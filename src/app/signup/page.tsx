@@ -7,6 +7,9 @@ import { useAuth } from '@/hooks';
 import { cn } from '@/lib/utils/cn';
 import { Eye, EyeOff, Loader2, Check, X } from 'lucide-react';
 
+// Prevent static generation - requires Firebase which needs runtime env vars
+export const dynamic = 'force-dynamic';
+
 export default function SignupPage() {
     const router = useRouter();
     const { signUp, signInWithGoogle, error } = useAuth();
