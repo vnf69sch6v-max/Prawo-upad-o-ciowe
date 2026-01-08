@@ -4,12 +4,26 @@ import { NextRequest, NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebase/admin';
 import Stripe from 'stripe';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '');
-
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
+// Lazy Stripe initialization
+let _stripe: Stripe | null = null;
+function getStripe(): Stripe | null {
+    if (_stripe) return _stripe;
+    if (!process.env.STRIPE_SECRET_KEY) {
+        console.warn('Stripe: Missing STRIPE_SECRET_KEY');
+        return null;
+    }
+    _stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+    return _stripe;
+}
 
 export async function POST(request: NextRequest) {
     try {
+        const stripe = getStripe();
+        if (!stripe) {
+            return NextResponse.json({ error: 'Payment service not configured' }, { status: 503 });
+        }
+
+        const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
         const body = await request.text();
         const signature = request.headers.get('stripe-signature');
 
@@ -30,7 +44,7 @@ export async function POST(request: NextRequest) {
         switch (event.type) {
             case 'checkout.session.completed': {
                 const session = event.data.object as Stripe.Checkout.Session;
-                await handleCheckoutComplete(session);
+                await handleCheckoutComplete(stripe, session);
                 break;
             }
 
@@ -59,7 +73,7 @@ export async function POST(request: NextRequest) {
     }
 }
 
-async function handleCheckoutComplete(session: Stripe.Checkout.Session) {
+async function handleCheckoutComplete(stripe: Stripe, session: Stripe.Checkout.Session) {
     const userId = session.metadata?.userId;
     if (!userId) return;
 

@@ -4,10 +4,25 @@ import { NextRequest, NextResponse } from 'next/server';
 import { adminAuth, adminDb } from '@/lib/firebase/admin';
 import Stripe from 'stripe';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '');
+// Lazy Stripe initialization
+let _stripe: Stripe | null = null;
+function getStripe(): Stripe | null {
+    if (_stripe) return _stripe;
+    if (!process.env.STRIPE_SECRET_KEY) {
+        console.warn('Stripe: Missing STRIPE_SECRET_KEY');
+        return null;
+    }
+    _stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+    return _stripe;
+}
 
 export async function POST(request: NextRequest) {
     try {
+        const stripe = getStripe();
+        if (!stripe) {
+            return NextResponse.json({ error: 'Payment service not configured' }, { status: 503 });
+        }
+
         const authHeader = request.headers.get('Authorization');
         if (!authHeader?.startsWith('Bearer ')) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
