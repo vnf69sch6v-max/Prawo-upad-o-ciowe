@@ -1,0 +1,109 @@
+{
+    "name": "LexCapital Pro",
+    "short_name": "LexCapital",
+    "description": "Premium Legal Education Platform - Master Polish Law",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#0a0d14",
+    "theme_color": "#8b5cf6",
+    "orientation": "portrait-primary",
+    "icons": [
+        {
+            "src": "/icons/icon-72x72.png",
+            "sizes": "72x72",
+            "type": "image/png",
+            "purpose": "maskable any"
+        },
+        {
+            "src": "/icons/icon-96x96.png",
+            "sizes": "96x96",
+            "type": "image/png",
+            "purpose": "maskable any"
+        },
+        {
+            "src": "/icons/icon-128x128.png",
+            "sizes": "128x128",
+            "type": "image/png",
+            "purpose": "maskable any"
+        },
+        {
+            "src": "/icons/icon-144x144.png",
+            "sizes": "144x144",
+            "type": "image/png",
+            "purpose": "maskable any"
+        },
+        {
+            "src": "/icons/icon-152x152.png",
+            "sizes": "152x152",
+            "type": "image/png",
+            "purpose": "maskable any"
+        },
+        {
+            "src": "/icons/icon-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable any"
+        },
+        {
+            "src": "/icons/icon-384x384.png",
+            "sizes": "384x384",
+            "type": "image/png",
+            "purpose": "maskable any"
+        },
+        {
+            "src": "/icons/icon-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable any"
+        }
+    ],
+    "categories": [
+        "education",
+        "productivity"
+    ],
+    "lang": "pl",
+    "dir": "ltr",
+    "scope": "/",
+    "screenshots": [
+        {
+            "src": "/screenshots/dashboard.png",
+            "sizes": "1280x720",
+            "type": "image/png",
+            "form_factor": "wide",
+            "label": "Dashboard LexCapital Pro"
+        },
+        {
+            "src": "/screenshots/flashcards.png",
+            "sizes": "390x844",
+            "type": "image/png",
+            "form_factor": "narrow",
+            "label": "Flashcards na mobile"
+        }
+    ],
+    "shortcuts": [
+        {
+            "name": "Rozpocznij naukę",
+            "short_name": "Nauka",
+            "description": "Szybki dostęp do fiszek",
+            "url": "/flashcards",
+            "icons": [
+                {
+                    "src": "/icons/flashcard.png",
+                    "sizes": "96x96"
+                }
+            ]
+        },
+        {
+            "name": "Egzamin",
+            "short_name": "Test",
+            "description": "Rozpocznij egzamin próbny",
+            "url": "/exam",
+            "icons": [
+                {
+                    "src": "/icons/exam.png",
+                    "sizes": "96x96"
+                }
+            ]
+        }
+    ]
+}

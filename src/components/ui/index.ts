@@ -4,3 +4,6 @@ export { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 export { Input, type InputProps } from './input';
 export { Progress } from './progress';
 export { Badge } from './badge';
+export { Skeleton, CardSkeleton, FlashcardSkeleton, ListSkeleton, ChartSkeleton } from './skeleton';
+export { ToastProvider, useToast } from './toast';
+export { Confetti } from './confetti';
