@@ -1,0 +1,125 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ============ HELPER FUNCTIONS ============
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+    
+    function isPro() {
+      let userData = getUserData();
+      return userData.tier == 'pro' || userData.tier == 'enterprise';
+    }
+    
+    function isEnterprise() {
+      return getUserData().tier == 'enterprise';
+    }
+    
+    // ============ USERS ============
+    
+    match /users/{userId} {
+      // User can read/write own data
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId);
+      allow delete: if false; // Users cannot delete their account directly
+      
+      // Flashcards subcollection
+      match /flashcards/{flashcardId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId);
+        allow update: if isOwner(userId);
+        allow delete: if isOwner(userId);
+      }
+      
+      // Exam sessions subcollection
+      match /examSessions/{sessionId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId);
+        allow update: if isOwner(userId);
+        allow delete: if false;
+      }
+      
+      // Exam results subcollection
+      match /examResults/{resultId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId);
+        allow update: if false;
+        allow delete: if false;
+      }
+      
+      // Usage tracking subcollection
+      match /usage/{date} {
+        allow read: if isOwner(userId);
+        allow write: if isOwner(userId);
+      }
+    }
+    
+    // ============ GLOBAL FLASHCARDS ============
+    
+    match /globalFlashcards/{flashcardId} {
+      // Anyone authenticated can read global flashcards
+      allow read: if isAuthenticated();
+      // Only admin can write (via Admin SDK)
+      allow write: if false;
+    }
+    
+    // ============ EXAMS ============
+    
+    match /exams/{examId} {
+      // Anyone authenticated can read exams
+      allow read: if isAuthenticated();
+      // PRO users can create custom exams
+      allow create: if isAuthenticated() && isPro();
+      // Only creator can update their custom exams
+      allow update: if isAuthenticated() && 
+        resource.data.createdBy == request.auth.uid;
+      allow delete: if false;
+    }
+    
+    // ============ EXAM QUESTIONS ============
+    
+    match /examQuestions/{questionId} {
+      // Anyone authenticated can read questions
+      allow read: if isAuthenticated();
+      // Only admin can write (via Admin SDK)
+      allow write: if false;
+    }
+    
+    // ============ LEADERBOARD ============
+    
+    match /leaderboard/{userId} {
+      // Anyone authenticated can read leaderboard
+      allow read: if isAuthenticated();
+      // Only the user can update their own entry (if privacy allows)
+      allow write: if isOwner(userId);
+    }
+    
+    // ============ SUBSCRIPTIONS ============
+    
+    match /subscriptions/{userId} {
+      // User can read own subscription
+      allow read: if isOwner(userId);
+      // Only backend can write (via Admin SDK)
+      allow write: if false;
+    }
+    
+    // ============ ANALYTICS (Optional) ============
+    
+    match /analytics/{docId} {
+      allow read: if false;
+      allow write: if isAuthenticated();
+    }
+  }
+}
