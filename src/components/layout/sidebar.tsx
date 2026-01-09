@@ -1,12 +1,15 @@
 'use client';
 
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils/cn';
-import { ChevronLeft, ChevronRight, Crown, Sparkles, LayoutDashboard, Trophy, BookOpen, Brain, Target, BarChart3, Clock, LineChart, Zap, Users, MessageSquare } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Crown, Sparkles, LayoutDashboard, Trophy, BookOpen, Brain, Target, BarChart3, Clock, LineChart, Zap, Users, MessageSquare, FileText } from 'lucide-react';
 
 interface NavItem {
     id: string;
     label: string;
     icon: React.ReactNode;
+    href: string;
     badge?: 'pro' | 'new';
 }
 
@@ -19,54 +22,54 @@ const NAV_SECTIONS: NavSection[] = [
     {
         title: 'Przegląd',
         items: [
-            { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={18} /> },
-            { id: 'leaderboard', label: 'Ranking', icon: <Trophy size={18} /> },
+            { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={18} />, href: '/' },
+            { id: 'leaderboard', label: 'Ranking', icon: <Trophy size={18} />, href: '/leaderboard' },
         ],
     },
     {
         title: 'Nauka',
         items: [
-            { id: 'flashcards', label: 'Fiszki', icon: <BookOpen size={18} /> },
-            { id: 'practice', label: 'Praktyka', icon: <Brain size={18} /> },
-            { id: 'weakareas', label: 'Słabe punkty', icon: <Target size={18} />, badge: 'pro' },
-            { id: 'customdecks', label: 'Własne talie', icon: <Sparkles size={18} /> },
+            { id: 'flashcards', label: 'Fiszki', icon: <BookOpen size={18} />, href: '/flashcards' },
+            { id: 'study', label: 'Nauka', icon: <Brain size={18} />, href: '/study' },
+            { id: 'weakareas', label: 'Słabe punkty', icon: <Target size={18} />, href: '/analytics', badge: 'pro' },
+            { id: 'customdecks', label: 'Własne talie', icon: <Sparkles size={18} />, href: '/flashcards' },
         ],
     },
     {
         title: 'Egzaminy',
         items: [
-            { id: 'exam', label: 'Symulacje', icon: <BookOpen size={18} /> },
-            { id: 'results', label: 'Wyniki', icon: <BarChart3 size={18} /> },
+            { id: 'exam', label: 'Symulacje', icon: <FileText size={18} />, href: '/exam' },
+            { id: 'results', label: 'Wyniki', icon: <BarChart3 size={18} />, href: '/exam/results' },
         ],
     },
     {
         title: 'Analityka',
         items: [
-            { id: 'performance', label: 'Wydajność', icon: <LineChart size={18} />, badge: 'pro' },
-            { id: 'timetracker', label: 'Czas nauki', icon: <Clock size={18} /> },
-            { id: 'predictions', label: 'Prognozy AI', icon: <Zap size={18} />, badge: 'pro' },
+            { id: 'performance', label: 'Wydajność', icon: <LineChart size={18} />, href: '/analytics', badge: 'pro' },
+            { id: 'timetracker', label: 'Czas nauki', icon: <Clock size={18} />, href: '/analytics' },
+            { id: 'predictions', label: 'Prognozy AI', icon: <Zap size={18} />, href: '/analytics', badge: 'pro' },
         ],
     },
     {
         title: 'AI Tools',
         items: [
-            { id: 'ai', label: 'Asystent AI', icon: <Brain size={18} /> },
-            { id: 'analyzer', label: 'Analiza kazusu', icon: <Sparkles size={18} />, badge: 'pro' },
-            { id: 'generator', label: 'Generator fiszek', icon: <Zap size={18} />, badge: 'new' },
+            { id: 'ai', label: 'Asystent AI', icon: <Brain size={18} />, href: '/ai' },
+            { id: 'analyzer', label: 'Analiza kazusu', icon: <Sparkles size={18} />, href: '/ai', badge: 'pro' },
+            { id: 'generator', label: 'Generator fiszek', icon: <Zap size={18} />, href: '/ai', badge: 'new' },
         ],
     },
     {
         title: 'Społeczność',
         items: [
-            { id: 'groups', label: 'Grupy nauki', icon: <Users size={18} />, badge: 'new' },
-            { id: 'forum', label: 'Forum', icon: <MessageSquare size={18} /> },
+            { id: 'groups', label: 'Grupy nauki', icon: <Users size={18} />, href: '/leaderboard', badge: 'new' },
+            { id: 'forum', label: 'Forum', icon: <MessageSquare size={18} />, href: '/leaderboard' },
         ],
     },
 ];
 
 interface SidebarProps {
-    currentView: string;
-    onNavigate: (view: string) => void;
+    currentView?: string;
+    onNavigate?: (view: string) => void;
     isCollapsed: boolean;
     onToggle: () => void;
     userStats?: {
@@ -76,12 +79,17 @@ interface SidebarProps {
 }
 
 export function Sidebar({
-    currentView,
-    onNavigate,
     isCollapsed,
     onToggle,
     userStats,
 }: SidebarProps) {
+    const pathname = usePathname();
+
+    const isActive = (href: string) => {
+        if (href === '/') return pathname === '/';
+        return pathname.startsWith(href);
+    };
+
     return (
         <aside
             className={cn(
@@ -91,7 +99,7 @@ export function Sidebar({
         >
             {/* Logo */}
             <div className="p-4 border-b border-[var(--border-color)]">
-                <div className="flex items-center gap-3">
+                <Link href="/" className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-purple-800 rounded-xl flex items-center justify-center font-bold text-lg shrink-0">
                         L
                     </div>
@@ -101,7 +109,7 @@ export function Sidebar({
                             <span className="badge badge-pro text-[10px]">PRO</span>
                         </div>
                     )}
-                </div>
+                </Link>
             </div>
 
             {/* Navigation */}
@@ -115,14 +123,14 @@ export function Sidebar({
                         )}
                         <div className="space-y-1 px-2">
                             {section.items.map((item) => {
-                                const isActive = currentView === item.id;
+                                const active = isActive(item.href);
                                 return (
-                                    <button
+                                    <Link
                                         key={item.id}
-                                        onClick={() => onNavigate(item.id)}
+                                        href={item.href}
                                         className={cn(
                                             'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all',
-                                            isActive
+                                            active
                                                 ? 'bg-purple-600/20 text-purple-400 border border-purple-500/30'
                                                 : 'text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] hover:text-white',
                                             isCollapsed && 'justify-center px-2'
@@ -143,7 +151,7 @@ export function Sidebar({
                                                 )}
                                             </>
                                         )}
-                                    </button>
+                                    </Link>
                                 );
                             })}
                         </div>
