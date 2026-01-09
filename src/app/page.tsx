@@ -1,223 +1,212 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { Sidebar, Header, MobileNav } from '@/components/layout';
 import { StatCard, PerformanceChart } from '@/components/dashboard';
-
-// Mock data for development
-const MOCK_STATS = {
-  knowledgeEquity: 12000,
-  retentionIndex: 87,
-  accuracy: 92,
-  streak: 12,
-  longestStreak: 28,
-  totalStudyTime: 4200,
-  totalQuestionsAnswered: 1847,
-  totalFlashcardsReviewed: 892,
-  lastStudyDate: new Date(),
-  rank: 32,
-};
-
-const MOCK_HISTORY = Array.from({ length: 14 }, (_, i) => ({
-  date: new Date(Date.now() - (13 - i) * 24 * 60 * 60 * 1000).toLocaleDateString('pl-PL', {
-    day: '2-digit',
-    month: '2-digit',
-  }),
-  value: 8000 + Math.floor(Math.random() * 4000) + i * 200,
-}));
-
-type View =
-  | 'dashboard'
-  | 'flashcards'
-  | 'exam'
-  | 'ai'
-  | 'leaderboard'
-  | 'practice'
-  | 'weakareas'
-  | 'customdecks'
-  | 'results'
-  | 'performance'
-  | 'timetracker'
-  | 'predictions'
-  | 'analyzer'
-  | 'generator'
-  | 'groups'
-  | 'forum';
+import { useAuth } from '@/hooks/use-auth';
+import { BookOpen, Brain, Target, Sparkles, Loader2 } from 'lucide-react';
+import { DEFAULT_USER_STATS } from '@/lib/types/user';
 
 export default function DashboardPage() {
-  const [currentView, setCurrentView] = useState<View>('dashboard');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const stats = MOCK_STATS;
+  const { profile, loading, profileLoading } = useAuth();
 
-  const handleNavigate = (view: string) => setCurrentView(view as View);
+  // Use profile stats or defaults
+  const stats = profile?.stats || DEFAULT_USER_STATS;
+  const displayName = profile?.displayName || 'Student';
+
+  // Calculate accuracy percentage
+  const accuracy = stats.totalQuestions > 0
+    ? Math.round((stats.correctAnswers / stats.totalQuestions) * 100)
+    : 0;
+
+  // Generate performance history from study sessions (placeholder for now)
+  const performanceHistory = Array.from({ length: 14 }, (_, i) => ({
+    date: new Date(Date.now() - (13 - i) * 24 * 60 * 60 * 1000).toLocaleDateString('pl-PL', {
+      day: '2-digit',
+      month: '2-digit',
+    }),
+    value: Math.max(0, stats.knowledgeEquity - (13 - i) * 50 + Math.floor(Math.random() * 100)),
+  }));
+
+  // Loading state
+  if (loading || profileLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg-primary)' }}>
+        <div className="text-center">
+          <Loader2 size={48} className="animate-spin text-purple-500 mx-auto mb-4" />
+          <p className="text-[var(--text-muted)]">Ładowanie...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen" style={{ background: 'var(--bg-primary)' }}>
       {/* Sidebar */}
       <Sidebar
-        currentView={currentView}
-        onNavigate={handleNavigate}
         isCollapsed={sidebarCollapsed}
         onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
-        userStats={{ streak: stats.streak, knowledgeEquity: stats.knowledgeEquity }}
+        userStats={{ streak: stats.currentStreak, knowledgeEquity: stats.knowledgeEquity }}
       />
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
         <Header
-          userStats={stats}
-          currentView={currentView}
-          onNavigate={handleNavigate}
+          userStats={{
+            streak: stats.currentStreak,
+            knowledgeEquity: stats.knowledgeEquity,
+            rank: 0, // TODO: Calculate from leaderboard
+          }}
+          currentView="dashboard"
         />
 
         <main className="flex-1 overflow-auto p-6 pb-20 lg:pb-6">
           <div className="max-w-7xl mx-auto">
-            {currentView === 'dashboard' && (
-              <div className="space-y-6 animate-fade-in">
-                {/* KPI Cards */}
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                  <StatCard
-                    label="Knowledge Equity"
-                    value={stats.knowledgeEquity}
-                    prefix="€"
-                    change={12}
-                    trend="up"
-                    icon="💰"
-                  />
-                  <StatCard
-                    label="Retention Index"
-                    value={stats.retentionIndex}
-                    suffix="%"
-                    change={3}
-                    trend="up"
-                    icon="🧠"
-                  />
-                  <StatCard
-                    label="Accuracy"
-                    value={stats.accuracy}
-                    suffix="%"
-                    change={-2}
-                    trend="down"
-                    icon="🎯"
-                  />
-                  <StatCard
-                    label="Streak"
-                    value={`${stats.streak} dni`}
-                    icon="🔥"
-                    trend="neutral"
-                  />
-                </div>
+            <div className="space-y-6 animate-fade-in">
+              {/* Welcome Message */}
+              <div className="mb-2">
+                <h1 className="text-2xl font-bold">
+                  Cześć, {displayName}! 👋
+                </h1>
+                <p className="text-[var(--text-muted)]">
+                  {stats.currentStreak > 0
+                    ? `Świetnie! Masz ${stats.currentStreak}-dniową passę. Kontynuuj naukę!`
+                    : 'Rozpocznij naukę, aby zbudować swoją passę!'
+                  }
+                </p>
+              </div>
 
-                {/* Charts */}
-                <div className="grid lg:grid-cols-2 gap-6">
-                  <PerformanceChart data={MOCK_HISTORY} target={15000} />
+              {/* KPI Cards */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <StatCard
+                  label="Knowledge Equity"
+                  value={stats.knowledgeEquity}
+                  prefix="€"
+                  change={stats.knowledgeEquity > 0 ? 12 : 0}
+                  trend={stats.knowledgeEquity > 0 ? "up" : "neutral"}
+                  icon="💰"
+                />
+                <StatCard
+                  label="Ukończone Egzaminy"
+                  value={stats.examsCompleted}
+                  change={stats.examsCompleted > 0 ? stats.examsPassed : 0}
+                  trend={stats.examsCompleted > 0 ? "up" : "neutral"}
+                  icon="📋"
+                />
+                <StatCard
+                  label="Dokładność"
+                  value={accuracy}
+                  suffix="%"
+                  change={accuracy > 70 ? 5 : -5}
+                  trend={accuracy > 70 ? "up" : accuracy > 0 ? "down" : "neutral"}
+                  icon="🎯"
+                />
+                <StatCard
+                  label="Streak"
+                  value={`${stats.currentStreak} dni`}
+                  icon="🔥"
+                  trend="neutral"
+                />
+              </div>
 
-                  {/* Quick Actions */}
-                  <div className="lex-card">
-                    <h3 className="text-lg font-semibold mb-4">⚡ Quick Actions</h3>
-                    <div className="grid grid-cols-2 gap-3">
-                      <button
-                        onClick={() => handleNavigate('flashcards')}
-                        className="p-4 bg-[var(--bg-hover)] hover:bg-purple-600/20 border border-[var(--border-color)] hover:border-purple-500/50 rounded-xl transition-all text-left"
-                      >
-                        <span className="text-2xl mb-2 block">📚</span>
-                        <span className="font-medium">Study Flashcards</span>
-                        <p className="text-xs text-[var(--text-muted)] mt-1">15 cards due</p>
-                      </button>
-                      <button
-                        onClick={() => handleNavigate('exam')}
-                        className="p-4 bg-[var(--bg-hover)] hover:bg-purple-600/20 border border-[var(--border-color)] hover:border-purple-500/50 rounded-xl transition-all text-left"
-                      >
-                        <span className="text-2xl mb-2 block">📋</span>
-                        <span className="font-medium">Quick Quiz</span>
-                        <p className="text-xs text-[var(--text-muted)] mt-1">10 questions</p>
-                      </button>
-                      <button
-                        onClick={() => handleNavigate('ai')}
-                        className="p-4 bg-[var(--bg-hover)] hover:bg-purple-600/20 border border-[var(--border-color)] hover:border-purple-500/50 rounded-xl transition-all text-left"
-                      >
-                        <span className="text-2xl mb-2 block">🤖</span>
-                        <span className="font-medium">AI Assistant</span>
-                        <p className="text-xs text-[var(--text-muted)] mt-1">Ask anything</p>
-                      </button>
-                      <button
-                        onClick={() => handleNavigate('weakareas')}
-                        className="p-4 bg-[var(--bg-hover)] hover:bg-purple-600/20 border border-[var(--border-color)] hover:border-purple-500/50 rounded-xl transition-all text-left"
-                      >
-                        <span className="text-2xl mb-2 block">🎯</span>
-                        <span className="font-medium">Weak Areas</span>
-                        <p className="text-xs text-[var(--text-muted)] mt-1">3 domains need work</p>
-                      </button>
-                    </div>
+              {/* Charts & Quick Actions */}
+              <div className="grid lg:grid-cols-2 gap-6">
+                {/* Performance Chart */}
+                {stats.knowledgeEquity > 0 ? (
+                  <PerformanceChart data={performanceHistory} target={15000} />
+                ) : (
+                  <div className="lex-card flex flex-col items-center justify-center py-12">
+                    <div className="text-6xl mb-4">📈</div>
+                    <h3 className="text-lg font-semibold mb-2">Brak danych</h3>
+                    <p className="text-[var(--text-muted)] text-center text-sm">
+                      Ukończ kilka egzaminów, aby zobaczyć wykres postępów
+                    </p>
                   </div>
-                </div>
+                )}
 
-                {/* Today's Progress */}
+                {/* Quick Actions */}
                 <div className="lex-card">
-                  <h3 className="text-lg font-semibold mb-4">📊 Today&apos;s Progress</h3>
-                  <div className="grid grid-cols-3 gap-4 text-center">
-                    <div>
-                      <p className="text-3xl font-bold text-purple-400">47</p>
-                      <p className="text-sm text-[var(--text-muted)]">Cards Reviewed</p>
-                    </div>
-                    <div>
-                      <p className="text-3xl font-bold text-green-400">89%</p>
-                      <p className="text-sm text-[var(--text-muted)]">Accuracy Today</p>
-                    </div>
-                    <div>
-                      <p className="text-3xl font-bold text-orange-400">1h 23m</p>
-                      <p className="text-sm text-[var(--text-muted)]">Study Time</p>
-                    </div>
-                  </div>
-                  {/* Progress Bar */}
-                  <div className="mt-4">
-                    <div className="flex justify-between text-sm mb-2">
-                      <span className="text-[var(--text-muted)]">Daily Goal</span>
-                      <span className="font-medium">73%</span>
-                    </div>
-                    <div className="h-3 bg-[var(--bg-hover)] rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-gradient-to-r from-purple-600 to-purple-400 rounded-full transition-all"
-                        style={{ width: '73%' }}
-                      />
-                    </div>
+                  <h3 className="text-lg font-semibold mb-4">⚡ Quick Actions</h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    <Link
+                      href="/flashcards"
+                      className="p-4 bg-[var(--bg-hover)] hover:bg-purple-600/20 border border-[var(--border-color)] hover:border-purple-500/50 rounded-xl transition-all text-left"
+                    >
+                      <BookOpen size={24} className="text-purple-400 mb-2" />
+                      <span className="font-medium block">Fiszki</span>
+                      <p className="text-xs text-[var(--text-muted)] mt-1">Ucz się z fiszek</p>
+                    </Link>
+                    <Link
+                      href="/exam"
+                      className="p-4 bg-[var(--bg-hover)] hover:bg-purple-600/20 border border-[var(--border-color)] hover:border-purple-500/50 rounded-xl transition-all text-left"
+                    >
+                      <Target size={24} className="text-blue-400 mb-2" />
+                      <span className="font-medium block">Egzamin KSH</span>
+                      <p className="text-xs text-[var(--text-muted)] mt-1">Test wiedzy</p>
+                    </Link>
+                    <Link
+                      href="/ai"
+                      className="p-4 bg-[var(--bg-hover)] hover:bg-purple-600/20 border border-[var(--border-color)] hover:border-purple-500/50 rounded-xl transition-all text-left"
+                    >
+                      <Brain size={24} className="text-green-400 mb-2" />
+                      <span className="font-medium block">AI Asystent</span>
+                      <p className="text-xs text-[var(--text-muted)] mt-1">Zapytaj o prawo</p>
+                    </Link>
+                    <Link
+                      href="/leaderboard"
+                      className="p-4 bg-[var(--bg-hover)] hover:bg-purple-600/20 border border-[var(--border-color)] hover:border-purple-500/50 rounded-xl transition-all text-left"
+                    >
+                      <Sparkles size={24} className="text-yellow-400 mb-2" />
+                      <span className="font-medium block">Ranking</span>
+                      <p className="text-xs text-[var(--text-muted)] mt-1">Zobacz pozycję</p>
+                    </Link>
                   </div>
                 </div>
               </div>
-            )}
 
-            {/* Placeholder for other views */}
-            {currentView !== 'dashboard' && (
-              <div className="lex-card animate-fade-in">
-                <div className="text-center py-16">
-                  <span className="text-6xl mb-4 block">🚧</span>
-                  <h2 className="text-2xl font-bold mb-2 capitalize">
-                    {currentView.replace(/([A-Z])/g, ' $1')}
-                  </h2>
-                  <p className="text-[var(--text-muted)] mb-6">
-                    Ta funkcja jest w trakcie rozwoju
-                  </p>
-                  <button
-                    onClick={() => handleNavigate('dashboard')}
-                    className="btn btn-secondary"
-                  >
-                    ← Wróć do Dashboard
-                  </button>
+              {/* Stats Summary */}
+              <div className="lex-card">
+                <h3 className="text-lg font-semibold mb-4">📊 Statystyki</h3>
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="text-center p-4 bg-[var(--bg-hover)] rounded-xl">
+                    <p className="text-2xl font-bold text-purple-400">{stats.totalQuestions}</p>
+                    <p className="text-xs text-[var(--text-muted)]">Pytań odpowiedzianych</p>
+                  </div>
+                  <div className="text-center p-4 bg-[var(--bg-hover)] rounded-xl">
+                    <p className="text-2xl font-bold text-green-400">{stats.correctAnswers}</p>
+                    <p className="text-xs text-[var(--text-muted)]">Poprawnych odpowiedzi</p>
+                  </div>
+                  <div className="text-center p-4 bg-[var(--bg-hover)] rounded-xl">
+                    <p className="text-2xl font-bold text-blue-400">{stats.examsPassed}</p>
+                    <p className="text-xs text-[var(--text-muted)]">Zdanych egzaminów</p>
+                  </div>
+                  <div className="text-center p-4 bg-[var(--bg-hover)] rounded-xl">
+                    <p className="text-2xl font-bold text-orange-400">{stats.longestStreak}</p>
+                    <p className="text-xs text-[var(--text-muted)]">Najdłuższa passa</p>
+                  </div>
                 </div>
               </div>
-            )}
+
+              {/* Best Exam Score */}
+              {stats.bestExamScore > 0 && (
+                <div className="lex-card bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border-yellow-500/30">
+                  <div className="flex items-center gap-4">
+                    <div className="text-4xl">🏆</div>
+                    <div>
+                      <h3 className="font-semibold">Najlepszy wynik egzaminu</h3>
+                      <p className="text-2xl font-bold text-yellow-400">{stats.bestExamScore}%</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </main>
-
-        <footer className="hidden lg:block border-t border-[var(--border-color)] p-4 text-center">
-          <p className="text-[var(--text-muted)] text-sm">
-            LexCapital Pro © 2025 • Premium Legal Education Platform
-          </p>
-        </footer>
       </div>
 
-      {/* Mobile Navigation */}
-      <MobileNav currentView={currentView} onNavigate={handleNavigate} />
+      <MobileNav currentView="dashboard" onNavigate={() => { }} />
     </div>
   );
 }

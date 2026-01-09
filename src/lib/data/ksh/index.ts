@@ -10,6 +10,7 @@ import { KSH_EXAM_QUESTIONS_PART2 } from './ksh-exam-questions-part2';
 import { KSH_EXAM_QUESTIONS_PART3 } from './ksh-exam-questions-part3';
 import { KSH_EXAM_QUESTIONS_PART4 } from './ksh-exam-questions-part4';
 import { KSH_EXAM_QUESTIONS_PART5 } from './ksh-exam-questions-part5';
+import { KSH_EXAM_QUESTIONS_PART6 } from './ksh-exam-questions-part6';
 
 // Re-export the type
 export type { ExamQuestion };
@@ -21,6 +22,7 @@ export const ALL_KSH_QUESTIONS: ExamQuestion[] = [
     ...KSH_EXAM_QUESTIONS_PART3,
     ...KSH_EXAM_QUESTIONS_PART4,
     ...KSH_EXAM_QUESTIONS_PART5,
+    ...KSH_EXAM_QUESTIONS_PART6,
 ];
 
 // ============================================================
