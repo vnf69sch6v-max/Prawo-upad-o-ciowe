@@ -159,15 +159,18 @@ export function Sidebar({
                 ))}
             </nav>
 
-            {/* User Profile */}
+            {/* User Profile - Click to go to Settings */}
             {!isCollapsed && userStats && (
                 <div className="p-4 border-t border-[var(--border-color)]">
-                    <div className="flex items-center gap-3 p-3 bg-[var(--bg-hover)] rounded-xl">
-                        <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-lg">
+                    <Link
+                        href="/settings"
+                        className="flex items-center gap-3 p-3 bg-[var(--bg-hover)] rounded-xl hover:bg-purple-600/20 hover:border-purple-500/50 border border-transparent transition-all"
+                    >
+                        <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-lg font-bold text-white">
                             👤
                         </div>
                         <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate">Student Prawa</p>
+                            <p className="text-sm font-medium truncate">Mój Profil</p>
                             <div className="flex items-center gap-2 text-xs text-[var(--text-muted)]">
                                 <span className="text-orange-400">🔥 {userStats.streak}</span>
                                 <span>•</span>
@@ -176,7 +179,7 @@ export function Sidebar({
                                 </span>
                             </div>
                         </div>
-                    </div>
+                    </Link>
                 </div>
             )}
 

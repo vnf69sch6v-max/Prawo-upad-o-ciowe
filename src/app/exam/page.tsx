@@ -6,6 +6,8 @@ import { ExamSimulator, ExamResults } from '@/components/exam';
 import { BookOpen, Clock, Trophy, Target, ChevronRight, Scale, Sparkles, Play } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 import { ALL_KSH_QUESTIONS, getRandomQuestions, generateBalancedExam, getQuestionStats, type ExamQuestion } from '@/lib/data/ksh';
+import { useAuth } from '@/hooks/use-auth';
+import { saveExamResult, addActivity, updateStreak, incrementUserStats } from '@/lib/services/user-service';
 
 // Convert KSH questions to ExamSimulator format
 function convertToSimulatorFormat(kshQuestions: ExamQuestion[]) {
@@ -105,6 +107,9 @@ export default function ExamPage() {
     const [selectedExam, setSelectedExam] = useState<typeof KSH_EXAMS[0] | null>(null);
     const [currentQuestions, setCurrentQuestions] = useState<ReturnType<typeof convertToSimulatorFormat>>([]);
     const [examResult, setExamResult] = useState<ExamResultData | null>(null);
+    const [isSaving, setIsSaving] = useState(false);
+
+    const { user, profile, refreshProfile } = useAuth();
 
     // Get stats for display
     const stats = useMemo(() => getQuestionStats(), []);
@@ -136,7 +141,7 @@ export default function ExamPage() {
         setView('exam');
     };
 
-    const handleSubmitExam = (answers: Record<string, string>) => {
+    const handleSubmitExam = async (answers: Record<string, string>) => {
         // Calculate real score
         let correctCount = 0;
         currentQuestions.forEach(q => {
@@ -147,17 +152,65 @@ export default function ExamPage() {
 
         const totalQuestions = currentQuestions.length;
         const score = Math.round((correctCount / totalQuestions) * 100);
+        const passed = score >= 60;
 
+        // Set local result immediately for UI
         setExamResult({
             score,
-            passed: score >= 60,
+            passed,
             correctAnswers: correctCount,
             totalQuestions,
-            timeSpent: 0, // Will be set by timer
+            timeSpent: 0,
             answers,
             questions: currentQuestions,
         });
         setView('results');
+
+        // Save to Firebase if user is logged in
+        if (user && selectedExam) {
+            setIsSaving(true);
+            try {
+                // Save exam result
+                await saveExamResult({
+                    uid: user.uid,
+                    examId: selectedExam.id,
+                    examTitle: selectedExam.title,
+                    completedAt: new Date(),
+                    score,
+                    passed,
+                    correctAnswers: correctCount,
+                    totalQuestions,
+                    timeSpent: 0,
+                    questionResults: currentQuestions.map(q => ({
+                        questionId: q.id,
+                        userAnswer: answers[q.id] || '',
+                        correctAnswer: q.correctAnswer,
+                        isCorrect: answers[q.id] === q.correctAnswer,
+                        article: q.article,
+                    })),
+                });
+
+                // Add activity
+                await addActivity({
+                    uid: user.uid,
+                    type: 'exam_completed',
+                    title: passed ? '🎉 Egzamin zdany!' : '📝 Egzamin ukończony',
+                    description: `${selectedExam.title} - ${score}% (${correctCount}/${totalQuestions})`,
+                });
+
+                // Update streak
+                await updateStreak(user.uid);
+
+                // Refresh profile to get updated stats
+                await refreshProfile();
+
+                console.log('Exam result saved to Firebase');
+            } catch (error) {
+                console.error('Failed to save exam result:', error);
+            } finally {
+                setIsSaving(false);
+            }
+        }
     };
 
     if (view === 'exam' && selectedExam) {

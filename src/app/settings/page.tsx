@@ -1,25 +1,52 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Sidebar, Header, MobileNav } from '@/components/layout';
 import { Button } from '@/components/ui';
+import { useAuth } from '@/hooks/use-auth';
 import {
     User, Bell, CreditCard, Shield, Palette, LogOut,
-    ChevronRight, Moon, Globe, Trash2, Crown
+    ChevronRight, Moon, Globe, Trash2, Crown, Mail, Calendar,
+    Trophy, Flame, Target, Clock, Loader2
 } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 
 const SETTINGS_SECTIONS = [
     { id: 'profile', label: 'Profil', icon: User },
+    { id: 'stats', label: 'Statystyki', icon: Trophy },
     { id: 'notifications', label: 'Powiadomienia', icon: Bell },
     { id: 'subscription', label: 'Subskrypcja', icon: CreditCard },
-    { id: 'privacy', label: 'Prywatność', icon: Shield },
     { id: 'appearance', label: 'Wygląd', icon: Palette },
 ];
 
 export default function SettingsPage() {
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const [activeSection, setActiveSection] = useState('profile');
+    const { user, profile, loading, logout } = useAuth();
+    const router = useRouter();
+
+    const handleLogout = async () => {
+        await logout();
+        router.push('/login');
+    };
+
+    // Loading state
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg-primary)' }}>
+                <div className="text-center">
+                    <Loader2 size={48} className="animate-spin text-purple-500 mx-auto mb-4" />
+                    <p className="text-[var(--text-muted)]">Ładowanie profilu...</p>
+                </div>
+            </div>
+        );
+    }
+
+    const stats = profile?.stats;
+    const accuracy = stats && stats.totalQuestions > 0
+        ? Math.round((stats.correctAnswers / stats.totalQuestions) * 100)
+        : 0;
 
     return (
         <div className="flex min-h-screen" style={{ background: 'var(--bg-primary)' }}>
@@ -28,12 +55,19 @@ export default function SettingsPage() {
                 onNavigate={() => { }}
                 isCollapsed={sidebarCollapsed}
                 onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
-                userStats={{ streak: 12, knowledgeEquity: 12000 }}
+                userStats={{
+                    streak: stats?.currentStreak || 0,
+                    knowledgeEquity: stats?.knowledgeEquity || 0
+                }}
             />
 
             <div className="flex-1 flex flex-col min-w-0">
                 <Header
-                    userStats={{ streak: 12, knowledgeEquity: 12000, rank: 32 }}
+                    userStats={{
+                        streak: stats?.currentStreak || 0,
+                        knowledgeEquity: stats?.knowledgeEquity || 0,
+                        rank: 0
+                    }}
                     currentView="settings"
                 />
 
@@ -73,12 +107,22 @@ export default function SettingsPage() {
                                         <h2 className="text-lg font-semibold">Profil</h2>
 
                                         <div className="flex items-center gap-4">
-                                            <div className="w-20 h-20 bg-purple-600 rounded-full flex items-center justify-center text-2xl">
-                                                👤
+                                            <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-2xl font-bold text-white">
+                                                {user?.displayName?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || '?'}
                                             </div>
                                             <div>
-                                                <Button variant="secondary" size="sm">Zmień zdjęcie</Button>
-                                                <p className="text-xs text-[var(--text-muted)] mt-1">JPG, PNG. Max 5MB</p>
+                                                <h3 className="text-xl font-bold">{user?.displayName || 'Student'}</h3>
+                                                <p className="text-[var(--text-muted)] flex items-center gap-2">
+                                                    <Mail size={14} />
+                                                    {user?.email || 'Brak email'}
+                                                </p>
+                                                <p className="text-[var(--text-muted)] flex items-center gap-2 text-sm">
+                                                    <Calendar size={14} />
+                                                    Dołączył: {profile?.createdAt
+                                                        ? new Date(profile.createdAt).toLocaleDateString('pl-PL')
+                                                        : 'Nieznana data'
+                                                    }
+                                                </p>
                                             </div>
                                         </div>
 
@@ -87,7 +131,8 @@ export default function SettingsPage() {
                                                 <label className="block text-sm font-medium mb-2">Imię i nazwisko</label>
                                                 <input
                                                     type="text"
-                                                    defaultValue="Jan Kowalski"
+                                                    defaultValue={user?.displayName || ''}
+                                                    placeholder="Twoje imię"
                                                     className="w-full px-4 py-2.5 bg-[var(--bg-hover)] border border-[var(--border-color)] rounded-xl focus:border-purple-500 focus:outline-none"
                                                 />
                                             </div>
@@ -95,20 +140,70 @@ export default function SettingsPage() {
                                                 <label className="block text-sm font-medium mb-2">Email</label>
                                                 <input
                                                     type="email"
-                                                    defaultValue="jan@example.com"
-                                                    className="w-full px-4 py-2.5 bg-[var(--bg-hover)] border border-[var(--border-color)] rounded-xl focus:border-purple-500 focus:outline-none"
+                                                    defaultValue={user?.email || ''}
+                                                    disabled
+                                                    className="w-full px-4 py-2.5 bg-[var(--bg-hover)] border border-[var(--border-color)] rounded-xl opacity-60 cursor-not-allowed"
                                                 />
-                                            </div>
-                                            <div>
-                                                <label className="block text-sm font-medium mb-2">Data egzaminu</label>
-                                                <input
-                                                    type="date"
-                                                    className="w-full px-4 py-2.5 bg-[var(--bg-hover)] border border-[var(--border-color)] rounded-xl focus:border-purple-500 focus:outline-none"
-                                                />
+                                                <p className="text-xs text-[var(--text-muted)] mt-1">Email nie może być zmieniony</p>
                                             </div>
                                         </div>
 
                                         <Button>Zapisz zmiany</Button>
+                                    </div>
+                                )}
+
+                                {activeSection === 'stats' && (
+                                    <div className="space-y-6">
+                                        {/* Stats Cards */}
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="lex-card text-center">
+                                                <Trophy size={24} className="mx-auto mb-2 text-yellow-400" />
+                                                <p className="text-2xl font-bold">€{stats?.knowledgeEquity || 0}</p>
+                                                <p className="text-xs text-[var(--text-muted)]">Knowledge Equity</p>
+                                            </div>
+                                            <div className="lex-card text-center">
+                                                <Flame size={24} className="mx-auto mb-2 text-orange-400" />
+                                                <p className="text-2xl font-bold">{stats?.currentStreak || 0} dni</p>
+                                                <p className="text-xs text-[var(--text-muted)]">Aktualna passa</p>
+                                            </div>
+                                            <div className="lex-card text-center">
+                                                <Target size={24} className="mx-auto mb-2 text-green-400" />
+                                                <p className="text-2xl font-bold">{accuracy}%</p>
+                                                <p className="text-xs text-[var(--text-muted)]">Dokładność</p>
+                                            </div>
+                                            <div className="lex-card text-center">
+                                                <Clock size={24} className="mx-auto mb-2 text-blue-400" />
+                                                <p className="text-2xl font-bold">{stats?.examsCompleted || 0}</p>
+                                                <p className="text-xs text-[var(--text-muted)]">Ukończone egzaminy</p>
+                                            </div>
+                                        </div>
+
+                                        {/* Detailed Stats */}
+                                        <div className="lex-card">
+                                            <h2 className="text-lg font-semibold mb-4">Szczegóły</h2>
+                                            <div className="space-y-3">
+                                                <div className="flex justify-between py-2 border-b border-[var(--border-color)]">
+                                                    <span className="text-[var(--text-muted)]">Wszystkie pytania</span>
+                                                    <span className="font-medium">{stats?.totalQuestions || 0}</span>
+                                                </div>
+                                                <div className="flex justify-between py-2 border-b border-[var(--border-color)]">
+                                                    <span className="text-[var(--text-muted)]">Poprawne odpowiedzi</span>
+                                                    <span className="font-medium text-green-400">{stats?.correctAnswers || 0}</span>
+                                                </div>
+                                                <div className="flex justify-between py-2 border-b border-[var(--border-color)]">
+                                                    <span className="text-[var(--text-muted)]">Zdane egzaminy</span>
+                                                    <span className="font-medium text-green-400">{stats?.examsPassed || 0}</span>
+                                                </div>
+                                                <div className="flex justify-between py-2 border-b border-[var(--border-color)]">
+                                                    <span className="text-[var(--text-muted)]">Najlepszy wynik</span>
+                                                    <span className="font-medium text-yellow-400">{stats?.bestExamScore || 0}%</span>
+                                                </div>
+                                                <div className="flex justify-between py-2">
+                                                    <span className="text-[var(--text-muted)]">Najdłuższa passa</span>
+                                                    <span className="font-medium text-orange-400">{stats?.longestStreak || 0} dni</span>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 )}
 
@@ -128,7 +223,7 @@ export default function SettingsPage() {
                                                     <p className="text-sm text-[var(--text-muted)]">{item.desc}</p>
                                                 </div>
                                                 <label className="relative inline-flex items-center cursor-pointer">
-                                                    <input type="checkbox" defaultChecked className="sr-only peer" />
+                                                    <input type="checkbox" defaultChecked={profile?.preferences?.notifications} className="sr-only peer" />
                                                     <div className="w-11 h-6 bg-[var(--bg-hover)] peer-focus:ring-2 peer-focus:ring-purple-500 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
                                                 </label>
                                             </div>
@@ -140,54 +235,52 @@ export default function SettingsPage() {
                                     <div className="lex-card space-y-6">
                                         <div className="flex items-center justify-between">
                                             <h2 className="text-lg font-semibold">Subskrypcja</h2>
-                                            <span className="px-3 py-1 bg-purple-600 text-white text-sm font-bold rounded-full flex items-center gap-1">
-                                                <Crown size={14} />
-                                                PRO
+                                            <span className={cn(
+                                                "px-3 py-1 text-sm font-bold rounded-full flex items-center gap-1",
+                                                profile?.subscription?.plan === 'free'
+                                                    ? "bg-[var(--bg-hover)] text-[var(--text-muted)]"
+                                                    : "bg-purple-600 text-white"
+                                            )}>
+                                                {profile?.subscription?.plan !== 'free' && <Crown size={14} />}
+                                                {profile?.subscription?.plan?.toUpperCase() || 'FREE'}
                                             </span>
                                         </div>
 
-                                        <div className="p-4 bg-purple-600/10 border border-purple-500/30 rounded-xl">
-                                            <p className="font-medium">LexCapital PRO</p>
-                                            <p className="text-sm text-[var(--text-muted)]">49 PLN/miesiąc • Odnawia się 15 lutego 2026</p>
+                                        <div className={cn(
+                                            "p-4 rounded-xl border",
+                                            profile?.subscription?.plan === 'free'
+                                                ? "bg-[var(--bg-hover)] border-[var(--border-color)]"
+                                                : "bg-purple-600/10 border-purple-500/30"
+                                        )}>
+                                            <p className="font-medium">
+                                                LexCapital {profile?.subscription?.plan?.toUpperCase() || 'FREE'}
+                                            </p>
+                                            <p className="text-sm text-[var(--text-muted)]">
+                                                {profile?.subscription?.plan === 'free'
+                                                    ? 'Podstawowy dostęp - ograniczone funkcje'
+                                                    : '49 PLN/miesiąc • Pełny dostęp do wszystkich funkcji'
+                                                }
+                                            </p>
                                         </div>
 
-                                        <div className="space-y-3">
-                                            <Button variant="secondary" className="w-full justify-between">
-                                                Zarządzaj płatnością
-                                                <ChevronRight size={18} />
+                                        {profile?.subscription?.plan === 'free' && (
+                                            <Button className="w-full bg-gradient-to-r from-purple-500 to-pink-500">
+                                                <Crown size={16} className="mr-2" />
+                                                Upgrade do PRO
                                             </Button>
-                                            <Button variant="secondary" className="w-full justify-between">
-                                                Historia faktur
-                                                <ChevronRight size={18} />
-                                            </Button>
-                                            <Button variant="ghost" className="w-full text-red-400 hover:bg-red-500/10">
-                                                Anuluj subskrypcję
-                                            </Button>
-                                        </div>
-                                    </div>
-                                )}
+                                        )}
 
-                                {activeSection === 'privacy' && (
-                                    <div className="lex-card space-y-6">
-                                        <h2 className="text-lg font-semibold">Prywatność</h2>
-
-                                        <div className="flex items-center justify-between">
-                                            <div>
-                                                <p className="font-medium">Profil publiczny</p>
-                                                <p className="text-sm text-[var(--text-muted)]">Widoczność w rankingu</p>
+                                        {profile?.subscription?.plan !== 'free' && (
+                                            <div className="space-y-3">
+                                                <Button variant="secondary" className="w-full justify-between">
+                                                    Zarządzaj płatnością
+                                                    <ChevronRight size={18} />
+                                                </Button>
+                                                <Button variant="ghost" className="w-full text-red-400 hover:bg-red-500/10">
+                                                    Anuluj subskrypcję
+                                                </Button>
                                             </div>
-                                            <label className="relative inline-flex items-center cursor-pointer">
-                                                <input type="checkbox" defaultChecked className="sr-only peer" />
-                                                <div className="w-11 h-6 bg-[var(--bg-hover)] rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
-                                            </label>
-                                        </div>
-
-                                        <div className="pt-4 border-t border-[var(--border-color)]">
-                                            <h3 className="font-medium text-red-400 mb-4">Strefa niebezpieczna</h3>
-                                            <Button variant="danger" leftIcon={<Trash2 size={16} />}>
-                                                Usuń konto
-                                            </Button>
-                                        </div>
+                                        )}
                                     </div>
                                 )}
 
@@ -220,7 +313,12 @@ export default function SettingsPage() {
                                 )}
 
                                 {/* Logout */}
-                                <Button variant="ghost" className="w-full text-red-400" leftIcon={<LogOut size={18} />}>
+                                <Button
+                                    variant="ghost"
+                                    className="w-full text-red-400"
+                                    leftIcon={<LogOut size={18} />}
+                                    onClick={handleLogout}
+                                >
                                     Wyloguj się
                                 </Button>
                             </div>
