@@ -51,11 +51,11 @@ const KSH_EXAMS = [
         icon: <Scale className="text-blue-400" size={24} />,
     },
     {
-        id: 'ksh-full-100',
-        title: 'KSH - Symulacja Egzaminu (100 pytań)',
+        id: 'ksh-full-150',
+        title: 'KSH - Symulacja Egzaminu (150 pytań)',
         description: 'Pełna symulacja egzaminu zawodowego z KSH',
-        questionCount: 100,
-        timeLimit: 150,
+        questionCount: 150,
+        timeLimit: 190,
         difficulty: 'hard' as const,
         passRate: 52,
         isPremium: false,
@@ -116,8 +116,8 @@ export default function ExamPage() {
             questions = getRandomQuestions(10);
         } else if (exam.id === 'ksh-standard-30') {
             questions = generateBalancedExam(30);
-        } else if (exam.id === 'ksh-full-100') {
-            questions = generateBalancedExam(100);
+        } else if (exam.id === 'ksh-full-150') {
+            questions = generateBalancedExam(150);
         } else if (exam.section) {
             // Filter by section
             const filtered = ALL_KSH_QUESTIONS.filter(q =>
@@ -174,6 +174,18 @@ export default function ExamPage() {
     }
 
     if (view === 'results' && examResult && selectedExam) {
+        // Build questionResults for review
+        const questionResults = examResult.questions.map(q => ({
+            id: q.id,
+            question: q.text,
+            options: q.options,
+            userAnswer: examResult.answers[q.id] || '',
+            correctAnswer: q.correctAnswer,
+            isCorrect: examResult.answers[q.id] === q.correctAnswer,
+            explanation: q.explanation,
+            article: q.article,
+        }));
+
         return (
             <div className="min-h-screen" style={{ background: 'var(--bg-primary)' }}>
                 <ExamResults
@@ -184,6 +196,7 @@ export default function ExamPage() {
                     correctAnswers={examResult.correctAnswers}
                     totalQuestions={examResult.totalQuestions}
                     timeSpent={examResult.timeSpent}
+                    questionResults={questionResults}
                     onRetry={() => {
                         handleStartExam(selectedExam);
                     }}
