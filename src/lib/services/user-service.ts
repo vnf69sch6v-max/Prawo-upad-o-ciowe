@@ -27,6 +27,9 @@ import {
     DEFAULT_USER_PREFERENCES
 } from '../types/user';
 
+// Re-export types for convenience
+export type { LeaderboardEntry };
+
 // Helper to convert Firestore timestamps
 function convertTimestamp(timestamp: Timestamp | Date | undefined): Date | undefined {
     if (!timestamp) return undefined;
