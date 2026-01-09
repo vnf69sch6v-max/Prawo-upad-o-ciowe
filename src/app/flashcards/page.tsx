@@ -6,6 +6,7 @@ import { FlashcardStudy } from '@/components/study';
 import { Plus, BookOpen, Filter, Search, Clock, Target, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 import type { Flashcard, LegalDomain } from '@/types';
+import { useAuth } from '@/hooks/use-auth';
 
 // Mock flashcards for demo
 const MOCK_FLASHCARDS: Flashcard[] = [
@@ -76,6 +77,9 @@ export default function FlashcardsPage() {
     const [selectedDomain, setSelectedDomain] = useState<LegalDomain | 'all'>('all');
     const [searchQuery, setSearchQuery] = useState('');
 
+    const { profile } = useAuth();
+    const stats = profile?.stats;
+
     const filteredCards = MOCK_FLASHCARDS.filter(card => {
         if (selectedDomain !== 'all' && card.domain !== selectedDomain) return false;
         if (searchQuery && !card.question.toLowerCase().includes(searchQuery.toLowerCase())) return false;
@@ -120,12 +124,19 @@ export default function FlashcardsPage() {
                 onNavigate={() => { }}
                 isCollapsed={sidebarCollapsed}
                 onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
-                userStats={{ streak: 12, knowledgeEquity: 12000 }}
+                userStats={{
+                    streak: stats?.currentStreak || 0,
+                    knowledgeEquity: stats?.knowledgeEquity || 0
+                }}
             />
 
             <div className="flex-1 flex flex-col min-w-0">
                 <Header
-                    userStats={{ streak: 12, knowledgeEquity: 12000, rank: 32 }}
+                    userStats={{
+                        streak: stats?.currentStreak || 0,
+                        knowledgeEquity: stats?.knowledgeEquity || 0,
+                        rank: 0
+                    }}
                     currentView="flashcards"
                 />
 
