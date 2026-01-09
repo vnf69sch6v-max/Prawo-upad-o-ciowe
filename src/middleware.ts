@@ -3,13 +3,10 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 // Routes that require authentication
+// Note: /exam, /flashcards, /study are PUBLIC (no login required for KSH quiz)
 const protectedRoutes = [
-    '/dashboard',
-    '/flashcards',
-    '/exam',
-    '/ai',
-    '/leaderboard',
-    '/settings',
+    '/settings',  // Only settings requires auth
+    '/ai',        // AI features require subscription
 ];
 
 // Routes that should redirect to dashboard if already authenticated
