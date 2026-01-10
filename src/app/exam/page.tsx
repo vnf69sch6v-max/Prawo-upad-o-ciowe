@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils/cn';
 import { ALL_KSH_QUESTIONS, getRandomQuestions, generateBalancedExam, getQuestionStats, type ExamQuestion } from '@/lib/data/ksh';
 import { useAuth } from '@/hooks/use-auth';
 import { saveExamResult, addActivity, updateStreak, incrementUserStats } from '@/lib/services/user-service';
+import { LEGAL_DOMAINS, type LegalDomainCategory, type CommercialLawSubdomain } from '@/lib/data/legal-domains';
 
 // Convert KSH questions to ExamSimulator format
 function convertToSimulatorFormat(kshQuestions: ExamQuestion[]) {
@@ -108,8 +109,11 @@ export default function ExamPage() {
     const [currentQuestions, setCurrentQuestions] = useState<ReturnType<typeof convertToSimulatorFormat>>([]);
     const [examResult, setExamResult] = useState<ExamResultData | null>(null);
     const [isSaving, setIsSaving] = useState(false);
+    const [selectedDomain, setSelectedDomain] = useState<LegalDomainCategory>('prawo_handlowe');
+    const [selectedSubdomain, setSelectedSubdomain] = useState<CommercialLawSubdomain | 'all'>('all');
 
     const { user, profile, refreshProfile } = useAuth();
+    const userStats = profile?.stats;
 
     // Get stats for display
     const stats = useMemo(() => getQuestionStats(), []);
@@ -270,12 +274,19 @@ export default function ExamPage() {
                 onNavigate={() => { }}
                 isCollapsed={sidebarCollapsed}
                 onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
-                userStats={{ streak: 12, knowledgeEquity: 12000 }}
+                userStats={{
+                    streak: userStats?.currentStreak || 0,
+                    knowledgeEquity: userStats?.knowledgeEquity || 0
+                }}
             />
 
             <div className="flex-1 flex flex-col min-w-0">
                 <Header
-                    userStats={{ streak: 12, knowledgeEquity: 12000, rank: 32 }}
+                    userStats={{
+                        streak: userStats?.currentStreak || 0,
+                        knowledgeEquity: userStats?.knowledgeEquity || 0,
+                        rank: 0
+                    }}
                     currentView="exam"
                 />
 
@@ -283,11 +294,79 @@ export default function ExamPage() {
                     <div className="max-w-6xl mx-auto space-y-6">
                         {/* Header */}
                         <div>
-                            <h1 className="text-2xl font-bold">Egzaminy KSH</h1>
+                            <h1 className="text-2xl font-bold">Egzaminy Prawnicze</h1>
                             <p className="text-[var(--text-muted)]">
-                                Baza {stats.total} pytań z Kodeksu Spółek Handlowych
+                                Wybierz dziedzinę prawa i rozpocznij naukę
                             </p>
                         </div>
+
+                        {/* Domain Tabs */}
+                        <div className="flex flex-wrap gap-2">
+                            {LEGAL_DOMAINS.filter(d => d.subdomains.length > 0 || d.id === 'prawo_handlowe').map(domain => (
+                                <button
+                                    key={domain.id}
+                                    onClick={() => {
+                                        setSelectedDomain(domain.id);
+                                        setSelectedSubdomain('all');
+                                    }}
+                                    className={cn(
+                                        'px-4 py-2.5 rounded-xl text-sm font-medium transition-all flex items-center gap-2',
+                                        selectedDomain === domain.id
+                                            ? 'bg-purple-600 text-white'
+                                            : 'bg-[var(--bg-card)] text-[var(--text-muted)] hover:text-white hover:bg-[var(--bg-hover)]'
+                                    )}
+                                >
+                                    <span>{domain.icon}</span>
+                                    <span>{domain.name}</span>
+                                </button>
+                            ))}
+                        </div>
+
+                        {/* Subdomain Pills (for commercial law) */}
+                        {selectedDomain === 'prawo_handlowe' && (
+                            <div className="flex flex-wrap gap-2">
+                                <button
+                                    onClick={() => setSelectedSubdomain('all')}
+                                    className={cn(
+                                        'px-3 py-1.5 rounded-lg text-xs font-medium transition-all',
+                                        selectedSubdomain === 'all'
+                                            ? 'bg-purple-500/20 text-purple-400 border border-purple-500/50'
+                                            : 'bg-[var(--bg-hover)] text-[var(--text-muted)] hover:text-white'
+                                    )}
+                                >
+                                    Wszystkie
+                                </button>
+                                {LEGAL_DOMAINS.find(d => d.id === 'prawo_handlowe')?.subdomains.map(sub => (
+                                    <button
+                                        key={sub.id}
+                                        onClick={() => setSelectedSubdomain(sub.id as CommercialLawSubdomain)}
+                                        className={cn(
+                                            'px-3 py-1.5 rounded-lg text-xs font-medium transition-all',
+                                            selectedSubdomain === sub.id
+                                                ? 'bg-purple-500/20 text-purple-400 border border-purple-500/50'
+                                                : 'bg-[var(--bg-hover)] text-[var(--text-muted)] hover:text-white'
+                                        )}
+                                    >
+                                        {sub.shortName}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* Stats - Only show for KSH */}
+                        {selectedDomain === 'prawo_handlowe' && (
+                            <div className="lex-card bg-gradient-to-r from-purple-900/20 to-[var(--bg-card)]">
+                                <div className="flex items-center gap-4">
+                                    <div className="text-3xl">⚖️</div>
+                                    <div>
+                                        <h3 className="font-semibold">Kodeks Spółek Handlowych</h3>
+                                        <p className="text-sm text-[var(--text-muted)]">
+                                            Baza {stats.total} pytań • Przygotuj się do egzaminu zawodowego
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
 
                         {/* Stats */}
                         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
