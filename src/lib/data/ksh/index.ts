@@ -12,11 +12,15 @@ import { KSH_EXAM_QUESTIONS_PART4 } from './ksh-exam-questions-part4';
 import { KSH_EXAM_QUESTIONS_PART5 } from './ksh-exam-questions-part5';
 import { KSH_EXAM_QUESTIONS_PART6 } from './ksh-exam-questions-part6';
 import { KSH_EXAM_QUESTIONS_PART7 } from './ksh-exam-questions-part7';
+import { KSH_EXAM_QUESTIONS_PART8 } from './ksh-exam-questions-part8';
+import { KSH_EXAM_QUESTIONS_PART9 } from './ksh-exam-questions-part9';
+import { KSH_EXAM_QUESTIONS_PART10 } from './ksh-exam-questions-part10';
+import { KSH_EXAM_QUESTIONS_PART11 } from './ksh-exam-questions-part11';
 
 // Re-export the type
 export type { ExamQuestion };
 
-// Combine all questions into one array
+// Combine all questions into one array (~880 questions total)
 export const ALL_KSH_QUESTIONS: ExamQuestion[] = [
     ...PART1,
     ...KSH_EXAM_QUESTIONS_PART2,
@@ -25,6 +29,10 @@ export const ALL_KSH_QUESTIONS: ExamQuestion[] = [
     ...KSH_EXAM_QUESTIONS_PART5,
     ...KSH_EXAM_QUESTIONS_PART6,
     ...KSH_EXAM_QUESTIONS_PART7,
+    ...KSH_EXAM_QUESTIONS_PART8,
+    ...KSH_EXAM_QUESTIONS_PART9,
+    ...KSH_EXAM_QUESTIONS_PART10,
+    ...KSH_EXAM_QUESTIONS_PART11,
 ];
 
 // ============================================================
