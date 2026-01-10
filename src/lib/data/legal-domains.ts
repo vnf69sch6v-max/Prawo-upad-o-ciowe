@@ -57,6 +57,7 @@ export interface SubdomainConfig {
     shortName: string;
     description?: string;
     questionCount?: number;
+    group?: 'ogolne' | 'osobowe' | 'kapitalowe' | 'inne';
 }
 
 // Full domain hierarchy
@@ -67,17 +68,21 @@ export const LEGAL_DOMAINS: DomainConfig[] = [
         icon: '⚖️',
         color: 'purple',
         subdomains: [
-            { id: 'ksh_ogolne', name: 'KSH - Przepisy ogólne', shortName: 'KSH Ogólne' },
-            { id: 'ksh_spolka_jawna', name: 'KSH - Spółka jawna', shortName: 'Sp. jawna' },
-            { id: 'ksh_spolka_partnerska', name: 'KSH - Spółka partnerska', shortName: 'Sp. partnerska' },
-            { id: 'ksh_spolka_komandytowa', name: 'KSH - Spółka komandytowa', shortName: 'Sp. komandytowa' },
-            { id: 'ksh_spolka_komandytowo_akcyjna', name: 'KSH - Spółka komandytowo-akcyjna', shortName: 'S.K.A.' },
-            { id: 'ksh_spolka_zoo', name: 'KSH - Spółka z o.o.', shortName: 'Sp. z o.o.' },
-            { id: 'ksh_spolka_akcyjna', name: 'KSH - Spółka akcyjna', shortName: 'S.A.' },
-            { id: 'ksh_psa', name: 'KSH - Prosta spółka akcyjna', shortName: 'P.S.A.' },
-            { id: 'prawo_upadlosciowe', name: 'Prawo upadłościowe', shortName: 'Upadłościowe' },
-            { id: 'prawo_restrukturyzacyjne', name: 'Prawo restrukturyzacyjne', shortName: 'Restrukturyzacja' },
-            { id: 'ustawa_krs', name: 'Ustawa o KRS', shortName: 'KRS' },
+            // Przepisy ogólne
+            { id: 'ksh_ogolne', name: 'KSH - Przepisy ogólne', shortName: 'KSH Ogólne', group: 'ogolne' },
+            // Spółki osobowe
+            { id: 'ksh_spolka_jawna', name: 'KSH - Spółka jawna', shortName: 'Sp. jawna', group: 'osobowe' },
+            { id: 'ksh_spolka_partnerska', name: 'KSH - Spółka partnerska', shortName: 'Sp. partnerska', group: 'osobowe' },
+            { id: 'ksh_spolka_komandytowa', name: 'KSH - Spółka komandytowa', shortName: 'Sp. komandytowa', group: 'osobowe' },
+            { id: 'ksh_spolka_komandytowo_akcyjna', name: 'KSH - Spółka komandytowo-akcyjna', shortName: 'S.K.A.', group: 'osobowe' },
+            // Spółki kapitałowe
+            { id: 'ksh_spolka_zoo', name: 'KSH - Spółka z o.o.', shortName: 'Sp. z o.o.', group: 'kapitalowe' },
+            { id: 'ksh_spolka_akcyjna', name: 'KSH - Spółka akcyjna', shortName: 'S.A.', group: 'kapitalowe' },
+            { id: 'ksh_psa', name: 'KSH - Prosta spółka akcyjna', shortName: 'P.S.A.', group: 'kapitalowe' },
+            // Inne ustawy
+            { id: 'prawo_upadlosciowe', name: 'Prawo upadłościowe', shortName: 'Upadłościowe', group: 'inne' },
+            { id: 'prawo_restrukturyzacyjne', name: 'Prawo restrukturyzacyjne', shortName: 'Restrukturyzacja', group: 'inne' },
+            { id: 'ustawa_krs', name: 'Ustawa o KRS', shortName: 'KRS', group: 'inne' },
         ]
     },
     {

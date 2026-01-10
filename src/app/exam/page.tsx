@@ -322,34 +322,114 @@ export default function ExamPage() {
                             ))}
                         </div>
 
-                        {/* Subdomain Pills (for commercial law) */}
+                        {/* Subdomain Pills (for commercial law) - organized by groups */}
                         {selectedDomain === 'prawo_handlowe' && (
-                            <div className="flex flex-wrap gap-2">
-                                <button
-                                    onClick={() => setSelectedSubdomain('all')}
-                                    className={cn(
-                                        'px-3 py-1.5 rounded-lg text-xs font-medium transition-all',
-                                        selectedSubdomain === 'all'
-                                            ? 'bg-purple-500/20 text-purple-400 border border-purple-500/50'
-                                            : 'bg-[var(--bg-hover)] text-[var(--text-muted)] hover:text-white'
-                                    )}
-                                >
-                                    Wszystkie
-                                </button>
-                                {LEGAL_DOMAINS.find(d => d.id === 'prawo_handlowe')?.subdomains.map(sub => (
+                            <div className="space-y-3">
+                                {/* All button */}
+                                <div className="flex items-center gap-2">
                                     <button
-                                        key={sub.id}
-                                        onClick={() => setSelectedSubdomain(sub.id as CommercialLawSubdomain)}
+                                        onClick={() => setSelectedSubdomain('all')}
                                         className={cn(
-                                            'px-3 py-1.5 rounded-lg text-xs font-medium transition-all',
-                                            selectedSubdomain === sub.id
-                                                ? 'bg-purple-500/20 text-purple-400 border border-purple-500/50'
-                                                : 'bg-[var(--bg-hover)] text-[var(--text-muted)] hover:text-white'
+                                            'px-4 py-2 rounded-xl text-sm font-medium transition-all',
+                                            selectedSubdomain === 'all'
+                                                ? 'bg-purple-600 text-white'
+                                                : 'bg-[var(--bg-card)] text-[var(--text-muted)] hover:text-white hover:bg-[var(--bg-hover)]'
                                         )}
                                     >
-                                        {sub.shortName}
+                                        Wszystkie pytania
                                     </button>
-                                ))}
+                                </div>
+
+                                {/* KSH Groups */}
+                                <div className="lex-card p-4 space-y-4">
+                                    <h3 className="text-sm font-semibold text-[var(--text-muted)] uppercase tracking-wider">Kodeks Spółek Handlowych</h3>
+
+                                    {/* Ogólne */}
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        <span className="text-xs text-[var(--text-muted)] w-20">Ogólne:</span>
+                                        {LEGAL_DOMAINS.find(d => d.id === 'prawo_handlowe')?.subdomains
+                                            .filter(sub => sub.group === 'ogolne')
+                                            .map(sub => (
+                                                <button
+                                                    key={sub.id}
+                                                    onClick={() => setSelectedSubdomain(sub.id as CommercialLawSubdomain)}
+                                                    className={cn(
+                                                        'px-3 py-1.5 rounded-lg text-xs font-medium transition-all',
+                                                        selectedSubdomain === sub.id
+                                                            ? 'bg-purple-500/20 text-purple-400 border border-purple-500/50'
+                                                            : 'bg-[var(--bg-hover)] text-[var(--text-muted)] hover:text-white'
+                                                    )}
+                                                >
+                                                    {sub.shortName}
+                                                </button>
+                                            ))}
+                                    </div>
+
+                                    {/* Spółki osobowe */}
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        <span className="text-xs text-[var(--text-muted)] w-20">Osobowe:</span>
+                                        {LEGAL_DOMAINS.find(d => d.id === 'prawo_handlowe')?.subdomains
+                                            .filter(sub => sub.group === 'osobowe')
+                                            .map(sub => (
+                                                <button
+                                                    key={sub.id}
+                                                    onClick={() => setSelectedSubdomain(sub.id as CommercialLawSubdomain)}
+                                                    className={cn(
+                                                        'px-3 py-1.5 rounded-lg text-xs font-medium transition-all',
+                                                        selectedSubdomain === sub.id
+                                                            ? 'bg-blue-500/20 text-blue-400 border border-blue-500/50'
+                                                            : 'bg-[var(--bg-hover)] text-[var(--text-muted)] hover:text-white'
+                                                    )}
+                                                >
+                                                    {sub.shortName}
+                                                </button>
+                                            ))}
+                                    </div>
+
+                                    {/* Spółki kapitałowe */}
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        <span className="text-xs text-[var(--text-muted)] w-20">Kapitałowe:</span>
+                                        {LEGAL_DOMAINS.find(d => d.id === 'prawo_handlowe')?.subdomains
+                                            .filter(sub => sub.group === 'kapitalowe')
+                                            .map(sub => (
+                                                <button
+                                                    key={sub.id}
+                                                    onClick={() => setSelectedSubdomain(sub.id as CommercialLawSubdomain)}
+                                                    className={cn(
+                                                        'px-3 py-1.5 rounded-lg text-xs font-medium transition-all',
+                                                        selectedSubdomain === sub.id
+                                                            ? 'bg-green-500/20 text-green-400 border border-green-500/50'
+                                                            : 'bg-[var(--bg-hover)] text-[var(--text-muted)] hover:text-white'
+                                                    )}
+                                                >
+                                                    {sub.shortName}
+                                                </button>
+                                            ))}
+                                    </div>
+                                </div>
+
+                                {/* Inne ustawy */}
+                                <div className="lex-card p-4">
+                                    <h3 className="text-sm font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-3">Inne ustawy</h3>
+                                    <div className="flex flex-wrap gap-2">
+                                        {LEGAL_DOMAINS.find(d => d.id === 'prawo_handlowe')?.subdomains
+                                            .filter(sub => sub.group === 'inne')
+                                            .map(sub => (
+                                                <button
+                                                    key={sub.id}
+                                                    onClick={() => setSelectedSubdomain(sub.id as CommercialLawSubdomain)}
+                                                    className={cn(
+                                                        'px-3 py-1.5 rounded-lg text-xs font-medium transition-all',
+                                                        selectedSubdomain === sub.id
+                                                            ? 'bg-orange-500/20 text-orange-400 border border-orange-500/50'
+                                                            : 'bg-[var(--bg-hover)] text-[var(--text-muted)] hover:text-white'
+                                                    )}
+                                                >
+                                                    {sub.shortName}
+                                                </button>
+                                            ))}
+                                    </div>
+                                </div>
                             </div>
                         )}
 
