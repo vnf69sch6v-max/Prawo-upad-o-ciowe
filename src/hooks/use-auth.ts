@@ -80,13 +80,16 @@ export function useAuth() {
 
         try {
             setError(null);
+            console.log('[AUTH] Starting signIn for:', email);
             const result = await signInWithEmailAndPassword(auth, email, password);
+            console.log('[AUTH] SignIn successful:', result.user.uid);
 
             // Update streak on login
             await updateStreak(result.user.uid);
 
             return result.user;
         } catch (err: unknown) {
+            console.error('[AUTH] SignIn error:', err);
             const message = err instanceof Error ? err.message : 'Failed to sign in';
             setError(message);
             throw err;
@@ -99,19 +102,27 @@ export function useAuth() {
 
         try {
             setError(null);
+            console.log('[AUTH] Starting signup for:', email);
+
             const result = await createUserWithEmailAndPassword(auth, email, password);
+            console.log('[AUTH] Firebase user created:', result.user.uid);
+
             await updateProfile(result.user, { displayName });
+            console.log('[AUTH] Profile updated with displayName:', displayName);
 
             // Create user profile in Firestore
+            console.log('[AUTH] Creating Firestore profile...');
             const newProfile = await createUserProfile(
                 result.user.uid,
                 email,
                 displayName
             );
+            console.log('[AUTH] Firestore profile created successfully');
             setProfile(newProfile);
 
             return result.user;
         } catch (err: unknown) {
+            console.error('[AUTH] Signup error:', err);
             const message = err instanceof Error ? err.message : 'Failed to sign up';
             setError(message);
             throw err;
