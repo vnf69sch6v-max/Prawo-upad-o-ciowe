@@ -175,7 +175,7 @@ export default function ExamPage() {
         setView('exam');
     };
 
-    const handleSubmitExam = async (answers: Record<string, string>) => {
+    const handleSubmitExam = async (answers: Record<string, string>, timeSpent: number) => {
         // Calculate real score
         let correctCount = 0;
         currentQuestions.forEach(q => {
@@ -194,7 +194,7 @@ export default function ExamPage() {
             passed,
             correctAnswers: correctCount,
             totalQuestions,
-            timeSpent: 0,
+            timeSpent,
             answers,
             questions: currentQuestions,
         });
@@ -214,7 +214,7 @@ export default function ExamPage() {
                     passed,
                     correctAnswers: correctCount,
                     totalQuestions,
-                    timeSpent: 0,
+                    timeSpent,
                     questionResults: currentQuestions.map(q => ({
                         questionId: q.id,
                         userAnswer: answers[q.id] || '',

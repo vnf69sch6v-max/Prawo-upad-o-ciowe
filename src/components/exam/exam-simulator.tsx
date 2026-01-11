@@ -17,7 +17,7 @@ interface ExamSimulatorProps {
     examTitle: string;
     questions: ExamQuestion[];
     timeLimit: number; // in seconds, 0 = no limit
-    onSubmit: (answers: Record<string, string>) => void;
+    onSubmit: (answers: Record<string, string>, timeSpent: number) => void;
     onCancel: () => void;
 }
 
@@ -34,6 +34,7 @@ export function ExamSimulator({
     const [flagged, setFlagged] = useState<Set<string>>(new Set());
     const [timeRemaining, setTimeRemaining] = useState(timeLimit);
     const [showConfirm, setShowConfirm] = useState(false);
+    const [startTime] = useState(Date.now());
 
     const currentQuestion = questions[currentIndex];
     const answeredCount = Object.keys(answers).length;
@@ -89,7 +90,9 @@ export function ExamSimulator({
     };
 
     const handleSubmit = () => {
-        onSubmit(answers);
+        // Calculate time spent in seconds
+        const timeSpent = Math.round((Date.now() - startTime) / 1000);
+        onSubmit(answers, timeSpent);
     };
 
     return (
