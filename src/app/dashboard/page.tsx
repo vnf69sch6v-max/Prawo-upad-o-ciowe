@@ -44,7 +44,7 @@ export default function DashboardPage() {
         return (
             <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg-primary)' }}>
                 <div className="text-center">
-                    <Loader2 size={48} className="animate-spin text-purple-500 mx-auto mb-4" />
+                    <Loader2 size={48} className="animate-spin text-[#1a365d] mx-auto mb-4" />
                     <p className="text-[var(--text-muted)]">Ładowanie...</p>
                 </div>
             </div>
@@ -144,33 +144,33 @@ export default function DashboardPage() {
                                     <div className="grid grid-cols-2 gap-3">
                                         <Link
                                             href="/flashcards"
-                                            className="p-4 bg-[var(--bg-hover)] hover:bg-purple-600/20 border border-[var(--border-color)] hover:border-purple-500/50 rounded-xl transition-all text-left"
+                                            className="p-4 bg-[var(--bg-hover)] hover:bg-[#1a365d]/10 border border-[var(--border-color)] hover:border-[#1a365d]/50 rounded-xl transition-all text-left"
                                         >
-                                            <BookOpen size={24} className="text-purple-400 mb-2" />
+                                            <BookOpen size={24} className="text-[#1a365d] mb-2" />
                                             <span className="font-medium block">Fiszki</span>
                                             <p className="text-xs text-[var(--text-muted)] mt-1">Ucz się z fiszek</p>
                                         </Link>
                                         <Link
                                             href="/exam"
-                                            className="p-4 bg-[var(--bg-hover)] hover:bg-purple-600/20 border border-[var(--border-color)] hover:border-purple-500/50 rounded-xl transition-all text-left"
+                                            className="p-4 bg-[var(--bg-hover)] hover:bg-[#1a365d]/10 border border-[var(--border-color)] hover:border-[#1a365d]/50 rounded-xl transition-all text-left"
                                         >
-                                            <Target size={24} className="text-blue-400 mb-2" />
-                                            <span className="font-medium block">Egzamin KSH</span>
+                                            <Target size={24} className="text-[#1a365d] mb-2" />
+                                            <span className="font-medium block">Egzaminy</span>
                                             <p className="text-xs text-[var(--text-muted)] mt-1">Test wiedzy</p>
                                         </Link>
                                         <Link
                                             href="/ai"
-                                            className="p-4 bg-[var(--bg-hover)] hover:bg-purple-600/20 border border-[var(--border-color)] hover:border-purple-500/50 rounded-xl transition-all text-left"
+                                            className="p-4 bg-[var(--bg-hover)] hover:bg-[#1a365d]/10 border border-[var(--border-color)] hover:border-[#1a365d]/50 rounded-xl transition-all text-left"
                                         >
-                                            <Brain size={24} className="text-green-400 mb-2" />
+                                            <Brain size={24} className="text-[#1a365d] mb-2" />
                                             <span className="font-medium block">AI Asystent</span>
                                             <p className="text-xs text-[var(--text-muted)] mt-1">Zapytaj o prawo</p>
                                         </Link>
                                         <Link
                                             href="/leaderboard"
-                                            className="p-4 bg-[var(--bg-hover)] hover:bg-purple-600/20 border border-[var(--border-color)] hover:border-purple-500/50 rounded-xl transition-all text-left"
+                                            className="p-4 bg-[var(--bg-hover)] hover:bg-[#1a365d]/10 border border-[var(--border-color)] hover:border-[#1a365d]/50 rounded-xl transition-all text-left"
                                         >
-                                            <Sparkles size={24} className="text-yellow-400 mb-2" />
+                                            <Sparkles size={24} className="text-[#b8860b] mb-2" />
                                             <span className="font-medium block">Ranking</span>
                                             <p className="text-xs text-[var(--text-muted)] mt-1">Zobacz pozycję</p>
                                         </Link>
@@ -183,19 +183,19 @@ export default function DashboardPage() {
                                 <h3 className="text-lg font-semibold mb-4">📊 Statystyki</h3>
                                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                                     <div className="text-center p-4 bg-[var(--bg-hover)] rounded-xl">
-                                        <p className="text-2xl font-bold text-purple-400">{stats.totalQuestions}</p>
+                                        <p className="text-2xl font-bold text-[#1a365d]">{stats.totalQuestions}</p>
                                         <p className="text-xs text-[var(--text-muted)]">Pytań odpowiedzianych</p>
                                     </div>
                                     <div className="text-center p-4 bg-[var(--bg-hover)] rounded-xl">
-                                        <p className="text-2xl font-bold text-green-400">{stats.correctAnswers}</p>
+                                        <p className="text-2xl font-bold text-[#059669]">{stats.correctAnswers}</p>
                                         <p className="text-xs text-[var(--text-muted)]">Poprawnych odpowiedzi</p>
                                     </div>
                                     <div className="text-center p-4 bg-[var(--bg-hover)] rounded-xl">
-                                        <p className="text-2xl font-bold text-blue-400">{stats.examsPassed}</p>
+                                        <p className="text-2xl font-bold text-[#1a365d]">{stats.examsPassed}</p>
                                         <p className="text-xs text-[var(--text-muted)]">Zdanych egzaminów</p>
                                     </div>
                                     <div className="text-center p-4 bg-[var(--bg-hover)] rounded-xl">
-                                        <p className="text-2xl font-bold text-orange-400">{stats.longestStreak}</p>
+                                        <p className="text-2xl font-bold text-[#b8860b]">{stats.longestStreak}</p>
                                         <p className="text-xs text-[var(--text-muted)]">Najdłuższa passa</p>
                                     </div>
                                 </div>

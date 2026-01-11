@@ -2,25 +2,25 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "LexCapital Pro - Premium Legal Education Platform",
-  description: "Opanuj prawo polskie z zaawansowanym systemem nauki opartym na spaced repetition, AI i gamifikacji.",
-  keywords: ["prawo", "nauka", "fiszki", "egzamin", "aplikacja", "radcowski", "adwokacki"],
+  title: "Savori Legal - Platforma do nauki prawa",
+  description: "Opanuj prawo handlowe i zdaj egzamin za pierwszym razem. 959+ pytań egzaminacyjnych, AI asystent, inteligentne fiszki.",
+  keywords: ["prawo", "KSH", "prawo upadłościowe", "egzamin radcowski", "egzamin adwokacki", "nauka prawa", "fiszki prawnicze"],
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
-    statusBarStyle: "black-translucent",
-    title: "LexCapital",
+    statusBarStyle: "default",
+    title: "Savori Legal",
   },
   openGraph: {
-    title: "LexCapital Pro",
-    description: "Premium Legal Education Platform",
+    title: "Savori Legal",
+    description: "Platforma do nauki prawa handlowego",
     type: "website",
     locale: "pl_PL",
   },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#8b5cf6",
+  themeColor: "#1a365d",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
@@ -38,8 +38,9 @@ export default function RootLayout({
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        {/* Inter for body text, Playfair Display for serif headings */}
         <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap"
           rel="stylesheet"
         />
         {/* PWA */}

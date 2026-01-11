@@ -1,39 +1,44 @@
 @import "tailwindcss";
 
 /* ============================================
-   LEXCAPITAL PRO - Design System
-   Premium Fintech UI for Legal Education
+   SAVORI LEGAL - Design System
+   Minimalist Scholarly Light Mode
    ============================================ */
 
 :root {
-  /* Background Colors - Deep Space */
-  --bg-primary: #0a0e1a;
-  --bg-secondary: #131720;
-  --bg-elevated: #1a1f2e;
-  --bg-card: #1e2433;
-  --bg-hover: #252b3d;
+  /* Background Colors - Clean Light */
+  --bg-primary: #FAFAFA;
+  --bg-secondary: #FFFFFF;
+  --bg-elevated: #FFFFFF;
+  --bg-card: #FFFFFF;
+  --bg-hover: #F5F5F5;
 
   /* Text Colors */
-  --text-primary: #e2e8f0;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
+  --text-primary: #1a1a1a;
+  --text-secondary: #4a4a4a;
+  --text-muted: #6b7280;
+
+  /* Brand Colors - Navy & Gold */
+  --brand-navy: #1a365d;
+  --brand-navy-light: #2c5282;
+  --brand-gold: #b8860b;
+  --brand-gold-light: #d4a51a;
 
   /* Accent Colors */
-  --accent-success: #10b981;
-  --accent-danger: #ef4444;
-  --accent-warning: #f59e0b;
-  --accent-info: #3b82f6;
-  --accent-premium: #8b5cf6;
+  --accent-success: #059669;
+  --accent-danger: #dc2626;
+  --accent-warning: #d97706;
+  --accent-info: #2563eb;
+  --accent-premium: #1a365d;
 
   /* Borders */
-  --border-color: rgba(255, 255, 255, 0.08);
-  --border-active: rgba(139, 92, 246, 0.5);
+  --border-color: #e5e7eb;
+  --border-active: #1a365d;
 
   /* Shadows */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.5);
-  --shadow-glow: 0 0 30px -10px var(--accent-premium);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
 }
 
 /* Base Styles */
@@ -47,8 +52,13 @@ body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   background: var(--bg-primary);
   color: var(--text-primary);
-  line-height: 1.5;
+  line-height: 1.6;
   min-height: 100vh;
+}
+
+/* Serif Font for Headings */
+.font-serif {
+  font-family: 'Playfair Display', Georgia, 'Times New Roman', serif;
 }
 
 /* ============================================
@@ -64,8 +74,8 @@ body {
 }
 
 .lex-card:hover {
-  border-color: var(--border-active);
-  box-shadow: var(--shadow-glow);
+  border-color: var(--brand-navy);
+  box-shadow: var(--shadow-md);
 }
 
 .lex-card-flat {
@@ -79,19 +89,24 @@ body {
 .badge {
   display: inline-flex;
   align-items: center;
-  padding: 0.25rem 0.5rem;
+  padding: 0.25rem 0.75rem;
   border-radius: 9999px;
   font-size: 0.75rem;
   font-weight: 600;
 }
 
 .badge-pro {
-  background: linear-gradient(135deg, #8b5cf6, #6366f1);
+  background: var(--brand-navy);
   color: white;
 }
 
 .badge-new {
-  background: linear-gradient(135deg, #22c55e, #14b8a6);
+  background: var(--accent-success);
+  color: white;
+}
+
+.badge-gold {
+  background: var(--brand-gold);
   color: white;
 }
 
@@ -102,8 +117,8 @@ body {
   justify-content: center;
   gap: 0.5rem;
   padding: 0.75rem 1.5rem;
-  border-radius: 10px;
-  font-weight: 600;
+  border-radius: 8px;
+  font-weight: 500;
   font-size: 0.875rem;
   cursor: pointer;
   transition: all 0.2s;
@@ -111,24 +126,32 @@ body {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #8b5cf6, #6366f1);
+  background: var(--brand-navy);
   color: white;
 }
 
 .btn-primary:hover {
-  background: linear-gradient(135deg, #7c3aed, #4f46e5);
-  transform: translateY(-1px);
+  background: var(--brand-navy-light);
 }
 
 .btn-secondary {
-  background: var(--bg-hover);
+  background: white;
   color: var(--text-primary);
   border: 1px solid var(--border-color);
 }
 
 .btn-secondary:hover {
-  background: var(--bg-elevated);
-  border-color: var(--border-active);
+  border-color: var(--brand-navy);
+  color: var(--brand-navy);
+}
+
+.btn-gold {
+  background: var(--brand-gold);
+  color: white;
+}
+
+.btn-gold:hover {
+  background: var(--brand-gold-light);
 }
 
 .btn-ghost {
@@ -169,46 +192,6 @@ body {
   }
 }
 
-@keyframes glow {
-
-  0%,
-  100% {
-    box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
-  }
-
-  50% {
-    box-shadow: 0 0 30px rgba(139, 92, 246, 0.5);
-  }
-}
-
-@keyframes confetti-fall {
-  0% {
-    transform: translateY(-10px) rotate(0deg);
-    opacity: 1;
-  }
-
-  100% {
-    transform: translateY(100vh) rotate(720deg);
-    opacity: 0;
-  }
-}
-
-.animate-fade-in {
-  animation: fadeIn 0.3s ease-out;
-}
-
-.animate-pulse {
-  animation: pulse 2s infinite;
-}
-
-.animate-glow {
-  animation: glow 2s infinite;
-}
-
-.animate-confetti {
-  animation: confetti-fall 3s ease-out forwards;
-}
-
 @keyframes slide-up {
   from {
     opacity: 0;
@@ -221,12 +204,20 @@ body {
   }
 }
 
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.animate-pulse {
+  animation: pulse 2s infinite;
+}
+
 .animate-slide-up {
   animation: slide-up 0.3s ease-out forwards;
 }
 
 /* ============================================
-   SCROLLBAR
+   SCROLLBAR - Subtle Light Mode
    ============================================ */
 
 ::-webkit-scrollbar {
@@ -239,15 +230,55 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--bg-hover);
+  background: #d1d5db;
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--text-muted);
+  background: #9ca3af;
 }
 
 /* Mobile Safe Area */
 .pb-safe {
   padding-bottom: max(env(safe-area-inset-bottom), 12px);
+}
+
+/* ============================================
+   FORM ELEMENTS
+   ============================================ */
+
+input,
+textarea,
+select {
+  font-family: inherit;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: var(--brand-navy);
+}
+
+/* ============================================
+   LINKS
+   ============================================ */
+
+a {
+  color: var(--brand-navy);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+a:hover {
+  color: var(--brand-navy-light);
+}
+
+/* ============================================
+   SELECTION
+   ============================================ */
+
+::selection {
+  background: var(--brand-navy);
+  color: white;
 }
