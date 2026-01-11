@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/hooks';
 import { cn } from '@/lib/utils/cn';
-import { Eye, EyeOff, Loader2, Check, X, Scale, CheckCircle, Sparkles, Crown } from 'lucide-react';
+import { Eye, EyeOff, Loader2, Check, X, Scale, CheckCircle, Crown } from 'lucide-react';
 
 // Prevent static generation - requires Firebase which needs runtime env vars
 export const dynamic = 'force-dynamic';
@@ -70,66 +70,60 @@ export default function SignupPage() {
     // Don't show while checking auth
     if (authLoading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-[#0a0a0f]">
-                <Loader2 size={32} className="animate-spin text-purple-500" />
+            <div className="min-h-screen flex items-center justify-center bg-[#FAFAFA]">
+                <Loader2 size={32} className="animate-spin text-[#1a365d]" />
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen flex bg-[#0a0a0f]">
+        <div className="min-h-screen flex bg-[#FAFAFA]">
             {/* Left Side - Pricing Info */}
-            <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-purple-900/40 to-pink-900/20 p-12 flex-col justify-between relative overflow-hidden">
-                {/* Background Effects */}
-                <div className="absolute top-20 left-10 w-72 h-72 bg-purple-600/20 rounded-full blur-[100px]" />
-                <div className="absolute bottom-20 right-10 w-60 h-60 bg-pink-600/20 rounded-full blur-[100px]" />
-
+            <div className="hidden lg:flex lg:w-1/2 bg-[#1a365d] p-12 flex-col justify-between relative">
                 {/* Logo */}
-                <div className="relative z-10">
+                <div>
                     <Link href="/" className="flex items-center gap-3">
-                        <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center">
-                            <Scale size={24} className="text-white" />
-                        </div>
-                        <span className="text-2xl font-bold text-white">LexCapital</span>
+                        <Scale size={28} className="text-white" />
+                        <span className="text-2xl font-serif font-bold text-white">Savori Legal</span>
                     </Link>
                 </div>
 
                 {/* Pricing Cards */}
-                <div className="relative z-10 space-y-6">
+                <div className="space-y-6">
                     <div>
-                        <h1 className="text-3xl font-bold text-white mb-2">
+                        <h1 className="text-3xl font-serif font-bold text-white mb-2">
                             Wybierz swój plan
                         </h1>
-                        <p className="text-gray-400">
+                        <p className="text-gray-300">
                             Możesz zmienić plan w dowolnym momencie
                         </p>
                     </div>
 
                     {/* Free Plan */}
                     <div className={cn(
-                        "p-6 rounded-2xl border transition-all cursor-pointer",
+                        "p-6 rounded-xl border-2 transition-all cursor-pointer",
                         !wantsPro
-                            ? "bg-white/10 border-purple-500"
-                            : "bg-white/5 border-white/10 hover:border-white/20"
+                            ? "bg-white/10 border-[#b8860b]"
+                            : "bg-white/5 border-white/20 hover:border-white/40"
                     )}>
                         <div className="flex items-start justify-between mb-4">
                             <div>
                                 <h3 className="text-lg font-semibold text-white">Free</h3>
-                                <p className="text-2xl font-bold text-white">0 zł</p>
+                                <p className="text-2xl font-serif font-bold text-white">0 zł</p>
                             </div>
                             {!wantsPro && (
-                                <div className="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center">
+                                <div className="w-6 h-6 bg-[#b8860b] rounded-full flex items-center justify-center">
                                     <Check size={14} className="text-white" />
                                 </div>
                             )}
                         </div>
-                        <ul className="space-y-2 text-sm text-gray-400">
+                        <ul className="space-y-2 text-sm text-gray-300">
                             <li className="flex items-center gap-2">
-                                <CheckCircle size={14} className="text-gray-500" />
+                                <CheckCircle size={14} className="text-gray-400" />
                                 3 egzaminy / miesiąc
                             </li>
                             <li className="flex items-center gap-2">
-                                <CheckCircle size={14} className="text-gray-500" />
+                                <CheckCircle size={14} className="text-gray-400" />
                                 50 pytań KSH
                             </li>
                         </ul>
@@ -137,12 +131,12 @@ export default function SignupPage() {
 
                     {/* Pro Plan */}
                     <div className={cn(
-                        "p-6 rounded-2xl border relative transition-all cursor-pointer",
+                        "p-6 rounded-xl border-2 relative transition-all cursor-pointer",
                         wantsPro
-                            ? "bg-gradient-to-br from-purple-900/50 to-pink-900/30 border-purple-500"
-                            : "bg-white/5 border-white/10 hover:border-purple-500/50"
+                            ? "bg-white/10 border-[#b8860b]"
+                            : "bg-white/5 border-white/20 hover:border-[#b8860b]/50"
                     )}>
-                        <div className="absolute -top-2 right-4 px-3 py-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs font-semibold rounded-full flex items-center gap-1">
+                        <div className="absolute -top-2 right-4 px-3 py-1 bg-[#b8860b] text-white text-xs font-semibold rounded-full flex items-center gap-1">
                             <Crown size={12} />
                             POLECANY
                         </div>
@@ -150,44 +144,44 @@ export default function SignupPage() {
                             <div>
                                 <h3 className="text-lg font-semibold text-white">Pro</h3>
                                 <div className="flex items-baseline gap-2">
-                                    <p className="text-2xl font-bold text-white">149 zł</p>
-                                    <span className="text-gray-400">/ rok</span>
+                                    <p className="text-2xl font-serif font-bold text-white">149 zł</p>
+                                    <span className="text-gray-300">/ rok</span>
                                 </div>
                             </div>
                             {wantsPro && (
-                                <div className="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center">
+                                <div className="w-6 h-6 bg-[#b8860b] rounded-full flex items-center justify-center">
                                     <Check size={14} className="text-white" />
                                 </div>
                             )}
                         </div>
                         <ul className="space-y-2 text-sm">
                             <li className="flex items-center gap-2 text-white">
-                                <CheckCircle size={14} className="text-purple-400" />
+                                <CheckCircle size={14} className="text-[#b8860b]" />
                                 <strong>Nieograniczone</strong> egzaminy
                             </li>
                             <li className="flex items-center gap-2 text-white">
-                                <CheckCircle size={14} className="text-purple-400" />
+                                <CheckCircle size={14} className="text-[#b8860b]" />
                                 <strong>959+</strong> pytań
                             </li>
                             <li className="flex items-center gap-2 text-white">
-                                <CheckCircle size={14} className="text-purple-400" />
-                                AI Asystent
+                                <CheckCircle size={14} className="text-[#b8860b]" />
+                                AI Asystent bez limitu
                             </li>
                             <li className="flex items-center gap-2 text-white">
-                                <CheckCircle size={14} className="text-purple-400" />
+                                <CheckCircle size={14} className="text-[#b8860b]" />
                                 Pełna analityka
                             </li>
                         </ul>
                     </div>
 
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-gray-400">
                         * Płatność po rejestracji. 7 dni gwarancji zwrotu.
                     </p>
                 </div>
 
                 {/* Footer */}
-                <p className="relative z-10 text-sm text-gray-500">
-                    © 2026 LexCapital. Wszystkie prawa zastrzeżone.
+                <p className="text-sm text-gray-400">
+                    © 2026 Savori Legal. Wszystkie prawa zastrzeżone.
                 </p>
             </div>
 
@@ -197,70 +191,64 @@ export default function SignupPage() {
                     {/* Mobile Logo */}
                     <div className="lg:hidden text-center mb-8">
                         <Link href="/" className="inline-flex items-center gap-3">
-                            <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center">
-                                <Scale size={24} className="text-white" />
-                            </div>
-                            <span className="text-2xl font-bold text-white">LexCapital</span>
+                            <Scale size={28} className="text-[#1a365d]" />
+                            <span className="text-2xl font-serif font-bold text-[#1a365d]">Savori Legal</span>
                         </Link>
                     </div>
 
                     <div className="text-center mb-8">
-                        <div className="inline-flex items-center gap-2 px-3 py-1 bg-purple-500/10 border border-purple-500/20 rounded-full text-sm text-purple-300 mb-4">
-                            <Sparkles size={14} />
-                            Darmowe konto
-                        </div>
-                        <h2 className="text-2xl font-bold text-white">Utwórz konto</h2>
-                        <p className="text-gray-400 mt-2">Rozpocznij przygotowania do egzaminu</p>
+                        <h2 className="text-2xl font-serif font-bold text-[#1a365d]">Utwórz konto</h2>
+                        <p className="text-gray-500 mt-2">Rozpocznij przygotowania do egzaminu</p>
                     </div>
 
                     {/* Form */}
-                    <div className="bg-white/5 border border-white/10 rounded-2xl p-8">
+                    <div className="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm">
                         <form onSubmit={handleSubmit} className="space-y-5">
                             {error && (
-                                <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">
+                                <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
                                     {error}
                                 </div>
                             )}
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-2">Imię i nazwisko</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Imię i nazwisko</label>
                                 <input
                                     type="text"
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
-                                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:border-purple-500 focus:outline-none transition-colors"
+                                    className="w-full px-4 py-3 bg-[#FAFAFA] border border-gray-200 rounded-lg text-gray-900 placeholder-gray-400 focus:border-[#1a365d] focus:outline-none transition-colors"
                                     placeholder="Jan Kowalski"
                                     required
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-2">Email</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
                                 <input
                                     type="email"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:border-purple-500 focus:outline-none transition-colors"
+                                    className="w-full px-4 py-3 bg-[#FAFAFA] border border-gray-200 rounded-lg text-gray-900 placeholder-gray-400 focus:border-[#1a365d] focus:outline-none transition-colors"
                                     placeholder="twoj@email.pl"
                                     required
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-2">Hasło</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Hasło</label>
                                 <div className="relative">
                                     <input
                                         type={showPassword ? 'text' : 'password'}
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
-                                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:border-purple-500 focus:outline-none transition-colors pr-12"
+                                        className="w-full px-4 py-3 bg-[#FAFAFA] border border-gray-200 rounded-lg text-gray-900 placeholder-gray-400 focus:border-[#1a365d] focus:outline-none transition-colors pr-12"
                                         placeholder="••••••••"
                                         required
                                     />
                                     <button
                                         type="button"
                                         onClick={() => setShowPassword(!showPassword)}
-                                        className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white"
+                                        className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                                     >
                                         {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                                     </button>
@@ -268,7 +256,7 @@ export default function SignupPage() {
 
                                 {/* Password requirements */}
                                 {password && (
-                                    <div className="mt-3 flex flex-wrap gap-3">
+                                    <div className="mt-3 flex flex-wrap gap-2">
                                         {[
                                             { key: 'length', label: '8+ znaków' },
                                             { key: 'uppercase', label: 'Wielka litera' },
@@ -277,8 +265,8 @@ export default function SignupPage() {
                                             <div key={key} className={cn(
                                                 "flex items-center gap-1.5 text-xs px-2 py-1 rounded",
                                                 passwordChecks[key as keyof typeof passwordChecks]
-                                                    ? 'bg-green-500/10 text-green-400'
-                                                    : 'bg-white/5 text-gray-500'
+                                                    ? 'bg-green-50 text-green-700'
+                                                    : 'bg-gray-100 text-gray-500'
                                             )}>
                                                 {passwordChecks[key as keyof typeof passwordChecks] ? (
                                                     <Check size={12} />
@@ -296,8 +284,8 @@ export default function SignupPage() {
                                 type="submit"
                                 disabled={loading || !isPasswordValid}
                                 className={cn(
-                                    'w-full py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl transition-all',
-                                    'hover:opacity-90',
+                                    'w-full py-3 bg-[#1a365d] text-white font-medium rounded-lg transition-all',
+                                    'hover:bg-[#2c5282]',
                                     'disabled:opacity-50 disabled:cursor-not-allowed',
                                     'flex items-center justify-center gap-2'
                                 )}
@@ -309,10 +297,10 @@ export default function SignupPage() {
 
                         <div className="relative my-6">
                             <div className="absolute inset-0 flex items-center">
-                                <div className="w-full border-t border-white/10" />
+                                <div className="w-full border-t border-gray-200" />
                             </div>
                             <div className="relative flex justify-center text-sm">
-                                <span className="px-4 bg-[#0d0d12] text-gray-500">lub</span>
+                                <span className="px-4 bg-white text-gray-400">lub</span>
                             </div>
                         </div>
 
@@ -320,8 +308,8 @@ export default function SignupPage() {
                             onClick={handleGoogleSignIn}
                             disabled={googleLoading}
                             className={cn(
-                                'w-full py-3 bg-white/5 border border-white/10 rounded-xl font-medium text-white transition-all',
-                                'hover:bg-white/10',
+                                'w-full py-3 bg-white border border-gray-200 rounded-lg font-medium text-gray-700 transition-all',
+                                'hover:bg-gray-50 hover:border-gray-300',
                                 'disabled:opacity-50 disabled:cursor-not-allowed',
                                 'flex items-center justify-center gap-3'
                             )}
@@ -339,18 +327,18 @@ export default function SignupPage() {
                             Kontynuuj z Google
                         </button>
 
-                        <p className="text-center text-sm text-gray-400 mt-6">
+                        <p className="text-center text-sm text-gray-500 mt-6">
                             Masz już konto?{' '}
-                            <Link href="/login" className="text-purple-400 hover:underline font-medium">
+                            <Link href="/login" className="text-[#1a365d] hover:underline font-medium">
                                 Zaloguj się
                             </Link>
                         </p>
                     </div>
 
-                    <p className="text-center text-xs text-gray-500 mt-6">
+                    <p className="text-center text-xs text-gray-400 mt-6">
                         Rejestrując się, akceptujesz{' '}
-                        <a href="#" className="underline hover:text-gray-400">Regulamin</a> i{' '}
-                        <a href="#" className="underline hover:text-gray-400">Politykę prywatności</a>
+                        <a href="#" className="underline hover:text-gray-600">Regulamin</a> i{' '}
+                        <a href="#" className="underline hover:text-gray-600">Politykę prywatności</a>
                     </p>
                 </div>
             </div>

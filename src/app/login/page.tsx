@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/hooks';
 import { cn } from '@/lib/utils/cn';
-import { Eye, EyeOff, Loader2, CheckCircle, Scale, Target, Brain, Zap } from 'lucide-react';
+import { Eye, EyeOff, Loader2, Scale, CheckCircle } from 'lucide-react';
 
 // Prevent static generation - requires Firebase which needs runtime env vars
 export const dynamic = 'force-dynamic';
@@ -59,84 +59,65 @@ export default function LoginPage() {
     // Don't show while checking auth
     if (authLoading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-[#0a0a0f]">
-                <Loader2 size={32} className="animate-spin text-purple-500" />
+            <div className="min-h-screen flex items-center justify-center bg-[#FAFAFA]">
+                <Loader2 size={32} className="animate-spin text-[#1a365d]" />
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen flex bg-[#0a0a0f]">
+        <div className="min-h-screen flex bg-[#FAFAFA]">
             {/* Left Side - Info Panel */}
-            <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-purple-900/40 to-pink-900/20 p-12 flex-col justify-between relative overflow-hidden">
-                {/* Background Effects */}
-                <div className="absolute top-20 left-10 w-72 h-72 bg-purple-600/20 rounded-full blur-[100px]" />
-                <div className="absolute bottom-20 right-10 w-60 h-60 bg-pink-600/20 rounded-full blur-[100px]" />
-
+            <div className="hidden lg:flex lg:w-1/2 bg-[#1a365d] p-12 flex-col justify-between relative">
                 {/* Logo */}
-                <div className="relative z-10">
+                <div>
                     <Link href="/" className="flex items-center gap-3">
-                        <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center">
-                            <Scale size={24} className="text-white" />
-                        </div>
-                        <span className="text-2xl font-bold text-white">LexCapital</span>
+                        <Scale size={28} className="text-white" />
+                        <span className="text-2xl font-serif font-bold text-white">Savori Legal</span>
                     </Link>
                 </div>
 
                 {/* Content */}
-                <div className="relative z-10 space-y-8">
+                <div className="space-y-8">
                     <div>
-                        <h1 className="text-4xl font-bold text-white mb-4">
-                            Zdaj egzamin zawodowy za pierwszym razem
+                        <h1 className="text-4xl font-serif font-bold text-white mb-4 leading-tight">
+                            Opanuj prawo handlowe.
+                            <br />
+                            <span className="text-[#b8860b]">Zdaj za pierwszym razem.</span>
                         </h1>
-                        <p className="text-lg text-gray-300">
-                            Dołącz do prawników, którzy przygotowują się z LexCapital Pro
+                        <p className="text-lg text-gray-300 leading-relaxed">
+                            Kompleksowa platforma do przygotowania się do egzaminu radcowskiego i adwokackiego.
                         </p>
                     </div>
 
                     <div className="space-y-4">
                         <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
-                                <Target size={20} className="text-purple-400" />
-                            </div>
-                            <div>
-                                <p className="font-medium text-white">959+ pytań egzaminacyjnych</p>
-                                <p className="text-sm text-gray-400">KSH + Prawo Upadłościowe</p>
-                            </div>
+                            <CheckCircle size={20} className="text-[#b8860b]" />
+                            <span className="text-white">959+ pytań egzaminacyjnych</span>
                         </div>
                         <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
-                                <Brain size={20} className="text-blue-400" />
-                            </div>
-                            <div>
-                                <p className="font-medium text-white">AI Asystent prawny</p>
-                                <p className="text-sm text-gray-400">Odpowiedzi 24/7 na każde pytanie</p>
-                            </div>
+                            <CheckCircle size={20} className="text-[#b8860b]" />
+                            <span className="text-white">AI Asystent prawny dostępny 24/7</span>
                         </div>
                         <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
-                                <Zap size={20} className="text-green-400" />
-                            </div>
-                            <div>
-                                <p className="font-medium text-white">Symulacje egzaminów</p>
-                                <p className="text-sm text-gray-400">Realistyczne warunki testowe</p>
-                            </div>
+                            <CheckCircle size={20} className="text-[#b8860b]" />
+                            <span className="text-white">Inteligentny system powtórek</span>
                         </div>
                     </div>
 
                     {/* Pricing Badge */}
-                    <div className="inline-block p-4 bg-white/5 border border-white/10 rounded-2xl">
+                    <div className="inline-block p-4 bg-white/10 rounded-xl">
                         <div className="flex items-baseline gap-2">
-                            <span className="text-3xl font-bold text-white">149 zł</span>
-                            <span className="text-gray-400">/ rok</span>
+                            <span className="text-3xl font-serif font-bold text-white">149 zł</span>
+                            <span className="text-gray-300">/ rok</span>
                         </div>
-                        <p className="text-sm text-gray-400 mt-1">Pełny dostęp do wszystkiego</p>
+                        <p className="text-sm text-gray-300 mt-1">Pełny dostęp do wszystkiego</p>
                     </div>
                 </div>
 
                 {/* Footer */}
-                <p className="relative z-10 text-sm text-gray-500">
-                    © 2026 LexCapital. Wszystkie prawa zastrzeżone.
+                <p className="text-sm text-gray-400">
+                    © 2026 Savori Legal. Wszystkie prawa zastrzeżone.
                 </p>
             </div>
 
@@ -146,54 +127,52 @@ export default function LoginPage() {
                     {/* Mobile Logo */}
                     <div className="lg:hidden text-center mb-8">
                         <Link href="/" className="inline-flex items-center gap-3">
-                            <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center">
-                                <Scale size={24} className="text-white" />
-                            </div>
-                            <span className="text-2xl font-bold text-white">LexCapital</span>
+                            <Scale size={28} className="text-[#1a365d]" />
+                            <span className="text-2xl font-serif font-bold text-[#1a365d]">Savori Legal</span>
                         </Link>
                     </div>
 
                     <div className="text-center mb-8">
-                        <h2 className="text-2xl font-bold text-white">Witaj z powrotem!</h2>
-                        <p className="text-gray-400 mt-2">Zaloguj się do swojego konta</p>
+                        <h2 className="text-2xl font-serif font-bold text-[#1a365d]">Witaj z powrotem</h2>
+                        <p className="text-gray-500 mt-2">Zaloguj się do swojego konta</p>
                     </div>
 
                     {/* Form */}
-                    <div className="bg-white/5 border border-white/10 rounded-2xl p-8">
+                    <div className="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm">
                         <form onSubmit={handleSubmit} className="space-y-5">
                             {error && (
-                                <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">
+                                <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
                                     {error}
                                 </div>
                             )}
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-2">Email</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
                                 <input
                                     type="email"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:border-purple-500 focus:outline-none transition-colors"
+                                    className="w-full px-4 py-3 bg-[#FAFAFA] border border-gray-200 rounded-lg text-gray-900 placeholder-gray-400 focus:border-[#1a365d] focus:outline-none transition-colors"
                                     placeholder="twoj@email.pl"
                                     required
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-2">Hasło</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Hasło</label>
                                 <div className="relative">
                                     <input
                                         type={showPassword ? 'text' : 'password'}
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
-                                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:border-purple-500 focus:outline-none transition-colors pr-12"
+                                        className="w-full px-4 py-3 bg-[#FAFAFA] border border-gray-200 rounded-lg text-gray-900 placeholder-gray-400 focus:border-[#1a365d] focus:outline-none transition-colors pr-12"
                                         placeholder="••••••••"
                                         required
                                     />
                                     <button
                                         type="button"
                                         onClick={() => setShowPassword(!showPassword)}
-                                        className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white"
+                                        className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                                     >
                                         {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                                     </button>
@@ -201,7 +180,7 @@ export default function LoginPage() {
                             </div>
 
                             <div className="flex justify-end">
-                                <Link href="/forgot-password" className="text-sm text-purple-400 hover:underline">
+                                <Link href="/forgot-password" className="text-sm text-[#1a365d] hover:underline">
                                     Zapomniałeś hasła?
                                 </Link>
                             </div>
@@ -210,8 +189,8 @@ export default function LoginPage() {
                                 type="submit"
                                 disabled={loading}
                                 className={cn(
-                                    'w-full py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl transition-all',
-                                    'hover:opacity-90',
+                                    'w-full py-3 bg-[#1a365d] text-white font-medium rounded-lg transition-all',
+                                    'hover:bg-[#2c5282]',
                                     'disabled:opacity-50 disabled:cursor-not-allowed',
                                     'flex items-center justify-center gap-2'
                                 )}
@@ -223,10 +202,10 @@ export default function LoginPage() {
 
                         <div className="relative my-6">
                             <div className="absolute inset-0 flex items-center">
-                                <div className="w-full border-t border-white/10" />
+                                <div className="w-full border-t border-gray-200" />
                             </div>
                             <div className="relative flex justify-center text-sm">
-                                <span className="px-4 bg-[#0d0d12] text-gray-500">lub</span>
+                                <span className="px-4 bg-white text-gray-400">lub</span>
                             </div>
                         </div>
 
@@ -234,8 +213,8 @@ export default function LoginPage() {
                             onClick={handleGoogleSignIn}
                             disabled={googleLoading}
                             className={cn(
-                                'w-full py-3 bg-white/5 border border-white/10 rounded-xl font-medium text-white transition-all',
-                                'hover:bg-white/10',
+                                'w-full py-3 bg-white border border-gray-200 rounded-lg font-medium text-gray-700 transition-all',
+                                'hover:bg-gray-50 hover:border-gray-300',
                                 'disabled:opacity-50 disabled:cursor-not-allowed',
                                 'flex items-center justify-center gap-3'
                             )}
@@ -253,9 +232,9 @@ export default function LoginPage() {
                             Kontynuuj z Google
                         </button>
 
-                        <p className="text-center text-sm text-gray-400 mt-6">
+                        <p className="text-center text-sm text-gray-500 mt-6">
                             Nie masz konta?{' '}
-                            <Link href="/signup" className="text-purple-400 hover:underline font-medium">
+                            <Link href="/signup" className="text-[#1a365d] hover:underline font-medium">
                                 Zarejestruj się
                             </Link>
                         </p>
