@@ -27,7 +27,7 @@ export default function ForgotPasswordPage() {
                 {/* Logo */}
                 <div className="text-center mb-8">
                     <div className="inline-flex items-center gap-3 mb-4">
-                        <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-purple-400 rounded-xl flex items-center justify-center text-white font-bold text-xl">
+                        <div className="w-12 h-12 bg-gradient-to-br from-#1a365d to-#1a365d rounded-xl flex items-center justify-center text-white font-bold text-xl">
                             L
                         </div>
                         <span className="text-2xl font-bold">LexCapital</span>
@@ -69,7 +69,7 @@ export default function ForgotPasswordPage() {
                                         onChange={(e) => setEmail(e.target.value)}
                                         placeholder="jan@example.com"
                                         required
-                                        className="w-full pl-10 pr-4 py-3 bg-[var(--bg-hover)] border border-[var(--border-color)] rounded-xl focus:border-purple-500 focus:outline-none"
+                                        className="w-full pl-10 pr-4 py-3 bg-[var(--bg-hover)] border border-[var(--border-color)] rounded-xl focus:border-#1a365d focus:outline-none"
                                     />
                                 </div>
                             </div>
@@ -87,7 +87,7 @@ export default function ForgotPasswordPage() {
                     <div className="mt-6 pt-6 border-t border-[var(--border-color)] text-center">
                         <Link
                             href="/login"
-                            className="inline-flex items-center gap-2 text-sm text-purple-400 hover:text-purple-300"
+                            className="inline-flex items-center gap-2 text-sm text-#1a365d hover:text-purple-300"
                         >
                             <ArrowLeft size={16} />
                             Wróć do logowania

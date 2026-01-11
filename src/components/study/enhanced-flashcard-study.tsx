@@ -166,7 +166,7 @@ function Flashcard3D({
                     {/* Legal reference */}
                     {card.legalReference && (
                         <div className="mb-4">
-                            <span className="px-3 py-1 bg-purple-500/20 text-purple-400 rounded-full text-sm font-medium">
+                            <span className="px-3 py-1 bg-#1a365d/20 text-#1a365d rounded-full text-sm font-medium">
                                 {card.legalReference}
                             </span>
                         </div>
@@ -242,7 +242,7 @@ function SessionComplete({
                     <p className="text-xs text-[var(--text-muted)]">Skuteczność</p>
                 </div>
                 <div className="lex-card text-center">
-                    <p className="text-3xl font-bold text-purple-400">+{stats.xpEarned}</p>
+                    <p className="text-3xl font-bold text-#1a365d">+{stats.xpEarned}</p>
                     <p className="text-xs text-[var(--text-muted)]">XP zdobyte</p>
                 </div>
                 <div className="lex-card text-center">
@@ -458,7 +458,7 @@ export function Enhanced3DFlashcardStudy({
                     </div>
                     <div className="h-2 bg-[var(--bg-hover)] rounded-full overflow-hidden">
                         <div
-                            className="h-full bg-gradient-to-r from-purple-600 to-purple-400 transition-all duration-300"
+                            className="h-full bg-gradient-to-r from-#1a365d to-#1a365d transition-all duration-300"
                             style={{ width: `${progress}%` }}
                         />
                     </div>
@@ -468,7 +468,7 @@ export function Enhanced3DFlashcardStudy({
                     onClick={() => setShowKeyboardHints(!showKeyboardHints)}
                     className={cn(
                         'p-2 rounded-lg transition-colors',
-                        showKeyboardHints ? 'bg-purple-500/20 text-purple-400' : 'hover:bg-[var(--bg-hover)]'
+                        showKeyboardHints ? 'bg-#1a365d/20 text-#1a365d' : 'hover:bg-[var(--bg-hover)]'
                     )}
                 >
                     <Keyboard size={20} />

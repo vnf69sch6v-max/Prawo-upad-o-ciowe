@@ -27,7 +27,7 @@ export function Badge({
                     'bg-red-500/20 text-red-400': variant === 'danger',
                     'bg-blue-500/20 text-blue-400': variant === 'info',
                     'bg-gradient-to-r from-yellow-500 to-yellow-600 text-white': variant === 'premium',
-                    'bg-purple-600 text-white': variant === 'pro',
+                    'bg-#1a365d text-white': variant === 'pro',
                     'bg-green-600 text-white': variant === 'new',
                 },
                 className

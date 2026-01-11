@@ -95,7 +95,7 @@ function QuestionGrid({
                             onClick={() => onSelect(i)}
                             className={cn(
                                 'w-8 h-8 rounded-lg text-xs font-medium transition-all relative',
-                                isCurrent && 'ring-2 ring-purple-500',
+                                isCurrent && 'ring-2 ring-#1a365d',
                                 isAnswered && !isCurrent && 'bg-green-500/20 text-green-400',
                                 !isAnswered && !isCurrent && 'bg-[var(--bg-hover)] text-[var(--text-muted)]',
                                 isFlagged && 'ring-2 ring-yellow-500'
@@ -346,7 +346,7 @@ export function EnhancedExamInterface({
                             </span>
                             <div className="w-32 h-2 bg-[var(--bg-hover)] rounded-full overflow-hidden">
                                 <div
-                                    className="h-full bg-gradient-to-r from-purple-600 to-purple-400"
+                                    className="h-full bg-gradient-to-r from-#1a365d to-#1a365d"
                                     style={{ width: `${((state.currentIndex + 1) / questions.length) * 100}%` }}
                                 />
                             </div>
@@ -358,7 +358,7 @@ export function EnhancedExamInterface({
                                 onClick={() => setShowGrid(!showGrid)}
                                 className={cn(
                                     'p-2 rounded-lg transition-colors',
-                                    showGrid ? 'bg-purple-500/20 text-purple-400' : 'hover:bg-[var(--bg-hover)]'
+                                    showGrid ? 'bg-#1a365d/20 text-#1a365d' : 'hover:bg-[var(--bg-hover)]'
                                 )}
                             >
                                 <Grid size={20} />
@@ -446,14 +446,14 @@ export function EnhancedExamInterface({
                                         className={cn(
                                             'w-full p-4 rounded-xl border text-left transition-all flex items-center gap-4',
                                             isSelected(option.id)
-                                                ? 'border-purple-500 bg-purple-500/10'
-                                                : 'border-[var(--border-color)] hover:border-purple-500/30 hover:bg-[var(--bg-hover)]'
+                                                ? 'border-#1a365d bg-#1a365d/10'
+                                                : 'border-[var(--border-color)] hover:border-#1a365d/30 hover:bg-[var(--bg-hover)]'
                                         )}
                                     >
                                         <span className={cn(
                                             'w-8 h-8 rounded-lg flex items-center justify-center font-semibold text-sm transition-colors',
                                             isSelected(option.id)
-                                                ? 'bg-purple-500 text-white'
+                                                ? 'bg-#1a365d text-white'
                                                 : 'bg-[var(--bg-hover)]'
                                         )}>
                                             {String.fromCharCode(65 + i)}
@@ -463,7 +463,7 @@ export function EnhancedExamInterface({
                                             <div className={cn(
                                                 'w-5 h-5 rounded border-2 flex items-center justify-center',
                                                 isSelected(option.id)
-                                                    ? 'border-purple-500 bg-purple-500'
+                                                    ? 'border-#1a365d bg-#1a365d'
                                                     : 'border-[var(--border-color)]'
                                             )}>
                                                 {isSelected(option.id) && <CheckCircle size={14} className="text-white" />}

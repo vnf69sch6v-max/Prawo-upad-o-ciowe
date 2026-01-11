@@ -74,7 +74,7 @@ export function FlashcardStudy({ cards, onReview, onComplete }: FlashcardStudyPr
                 </div>
                 <div className="h-2 bg-[var(--bg-hover)] rounded-full overflow-hidden">
                     <div
-                        className="h-full bg-gradient-to-r from-purple-600 to-purple-400 transition-all duration-300"
+                        className="h-full bg-gradient-to-r from-#1a365d to-#1a365d transition-all duration-300"
                         style={{ width: `${progress}%` }}
                     />
                 </div>
@@ -142,7 +142,7 @@ export function FlashcardStudy({ cards, onReview, onComplete }: FlashcardStudyPr
                     >
                         <p className="text-xl font-medium text-green-400 mb-4">{currentCard.answer}</p>
                         {currentCard.legalReference && (
-                            <p className="text-sm text-purple-400 mb-2">{currentCard.legalReference}</p>
+                            <p className="text-sm text-#1a365d mb-2">{currentCard.legalReference}</p>
                         )}
                         {currentCard.explanation && (
                             <p className="text-sm text-[var(--text-muted)] mt-4">{currentCard.explanation}</p>

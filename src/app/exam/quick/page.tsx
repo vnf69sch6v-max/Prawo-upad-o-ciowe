@@ -97,7 +97,7 @@ export default function QuickQuizPage() {
                                 </div>
                                 <div className="h-2 bg-[var(--bg-hover)] rounded-full overflow-hidden">
                                     <div
-                                        className="h-full bg-gradient-to-r from-purple-600 to-purple-400 transition-all"
+                                        className="h-full bg-gradient-to-r from-#1a365d to-#1a365d transition-all"
                                         style={{ width: `${((currentIndex + 1) / questions.length) * 100}%` }}
                                     />
                                 </div>
@@ -131,7 +131,7 @@ export default function QuickQuizPage() {
                                             disabled={showAnswer}
                                             className={cn(
                                                 'w-full p-4 rounded-xl border text-left transition-all',
-                                                !showAnswer && 'hover:border-purple-500/50 hover:bg-[var(--bg-hover)]',
+                                                !showAnswer && 'hover:border-#1a365d/50 hover:bg-[var(--bg-hover)]',
                                                 !showAnswer && 'bg-[var(--bg-card)] border-[var(--border-color)]',
                                                 showAnswer && isCorrect && 'bg-green-500/20 border-green-500 text-green-400',
                                                 showAnswer && isSelected && !isCorrect && 'bg-red-500/20 border-red-500 text-red-400',
@@ -157,7 +157,7 @@ export default function QuickQuizPage() {
                                     <div className="p-4 bg-[var(--bg-elevated)] rounded-xl border border-[var(--border-color)]">
                                         <p className="text-sm text-[var(--text-muted)] mb-2">Wyjaśnienie:</p>
                                         <p>{currentQuestion.explanation}</p>
-                                        <p className="text-sm text-purple-400 mt-2">{currentQuestion.legalReference}</p>
+                                        <p className="text-sm text-#1a365d mt-2">{currentQuestion.legalReference}</p>
                                     </div>
                                     <button onClick={nextQuestion} className="btn btn-primary w-full">
                                         {currentIndex < questions.length - 1 ? 'Następne pytanie' : 'Zobacz wyniki'}

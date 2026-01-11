@@ -77,12 +77,12 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
                             className={cn(
                                 'relative p-6 rounded-xl border transition-all',
                                 plan.popular
-                                    ? 'bg-gradient-to-br from-purple-900/30 to-[var(--bg-elevated)] border-purple-500'
-                                    : 'bg-[var(--bg-elevated)] border-[var(--border-color)] hover:border-purple-500/50'
+                                    ? 'bg-gradient-to-br from-purple-900/30 to-[var(--bg-elevated)] border-#1a365d'
+                                    : 'bg-[var(--bg-elevated)] border-[var(--border-color)] hover:border-#1a365d/50'
                             )}
                         >
                             {plan.popular && (
-                                <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs font-bold rounded-full">
+                                <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-to-r from-#1a365d to-pink-600 text-white text-xs font-bold rounded-full">
                                     NAJPOPULARNIEJSZY
                                 </span>
                             )}
@@ -109,8 +109,8 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
                                 className={cn(
                                     'w-full py-3 rounded-xl font-semibold transition-all flex items-center justify-center gap-2',
                                     plan.popular
-                                        ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-500 hover:to-pink-500'
-                                        : 'bg-[var(--bg-hover)] hover:bg-purple-600/20 border border-[var(--border-color)]'
+                                        ? 'bg-gradient-to-r from-#1a365d to-pink-600 text-white hover:from-#1a365d hover:to-#b8860b'
+                                        : 'bg-[var(--bg-hover)] hover:bg-#1a365d/20 border border-[var(--border-color)]'
                                 )}
                             >
                                 <Zap size={18} />

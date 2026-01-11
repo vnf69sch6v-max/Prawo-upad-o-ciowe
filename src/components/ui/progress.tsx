@@ -45,7 +45,7 @@ export function Progress({
                     className={cn(
                         'h-full rounded-full transition-all duration-500',
                         {
-                            'bg-gradient-to-r from-purple-600 to-purple-400': color === 'default',
+                            'bg-gradient-to-r from-#1a365d to-#1a365d': color === 'default',
                             'bg-gradient-to-r from-green-600 to-green-400': color === 'success',
                             'bg-gradient-to-r from-yellow-600 to-yellow-400': color === 'warning',
                             'bg-gradient-to-r from-red-600 to-red-400': color === 'danger',

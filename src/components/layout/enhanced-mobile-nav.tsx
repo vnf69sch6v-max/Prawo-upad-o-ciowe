@@ -102,9 +102,9 @@ function QuickAddMenu({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
                             >
                                 <div className={cn(
                                     'w-12 h-12 rounded-xl flex items-center justify-center',
-                                    action.color === 'purple' && 'bg-purple-500/20 text-purple-400',
+                                    action.color === 'purple' && 'bg-#1a365d/20 text-#1a365d',
                                     action.color === 'blue' && 'bg-blue-500/20 text-blue-400',
-                                    action.color === 'pink' && 'bg-pink-500/20 text-pink-400',
+                                    action.color === 'pink' && 'bg-#b8860b/20 text-#b8860b',
                                     action.color === 'yellow' && 'bg-yellow-500/20 text-yellow-400'
                                 )}>
                                     {action.icon}
@@ -186,7 +186,7 @@ export function EnhancedMobileNav({ onQuickAdd }: EnhancedMobileNavProps) {
                                             'relative -mt-6 w-14 h-14 rounded-full flex items-center justify-center transition-all',
                                             showQuickAdd
                                                 ? 'bg-red-500 rotate-45'
-                                                : 'bg-gradient-to-br from-purple-600 to-pink-600 shadow-lg shadow-purple-500/30'
+                                                : 'bg-gradient-to-br from-#1a365d to-pink-600 shadow-lg shadow-#1a365d/30'
                                         )}
                                     >
                                         <Plus size={24} className="text-white" />
@@ -202,13 +202,13 @@ export function EnhancedMobileNav({ onQuickAdd }: EnhancedMobileNavProps) {
                                     className={cn(
                                         'relative flex flex-col items-center gap-0.5 py-2 px-3 rounded-xl transition-all',
                                         active
-                                            ? 'text-purple-400'
+                                            ? 'text-#1a365d'
                                             : 'text-[var(--text-muted)] hover:text-white'
                                     )}
                                 >
                                     {/* Active indicator */}
                                     {active && (
-                                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-4 h-1 bg-purple-500 rounded-full" />
+                                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-4 h-1 bg-#1a365d rounded-full" />
                                     )}
 
                                     {/* Icon with badge */}
@@ -224,7 +224,7 @@ export function EnhancedMobileNav({ onQuickAdd }: EnhancedMobileNavProps) {
                                     {/* Label */}
                                     <span className={cn(
                                         'text-[10px] font-medium',
-                                        active ? 'text-purple-400' : ''
+                                        active ? 'text-#1a365d' : ''
                                     )}>
                                         {item.label}
                                     </span>

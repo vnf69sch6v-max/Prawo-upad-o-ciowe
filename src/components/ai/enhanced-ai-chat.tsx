@@ -110,7 +110,7 @@ function ChatMessage({
                 return (
                     <span
                         key={i}
-                        className="px-1.5 py-0.5 bg-purple-500/20 text-purple-400 rounded cursor-pointer hover:bg-purple-500/30 transition-colors"
+                        className="px-1.5 py-0.5 bg-#1a365d/20 text-#1a365d rounded cursor-pointer hover:bg-#1a365d/30 transition-colors"
                     >
                         {part}
                     </span>
@@ -128,7 +128,7 @@ function ChatMessage({
             {/* Avatar */}
             <div className={cn(
                 'w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0',
-                isUser ? 'bg-purple-500' : 'bg-[var(--bg-hover)]'
+                isUser ? 'bg-#1a365d' : 'bg-[var(--bg-hover)]'
             )}>
                 {isUser ? <User size={16} /> : <Bot size={16} />}
             </div>
@@ -137,7 +137,7 @@ function ChatMessage({
             <div className={cn(
                 'max-w-[80%] rounded-2xl p-4',
                 isUser
-                    ? 'bg-purple-600 rounded-tr-sm'
+                    ? 'bg-#1a365d rounded-tr-sm'
                     : 'bg-[var(--bg-card)] border border-[var(--border-color)] rounded-tl-sm'
             )}>
                 <p className="whitespace-pre-wrap leading-relaxed">
@@ -152,7 +152,7 @@ function ChatMessage({
                             {message.metadata.legalReferences.map((ref, i) => (
                                 <span
                                     key={i}
-                                    className="px-2 py-1 bg-purple-500/10 text-purple-400 rounded text-xs"
+                                    className="px-2 py-1 bg-#1a365d/10 text-#1a365d rounded text-xs"
                                 >
                                     {ref}
                                 </span>
@@ -404,14 +404,14 @@ export function EnhancedAIChat({
                             onKeyDown={handleKeyDown}
                             placeholder="Zadaj pytanie..."
                             rows={1}
-                            className="w-full px-4 py-3 bg-[var(--bg-hover)] border border-[var(--border-color)] rounded-xl resize-none focus:border-purple-500 focus:outline-none"
+                            className="w-full px-4 py-3 bg-[var(--bg-hover)] border border-[var(--border-color)] rounded-xl resize-none focus:border-#1a365d focus:outline-none"
                             style={{ maxHeight: '120px' }}
                         />
                     </div>
                     <button
                         onClick={handleSend}
                         disabled={!input.trim() || isLoading}
-                        className="p-3 bg-purple-600 text-white rounded-xl hover:bg-purple-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        className="p-3 bg-#1a365d text-white rounded-xl hover:bg-#1a365d disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
                         {isLoading ? <Loader2 size={20} className="animate-spin" /> : <Send size={20} />}
                     </button>

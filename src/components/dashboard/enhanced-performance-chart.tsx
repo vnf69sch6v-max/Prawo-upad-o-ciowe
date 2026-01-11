@@ -191,7 +191,7 @@ export function EnhancedPerformanceChart({
             <div className="flex items-center justify-between mb-6">
                 <div>
                     <h3 className="text-lg font-semibold flex items-center gap-2">
-                        <TrendingUp className="text-purple-400" />
+                        <TrendingUp className="text-#1a365d" />
                         Progres nauki
                     </h3>
                     <p className="text-sm text-[var(--text-muted)]">Twoje statystyki w czasie</p>
@@ -206,7 +206,7 @@ export function EnhancedPerformanceChart({
                             className={cn(
                                 'px-3 py-1.5 rounded-lg text-sm font-medium transition-all',
                                 timeRange === range.value
-                                    ? 'bg-purple-600 text-white'
+                                    ? 'bg-#1a365d text-white'
                                     : 'text-[var(--text-muted)] hover:text-white'
                             )}
                         >

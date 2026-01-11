@@ -65,7 +65,7 @@ export default function AnalyticsPage() {
                         <div className="flex items-center justify-between">
                             <div>
                                 <h1 className="text-2xl font-bold flex items-center gap-2">
-                                    <BarChart3 className="text-purple-400" />
+                                    <BarChart3 className="text-#1a365d" />
                                     Analityka
                                 </h1>
                                 <p className="text-[var(--text-muted)]">Szczegółowe statystyki Twojej nauki</p>
@@ -74,7 +74,7 @@ export default function AnalyticsPage() {
                                 <select
                                     value={timeRange}
                                     onChange={(e) => setTimeRange(e.target.value as typeof timeRange)}
-                                    className="px-4 py-2 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-xl focus:border-purple-500 focus:outline-none"
+                                    className="px-4 py-2 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-xl focus:border-#1a365d focus:outline-none"
                                 >
                                     <option value="7d">Ostatnie 7 dni</option>
                                     <option value="30d">Ostatnie 30 dni</option>
@@ -92,8 +92,8 @@ export default function AnalyticsPage() {
                         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                             <div className="lex-card">
                                 <div className="flex items-center gap-3 mb-3">
-                                    <div className="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
-                                        <BookOpen size={20} className="text-purple-400" />
+                                    <div className="w-10 h-10 bg-#1a365d/20 rounded-lg flex items-center justify-center">
+                                        <BookOpen size={20} className="text-#1a365d" />
                                     </div>
                                     <span className="text-sm text-[var(--text-muted)]">Fiszek powtórzonych</span>
                                 </div>
@@ -156,7 +156,7 @@ export default function AnalyticsPage() {
                                         <div className="w-full flex flex-col items-center gap-1">
                                             <span className="text-xs text-[var(--text-muted)]">{day.cards}</span>
                                             <div
-                                                className="w-full bg-gradient-to-t from-purple-600 to-purple-400 rounded-t-lg transition-all hover:from-purple-500 hover:to-purple-300"
+                                                className="w-full bg-gradient-to-t from-#1a365d to-#1a365d rounded-t-lg transition-all hover:from-#1a365d hover:to-purple-300"
                                                 style={{ height: `${(day.cards / maxCards) * 150}px` }}
                                             />
                                         </div>
@@ -219,7 +219,7 @@ export default function AnalyticsPage() {
                         {/* Milestones */}
                         <div className="lex-card">
                             <h3 className="text-lg font-semibold mb-6 flex items-center gap-2">
-                                <Calendar className="text-purple-400" />
+                                <Calendar className="text-#1a365d" />
                                 Osiągnięte kamienie milowe
                             </h3>
                             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

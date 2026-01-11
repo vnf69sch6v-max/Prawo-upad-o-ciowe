@@ -89,7 +89,7 @@ export default function LeaderboardPage() {
                                         className={cn(
                                             'px-3 py-1.5 text-sm font-medium rounded-lg transition-all',
                                             timeRange === r
-                                                ? 'bg-purple-600 text-white'
+                                                ? 'bg-#1a365d text-white'
                                                 : 'text-[var(--text-muted)] hover:text-white'
                                         )}
                                     >
@@ -102,7 +102,7 @@ export default function LeaderboardPage() {
                         {/* Loading State */}
                         {loading && (
                             <div className="flex items-center justify-center py-12">
-                                <Loader2 size={32} className="animate-spin text-purple-500" />
+                                <Loader2 size={32} className="animate-spin text-#1a365d" />
                             </div>
                         )}
 
@@ -160,10 +160,10 @@ export default function LeaderboardPage() {
 
                         {/* Current User Card */}
                         {!loading && currentUserEntry && currentUserRank && (
-                            <div className="lex-card bg-gradient-to-r from-purple-900/30 to-[var(--bg-card)] border-purple-500/50">
+                            <div className="lex-card bg-gradient-to-r from-purple-900/30 to-[var(--bg-card)] border-#1a365d/50">
                                 <div className="flex items-center gap-4">
-                                    <span className="text-2xl font-bold text-purple-400">#{currentUserRank}</span>
-                                    <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center text-xl font-bold text-white">
+                                    <span className="text-2xl font-bold text-#1a365d">#{currentUserRank}</span>
+                                    <div className="w-12 h-12 bg-#1a365d rounded-full flex items-center justify-center text-xl font-bold text-white">
                                         {profile?.displayName?.charAt(0).toUpperCase() || '?'}
                                     </div>
                                     <div className="flex-1">
@@ -201,7 +201,7 @@ export default function LeaderboardPage() {
                                                     key={entry.uid}
                                                     className={cn(
                                                         'border-b border-[var(--border-color)] last:border-b-0 hover:bg-[var(--bg-hover)] transition-colors',
-                                                        isCurrentUser && 'bg-purple-500/10'
+                                                        isCurrentUser && 'bg-#1a365d/10'
                                                     )}
                                                 >
                                                     <td className="px-4 py-3 font-medium">{rank}</td>
@@ -212,7 +212,7 @@ export default function LeaderboardPage() {
                                                             </span>
                                                             <span className={cn(
                                                                 'font-medium truncate max-w-[150px]',
-                                                                isCurrentUser && 'text-purple-400'
+                                                                isCurrentUser && 'text-#1a365d'
                                                             )}>
                                                                 {entry.displayName}
                                                                 {isCurrentUser && ' (Ty)'}

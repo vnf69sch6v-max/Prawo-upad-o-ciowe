@@ -42,7 +42,7 @@ const DOMAIN_EXAMS = {
             difficulty: 'mixed' as const,
             passRate: 75,
             isPremium: false,
-            icon: <Sparkles className="text-purple-400" size={24} />,
+            icon: <Sparkles className="text-#1a365d" size={24} />,
         },
         {
             id: 'ksh-standard-30',
@@ -343,7 +343,7 @@ export default function ExamPage() {
                                         'px-5 py-3 rounded-xl text-sm font-medium transition-all flex items-center gap-2',
                                         selectedDomain === domain.id
                                             ? domain.id === 'ksh'
-                                                ? 'bg-purple-600 text-white'
+                                                ? 'bg-#1a365d text-white'
                                                 : 'bg-orange-600 text-white'
                                             : 'bg-[var(--bg-card)] text-[var(--text-muted)] hover:text-white hover:bg-[var(--bg-hover)]'
                                     )}
@@ -367,7 +367,7 @@ export default function ExamPage() {
                                         className={cn(
                                             'px-3 py-1.5 rounded-lg text-xs font-medium transition-all',
                                             selectedSubdomain === 'all'
-                                                ? 'bg-purple-600 text-white'
+                                                ? 'bg-#1a365d text-white'
                                                 : 'bg-[var(--bg-hover)] text-[var(--text-muted)] hover:text-white'
                                         )}
                                     >
@@ -387,7 +387,7 @@ export default function ExamPage() {
                                                         ? 'bg-blue-500/20 text-blue-400 border border-blue-500/50'
                                                         : sub.group === 'kapitalowe'
                                                             ? 'bg-green-500/20 text-green-400 border border-green-500/50'
-                                                            : 'bg-purple-500/20 text-purple-400 border border-purple-500/50'
+                                                            : 'bg-#1a365d/20 text-#1a365d border border-#1a365d/50'
                                                     : 'bg-[var(--bg-hover)] text-[var(--text-muted)] hover:text-white'
                                             )}
                                         >
@@ -460,8 +460,8 @@ export default function ExamPage() {
                         {/* Stats */}
                         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                             <div className="lex-card flex items-center gap-3">
-                                <div className="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
-                                    <BookOpen size={20} className="text-purple-400" />
+                                <div className="w-10 h-10 bg-#1a365d/20 rounded-lg flex items-center justify-center">
+                                    <BookOpen size={20} className="text-#1a365d" />
                                 </div>
                                 <div>
                                     <p className="text-2xl font-bold">{stats.total}</p>
@@ -505,7 +505,7 @@ export default function ExamPage() {
                                     onClick={() => handleStartExam(exam)}
                                     className={cn(
                                         "lex-card transition-all text-left group",
-                                        index === 0 && "hover:border-purple-500/50",
+                                        index === 0 && "hover:border-#1a365d/50",
                                         index === 1 && "hover:border-blue-500/50",
                                         index === 2 && "hover:border-yellow-500/50"
                                     )}
@@ -513,7 +513,7 @@ export default function ExamPage() {
                                     <div className="flex items-center gap-4">
                                         <div className={cn(
                                             "w-14 h-14 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform",
-                                            index === 0 && (selectedDomain === 'ksh' ? "bg-gradient-to-br from-purple-600 to-pink-600" : "bg-gradient-to-br from-orange-600 to-red-600"),
+                                            index === 0 && (selectedDomain === 'ksh' ? "bg-gradient-to-br from-#1a365d to-pink-600" : "bg-gradient-to-br from-orange-600 to-red-600"),
                                             index === 1 && "bg-gradient-to-br from-blue-600 to-cyan-600",
                                             index === 2 && "bg-gradient-to-br from-yellow-600 to-orange-600"
                                         )}>
@@ -541,7 +541,7 @@ export default function ExamPage() {
                                     className={cn(
                                         "lex-card transition-all cursor-pointer",
                                         selectedDomain === 'ksh'
-                                            ? "hover:border-purple-500/50"
+                                            ? "hover:border-#1a365d/50"
                                             : "hover:border-orange-500/50"
                                     )}
                                     onClick={() => handleStartExam(exam)}
@@ -561,7 +561,7 @@ export default function ExamPage() {
                                                 <span>{exam.timeLimit} min</span>
                                                 <span>•</span>
                                                 <span className={cn(
-                                                    exam.difficulty === 'mixed' && 'text-purple-400',
+                                                    exam.difficulty === 'mixed' && 'text-#1a365d',
                                                     exam.difficulty === 'medium' && 'text-yellow-400',
                                                     exam.difficulty === 'hard' && 'text-red-400',
                                                 )}>

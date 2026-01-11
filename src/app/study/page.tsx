@@ -71,7 +71,7 @@ export default function StudyPage() {
                             <div className="flex items-center justify-between">
                                 <div>
                                     <h1 className="text-2xl font-bold flex items-center gap-2">
-                                        <BookOpen className="text-purple-400" />
+                                        <BookOpen className="text-#1a365d" />
                                         Nauka Fiszek
                                     </h1>
                                     <p className="text-[var(--text-muted)]">
@@ -114,8 +114,8 @@ export default function StudyPage() {
                                     </div>
                                 </div>
                                 <div className="lex-card flex items-center gap-4">
-                                    <div className="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center">
-                                        <Clock size={24} className="text-purple-400" />
+                                    <div className="w-12 h-12 bg-#1a365d/20 rounded-xl flex items-center justify-center">
+                                        <Clock size={24} className="text-#1a365d" />
                                     </div>
                                     <div>
                                         <p className="text-2xl font-bold">~15min</p>
@@ -127,11 +127,11 @@ export default function StudyPage() {
                             {/* Start Study CTA */}
                             <button
                                 onClick={() => setView('study')}
-                                className="w-full p-6 bg-gradient-to-r from-purple-600/20 to-pink-600/20 border border-purple-500/30 rounded-2xl hover:border-purple-500/50 transition-all group"
+                                className="w-full p-6 bg-gradient-to-r from-#1a365d/20 to-pink-600/20 border border-#1a365d/30 rounded-2xl hover:border-#1a365d/50 transition-all group"
                             >
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-4">
-                                        <div className="w-14 h-14 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center">
+                                        <div className="w-14 h-14 bg-gradient-to-br from-#1a365d to-pink-600 rounded-xl flex items-center justify-center">
                                             <BookOpen size={28} className="text-white" />
                                         </div>
                                         <div className="text-left">
@@ -139,7 +139,7 @@ export default function StudyPage() {
                                             <p className="text-[var(--text-muted)]">45 fiszek do powtórek z algorytmem SRS</p>
                                         </div>
                                     </div>
-                                    <div className="w-12 h-12 bg-purple-600 rounded-xl flex items-center justify-center group-hover:bg-purple-500 transition-colors">
+                                    <div className="w-12 h-12 bg-#1a365d rounded-xl flex items-center justify-center group-hover:bg-#1a365d transition-colors">
                                         →
                                     </div>
                                 </div>
@@ -154,7 +154,7 @@ export default function StudyPage() {
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
                                         placeholder="Szukaj fiszek..."
-                                        className="w-full pl-12 pr-4 py-3 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-xl focus:border-purple-500 focus:outline-none"
+                                        className="w-full pl-12 pr-4 py-3 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-xl focus:border-#1a365d focus:outline-none"
                                     />
                                 </div>
                                 <div className="flex gap-2">
@@ -165,7 +165,7 @@ export default function StudyPage() {
                                             className={cn(
                                                 'px-4 py-2 rounded-xl text-sm font-medium transition-all whitespace-nowrap',
                                                 selectedDomain === domain.id
-                                                    ? 'bg-purple-600 text-white'
+                                                    ? 'bg-#1a365d text-white'
                                                     : 'bg-[var(--bg-card)] text-[var(--text-muted)] hover:text-white'
                                             )}
                                         >
@@ -178,7 +178,7 @@ export default function StudyPage() {
                             {/* Domain Cards */}
                             <div className="grid lg:grid-cols-2 gap-4">
                                 {domainStats.map(domain => (
-                                    <div key={domain.id} className="lex-card hover:border-purple-500/30 cursor-pointer">
+                                    <div key={domain.id} className="lex-card hover:border-#1a365d/30 cursor-pointer">
                                         <div className="flex items-center justify-between mb-4">
                                             <h3 className="font-semibold">{domain.name}</h3>
                                             <span className={cn(
@@ -192,13 +192,13 @@ export default function StudyPage() {
                                         </div>
                                         <div className="h-2 bg-[var(--bg-hover)] rounded-full overflow-hidden mb-4">
                                             <div
-                                                className="h-full bg-gradient-to-r from-purple-600 to-purple-400"
+                                                className="h-full bg-gradient-to-r from-#1a365d to-#1a365d"
                                                 style={{ width: `${domain.mastery}%` }}
                                             />
                                         </div>
                                         <div className="flex justify-between text-sm text-[var(--text-muted)]">
                                             <span>{domain.total} fiszek</span>
-                                            <span className="text-purple-400">{domain.due} do powtórki</span>
+                                            <span className="text-#1a365d">{domain.due} do powtórki</span>
                                         </div>
                                     </div>
                                 ))}

@@ -91,7 +91,7 @@ export function AIChat({ onSendMessage }: AIChatProps) {
         <div className="flex flex-col h-[600px] lex-card overflow-hidden">
             {/* Header */}
             <div className="flex items-center gap-3 p-4 border-b border-[var(--border-color)]">
-                <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center">
+                <div className="w-10 h-10 bg-gradient-to-br from-#1a365d to-pink-600 rounded-xl flex items-center justify-center">
                     <Bot size={20} />
                 </div>
                 <div>
@@ -110,7 +110,7 @@ export function AIChat({ onSendMessage }: AIChatProps) {
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
                 {messages.length === 0 && (
                     <div className="text-center py-8 space-y-4">
-                        <Sparkles size={40} className="mx-auto text-purple-400" />
+                        <Sparkles size={40} className="mx-auto text-#1a365d" />
                         <div>
                             <h4 className="font-medium mb-2">Witaj w LexCapital AI!</h4>
                             <p className="text-sm text-[var(--text-muted)]">
@@ -123,7 +123,7 @@ export function AIChat({ onSendMessage }: AIChatProps) {
                                 <button
                                     key={item.label}
                                     onClick={() => handleQuickPrompt(item.prompt)}
-                                    className="px-3 py-1.5 text-xs bg-[var(--bg-hover)] hover:bg-purple-600/20 border border-[var(--border-color)] hover:border-purple-500/50 rounded-full transition-all"
+                                    className="px-3 py-1.5 text-xs bg-[var(--bg-hover)] hover:bg-#1a365d/20 border border-[var(--border-color)] hover:border-#1a365d/50 rounded-full transition-all"
                                 >
                                     {item.label}
                                 </button>
@@ -144,8 +144,8 @@ export function AIChat({ onSendMessage }: AIChatProps) {
                             className={cn(
                                 'w-8 h-8 rounded-full flex items-center justify-center shrink-0',
                                 msg.role === 'user'
-                                    ? 'bg-purple-600'
-                                    : 'bg-gradient-to-br from-purple-600 to-pink-600'
+                                    ? 'bg-#1a365d'
+                                    : 'bg-gradient-to-br from-#1a365d to-pink-600'
                             )}
                         >
                             {msg.role === 'user' ? <User size={14} /> : <Bot size={14} />}
@@ -154,7 +154,7 @@ export function AIChat({ onSendMessage }: AIChatProps) {
                             className={cn(
                                 'max-w-[80%] p-3 rounded-2xl text-sm',
                                 msg.role === 'user'
-                                    ? 'bg-purple-600 text-white rounded-br-sm'
+                                    ? 'bg-#1a365d text-white rounded-br-sm'
                                     : 'bg-[var(--bg-hover)] rounded-bl-sm'
                             )}
                         >
@@ -165,7 +165,7 @@ export function AIChat({ onSendMessage }: AIChatProps) {
 
                 {loading && (
                     <div className="flex gap-3">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-#1a365d to-pink-600 flex items-center justify-center">
                             <Bot size={14} />
                         </div>
                         <div className="p-3 rounded-2xl rounded-bl-sm bg-[var(--bg-hover)] text-sm">
@@ -189,7 +189,7 @@ export function AIChat({ onSendMessage }: AIChatProps) {
                         onChange={(e) => setInput(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
                         placeholder="Zadaj pytanie prawne..."
-                        className="flex-1 px-4 py-3 bg-[var(--bg-hover)] border border-[var(--border-color)] rounded-xl focus:border-purple-500 focus:outline-none transition-colors"
+                        className="flex-1 px-4 py-3 bg-[var(--bg-hover)] border border-[var(--border-color)] rounded-xl focus:border-#1a365d focus:outline-none transition-colors"
                         disabled={loading}
                     />
                     <button
@@ -197,8 +197,8 @@ export function AIChat({ onSendMessage }: AIChatProps) {
                         disabled={!input.trim() || loading}
                         className={cn(
                             'px-4 py-3 rounded-xl transition-all',
-                            'bg-gradient-to-r from-purple-600 to-purple-700',
-                            'hover:from-purple-500 hover:to-purple-600',
+                            'bg-gradient-to-r from-#1a365d to-#2c5282',
+                            'hover:from-#1a365d hover:to-#1a365d',
                             'disabled:opacity-50 disabled:cursor-not-allowed'
                         )}
                     >

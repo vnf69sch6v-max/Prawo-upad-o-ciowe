@@ -60,7 +60,7 @@ const ICONS = {
 
 const COLORS = {
     achievement: 'text-yellow-400 bg-yellow-500/20',
-    milestone: 'text-purple-400 bg-purple-500/20',
+    milestone: 'text-#1a365d bg-#1a365d/20',
     rank: 'text-green-400 bg-green-500/20',
     streak: 'text-orange-400 bg-orange-500/20',
     study: 'text-blue-400 bg-blue-500/20',
@@ -93,7 +93,7 @@ export function ActivityFeed() {
                 })}
             </div>
 
-            <button className="w-full mt-4 py-2 text-sm text-purple-400 hover:text-purple-300 transition-colors">
+            <button className="w-full mt-4 py-2 text-sm text-#1a365d hover:text-purple-300 transition-colors">
                 Zobacz wszystko →
             </button>
         </div>

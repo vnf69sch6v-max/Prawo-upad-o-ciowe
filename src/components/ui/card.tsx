@@ -21,7 +21,7 @@ export function Card({
                     'bg-[var(--bg-elevated)] border-[var(--border-color)] shadow-lg': variant === 'elevated',
                     'bg-[var(--bg-elevated)]/50 backdrop-blur-xl border-[var(--border-color)]': variant === 'glass',
                 },
-                glow && 'hover:border-purple-500/30 hover:shadow-purple-500/10 hover:shadow-lg',
+                glow && 'hover:border-#1a365d/30 hover:shadow-#1a365d/10 hover:shadow-lg',
                 className
             )}
             {...props}

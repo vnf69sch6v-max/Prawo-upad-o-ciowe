@@ -98,7 +98,7 @@ function Podium({ top3 }: { top3: LeaderboardEntry[] }) {
                         {/* Avatar with rank indicator */}
                         <div className="relative mb-2">
                             <div className={cn(
-                                'w-16 h-16 rounded-full bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center text-2xl font-bold border-2',
+                                'w-16 h-16 rounded-full bg-gradient-to-br from-#1a365d to-pink-600 flex items-center justify-center text-2xl font-bold border-2',
                                 style.border,
                                 style.glow
                             )}>
@@ -117,7 +117,7 @@ function Podium({ top3 }: { top3: LeaderboardEntry[] }) {
                         {/* Name */}
                         <p className={cn(
                             'font-semibold text-sm mb-1 truncate max-w-[100px]',
-                            entry.isCurrentUser && 'text-purple-400'
+                            entry.isCurrentUser && 'text-#1a365d'
                         )}>
                             {entry.displayName}
                             {entry.isCurrentUser && ' (Ty)'}
@@ -162,14 +162,14 @@ function LeaderboardRow({ entry, showRankChange = true }: { entry: LeaderboardEn
         <div className={cn(
             'flex items-center gap-4 p-4 rounded-xl border transition-all',
             entry.isCurrentUser
-                ? 'bg-purple-500/10 border-purple-500/30'
-                : 'bg-[var(--bg-card)] border-[var(--border-color)] hover:border-purple-500/30'
+                ? 'bg-#1a365d/10 border-#1a365d/30'
+                : 'bg-[var(--bg-card)] border-[var(--border-color)] hover:border-#1a365d/30'
         )}>
             {/* Rank */}
             <div className="w-12 flex items-center justify-center">
                 <span className={cn(
                     'font-bold text-lg',
-                    entry.rank <= 10 && 'text-purple-400'
+                    entry.rank <= 10 && 'text-#1a365d'
                 )}>
                     #{entry.rank}
                 </span>
@@ -192,7 +192,7 @@ function LeaderboardRow({ entry, showRankChange = true }: { entry: LeaderboardEn
             )}
 
             {/* Avatar */}
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center font-bold">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-#1a365d to-pink-600 flex items-center justify-center font-bold">
                 {entry.avatar || entry.displayName[0]}
             </div>
 
@@ -201,12 +201,12 @@ function LeaderboardRow({ entry, showRankChange = true }: { entry: LeaderboardEn
                 <div className="flex items-center gap-2">
                     <span className={cn(
                         'font-medium truncate',
-                        entry.isCurrentUser && 'text-purple-400'
+                        entry.isCurrentUser && 'text-#1a365d'
                     )}>
                         {entry.displayName}
                         {entry.isCurrentUser && ' (Ty)'}
                     </span>
-                    <span className="text-xs px-2 py-0.5 bg-purple-500/20 text-purple-400 rounded-full">
+                    <span className="text-xs px-2 py-0.5 bg-#1a365d/20 text-#1a365d rounded-full">
                         Lv.{entry.level}
                     </span>
                 </div>
@@ -274,7 +274,7 @@ export function EnhancedLeaderboard({
                             className={cn(
                                 'px-4 py-2 rounded-lg text-sm font-medium transition-all',
                                 timeRange === range.value
-                                    ? 'bg-purple-600 text-white'
+                                    ? 'bg-#1a365d text-white'
                                     : 'text-[var(--text-muted)] hover:text-white'
                             )}
                         >
@@ -296,7 +296,7 @@ export function EnhancedLeaderboard({
 
             {/* Floating current user card */}
             {showFloatingCard && currentUser && (
-                <div className="fixed bottom-20 left-4 right-4 lg:left-auto lg:right-8 lg:w-96 bg-[var(--bg-elevated)] border border-purple-500/30 rounded-xl p-4 shadow-lg animate-fade-in">
+                <div className="fixed bottom-20 left-4 right-4 lg:left-auto lg:right-8 lg:w-96 bg-[var(--bg-elevated)] border border-#1a365d/30 rounded-xl p-4 shadow-lg animate-fade-in">
                     <p className="text-xs text-[var(--text-muted)] mb-2">Twoja pozycja</p>
                     <LeaderboardRow entry={currentUser} showRankChange={false} />
                 </div>

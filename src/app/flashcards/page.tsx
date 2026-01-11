@@ -170,8 +170,8 @@ export default function FlashcardsPage() {
                         {/* Stats */}
                         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                             <div className="lex-card flex items-center gap-3">
-                                <div className="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
-                                    <BookOpen size={20} className="text-purple-400" />
+                                <div className="w-10 h-10 bg-#1a365d/20 rounded-lg flex items-center justify-center">
+                                    <BookOpen size={20} className="text-#1a365d" />
                                 </div>
                                 <div>
                                     <p className="text-2xl font-bold">{filteredCards.length}</p>
@@ -216,7 +216,7 @@ export default function FlashcardsPage() {
                                     placeholder="Szukaj fiszek..."
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-2.5 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-xl focus:border-purple-500 focus:outline-none"
+                                    className="w-full pl-10 pr-4 py-2.5 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-xl focus:border-#1a365d focus:outline-none"
                                 />
                             </div>
                             <div className="flex gap-2">
@@ -225,7 +225,7 @@ export default function FlashcardsPage() {
                                     className={cn(
                                         'px-4 py-2.5 rounded-xl text-sm font-medium transition-all',
                                         selectedDomain === 'all'
-                                            ? 'bg-purple-600 text-white'
+                                            ? 'bg-#1a365d text-white'
                                             : 'bg-[var(--bg-card)] text-[var(--text-muted)] hover:text-white'
                                     )}
                                 >
@@ -238,7 +238,7 @@ export default function FlashcardsPage() {
                                         className={cn(
                                             'px-4 py-2.5 rounded-xl text-sm font-medium transition-all hidden sm:block',
                                             selectedDomain === domain.id
-                                                ? 'bg-purple-600 text-white'
+                                                ? 'bg-#1a365d text-white'
                                                 : 'bg-[var(--bg-card)] text-[var(--text-muted)] hover:text-white'
                                         )}
                                     >
@@ -254,7 +254,7 @@ export default function FlashcardsPage() {
                         {/* Cards List */}
                         <div className="space-y-3">
                             {filteredCards.map(card => (
-                                <div key={card.id} className="lex-card hover:border-purple-500/50 transition-all cursor-pointer">
+                                <div key={card.id} className="lex-card hover:border-#1a365d/50 transition-all cursor-pointer">
                                     <div className="flex items-start justify-between gap-4">
                                         <div className="flex-1 min-w-0">
                                             <p className="font-medium mb-1">{card.question}</p>
@@ -271,7 +271,7 @@ export default function FlashcardsPage() {
                                                 {card.difficulty}
                                             </span>
                                             {new Date(card.srs.nextReview) <= new Date() && (
-                                                <span className="px-2 py-1 bg-purple-500/20 text-purple-400 text-xs rounded font-medium">
+                                                <span className="px-2 py-1 bg-#1a365d/20 text-#1a365d text-xs rounded font-medium">
                                                     Do powtórki
                                                 </span>
                                             )}

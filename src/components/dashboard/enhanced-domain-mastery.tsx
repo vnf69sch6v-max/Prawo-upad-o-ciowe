@@ -194,7 +194,7 @@ function DomainRow({ domain, onPractice, onQuiz }: {
             className={cn(
                 'rounded-xl border transition-all',
                 needsWork ? 'border-red-500/20' : 'border-[var(--border-color)]',
-                isHovered && 'border-purple-500/30'
+                isHovered && 'border-#1a365d/30'
             )}
             style={{
                 boxShadow: needsWork ? '0 0 20px -10px rgba(239, 68, 68, 0.3)' : undefined,
@@ -266,7 +266,7 @@ function DomainRow({ domain, onPractice, onQuiz }: {
                 )}>
                     <button
                         onClick={(e) => { e.stopPropagation(); onPractice(); }}
-                        className="p-2 rounded-lg bg-purple-600/20 hover:bg-purple-600/40 text-purple-400 transition-colors"
+                        className="p-2 rounded-lg bg-#1a365d/20 hover:bg-#1a365d/40 text-#1a365d transition-colors"
                         title="Ćwicz fiszki"
                     >
                         <Play size={16} />
@@ -369,7 +369,7 @@ export function EnhancedDomainMastery({
                         className={cn(
                             'px-3 py-1.5 rounded-lg text-sm font-medium transition-all',
                             viewMode === 'bar'
-                                ? 'bg-purple-600 text-white'
+                                ? 'bg-#1a365d text-white'
                                 : 'text-[var(--text-muted)] hover:text-white'
                         )}
                     >
@@ -380,12 +380,12 @@ export function EnhancedDomainMastery({
                         className={cn(
                             'px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-1',
                             viewMode === 'radar'
-                                ? 'bg-purple-600 text-white'
+                                ? 'bg-#1a365d text-white'
                                 : 'text-[var(--text-muted)] hover:text-white'
                         )}
                     >
                         Radar
-                        <span className="px-1.5 py-0.5 bg-gradient-to-r from-purple-600 to-pink-600 rounded text-[10px]">PRO</span>
+                        <span className="px-1.5 py-0.5 bg-gradient-to-r from-#1a365d to-pink-600 rounded text-[10px]">PRO</span>
                     </button>
                 </div>
             </div>

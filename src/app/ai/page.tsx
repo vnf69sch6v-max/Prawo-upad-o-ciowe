@@ -83,7 +83,7 @@ export default function AIPage() {
                     <div className="max-w-6xl mx-auto space-y-6">
                         {/* Header */}
                         <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center">
+                            <div className="w-12 h-12 bg-gradient-to-br from-#1a365d to-pink-600 rounded-xl flex items-center justify-center">
                                 <Sparkles size={24} />
                             </div>
                             <div>
@@ -104,18 +104,18 @@ export default function AIPage() {
                                         className={cn(
                                             'p-4 rounded-xl text-left transition-all border',
                                             isActive
-                                                ? 'bg-purple-600/20 border-purple-500'
-                                                : 'bg-[var(--bg-card)] border-[var(--border-color)] hover:border-purple-500/50'
+                                                ? 'bg-#1a365d/20 border-#1a365d'
+                                                : 'bg-[var(--bg-card)] border-[var(--border-color)] hover:border-#1a365d/50'
                                         )}
                                     >
                                         <div className={cn(
                                             'w-10 h-10 rounded-lg flex items-center justify-center mb-3',
-                                            tool.color === 'purple' && 'bg-purple-500/20',
+                                            tool.color === 'purple' && 'bg-#1a365d/20',
                                             tool.color === 'blue' && 'bg-blue-500/20',
                                             tool.color === 'green' && 'bg-green-500/20'
                                         )}>
                                             <Icon size={20} className={cn(
-                                                tool.color === 'purple' && 'text-purple-400',
+                                                tool.color === 'purple' && 'text-#1a365d',
                                                 tool.color === 'blue' && 'text-blue-400',
                                                 tool.color === 'green' && 'text-green-400'
                                             )} />
@@ -144,7 +144,7 @@ export default function AIPage() {
                                     value={generatorText}
                                     onChange={(e) => setGeneratorText(e.target.value)}
                                     placeholder="Wklej tekst z ustawy, podręcznika lub podaj temat np. 'terminy przedawnienia w prawie cywilnym'..."
-                                    className="w-full h-40 px-4 py-3 bg-[var(--bg-hover)] border border-[var(--border-color)] rounded-xl focus:border-purple-500 focus:outline-none resize-none"
+                                    className="w-full h-40 px-4 py-3 bg-[var(--bg-hover)] border border-[var(--border-color)] rounded-xl focus:border-#1a365d focus:outline-none resize-none"
                                 />
 
                                 <div className="flex items-center justify-between">
@@ -177,7 +177,7 @@ export default function AIPage() {
                                             <div key={i} className="p-4 bg-[var(--bg-hover)] rounded-xl">
                                                 <p className="font-medium mb-2">{card.question}</p>
                                                 <p className="text-sm text-[var(--text-muted)]">{card.answer}</p>
-                                                <p className="text-xs text-purple-400 mt-2">{card.legalReference}</p>
+                                                <p className="text-xs text-#1a365d mt-2">{card.legalReference}</p>
                                             </div>
                                         ))}
                                         <button className="w-full py-3 bg-green-600 text-white rounded-xl hover:bg-green-500 font-medium">
@@ -200,7 +200,7 @@ export default function AIPage() {
 
                                 <textarea
                                     placeholder="Opisz stan faktyczny kazusu..."
-                                    className="w-full h-40 px-4 py-3 bg-[var(--bg-hover)] border border-[var(--border-color)] rounded-xl focus:border-purple-500 focus:outline-none resize-none"
+                                    className="w-full h-40 px-4 py-3 bg-[var(--bg-hover)] border border-[var(--border-color)] rounded-xl focus:border-#1a365d focus:outline-none resize-none"
                                 />
 
                                 <button className="btn btn-primary">
@@ -220,7 +220,7 @@ export default function AIPage() {
                                         <span>3 / 5</span>
                                     </div>
                                     <div className="h-2 bg-[var(--bg-hover)] rounded-full overflow-hidden">
-                                        <div className="h-full w-3/5 bg-purple-500 rounded-full" />
+                                        <div className="h-full w-3/5 bg-#1a365d rounded-full" />
                                     </div>
                                 </div>
                                 <button className="btn btn-secondary text-sm">

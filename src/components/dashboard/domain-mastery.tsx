@@ -65,7 +65,7 @@ export function DomainMastery({ scores, showRadar = false }: DomainMasteryProps)
                         <div className="text-center">
                             <div className="text-4xl mb-2">📊</div>
                             <p className="text-sm text-[var(--text-muted)]">Radar Chart</p>
-                            <span className="px-2 py-1 bg-purple-600 text-white text-xs rounded-full">PRO</span>
+                            <span className="px-2 py-1 bg-#1a365d text-white text-xs rounded-full">PRO</span>
                         </div>
                     </div>
                 </div>

@@ -52,7 +52,7 @@ export function PerformanceChart({ data, target = 15000 }: PerformanceChartProps
                             className={cn(
                                 'px-3 py-1 text-xs font-medium rounded transition-all',
                                 timeRange === r
-                                    ? 'bg-purple-600 text-white'
+                                    ? 'bg-#1a365d text-white'
                                     : 'text-[var(--text-muted)] hover:text-white'
                             )}
                         >
@@ -101,8 +101,8 @@ export function PerformanceChart({ data, target = 15000 }: PerformanceChartProps
                                     className={cn(
                                         'w-full rounded-t transition-all duration-200 cursor-pointer',
                                         isHovered
-                                            ? 'bg-gradient-to-t from-purple-500 to-purple-300 shadow-lg shadow-purple-500/30'
-                                            : 'bg-gradient-to-t from-purple-600/80 to-purple-400/60'
+                                            ? 'bg-gradient-to-t from-#1a365d to-purple-300 shadow-lg shadow-#1a365d/30'
+                                            : 'bg-gradient-to-t from-#1a365d/80 to-#1a365d/60'
                                     )}
                                     style={{ height: `${Math.max(height, 3)}%` }}
                                 />
@@ -123,7 +123,7 @@ export function PerformanceChart({ data, target = 15000 }: PerformanceChartProps
             <div className="grid grid-cols-3 gap-4 pt-4 border-t border-[var(--border-color)]">
                 <div>
                     <p className="text-xs text-[var(--text-muted)]">Peak Value</p>
-                    <p className="text-sm font-semibold text-purple-400">€{peakValue.toLocaleString()}</p>
+                    <p className="text-sm font-semibold text-#1a365d">€{peakValue.toLocaleString()}</p>
                 </div>
                 <div>
                     <p className="text-xs text-[var(--text-muted)]">Avg. Daily</p>

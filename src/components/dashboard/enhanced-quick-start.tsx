@@ -34,7 +34,7 @@ const ACTIVITIES = {
         title: 'Powtórz fiszki',
         description: 'Masz fiszki do powtórzenia',
         color: '#8b5cf6',
-        gradient: 'from-purple-600 to-purple-800',
+        gradient: 'from-#1a365d to-purple-800',
     },
     quiz: {
         icon: Brain,
@@ -205,7 +205,7 @@ export function EnhancedQuickStart({
                             </div>
                         </div>
                         <div className="flex items-center justify-between">
-                            <span className="px-2 py-0.5 bg-gradient-to-r from-purple-600 to-pink-600 rounded text-xs">PRO</span>
+                            <span className="px-2 py-0.5 bg-gradient-to-r from-#1a365d to-pink-600 rounded text-xs">PRO</span>
                             <ArrowRight size={16} className="text-[var(--text-muted)] group-hover:text-blue-400 transition-colors" />
                         </div>
                     </div>
@@ -216,11 +216,11 @@ export function EnhancedQuickStart({
             <div className="p-4 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)]">
                 <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
-                        <Target size={18} className={isGoalComplete ? 'text-green-400' : 'text-purple-400'} />
+                        <Target size={18} className={isGoalComplete ? 'text-green-400' : 'text-#1a365d'} />
                         <span className="font-medium">Dzienny cel</span>
                     </div>
                     <span className="text-sm">
-                        <span className={isGoalComplete ? 'text-green-400' : 'text-purple-400'}>
+                        <span className={isGoalComplete ? 'text-green-400' : 'text-#1a365d'}>
                             {dailyGoalProgress}
                         </span>
                         <span className="text-[var(--text-muted)]"> / {dailyGoalTarget} fiszek</span>
@@ -234,7 +234,7 @@ export function EnhancedQuickStart({
                             'h-full rounded-full transition-all duration-500',
                             isGoalComplete
                                 ? 'bg-gradient-to-r from-green-600 to-green-400'
-                                : 'bg-gradient-to-r from-purple-600 to-purple-400'
+                                : 'bg-gradient-to-r from-#1a365d to-#1a365d'
                         )}
                         style={{ width: `${goalPercent}%` }}
                     />
