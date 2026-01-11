@@ -3,10 +3,15 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 // Routes that require authentication
-// Note: /exam, /flashcards, /study are PUBLIC (no login required for KSH quiz)
 const protectedRoutes = [
-    '/settings',  // Only settings requires auth
-    '/ai',        // AI features require subscription
+    '/dashboard',
+    '/settings',
+    '/ai',
+    '/exam',
+    '/flashcards',
+    '/analytics',
+    '/leaderboard',
+    '/study',
 ];
 
 // Routes that should redirect to dashboard if already authenticated
@@ -20,14 +25,14 @@ export function middleware(request: NextRequest) {
 
     // Check if the route is protected
     const isProtectedRoute = protectedRoutes.some(route =>
-        pathname.startsWith(route) || pathname === '/'
+        pathname.startsWith(route)
     );
 
     // Check if it's an auth route
     const isAuthRoute = authRoutes.some(route => pathname.startsWith(route));
 
     // If trying to access protected route without auth, redirect to login
-    if (isProtectedRoute && !token && pathname !== '/') {
+    if (isProtectedRoute && !token) {
         const loginUrl = new URL('/login', request.url);
         loginUrl.searchParams.set('redirect', pathname);
         return NextResponse.redirect(loginUrl);
@@ -35,7 +40,7 @@ export function middleware(request: NextRequest) {
 
     // If authenticated and trying to access auth routes, redirect to dashboard
     if (isAuthRoute && token) {
-        return NextResponse.redirect(new URL('/', request.url));
+        return NextResponse.redirect(new URL('/dashboard', request.url));
     }
 
     return NextResponse.next();
