@@ -75,7 +75,7 @@ export function Header({ userStats, currentView, onNavigate }: HeaderProps) {
                                         <span className="text-sm font-semibold">Twoja pozycja</span>
                                         <button
                                             onClick={() => onNavigate?.('leaderboard')}
-                                            className="text-xs text-purple-400 hover:underline"
+                                            className="text-xs text-[#1a365d] hover:underline"
                                         >
                                             Zobacz pełny ranking →
                                         </button>
@@ -86,7 +86,7 @@ export function Header({ userStats, currentView, onNavigate }: HeaderProps) {
                                                 key={user.rank}
                                                 className={cn(
                                                     'flex items-center gap-3 px-3 py-2 border-b border-[var(--border-color)] last:border-b-0',
-                                                    user.isCurrentUser && 'bg-purple-500/10'
+                                                    user.isCurrentUser && 'bg-[#1a365d]/10'
                                                 )}
                                             >
                                                 <span className={cn(
@@ -98,7 +98,7 @@ export function Header({ userStats, currentView, onNavigate }: HeaderProps) {
                                                 <div className="flex-1 min-w-0">
                                                     <p className={cn(
                                                         'text-sm font-medium truncate',
-                                                        user.isCurrentUser && 'text-purple-400'
+                                                        user.isCurrentUser && 'text-[#1a365d]'
                                                     )}>
                                                         {user.name}
                                                         {user.isCurrentUser && ' (Ty)'}
@@ -124,10 +124,10 @@ export function Header({ userStats, currentView, onNavigate }: HeaderProps) {
                     </div>
 
                     {/* Streak */}
-                    <div className="flex items-center gap-1.5 px-3 py-1.5 bg-orange-500/10 border border-orange-500/20 rounded-lg">
-                        <span className="text-orange-400">🔥</span>
-                        <span className="text-sm font-bold text-orange-400">{userStats.streak}</span>
-                        <span className="text-xs text-orange-400/70">dni</span>
+                    <div className="flex items-center gap-1.5 px-3 py-1.5 bg-[#b8860b]/10 border border-[#b8860b]/20 rounded-lg">
+                        <span className="text-[#b8860b]">🔥</span>
+                        <span className="text-sm font-bold text-[#b8860b]">{userStats.streak}</span>
+                        <span className="text-xs text-[#b8860b]/70">dni</span>
                     </div>
 
                     {/* Notifications */}

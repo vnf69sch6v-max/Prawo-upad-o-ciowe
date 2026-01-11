@@ -22,7 +22,7 @@ const NAV_SECTIONS: NavSection[] = [
     {
         title: 'Przegląd',
         items: [
-            { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={18} />, href: '/' },
+            { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={18} />, href: '/dashboard' },
             { id: 'leaderboard', label: 'Ranking', icon: <Trophy size={18} />, href: '/leaderboard' },
         ],
     },
@@ -86,7 +86,7 @@ export function Sidebar({
     const pathname = usePathname();
 
     const isActive = (href: string) => {
-        if (href === '/') return pathname === '/';
+        if (href === '/dashboard') return pathname === '/dashboard';
         return pathname.startsWith(href);
     };
 
@@ -99,14 +99,13 @@ export function Sidebar({
         >
             {/* Logo */}
             <div className="p-4 border-b border-[var(--border-color)]">
-                <Link href="/" className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-purple-800 rounded-xl flex items-center justify-center font-bold text-lg shrink-0">
-                        L
+                <Link href="/dashboard" className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-[#1a365d] rounded-xl flex items-center justify-center font-bold text-lg shrink-0 text-white">
+                        S
                     </div>
                     {!isCollapsed && (
                         <div className="animate-fade-in">
-                            <h1 className="font-bold text-lg">LexCapital</h1>
-                            <span className="badge badge-pro text-[10px]">PRO</span>
+                            <h1 className="font-serif font-bold text-lg">Savori Legal</h1>
                         </div>
                     )}
                 </Link>
@@ -131,8 +130,8 @@ export function Sidebar({
                                         className={cn(
                                             'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all',
                                             active
-                                                ? 'bg-purple-600/20 text-purple-400 border border-purple-500/30'
-                                                : 'text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] hover:text-white',
+                                                ? 'bg-[#1a365d]/10 text-[#1a365d] border border-[#1a365d]/30'
+                                                : 'text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] hover:text-[#1a365d]',
                                             isCollapsed && 'justify-center px-2'
                                         )}
                                         title={isCollapsed ? item.label : undefined}
@@ -159,22 +158,21 @@ export function Sidebar({
                 ))}
             </nav>
 
-            {/* User Profile - Click to go to Settings */}
             {!isCollapsed && userStats && (
                 <div className="p-4 border-t border-[var(--border-color)]">
                     <Link
                         href="/settings"
-                        className="flex items-center gap-3 p-3 bg-[var(--bg-hover)] rounded-xl hover:bg-purple-600/20 hover:border-purple-500/50 border border-transparent transition-all"
+                        className="flex items-center gap-3 p-3 bg-[var(--bg-hover)] rounded-xl hover:bg-[#1a365d]/10 hover:border-[#1a365d]/50 border border-transparent transition-all"
                     >
-                        <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-lg font-bold text-white">
+                        <div className="w-10 h-10 bg-[#1a365d] rounded-full flex items-center justify-center text-lg font-bold text-white">
                             👤
                         </div>
                         <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium truncate">Mój Profil</p>
                             <div className="flex items-center gap-2 text-xs text-[var(--text-muted)]">
-                                <span className="text-orange-400">🔥 {userStats.streak}</span>
+                                <span className="text-[#b8860b]">🔥 {userStats.streak}</span>
                                 <span>•</span>
-                                <span className="text-green-400">
+                                <span className="text-[#059669]">
                                     €{userStats.knowledgeEquity.toLocaleString()}
                                 </span>
                             </div>

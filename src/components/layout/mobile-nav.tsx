@@ -30,14 +30,14 @@ export function MobileNav({ currentView, onNavigate }: MobileNavProps) {
                             className={cn(
                                 'flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-lg transition-all min-w-[60px] relative',
                                 isActive
-                                    ? 'text-purple-400'
-                                    : 'text-[var(--text-muted)] hover:text-white'
+                                    ? 'text-[#1a365d]'
+                                    : 'text-[var(--text-muted)] hover:text-[#1a365d]'
                             )}
                         >
                             <Icon size={20} className={cn(isActive && 'scale-110', 'transition-transform')} />
                             <span className="text-[10px] font-medium">{tab.label}</span>
                             {isActive && (
-                                <span className="absolute -bottom-px left-1/2 -translate-x-1/2 w-8 h-1 bg-purple-500 rounded-t" />
+                                <span className="absolute -bottom-px left-1/2 -translate-x-1/2 w-8 h-1 bg-[#1a365d] rounded-t" />
                             )}
                         </button>
                     );
