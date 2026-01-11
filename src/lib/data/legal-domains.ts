@@ -2,7 +2,8 @@
 // Hierarchical structure for organizing legal content
 
 export type LegalDomainCategory =
-    | 'prawo_handlowe'
+    | 'ksh'
+    | 'prawo_upadlosciowe'
     | 'prawo_cywilne'
     | 'prawo_karne'
     | 'procedura_cywilna'
@@ -11,7 +12,7 @@ export type LegalDomainCategory =
     | 'prawo_administracyjne'
     | 'prawo_pracy';
 
-export type CommercialLawSubdomain =
+export type KSHSubdomain =
     | 'ksh_ogolne'
     | 'ksh_spolka_jawna'
     | 'ksh_spolka_partnerska'
@@ -20,9 +21,14 @@ export type CommercialLawSubdomain =
     | 'ksh_spolka_zoo'
     | 'ksh_spolka_akcyjna'
     | 'ksh_psa'
-    | 'prawo_upadlosciowe'
-    | 'prawo_restrukturyzacyjne'
-    | 'ustawa_krs';
+    | 'ksh_przeksztalcenia';
+
+export type PrawoUpadloscioweSubdomain =
+    | 'pu_przepisy_ogolne'
+    | 'pu_postepowanie'
+    | 'pu_skutki'
+    | 'pu_masa_upadlosci'
+    | 'pu_upadlosc_konsumencka';
 
 export type CivilLawSubdomain =
     | 'kc_czesc_ogolna'
@@ -37,7 +43,8 @@ export type CriminalLawSubdomain =
     | 'kk_kary';
 
 export type LegalSubdomain =
-    | CommercialLawSubdomain
+    | KSHSubdomain
+    | PrawoUpadloscioweSubdomain
     | CivilLawSubdomain
     | CriminalLawSubdomain
     | 'all';
@@ -49,6 +56,7 @@ export interface DomainConfig {
     icon: string;
     color: string;
     subdomains: SubdomainConfig[];
+    hasQuestions?: boolean;
 }
 
 export interface SubdomainConfig {
@@ -63,39 +71,39 @@ export interface SubdomainConfig {
 // Full domain hierarchy
 export const LEGAL_DOMAINS: DomainConfig[] = [
     {
-        id: 'prawo_handlowe',
-        name: 'Prawo Handlowe',
+        id: 'ksh',
+        name: 'Kodeks Spółek Handlowych',
         icon: '⚖️',
         color: 'purple',
+        hasQuestions: true,
         subdomains: [
             // Przepisy ogólne
-            { id: 'ksh_ogolne', name: 'KSH - Przepisy ogólne', shortName: 'KSH Ogólne', group: 'ogolne' },
+            { id: 'ksh_ogolne', name: 'Przepisy ogólne', shortName: 'Ogólne', group: 'ogolne' },
             // Spółki osobowe
-            { id: 'ksh_spolka_jawna', name: 'KSH - Spółka jawna', shortName: 'Sp. jawna', group: 'osobowe' },
-            { id: 'ksh_spolka_partnerska', name: 'KSH - Spółka partnerska', shortName: 'Sp. partnerska', group: 'osobowe' },
-            { id: 'ksh_spolka_komandytowa', name: 'KSH - Spółka komandytowa', shortName: 'Sp. komandytowa', group: 'osobowe' },
-            { id: 'ksh_spolka_komandytowo_akcyjna', name: 'KSH - Spółka komandytowo-akcyjna', shortName: 'S.K.A.', group: 'osobowe' },
+            { id: 'ksh_spolka_jawna', name: 'Spółka jawna', shortName: 'Sp. jawna', group: 'osobowe' },
+            { id: 'ksh_spolka_partnerska', name: 'Spółka partnerska', shortName: 'Sp. partnerska', group: 'osobowe' },
+            { id: 'ksh_spolka_komandytowa', name: 'Spółka komandytowa', shortName: 'Sp. komandytowa', group: 'osobowe' },
+            { id: 'ksh_spolka_komandytowo_akcyjna', name: 'Spółka komandytowo-akcyjna', shortName: 'S.K.A.', group: 'osobowe' },
             // Spółki kapitałowe
-            { id: 'ksh_spolka_zoo', name: 'KSH - Spółka z o.o.', shortName: 'Sp. z o.o.', group: 'kapitalowe' },
-            { id: 'ksh_spolka_akcyjna', name: 'KSH - Spółka akcyjna', shortName: 'S.A.', group: 'kapitalowe' },
-            { id: 'ksh_psa', name: 'KSH - Prosta spółka akcyjna', shortName: 'P.S.A.', group: 'kapitalowe' },
-            // Inne ustawy
-            { id: 'prawo_upadlosciowe', name: 'Prawo upadłościowe', shortName: 'Upadłościowe', group: 'inne' },
-            { id: 'prawo_restrukturyzacyjne', name: 'Prawo restrukturyzacyjne', shortName: 'Restrukturyzacja', group: 'inne' },
-            { id: 'ustawa_krs', name: 'Ustawa o KRS', shortName: 'KRS', group: 'inne' },
+            { id: 'ksh_spolka_zoo', name: 'Spółka z o.o.', shortName: 'Sp. z o.o.', group: 'kapitalowe' },
+            { id: 'ksh_spolka_akcyjna', name: 'Spółka akcyjna', shortName: 'S.A.', group: 'kapitalowe' },
+            { id: 'ksh_psa', name: 'Prosta spółka akcyjna', shortName: 'P.S.A.', group: 'kapitalowe' },
+            // Przekształcenia
+            { id: 'ksh_przeksztalcenia', name: 'Przekształcenia spółek', shortName: 'Przekształcenia', group: 'inne' },
         ]
     },
     {
-        id: 'prawo_cywilne',
-        name: 'Prawo Cywilne',
-        icon: '📕',
-        color: 'blue',
+        id: 'prawo_upadlosciowe',
+        name: 'Prawo Upadłościowe',
+        icon: '📉',
+        color: 'orange',
+        hasQuestions: true,
         subdomains: [
-            { id: 'kc_czesc_ogolna', name: 'Kodeks cywilny - Część ogólna', shortName: 'KC Ogólna' },
-            { id: 'kc_zobowiazania', name: 'Kodeks cywilny - Zobowiązania', shortName: 'Zobowiązania' },
-            { id: 'kc_prawo_rzeczowe', name: 'Kodeks cywilny - Prawo rzeczowe', shortName: 'Prawo rzeczowe' },
-            { id: 'kc_spadki', name: 'Kodeks cywilny - Spadki', shortName: 'Spadki' },
-            { id: 'kc_wlasnosc', name: 'Kodeks cywilny - Własność', shortName: 'Własność' },
+            { id: 'pu_przepisy_ogolne', name: 'Przepisy ogólne', shortName: 'Ogólne' },
+            { id: 'pu_postepowanie', name: 'Postępowanie upadłościowe', shortName: 'Postępowanie' },
+            { id: 'pu_skutki', name: 'Skutki ogłoszenia upadłości', shortName: 'Skutki' },
+            { id: 'pu_masa_upadlosci', name: 'Masa upadłości', shortName: 'Masa' },
+            { id: 'pu_upadlosc_konsumencka', name: 'Upadłość konsumencka', shortName: 'Konsumencka' },
         ]
     },
     {
@@ -165,12 +173,11 @@ export function getSubdomainName(id: LegalSubdomain | string): string {
 }
 
 export function getDomainsWithExams(): DomainConfig[] {
-    // For now, only commercial law has exams
-    return LEGAL_DOMAINS.filter(d => d.id === 'prawo_handlowe');
+    return LEGAL_DOMAINS.filter(d => d.hasQuestions === true);
 }
 
 // Map KSH sections to subdomains
-export const KSH_SECTION_TO_SUBDOMAIN: Record<string, CommercialLawSubdomain> = {
+export const KSH_SECTION_TO_SUBDOMAIN: Record<string, KSHSubdomain> = {
     'Przepisy ogólne': 'ksh_ogolne',
     'Spółka jawna': 'ksh_spolka_jawna',
     'Spółka partnerska': 'ksh_spolka_partnerska',
@@ -185,7 +192,7 @@ export const KSH_SECTION_TO_SUBDOMAIN: Record<string, CommercialLawSubdomain> = 
     'P.S.A.': 'ksh_psa',
 };
 
-export function mapSectionToSubdomain(section: string): CommercialLawSubdomain | null {
+export function mapSectionToSubdomain(section: string): KSHSubdomain | null {
     // Direct match
     if (KSH_SECTION_TO_SUBDOMAIN[section]) {
         return KSH_SECTION_TO_SUBDOMAIN[section];
@@ -217,3 +224,4 @@ export function mapSectionToSubdomain(section: string): CommercialLawSubdomain |
 
     return null;
 }
+
