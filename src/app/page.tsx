@@ -71,43 +71,43 @@ export default function LandingPage() {
       <section className="pt-20 pb-24 px-6">
         <div className="max-w-4xl mx-auto text-center">
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#1a365d]/5 border border-[#1a365d]/10 rounded-full text-sm text-[#1a365d] mb-8">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#1a365d]/5 border border-[#1a365d]/10 rounded-full text-sm text-[#1a365d] mb-8 animate-fade-in-up">
             <GraduationCap size={16} />
             <span>Platforma do nauki prawa</span>
           </div>
 
           {/* Headline */}
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-serif font-bold text-[#1a365d] leading-tight mb-6">
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-serif font-bold text-[#1a365d] leading-tight mb-6 animate-fade-in-up delay-100">
             Opanuj prawo handlowe.
             <br />
             <span className="text-[#b8860b]">Zdaj za pierwszym razem.</span>
           </h1>
 
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto mb-10 leading-relaxed">
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto mb-10 leading-relaxed animate-fade-in-up delay-200">
             Kompleksowa platforma z <strong>959+ pytaniami egzaminacyjnymi</strong>,
             inteligentnym AI asystentem i systemem powtórek.
             Wszystko, czego potrzebujesz do egzaminu radcowskiego i adwokackiego.
           </p>
 
           {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16 animate-fade-in-up delay-300">
             <Link
               href="/signup"
-              className="w-full sm:w-auto px-8 py-4 bg-[#1a365d] text-white font-medium rounded-lg hover:bg-[#2c5282] transition-all flex items-center justify-center gap-2 group"
+              className="w-full sm:w-auto px-8 py-4 bg-[#1a365d] text-white font-medium rounded-lg hover:bg-[#2c5282] transition-all flex items-center justify-center gap-2 group hover-lift"
             >
               Rozpocznij za darmo
               <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
             </Link>
             <Link
               href="#pricing"
-              className="w-full sm:w-auto px-8 py-4 bg-white border border-gray-300 text-gray-700 font-medium rounded-lg hover:border-[#1a365d] hover:text-[#1a365d] transition-all"
+              className="w-full sm:w-auto px-8 py-4 bg-white border border-gray-300 text-gray-700 font-medium rounded-lg hover:border-[#1a365d] hover:text-[#1a365d] transition-all hover-lift"
             >
               Zobacz cennik
             </Link>
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-3 gap-8 max-w-lg mx-auto">
+          <div className="grid grid-cols-3 gap-8 max-w-lg mx-auto animate-fade-in-up delay-400">
             <div>
               <p className="text-3xl font-serif font-bold text-[#1a365d]">959+</p>
               <p className="text-sm text-gray-500">pytań</p>
@@ -138,7 +138,7 @@ export default function LandingPage() {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {/* Feature 1 */}
-            <div className="p-6 bg-[#FAFAFA] rounded-xl">
+            <div className="p-6 bg-[#FAFAFA] rounded-xl hover-lift hover-glow">
               <div className="w-12 h-12 bg-[#1a365d]/10 rounded-lg flex items-center justify-center mb-4">
                 <Target size={24} className="text-[#1a365d]" />
               </div>
@@ -149,7 +149,7 @@ export default function LandingPage() {
             </div>
 
             {/* Feature 2 */}
-            <div className="p-6 bg-[#FAFAFA] rounded-xl">
+            <div className="p-6 bg-[#FAFAFA] rounded-xl hover-lift hover-glow">
               <div className="w-12 h-12 bg-[#1a365d]/10 rounded-lg flex items-center justify-center mb-4">
                 <Brain size={24} className="text-[#1a365d]" />
               </div>
@@ -160,7 +160,7 @@ export default function LandingPage() {
             </div>
 
             {/* Feature 3 */}
-            <div className="p-6 bg-[#FAFAFA] rounded-xl">
+            <div className="p-6 bg-[#FAFAFA] rounded-xl hover-lift hover-glow">
               <div className="w-12 h-12 bg-[#1a365d]/10 rounded-lg flex items-center justify-center mb-4">
                 <BookOpen size={24} className="text-[#1a365d]" />
               </div>
@@ -171,7 +171,7 @@ export default function LandingPage() {
             </div>
 
             {/* Feature 4 */}
-            <div className="p-6 bg-[#FAFAFA] rounded-xl">
+            <div className="p-6 bg-[#FAFAFA] rounded-xl hover-lift hover-glow">
               <div className="w-12 h-12 bg-[#1a365d]/10 rounded-lg flex items-center justify-center mb-4">
                 <TrendingUp size={24} className="text-[#1a365d]" />
               </div>
@@ -182,7 +182,7 @@ export default function LandingPage() {
             </div>
 
             {/* Feature 5 */}
-            <div className="p-6 bg-[#FAFAFA] rounded-xl">
+            <div className="p-6 bg-[#FAFAFA] rounded-xl hover-lift hover-glow">
               <div className="w-12 h-12 bg-[#1a365d]/10 rounded-lg flex items-center justify-center mb-4">
                 <Zap size={24} className="text-[#1a365d]" />
               </div>
@@ -193,7 +193,7 @@ export default function LandingPage() {
             </div>
 
             {/* Feature 6 */}
-            <div className="p-6 bg-[#FAFAFA] rounded-xl">
+            <div className="p-6 bg-[#FAFAFA] rounded-xl hover-lift hover-glow">
               <div className="w-12 h-12 bg-[#1a365d]/10 rounded-lg flex items-center justify-center mb-4">
                 <Award size={24} className="text-[#1a365d]" />
               </div>
