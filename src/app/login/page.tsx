@@ -81,7 +81,7 @@ export default function LoginPage() {
                 <div className="space-y-8">
                     <div>
                         <h1 className="text-4xl font-serif font-bold text-white mb-4 leading-tight">
-                            Opanuj prawo handlowe.
+                            Opanuj egzaminy prawnicze.
                             <br />
                             <span className="text-[#b8860b]">Zdaj za pierwszym razem.</span>
                         </h1>

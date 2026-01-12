@@ -78,7 +78,7 @@ export default function LandingPage() {
 
           {/* Headline */}
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-serif font-bold text-[#1a365d] leading-tight mb-6 animate-fade-in-up delay-100">
-            Opanuj prawo handlowe.
+            Opanuj egzaminy prawnicze.
             <br />
             <span className="text-[#b8860b]">Zdaj za pierwszym razem.</span>
           </h1>

@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Savori Legal - Platforma do nauki prawa",
-  description: "Opanuj prawo handlowe i zdaj egzamin za pierwszym razem. 959+ pytań egzaminacyjnych, AI asystent, inteligentne fiszki.",
+  description: "Opanuj egzaminy prawnicze i zdaj egzamin za pierwszym razem. 959+ pytań egzaminacyjnych, AI asystent, inteligentne fiszki.",
   keywords: ["prawo", "KSH", "prawo upadłościowe", "egzamin radcowski", "egzamin adwokacki", "nauka prawa", "fiszki prawnicze"],
   manifest: "/manifest.json",
   appleWebApp: {
