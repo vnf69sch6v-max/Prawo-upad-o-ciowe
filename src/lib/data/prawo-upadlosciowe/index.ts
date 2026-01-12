@@ -4,14 +4,18 @@
 // ============================================================
 
 import { PRAWO_UPADLOSCIOWE_EXAM_QUESTIONS_PART1 } from './prawo-upadlosciowe-exam-questions-part1';
+import { PRAWO_UPADLOSCIOWE_EXAM_QUESTIONS_PART3 } from './prawo-upadlosciowe-exam-questions-part3';
 import { ExamQuestion } from '../ksh/ksh-exam-questions';
 
 // Re-export the type
 export type { ExamQuestion };
 
 // Combine all questions into one array
+// Part 1: 80 questions - podstawy, przesłanki, organy, skutki
+// Part 3: pytania o międzynarodowe postępowanie, odrębne postępowania, przepisy karne
 export const ALL_PRAWO_UPADLOSCIOWE_QUESTIONS: ExamQuestion[] = [
     ...PRAWO_UPADLOSCIOWE_EXAM_QUESTIONS_PART1,
+    ...PRAWO_UPADLOSCIOWE_EXAM_QUESTIONS_PART3,
 ];
 
 // ============================================================
