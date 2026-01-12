@@ -1,80 +1,114 @@
 'use client';
 
-import { TrendingUp, MessageSquare, Trophy, Target, Zap } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { TrendingUp, MessageSquare, Trophy, Target, Zap, Loader2, Inbox } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { pl } from 'date-fns/locale';
+import { useAuth } from '@/hooks/use-auth';
+import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
+import { getFirebaseDb, isFirebaseAvailable } from '@/lib/firebase/config';
+import { ActivityItem } from '@/lib/types/user';
 
-interface Activity {
-    id: string;
-    type: 'achievement' | 'milestone' | 'rank' | 'streak' | 'study';
-    title: string;
-    description: string;
-    timestamp: Date;
+const ICONS: Record<string, React.ElementType> = {
+    exam_completed: Trophy,
+    streak_milestone: Zap,
+    achievement: Trophy,
+    study_session: MessageSquare,
+    flashcard_mastered: Target,
+};
+
+const COLORS: Record<string, string> = {
+    exam_completed: 'text-green-500 bg-green-500/10',
+    streak_milestone: 'text-orange-500 bg-orange-500/10',
+    achievement: 'text-yellow-500 bg-yellow-500/10',
+    study_session: 'text-blue-500 bg-blue-500/10',
+    flashcard_mastered: 'text-purple-500 bg-purple-500/10',
+};
+
+interface ActivityFeedProps {
+    userId?: string;
 }
 
-const MOCK_ACTIVITIES: Activity[] = [
-    {
-        id: '1',
-        type: 'achievement',
-        title: 'Nowa odznaka!',
-        description: 'Zdobyłeś odznakę "Prawo Cywilne Master"',
-        timestamp: new Date(Date.now() - 1000 * 60 * 30),
-    },
-    {
-        id: '2',
-        type: 'rank',
-        title: 'Awans w rankingu',
-        description: 'Awansowałeś o 3 pozycje (#32)',
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2),
-    },
-    {
-        id: '3',
-        type: 'milestone',
-        title: 'Kamień milowy',
-        description: 'Przekroczyłeś €10,000 Knowledge Equity',
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24),
-    },
-    {
-        id: '4',
-        type: 'streak',
-        title: 'Nowy streak!',
-        description: '12 dni nauki z rzędu 🔥',
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2),
-    },
-    {
-        id: '5',
-        type: 'study',
-        title: 'Sesja zakończona',
-        description: '45 fiszek, 87% poprawnych',
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3),
-    },
-];
+export function ActivityFeed({ userId }: ActivityFeedProps) {
+    const { user } = useAuth();
+    const [activities, setActivities] = useState<ActivityItem[]>([]);
+    const [loading, setLoading] = useState(true);
 
-const ICONS = {
-    achievement: Trophy,
-    milestone: Target,
-    rank: TrendingUp,
-    streak: Zap,
-    study: MessageSquare,
-};
+    const uid = userId || user?.uid;
 
-const COLORS = {
-    achievement: 'text-yellow-400 bg-yellow-500/20',
-    milestone: 'text-#1a365d bg-#1a365d/20',
-    rank: 'text-green-400 bg-green-500/20',
-    streak: 'text-orange-400 bg-orange-500/20',
-    study: 'text-blue-400 bg-blue-500/20',
-};
+    useEffect(() => {
+        async function fetchActivities() {
+            if (!uid || !isFirebaseAvailable()) {
+                setLoading(false);
+                return;
+            }
 
-export function ActivityFeed() {
+            try {
+                const db = getFirebaseDb();
+                if (!db) {
+                    setLoading(false);
+                    return;
+                }
+
+                const activitiesRef = collection(db, 'users', uid, 'activities');
+                const q = query(
+                    activitiesRef,
+                    orderBy('createdAt', 'desc'),
+                    limit(10)
+                );
+
+                const snapshot = await getDocs(q);
+                const data = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data(),
+                    createdAt: doc.data().createdAt?.toDate() || new Date(),
+                })) as ActivityItem[];
+
+                setActivities(data);
+            } catch (error) {
+                console.error('Error fetching activities:', error);
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        fetchActivities();
+    }, [uid]);
+
+    if (loading) {
+        return (
+            <div className="lex-card">
+                <h3 className="text-lg font-semibold mb-4">Aktywność</h3>
+                <div className="flex items-center justify-center py-8">
+                    <Loader2 className="animate-spin" size={24} style={{ color: '#1a365d' }} />
+                </div>
+            </div>
+        );
+    }
+
+    if (activities.length === 0) {
+        return (
+            <div className="lex-card">
+                <h3 className="text-lg font-semibold mb-4">Aktywność</h3>
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                    <div className="w-12 h-12 rounded-full bg-[var(--bg-hover)] flex items-center justify-center mb-3">
+                        <Inbox size={24} className="text-[var(--text-muted)]" />
+                    </div>
+                    <p className="text-sm text-[var(--text-muted)]">Brak aktywności</p>
+                    <p className="text-xs text-[var(--text-muted)] mt-1">Zacznij naukę, aby zobaczyć swoje postępy</p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="lex-card">
             <h3 className="text-lg font-semibold mb-4">Aktywność</h3>
 
             <div className="space-y-4">
-                {MOCK_ACTIVITIES.map(activity => {
-                    const Icon = ICONS[activity.type];
-                    const colorClass = COLORS[activity.type];
+                {activities.map(activity => {
+                    const Icon = ICONS[activity.type] || Trophy;
+                    const colorClass = COLORS[activity.type] || 'text-gray-500 bg-gray-500/10';
 
                     return (
                         <div key={activity.id} className="flex gap-3">
@@ -85,17 +119,13 @@ export function ActivityFeed() {
                                 <p className="font-medium text-sm">{activity.title}</p>
                                 <p className="text-xs text-[var(--text-muted)] truncate">{activity.description}</p>
                                 <p className="text-xs text-[var(--text-muted)] mt-1">
-                                    {formatDistanceToNow(activity.timestamp, { addSuffix: true, locale: pl })}
+                                    {formatDistanceToNow(activity.createdAt, { addSuffix: true, locale: pl })}
                                 </p>
                             </div>
                         </div>
                     );
                 })}
             </div>
-
-            <button className="w-full mt-4 py-2 text-sm text-#1a365d hover:text-purple-300 transition-colors">
-                Zobacz wszystko →
-            </button>
         </div>
     );
 }

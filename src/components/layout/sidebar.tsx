@@ -1,9 +1,10 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils/cn';
-import { ChevronLeft, ChevronRight, Crown, Sparkles, LayoutDashboard, Trophy, BookOpen, Brain, Target, BarChart3, Clock, LineChart, Zap, Users, MessageSquare, FileText } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ChevronDown, Crown, Sparkles, LayoutDashboard, Trophy, BookOpen, Brain, Target, BarChart3, Clock, LineChart, Zap, Users, MessageSquare, FileText } from 'lucide-react';
 
 interface NavItem {
     id: string;
@@ -15,12 +16,14 @@ interface NavItem {
 
 interface NavSection {
     title: string;
+    id: string;
     items: NavItem[];
 }
 
 const NAV_SECTIONS: NavSection[] = [
     {
         title: 'Przegląd',
+        id: 'przeglad',
         items: [
             { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={18} />, href: '/dashboard' },
             { id: 'leaderboard', label: 'Ranking', icon: <Trophy size={18} />, href: '/leaderboard' },
@@ -28,15 +31,15 @@ const NAV_SECTIONS: NavSection[] = [
     },
     {
         title: 'Nauka',
+        id: 'nauka',
         items: [
             { id: 'flashcards', label: 'Fiszki', icon: <BookOpen size={18} />, href: '/flashcards' },
             { id: 'study', label: 'Nauka', icon: <Brain size={18} />, href: '/study' },
-            { id: 'weakareas', label: 'Słabe punkty', icon: <Target size={18} />, href: '/analytics', badge: 'pro' },
-            { id: 'customdecks', label: 'Własne talie', icon: <Sparkles size={18} />, href: '/flashcards' },
         ],
     },
     {
         title: 'Egzaminy',
+        id: 'egzaminy',
         items: [
             { id: 'exam', label: 'Symulacje', icon: <FileText size={18} />, href: '/exam' },
             { id: 'results', label: 'Wyniki', icon: <BarChart3 size={18} />, href: '/exam/results' },
@@ -44,28 +47,22 @@ const NAV_SECTIONS: NavSection[] = [
     },
     {
         title: 'Analityka',
+        id: 'analityka',
         items: [
-            { id: 'performance', label: 'Wydajność', icon: <LineChart size={18} />, href: '/analytics', badge: 'pro' },
-            { id: 'timetracker', label: 'Czas nauki', icon: <Clock size={18} />, href: '/analytics' },
-            { id: 'predictions', label: 'Prognozy AI', icon: <Zap size={18} />, href: '/analytics', badge: 'pro' },
+            { id: 'analytics', label: 'Statystyki', icon: <LineChart size={18} />, href: '/analytics', badge: 'pro' },
         ],
     },
     {
         title: 'AI Tools',
+        id: 'ai-tools',
         items: [
             { id: 'ai', label: 'Asystent AI', icon: <Brain size={18} />, href: '/ai' },
-            { id: 'analyzer', label: 'Analiza kazusu', icon: <Sparkles size={18} />, href: '/ai', badge: 'pro' },
-            { id: 'generator', label: 'Generator fiszek', icon: <Zap size={18} />, href: '/ai', badge: 'new' },
-        ],
-    },
-    {
-        title: 'Społeczność',
-        items: [
-            { id: 'groups', label: 'Grupy nauki', icon: <Users size={18} />, href: '/leaderboard', badge: 'new' },
-            { id: 'forum', label: 'Forum', icon: <MessageSquare size={18} />, href: '/leaderboard' },
         ],
     },
 ];
+
+// Default expanded sections
+const DEFAULT_EXPANDED = ['przeglad', 'nauka', 'egzaminy'];
 
 interface SidebarProps {
     currentView?: string;
@@ -84,6 +81,26 @@ export function Sidebar({
     userStats,
 }: SidebarProps) {
     const pathname = usePathname();
+    const [expandedSections, setExpandedSections] = useState<string[]>(DEFAULT_EXPANDED);
+
+    // Load from localStorage on mount
+    useEffect(() => {
+        const saved = localStorage.getItem('sidebar-expanded');
+        if (saved) {
+            setExpandedSections(JSON.parse(saved));
+        }
+    }, []);
+
+    // Save to localStorage
+    const toggleSection = (sectionId: string) => {
+        setExpandedSections(prev => {
+            const newState = prev.includes(sectionId)
+                ? prev.filter(id => id !== sectionId)
+                : [...prev, sectionId];
+            localStorage.setItem('sidebar-expanded', JSON.stringify(newState));
+            return newState;
+        });
+    };
 
     const isActive = (href: string) => {
         if (href === '/dashboard') return pathname === '/dashboard';
@@ -113,49 +130,68 @@ export function Sidebar({
 
             {/* Navigation */}
             <nav className="flex-1 overflow-y-auto py-4">
-                {NAV_SECTIONS.map((section) => (
-                    <div key={section.title} className="mb-4">
-                        {!isCollapsed && (
-                            <h3 className="px-4 mb-2 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wide">
-                                {section.title}
-                            </h3>
-                        )}
-                        <div className="space-y-1 px-2">
-                            {section.items.map((item) => {
-                                const active = isActive(item.href);
-                                return (
-                                    <Link
-                                        key={item.id}
-                                        href={item.href}
+                {NAV_SECTIONS.map((section) => {
+                    const isExpanded = expandedSections.includes(section.id);
+                    return (
+                        <div key={section.id} className="mb-2">
+                            {!isCollapsed ? (
+                                <button
+                                    onClick={() => toggleSection(section.id)}
+                                    className="w-full px-4 mb-1 flex items-center justify-between text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wide hover:text-[#1a365d] transition-colors"
+                                >
+                                    {section.title}
+                                    <ChevronDown
+                                        size={14}
                                         className={cn(
-                                            'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all',
-                                            active
-                                                ? 'bg-[#1a365d]/10 text-[#1a365d] border border-[#1a365d]/30'
-                                                : 'text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] hover:text-[#1a365d]',
-                                            isCollapsed && 'justify-center px-2'
+                                            'transition-transform duration-200',
+                                            isExpanded ? 'rotate-0' : '-rotate-90'
                                         )}
-                                        title={isCollapsed ? item.label : undefined}
-                                    >
-                                        {item.icon}
-                                        {!isCollapsed && (
-                                            <>
-                                                <span className="flex-1 text-left">{item.label}</span>
-                                                {item.badge === 'pro' && (
-                                                    <span className="badge badge-pro text-[9px] py-0.5">
-                                                        <Crown size={10} />
-                                                    </span>
-                                                )}
-                                                {item.badge === 'new' && (
-                                                    <span className="badge badge-new text-[9px] py-0.5">NEW</span>
-                                                )}
-                                            </>
-                                        )}
-                                    </Link>
-                                );
-                            })}
+                                    />
+                                </button>
+                            ) : null}
+                            <div
+                                className={cn(
+                                    'space-y-1 px-2 overflow-hidden transition-all duration-200',
+                                    !isCollapsed && !isExpanded && 'max-h-0 opacity-0',
+                                    (!isCollapsed && isExpanded) || isCollapsed ? 'max-h-96 opacity-100' : ''
+                                )}
+                            >
+                                {section.items.map((item) => {
+                                    const active = isActive(item.href);
+                                    return (
+                                        <Link
+                                            key={item.id}
+                                            href={item.href}
+                                            className={cn(
+                                                'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all',
+                                                active
+                                                    ? 'bg-[#1a365d]/10 text-[#1a365d] border border-[#1a365d]/30'
+                                                    : 'text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] hover:text-[#1a365d]',
+                                                isCollapsed && 'justify-center px-2'
+                                            )}
+                                            title={isCollapsed ? item.label : undefined}
+                                        >
+                                            {item.icon}
+                                            {!isCollapsed && (
+                                                <>
+                                                    <span className="flex-1 text-left">{item.label}</span>
+                                                    {item.badge === 'pro' && (
+                                                        <span className="badge badge-pro text-[9px] py-0.5">
+                                                            <Crown size={10} />
+                                                        </span>
+                                                    )}
+                                                    {item.badge === 'new' && (
+                                                        <span className="badge badge-new text-[9px] py-0.5">NEW</span>
+                                                    )}
+                                                </>
+                                            )}
+                                        </Link>
+                                    );
+                                })}
+                            </div>
                         </div>
-                    </div>
-                ))}
+                    );
+                })}
             </nav>
 
             {!isCollapsed && userStats && (
