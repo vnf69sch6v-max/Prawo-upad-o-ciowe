@@ -18,6 +18,16 @@ import { getUserProfile, createUserProfile, updateStreak } from '@/lib/services/
 
 const googleProvider = new GoogleAuthProvider();
 
+// Cookie management for middleware sync
+const setAuthCookie = async (user: User | null) => {
+    if (user) {
+        const token = await user.getIdToken();
+        document.cookie = `auth-token=${token}; path=/; max-age=3600; SameSite=Lax; Secure`;
+    } else {
+        document.cookie = 'auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+    }
+};
+
 export function useAuth() {
     const [user, setUser] = useState<User | null>(null);
     const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -68,6 +78,10 @@ export function useAuth() {
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
             setUser(firebaseUser);
             setLoading(false);
+
+            // Sync auth cookie with Firebase auth state
+            await setAuthCookie(firebaseUser);
+
             await loadProfile(firebaseUser);
         });
 
