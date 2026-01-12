@@ -11,6 +11,7 @@ import {
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { cn } from '@/lib/utils/cn';
+import { Confetti } from '@/components/ui/confetti';
 
 interface Step {
     id: string;
@@ -52,6 +53,7 @@ export default function OnboardingPage() {
     const [selectedDomains, setSelectedDomains] = useState<string[]>([]);
     const [selectedPace, setSelectedPace] = useState<number>(30);
     const [saving, setSaving] = useState(false);
+    const [showConfetti, setShowConfetti] = useState(false);
 
     // Redirect if already completed onboarding
     useEffect(() => {
@@ -86,6 +88,10 @@ export default function OnboardingPage() {
     const handleNext = async () => {
         if (currentStep < STEPS.length - 1) {
             setCurrentStep(prev => prev + 1);
+            // Show confetti when reaching ready step
+            if (STEPS[currentStep + 1].id === 'ready') {
+                setShowConfetti(true);
+            }
         } else {
             // Save preferences and redirect
             if (user) {
@@ -272,26 +278,67 @@ export default function OnboardingPage() {
                             </div>
                         )}
 
-                        {/* Ready step */}
+                        {/* Ready step - Premium celebration */}
                         {step.id === 'ready' && (
-                            <div className="text-center py-8">
-                                <div className="w-20 h-20 mx-auto mb-6 rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)' }}>
-                                    <Check size={40} className="text-white" />
+                            <>
+                                <Confetti active={showConfetti} duration={4000} particleCount={80} />
+                                <div className="text-center py-8">
+                                    {/* Glassmorphism celebration card */}
+                                    <div className="relative max-w-md mx-auto p-8 rounded-3xl mb-8" style={{
+                                        background: 'rgba(255, 255, 255, 0.7)',
+                                        backdropFilter: 'blur(20px)',
+                                        border: '1px solid rgba(255, 255, 255, 0.3)',
+                                        boxShadow: '0 25px 50px -12px rgba(26, 54, 93, 0.25)'
+                                    }}>
+                                        {/* Animated celebration icon */}
+                                        <div className="w-24 h-24 mx-auto mb-6 rounded-full flex items-center justify-center animate-celebration" style={{
+                                            background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
+                                            boxShadow: '0 10px 40px rgba(5, 150, 105, 0.3)'
+                                        }}>
+                                            <Check size={48} className="text-white" strokeWidth={3} />
+                                        </div>
+
+                                        <h2 className="text-2xl font-bold mb-2" style={{ color: '#1a365d' }}>
+                                            🎉 Gratulacje!
+                                        </h2>
+                                        <p className="text-gray-600 mb-6">
+                                            Twoje konto jest w pełni skonfigurowane. Jesteś gotowy do nauki!
+                                        </p>
+
+                                        {/* Selected options display */}
+                                        <div className="space-y-3">
+                                            <div className="flex items-center justify-center gap-2 text-sm">
+                                                <span className="text-gray-500">Cel:</span>
+                                                <span className="font-semibold" style={{ color: '#1a365d' }}>
+                                                    {GOALS.find(g => g.id === selectedGoal)?.label}
+                                                </span>
+                                            </div>
+                                            <div className="flex flex-wrap items-center justify-center gap-2">
+                                                {selectedDomains.map(id => (
+                                                    <span key={id} className="px-4 py-2 rounded-full text-sm font-medium text-white shadow-lg" style={{
+                                                        background: 'linear-gradient(135deg, #1a365d 0%, #2c5282 100%)'
+                                                    }}>
+                                                        📚 {DOMAINS.find(d => d.id === id)?.label}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                            <div className="flex items-center justify-center">
+                                                <span className="px-4 py-2 rounded-full text-sm font-medium shadow-lg" style={{
+                                                    background: 'linear-gradient(135deg, #b8860b 0%, #d4a418 100%)',
+                                                    color: 'white'
+                                                }}>
+                                                    ⏱️ {selectedPace} min dziennie
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Motivational quote */}
+                                    <p className="text-sm text-gray-500 italic max-w-sm mx-auto">
+                                        "Droga do sukcesu zaczyna się od pierwszego kroku. Zacznij już dziś!"
+                                    </p>
                                 </div>
-                                <p className="text-lg text-gray-700 max-w-md mx-auto mb-6">
-                                    Świetnie! Twoje konto jest skonfigurowane. Zaczynamy naukę!
-                                </p>
-                                <div className="flex flex-wrap justify-center gap-2">
-                                    {selectedDomains.map(id => (
-                                        <span key={id} className="px-3 py-1 rounded-full text-sm font-medium text-white" style={{ background: '#1a365d' }}>
-                                            {DOMAINS.find(d => d.id === id)?.label}
-                                        </span>
-                                    ))}
-                                    <span className="px-3 py-1 rounded-full text-sm font-medium" style={{ background: '#b8860b', color: 'white' }}>
-                                        {selectedPace} min/dzień
-                                    </span>
-                                </div>
-                            </div>
+                            </>
                         )}
                     </div>
 

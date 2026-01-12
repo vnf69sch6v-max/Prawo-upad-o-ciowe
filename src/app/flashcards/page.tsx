@@ -1,24 +1,30 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Sidebar, Header, MobileNav } from '@/components/layout';
 import { FlashcardStudy } from '@/components/study';
-import { Plus, BookOpen, Filter, Search, Clock, Target, Zap } from 'lucide-react';
+import { Plus, BookOpen, Filter, Search, Clock, Target, Zap, Loader2, Inbox } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 import type { Flashcard, LegalDomain } from '@/types';
 import { useAuth } from '@/hooks/use-auth';
+import { ALL_KSH_QUESTIONS, type ExamQuestion } from '@/lib/data/ksh';
+import { ALL_PRAWO_UPADLOSCIOWE_QUESTIONS } from '@/lib/data/prawo-upadlosciowe';
 
-// Mock flashcards for demo
-const MOCK_FLASHCARDS: Flashcard[] = [
-    {
-        id: '1',
-        question: 'Co to jest zdolność prawna?',
-        answer: 'Zdolność prawna to zdolność do bycia podmiotem praw i obowiązków cywilnoprawnych.',
-        legalReference: 'Art. 8 k.c.',
-        explanation: 'Każdy człowiek od chwili urodzenia ma zdolność prawną.',
-        domain: 'prawo_cywilne',
-        tags: ['podstawy', 'podmiotowość'],
-        difficulty: 'easy',
+// Convert exam questions to flashcard format
+function convertQuestionToFlashcard(q: ExamQuestion, domain: LegalDomain): Flashcard {
+    // Get correct answer text from options
+    const correctAnswerKey = q.correct;
+    const correctAnswerText = q.options[correctAnswerKey];
+
+    return {
+        id: q.id,
+        question: q.question,
+        answer: correctAnswerText,
+        legalReference: q.article || '',
+        explanation: q.explanation || '',
+        domain,
+        tags: q.tags || [],
+        difficulty: q.difficulty || 'medium',
         srs: { easeFactor: 2.5, interval: 1, repetitions: 0, nextReview: new Date(), lastReview: null },
         stats: { timesReviewed: 0, timesCorrect: 0, timesIncorrect: 0, averageResponseTime: 0 },
         source: 'global',
@@ -26,76 +32,68 @@ const MOCK_FLASHCARDS: Flashcard[] = [
         createdAt: new Date(),
         updatedAt: new Date(),
         isArchived: false,
-    },
-    {
-        id: '2',
-        question: 'Czym różni się zdolność prawna od zdolności do czynności prawnych?',
-        answer: 'Zdolność prawna to możliwość bycia podmiotem praw, zdolność do czynności prawnych to możliwość samodzielnego ich nabywania.',
-        legalReference: 'Art. 8, 10-14 k.c.',
-        explanation: 'Zdolność prawną ma każdy od urodzenia, zdolność do czynności prawnych nabywa się z wiekiem.',
-        domain: 'prawo_cywilne',
-        tags: ['podstawy', 'podmiotowość'],
-        difficulty: 'medium',
-        srs: { easeFactor: 2.5, interval: 0, repetitions: 0, nextReview: new Date(), lastReview: null },
-        stats: { timesReviewed: 0, timesCorrect: 0, timesIncorrect: 0, averageResponseTime: 0 },
-        source: 'global',
-        sourceId: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        isArchived: false,
-    },
-    {
-        id: '3',
-        question: 'Kiedy następuje nabycie pełnej zdolności do czynności prawnych?',
-        answer: 'Z chwilą uzyskania pełnoletności (18 lat) lub przez zawarcie małżeństwa przez osobę niepełnoletnią.',
-        legalReference: 'Art. 11 k.c.',
-        explanation: 'Kobieta, która ukończyła 16 lat, może za zgodą sądu zawrzeć małżeństwo i tym samym uzyskać pełną zdolność.',
-        domain: 'prawo_cywilne',
-        tags: ['podstawy', 'wiek'],
-        difficulty: 'medium',
-        srs: { easeFactor: 2.5, interval: 0, repetitions: 0, nextReview: new Date(), lastReview: null },
-        stats: { timesReviewed: 0, timesCorrect: 0, timesIncorrect: 0, averageResponseTime: 0 },
-        source: 'global',
-        sourceId: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        isArchived: false,
-    },
-];
+    };
+}
 
-const DOMAINS: { id: LegalDomain; name: string }[] = [
-    { id: 'prawo_cywilne', name: 'Prawo Cywilne' },
-    { id: 'prawo_karne', name: 'Prawo Karne' },
-    { id: 'prawo_handlowe', name: 'Prawo Handlowe' },
-    { id: 'procedura_cywilna', name: 'Procedura Cywilna' },
-    { id: 'procedura_karna', name: 'Procedura Karna' },
+const DOMAINS: { id: LegalDomain | 'prawo_upadlosciowe'; name: string }[] = [
+    { id: 'prawo_handlowe', name: 'Prawo Handlowe (KSH)' },
+    { id: 'prawo_upadlosciowe', name: 'Prawo Upadłościowe' },
 ];
 
 export default function FlashcardsPage() {
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const [view, setView] = useState<'list' | 'study'>('list');
-    const [selectedDomain, setSelectedDomain] = useState<LegalDomain | 'all'>('all');
+    const [selectedDomain, setSelectedDomain] = useState<string>('all');
     const [searchQuery, setSearchQuery] = useState('');
 
-    const { profile } = useAuth();
+    const { profile, loading: authLoading } = useAuth();
     const stats = profile?.stats;
 
-    const filteredCards = MOCK_FLASHCARDS.filter(card => {
-        if (selectedDomain !== 'all' && card.domain !== selectedDomain) return false;
-        if (searchQuery && !card.question.toLowerCase().includes(searchQuery.toLowerCase())) return false;
-        return true;
-    });
+    // Calculate accuracy from real stats
+    const accuracy = useMemo(() => {
+        if (!stats || stats.totalQuestions === 0) return 0;
+        return Math.round((stats.correctAnswers / stats.totalQuestions) * 100);
+    }, [stats]);
 
-    const dueCards = filteredCards.filter(c => new Date(c.srs.nextReview) <= new Date());
+    // Convert exam questions to flashcards
+    const allFlashcards = useMemo(() => {
+        const kshCards = ALL_KSH_QUESTIONS.slice(0, 50).map(q =>
+            convertQuestionToFlashcard(q, 'prawo_handlowe')
+        );
+        const upCards = ALL_PRAWO_UPADLOSCIOWE_QUESTIONS.slice(0, 50).map(q =>
+            convertQuestionToFlashcard(q, 'prawo_upadlosciowe' as LegalDomain)
+        );
+        return [...kshCards, ...upCards];
+    }, []);
+
+    const filteredCards = useMemo(() => {
+        return allFlashcards.filter(card => {
+            if (selectedDomain !== 'all' && card.domain !== selectedDomain) return false;
+            if (searchQuery && !card.question.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+            return true;
+        });
+    }, [allFlashcards, selectedDomain, searchQuery]);
+
+    const dueCards = useMemo(() => {
+        return filteredCards.filter(c => new Date(c.srs.nextReview) <= new Date());
+    }, [filteredCards]);
 
     const handleReview = (cardId: string, quality: number, responseTime: number) => {
         console.log('Review:', { cardId, quality, responseTime });
-        // API call would go here
+        // TODO: Save to Firestore
     };
 
     const handleComplete = () => {
         setView('list');
     };
+
+    if (authLoading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg-primary)' }}>
+                <Loader2 className="animate-spin" size={48} style={{ color: '#1a365d' }} />
+            </div>
+        );
+    }
 
     if (view === 'study') {
         return (
@@ -103,7 +101,7 @@ export default function FlashcardsPage() {
                 <div className="max-w-4xl mx-auto p-6">
                     <button
                         onClick={() => setView('list')}
-                        className="mb-6 text-sm text-[var(--text-muted)] hover:text-white"
+                        className="mb-6 text-sm text-[var(--text-muted)] hover:text-[#1a365d] transition-colors"
                     >
                         ← Powrót do listy
                     </button>
@@ -151,36 +149,33 @@ export default function FlashcardsPage() {
                                 </p>
                             </div>
                             <div className="flex gap-3">
-                                {dueCards.length > 0 && (
+                                {filteredCards.length > 0 && (
                                     <button
                                         onClick={() => setView('study')}
-                                        className="btn btn-primary"
+                                        className="px-4 py-2 rounded-lg font-medium text-white flex items-center gap-2"
+                                        style={{ background: '#1a365d' }}
                                     >
                                         <Zap size={18} />
-                                        Rozpocznij naukę ({dueCards.length})
+                                        Rozpocznij naukę
                                     </button>
                                 )}
-                                <button className="btn btn-secondary">
-                                    <Plus size={18} />
-                                    Nowa fiszka
-                                </button>
                             </div>
                         </div>
 
-                        {/* Stats */}
+                        {/* Stats - Real data from user profile */}
                         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                             <div className="lex-card flex items-center gap-3">
-                                <div className="w-10 h-10 bg-#1a365d/20 rounded-lg flex items-center justify-center">
-                                    <BookOpen size={20} className="text-#1a365d" />
+                                <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: 'rgba(26, 54, 93, 0.1)' }}>
+                                    <BookOpen size={20} style={{ color: '#1a365d' }} />
                                 </div>
                                 <div>
                                     <p className="text-2xl font-bold">{filteredCards.length}</p>
-                                    <p className="text-xs text-[var(--text-muted)]">Wszystkie fiszki</p>
+                                    <p className="text-xs text-[var(--text-muted)]">Dostępne fiszki</p>
                                 </div>
                             </div>
                             <div className="lex-card flex items-center gap-3">
-                                <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
-                                    <Clock size={20} className="text-orange-400" />
+                                <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: 'rgba(234, 88, 12, 0.1)' }}>
+                                    <Clock size={20} style={{ color: '#ea580c' }} />
                                 </div>
                                 <div>
                                     <p className="text-2xl font-bold">{dueCards.length}</p>
@@ -188,21 +183,21 @@ export default function FlashcardsPage() {
                                 </div>
                             </div>
                             <div className="lex-card flex items-center gap-3">
-                                <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
-                                    <Target size={20} className="text-green-400" />
+                                <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: 'rgba(5, 150, 105, 0.1)' }}>
+                                    <Target size={20} style={{ color: '#059669' }} />
                                 </div>
                                 <div>
-                                    <p className="text-2xl font-bold">87%</p>
-                                    <p className="text-xs text-[var(--text-muted)]">Średnia skuteczność</p>
+                                    <p className="text-2xl font-bold">{accuracy}%</p>
+                                    <p className="text-xs text-[var(--text-muted)]">Twoja dokładność</p>
                                 </div>
                             </div>
                             <div className="lex-card flex items-center gap-3">
-                                <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
-                                    <Zap size={20} className="text-blue-400" />
+                                <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: 'rgba(37, 99, 235, 0.1)' }}>
+                                    <Zap size={20} style={{ color: '#2563eb' }} />
                                 </div>
                                 <div>
-                                    <p className="text-2xl font-bold">892</p>
-                                    <p className="text-xs text-[var(--text-muted)]">Powtórzonych dziś</p>
+                                    <p className="text-2xl font-bold">{stats?.totalQuestions || 0}</p>
+                                    <p className="text-xs text-[var(--text-muted)]">Przećwiczonych</p>
                                 </div>
                             </div>
                         </div>
@@ -216,7 +211,7 @@ export default function FlashcardsPage() {
                                     placeholder="Szukaj fiszek..."
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-2.5 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-xl focus:border-#1a365d focus:outline-none"
+                                    className="w-full pl-10 pr-4 py-2.5 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-xl focus:border-[#1a365d] focus:outline-none"
                                 />
                             </div>
                             <div className="flex gap-2">
@@ -225,68 +220,67 @@ export default function FlashcardsPage() {
                                     className={cn(
                                         'px-4 py-2.5 rounded-xl text-sm font-medium transition-all',
                                         selectedDomain === 'all'
-                                            ? 'bg-#1a365d text-white'
-                                            : 'bg-[var(--bg-card)] text-[var(--text-muted)] hover:text-white'
+                                            ? 'bg-[#1a365d] text-white'
+                                            : 'bg-[var(--bg-card)] text-[var(--text-muted)] hover:text-[#1a365d]'
                                     )}
                                 >
                                     Wszystkie
                                 </button>
-                                {DOMAINS.slice(0, 3).map(domain => (
+                                {DOMAINS.map(domain => (
                                     <button
                                         key={domain.id}
                                         onClick={() => setSelectedDomain(domain.id)}
                                         className={cn(
                                             'px-4 py-2.5 rounded-xl text-sm font-medium transition-all hidden sm:block',
                                             selectedDomain === domain.id
-                                                ? 'bg-#1a365d text-white'
-                                                : 'bg-[var(--bg-card)] text-[var(--text-muted)] hover:text-white'
+                                                ? 'bg-[#1a365d] text-white'
+                                                : 'bg-[var(--bg-card)] text-[var(--text-muted)] hover:text-[#1a365d]'
                                         )}
                                     >
                                         {domain.name}
                                     </button>
                                 ))}
-                                <button className="p-2.5 bg-[var(--bg-card)] rounded-xl">
-                                    <Filter size={18} />
-                                </button>
                             </div>
                         </div>
 
                         {/* Cards List */}
-                        <div className="space-y-3">
-                            {filteredCards.map(card => (
-                                <div key={card.id} className="lex-card hover:border-#1a365d/50 transition-all cursor-pointer">
-                                    <div className="flex items-start justify-between gap-4">
-                                        <div className="flex-1 min-w-0">
-                                            <p className="font-medium mb-1">{card.question}</p>
-                                            <p className="text-sm text-[var(--text-muted)] line-clamp-1">{card.answer}</p>
-                                        </div>
-                                        <div className="flex items-center gap-2 shrink-0">
-                                            <span className={cn(
-                                                'px-2 py-1 rounded text-xs font-medium',
-                                                card.difficulty === 'easy' && 'bg-green-500/20 text-green-400',
-                                                card.difficulty === 'medium' && 'bg-yellow-500/20 text-yellow-400',
-                                                card.difficulty === 'hard' && 'bg-orange-500/20 text-orange-400',
-                                                card.difficulty === 'expert' && 'bg-red-500/20 text-red-400'
-                                            )}>
-                                                {card.difficulty}
-                                            </span>
-                                            {new Date(card.srs.nextReview) <= new Date() && (
-                                                <span className="px-2 py-1 bg-#1a365d/20 text-#1a365d text-xs rounded font-medium">
-                                                    Do powtórki
+                        {filteredCards.length === 0 ? (
+                            <div className="lex-card py-12 text-center">
+                                <Inbox size={48} className="mx-auto mb-4 text-[var(--text-muted)]" />
+                                <p className="text-[var(--text-muted)]">Brak fiszek w wybranej kategorii</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-3">
+                                {filteredCards.slice(0, 20).map(card => (
+                                    <div key={card.id} className="lex-card hover:border-[#1a365d]/50 transition-all cursor-pointer">
+                                        <div className="flex items-start justify-between gap-4">
+                                            <div className="flex-1 min-w-0">
+                                                <p className="font-medium mb-1">{card.question}</p>
+                                                <p className="text-sm text-[var(--text-muted)] line-clamp-1">{card.answer}</p>
+                                            </div>
+                                            <div className="flex items-center gap-2 shrink-0">
+                                                <span className={cn(
+                                                    'px-2 py-1 rounded text-xs font-medium',
+                                                    card.difficulty === 'easy' && 'bg-green-500/20 text-green-600',
+                                                    card.difficulty === 'medium' && 'bg-yellow-500/20 text-yellow-600',
+                                                    card.difficulty === 'hard' && 'bg-orange-500/20 text-orange-600',
+                                                    card.difficulty === 'expert' && 'bg-red-500/20 text-red-600'
+                                                )}>
+                                                    {card.difficulty}
                                                 </span>
-                                            )}
+                                            </div>
                                         </div>
+                                        {card.legalReference && (
+                                            <div className="flex items-center gap-4 mt-3 pt-3 border-t border-[var(--border-color)] text-xs text-[var(--text-muted)]">
+                                                <span>{card.domain === 'prawo_handlowe' ? 'KSH' : 'Prawo upadłościowe'}</span>
+                                                <span>•</span>
+                                                <span>{card.legalReference}</span>
+                                            </div>
+                                        )}
                                     </div>
-                                    <div className="flex items-center gap-4 mt-3 pt-3 border-t border-[var(--border-color)] text-xs text-[var(--text-muted)]">
-                                        <span>{card.domain.replace('_', ' ')}</span>
-                                        <span>•</span>
-                                        <span>{card.legalReference}</span>
-                                        <span>•</span>
-                                        <span>{card.stats.timesReviewed}x powtórzone</span>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
                 </main>
             </div>

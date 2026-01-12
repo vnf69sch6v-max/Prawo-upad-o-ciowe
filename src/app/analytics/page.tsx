@@ -1,47 +1,45 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Sidebar, Header, MobileNav } from '@/components/layout';
 import {
-    BarChart3, TrendingUp, TrendingDown, Target, Clock,
-    BookOpen, Brain, Calendar, Download, ChevronDown
+    BarChart3, TrendingUp, Target, Clock,
+    BookOpen, Brain, Loader2, Inbox
 } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
-
-// Mock analytics data
-const WEEKLY_DATA = [
-    { day: 'Pon', cards: 45, accuracy: 82, time: 35 },
-    { day: 'Wt', cards: 62, accuracy: 88, time: 48 },
-    { day: 'Śr', cards: 38, accuracy: 75, time: 28 },
-    { day: 'Czw', cards: 71, accuracy: 91, time: 55 },
-    { day: 'Pt', cards: 55, accuracy: 85, time: 42 },
-    { day: 'Sob', cards: 28, accuracy: 78, time: 22 },
-    { day: 'Nie', cards: 15, accuracy: 80, time: 12 },
-];
-
-const DOMAIN_STATS = [
-    { name: 'Prawo Cywilne', mastery: 78, cards: 245, reviews: 1823 },
-    { name: 'Prawo Karne', mastery: 92, cards: 189, reviews: 1456 },
-    { name: 'Prawo Handlowe', mastery: 65, cards: 156, reviews: 987 },
-    { name: 'Procedura Cywilna', mastery: 81, cards: 178, reviews: 1234 },
-    { name: 'Procedura Karna', mastery: 73, cards: 134, reviews: 876 },
-    { name: 'Prawo Administracyjne', mastery: 68, cards: 112, reviews: 654 },
-    { name: 'Prawo Konstytucyjne', mastery: 85, cards: 98, reviews: 543 },
-    { name: 'Prawo Pracy', mastery: 71, cards: 87, reviews: 432 },
-];
-
-const MILESTONES = [
-    { date: '2025-12-01', type: 'streak', value: 10, label: '10 dni streak' },
-    { date: '2025-12-15', type: 'equity', value: 5000, label: '€5,000 Equity' },
-    { date: '2025-12-28', type: 'cards', value: 500, label: '500 fiszek' },
-    { date: '2026-01-05', type: 'exam', value: 90, label: '90% na egzaminie' },
-];
+import { useAuth } from '@/hooks/use-auth';
 
 export default function AnalyticsPage() {
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-    const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d' | 'all'>('30d');
+    const { profile, loading: authLoading } = useAuth();
 
-    const maxCards = Math.max(...WEEKLY_DATA.map(d => d.cards));
+    const stats = profile?.stats;
+
+    // Calculate real accuracy
+    const accuracy = useMemo(() => {
+        if (!stats || stats.totalQuestions === 0) return 0;
+        return Math.round((stats.correctAnswers / stats.totalQuestions) * 100);
+    }, [stats]);
+
+    // Calculate study time in hours
+    const studyTimeHours = useMemo(() => {
+        if (!stats?.totalStudyTime) return 0;
+        return (stats.totalStudyTime / 60).toFixed(1);
+    }, [stats]);
+
+    // Exam pass rate
+    const passRate = useMemo(() => {
+        if (!stats || stats.examsCompleted === 0) return 0;
+        return Math.round((stats.examsPassed / stats.examsCompleted) * 100);
+    }, [stats]);
+
+    if (authLoading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg-primary)' }}>
+                <Loader2 className="animate-spin" size={48} style={{ color: '#1a365d' }} />
+            </div>
+        );
+    }
 
     return (
         <div className="flex min-h-screen" style={{ background: 'var(--bg-primary)' }}>
@@ -50,191 +48,161 @@ export default function AnalyticsPage() {
                 onNavigate={() => { }}
                 isCollapsed={sidebarCollapsed}
                 onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
-                userStats={{ streak: 12, knowledgeEquity: 12000 }}
+                userStats={{
+                    streak: stats?.currentStreak || 0,
+                    knowledgeEquity: stats?.knowledgeEquity || 0
+                }}
             />
 
             <div className="flex-1 flex flex-col min-w-0">
                 <Header
-                    userStats={{ streak: 12, knowledgeEquity: 12000, rank: 32 }}
+                    userStats={{
+                        streak: stats?.currentStreak || 0,
+                        knowledgeEquity: stats?.knowledgeEquity || 0,
+                        rank: 0
+                    }}
                     currentView="analytics"
                 />
 
                 <main className="flex-1 overflow-auto p-6 pb-20 lg:pb-6">
                     <div className="max-w-6xl mx-auto space-y-6">
                         {/* Header */}
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <h1 className="text-2xl font-bold flex items-center gap-2">
-                                    <BarChart3 className="text-#1a365d" />
-                                    Analityka
-                                </h1>
-                                <p className="text-[var(--text-muted)]">Szczegółowe statystyki Twojej nauki</p>
-                            </div>
-                            <div className="flex gap-3">
-                                <select
-                                    value={timeRange}
-                                    onChange={(e) => setTimeRange(e.target.value as typeof timeRange)}
-                                    className="px-4 py-2 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-xl focus:border-#1a365d focus:outline-none"
-                                >
-                                    <option value="7d">Ostatnie 7 dni</option>
-                                    <option value="30d">Ostatnie 30 dni</option>
-                                    <option value="90d">Ostatnie 90 dni</option>
-                                    <option value="all">Wszystko</option>
-                                </select>
-                                <button className="btn btn-secondary">
-                                    <Download size={18} />
-                                    Eksport
-                                </button>
-                            </div>
+                        <div>
+                            <h1 className="text-2xl font-bold flex items-center gap-2">
+                                <BarChart3 style={{ color: '#1a365d' }} />
+                                Analityka
+                            </h1>
+                            <p className="text-[var(--text-muted)]">Szczegółowe statystyki Twojej nauki</p>
                         </div>
 
-                        {/* KPI Summary */}
+                        {/* KPI Summary - Real data */}
                         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                             <div className="lex-card">
                                 <div className="flex items-center gap-3 mb-3">
-                                    <div className="w-10 h-10 bg-#1a365d/20 rounded-lg flex items-center justify-center">
-                                        <BookOpen size={20} className="text-#1a365d" />
+                                    <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: 'rgba(26, 54, 93, 0.1)' }}>
+                                        <BookOpen size={20} style={{ color: '#1a365d' }} />
                                     </div>
-                                    <span className="text-sm text-[var(--text-muted)]">Fiszek powtórzonych</span>
+                                    <span className="text-sm text-[var(--text-muted)]">Pytań rozwiązanych</span>
                                 </div>
-                                <p className="text-3xl font-bold">2,847</p>
-                                <p className="text-sm text-green-400 flex items-center gap-1 mt-1">
-                                    <TrendingUp size={14} />
-                                    +12% vs poprzedni okres
+                                <p className="text-3xl font-bold">{stats?.totalQuestions?.toLocaleString() || 0}</p>
+                            </div>
+
+                            <div className="lex-card">
+                                <div className="flex items-center gap-3 mb-3">
+                                    <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: 'rgba(5, 150, 105, 0.1)' }}>
+                                        <Target size={20} style={{ color: '#059669' }} />
+                                    </div>
+                                    <span className="text-sm text-[var(--text-muted)]">Dokładność</span>
+                                </div>
+                                <p className="text-3xl font-bold">{accuracy}%</p>
+                                <p className="text-sm mt-1" style={{ color: '#059669' }}>
+                                    {stats?.correctAnswers || 0} poprawnych
                                 </p>
                             </div>
 
                             <div className="lex-card">
                                 <div className="flex items-center gap-3 mb-3">
-                                    <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
-                                        <Target size={20} className="text-green-400" />
-                                    </div>
-                                    <span className="text-sm text-[var(--text-muted)]">Średnia skuteczność</span>
-                                </div>
-                                <p className="text-3xl font-bold">84%</p>
-                                <p className="text-sm text-green-400 flex items-center gap-1 mt-1">
-                                    <TrendingUp size={14} />
-                                    +3% vs poprzedni okres
-                                </p>
-                            </div>
-
-                            <div className="lex-card">
-                                <div className="flex items-center gap-3 mb-3">
-                                    <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
-                                        <Clock size={20} className="text-blue-400" />
+                                    <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: 'rgba(37, 99, 235, 0.1)' }}>
+                                        <Clock size={20} style={{ color: '#2563eb' }} />
                                     </div>
                                     <span className="text-sm text-[var(--text-muted)]">Czas nauki</span>
                                 </div>
-                                <p className="text-3xl font-bold">18.5h</p>
-                                <p className="text-sm text-red-400 flex items-center gap-1 mt-1">
-                                    <TrendingDown size={14} />
-                                    -5% vs poprzedni okres
-                                </p>
+                                <p className="text-3xl font-bold">{studyTimeHours}h</p>
                             </div>
 
                             <div className="lex-card">
                                 <div className="flex items-center gap-3 mb-3">
-                                    <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
-                                        <Brain size={20} className="text-orange-400" />
+                                    <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: 'rgba(234, 88, 12, 0.1)' }}>
+                                        <Brain size={20} style={{ color: '#ea580c' }} />
                                     </div>
-                                    <span className="text-sm text-[var(--text-muted)]">Retention Rate</span>
+                                    <span className="text-sm text-[var(--text-muted)]">Zdawalność egzaminów</span>
                                 </div>
-                                <p className="text-3xl font-bold">87%</p>
-                                <p className="text-sm text-green-400 flex items-center gap-1 mt-1">
-                                    <TrendingUp size={14} />
-                                    +2% vs poprzedni okres
+                                <p className="text-3xl font-bold">{passRate}%</p>
+                                <p className="text-sm mt-1 text-[var(--text-muted)]">
+                                    {stats?.examsPassed || 0}/{stats?.examsCompleted || 0} zdanych
                                 </p>
                             </div>
                         </div>
 
-                        {/* Weekly Activity Chart */}
-                        <div className="lex-card">
-                            <h3 className="text-lg font-semibold mb-6">Aktywność tygodniowa</h3>
-                            <div className="flex items-end gap-3 h-48">
-                                {WEEKLY_DATA.map((day, i) => (
-                                    <div key={i} className="flex-1 flex flex-col items-center gap-2">
-                                        <div className="w-full flex flex-col items-center gap-1">
-                                            <span className="text-xs text-[var(--text-muted)]">{day.cards}</span>
-                                            <div
-                                                className="w-full bg-gradient-to-t from-#1a365d to-#1a365d rounded-t-lg transition-all hover:from-#1a365d hover:to-purple-300"
-                                                style={{ height: `${(day.cards / maxCards) * 150}px` }}
-                                            />
-                                        </div>
-                                        <span className="text-xs text-[var(--text-muted)]">{day.day}</span>
+                        {/* Detailed Stats */}
+                        <div className="grid lg:grid-cols-2 gap-6">
+                            {/* Streak & Progress */}
+                            <div className="lex-card">
+                                <h3 className="text-lg font-semibold mb-6">Twoja seria</h3>
+                                <div className="text-center py-6">
+                                    <div className="w-24 h-24 mx-auto mb-4 rounded-full flex items-center justify-center text-4xl" style={{ background: 'rgba(234, 88, 12, 0.1)' }}>
+                                        🔥
                                     </div>
-                                ))}
+                                    <p className="text-4xl font-bold mb-2">{stats?.currentStreak || 0}</p>
+                                    <p className="text-[var(--text-muted)]">dni z rzędu</p>
+                                    <p className="text-sm mt-4" style={{ color: '#b8860b' }}>
+                                        Najdłuższa seria: {stats?.longestStreak || 0} dni
+                                    </p>
+                                </div>
                             </div>
-                            <div className="flex justify-between mt-6 pt-4 border-t border-[var(--border-color)] text-sm">
-                                <div>
-                                    <span className="text-[var(--text-muted)]">Suma: </span>
-                                    <span className="font-semibold">{WEEKLY_DATA.reduce((a, b) => a + b.cards, 0)} fiszek</span>
-                                </div>
-                                <div>
-                                    <span className="text-[var(--text-muted)]">Średnia: </span>
-                                    <span className="font-semibold">{Math.round(WEEKLY_DATA.reduce((a, b) => a + b.cards, 0) / 7)}/dzień</span>
-                                </div>
-                                <div>
-                                    <span className="text-[var(--text-muted)]">Czas: </span>
-                                    <span className="font-semibold">{WEEKLY_DATA.reduce((a, b) => a + b.time, 0)} min</span>
-                                </div>
+
+                            {/* Exam Results */}
+                            <div className="lex-card">
+                                <h3 className="text-lg font-semibold mb-6">Wyniki egzaminów</h3>
+                                {stats?.examsCompleted === 0 ? (
+                                    <div className="text-center py-8">
+                                        <Inbox size={48} className="mx-auto mb-4 text-[var(--text-muted)]" />
+                                        <p className="text-[var(--text-muted)]">Nie ukończyłeś jeszcze żadnego egzaminu</p>
+                                        <a href="/exam" className="inline-block mt-4 px-4 py-2 rounded-lg text-white font-medium" style={{ background: '#1a365d' }}>
+                                            Rozpocznij egzamin
+                                        </a>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-4">
+                                        <div className="flex justify-between items-center py-3 border-b border-[var(--border-color)]">
+                                            <span className="text-[var(--text-muted)]">Ukończone egzaminy</span>
+                                            <span className="font-semibold">{stats?.examsCompleted || 0}</span>
+                                        </div>
+                                        <div className="flex justify-between items-center py-3 border-b border-[var(--border-color)]">
+                                            <span className="text-[var(--text-muted)]">Zdane egzaminy</span>
+                                            <span className="font-semibold" style={{ color: '#059669' }}>{stats?.examsPassed || 0}</span>
+                                        </div>
+                                        <div className="flex justify-between items-center py-3 border-b border-[var(--border-color)]">
+                                            <span className="text-[var(--text-muted)]">Najlepszy wynik</span>
+                                            <span className="font-semibold" style={{ color: '#b8860b' }}>{stats?.bestExamScore || 0}%</span>
+                                        </div>
+                                        <div className="flex justify-between items-center py-3">
+                                            <span className="text-[var(--text-muted)]">Zdawalność</span>
+                                            <span className="font-semibold">{passRate}%</span>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
 
-                        {/* Domain Breakdown */}
-                        <div className="lex-card">
-                            <h3 className="text-lg font-semibold mb-6">Postęp według dziedzin</h3>
-                            <div className="space-y-4">
-                                {DOMAIN_STATS.map((domain, i) => (
-                                    <div key={i} className="space-y-2">
-                                        <div className="flex items-center justify-between">
-                                            <span className="font-medium">{domain.name}</span>
-                                            <div className="flex items-center gap-4 text-sm text-[var(--text-muted)]">
-                                                <span>{domain.cards} fiszek</span>
-                                                <span className={cn(
-                                                    'font-semibold',
-                                                    domain.mastery >= 85 && 'text-green-400',
-                                                    domain.mastery >= 70 && domain.mastery < 85 && 'text-yellow-400',
-                                                    domain.mastery < 70 && 'text-red-400'
-                                                )}>
-                                                    {domain.mastery}%
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <div className="h-2 bg-[var(--bg-hover)] rounded-full overflow-hidden">
-                                            <div
-                                                className={cn(
-                                                    'h-full rounded-full transition-all',
-                                                    domain.mastery >= 85 && 'bg-gradient-to-r from-green-600 to-green-400',
-                                                    domain.mastery >= 70 && domain.mastery < 85 && 'bg-gradient-to-r from-yellow-600 to-yellow-400',
-                                                    domain.mastery < 70 && 'bg-gradient-to-r from-red-600 to-red-400'
-                                                )}
-                                                style={{ width: `${domain.mastery}%` }}
-                                            />
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Milestones */}
+                        {/* Knowledge Equity Progress */}
                         <div className="lex-card">
                             <h3 className="text-lg font-semibold mb-6 flex items-center gap-2">
-                                <Calendar className="text-#1a365d" />
-                                Osiągnięte kamienie milowe
+                                <TrendingUp style={{ color: '#1a365d' }} />
+                                Knowledge Equity
                             </h3>
-                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                                {MILESTONES.map((milestone, i) => (
-                                    <div key={i} className="p-4 bg-[var(--bg-hover)] rounded-xl text-center">
-                                        <div className="text-2xl mb-2">
-                                            {milestone.type === 'streak' && '🔥'}
-                                            {milestone.type === 'equity' && '💰'}
-                                            {milestone.type === 'cards' && '📚'}
-                                            {milestone.type === 'exam' && '🎯'}
-                                        </div>
-                                        <p className="font-semibold">{milestone.label}</p>
-                                        <p className="text-xs text-[var(--text-muted)] mt-1">{milestone.date}</p>
+                            <div className="text-center py-8">
+                                <p className="text-5xl font-bold mb-2" style={{ color: '#059669' }}>
+                                    €{stats?.knowledgeEquity?.toLocaleString() || 0}
+                                </p>
+                                <p className="text-[var(--text-muted)]">
+                                    Wartość Twojej wiedzy prawniczej
+                                </p>
+                                <div className="mt-6 max-w-md mx-auto">
+                                    <div className="flex justify-between text-sm mb-2">
+                                        <span className="text-[var(--text-muted)]">Postęp do €50,000</span>
+                                        <span className="font-medium">{Math.min(100, Math.round((stats?.knowledgeEquity || 0) / 500))}%</span>
                                     </div>
-                                ))}
+                                    <div className="h-3 rounded-full" style={{ background: 'var(--bg-hover)' }}>
+                                        <div
+                                            className="h-full rounded-full transition-all"
+                                            style={{
+                                                width: `${Math.min(100, Math.round((stats?.knowledgeEquity || 0) / 500))}%`,
+                                                background: 'linear-gradient(90deg, #059669 0%, #10b981 100%)'
+                                            }}
+                                        />
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
