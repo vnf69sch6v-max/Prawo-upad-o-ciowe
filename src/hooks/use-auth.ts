@@ -16,6 +16,30 @@ import { getFirebaseAuth, isFirebaseAvailable } from '@/lib/firebase/config';
 import { UserProfile } from '@/lib/types/user';
 import { getUserProfile, createUserProfile, updateStreak } from '@/lib/services/user-service';
 
+// Polish error messages for Firebase auth errors
+const AUTH_ERROR_MESSAGES: Record<string, string> = {
+    'auth/email-already-in-use': 'Ten adres email jest już używany',
+    'auth/invalid-email': 'Nieprawidłowy format adresu email',
+    'auth/weak-password': 'Hasło musi mieć minimum 6 znaków',
+    'auth/user-not-found': 'Nie znaleziono konta z tym adresem email',
+    'auth/wrong-password': 'Nieprawidłowe hasło',
+    'auth/invalid-credential': 'Nieprawidłowe dane logowania',
+    'auth/too-many-requests': 'Zbyt wiele prób. Spróbuj ponownie za chwilę',
+    'auth/network-request-failed': 'Brak połączenia z internetem',
+    'auth/popup-closed-by-user': 'Logowanie zostało anulowane',
+    'auth/operation-not-allowed': 'Ta metoda logowania jest niedostępna',
+};
+
+const getPolishErrorMessage = (error: unknown): string => {
+    if (error instanceof Error) {
+        // Extract Firebase error code
+        const match = error.message.match(/\(([^)]+)\)/);
+        const code = match ? match[1] : error.message;
+        return AUTH_ERROR_MESSAGES[code] || 'Wystąpił błąd. Spróbuj ponownie.';
+    }
+    return 'Wystąpił nieoczekiwany błąd';
+};
+
 const googleProvider = new GoogleAuthProvider();
 
 // Cookie management for middleware sync
@@ -104,8 +128,7 @@ export function useAuth() {
             return result.user;
         } catch (err: unknown) {
             console.error('[AUTH] SignIn error:', err);
-            const message = err instanceof Error ? err.message : 'Failed to sign in';
-            setError(message);
+            setError(getPolishErrorMessage(err));
             throw err;
         }
     };
@@ -137,8 +160,7 @@ export function useAuth() {
             return result.user;
         } catch (err: unknown) {
             console.error('[AUTH] Signup error:', err);
-            const message = err instanceof Error ? err.message : 'Failed to sign up';
-            setError(message);
+            setError(getPolishErrorMessage(err));
             throw err;
         }
     };
@@ -167,8 +189,7 @@ export function useAuth() {
 
             return result.user;
         } catch (err: unknown) {
-            const message = err instanceof Error ? err.message : 'Failed to sign in with Google';
-            setError(message);
+            setError(getPolishErrorMessage(err));
             throw err;
         }
     };
@@ -182,8 +203,7 @@ export function useAuth() {
             await signOut(auth);
             setProfile(null);
         } catch (err: unknown) {
-            const message = err instanceof Error ? err.message : 'Failed to sign out';
-            setError(message);
+            setError(getPolishErrorMessage(err));
             throw err;
         }
     };
@@ -196,8 +216,7 @@ export function useAuth() {
             setError(null);
             await sendPasswordResetEmail(auth, email);
         } catch (err: unknown) {
-            const message = err instanceof Error ? err.message : 'Failed to send reset email';
-            setError(message);
+            setError(getPolishErrorMessage(err));
             throw err;
         }
     };

@@ -19,6 +19,8 @@ import { getFirebaseDb, isFirebaseAvailable } from '../firebase/config';
 import {
     UserProfile,
     UserStats,
+    UserPreferences,
+    OnboardingData,
     ExamResult,
     ActivityItem,
     LeaderboardEntry,
@@ -107,6 +109,56 @@ export async function updateUserProfile(
 
     await updateDoc(doc(db, 'users', uid), {
         ...updates,
+        updatedAt: serverTimestamp(),
+    });
+}
+
+// ========================
+// ONBOARDING
+// ========================
+
+export async function saveOnboardingData(
+    uid: string,
+    data: {
+        goal: OnboardingData['goal'];
+        domains: string[];
+        dailyGoal: number;
+    }
+): Promise<void> {
+    const db = getFirebaseDb();
+    if (!db) throw new Error('Firebase not available');
+
+    await updateDoc(doc(db, 'users', uid), {
+        onboardingCompleted: true,
+        onboardingData: {
+            goal: data.goal,
+            domains: data.domains,
+            completedAt: serverTimestamp(),
+        },
+        'preferences.dailyGoal': data.dailyGoal,
+        updatedAt: serverTimestamp(),
+    });
+}
+
+// ========================
+// USER PREFERENCES
+// ========================
+
+export async function updateUserPreferences(
+    uid: string,
+    preferences: Partial<UserPreferences>
+): Promise<void> {
+    const db = getFirebaseDb();
+    if (!db) throw new Error('Firebase not available');
+
+    const updateData: Record<string, unknown> = {};
+
+    Object.entries(preferences).forEach(([key, value]) => {
+        updateData[`preferences.${key}`] = value;
+    });
+
+    await updateDoc(doc(db, 'users', uid), {
+        ...updateData,
         updatedAt: serverTimestamp(),
     });
 }

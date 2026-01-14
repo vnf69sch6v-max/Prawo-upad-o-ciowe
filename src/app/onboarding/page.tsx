@@ -8,8 +8,8 @@ import {
     BookOpen, Target, Clock, ArrowRight, Check,
     Scale, Briefcase, GraduationCap, Sparkles, Loader2
 } from 'lucide-react';
-import { doc, updateDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase/config';
+import { saveOnboardingData } from '@/lib/services/user-service';
+import { OnboardingData } from '@/lib/types/user';
 import { cn } from '@/lib/utils/cn';
 import { Confetti } from '@/components/ui/confetti';
 
@@ -49,7 +49,7 @@ export default function OnboardingPage() {
     const router = useRouter();
     const { user, profile, loading: authLoading } = useAuth();
     const [currentStep, setCurrentStep] = useState(0);
-    const [selectedGoal, setSelectedGoal] = useState<string | null>(null);
+    const [selectedGoal, setSelectedGoal] = useState<OnboardingData['goal'] | null>(null);
     const [selectedDomains, setSelectedDomains] = useState<string[]>([]);
     const [selectedPace, setSelectedPace] = useState<number>(30);
     const [saving, setSaving] = useState(false);
@@ -57,7 +57,7 @@ export default function OnboardingPage() {
 
     // Redirect if already completed onboarding
     useEffect(() => {
-        if (!authLoading && profile?.preferences && (profile as any).onboardingCompleted) {
+        if (!authLoading && profile?.onboardingCompleted) {
             router.push('/dashboard');
         }
     }, [profile, authLoading, router]);
@@ -94,18 +94,13 @@ export default function OnboardingPage() {
             }
         } else {
             // Save preferences and redirect
-            if (user) {
+            if (user && selectedGoal) {
                 setSaving(true);
                 try {
-                    const userRef = doc(db, 'users', user.uid);
-                    await updateDoc(userRef, {
-                        'preferences.dailyGoal': selectedPace,
-                        onboardingCompleted: true,
-                        onboardingData: {
-                            goal: selectedGoal,
-                            domains: selectedDomains,
-                            completedAt: new Date(),
-                        },
+                    await saveOnboardingData(user.uid, {
+                        goal: selectedGoal,
+                        domains: selectedDomains,
+                        dailyGoal: selectedPace,
                     });
                     router.push('/dashboard');
                 } catch (error) {
@@ -186,7 +181,7 @@ export default function OnboardingPage() {
                                     return (
                                         <button
                                             key={goal.id}
-                                            onClick={() => setSelectedGoal(goal.id)}
+                                            onClick={() => setSelectedGoal(goal.id as OnboardingData['goal'])}
                                             className={cn(
                                                 'p-6 rounded-xl border-2 text-left transition-all hover-lift',
                                                 isSelected

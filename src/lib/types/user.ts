@@ -20,6 +20,16 @@ export interface UserProfile {
 
     // Preferences
     preferences: UserPreferences;
+
+    // Onboarding
+    onboardingCompleted?: boolean;
+    onboardingData?: OnboardingData;
+}
+
+export interface OnboardingData {
+    goal: 'radcowski' | 'adwokacki' | 'student' | 'other';
+    domains: string[];
+    completedAt: Date;
 }
 
 export interface UserStats {
