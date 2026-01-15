@@ -1,18 +1,24 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Sidebar, Header, MobileNav } from '@/components/layout';
 import { StatCard, PerformanceChart } from '@/components/dashboard';
 import { useAuth } from '@/hooks/use-auth';
+import { getLeaderboard, LeaderboardEntry } from '@/lib/services/user-service';
 import { BookOpen, Brain, Target, Sparkles, Loader2 } from 'lucide-react';
 import { DEFAULT_USER_STATS } from '@/lib/types/user';
+
 
 export default function DashboardPage() {
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const { user, profile, loading, profileLoading } = useAuth();
     const router = useRouter();
+
+    // Leaderboard data for header
+    const [userRank, setUserRank] = useState<number | undefined>();
+    const [nearbyUsers, setNearbyUsers] = useState<LeaderboardEntry[]>([]);
 
     // Redirect to landing if not authenticated
     useEffect(() => {
@@ -21,9 +27,36 @@ export default function DashboardPage() {
         }
     }, [user, loading, router]);
 
+    // Fetch leaderboard data
+    const fetchLeaderboard = useCallback(async () => {
+        if (!user) return;
+
+        try {
+            const leaderboard = await getLeaderboard(50);
+            // Find user's rank
+            const userIndex = leaderboard.findIndex(entry => entry.uid === user.uid);
+            if (userIndex !== -1) {
+                setUserRank(userIndex + 1);
+                // Get nearby users (2 above and 2 below)
+                const start = Math.max(0, userIndex - 2);
+                const end = Math.min(leaderboard.length, userIndex + 3);
+                setNearbyUsers(leaderboard.slice(start, end));
+            }
+        } catch (error) {
+            console.error('Error fetching leaderboard:', error);
+        }
+    }, [user]);
+
+    useEffect(() => {
+        if (user && !loading) {
+            fetchLeaderboard();
+        }
+    }, [user, loading, fetchLeaderboard]);
+
     // Use profile stats or defaults
     const stats = profile?.stats || DEFAULT_USER_STATS;
     const displayName = profile?.displayName || 'Student';
+
 
     // Calculate accuracy percentage
     const accuracy = stats.totalQuestions > 0
@@ -69,9 +102,10 @@ export default function DashboardPage() {
                     userStats={{
                         streak: stats.currentStreak,
                         knowledgeEquity: stats.knowledgeEquity,
-                        rank: 0, // TODO: Calculate from leaderboard
+                        rank: userRank,
                     }}
                     currentView="dashboard"
+                    nearbyUsers={nearbyUsers}
                 />
 
                 <main className="flex-1 overflow-auto p-6 pb-20 lg:pb-6">
