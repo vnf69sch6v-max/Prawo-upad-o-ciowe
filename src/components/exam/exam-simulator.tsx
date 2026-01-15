@@ -144,7 +144,7 @@ export function ExamSimulator({
                                 onClick={() => goToQuestion(i)}
                                 className={cn(
                                     'w-10 h-10 rounded-lg text-sm font-medium transition-all relative',
-                                    i === currentIndex && 'ring-2 ring-#1a365d',
+                                    i === currentIndex && 'ring-2 ring-[#1a365d]',
                                     answers[q.id]
                                         ? 'bg-green-500/20 text-green-400'
                                         : 'bg-[var(--bg-hover)] text-[var(--text-muted)]'
@@ -221,20 +221,20 @@ export function ExamSimulator({
                                         className={cn(
                                             'w-full p-4 rounded-xl text-left transition-all flex items-start gap-4',
                                             isSelected
-                                                ? 'bg-#1a365d/20 border-2 border-#1a365d'
-                                                : 'bg-[var(--bg-card)] border border-[var(--border-color)] hover:border-#1a365d/50'
+                                                ? 'bg-[#1a365d]/20 border-2 border-[#1a365d]'
+                                                : 'bg-[var(--bg-card)] border border-[var(--border-color)] hover:border-[#1a365d]/50'
                                         )}
                                     >
                                         <span className={cn(
                                             'w-8 h-8 rounded-full flex items-center justify-center shrink-0 font-semibold',
                                             isSelected
-                                                ? 'bg-#1a365d text-white'
+                                                ? 'bg-[#1a365d] text-white'
                                                 : 'bg-[var(--bg-hover)]'
                                         )}>
                                             {letter}
                                         </span>
                                         <span className="flex-1">{option.text}</span>
-                                        {isSelected && <CheckCircle size={20} className="text-#1a365d shrink-0" />}
+                                        {isSelected && <CheckCircle size={20} className="text-[#1a365d] shrink-0" />}
                                     </button>
                                 );
                             })}
@@ -261,7 +261,7 @@ export function ExamSimulator({
                 {currentIndex < questions.length - 1 ? (
                     <button
                         onClick={() => goToQuestion(currentIndex + 1)}
-                        className="flex items-center gap-2 px-4 py-2 bg-#1a365d text-white rounded-lg hover:bg-#1a365d"
+                        className="flex items-center gap-2 px-4 py-2 bg-[#1a365d] text-white rounded-lg hover:bg-[#1a365d]"
                     >
                         Następne
                         <ChevronRight size={18} />

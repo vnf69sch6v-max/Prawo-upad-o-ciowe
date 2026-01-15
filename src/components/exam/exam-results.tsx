@@ -117,7 +117,7 @@ export function ExamResults({
             {/* Stats Grid */}
             <div className="grid grid-cols-3 gap-4">
                 <div className="lex-card text-center">
-                    <Target size={24} className="mx-auto mb-2 text-#1a365d" />
+                    <Target size={24} className="mx-auto mb-2 text-[#1a365d]" />
                     <p className="text-2xl font-bold">{correctAnswers}/{totalQuestions}</p>
                     <p className="text-xs text-[var(--text-muted)]">Poprawne odpowiedzi</p>
                 </div>
@@ -163,9 +163,9 @@ export function ExamResults({
             {questionResults && questionResults.length > 0 && (
                 <button
                     onClick={() => setShowReview(!showReview)}
-                    className="w-full lex-card flex items-center justify-center gap-2 py-4 hover:border-#1a365d/50 transition-all"
+                    className="w-full lex-card flex items-center justify-center gap-2 py-4 hover:border-[#1a365d]/50 transition-all"
                 >
-                    <BookOpen size={20} className="text-#1a365d" />
+                    <BookOpen size={20} className="text-[#1a365d]" />
                     <span className="font-medium">
                         {showReview ? 'Ukryj przegląd odpowiedzi' : 'Zobacz przegląd odpowiedzi'}
                     </span>
@@ -181,14 +181,14 @@ export function ExamResults({
                         <div className="flex gap-2">
                             <button
                                 onClick={expandAll}
-                                className="text-sm text-#1a365d hover:text-purple-300"
+                                className="text-sm text-[#1a365d] hover:text-purple-300"
                             >
                                 Rozwiń wszystkie
                             </button>
                             <span className="text-[var(--text-muted)]">|</span>
                             <button
                                 onClick={collapseAll}
-                                className="text-sm text-#1a365d hover:text-purple-300"
+                                className="text-sm text-[#1a365d] hover:text-purple-300"
                             >
                                 Zwiń wszystkie
                             </button>
@@ -228,7 +228,7 @@ export function ExamResults({
                                                 Pytanie {index + 1}
                                             </span>
                                             {q.article && (
-                                                <span className="text-xs px-2 py-0.5 bg-#1a365d/20 text-#1a365d rounded">
+                                                <span className="text-xs px-2 py-0.5 bg-[#1a365d]/20 text-[#1a365d] rounded">
                                                     {q.article}
                                                 </span>
                                             )}
@@ -307,7 +307,7 @@ export function ExamResults({
                 {onRetry && (
                     <button
                         onClick={onRetry}
-                        className="flex-1 py-3 bg-#1a365d text-white rounded-xl hover:bg-#1a365d font-medium flex items-center justify-center gap-2"
+                        className="flex-1 py-3 bg-[#1a365d] text-white rounded-xl hover:bg-[#1a365d] font-medium flex items-center justify-center gap-2"
                     >
                         <RotateCcw size={18} />
                         Spróbuj ponownie

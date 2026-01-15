@@ -194,7 +194,7 @@ function DomainRow({ domain, onPractice, onQuiz }: {
             className={cn(
                 'rounded-xl border transition-all',
                 needsWork ? 'border-red-500/20' : 'border-[var(--border-color)]',
-                isHovered && 'border-#1a365d/30'
+                isHovered && 'border-[#1a365d]/30'
             )}
             style={{
                 boxShadow: needsWork ? '0 0 20px -10px rgba(239, 68, 68, 0.3)' : undefined,
@@ -266,7 +266,7 @@ function DomainRow({ domain, onPractice, onQuiz }: {
                 )}>
                     <button
                         onClick={(e) => { e.stopPropagation(); onPractice(); }}
-                        className="p-2 rounded-lg bg-#1a365d/20 hover:bg-#1a365d/40 text-#1a365d transition-colors"
+                        className="p-2 rounded-lg bg-[#1a365d]/20 hover:bg-[#1a365d]/40 text-[#1a365d] transition-colors"
                         title="Ćwicz fiszki"
                     >
                         <Play size={16} />
@@ -369,7 +369,7 @@ export function EnhancedDomainMastery({
                         className={cn(
                             'px-3 py-1.5 rounded-lg text-sm font-medium transition-all',
                             viewMode === 'bar'
-                                ? 'bg-#1a365d text-white'
+                                ? 'bg-[#1a365d] text-white'
                                 : 'text-[var(--text-muted)] hover:text-white'
                         )}
                     >
@@ -380,7 +380,7 @@ export function EnhancedDomainMastery({
                         className={cn(
                             'px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-1',
                             viewMode === 'radar'
-                                ? 'bg-#1a365d text-white'
+                                ? 'bg-[#1a365d] text-white'
                                 : 'text-[var(--text-muted)] hover:text-white'
                         )}
                     >

@@ -110,7 +110,7 @@ export function AIChat({ onSendMessage }: AIChatProps) {
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
                 {messages.length === 0 && (
                     <div className="text-center py-8 space-y-4">
-                        <Sparkles size={40} className="mx-auto text-#1a365d" />
+                        <Sparkles size={40} className="mx-auto text-[#1a365d]" />
                         <div>
                             <h4 className="font-medium mb-2">Witaj w LexCapital AI!</h4>
                             <p className="text-sm text-[var(--text-muted)]">
@@ -123,7 +123,7 @@ export function AIChat({ onSendMessage }: AIChatProps) {
                                 <button
                                     key={item.label}
                                     onClick={() => handleQuickPrompt(item.prompt)}
-                                    className="px-3 py-1.5 text-xs bg-[var(--bg-hover)] hover:bg-#1a365d/20 border border-[var(--border-color)] hover:border-#1a365d/50 rounded-full transition-all"
+                                    className="px-3 py-1.5 text-xs bg-[var(--bg-hover)] hover:bg-[#1a365d]/20 border border-[var(--border-color)] hover:border-[#1a365d]/50 rounded-full transition-all"
                                 >
                                     {item.label}
                                 </button>
@@ -144,7 +144,7 @@ export function AIChat({ onSendMessage }: AIChatProps) {
                             className={cn(
                                 'w-8 h-8 rounded-full flex items-center justify-center shrink-0',
                                 msg.role === 'user'
-                                    ? 'bg-#1a365d'
+                                    ? 'bg-[#1a365d]'
                                     : 'bg-gradient-to-br from-#1a365d to-pink-600'
                             )}
                         >
@@ -154,7 +154,7 @@ export function AIChat({ onSendMessage }: AIChatProps) {
                             className={cn(
                                 'max-w-[80%] p-3 rounded-2xl text-sm',
                                 msg.role === 'user'
-                                    ? 'bg-#1a365d text-white rounded-br-sm'
+                                    ? 'bg-[#1a365d] text-white rounded-br-sm'
                                     : 'bg-[var(--bg-hover)] rounded-bl-sm'
                             )}
                         >
@@ -189,7 +189,7 @@ export function AIChat({ onSendMessage }: AIChatProps) {
                         onChange={(e) => setInput(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
                         placeholder="Zadaj pytanie prawne..."
-                        className="flex-1 px-4 py-3 bg-[var(--bg-hover)] border border-[var(--border-color)] rounded-xl focus:border-#1a365d focus:outline-none transition-colors"
+                        className="flex-1 px-4 py-3 bg-[var(--bg-hover)] border border-[var(--border-color)] rounded-xl focus:border-[#1a365d] focus:outline-none transition-colors"
                         disabled={loading}
                     />
                     <button

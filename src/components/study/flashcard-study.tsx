@@ -142,7 +142,7 @@ export function FlashcardStudy({ cards, onReview, onComplete }: FlashcardStudyPr
                     >
                         <p className="text-xl font-medium text-green-400 mb-4">{currentCard.answer}</p>
                         {currentCard.legalReference && (
-                            <p className="text-sm text-#1a365d mb-2">{currentCard.legalReference}</p>
+                            <p className="text-sm text-[#1a365d] mb-2">{currentCard.legalReference}</p>
                         )}
                         {currentCard.explanation && (
                             <p className="text-sm text-[var(--text-muted)] mt-4">{currentCard.explanation}</p>

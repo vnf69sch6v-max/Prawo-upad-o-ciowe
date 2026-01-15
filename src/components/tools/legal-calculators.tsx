@@ -124,7 +124,7 @@ export function DeadlineCalculator() {
     return (
         <div className="lex-card">
             <div className="flex items-center gap-2 mb-6">
-                <Calendar className="text-#1a365d" />
+                <Calendar className="text-[#1a365d]" />
                 <h3 className="text-lg font-semibold">Kalkulator terminów</h3>
             </div>
 
@@ -135,7 +135,7 @@ export function DeadlineCalculator() {
                     type="date"
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
-                    className="w-full px-4 py-3 bg-[var(--bg-hover)] border border-[var(--border-color)] rounded-xl focus:border-#1a365d focus:outline-none"
+                    className="w-full px-4 py-3 bg-[var(--bg-hover)] border border-[var(--border-color)] rounded-xl focus:border-[#1a365d] focus:outline-none"
                 />
             </div>
 
@@ -153,8 +153,8 @@ export function DeadlineCalculator() {
                             className={cn(
                                 'p-3 text-left rounded-xl border transition-all text-sm',
                                 selectedPreset === preset
-                                    ? 'border-#1a365d bg-#1a365d/10'
-                                    : 'border-[var(--border-color)] hover:border-#1a365d/30'
+                                    ? 'border-[#1a365d] bg-[#1a365d]/10'
+                                    : 'border-[var(--border-color)] hover:border-[#1a365d]/30'
                             )}
                         >
                             <p className="font-medium truncate">{preset.name}</p>
@@ -177,7 +177,7 @@ export function DeadlineCalculator() {
                         }}
                         placeholder="0"
                         min="0"
-                        className="flex-1 px-4 py-3 bg-[var(--bg-hover)] border border-[var(--border-color)] rounded-xl focus:border-#1a365d focus:outline-none"
+                        className="flex-1 px-4 py-3 bg-[var(--bg-hover)] border border-[var(--border-color)] rounded-xl focus:border-[#1a365d] focus:outline-none"
                     />
                     <span className="flex items-center px-4 text-[var(--text-muted)]">dni</span>
                 </div>
@@ -189,7 +189,7 @@ export function DeadlineCalculator() {
                     type="checkbox"
                     checked={adjustWeekends}
                     onChange={(e) => setAdjustWeekends(e.target.checked)}
-                    className="w-4 h-4 rounded border-[var(--border-color)] bg-[var(--bg-hover)] text-#1a365d focus:ring-#1a365d"
+                    className="w-4 h-4 rounded border-[var(--border-color)] bg-[var(--bg-hover)] text-[#1a365d] focus:ring-[#1a365d]"
                 />
                 <span className="text-sm">Przesuń weekendy na poniedziałek</span>
             </label>
@@ -199,7 +199,7 @@ export function DeadlineCalculator() {
                 <div className="p-4 bg-[var(--bg-hover)] rounded-xl space-y-3">
                     <div className="flex items-center justify-between">
                         <span className="text-[var(--text-muted)]">Termin upływa:</span>
-                        <span className="text-xl font-bold text-#1a365d">
+                        <span className="text-xl font-bold text-[#1a365d]">
                             {result.date.toLocaleDateString('pl-PL', {
                                 weekday: 'long',
                                 day: 'numeric',
@@ -236,7 +236,7 @@ export function DeadlineCalculator() {
                     {/* Legal basis */}
                     {activePreset?.basis && (
                         <p className="text-xs text-[var(--text-muted)]">
-                            Podstawa prawna: <span className="text-#1a365d">{activePreset.basis}</span>
+                            Podstawa prawna: <span className="text-[#1a365d]">{activePreset.basis}</span>
                         </p>
                     )}
 
@@ -294,7 +294,7 @@ export function CourtFeeCalculator() {
                 <select
                     value={selectedCase.name}
                     onChange={(e) => setSelectedCase(CASE_TYPES.find(c => c.name === e.target.value) || CASE_TYPES[0])}
-                    className="w-full px-4 py-3 bg-[var(--bg-hover)] border border-[var(--border-color)] rounded-xl focus:border-#1a365d focus:outline-none"
+                    className="w-full px-4 py-3 bg-[var(--bg-hover)] border border-[var(--border-color)] rounded-xl focus:border-[#1a365d] focus:outline-none"
                 >
                     {CASE_TYPES.map((c, i) => (
                         <option key={i} value={c.name}>{c.name}</option>
@@ -310,7 +310,7 @@ export function CourtFeeCalculator() {
                         type="number"
                         value={amount}
                         onChange={(e) => setAmount(parseInt(e.target.value) || 0)}
-                        className="w-full px-4 py-3 bg-[var(--bg-hover)] border border-[var(--border-color)] rounded-xl focus:border-#1a365d focus:outline-none"
+                        className="w-full px-4 py-3 bg-[var(--bg-hover)] border border-[var(--border-color)] rounded-xl focus:border-[#1a365d] focus:outline-none"
                     />
                 </div>
             )}
@@ -382,7 +382,7 @@ export function InterestCalculator() {
                     type="number"
                     value={principal}
                     onChange={(e) => setPrincipal(parseInt(e.target.value) || 0)}
-                    className="w-full px-4 py-3 bg-[var(--bg-hover)] border border-[var(--border-color)] rounded-xl focus:border-#1a365d focus:outline-none"
+                    className="w-full px-4 py-3 bg-[var(--bg-hover)] border border-[var(--border-color)] rounded-xl focus:border-[#1a365d] focus:outline-none"
                 />
             </div>
 
@@ -392,7 +392,7 @@ export function InterestCalculator() {
                 <select
                     value={interestType}
                     onChange={(e) => setInterestType(e.target.value as keyof typeof INTEREST_RATES)}
-                    className="w-full px-4 py-3 bg-[var(--bg-hover)] border border-[var(--border-color)] rounded-xl focus:border-#1a365d focus:outline-none"
+                    className="w-full px-4 py-3 bg-[var(--bg-hover)] border border-[var(--border-color)] rounded-xl focus:border-[#1a365d] focus:outline-none"
                 >
                     {Object.entries(INTEREST_RATES).map(([key, val]) => (
                         <option key={key} value={key}>{val.name} ({(val.rate * 100).toFixed(2)}%)</option>
@@ -408,7 +408,7 @@ export function InterestCalculator() {
                         type="date"
                         value={startDate}
                         onChange={(e) => setStartDate(e.target.value)}
-                        className="w-full px-4 py-3 bg-[var(--bg-hover)] border border-[var(--border-color)] rounded-xl focus:border-#1a365d focus:outline-none"
+                        className="w-full px-4 py-3 bg-[var(--bg-hover)] border border-[var(--border-color)] rounded-xl focus:border-[#1a365d] focus:outline-none"
                     />
                 </div>
                 <div>
@@ -417,7 +417,7 @@ export function InterestCalculator() {
                         type="date"
                         value={endDate}
                         onChange={(e) => setEndDate(e.target.value)}
-                        className="w-full px-4 py-3 bg-[var(--bg-hover)] border border-[var(--border-color)] rounded-xl focus:border-#1a365d focus:outline-none"
+                        className="w-full px-4 py-3 bg-[var(--bg-hover)] border border-[var(--border-color)] rounded-xl focus:border-[#1a365d] focus:outline-none"
                     />
                 </div>
             </div>
@@ -455,7 +455,7 @@ export function InterestCalculator() {
                 </div>
 
                 <p className="text-xs text-[var(--text-muted)]">
-                    Podstawa: <span className="text-#1a365d">{rate.basis}</span>
+                    Podstawa: <span className="text-[#1a365d]">{rate.basis}</span>
                 </p>
             </div>
         </div>

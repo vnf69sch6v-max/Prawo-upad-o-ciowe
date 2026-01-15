@@ -77,8 +77,8 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
                             className={cn(
                                 'relative p-6 rounded-xl border transition-all',
                                 plan.popular
-                                    ? 'bg-gradient-to-br from-purple-900/30 to-[var(--bg-elevated)] border-#1a365d'
-                                    : 'bg-[var(--bg-elevated)] border-[var(--border-color)] hover:border-#1a365d/50'
+                                    ? 'bg-gradient-to-br from-purple-900/30 to-[var(--bg-elevated)] border-[#1a365d]'
+                                    : 'bg-[var(--bg-elevated)] border-[var(--border-color)] hover:border-[#1a365d]/50'
                             )}
                         >
                             {plan.popular && (
@@ -110,7 +110,7 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
                                     'w-full py-3 rounded-xl font-semibold transition-all flex items-center justify-center gap-2',
                                     plan.popular
                                         ? 'bg-gradient-to-r from-#1a365d to-pink-600 text-white hover:from-#1a365d hover:to-#b8860b'
-                                        : 'bg-[var(--bg-hover)] hover:bg-#1a365d/20 border border-[var(--border-color)]'
+                                        : 'bg-[var(--bg-hover)] hover:bg-[#1a365d]/20 border border-[var(--border-color)]'
                                 )}
                             >
                                 <Zap size={18} />

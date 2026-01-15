@@ -102,7 +102,7 @@ function QuickAddMenu({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
                             >
                                 <div className={cn(
                                     'w-12 h-12 rounded-xl flex items-center justify-center',
-                                    action.color === 'purple' && 'bg-#1a365d/20 text-#1a365d',
+                                    action.color === 'purple' && 'bg-[#1a365d]/20 text-[#1a365d]',
                                     action.color === 'blue' && 'bg-blue-500/20 text-blue-400',
                                     action.color === 'pink' && 'bg-#b8860b/20 text-#b8860b',
                                     action.color === 'yellow' && 'bg-yellow-500/20 text-yellow-400'
@@ -202,13 +202,13 @@ export function EnhancedMobileNav({ onQuickAdd }: EnhancedMobileNavProps) {
                                     className={cn(
                                         'relative flex flex-col items-center gap-0.5 py-2 px-3 rounded-xl transition-all',
                                         active
-                                            ? 'text-#1a365d'
+                                            ? 'text-[#1a365d]'
                                             : 'text-[var(--text-muted)] hover:text-white'
                                     )}
                                 >
                                     {/* Active indicator */}
                                     {active && (
-                                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-4 h-1 bg-#1a365d rounded-full" />
+                                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-4 h-1 bg-[#1a365d] rounded-full" />
                                     )}
 
                                     {/* Icon with badge */}
@@ -224,7 +224,7 @@ export function EnhancedMobileNav({ onQuickAdd }: EnhancedMobileNavProps) {
                                     {/* Label */}
                                     <span className={cn(
                                         'text-[10px] font-medium',
-                                        active ? 'text-#1a365d' : ''
+                                        active ? 'text-[#1a365d]' : ''
                                     )}>
                                         {item.label}
                                     </span>

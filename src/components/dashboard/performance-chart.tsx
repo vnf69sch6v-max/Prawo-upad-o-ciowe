@@ -52,7 +52,7 @@ export function PerformanceChart({ data, target = 15000 }: PerformanceChartProps
                             className={cn(
                                 'px-3 py-1 text-xs font-medium rounded transition-all',
                                 timeRange === r
-                                    ? 'bg-#1a365d text-white'
+                                    ? 'bg-[#1a365d] text-white'
                                     : 'text-[var(--text-muted)] hover:text-white'
                             )}
                         >
@@ -123,7 +123,7 @@ export function PerformanceChart({ data, target = 15000 }: PerformanceChartProps
             <div className="grid grid-cols-3 gap-4 pt-4 border-t border-[var(--border-color)]">
                 <div>
                     <p className="text-xs text-[var(--text-muted)]">Peak Value</p>
-                    <p className="text-sm font-semibold text-#1a365d">€{peakValue.toLocaleString()}</p>
+                    <p className="text-sm font-semibold text-[#1a365d]">€{peakValue.toLocaleString()}</p>
                 </div>
                 <div>
                     <p className="text-xs text-[var(--text-muted)]">Avg. Daily</p>

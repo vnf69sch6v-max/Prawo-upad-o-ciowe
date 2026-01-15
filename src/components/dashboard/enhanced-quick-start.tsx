@@ -216,11 +216,11 @@ export function EnhancedQuickStart({
             <div className="p-4 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)]">
                 <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
-                        <Target size={18} className={isGoalComplete ? 'text-green-400' : 'text-#1a365d'} />
+                        <Target size={18} className={isGoalComplete ? 'text-green-400' : 'text-[#1a365d]'} />
                         <span className="font-medium">Dzienny cel</span>
                     </div>
                     <span className="text-sm">
-                        <span className={isGoalComplete ? 'text-green-400' : 'text-#1a365d'}>
+                        <span className={isGoalComplete ? 'text-green-400' : 'text-[#1a365d]'}>
                             {dailyGoalProgress}
                         </span>
                         <span className="text-[var(--text-muted)]"> / {dailyGoalTarget} fiszek</span>

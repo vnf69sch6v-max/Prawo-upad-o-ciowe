@@ -36,7 +36,7 @@ export default function SettingsPage() {
         return (
             <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg-primary)' }}>
                 <div className="text-center">
-                    <Loader2 size={48} className="animate-spin text-#1a365d mx-auto mb-4" />
+                    <Loader2 size={48} className="animate-spin text-[#1a365d] mx-auto mb-4" />
                     <p className="text-[var(--text-muted)]">Ładowanie profilu...</p>
                 </div>
             </div>
@@ -88,7 +88,7 @@ export default function SettingsPage() {
                                                 className={cn(
                                                     'w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all',
                                                     activeSection === section.id
-                                                        ? 'bg-#1a365d/20 text-#1a365d'
+                                                        ? 'bg-[#1a365d]/20 text-[#1a365d]'
                                                         : 'text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)]'
                                                 )}
                                             >
@@ -133,7 +133,7 @@ export default function SettingsPage() {
                                                     type="text"
                                                     defaultValue={user?.displayName || ''}
                                                     placeholder="Twoje imię"
-                                                    className="w-full px-4 py-2.5 bg-[var(--bg-hover)] border border-[var(--border-color)] rounded-xl focus:border-#1a365d focus:outline-none"
+                                                    className="w-full px-4 py-2.5 bg-[var(--bg-hover)] border border-[var(--border-color)] rounded-xl focus:border-[#1a365d] focus:outline-none"
                                                 />
                                             </div>
                                             <div>
@@ -224,7 +224,7 @@ export default function SettingsPage() {
                                                 </div>
                                                 <label className="relative inline-flex items-center cursor-pointer">
                                                     <input type="checkbox" defaultChecked={profile?.preferences?.notifications} className="sr-only peer" />
-                                                    <div className="w-11 h-6 bg-[var(--bg-hover)] peer-focus:ring-2 peer-focus:ring-#1a365d rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-#1a365d"></div>
+                                                    <div className="w-11 h-6 bg-[var(--bg-hover)] peer-focus:ring-2 peer-focus:ring-[#1a365d] rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#1a365d]"></div>
                                                 </label>
                                             </div>
                                         ))}
@@ -239,7 +239,7 @@ export default function SettingsPage() {
                                                 "px-3 py-1 text-sm font-bold rounded-full flex items-center gap-1",
                                                 profile?.subscription?.plan === 'free'
                                                     ? "bg-[var(--bg-hover)] text-[var(--text-muted)]"
-                                                    : "bg-#1a365d text-white"
+                                                    : "bg-[#1a365d] text-white"
                                             )}>
                                                 {profile?.subscription?.plan !== 'free' && <Crown size={14} />}
                                                 {profile?.subscription?.plan?.toUpperCase() || 'FREE'}
@@ -250,7 +250,7 @@ export default function SettingsPage() {
                                             "p-4 rounded-xl border",
                                             profile?.subscription?.plan === 'free'
                                                 ? "bg-[var(--bg-hover)] border-[var(--border-color)]"
-                                                : "bg-#1a365d/10 border-#1a365d/30"
+                                                : "bg-[#1a365d]/10 border-[#1a365d]/30"
                                         )}>
                                             <p className="font-medium">
                                                 LexCapital {profile?.subscription?.plan?.toUpperCase() || 'FREE'}

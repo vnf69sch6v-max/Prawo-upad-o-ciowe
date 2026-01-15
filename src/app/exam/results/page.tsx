@@ -108,7 +108,7 @@ export default function ExamResultsPage() {
                         {/* Header */}
                         <div>
                             <h1 className="text-2xl font-bold flex items-center gap-2">
-                                <ClipboardList className="text-#1a365d" />
+                                <ClipboardList className="text-[#1a365d]" />
                                 Historia Egzaminów
                             </h1>
                             <p className="text-[var(--text-muted)]">Twoje poprzednie wyniki</p>
@@ -143,7 +143,7 @@ export default function ExamResultsPage() {
                                     className={cn(
                                         'px-4 py-2 rounded-xl text-sm font-medium transition-all',
                                         filter === f
-                                            ? 'bg-#1a365d text-white'
+                                            ? 'bg-[#1a365d] text-white'
                                             : 'bg-[var(--bg-card)] text-[var(--text-muted)] hover:text-white'
                                     )}
                                 >
@@ -162,7 +162,7 @@ export default function ExamResultsPage() {
                                     onClick={() => setSelectedResult(result)}
                                     className={cn(
                                         'lex-card cursor-pointer transition-all',
-                                        selectedResult?.id === result.id && 'border-#1a365d'
+                                        selectedResult?.id === result.id && 'border-[#1a365d]'
                                     )}
                                 >
                                     <div className="flex items-start justify-between mb-4">

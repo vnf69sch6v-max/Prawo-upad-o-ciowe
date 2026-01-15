@@ -29,7 +29,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
                         ref={ref}
                         className={cn(
                             'w-full h-10 px-4 bg-[var(--bg-card)] border rounded-xl text-[var(--text-primary)] placeholder:text-[var(--text-muted)]',
-                            'focus:outline-none focus:ring-2 focus:ring-#1a365d focus:border-transparent',
+                            'focus:outline-none focus:ring-2 focus:ring-[#1a365d] focus:border-transparent',
                             'disabled:opacity-50 disabled:cursor-not-allowed',
                             error ? 'border-red-500' : 'border-[var(--border-color)]',
                             leftIcon && 'pl-10',
