@@ -72,11 +72,25 @@ export function useAuth() {
 
             // Create profile if it doesn't exist (for existing auth users)
             if (!userProfile) {
+                // Wait a moment for displayName to be set by signUp
+                await new Promise(resolve => setTimeout(resolve, 500));
+                // Reload user to get updated displayName
+                await firebaseUser.reload();
+
+                const displayName = firebaseUser.displayName ||
+                    firebaseUser.email?.split('@')[0] ||
+                    'Student';
+
                 userProfile = await createUserProfile(
                     firebaseUser.uid,
                     firebaseUser.email || '',
-                    firebaseUser.displayName || 'User'
+                    displayName
                 );
+            } else if (userProfile.displayName === 'User' && firebaseUser.displayName) {
+                // Fix existing profiles with 'User' displayName
+                const { updateUserProfile } = await import('@/lib/services/user-service');
+                await updateUserProfile(firebaseUser.uid, { displayName: firebaseUser.displayName });
+                userProfile = { ...userProfile, displayName: firebaseUser.displayName };
             }
 
             setProfile(userProfile);

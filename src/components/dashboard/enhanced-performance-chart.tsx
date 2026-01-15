@@ -45,7 +45,7 @@ const TIME_RANGES = [
 ] as const;
 
 const METRICS: { key: MetricKey; label: string; color: string; format: (v: number) => string }[] = [
-    { key: 'knowledgeEquity', label: 'Knowledge Equity', color: '#8b5cf6', format: (v) => `€${(v / 1000).toFixed(1)}k` },
+    { key: 'knowledgeEquity', label: 'Knowledge Equity', color: '#8b5cf6', format: (v) => `{(v / 1000).toFixed(1)}k` },
     { key: 'cardsReviewed', label: 'Karty', color: '#10b981', format: (v) => v.toString() },
     { key: 'accuracy', label: 'Dokładność', color: '#f59e0b', format: (v) => `${v}%` },
 ];
@@ -133,7 +133,7 @@ export function EnhancedPerformanceChart({
         const max = Math.max(...values);
 
         return [max, (max + min) / 2, min].map(v => {
-            if (primaryMetric === 'knowledgeEquity') return `€${(v / 1000).toFixed(1)}k`;
+            if (primaryMetric === 'knowledgeEquity') return `{(v / 1000).toFixed(1)}k`;
             if (primaryMetric === 'accuracy') return `${v.toFixed(0)}%`;
             return v.toFixed(0);
         });
@@ -400,11 +400,11 @@ export function EnhancedPerformanceChart({
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-6 pt-4 border-t border-[var(--border-color)]">
                 <div>
                     <p className="text-xs text-[var(--text-muted)]">Szczyt</p>
-                    <p className="font-semibold">€{(stats.peak / 1000).toFixed(1)}k</p>
+                    <p className="font-semibold">pkt {(stats.peak / 1000).toFixed(1)}k</p>
                 </div>
                 <div>
                     <p className="text-xs text-[var(--text-muted)]">Śr. dzienny wzrost</p>
-                    <p className="font-semibold text-green-400">+€{stats.avgDaily.toFixed(0)}</p>
+                    <p className="font-semibold text-green-400">+pkt {stats.avgDaily.toFixed(0)}</p>
                 </div>
                 <div>
                     <p className="text-xs text-[var(--text-muted)]">Zmiana w okresie</p>

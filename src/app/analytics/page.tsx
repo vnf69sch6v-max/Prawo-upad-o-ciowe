@@ -183,14 +183,14 @@ export default function AnalyticsPage() {
                             </h3>
                             <div className="text-center py-8">
                                 <p className="text-5xl font-bold mb-2" style={{ color: '#059669' }}>
-                                    €{stats?.knowledgeEquity?.toLocaleString() || 0}
+                                    pkt {stats?.knowledgeEquity?.toLocaleString() || 0}
                                 </p>
                                 <p className="text-[var(--text-muted)]">
                                     Wartość Twojej wiedzy prawniczej
                                 </p>
                                 <div className="mt-6 max-w-md mx-auto">
                                     <div className="flex justify-between text-sm mb-2">
-                                        <span className="text-[var(--text-muted)]">Postęp do €50,000</span>
+                                        <span className="text-[var(--text-muted)]">Postęp do 50,000 pkt</span>
                                         <span className="font-medium">{Math.min(100, Math.round((stats?.knowledgeEquity || 0) / 500))}%</span>
                                     </div>
                                     <div className="h-3 rounded-full" style={{ background: 'var(--bg-hover)' }}>

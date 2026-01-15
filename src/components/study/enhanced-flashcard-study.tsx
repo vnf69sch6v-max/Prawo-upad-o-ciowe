@@ -246,7 +246,7 @@ function SessionComplete({
                     <p className="text-xs text-[var(--text-muted)]">XP zdobyte</p>
                 </div>
                 <div className="lex-card text-center">
-                    <p className="text-3xl font-bold text-emerald-400">+€{stats.equityGained}</p>
+                    <p className="text-3xl font-bold text-emerald-400">+pkt {stats.equityGained}</p>
                     <p className="text-xs text-[var(--text-muted)]">Knowledge Equity</p>
                 </div>
             </div>

@@ -125,7 +125,7 @@ function Podium({ top3 }: { top3: LeaderboardEntry[] }) {
 
                         {/* Stats */}
                         <p className="text-xs text-[var(--text-muted)] mb-2">
-                            €{(entry.knowledgeEquity / 1000).toFixed(1)}k
+                            pkt {(entry.knowledgeEquity / 1000).toFixed(1)}k
                         </p>
 
                         {/* Podium block */}
@@ -226,7 +226,7 @@ function LeaderboardRow({ entry, showRankChange = true }: { entry: LeaderboardEn
             {/* Knowledge Equity */}
             <div className="text-right">
                 <p className="font-bold text-emerald-400">
-                    €{entry.knowledgeEquity.toLocaleString()}
+                    pkt {entry.knowledgeEquity.toLocaleString()}
                 </p>
                 <p className="text-xs text-[var(--text-muted)]">Knowledge Equity</p>
             </div>

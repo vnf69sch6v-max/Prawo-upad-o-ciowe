@@ -111,9 +111,15 @@ export default function LeaderboardPage() {
                             <div className="lex-card text-center py-12">
                                 <Users size={48} className="mx-auto text-[var(--text-muted)] mb-4" />
                                 <h3 className="text-lg font-semibold mb-2">Brak danych rankingu</h3>
-                                <p className="text-[var(--text-muted)]">
+                                <p className="text-[var(--text-muted)] mb-6">
                                     Ukończ egzaminy, aby pojawić się w rankingu!
                                 </p>
+                                <a
+                                    href="/exam"
+                                    className="inline-flex items-center gap-2 px-6 py-3 bg-[#1a365d] text-white rounded-xl hover:bg-[#1a365d]/90 transition-colors font-medium"
+                                >
+                                    Zacznij naukę →
+                                </a>
                             </div>
                         )}
 
@@ -127,7 +133,7 @@ export default function LeaderboardPage() {
                                     </div>
                                     <Medal className="mx-auto text-gray-400 mb-1" size={24} />
                                     <p className="font-semibold truncate max-w-[120px]">{leaderboard[1].displayName}</p>
-                                    <p className="text-sm text-[var(--text-muted)]">€{leaderboard[1].knowledgeEquity.toLocaleString()}</p>
+                                    <p className="text-sm text-[var(--text-muted)]">pkt {leaderboard[1].knowledgeEquity.toLocaleString()}</p>
                                     <div className="h-24 w-20 bg-gray-500/20 rounded-t-lg mt-2" />
                                 </div>
 
@@ -141,7 +147,7 @@ export default function LeaderboardPage() {
                                     </div>
                                     <Medal className="mx-auto text-yellow-400 mb-1" size={28} />
                                     <p className="font-bold text-lg truncate max-w-[140px]">{leaderboard[0].displayName}</p>
-                                    <p className="text-sm text-yellow-400">€{leaderboard[0].knowledgeEquity.toLocaleString()}</p>
+                                    <p className="text-sm text-yellow-400">pkt {leaderboard[0].knowledgeEquity.toLocaleString()}</p>
                                     <div className="h-32 w-24 bg-yellow-500/20 rounded-t-lg mt-2" />
                                 </div>
 
@@ -152,7 +158,7 @@ export default function LeaderboardPage() {
                                     </div>
                                     <Medal className="mx-auto text-orange-400 mb-1" size={24} />
                                     <p className="font-semibold truncate max-w-[120px]">{leaderboard[2].displayName}</p>
-                                    <p className="text-sm text-[var(--text-muted)]">€{leaderboard[2].knowledgeEquity.toLocaleString()}</p>
+                                    <p className="text-sm text-[var(--text-muted)]">pkt {leaderboard[2].knowledgeEquity.toLocaleString()}</p>
                                     <div className="h-16 w-20 bg-orange-500/20 rounded-t-lg mt-2" />
                                 </div>
                             </div>
@@ -169,7 +175,7 @@ export default function LeaderboardPage() {
                                     <div className="flex-1">
                                         <p className="font-semibold">Twoja pozycja</p>
                                         <p className="text-sm text-[var(--text-muted)]">
-                                            €{currentUserEntry.knowledgeEquity.toLocaleString()} • {currentUserEntry.currentStreak} dni streak
+                                            pkt {currentUserEntry.knowledgeEquity.toLocaleString()} • {currentUserEntry.currentStreak} dni streak
                                         </p>
                                     </div>
                                     <div className="flex items-center gap-1 text-[var(--text-muted)]">
@@ -220,7 +226,7 @@ export default function LeaderboardPage() {
                                                         </div>
                                                     </td>
                                                     <td className="px-4 py-3 text-right font-medium">
-                                                        €{entry.knowledgeEquity.toLocaleString()}
+                                                        pkt {entry.knowledgeEquity.toLocaleString()}
                                                     </td>
                                                     <td className="px-4 py-3 text-right hidden sm:table-cell">
                                                         <span className="flex items-center justify-end gap-1 text-orange-400">

@@ -55,8 +55,7 @@ export default function DashboardPage() {
 
     // Use profile stats or defaults
     const stats = profile?.stats || DEFAULT_USER_STATS;
-    const displayName = profile?.displayName || 'Student';
-
+    const displayName = profile?.displayName || user?.displayName || 'Student';
 
     // Calculate accuracy percentage
     const accuracy = stats.totalQuestions > 0
@@ -129,7 +128,7 @@ export default function DashboardPage() {
                                 <StatCard
                                     label="Knowledge Equity"
                                     value={stats.knowledgeEquity}
-                                    prefix="€"
+                                    prefix=""
                                     change={stats.knowledgeEquity > 0 ? 12 : 0}
                                     trend={stats.knowledgeEquity > 0 ? "up" : "neutral"}
                                     icon="💰"

@@ -95,7 +95,7 @@ export function Header({ userStats, currentView, onNavigate, nearbyUsers = [] }:
                                                                 {isCurrentUser && ' (Ty)'}
                                                             </p>
                                                             <p className="text-xs text-[var(--text-muted)]">
-                                                                €{user.knowledgeEquity.toLocaleString()}
+                                                                pkt {user.knowledgeEquity.toLocaleString()}
                                                             </p>
                                                         </div>
                                                         <span className={cn(

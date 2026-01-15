@@ -158,7 +158,7 @@ export default function SettingsPage() {
                                         <div className="grid grid-cols-2 gap-4">
                                             <div className="lex-card text-center">
                                                 <Trophy size={24} className="mx-auto mb-2 text-yellow-400" />
-                                                <p className="text-2xl font-bold">€{stats?.knowledgeEquity || 0}</p>
+                                                <p className="text-2xl font-bold">pkt {stats?.knowledgeEquity || 0}</p>
                                                 <p className="text-xs text-[var(--text-muted)]">Knowledge Equity</p>
                                             </div>
                                             <div className="lex-card text-center">

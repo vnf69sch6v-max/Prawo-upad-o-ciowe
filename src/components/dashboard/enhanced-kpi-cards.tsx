@@ -156,9 +156,9 @@ function formatValue(value: number, format: EnhancedKPICardProps['format']): str
     switch (format) {
         case 'currency':
             if (value >= 1000) {
-                return `€${(value / 1000).toFixed(1)}k`;
+                return `{(value / 1000).toFixed(1)}k`;
             }
-            return `€${value.toLocaleString()}`;
+            return `{value.toLocaleString()}`;
         case 'percentage':
             return `${value}%`;
         case 'days':
