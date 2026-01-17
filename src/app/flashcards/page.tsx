@@ -252,11 +252,18 @@ export default function FlashcardsPage() {
                         ) : (
                             <div className="space-y-3">
                                 {filteredCards.slice(0, 20).map(card => (
-                                    <div key={card.id} className="lex-card hover:border-[#1a365d]/50 transition-all cursor-pointer">
+                                    <div key={card.id} className="lex-card hover:border-[#1a365d]/50 transition-all group">
                                         <div className="flex items-start justify-between gap-4">
                                             <div className="flex-1 min-w-0">
-                                                <p className="font-medium mb-1">{card.question}</p>
-                                                <p className="text-sm text-[var(--text-muted)] line-clamp-1">{card.answer}</p>
+                                                <p className="font-medium mb-2">{card.question}</p>
+                                                <details className="cursor-pointer">
+                                                    <summary className="text-sm text-[#1a365d] hover:text-[#1a365d]/80 transition-colors font-medium">
+                                                        Pokaż odpowiedź →
+                                                    </summary>
+                                                    <p className="text-sm text-[var(--text-muted)] mt-2 pl-4 border-l-2 border-[#1a365d]/30">
+                                                        {card.answer}
+                                                    </p>
+                                                </details>
                                             </div>
                                             <div className="flex items-center gap-2 shrink-0">
                                                 <span className={cn(
