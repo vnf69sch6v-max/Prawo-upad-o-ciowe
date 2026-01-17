@@ -209,7 +209,7 @@ export function Sidebar({
                                 <span className="text-[#b8860b]">🔥 {userStats.streak}</span>
                                 <span>•</span>
                                 <span className="text-[#059669]">
-                                    pkt {userStats.knowledgeEquity.toLocaleString()}
+                                    {userStats.knowledgeEquity.toLocaleString()} pkt
                                 </span>
                             </div>
                         </div>

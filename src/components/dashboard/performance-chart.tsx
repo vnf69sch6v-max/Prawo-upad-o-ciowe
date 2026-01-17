@@ -71,7 +71,7 @@ export function PerformanceChart({ data, target = 15000 }: PerformanceChartProps
                         style={{ bottom: `${((target - min) / range) * 100}%` }}
                     >
                         <span className="absolute right-0 -top-5 text-xs text-yellow-500 bg-[var(--bg-card)] px-2 rounded">
-                            Target pkt {(target / 1000).toFixed(1)}k
+                            Target {(target / 1000).toFixed(1)}k pkt
                         </span>
                     </div>
                 )}
@@ -92,7 +92,7 @@ export function PerformanceChart({ data, target = 15000 }: PerformanceChartProps
                                 {isHovered && (
                                     <div className="absolute -top-16 left-1/2 -translate-x-1/2 bg-[var(--bg-elevated)] border border-[var(--border-color)] rounded-lg px-3 py-2 shadow-lg z-20 whitespace-nowrap animate-fade-in">
                                         <p className="text-xs text-[var(--text-muted)]">{point.date}</p>
-                                        <p className="text-sm font-bold">pkt {point.value.toLocaleString()}</p>
+                                        <p className="text-sm font-bold">{point.value.toLocaleString()} pkt</p>
                                     </div>
                                 )}
 
@@ -123,7 +123,7 @@ export function PerformanceChart({ data, target = 15000 }: PerformanceChartProps
             <div className="grid grid-cols-3 gap-4 pt-4 border-t border-[var(--border-color)]">
                 <div>
                     <p className="text-xs text-[var(--text-muted)]">Peak Value</p>
-                    <p className="text-sm font-semibold text-[#1a365d]">pkt {peakValue.toLocaleString()}</p>
+                    <p className="text-sm font-semibold text-[#1a365d]">{peakValue.toLocaleString()} pkt</p>
                 </div>
                 <div>
                     <p className="text-xs text-[var(--text-muted)]">Avg. Daily</p>
@@ -133,7 +133,7 @@ export function PerformanceChart({ data, target = 15000 }: PerformanceChartProps
                             avgGrowth >= 0 ? 'text-green-400' : 'text-red-400'
                         )}
                     >
-                        {avgGrowth >= 0 ? '+' : ''}pkt {avgGrowth}
+                        {avgGrowth >= 0 ? '+' : ''}{avgGrowth} pkt
                     </p>
                 </div>
                 <div>

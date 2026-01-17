@@ -128,7 +128,7 @@ export default function DashboardPage() {
                                 <StatCard
                                     label="Knowledge Equity"
                                     value={stats.knowledgeEquity}
-                                    prefix=""
+                                    suffix=" pkt"
                                     change={stats.knowledgeEquity > 0 ? 12 : 0}
                                     trend={stats.knowledgeEquity > 0 ? "up" : "neutral"}
                                     icon="💰"

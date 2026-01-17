@@ -183,7 +183,7 @@ export default function AnalyticsPage() {
                             </h3>
                             <div className="text-center py-8">
                                 <p className="text-5xl font-bold mb-2" style={{ color: '#059669' }}>
-                                    pkt {stats?.knowledgeEquity?.toLocaleString() || 0}
+                                    {stats?.knowledgeEquity?.toLocaleString() || 0} pkt
                                 </p>
                                 <p className="text-[var(--text-muted)]">
                                     Wartość Twojej wiedzy prawniczej

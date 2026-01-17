@@ -127,7 +127,7 @@ export default function ProfilePage() {
                                 <div className="w-12 h-12 mx-auto mb-3 rounded-full flex items-center justify-center" style={{ background: 'rgba(184, 134, 11, 0.1)' }}>
                                     <Trophy size={24} style={{ color: '#b8860b' }} />
                                 </div>
-                                <p className="text-2xl font-bold" style={{ color: '#1a365d' }}>pkt {stats?.knowledgeEquity || 0}</p>
+                                <p className="text-2xl font-bold" style={{ color: '#1a365d' }}>{stats?.knowledgeEquity || 0}</p>
                                 <p className="text-xs text-[var(--text-muted)]">Knowledge Equity</p>
                             </div>
                             <div className="lex-card text-center animate-fade-in-up hover-lift" style={{ animationDelay: '200ms' }}>

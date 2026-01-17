@@ -400,11 +400,11 @@ export function EnhancedPerformanceChart({
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-6 pt-4 border-t border-[var(--border-color)]">
                 <div>
                     <p className="text-xs text-[var(--text-muted)]">Szczyt</p>
-                    <p className="font-semibold">pkt {(stats.peak / 1000).toFixed(1)}k</p>
+                    <p className="font-semibold">{(stats.peak / 1000).toFixed(1)}k</p>
                 </div>
                 <div>
                     <p className="text-xs text-[var(--text-muted)]">Śr. dzienny wzrost</p>
-                    <p className="font-semibold text-green-400">+pkt {stats.avgDaily.toFixed(0)}</p>
+                    <p className="font-semibold text-green-400">+{stats.avgDaily.toFixed(0)}</p>
                 </div>
                 <div>
                     <p className="text-xs text-[var(--text-muted)]">Zmiana w okresie</p>
