@@ -2,18 +2,16 @@
 
 import { useState, useMemo } from 'react';
 import { Sidebar, Header, MobileNav } from '@/components/layout';
-import {
-    BarChart3, TrendingUp, Target, Clock,
-    BookOpen, Brain, Loader2, Inbox
-} from 'lucide-react';
-import { cn } from '@/lib/utils/cn';
+import { BarChart3, TrendingUp, Target, Clock, BookOpen, Loader2, Play, Trophy } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
+import Link from 'next/link';
 
 export default function AnalyticsPage() {
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const { profile, loading: authLoading } = useAuth();
 
     const stats = profile?.stats;
+    const hasData = stats && stats.totalQuestions > 0;
 
     // Calculate real accuracy
     const accuracy = useMemo(() => {
@@ -65,144 +63,135 @@ export default function AnalyticsPage() {
                 />
 
                 <main className="flex-1 overflow-auto p-6 pb-20 lg:pb-6">
-                    <div className="max-w-6xl mx-auto space-y-6">
+                    <div className="max-w-4xl mx-auto space-y-6">
                         {/* Header */}
-                        <div>
-                            <h1 className="text-2xl font-bold flex items-center gap-2">
-                                <BarChart3 style={{ color: '#1a365d' }} />
-                                Analityka
-                            </h1>
-                            <p className="text-[var(--text-muted)]">Szczegółowe statystyki Twojej nauki</p>
+                        <div className="text-center mb-8">
+                            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4" style={{ background: '#1a365d' }}>
+                                <BarChart3 size={32} className="text-white" />
+                            </div>
+                            <h1 className="text-3xl font-bold mb-2">Statystyki</h1>
+                            <p className="text-[var(--text-muted)]">
+                                {hasData ? 'Twoje postępy w nauce' : 'Zacznij naukę, żeby zobaczyć statystyki'}
+                            </p>
                         </div>
 
-                        {/* KPI Summary - Real data */}
-                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                            <div className="lex-card">
-                                <div className="flex items-center gap-3 mb-3">
-                                    <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: 'rgba(26, 54, 93, 0.1)' }}>
-                                        <BookOpen size={20} style={{ color: '#1a365d' }} />
-                                    </div>
-                                    <span className="text-sm text-[var(--text-muted)]">Pytań rozwiązanych</span>
+                        {!hasData ? (
+                            /* Empty State */
+                            <div className="lex-card py-16 text-center">
+                                <div className="w-24 h-24 rounded-full mx-auto mb-6 flex items-center justify-center text-5xl" style={{ background: '#1a365d15' }}>
+                                    📊
                                 </div>
-                                <p className="text-3xl font-bold">{stats?.totalQuestions?.toLocaleString() || 0}</p>
-                            </div>
-
-                            <div className="lex-card">
-                                <div className="flex items-center gap-3 mb-3">
-                                    <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: 'rgba(5, 150, 105, 0.1)' }}>
-                                        <Target size={20} style={{ color: '#059669' }} />
-                                    </div>
-                                    <span className="text-sm text-[var(--text-muted)]">Dokładność</span>
-                                </div>
-                                <p className="text-3xl font-bold">{accuracy}%</p>
-                                <p className="text-sm mt-1" style={{ color: '#059669' }}>
-                                    {stats?.correctAnswers || 0} poprawnych
+                                <h2 className="text-2xl font-bold mb-2">Brak danych</h2>
+                                <p className="text-[var(--text-muted)] mb-8 max-w-md mx-auto">
+                                    Ukończ swój pierwszy egzamin lub sesję nauki, aby zobaczyć szczegółowe statystyki postępu.
                                 </p>
+                                <Link
+                                    href="/exam"
+                                    className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-white font-medium"
+                                    style={{ background: '#1a365d' }}
+                                >
+                                    <Play size={20} />
+                                    Rozpocznij egzamin
+                                </Link>
                             </div>
+                        ) : (
+                            /* Stats Content */
+                            <>
+                                {/* Main Stats Grid */}
+                                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                                    <div className="lex-card text-center py-6">
+                                        <div className="w-12 h-12 rounded-xl mx-auto mb-3 flex items-center justify-center" style={{ background: '#1a365d15' }}>
+                                            <BookOpen size={24} style={{ color: '#1a365d' }} />
+                                        </div>
+                                        <p className="text-3xl font-bold">{stats?.totalQuestions?.toLocaleString() || 0}</p>
+                                        <p className="text-sm text-[var(--text-muted)]">pytań</p>
+                                    </div>
 
-                            <div className="lex-card">
-                                <div className="flex items-center gap-3 mb-3">
-                                    <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: 'rgba(37, 99, 235, 0.1)' }}>
-                                        <Clock size={20} style={{ color: '#2563eb' }} />
+                                    <div className="lex-card text-center py-6">
+                                        <div className="w-12 h-12 rounded-xl mx-auto mb-3 flex items-center justify-center" style={{ background: '#05966915' }}>
+                                            <Target size={24} style={{ color: '#059669' }} />
+                                        </div>
+                                        <p className="text-3xl font-bold">{accuracy}%</p>
+                                        <p className="text-sm text-[var(--text-muted)]">dokładność</p>
                                     </div>
-                                    <span className="text-sm text-[var(--text-muted)]">Czas nauki</span>
-                                </div>
-                                <p className="text-3xl font-bold">{studyTimeHours}h</p>
-                            </div>
 
-                            <div className="lex-card">
-                                <div className="flex items-center gap-3 mb-3">
-                                    <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: 'rgba(234, 88, 12, 0.1)' }}>
-                                        <Brain size={20} style={{ color: '#ea580c' }} />
+                                    <div className="lex-card text-center py-6">
+                                        <div className="w-12 h-12 rounded-xl mx-auto mb-3 flex items-center justify-center" style={{ background: '#2563eb15' }}>
+                                            <Clock size={24} style={{ color: '#2563eb' }} />
+                                        </div>
+                                        <p className="text-3xl font-bold">{studyTimeHours}h</p>
+                                        <p className="text-sm text-[var(--text-muted)]">czas nauki</p>
                                     </div>
-                                    <span className="text-sm text-[var(--text-muted)]">Zdawalność egzaminów</span>
-                                </div>
-                                <p className="text-3xl font-bold">{passRate}%</p>
-                                <p className="text-sm mt-1 text-[var(--text-muted)]">
-                                    {stats?.examsPassed || 0}/{stats?.examsCompleted || 0} zdanych
-                                </p>
-                            </div>
-                        </div>
 
-                        {/* Streak & Exam Stats - Compact Row */}
-                        <div className="lex-card">
-                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-                                {/* Streak */}
-                                <div className="flex items-center gap-4">
-                                    <div className="w-14 h-14 rounded-xl flex items-center justify-center text-2xl" style={{ background: 'rgba(234, 88, 12, 0.1)' }}>
-                                        🔥
-                                    </div>
-                                    <div>
-                                        <p className="text-2xl font-bold">{stats?.currentStreak || 0}</p>
-                                        <p className="text-sm text-[var(--text-muted)]">dni z rzędu</p>
-                                    </div>
-                                </div>
-
-                                {/* Longest Streak */}
-                                <div className="flex items-center gap-4">
-                                    <div className="w-14 h-14 rounded-xl flex items-center justify-center text-2xl" style={{ background: 'rgba(184, 134, 11, 0.1)' }}>
-                                        ⭐
-                                    </div>
-                                    <div>
-                                        <p className="text-2xl font-bold">{stats?.longestStreak || 0}</p>
-                                        <p className="text-sm text-[var(--text-muted)]">najdłuższa seria</p>
+                                    <div className="lex-card text-center py-6">
+                                        <div className="w-12 h-12 rounded-xl mx-auto mb-3 flex items-center justify-center" style={{ background: '#ea580c15' }}>
+                                            <Trophy size={24} style={{ color: '#ea580c' }} />
+                                        </div>
+                                        <p className="text-3xl font-bold">{passRate}%</p>
+                                        <p className="text-sm text-[var(--text-muted)]">zdawalność</p>
                                     </div>
                                 </div>
 
-                                {/* Exams Passed */}
-                                <div className="flex items-center gap-4">
-                                    <div className="w-14 h-14 rounded-xl flex items-center justify-center text-2xl" style={{ background: 'rgba(5, 150, 105, 0.1)' }}>
-                                        ✅
+                                {/* Streak & Knowledge */}
+                                <div className="grid lg:grid-cols-2 gap-4">
+                                    <div className="lex-card">
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl" style={{ background: '#ea580c15' }}>
+                                                🔥
+                                            </div>
+                                            <div>
+                                                <p className="text-4xl font-bold">{stats?.currentStreak || 0}</p>
+                                                <p className="text-[var(--text-muted)]">dni serii</p>
+                                            </div>
+                                            {stats?.longestStreak && stats.longestStreak > 0 && (
+                                                <div className="ml-auto text-right">
+                                                    <p className="text-sm text-[var(--text-muted)]">rekord</p>
+                                                    <p className="font-bold">{stats.longestStreak} dni</p>
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
-                                    <div>
-                                        <p className="text-2xl font-bold">{stats?.examsPassed || 0}/{stats?.examsCompleted || 0}</p>
-                                        <p className="text-sm text-[var(--text-muted)]">zdanych egzaminów</p>
+
+                                    <div className="lex-card">
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl" style={{ background: '#05966915' }}>
+                                                💎
+                                            </div>
+                                            <div>
+                                                <p className="text-4xl font-bold" style={{ color: '#059669' }}>
+                                                    {stats?.knowledgeEquity?.toLocaleString() || 0}
+                                                </p>
+                                                <p className="text-[var(--text-muted)]">punktów wiedzy</p>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 
-                                {/* Best Score */}
-                                <div className="flex items-center gap-4">
-                                    <div className="w-14 h-14 rounded-xl flex items-center justify-center text-2xl" style={{ background: 'rgba(37, 99, 235, 0.1)' }}>
-                                        🏆
+                                {/* Exams Summary */}
+                                {stats?.examsCompleted && stats.examsCompleted > 0 && (
+                                    <div className="lex-card">
+                                        <h3 className="font-semibold mb-4 flex items-center gap-2">
+                                            <TrendingUp size={20} style={{ color: '#1a365d' }} />
+                                            Egzaminy
+                                        </h3>
+                                        <div className="grid grid-cols-3 gap-4 text-center">
+                                            <div>
+                                                <p className="text-2xl font-bold">{stats.examsCompleted}</p>
+                                                <p className="text-sm text-[var(--text-muted)]">ukończonych</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-2xl font-bold text-green-500">{stats.examsPassed}</p>
+                                                <p className="text-sm text-[var(--text-muted)]">zdanych</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-2xl font-bold">{stats.bestExamScore || 0}%</p>
+                                                <p className="text-sm text-[var(--text-muted)]">najlepszy wynik</p>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <p className="text-2xl font-bold">{stats?.bestExamScore || 0}%</p>
-                                        <p className="text-sm text-[var(--text-muted)]">najlepszy wynik</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Punkty wiedzy Progress */}
-                        <div className="lex-card">
-                            <h3 className="text-lg font-semibold mb-6 flex items-center gap-2">
-                                <TrendingUp style={{ color: '#1a365d' }} />
-                                Punkty wiedzy
-                            </h3>
-                            <div className="text-center py-8">
-                                <p className="text-5xl font-bold mb-2" style={{ color: '#059669' }}>
-                                    {stats?.knowledgeEquity?.toLocaleString() || 0} pkt
-                                </p>
-                                <p className="text-[var(--text-muted)]">
-                                    Wartość Twojej wiedzy prawniczej
-                                </p>
-                                <div className="mt-6 max-w-md mx-auto">
-                                    <div className="flex justify-between text-sm mb-2">
-                                        <span className="text-[var(--text-muted)]">Postęp do 50,000 pkt</span>
-                                        <span className="font-medium">{Math.min(100, Math.round((stats?.knowledgeEquity || 0) / 500))}%</span>
-                                    </div>
-                                    <div className="h-3 rounded-full" style={{ background: 'var(--bg-hover)' }}>
-                                        <div
-                                            className="h-full rounded-full transition-all"
-                                            style={{
-                                                width: `${Math.min(100, Math.round((stats?.knowledgeEquity || 0) / 500))}%`,
-                                                background: 'linear-gradient(90deg, #059669 0%, #10b981 100%)'
-                                            }}
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                                )}
+                            </>
+                        )}
                     </div>
                 </main>
             </div>

@@ -144,8 +144,8 @@ export default function DashboardPage() {
                                     label="Dokładność"
                                     value={accuracy}
                                     suffix="%"
-                                    change={accuracy > 70 ? 5 : -5}
-                                    trend={accuracy > 70 ? "up" : accuracy > 0 ? "down" : "neutral"}
+                                    change={accuracy > 0 ? (accuracy > 70 ? 5 : 0) : undefined}
+                                    trend={accuracy > 70 ? "up" : "neutral"}
                                     icon="🎯"
                                 />
                                 <StatCard
