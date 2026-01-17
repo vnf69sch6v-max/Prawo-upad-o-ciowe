@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils/cn';
-import { ChevronLeft, ChevronRight, ChevronDown, Crown, Sparkles, LayoutDashboard, Trophy, BookOpen, Brain, Target, BarChart3, Clock, LineChart, Zap, Users, MessageSquare, FileText } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ChevronDown, Crown, Sparkles, LayoutDashboard, Trophy, BookOpen, Brain, Target, BarChart3, Clock, LineChart, Zap, Users, MessageSquare, FileText, Search, Calendar, Scale } from 'lucide-react';
 
 interface NavItem {
     id: string;
@@ -35,6 +35,7 @@ const NAV_SECTIONS: NavSection[] = [
         items: [
             { id: 'flashcards', label: 'Fiszki', icon: <BookOpen size={18} />, href: '/flashcards' },
             { id: 'study', label: 'Nauka', icon: <Brain size={18} />, href: '/study' },
+            { id: 'search', label: 'Wyszukiwarka', icon: <Search size={18} />, href: '/search', badge: 'new' },
         ],
     },
     {
@@ -43,13 +44,22 @@ const NAV_SECTIONS: NavSection[] = [
         items: [
             { id: 'exam', label: 'Symulacje', icon: <FileText size={18} />, href: '/exam' },
             { id: 'results', label: 'Wyniki', icon: <BarChart3 size={18} />, href: '/exam/results' },
+            { id: 'weak-points', label: 'Słabe punkty', icon: <Target size={18} />, href: '/weak-points', badge: 'new' },
+        ],
+    },
+    {
+        title: 'Praktyka',
+        id: 'praktyka',
+        items: [
+            { id: 'cases', label: 'Kazusy', icon: <Scale size={18} />, href: '/cases', badge: 'new' },
+            { id: 'deadlines', label: 'Terminy', icon: <Calendar size={18} />, href: '/deadlines', badge: 'new' },
         ],
     },
     {
         title: 'Analityka',
         id: 'analityka',
         items: [
-            { id: 'analytics', label: 'Statystyki', icon: <LineChart size={18} />, href: '/analytics', badge: 'pro' },
+            { id: 'analytics', label: 'Statystyki', icon: <LineChart size={18} />, href: '/analytics' },
         ],
     },
     {

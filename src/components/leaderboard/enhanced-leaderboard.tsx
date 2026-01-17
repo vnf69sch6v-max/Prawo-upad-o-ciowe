@@ -125,7 +125,7 @@ function Podium({ top3 }: { top3: LeaderboardEntry[] }) {
 
                         {/* Stats */}
                         <p className="text-xs text-[var(--text-muted)] mb-2">
-                            {(entry.knowledgeEquity / 1000).toFixed(1) pkt
+                            {(entry.knowledgeEquity / 1000).toFixed(1)}k pkt
                         </p>
 
                         {/* Podium block */}
