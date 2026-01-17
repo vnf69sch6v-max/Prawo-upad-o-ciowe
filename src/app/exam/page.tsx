@@ -357,223 +357,152 @@ export default function ExamPage() {
                             ))}
                         </div>
 
-                        {/* KSH Subdomain Pills */}
-                        {selectedDomain === 'ksh' && (
-                            <div className="lex-card p-4 space-y-3">
-                                <div className="flex items-center justify-between">
-                                    <h3 className="text-sm font-semibold text-[var(--text-muted)] uppercase tracking-wider">Filtruj pytania</h3>
-                                    <button
-                                        onClick={() => setSelectedSubdomain('all')}
-                                        className={cn(
-                                            'px-3 py-1.5 rounded-lg text-xs font-medium transition-all',
-                                            selectedSubdomain === 'all'
-                                                ? 'bg-[#1a365d] text-white'
-                                                : 'bg-[var(--bg-hover)] text-[var(--text-muted)] hover:text-white'
-                                        )}
-                                    >
-                                        Wszystkie
-                                    </button>
-                                </div>
-
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                                    {LEGAL_DOMAINS.find(d => d.id === 'ksh')?.subdomains.map(sub => (
-                                        <button
-                                            key={sub.id}
-                                            onClick={() => setSelectedSubdomain(sub.id)}
-                                            className={cn(
-                                                'px-3 py-2 rounded-lg text-xs font-medium transition-all text-left',
-                                                selectedSubdomain === sub.id
-                                                    ? sub.group === 'osobowe'
-                                                        ? 'bg-blue-500/20 text-blue-400 border border-blue-500/50'
-                                                        : sub.group === 'kapitalowe'
-                                                            ? 'bg-green-500/20 text-green-400 border border-green-500/50'
-                                                            : 'bg-[#1a365d]/20 text-[#1a365d] border border-[#1a365d]/50'
-                                                    : 'bg-[var(--bg-hover)] text-[var(--text-muted)] hover:text-white'
-                                            )}
-                                        >
-                                            {sub.shortName}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Prawo Upadłościowe Subdomain Pills */}
-                        {selectedDomain === 'prawo_upadlosciowe' && (
-                            <div className="lex-card p-4 space-y-3">
-                                <div className="flex items-center justify-between">
-                                    <h3 className="text-sm font-semibold text-[var(--text-muted)] uppercase tracking-wider">Filtruj pytania</h3>
-                                    <button
-                                        onClick={() => setSelectedSubdomain('all')}
-                                        className={cn(
-                                            'px-3 py-1.5 rounded-lg text-xs font-medium transition-all',
-                                            selectedSubdomain === 'all'
-                                                ? 'bg-orange-600 text-white'
-                                                : 'bg-[var(--bg-hover)] text-[var(--text-muted)] hover:text-white'
-                                        )}
-                                    >
-                                        Wszystkie
-                                    </button>
-                                </div>
-
-                                <div className="flex flex-wrap gap-2">
-                                    {LEGAL_DOMAINS.find(d => d.id === 'prawo_upadlosciowe')?.subdomains.map(sub => (
-                                        <button
-                                            key={sub.id}
-                                            onClick={() => setSelectedSubdomain(sub.id)}
-                                            className={cn(
-                                                'px-3 py-2 rounded-lg text-xs font-medium transition-all',
-                                                selectedSubdomain === sub.id
-                                                    ? 'bg-orange-500/20 text-orange-400 border border-orange-500/50'
-                                                    : 'bg-[var(--bg-hover)] text-[var(--text-muted)] hover:text-white'
-                                            )}
-                                        >
-                                            {sub.shortName}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Domain Info Card */}
-                        <div className={cn(
-                            "lex-card bg-gradient-to-r",
-                            selectedDomain === 'ksh'
-                                ? "from-purple-900/20 to-[var(--bg-card)]"
-                                : "from-orange-900/20 to-[var(--bg-card)]"
-                        )}>
-                            <div className="flex items-center gap-4">
-                                <div className="text-3xl">
-                                    {selectedDomain === 'ksh' ? '⚖️' : '📉'}
-                                </div>
-                                <div>
-                                    <h3 className="font-semibold">
-                                        {selectedDomain === 'ksh' ? 'Kodeks Spółek Handlowych' : 'Prawo Upadłościowe'}
-                                    </h3>
-                                    <p className="text-sm text-[var(--text-muted)]">
-                                        Baza {stats.total} pytań • Przygotuj się do egzaminu zawodowego
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Stats */}
-                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                            <div className="lex-card flex items-center gap-3">
-                                <div className="w-10 h-10 bg-[#1a365d]/20 rounded-lg flex items-center justify-center">
-                                    <BookOpen size={20} className="text-[#1a365d]" />
-                                </div>
-                                <div>
-                                    <p className="text-2xl font-bold">{stats.total}</p>
-                                    <p className="text-xs text-[var(--text-muted)]">Pytań w bazie</p>
-                                </div>
-                            </div>
-                            <div className="lex-card flex items-center gap-3">
-                                <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
-                                    <span className="text-green-400 font-bold">{stats.byDifficulty.easy}</span>
-                                </div>
-                                <div>
-                                    <p className="text-sm font-medium text-green-400">Łatwe</p>
-                                    <p className="text-xs text-[var(--text-muted)]">pytania</p>
-                                </div>
-                            </div>
-                            <div className="lex-card flex items-center gap-3">
-                                <div className="w-10 h-10 bg-yellow-500/20 rounded-lg flex items-center justify-center">
-                                    <span className="text-yellow-400 font-bold">{stats.byDifficulty.medium}</span>
-                                </div>
-                                <div>
-                                    <p className="text-sm font-medium text-yellow-400">Średnie</p>
-                                    <p className="text-xs text-[var(--text-muted)]">pytania</p>
-                                </div>
-                            </div>
-                            <div className="lex-card flex items-center gap-3">
-                                <div className="w-10 h-10 bg-red-500/20 rounded-lg flex items-center justify-center">
-                                    <span className="text-red-400 font-bold">{stats.byDifficulty.hard}</span>
-                                </div>
-                                <div>
-                                    <p className="text-sm font-medium text-red-400">Trudne</p>
-                                    <p className="text-xs text-[var(--text-muted)]">pytania</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Quick Start */}
-                        <div className="grid lg:grid-cols-3 gap-4">
-                            {currentExams.slice(0, 3).map((exam, index) => (
-                                <button
-                                    key={exam.id}
-                                    onClick={() => handleStartExam(exam)}
-                                    className={cn(
-                                        "lex-card transition-all text-left group",
-                                        index === 0 && "hover:border-[#1a365d]/50",
-                                        index === 1 && "hover:border-blue-500/50",
-                                        index === 2 && "hover:border-yellow-500/50"
-                                    )}
-                                >
-                                    <div className="flex items-center gap-4">
-                                        <div className={cn(
-                                            "w-14 h-14 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform",
-                                            index === 0 && (selectedDomain === 'ksh' ? "bg-gradient-to-br from-#1a365d to-pink-600" : "bg-gradient-to-br from-orange-600 to-red-600"),
-                                            index === 1 && "bg-gradient-to-br from-blue-600 to-cyan-600",
-                                            index === 2 && "bg-gradient-to-br from-yellow-600 to-orange-600"
-                                        )}>
-                                            {index === 0 && <Play size={24} className="text-white" />}
-                                            {index === 1 && <Scale size={24} className="text-white" />}
-                                            {index === 2 && <Trophy size={24} className="text-white" />}
-                                        </div>
-                                        <div>
-                                            <h3 className="font-semibold">{exam.title}</h3>
-                                            <p className="text-sm text-[var(--text-muted)]">
-                                                {exam.questionCount} pytań • {exam.timeLimit} min
-                                            </p>
-                                        </div>
-                                    </div>
-                                </button>
-                            ))}
-                        </div>
-
-                        {/* All Exams List */}
+                        {/* MAIN CTA - Exam Modes - NOW ON TOP */}
                         <div className="space-y-4">
-                            <h2 className="text-lg font-semibold">Dostępne egzaminy</h2>
-                            {currentExams.map((exam: ExamType) => (
-                                <div
-                                    key={exam.id}
-                                    className={cn(
-                                        "lex-card transition-all cursor-pointer",
-                                        selectedDomain === 'ksh'
-                                            ? "hover:border-[#1a365d]/50"
-                                            : "hover:border-orange-500/50"
-                                    )}
-                                    onClick={() => handleStartExam(exam)}
-                                >
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-12 h-12 bg-[var(--bg-hover)] rounded-xl flex items-center justify-center">
-                                            {exam.icon}
-                                        </div>
-                                        <div className="flex-1">
-                                            <div className="flex items-center gap-2 mb-1">
-                                                <h3 className="font-semibold">{exam.title}</h3>
+                            <h2 className="text-lg font-semibold">Wybierz tryb egzaminu</h2>
+                            <div className="grid lg:grid-cols-3 gap-4">
+                                {currentExams.slice(0, 3).map((exam, index) => (
+                                    <button
+                                        key={exam.id}
+                                        onClick={() => handleStartExam(exam)}
+                                        className={cn(
+                                            "lex-card transition-all text-left group hover:scale-[1.02]",
+                                            index === 0 && "hover:border-[#1a365d]/50 hover:shadow-lg hover:shadow-purple-500/10",
+                                            index === 1 && "hover:border-blue-500/50 hover:shadow-lg hover:shadow-blue-500/10",
+                                            index === 2 && "hover:border-yellow-500/50 hover:shadow-lg hover:shadow-yellow-500/10"
+                                        )}
+                                    >
+                                        <div className="flex flex-col items-center text-center p-4">
+                                            <div className={cn(
+                                                "w-16 h-16 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform mb-4",
+                                                index === 0 && (selectedDomain === 'ksh' ? "bg-gradient-to-br from-purple-600 to-pink-600" : "bg-gradient-to-br from-orange-600 to-red-600"),
+                                                index === 1 && "bg-gradient-to-br from-blue-600 to-cyan-600",
+                                                index === 2 && "bg-gradient-to-br from-yellow-600 to-orange-600"
+                                            )}>
+                                                {index === 0 && <Play size={28} className="text-white" />}
+                                                {index === 1 && <Scale size={28} className="text-white" />}
+                                                {index === 2 && <Trophy size={28} className="text-white" />}
                                             </div>
-                                            <p className="text-sm text-[var(--text-muted)]">{exam.description}</p>
-                                            <div className="flex items-center gap-4 mt-2 text-xs text-[var(--text-muted)]">
-                                                <span>{exam.questionCount} pytań</span>
-                                                <span>•</span>
-                                                <span>{exam.timeLimit} min</span>
-                                                <span>•</span>
-                                                <span className={cn(
-                                                    exam.difficulty === 'mixed' && 'text-[#1a365d]',
-                                                    exam.difficulty === 'medium' && 'text-yellow-400',
-                                                    exam.difficulty === 'hard' && 'text-red-400',
-                                                )}>
-                                                    {exam.difficulty === 'mixed' ? 'Mix' : exam.difficulty}
+                                            <h3 className="font-bold text-lg mb-1">{exam.title}</h3>
+                                            <p className="text-sm text-[var(--text-muted)] mb-3">
+                                                {exam.description}
+                                            </p>
+                                            <div className="flex items-center gap-3 text-xs">
+                                                <span className="px-2 py-1 bg-[var(--bg-hover)] rounded-full">
+                                                    📝 {exam.questionCount} pytań
+                                                </span>
+                                                <span className="px-2 py-1 bg-[var(--bg-hover)] rounded-full">
+                                                    ⏱️ {exam.timeLimit} min
                                                 </span>
                                             </div>
                                         </div>
-                                        <ChevronRight size={20} className="text-[var(--text-muted)]" />
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Collapsible Advanced Filters */}
+                        <details className="lex-card group">
+                            <summary className="flex items-center justify-between cursor-pointer list-none p-4 -m-4">
+                                <div className="flex items-center gap-3">
+                                    <span className="text-xl">⚙️</span>
+                                    <span className="font-semibold">Zaawansowane opcje</span>
+                                </div>
+                                <ChevronRight size={20} className="text-[var(--text-muted)] transition-transform group-open:rotate-90" />
+                            </summary>
+
+                            <div className="pt-6 space-y-4">
+                                {/* Stats Row */}
+                                <div className="grid grid-cols-4 gap-3">
+                                    <div className="flex items-center gap-2 p-3 bg-[var(--bg-hover)] rounded-xl">
+                                        <BookOpen size={18} className="text-[#1a365d]" />
+                                        <div>
+                                            <p className="font-bold">{stats.total}</p>
+                                            <p className="text-xs text-[var(--text-muted)]">pytań</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-2 p-3 bg-green-500/10 rounded-xl">
+                                        <span className="text-green-400 font-bold">{stats.byDifficulty.easy}</span>
+                                        <span className="text-xs text-green-400">łatwych</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 p-3 bg-yellow-500/10 rounded-xl">
+                                        <span className="text-yellow-400 font-bold">{stats.byDifficulty.medium}</span>
+                                        <span className="text-xs text-yellow-400">średnich</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 p-3 bg-red-500/10 rounded-xl">
+                                        <span className="text-red-400 font-bold">{stats.byDifficulty.hard}</span>
+                                        <span className="text-xs text-red-400">trudnych</span>
                                     </div>
                                 </div>
-                            ))}
-                        </div>
+
+                                {/* Subdomain Filters */}
+                                {selectedDomain === 'ksh' && (
+                                    <div className="space-y-2">
+                                        <p className="text-sm font-medium text-[var(--text-muted)]">Filtruj wg tematu:</p>
+                                        <div className="flex flex-wrap gap-2">
+                                            <button
+                                                onClick={() => setSelectedSubdomain('all')}
+                                                className={cn(
+                                                    'px-3 py-1.5 rounded-full text-xs font-medium transition-all',
+                                                    selectedSubdomain === 'all'
+                                                        ? 'bg-[#1a365d] text-white'
+                                                        : 'bg-[var(--bg-hover)] text-[var(--text-muted)] hover:text-white'
+                                                )}
+                                            >
+                                                Wszystkie
+                                            </button>
+                                            {LEGAL_DOMAINS.find(d => d.id === 'ksh')?.subdomains.map(sub => (
+                                                <button
+                                                    key={sub.id}
+                                                    onClick={() => setSelectedSubdomain(sub.id)}
+                                                    className={cn(
+                                                        'px-3 py-1.5 rounded-full text-xs font-medium transition-all',
+                                                        selectedSubdomain === sub.id
+                                                            ? 'bg-[#1a365d] text-white'
+                                                            : 'bg-[var(--bg-hover)] text-[var(--text-muted)] hover:text-white'
+                                                    )}
+                                                >
+                                                    {sub.shortName}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {selectedDomain === 'prawo_upadlosciowe' && (
+                                    <div className="space-y-2">
+                                        <p className="text-sm font-medium text-[var(--text-muted)]">Filtruj wg tematu:</p>
+                                        <div className="flex flex-wrap gap-2">
+                                            <button
+                                                onClick={() => setSelectedSubdomain('all')}
+                                                className={cn(
+                                                    'px-3 py-1.5 rounded-full text-xs font-medium transition-all',
+                                                    selectedSubdomain === 'all'
+                                                        ? 'bg-orange-600 text-white'
+                                                        : 'bg-[var(--bg-hover)] text-[var(--text-muted)] hover:text-white'
+                                                )}
+                                            >
+                                                Wszystkie
+                                            </button>
+                                            {LEGAL_DOMAINS.find(d => d.id === 'prawo_upadlosciowe')?.subdomains.map(sub => (
+                                                <button
+                                                    key={sub.id}
+                                                    onClick={() => setSelectedSubdomain(sub.id)}
+                                                    className={cn(
+                                                        'px-3 py-1.5 rounded-full text-xs font-medium transition-all',
+                                                        selectedSubdomain === sub.id
+                                                            ? 'bg-orange-600 text-white'
+                                                            : 'bg-[var(--bg-hover)] text-[var(--text-muted)] hover:text-white'
+                                                    )}
+                                                >
+                                                    {sub.shortName}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </details>
                     </div>
                 </main>
             </div>
