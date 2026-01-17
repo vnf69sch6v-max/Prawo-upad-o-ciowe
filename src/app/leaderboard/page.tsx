@@ -108,18 +108,53 @@ export default function LeaderboardPage() {
 
                         {/* Empty State */}
                         {!loading && leaderboard.length === 0 && (
-                            <div className="lex-card text-center py-12">
-                                <Users size={48} className="mx-auto text-[var(--text-muted)] mb-4" />
-                                <h3 className="text-lg font-semibold mb-2">Brak danych rankingu</h3>
-                                <p className="text-[var(--text-muted)] mb-6">
-                                    Ukończ egzaminy, aby pojawić się w rankingu!
-                                </p>
-                                <a
-                                    href="/exam"
-                                    className="inline-flex items-center gap-2 px-6 py-3 bg-[#1a365d] text-white rounded-xl hover:bg-[#1a365d]/90 transition-colors font-medium"
-                                >
-                                    Zacznij naukę →
-                                </a>
+                            <div className="lex-card py-8">
+                                {/* Ghost Podium */}
+                                <div className="flex items-end justify-center gap-4 mb-8 opacity-40">
+                                    {/* 2nd Place Ghost */}
+                                    <div className="text-center">
+                                        <div className="w-16 h-16 mx-auto mb-2 bg-gradient-to-br from-gray-400 to-gray-500 rounded-full flex items-center justify-center">
+                                            <span className="text-2xl">?</span>
+                                        </div>
+                                        <div className="w-6 h-6 mx-auto mb-1 rounded-full bg-gray-400" />
+                                        <p className="font-medium text-sm">2. miejsce</p>
+                                        <div className="h-16 w-16 bg-gray-500/30 rounded-t-lg mt-2" />
+                                    </div>
+
+                                    {/* 1st Place Ghost */}
+                                    <div className="text-center">
+                                        <div className="w-20 h-20 mx-auto mb-2 bg-gradient-to-br from-yellow-400/50 to-yellow-600/50 rounded-full flex items-center justify-center">
+                                            <span className="text-3xl">👑</span>
+                                        </div>
+                                        <div className="w-6 h-6 mx-auto mb-1 rounded-full bg-yellow-400/50" />
+                                        <p className="font-medium">1. miejsce</p>
+                                        <div className="h-24 w-20 bg-yellow-500/20 rounded-t-lg mt-2" />
+                                    </div>
+
+                                    {/* 3rd Place Ghost */}
+                                    <div className="text-center">
+                                        <div className="w-16 h-16 mx-auto mb-2 bg-gradient-to-br from-amber-600/50 to-amber-800/50 rounded-full flex items-center justify-center">
+                                            <span className="text-2xl">?</span>
+                                        </div>
+                                        <div className="w-6 h-6 mx-auto mb-1 rounded-full bg-amber-600/50" />
+                                        <p className="font-medium text-sm">3. miejsce</p>
+                                        <div className="h-12 w-16 bg-amber-600/20 rounded-t-lg mt-2" />
+                                    </div>
+                                </div>
+
+                                {/* CTA */}
+                                <div className="text-center">
+                                    <h3 className="text-xl font-bold mb-2">Zajmij swoje miejsce na podium! 🏆</h3>
+                                    <p className="text-[var(--text-muted)] mb-6">
+                                        Rozwiązuj egzaminy i zdobywaj punkty wiedzy
+                                    </p>
+                                    <a
+                                        href="/exam"
+                                        className="inline-flex items-center gap-2 px-6 py-3 bg-[#1a365d] text-white rounded-xl hover:bg-[#1a365d]/90 transition-colors font-medium"
+                                    >
+                                        Rozpocznij egzamin →
+                                    </a>
+                                </div>
                             </div>
                         )}
 

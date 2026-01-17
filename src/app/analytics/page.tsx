@@ -124,54 +124,52 @@ export default function AnalyticsPage() {
                             </div>
                         </div>
 
-                        {/* Detailed Stats */}
-                        <div className="grid lg:grid-cols-2 gap-6">
-                            {/* Streak & Progress */}
-                            <div className="lex-card">
-                                <h3 className="text-lg font-semibold mb-6">Twoja seria</h3>
-                                <div className="text-center py-6">
-                                    <div className="w-24 h-24 mx-auto mb-4 rounded-full flex items-center justify-center text-4xl" style={{ background: 'rgba(234, 88, 12, 0.1)' }}>
+                        {/* Streak & Exam Stats - Compact Row */}
+                        <div className="lex-card">
+                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                                {/* Streak */}
+                                <div className="flex items-center gap-4">
+                                    <div className="w-14 h-14 rounded-xl flex items-center justify-center text-2xl" style={{ background: 'rgba(234, 88, 12, 0.1)' }}>
                                         🔥
                                     </div>
-                                    <p className="text-4xl font-bold mb-2">{stats?.currentStreak || 0}</p>
-                                    <p className="text-[var(--text-muted)]">dni z rzędu</p>
-                                    <p className="text-sm mt-4" style={{ color: '#b8860b' }}>
-                                        Najdłuższa seria: {stats?.longestStreak || 0} dni
-                                    </p>
+                                    <div>
+                                        <p className="text-2xl font-bold">{stats?.currentStreak || 0}</p>
+                                        <p className="text-sm text-[var(--text-muted)]">dni z rzędu</p>
+                                    </div>
                                 </div>
-                            </div>
 
-                            {/* Exam Results */}
-                            <div className="lex-card">
-                                <h3 className="text-lg font-semibold mb-6">Wyniki egzaminów</h3>
-                                {stats?.examsCompleted === 0 ? (
-                                    <div className="text-center py-8">
-                                        <Inbox size={48} className="mx-auto mb-4 text-[var(--text-muted)]" />
-                                        <p className="text-[var(--text-muted)]">Nie ukończyłeś jeszcze żadnego egzaminu</p>
-                                        <a href="/exam" className="inline-block mt-4 px-4 py-2 rounded-lg text-white font-medium" style={{ background: '#1a365d' }}>
-                                            Rozpocznij egzamin
-                                        </a>
+                                {/* Longest Streak */}
+                                <div className="flex items-center gap-4">
+                                    <div className="w-14 h-14 rounded-xl flex items-center justify-center text-2xl" style={{ background: 'rgba(184, 134, 11, 0.1)' }}>
+                                        ⭐
                                     </div>
-                                ) : (
-                                    <div className="space-y-4">
-                                        <div className="flex justify-between items-center py-3 border-b border-[var(--border-color)]">
-                                            <span className="text-[var(--text-muted)]">Ukończone egzaminy</span>
-                                            <span className="font-semibold">{stats?.examsCompleted || 0}</span>
-                                        </div>
-                                        <div className="flex justify-between items-center py-3 border-b border-[var(--border-color)]">
-                                            <span className="text-[var(--text-muted)]">Zdane egzaminy</span>
-                                            <span className="font-semibold" style={{ color: '#059669' }}>{stats?.examsPassed || 0}</span>
-                                        </div>
-                                        <div className="flex justify-between items-center py-3 border-b border-[var(--border-color)]">
-                                            <span className="text-[var(--text-muted)]">Najlepszy wynik</span>
-                                            <span className="font-semibold" style={{ color: '#b8860b' }}>{stats?.bestExamScore || 0}%</span>
-                                        </div>
-                                        <div className="flex justify-between items-center py-3">
-                                            <span className="text-[var(--text-muted)]">Zdawalność</span>
-                                            <span className="font-semibold">{passRate}%</span>
-                                        </div>
+                                    <div>
+                                        <p className="text-2xl font-bold">{stats?.longestStreak || 0}</p>
+                                        <p className="text-sm text-[var(--text-muted)]">najdłuższa seria</p>
                                     </div>
-                                )}
+                                </div>
+
+                                {/* Exams Passed */}
+                                <div className="flex items-center gap-4">
+                                    <div className="w-14 h-14 rounded-xl flex items-center justify-center text-2xl" style={{ background: 'rgba(5, 150, 105, 0.1)' }}>
+                                        ✅
+                                    </div>
+                                    <div>
+                                        <p className="text-2xl font-bold">{stats?.examsPassed || 0}/{stats?.examsCompleted || 0}</p>
+                                        <p className="text-sm text-[var(--text-muted)]">zdanych egzaminów</p>
+                                    </div>
+                                </div>
+
+                                {/* Best Score */}
+                                <div className="flex items-center gap-4">
+                                    <div className="w-14 h-14 rounded-xl flex items-center justify-center text-2xl" style={{ background: 'rgba(37, 99, 235, 0.1)' }}>
+                                        🏆
+                                    </div>
+                                    <div>
+                                        <p className="text-2xl font-bold">{stats?.bestExamScore || 0}%</p>
+                                        <p className="text-sm text-[var(--text-muted)]">najlepszy wynik</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 

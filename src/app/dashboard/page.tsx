@@ -217,25 +217,55 @@ export default function DashboardPage() {
                                 </div>
                             </div>
 
-                            {/* Stats Summary */}
+                            {/* Progress Towards Goals */}
                             <div className="lex-card">
-                                <h3 className="text-lg font-semibold mb-4">📊 Statystyki</h3>
-                                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                                    <div className="text-center p-4 bg-[var(--bg-hover)] rounded-xl">
-                                        <p className="text-2xl font-bold text-[#1a365d]">{stats.totalQuestions}</p>
-                                        <p className="text-xs text-[var(--text-muted)]">Pytań odpowiedzianych</p>
+                                <h3 className="text-lg font-semibold mb-4">📈 Twoje postępy</h3>
+                                <div className="space-y-4">
+                                    {/* Questions Goal */}
+                                    <div>
+                                        <div className="flex justify-between text-sm mb-2">
+                                            <span className="text-[var(--text-muted)]">Pytania dzisiaj</span>
+                                            <span className="font-medium">{stats.totalQuestions} / 20</span>
+                                        </div>
+                                        <div className="h-2 bg-[var(--bg-hover)] rounded-full overflow-hidden">
+                                            <div
+                                                className="h-full bg-[#1a365d] rounded-full transition-all"
+                                                style={{ width: `${Math.min(100, (stats.totalQuestions / 20) * 100)}%` }}
+                                            />
+                                        </div>
                                     </div>
-                                    <div className="text-center p-4 bg-[var(--bg-hover)] rounded-xl">
-                                        <p className="text-2xl font-bold text-[#059669]">{stats.correctAnswers}</p>
-                                        <p className="text-xs text-[var(--text-muted)]">Poprawnych odpowiedzi</p>
+
+                                    {/* Accuracy Goal */}
+                                    <div>
+                                        <div className="flex justify-between text-sm mb-2">
+                                            <span className="text-[var(--text-muted)]">Cel dokładności 80%</span>
+                                            <span className="font-medium" style={{ color: accuracy >= 80 ? '#059669' : 'inherit' }}>
+                                                {accuracy}% {accuracy >= 80 && '✓'}
+                                            </span>
+                                        </div>
+                                        <div className="h-2 bg-[var(--bg-hover)] rounded-full overflow-hidden">
+                                            <div
+                                                className="h-full rounded-full transition-all"
+                                                style={{
+                                                    width: `${Math.min(100, (accuracy / 80) * 100)}%`,
+                                                    background: accuracy >= 80 ? '#059669' : '#f59e0b'
+                                                }}
+                                            />
+                                        </div>
                                     </div>
-                                    <div className="text-center p-4 bg-[var(--bg-hover)] rounded-xl">
-                                        <p className="text-2xl font-bold text-[#1a365d]">{stats.examsPassed}</p>
-                                        <p className="text-xs text-[var(--text-muted)]">Zdanych egzaminów</p>
-                                    </div>
-                                    <div className="text-center p-4 bg-[var(--bg-hover)] rounded-xl">
-                                        <p className="text-2xl font-bold text-[#b8860b]">{stats.longestStreak}</p>
-                                        <p className="text-xs text-[var(--text-muted)]">Najdłuższa passa</p>
+
+                                    {/* Points Goal */}
+                                    <div>
+                                        <div className="flex justify-between text-sm mb-2">
+                                            <span className="text-[var(--text-muted)]">Punkty wiedzy</span>
+                                            <span className="font-medium">{stats.knowledgeEquity.toLocaleString()} / 10,000 pkt</span>
+                                        </div>
+                                        <div className="h-2 bg-[var(--bg-hover)] rounded-full overflow-hidden">
+                                            <div
+                                                className="h-full bg-gradient-to-r from-[#059669] to-[#10b981] rounded-full transition-all"
+                                                style={{ width: `${Math.min(100, (stats.knowledgeEquity / 10000) * 100)}%` }}
+                                            />
+                                        </div>
                                     </div>
                                 </div>
                             </div>
