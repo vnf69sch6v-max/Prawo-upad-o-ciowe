@@ -126,7 +126,7 @@ export default function DashboardPage() {
                             {/* KPI Cards */}
                             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                                 <StatCard
-                                    label="Knowledge Equity"
+                                    label="Punkty wiedzy"
                                     value={stats.knowledgeEquity}
                                     suffix=" pkt"
                                     change={stats.knowledgeEquity > 0 ? 12 : 0}
@@ -149,7 +149,7 @@ export default function DashboardPage() {
                                     icon="🎯"
                                 />
                                 <StatCard
-                                    label="Streak"
+                                    label="Seria nauki"
                                     value={`${stats.currentStreak} dni`}
                                     icon="🔥"
                                     trend="neutral"
@@ -163,17 +163,23 @@ export default function DashboardPage() {
                                     <PerformanceChart data={performanceHistory} target={15000} />
                                 ) : (
                                     <div className="lex-card flex flex-col items-center justify-center py-12">
-                                        <div className="text-6xl mb-4">📈</div>
-                                        <h3 className="text-lg font-semibold mb-2">Brak danych</h3>
-                                        <p className="text-[var(--text-muted)] text-center text-sm">
-                                            Ukończ kilka egzaminów, aby zobaczyć wykres postępów
+                                        <div className="text-6xl mb-4">🚀</div>
+                                        <h3 className="text-lg font-semibold mb-2">Zacznij swoją przygodę!</h3>
+                                        <p className="text-[var(--text-muted)] text-center text-sm mb-4">
+                                            Odpowiadaj na pytania i śledź swoje postępy
                                         </p>
+                                        <a
+                                            href="/exam"
+                                            className="px-6 py-2 bg-[#1a365d] text-white rounded-lg hover:bg-[#1a365d]/90 transition-colors font-medium"
+                                        >
+                                            Rozpocznij egzamin →
+                                        </a>
                                     </div>
                                 )}
 
                                 {/* Quick Actions */}
                                 <div className="lex-card">
-                                    <h3 className="text-lg font-semibold mb-4">⚡ Quick Actions</h3>
+                                    <h3 className="text-lg font-semibold mb-4">⚡ Szybkie akcje</h3>
                                     <div className="grid grid-cols-2 gap-3">
                                         <Link
                                             href="/flashcards"

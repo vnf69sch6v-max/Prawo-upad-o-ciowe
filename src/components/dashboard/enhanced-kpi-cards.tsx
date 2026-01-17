@@ -318,7 +318,7 @@ export function EnhancedKPICardsGrid({ data, onCardClick }: EnhancedKPICardsGrid
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <EnhancedKPICard
-                title="Knowledge Equity"
+                title="Punkty wiedzy"
                 value={data.knowledgeEquity.value}
                 previousValue={data.knowledgeEquity.previous}
                 format="currency"

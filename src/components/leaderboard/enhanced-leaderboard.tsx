@@ -223,12 +223,12 @@ function LeaderboardRow({ entry, showRankChange = true }: { entry: LeaderboardEn
                 <span className="text-sm font-medium">{entry.streak}</span>
             </div>
 
-            {/* Knowledge Equity */}
+            {/* Punkty wiedzy */}
             <div className="text-right">
                 <p className="font-bold text-emerald-400">
                     {entry.knowledgeEquity.toLocaleString()}
                 </p>
-                <p className="text-xs text-[var(--text-muted)]">Knowledge Equity</p>
+                <p className="text-xs text-[var(--text-muted)]">Punkty wiedzy</p>
             </div>
         </div>
     );

@@ -175,11 +175,11 @@ export default function AnalyticsPage() {
                             </div>
                         </div>
 
-                        {/* Knowledge Equity Progress */}
+                        {/* Punkty wiedzy Progress */}
                         <div className="lex-card">
                             <h3 className="text-lg font-semibold mb-6 flex items-center gap-2">
                                 <TrendingUp style={{ color: '#1a365d' }} />
-                                Knowledge Equity
+                                Punkty wiedzy
                             </h3>
                             <div className="text-center py-8">
                                 <p className="text-5xl font-bold mb-2" style={{ color: '#059669' }}>

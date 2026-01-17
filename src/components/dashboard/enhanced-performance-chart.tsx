@@ -45,7 +45,7 @@ const TIME_RANGES = [
 ] as const;
 
 const METRICS: { key: MetricKey; label: string; color: string; format: (v: number) => string }[] = [
-    { key: 'knowledgeEquity', label: 'Knowledge Equity', color: '#8b5cf6', format: (v) => `{(v / 1000).toFixed(1)}k` },
+    { key: 'knowledgeEquity', label: 'Punkty wiedzy', color: '#8b5cf6', format: (v) => `{(v / 1000).toFixed(1)}k` },
     { key: 'cardsReviewed', label: 'Karty', color: '#10b981', format: (v) => v.toString() },
     { key: 'accuracy', label: 'Dokładność', color: '#f59e0b', format: (v) => `${v}%` },
 ];

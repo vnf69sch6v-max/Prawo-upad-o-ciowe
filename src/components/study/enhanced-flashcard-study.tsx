@@ -247,7 +247,7 @@ function SessionComplete({
                 </div>
                 <div className="lex-card text-center">
                     <p className="text-3xl font-bold text-emerald-400">+{stats.equityGained}</p>
-                    <p className="text-xs text-[var(--text-muted)]">Knowledge Equity</p>
+                    <p className="text-xs text-[var(--text-muted)]">Punkty wiedzy</p>
                 </div>
             </div>
 
