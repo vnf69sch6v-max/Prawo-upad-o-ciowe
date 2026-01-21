@@ -8,7 +8,8 @@ import { cn } from '@/lib/utils/cn';
 import { ALL_KSH_QUESTIONS, getRandomQuestions, generateBalancedExam, getQuestionStats, type ExamQuestion } from '@/lib/data/ksh';
 import { ALL_PRAWO_UPADLOSCIOWE_QUESTIONS, getQuestionStats as getPUStats } from '@/lib/data/prawo-upadlosciowe';
 import { useAuth } from '@/hooks/use-auth';
-import { saveExamResult, addActivity, updateStreak, incrementUserStats } from '@/lib/services/user-service';
+import { useUserData } from '@/hooks/use-user-data';
+import { saveExamResult, addActivity, updateStreak } from '@/lib/services/user-service';
 import { LEGAL_DOMAINS, getDomainsWithExams, type LegalDomainCategory, type KSHSubdomain, type PrawoUpadloscioweSubdomain, type LegalSubdomain } from '@/lib/data/legal-domains';
 
 // Convert KSH questions to ExamSimulator format
@@ -128,6 +129,7 @@ export default function ExamPage() {
     const [selectedSubdomain, setSelectedSubdomain] = useState<LegalSubdomain | 'all'>('all');
 
     const { user, profile, refreshProfile } = useAuth();
+    const { saveTestResult, saveWrongAnswer } = useUserData();
     const userStats = profile?.stats;
 
     // Get stats for current domain
@@ -200,11 +202,20 @@ export default function ExamPage() {
         });
         setView('results');
 
-        // Save to Firebase if user is logged in
+        // Save to Firebase and Supabase if user is logged in
         if (user && selectedExam) {
             setIsSaving(true);
             try {
-                // Save exam result
+                // Prepare question results
+                const questionResults = currentQuestions.map(q => ({
+                    questionId: q.id,
+                    userAnswer: answers[q.id] || '',
+                    correctAnswer: q.correctAnswer,
+                    isCorrect: answers[q.id] === q.correctAnswer,
+                    article: q.article,
+                }));
+
+                // Save to Firebase
                 await saveExamResult({
                     uid: user.uid,
                     examId: selectedExam.id,
@@ -215,14 +226,28 @@ export default function ExamPage() {
                     correctAnswers: correctCount,
                     totalQuestions,
                     timeSpent,
-                    questionResults: currentQuestions.map(q => ({
-                        questionId: q.id,
-                        userAnswer: answers[q.id] || '',
-                        correctAnswer: q.correctAnswer,
-                        isCorrect: answers[q.id] === q.correctAnswer,
-                        article: q.article,
-                    })),
+                    questionResults,
                 });
+
+                // Save to Supabase
+                await saveTestResult({
+                    examId: selectedExam.id,
+                    examTitle: selectedExam.title,
+                    score,
+                    passed,
+                    correctAnswers: correctCount,
+                    totalQuestions,
+                    timeSpent,
+                    questionResults,
+                });
+
+                // Save wrong answers to Supabase
+                const wrongQuestions = currentQuestions.filter(q => answers[q.id] !== q.correctAnswer);
+                for (const wq of wrongQuestions) {
+                    // Determine domain from exam ID
+                    const domain = selectedExam.id.startsWith('ksh') ? 'ksh' : 'prawo_upadlosciowe';
+                    await saveWrongAnswer(wq.id, domain as 'ksh' | 'prawo_upadlosciowe');
+                }
 
                 // Add activity
                 await addActivity({
@@ -238,7 +263,7 @@ export default function ExamPage() {
                 // Refresh profile to get updated stats
                 await refreshProfile();
 
-                console.log('Exam result saved to Firebase');
+                console.log('Exam result saved to Firebase and Supabase');
             } catch (error) {
                 console.error('Failed to save exam result:', error);
             } finally {

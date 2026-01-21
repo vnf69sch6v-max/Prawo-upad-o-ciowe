@@ -62,14 +62,18 @@ export default function DashboardPage() {
         ? Math.round((stats.correctAnswers / stats.totalQuestions) * 100)
         : 0;
 
-    // Generate performance history from study sessions (placeholder for now)
-    const performanceHistory = Array.from({ length: 14 }, (_, i) => ({
-        date: new Date(Date.now() - (13 - i) * 24 * 60 * 60 * 1000).toLocaleDateString('pl-PL', {
-            day: '2-digit',
-            month: '2-digit',
-        }),
-        value: Math.max(0, stats.knowledgeEquity - (13 - i) * 50 + Math.floor(Math.random() * 100)),
-    }));
+    // Generate performance history - show only current value without random fluctuations
+    // In the future, this should come from actual test history in Supabase
+    const performanceHistory = stats.knowledgeEquity > 0
+        ? Array.from({ length: 14 }, (_, i) => ({
+            date: new Date(Date.now() - (13 - i) * 24 * 60 * 60 * 1000).toLocaleDateString('pl-PL', {
+                day: '2-digit',
+                month: '2-digit',
+            }),
+            // Show gradual growth to current value (deterministic)
+            value: Math.round((stats.knowledgeEquity / 14) * (i + 1)),
+        }))
+        : [];
 
     // Loading state
     if (loading || profileLoading) {
