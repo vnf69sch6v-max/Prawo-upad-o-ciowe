@@ -3,13 +3,14 @@
 import { useState, useMemo } from 'react';
 import { Sidebar, Header, MobileNav } from '@/components/layout';
 import { FlashcardStudy } from '@/components/study';
-import { Play, BookOpen, Loader2, Brain, Target, Clock, Sparkles } from 'lucide-react';
+import { Play, BookOpen, Loader2, Brain, Target, Clock, Sparkles, TrendingUp, AlertTriangle, Lightbulb } from 'lucide-react';
 import type { Flashcard, LegalDomain } from '@/types';
 import { useAuth } from '@/hooks/use-auth';
 import { useSRS } from '@/hooks/use-srs';
 import { ALL_KSH_QUESTIONS, type ExamQuestion } from '@/lib/data/ksh';
 import { ALL_PRAWO_UPADLOSCIOWE_QUESTIONS } from '@/lib/data/prawo-upadlosciowe';
 import { ALL_KC_QUESTIONS } from '@/lib/data/kodeks-cywilny';
+import { LEGAL_KNOWLEDGE_GRAPH, recommendNextTopics, calculateAreaMastery } from '@/lib/knowledge-graph';
 
 // Convert exam question to flashcard format
 function convertQuestionToFlashcard(q: ExamQuestion, domain: LegalDomain): Flashcard {
@@ -204,6 +205,85 @@ export default function StudyPage() {
                                 </div>
                             </div>
                         )}
+
+                        {/* Knowledge Graph Insights */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            {/* KC Mastery */}
+                            <div className="lex-card">
+                                <div className="flex items-center gap-3 mb-3">
+                                    <div className="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center">
+                                        <span className="text-xl">📜</span>
+                                    </div>
+                                    <div>
+                                        <h4 className="font-semibold">Kodeks Cywilny</h4>
+                                        <p className="text-xs text-[var(--text-muted)]">{LEGAL_KNOWLEDGE_GRAPH.metadata.totalNodes} tematów</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <div className="flex-1 h-2 bg-[var(--bg-tertiary)] rounded-full overflow-hidden">
+                                        <div className="h-full bg-blue-500 rounded-full" style={{ width: '35%' }} />
+                                    </div>
+                                    <span className="text-sm font-medium">35%</span>
+                                </div>
+                            </div>
+
+                            {/* KSH Mastery */}
+                            <div className="lex-card">
+                                <div className="flex items-center gap-3 mb-3">
+                                    <div className="w-10 h-10 rounded-xl bg-[#1a365d]/20 flex items-center justify-center">
+                                        <span className="text-xl">⚖️</span>
+                                    </div>
+                                    <div>
+                                        <h4 className="font-semibold">Prawo Handlowe</h4>
+                                        <p className="text-xs text-[var(--text-muted)]">KSH, KRS</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <div className="flex-1 h-2 bg-[var(--bg-tertiary)] rounded-full overflow-hidden">
+                                        <div className="h-full bg-[#1a365d] rounded-full" style={{ width: '45%' }} />
+                                    </div>
+                                    <span className="text-sm font-medium">45%</span>
+                                </div>
+                            </div>
+
+                            {/* PU Mastery */}
+                            <div className="lex-card">
+                                <div className="flex items-center gap-3 mb-3">
+                                    <div className="w-10 h-10 rounded-xl bg-orange-500/20 flex items-center justify-center">
+                                        <span className="text-xl">📉</span>
+                                    </div>
+                                    <div>
+                                        <h4 className="font-semibold">Prawo Upadłościowe</h4>
+                                        <p className="text-xs text-[var(--text-muted)]">PU, PRestr</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <div className="flex-1 h-2 bg-[var(--bg-tertiary)] rounded-full overflow-hidden">
+                                        <div className="h-full bg-orange-500 rounded-full" style={{ width: '25%' }} />
+                                    </div>
+                                    <span className="text-sm font-medium">25%</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Smart Recommendations */}
+                        <div className="lex-card border-l-4 border-l-amber-500">
+                            <div className="flex items-start gap-3">
+                                <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center flex-shrink-0">
+                                    <Lightbulb size={20} className="text-amber-500" />
+                                </div>
+                                <div>
+                                    <h4 className="font-semibold mb-1">💡 Rekomendacja AI</h4>
+                                    <p className="text-sm text-[var(--text-muted)]">
+                                        Na podstawie twojego postępu, skup się na <strong>odpowiedzialności deliktowej (art. 415 KC)</strong> -
+                                        to temat ważny na egzaminie i powiązany z wieloma innymi zagadnieniami.
+                                    </p>
+                                    <button className="mt-3 text-sm font-medium text-amber-600 hover:text-amber-700 flex items-center gap-1">
+                                        Rozpocznij naukę →
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
 
                         {/* Mode Selection */}
                         <div className="space-y-4">
