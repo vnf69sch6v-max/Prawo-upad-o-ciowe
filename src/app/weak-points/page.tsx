@@ -1,22 +1,14 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { Sidebar, Header, MobileNav } from '@/components/layout';
 import { Target, Play, Loader2, Trash2, Clock, TrendingUp, ChevronRight, CheckCircle, XCircle, ChevronLeft } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 import { useAuth } from '@/hooks/use-auth';
+import { useUserData } from '@/hooks/use-user-data';
 import { ALL_KSH_QUESTIONS } from '@/lib/data/ksh';
 import { ALL_PRAWO_UPADLOSCIOWE_QUESTIONS } from '@/lib/data/prawo-upadlosciowe';
 import Link from 'next/link';
-
-// Type for wrong answer tracking
-interface WrongAnswer {
-    questionId: string;
-    wrongCount: number;
-    lastWrongAt: Date;
-    correctStreak: number;
-    domain: 'ksh' | 'prawo_upadlosciowe';
-}
 
 // Question type from data
 interface QuestionData {
@@ -37,10 +29,12 @@ const ALL_QUESTIONS: QuestionData[] = [
 // Simple Review Component
 function QuickReview({
     questions,
-    onComplete
+    onComplete,
+    onAnswerResult
 }: {
     questions: QuestionData[];
     onComplete: () => void;
+    onAnswerResult: (questionId: string, isCorrect: boolean) => void;
 }) {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
@@ -63,6 +57,8 @@ function QuickReview({
             correct: prev.correct + (isCorrect ? 1 : 0),
             total: prev.total + 1
         }));
+        // Report result to parent
+        onAnswerResult(currentQuestion.id, isCorrect);
     };
 
     const handleNext = () => {
@@ -183,26 +179,17 @@ export default function WeakPointsPage() {
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const [view, setView] = useState<'list' | 'practice'>('list');
     const [filter, setFilter] = useState<'all' | 'ksh' | 'prawo_upadlosciowe'>('all');
-    const [wrongAnswers, setWrongAnswers] = useState<WrongAnswer[]>([]);
 
     const { profile, loading: authLoading } = useAuth();
+    const {
+        wrongAnswers,
+        loading: dataLoading,
+        removeWrongAnswer,
+        clearAllWrongAnswers,
+        markAnswerCorrect,
+        saveWrongAnswer
+    } = useUserData();
     const stats = profile?.stats;
-
-    // Load wrong answers from localStorage
-    useEffect(() => {
-        const saved = localStorage.getItem('weak-points');
-        if (saved) {
-            try {
-                const parsed = JSON.parse(saved);
-                setWrongAnswers(parsed.map((wa: WrongAnswer) => ({
-                    ...wa,
-                    lastWrongAt: new Date(wa.lastWrongAt)
-                })));
-            } catch (e) {
-                console.error('Error loading weak points:', e);
-            }
-        }
-    }, []);
 
     // Filter wrong answers
     const filteredWrongAnswers = useMemo(() => {
@@ -230,24 +217,33 @@ export default function WeakPointsPage() {
             .filter(Boolean) as QuestionData[];
     }, [weakPoints]);
 
-    const handleClearAll = () => {
+    const handleClearAll = async () => {
         if (confirm('Czy na pewno chcesz wyczyścić wszystkie słabe punkty?')) {
-            setWrongAnswers([]);
-            localStorage.removeItem('weak-points');
+            await clearAllWrongAnswers();
         }
     };
 
-    const handleRemoveOne = (questionId: string) => {
-        const newList = wrongAnswers.filter(wa => wa.questionId !== questionId);
-        setWrongAnswers(newList);
-        localStorage.setItem('weak-points', JSON.stringify(newList));
+    const handleRemoveOne = async (questionId: string) => {
+        await removeWrongAnswer(questionId);
+    };
+
+    const handleAnswerResult = async (questionId: string, isCorrect: boolean) => {
+        if (isCorrect) {
+            await markAnswerCorrect(questionId);
+        } else {
+            // Find domain of question
+            const q = ALL_QUESTIONS.find(q => q.id === questionId);
+            if (q) {
+                await saveWrongAnswer(questionId, q.domain);
+            }
+        }
     };
 
     const handlePracticeComplete = () => {
         setView('list');
     };
 
-    if (authLoading) {
+    if (authLoading || dataLoading) {
         return (
             <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg-primary)' }}>
                 <Loader2 className="animate-spin" size={48} style={{ color: '#1a365d' }} />
@@ -279,6 +275,7 @@ export default function WeakPointsPage() {
                     <QuickReview
                         questions={practiceQuestions}
                         onComplete={handlePracticeComplete}
+                        onAnswerResult={handleAnswerResult}
                     />
                 </div>
             </div>
