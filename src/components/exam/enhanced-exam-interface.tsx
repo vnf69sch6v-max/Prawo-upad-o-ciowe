@@ -439,38 +439,40 @@ export function EnhancedExamInterface({
 
                             {/* Options */}
                             <div className="space-y-3">
-                                {currentQuestion.options.map((option, i) => (
-                                    <button
-                                        key={option.id}
-                                        onClick={() => handleAnswer(option.id)}
-                                        className={cn(
-                                            'w-full p-4 rounded-xl border text-left transition-all flex items-center gap-4',
-                                            isSelected(option.id)
-                                                ? 'border-[#1a365d] bg-[#1a365d]/10'
-                                                : 'border-[var(--border-color)] hover:border-[#1a365d]/30 hover:bg-[var(--bg-hover)]'
-                                        )}
-                                    >
-                                        <span className={cn(
-                                            'w-8 h-8 rounded-lg flex items-center justify-center font-semibold text-sm transition-colors',
-                                            isSelected(option.id)
-                                                ? 'bg-[#1a365d] text-white'
-                                                : 'bg-[var(--bg-hover)]'
-                                        )}>
-                                            {String.fromCharCode(65 + i)}
-                                        </span>
-                                        <span className="flex-1">{option.text}</span>
-                                        {currentQuestion.type === 'multiple' && (
-                                            <div className={cn(
-                                                'w-5 h-5 rounded border-2 flex items-center justify-center',
+                                {currentQuestion.options
+                                    .filter(option => option.text && option.text.trim() !== '')
+                                    .map((option, i) => (
+                                        <button
+                                            key={option.id}
+                                            onClick={() => handleAnswer(option.id)}
+                                            className={cn(
+                                                'w-full p-4 rounded-xl border text-left transition-all flex items-center gap-4',
                                                 isSelected(option.id)
-                                                    ? 'border-[#1a365d] bg-[#1a365d]'
-                                                    : 'border-[var(--border-color)]'
+                                                    ? 'border-[#1a365d] bg-[#1a365d]/10'
+                                                    : 'border-[var(--border-color)] hover:border-[#1a365d]/30 hover:bg-[var(--bg-hover)]'
+                                            )}
+                                        >
+                                            <span className={cn(
+                                                'w-8 h-8 rounded-lg flex items-center justify-center font-semibold text-sm transition-colors',
+                                                isSelected(option.id)
+                                                    ? 'bg-[#1a365d] text-white'
+                                                    : 'bg-[var(--bg-hover)]'
                                             )}>
-                                                {isSelected(option.id) && <CheckCircle size={14} className="text-white" />}
-                                            </div>
-                                        )}
-                                    </button>
-                                ))}
+                                                {String.fromCharCode(65 + i)}
+                                            </span>
+                                            <span className="flex-1">{option.text}</span>
+                                            {currentQuestion.type === 'multiple' && (
+                                                <div className={cn(
+                                                    'w-5 h-5 rounded border-2 flex items-center justify-center',
+                                                    isSelected(option.id)
+                                                        ? 'border-[#1a365d] bg-[#1a365d]'
+                                                        : 'border-[var(--border-color)]'
+                                                )}>
+                                                    {isSelected(option.id) && <CheckCircle size={14} className="text-white" />}
+                                                </div>
+                                            )}
+                                        </button>
+                                    ))}
                             </div>
 
                             {currentQuestion.type === 'multiple' && (

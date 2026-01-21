@@ -211,33 +211,35 @@ export function ExamSimulator({
 
                         {/* Options */}
                         <div className="space-y-3">
-                            {currentQuestion.options.map((option, i) => {
-                                const isSelected = answers[currentQuestion.id] === option.id;
-                                const letter = String.fromCharCode(65 + i);
-                                return (
-                                    <button
-                                        key={option.id}
-                                        onClick={() => handleAnswer(option.id)}
-                                        className={cn(
-                                            'w-full p-4 rounded-xl text-left transition-all flex items-start gap-4',
-                                            isSelected
-                                                ? 'bg-[#1a365d]/20 border-2 border-[#1a365d]'
-                                                : 'bg-[var(--bg-card)] border border-[var(--border-color)] hover:border-[#1a365d]/50'
-                                        )}
-                                    >
-                                        <span className={cn(
-                                            'w-8 h-8 rounded-full flex items-center justify-center shrink-0 font-semibold',
-                                            isSelected
-                                                ? 'bg-[#1a365d] text-white'
-                                                : 'bg-[var(--bg-hover)]'
-                                        )}>
-                                            {letter}
-                                        </span>
-                                        <span className="flex-1">{option.text}</span>
-                                        {isSelected && <CheckCircle size={20} className="text-[#1a365d] shrink-0" />}
-                                    </button>
-                                );
-                            })}
+                            {currentQuestion.options
+                                .filter(option => option.text && option.text.trim() !== '')
+                                .map((option, i) => {
+                                    const isSelected = answers[currentQuestion.id] === option.id;
+                                    const letter = String.fromCharCode(65 + i);
+                                    return (
+                                        <button
+                                            key={option.id}
+                                            onClick={() => handleAnswer(option.id)}
+                                            className={cn(
+                                                'w-full p-4 rounded-xl text-left transition-all flex items-start gap-4',
+                                                isSelected
+                                                    ? 'bg-[#1a365d]/20 border-2 border-[#1a365d]'
+                                                    : 'bg-[var(--bg-card)] border border-[var(--border-color)] hover:border-[#1a365d]/50'
+                                            )}
+                                        >
+                                            <span className={cn(
+                                                'w-8 h-8 rounded-full flex items-center justify-center shrink-0 font-semibold',
+                                                isSelected
+                                                    ? 'bg-[#1a365d] text-white'
+                                                    : 'bg-[var(--bg-hover)]'
+                                            )}>
+                                                {letter}
+                                            </span>
+                                            <span className="flex-1">{option.text}</span>
+                                            {isSelected && <CheckCircle size={20} className="text-[#1a365d] shrink-0" />}
+                                        </button>
+                                    );
+                                })}
                         </div>
                     </div>
                 </main>
