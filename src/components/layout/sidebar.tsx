@@ -60,6 +60,7 @@ const NAV_SECTIONS: NavSection[] = [
         id: 'analityka',
         items: [
             { id: 'analytics', label: 'Statystyki', icon: <LineChart size={18} />, href: '/analytics' },
+            { id: 'learning-style', label: 'Profil Nauki', icon: <Brain size={18} />, href: '/profile/learning-style', badge: 'new' },
         ],
     },
     {
