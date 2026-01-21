@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import { useSubscription } from '@/hooks/use-subscription';
 import { getStripe } from '@/lib/stripe/client';
-import { PLANS } from '@/lib/constants';
+import { PLANS, calculateSavingsPercent } from '@/lib/plans';
 import {
     Check,
     Zap,
@@ -67,8 +67,8 @@ export default function PricingPage() {
             icon: <Zap size={24} />,
             price: 0,
             priceYearly: 0,
-            description: 'Dla początkujących',
-            features: PLANS.free.features,
+            description: PLANS.free.description,
+            features: PLANS.free.featuresDisplay,
             gradient: 'from-gray-400 to-gray-600',
             popular: false,
         },
@@ -78,10 +78,11 @@ export default function PricingPage() {
             icon: <Crown size={24} />,
             price: PLANS.premium.priceMonthly,
             priceYearly: PLANS.premium.priceYearly,
-            description: 'Dla poważnej nauki',
-            features: PLANS.premium.features,
+            description: PLANS.premium.description,
+            features: PLANS.premium.featuresDisplay,
             gradient: 'from-[#1a365d] to-[#2563eb]',
             popular: true,
+            badge: PLANS.premium.badge,
         },
         {
             id: 'pro' as const,
@@ -89,10 +90,11 @@ export default function PricingPage() {
             icon: <Rocket size={24} />,
             price: PLANS.pro.priceMonthly,
             priceYearly: PLANS.pro.priceYearly,
-            description: 'Dla profesjonalistów',
-            features: PLANS.pro.features,
+            description: PLANS.pro.description,
+            features: PLANS.pro.featuresDisplay,
             gradient: 'from-purple-600 to-pink-600',
             popular: false,
+            badge: PLANS.pro.badge,
         },
     ];
 

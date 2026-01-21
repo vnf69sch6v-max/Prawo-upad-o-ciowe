@@ -208,36 +208,46 @@ export default function LandingPage() {
 
       {/* Pricing Section */}
       <section id="pricing" className="py-20 px-6">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-5xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-serif font-bold text-[#1a365d] mb-4">
-              Prosta, uczciwa cena
+              Wybierz swój plan
             </h2>
             <p className="text-gray-600">
-              Jedna subskrypcja, pełny dostęp. Bez ukrytych opłat.
+              Prosta, uczciwa cena. Bez ukrytych opłat.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8">
+          <div className="grid md:grid-cols-3 gap-6">
             {/* Free Plan */}
-            <div className="p-8 bg-white border border-gray-200 rounded-2xl">
-              <div className="mb-6">
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">Free</h3>
+            <div className="p-6 bg-white border border-gray-200 rounded-2xl">
+              <div className="text-center mb-6">
+                <div className="inline-flex items-center justify-center w-12 h-12 bg-gray-100 rounded-xl mb-4">
+                  <Zap size={24} className="text-gray-600" />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-1">Free</h3>
+                <p className="text-sm text-gray-500">Zacznij za darmo</p>
+              </div>
+              <div className="text-center mb-6">
                 <p className="text-4xl font-serif font-bold text-[#1a365d]">0 zł</p>
                 <p className="text-gray-500 text-sm">na zawsze</p>
               </div>
-              <ul className="space-y-3 mb-8">
-                <li className="flex items-center gap-3 text-gray-600">
-                  <CheckCircle size={18} className="text-gray-400" />
-                  3 egzaminy próbne / miesiąc
+              <ul className="space-y-3 mb-6 text-sm">
+                <li className="flex items-start gap-2 text-gray-600">
+                  <CheckCircle size={16} className="text-gray-400 mt-0.5 flex-shrink-0" />
+                  <span>50 pytań dziennie</span>
                 </li>
-                <li className="flex items-center gap-3 text-gray-600">
-                  <CheckCircle size={18} className="text-gray-400" />
-                  50 pytań z bazy KSH
+                <li className="flex items-start gap-2 text-gray-600">
+                  <CheckCircle size={16} className="text-gray-400 mt-0.5 flex-shrink-0" />
+                  <span>3 działy prawa</span>
                 </li>
-                <li className="flex items-center gap-3 text-gray-600">
-                  <CheckCircle size={18} className="text-gray-400" />
-                  10 fiszek
+                <li className="flex items-start gap-2 text-gray-600">
+                  <CheckCircle size={16} className="text-gray-400 mt-0.5 flex-shrink-0" />
+                  <span>5 AI wyjaśnień dziennie</span>
+                </li>
+                <li className="flex items-start gap-2 text-gray-600">
+                  <CheckCircle size={16} className="text-gray-400 mt-0.5 flex-shrink-0" />
+                  <span>Podstawowe statystyki</span>
                 </li>
               </ul>
               <Link
@@ -248,53 +258,112 @@ export default function LandingPage() {
               </Link>
             </div>
 
-            {/* Pro Plan */}
-            <div className="p-8 bg-[#1a365d] rounded-2xl relative">
+            {/* Premium Plan - Highlighted */}
+            <div className="p-6 bg-[#1a365d] rounded-2xl relative scale-105 shadow-xl">
               <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-[#b8860b] text-white text-xs font-semibold rounded-full">
                 NAJPOPULARNIEJSZY
               </div>
-              <div className="mb-6">
-                <h3 className="text-xl font-semibold text-white mb-2">Pro</h3>
-                <div className="flex items-baseline gap-2">
-                  <p className="text-4xl font-serif font-bold text-white">149 zł</p>
-                  <p className="text-gray-300">/ rok</p>
+              <div className="text-center mb-6">
+                <div className="inline-flex items-center justify-center w-12 h-12 bg-white/10 rounded-xl mb-4">
+                  <Award size={24} className="text-[#b8860b]" />
                 </div>
-                <p className="text-[#b8860b] text-sm">tylko 12,42 zł / miesiąc</p>
+                <h3 className="text-xl font-semibold text-white mb-1">Premium</h3>
+                <p className="text-sm text-gray-300">Dla poważnej nauki</p>
               </div>
-              <ul className="space-y-3 mb-8">
-                <li className="flex items-center gap-3 text-white">
-                  <CheckCircle size={18} className="text-[#b8860b]" />
-                  <span><strong>Nieograniczone</strong> egzaminy</span>
+              <div className="text-center mb-6">
+                <div className="flex items-baseline justify-center gap-1">
+                  <p className="text-4xl font-serif font-bold text-white">39 zł</p>
+                </div>
+                <p className="text-gray-300 text-sm">/ miesiąc</p>
+                <p className="text-[#b8860b] text-xs mt-1">lub 312 zł/rok (26 zł/mies)</p>
+              </div>
+              <ul className="space-y-3 mb-6 text-sm">
+                <li className="flex items-start gap-2 text-white">
+                  <CheckCircle size={16} className="text-[#b8860b] mt-0.5 flex-shrink-0" />
+                  <span><strong>Nieograniczone</strong> pytania</span>
                 </li>
-                <li className="flex items-center gap-3 text-white">
-                  <CheckCircle size={18} className="text-[#b8860b]" />
-                  <span><strong>959+</strong> pytań</span>
+                <li className="flex items-start gap-2 text-white">
+                  <CheckCircle size={16} className="text-[#b8860b] mt-0.5 flex-shrink-0" />
+                  <span><strong>Wszystkie</strong> działy prawa</span>
                 </li>
-                <li className="flex items-center gap-3 text-white">
-                  <CheckCircle size={18} className="text-[#b8860b]" />
-                  <span><strong>AI Asystent</strong> bez limitu</span>
+                <li className="flex items-start gap-2 text-white">
+                  <CheckCircle size={16} className="text-[#b8860b] mt-0.5 flex-shrink-0" />
+                  <span>Tryb egzaminacyjny</span>
                 </li>
-                <li className="flex items-center gap-3 text-white">
-                  <CheckCircle size={18} className="text-[#b8860b]" />
-                  <span><strong>Nieograniczone</strong> fiszki</span>
+                <li className="flex items-start gap-2 text-white">
+                  <CheckCircle size={16} className="text-[#b8860b] mt-0.5 flex-shrink-0" />
+                  <span>Pełne statystyki + analityka</span>
                 </li>
-                <li className="flex items-center gap-3 text-white">
-                  <CheckCircle size={18} className="text-[#b8860b]" />
-                  Pełna analityka postępów
+                <li className="flex items-start gap-2 text-white">
+                  <CheckCircle size={16} className="text-[#b8860b] mt-0.5 flex-shrink-0" />
+                  <span>50 AI wyjaśnień dziennie</span>
                 </li>
-                <li className="flex items-center gap-3 text-white">
-                  <CheckCircle size={18} className="text-[#b8860b]" />
-                  Ranking & Leaderboard
+                <li className="flex items-start gap-2 text-white">
+                  <CheckCircle size={16} className="text-[#b8860b] mt-0.5 flex-shrink-0" />
+                  <span>Brak reklam</span>
+                </li>
+              </ul>
+              <Link
+                href="/signup?plan=premium"
+                className="block w-full py-3 text-center bg-[#b8860b] text-white font-semibold rounded-lg hover:bg-[#9a7209] transition-colors"
+              >
+                Wybierz Premium
+              </Link>
+            </div>
+
+            {/* Pro Plan */}
+            <div className="p-6 bg-white border border-purple-200 rounded-2xl relative">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-purple-600 text-white text-xs font-semibold rounded-full">
+                PEŁNY PAKIET
+              </div>
+              <div className="text-center mb-6">
+                <div className="inline-flex items-center justify-center w-12 h-12 bg-purple-100 rounded-xl mb-4">
+                  <Brain size={24} className="text-purple-600" />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-1">Pro</h3>
+                <p className="text-sm text-gray-500">Z AI Tutorem</p>
+              </div>
+              <div className="text-center mb-6">
+                <div className="flex items-baseline justify-center gap-1">
+                  <p className="text-4xl font-serif font-bold text-purple-600">79 zł</p>
+                </div>
+                <p className="text-gray-500 text-sm">/ miesiąc</p>
+                <p className="text-purple-600 text-xs mt-1">lub 632 zł/rok (~53 zł/mies)</p>
+              </div>
+              <ul className="space-y-3 mb-6 text-sm">
+                <li className="flex items-start gap-2 text-gray-600">
+                  <CheckCircle size={16} className="text-purple-500 mt-0.5 flex-shrink-0" />
+                  <span>Wszystko z Premium +</span>
+                </li>
+                <li className="flex items-start gap-2 text-gray-600">
+                  <CheckCircle size={16} className="text-purple-500 mt-0.5 flex-shrink-0" />
+                  <span><strong>AI Tutor</strong> chat bez limitu</span>
+                </li>
+                <li className="flex items-start gap-2 text-gray-600">
+                  <CheckCircle size={16} className="text-purple-500 mt-0.5 flex-shrink-0" />
+                  <span>Nieograniczone AI wyjaśnienia</span>
+                </li>
+                <li className="flex items-start gap-2 text-gray-600">
+                  <CheckCircle size={16} className="text-purple-500 mt-0.5 flex-shrink-0" />
+                  <span>Plan nauki personalny</span>
+                </li>
+                <li className="flex items-start gap-2 text-gray-600">
+                  <CheckCircle size={16} className="text-purple-500 mt-0.5 flex-shrink-0" />
+                  <span>Priorytetowe wsparcie</span>
                 </li>
               </ul>
               <Link
                 href="/signup?plan=pro"
-                className="block w-full py-3 text-center bg-[#b8860b] text-white font-semibold rounded-lg hover:bg-[#9a7209] transition-colors"
+                className="block w-full py-3 text-center bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 transition-colors"
               >
                 Wybierz Pro
               </Link>
             </div>
           </div>
+
+          <p className="text-center text-sm text-gray-500 mt-8">
+            🔒 Bezpieczne płatności przez Stripe · Możesz anulować w dowolnym momencie
+          </p>
         </div>
       </section>
 
