@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState } from 'react';
 import { Sidebar, Header, MobileNav } from '@/components/layout';
 import {
     Brain,
@@ -12,74 +12,69 @@ import {
     Clock,
     Zap,
     BarChart3,
-    Lightbulb
+    Lightbulb,
+    RefreshCw
 } from 'lucide-react';
-import { useAuth } from '@/hooks/use-auth';
+import { useStudentProfile } from '@/hooks/use-student-profile';
 
-// Mock data for demonstration (will be replaced with real profile data)
-const MOCK_PROFILE = {
+// Default profile for new users (fallback)
+const DEFAULT_PROFILE = {
     predictions: {
-        predictedExamScore: { value: 68, confidence: 0.7, range: { min: 55, max: 81 } },
-        passProbability: 0.72,
-        recommendedFocus: [
-            { topic: 'Odpowiedzialność deliktowa', reason: 'niski poziom opanowania', priority: 9 },
-            { topic: 'Spółka z o.o. - kapitał', reason: 'spadek wyników', priority: 7 },
-            { topic: 'Terminy przedawnienia', reason: 'wiele błędów', priority: 6 },
-        ]
+        predictedExamScore: { value: 50, confidence: 0, range: { min: 30, max: 70 } },
+        passProbability: 0.5,
+        recommendedFocus: [] as Array<{ topic: string; reason: string; priority: number }>
     },
-    knowledgeMap: {
-        'Prawo cywilne': { mastery: 45, trend: 'improving', totalAttempts: 23 },
-        'Prawo handlowe': { mastery: 62, trend: 'stable', totalAttempts: 45 },
-        'Prawo upadłościowe': { mastery: 38, trend: 'declining', totalAttempts: 12 },
-        'Odpowiedzialność deliktowa': { mastery: 32, trend: 'stable', totalAttempts: 8 },
-        'Spółki kapitałowe': { mastery: 71, trend: 'improving', totalAttempts: 34 },
-    },
+    knowledgeMap: {} as Record<string, { mastery: number; trend: string; totalAttempts: number }>,
     errorPatterns: {
-        dominantErrorType: 'confusion',
+        dominantErrorType: 'conceptual',
         errorTypeDistribution: {
-            careless: 12,
-            conceptual: 28,
-            knowledge_gap: 18,
-            confusion: 35,
-            partial: 7
+            careless: 0,
+            conceptual: 0,
+            knowledge_gap: 0,
+            confusion: 0,
+            partial: 0
         },
-        confusionPairs: [
-            { concept1: 'art. 415 KC', concept2: 'art. 471 KC', frequency: 8 },
-            { concept1: 'Spółka z o.o.', concept2: 'Spółka akcyjna', frequency: 5 },
-            { concept1: 'Upadłość', concept2: 'Restrukturyzacja', frequency: 4 },
-        ]
+        confusionPairs: [] as Array<{ concept1: string; concept2: string; frequency: number }>
     },
     learningStyle: {
         cognitiveStyle: {
-            analyticalVsIntuitive: 0.3,
-            sequentialVsGlobal: -0.2,
-            activeVsReflective: 0.1
+            analyticalVsIntuitive: 0,
+            sequentialVsGlobal: 0,
+            activeVsReflective: 0
         },
         optimalConditions: {
-            bestTimeOfDay: 'morning',
+            bestTimeOfDay: 'morning' as const,
             optimalSessionLength: 25,
             optimalQuestionCount: 15
         },
         solvingStrategies: {
-            usesElimination: 0.7,
-            readsCarefully: 0.6,
-            rushes: 0.3,
-            usesHints: 0.4
+            usesElimination: 0.5,
+            readsCarefully: 0.5,
+            rushes: 0.5,
+            usesHints: 0.5
         }
     },
     engagement: {
-        currentStreak: 5,
-        longestStreak: 12,
-        motivationLevel: 65
+        currentStreak: 0,
+        longestStreak: 0,
+        motivationLevel: 50
     }
 };
 
 export default function LearningStylePage() {
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-    const { profile: userProfile, loading } = useAuth();
+    const { profile, loading, error, stats, refresh } = useStudentProfile();
 
-    // Use mock data for now
-    const studentProfile = MOCK_PROFILE;
+    // Use real profile or fallback to default
+    const studentProfile = profile ? {
+        predictions: profile.predictions || DEFAULT_PROFILE.predictions,
+        knowledgeMap: profile.knowledgeMap || DEFAULT_PROFILE.knowledgeMap,
+        errorPatterns: profile.errorPatterns || DEFAULT_PROFILE.errorPatterns,
+        learningStyle: profile.learningStyle || DEFAULT_PROFILE.learningStyle,
+        engagement: profile.engagement || DEFAULT_PROFILE.engagement
+    } : DEFAULT_PROFILE;
+
+    const hasData = stats && stats.totalAttempts > 0;
 
     if (loading) {
         return (
