@@ -3,9 +3,10 @@
 import { useState, useMemo } from 'react';
 import { Sidebar, Header, MobileNav } from '@/components/layout';
 import { FlashcardStudy } from '@/components/study';
-import { Play, BookOpen, Loader2, Brain, Target } from 'lucide-react';
+import { Play, BookOpen, Loader2, Brain, Target, Clock, Sparkles } from 'lucide-react';
 import type { Flashcard, LegalDomain } from '@/types';
 import { useAuth } from '@/hooks/use-auth';
+import { useSRS } from '@/hooks/use-srs';
 import { ALL_KSH_QUESTIONS, type ExamQuestion } from '@/lib/data/ksh';
 import { ALL_PRAWO_UPADLOSCIOWE_QUESTIONS } from '@/lib/data/prawo-upadlosciowe';
 import { ALL_KC_QUESTIONS } from '@/lib/data/kodeks-cywilny';
@@ -83,6 +84,7 @@ export default function StudyPage() {
     const [cards, setCards] = useState<Flashcard[]>([]);
 
     const { profile, loading: authLoading } = useAuth();
+    const { dueCount, stats: srsStats, loading: srsLoading } = useSRS();
     const stats = profile?.stats;
 
     const handleSelectMode = (modeId: string) => {
@@ -171,6 +173,37 @@ export default function StudyPage() {
                                 {ALL_KSH_QUESTIONS.length + ALL_PRAWO_UPADLOSCIOWE_QUESTIONS.length + ALL_KC_QUESTIONS.length} pytań w bazie
                             </p>
                         </div>
+
+                        {/* SRS Section - "Dziś do powtórki" */}
+                        {dueCount > 0 && (
+                            <div className="lex-card border-2 border-[#8b5cf6]/50 bg-gradient-to-r from-[#8b5cf6]/10 to-[#6366f1]/10">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#8b5cf6] to-[#6366f1] flex items-center justify-center">
+                                            <Clock size={28} className="text-white" />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-xl font-bold flex items-center gap-2">
+                                                Dziś do powtórki
+                                                <span className="px-2.5 py-1 bg-[#8b5cf6] text-white text-sm rounded-full font-bold animate-pulse">
+                                                    {dueCount}
+                                                </span>
+                                            </h3>
+                                            <p className="text-[var(--text-muted)]">
+                                                Karty czekające na powtórkę (SM-2)
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => handleSelectMode('mixed')}
+                                        className="px-6 py-3 bg-gradient-to-r from-[#8b5cf6] to-[#6366f1] rounded-xl font-bold text-white hover:scale-105 transition-transform flex items-center gap-2"
+                                    >
+                                        <Sparkles size={20} />
+                                        Rozpocznij
+                                    </button>
+                                </div>
+                            </div>
+                        )}
 
                         {/* Mode Selection */}
                         <div className="space-y-4">
