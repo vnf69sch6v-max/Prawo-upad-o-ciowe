@@ -19,7 +19,7 @@ export const KC_EXAM_QUESTIONS_PART1: ExamQuestion[] = [
       c: `domniemywa się istnienie dobrej wiary`,
       d: ``
     },
-    correct: 'a',
+    correct: 'b',
     explanation: `Na podstawie przepisów Kodeksu cywilnego.`,
     difficulty: 'medium',
     tags: ["kodeks cywilny"]
@@ -37,7 +37,7 @@ export const KC_EXAM_QUESTIONS_PART1: ExamQuestion[] = [
       c: `od chwili ukończenia 13 lat`,
       d: ``
     },
-    correct: 'a',
+    correct: 'b',
     explanation: `Na podstawie przepisów Kodeksu cywilnego.`,
     difficulty: 'medium',
     tags: ["kodeks cywilny"]
@@ -55,7 +55,7 @@ export const KC_EXAM_QUESTIONS_PART1: ExamQuestion[] = [
       c: `urodziło się w terminie ustawowym`,
       d: ``
     },
-    correct: 'a',
+    correct: 'b',
     explanation: `Na podstawie przepisów Kodeksu cywilnego.`,
     difficulty: 'medium',
     tags: ["kodeks cywilny"]
@@ -73,7 +73,7 @@ export const KC_EXAM_QUESTIONS_PART1: ExamQuestion[] = [
       c: `sąd decyduje o utrzymaniu lub utracie pełnoletności`,
       d: ``
     },
-    correct: 'a',
+    correct: 'b',
     explanation: `Na podstawie przepisów Kodeksu cywilnego.`,
     difficulty: 'medium',
     tags: ["kodeks cywilny"]
@@ -91,7 +91,7 @@ export const KC_EXAM_QUESTIONS_PART1: ExamQuestion[] = [
       c: `wyłącznie osoby ubezwłasnowolnione całkowicie`,
       d: ``
     },
-    correct: 'a',
+    correct: 'b',
     explanation: `Na podstawie przepisów Kodeksu cywilnego.`,
     difficulty: 'medium',
     tags: ["kodeks cywilny"]
@@ -109,7 +109,7 @@ export const KC_EXAM_QUESTIONS_PART1: ExamQuestion[] = [
       c: `jej majątek jest zagrożony uszczupleniem`,
       d: ``
     },
-    correct: 'a',
+    correct: 'b',
     explanation: `Na podstawie przepisów Kodeksu cywilnego.`,
     difficulty: 'medium',
     tags: ["kodeks cywilny"]
@@ -127,7 +127,7 @@ export const KC_EXAM_QUESTIONS_PART1: ExamQuestion[] = [
       c: `doradcę tymczasowego`,
       d: ``
     },
-    correct: 'a',
+    correct: 'b',
     explanation: `Na podstawie przepisów Kodeksu cywilnego.`,
     difficulty: 'medium',
     tags: ["kodeks cywilny"]
@@ -145,7 +145,7 @@ export const KC_EXAM_QUESTIONS_PART1: ExamQuestion[] = [
       c: `dotknięta bezskutecznością zawieszoną`,
       d: ``
     },
-    correct: 'a',
+    correct: 'c',
     explanation: `Na podstawie przepisów Kodeksu cywilnego.`,
     difficulty: 'medium',
     tags: ["kodeks cywilny"]
@@ -181,7 +181,7 @@ export const KC_EXAM_QUESTIONS_PART1: ExamQuestion[] = [
       c: `wyłącznie osoby ubezwłasnowolnione częściowo`,
       d: ``
     },
-    correct: 'a',
+    correct: 'c',
     explanation: `Na podstawie przepisów Kodeksu cywilnego.`,
     difficulty: 'medium',
     tags: ["kodeks cywilny"]
@@ -199,7 +199,7 @@ export const KC_EXAM_QUESTIONS_PART1: ExamQuestion[] = [
       c: `nie jest w stanie kierować swym postępowaniem`,
       d: ``
     },
-    correct: 'a',
+    correct: 'c',
     explanation: `Na podstawie przepisów Kodeksu cywilnego.`,
     difficulty: 'medium',
     tags: ["kodeks cywilny"]
@@ -217,7 +217,7 @@ export const KC_EXAM_QUESTIONS_PART1: ExamQuestion[] = [
       c: `zależy od potwierdzenia umowy przez sąd opiekuńczy`,
       d: ``
     },
-    correct: 'a',
+    correct: 'b',
     explanation: `Na podstawie przepisów Kodeksu cywilnego.`,
     difficulty: 'medium',
     tags: ["kodeks cywilny"]
@@ -235,7 +235,7 @@ export const KC_EXAM_QUESTIONS_PART1: ExamQuestion[] = [
       c: `ważna`,
       d: ``
     },
-    correct: 'a',
+    correct: 'b',
     explanation: `Na podstawie przepisów Kodeksu cywilnego.`,
     difficulty: 'medium',
     tags: ["kodeks cywilny"]
@@ -289,7 +289,7 @@ export const KC_EXAM_QUESTIONS_PART1: ExamQuestion[] = [
       c: `tylko wtedy`,
       d: ``
     },
-    correct: 'a',
+    correct: 'b',
     explanation: `Na podstawie przepisów Kodeksu cywilnego.`,
     difficulty: 'medium',
     tags: ["kodeks cywilny"]
@@ -343,7 +343,7 @@ export const KC_EXAM_QUESTIONS_PART1: ExamQuestion[] = [
       c: `dowolną liczbę miejsc zamieszkania`,
       d: ``
     },
-    correct: 'a',
+    correct: 'b',
     explanation: `Na podstawie przepisów Kodeksu cywilnego.`,
     difficulty: 'medium',
     tags: ["kodeks cywilny"]
@@ -361,7 +361,7 @@ export const KC_EXAM_QUESTIONS_PART1: ExamQuestion[] = [
       c: `siedmiu`,
       d: ``
     },
-    correct: 'a',
+    correct: 'b',
     explanation: `Na podstawie przepisów Kodeksu cywilnego.`,
     difficulty: 'medium',
     tags: ["kodeks cywilny"]
@@ -379,7 +379,7 @@ export const KC_EXAM_QUESTIONS_PART1: ExamQuestion[] = [
       c: `dwadzieścia trzy`,
       d: ``
     },
-    correct: 'a',
+    correct: 'b',
     explanation: `Na podstawie przepisów Kodeksu cywilnego.`,
     difficulty: 'medium',
     tags: ["kodeks cywilny"]
@@ -397,7 +397,7 @@ export const KC_EXAM_QUESTIONS_PART1: ExamQuestion[] = [
       c: `roku od dnia katastrofy`,
       d: ``
     },
-    correct: 'a',
+    correct: 'b',
     explanation: `Na podstawie przepisów Kodeksu cywilnego.`,
     difficulty: 'medium',
     tags: ["kodeks cywilny"]
@@ -487,7 +487,7 @@ export const KC_EXAM_QUESTIONS_PART1: ExamQuestion[] = [
       c: `z chwilą jej wpisu do właściwego rejestru`,
       d: ``
     },
-    correct: 'a',
+    correct: 'b',
     explanation: `Na podstawie przepisów Kodeksu cywilnego.`,
     difficulty: 'medium',
     tags: ["kodeks cywilny"]
@@ -523,7 +523,7 @@ export const KC_EXAM_QUESTIONS_PART1: ExamQuestion[] = [
       c: `nazwa miejsca wykonywania działalności gospodarczej`,
       d: ``
     },
-    correct: 'a',
+    correct: 'b',
     explanation: `Na podstawie przepisów Kodeksu cywilnego.`,
     difficulty: 'medium',
     tags: ["kodeks cywilny"]
@@ -559,7 +559,7 @@ export const KC_EXAM_QUESTIONS_PART1: ExamQuestion[] = [
       c: `może być zbyta tylko łącznie z przedsiębiorstwem`,
       d: ``
     },
-    correct: 'a',
+    correct: 'b',
     explanation: `Na podstawie przepisów Kodeksu cywilnego.`,
     difficulty: 'medium',
     tags: ["kodeks cywilny"]
@@ -613,7 +613,7 @@ export const KC_EXAM_QUESTIONS_PART1: ExamQuestion[] = [
       c: `budynki i urządzenia trwale z gruntem związane oraz nasadzenia`,
       d: ``
     },
-    correct: 'a',
+    correct: 'b',
     explanation: `Na podstawie przepisów Kodeksu cywilnego.`,
     difficulty: 'medium',
     tags: ["kodeks cywilny"]
@@ -649,7 +649,7 @@ export const KC_EXAM_QUESTIONS_PART1: ExamQuestion[] = [
       c: `posiada fizyczne połączenie z rzeczą główną`,
       d: ``
     },
-    correct: 'a',
+    correct: 'b',
     explanation: `Na podstawie przepisów Kodeksu cywilnego.`,
     difficulty: 'medium',
     tags: ["kodeks cywilny"]
@@ -667,7 +667,7 @@ export const KC_EXAM_QUESTIONS_PART1: ExamQuestion[] = [
       c: `stanowią współwłasność właściciela gruntu i przedsiębiorcy`,
       d: ``
     },
-    correct: 'a',
+    correct: 'b',
     explanation: `Na podstawie przepisów Kodeksu cywilnego.`,
     difficulty: 'medium',
     tags: ["kodeks cywilny"]
@@ -739,7 +739,7 @@ export const KC_EXAM_QUESTIONS_PART1: ExamQuestion[] = [
       c: `odłączone części składowe`,
       d: ``
     },
-    correct: 'a',
+    correct: 'b',
     explanation: `Na podstawie przepisów Kodeksu cywilnego.`,
     difficulty: 'medium',
     tags: ["kodeks cywilny"]
@@ -757,7 +757,7 @@ export const KC_EXAM_QUESTIONS_PART1: ExamQuestion[] = [
       c: `tylko pożytki określone w umowie`,
       d: ``
     },
-    correct: 'a',
+    correct: 'b',
     explanation: `Na podstawie przepisów Kodeksu cywilnego.`,
     difficulty: 'medium',
     tags: ["kodeks cywilny"]
@@ -775,7 +775,7 @@ export const KC_EXAM_QUESTIONS_PART1: ExamQuestion[] = [
       c: `w stosunku do czasu trwania tego uprawnienia`,
       d: ``
     },
-    correct: 'a',
+    correct: 'b',
     explanation: `Na podstawie przepisów Kodeksu cywilnego.`,
     difficulty: 'medium',
     tags: ["kodeks cywilny"]
@@ -793,7 +793,7 @@ export const KC_EXAM_QUESTIONS_PART1: ExamQuestion[] = [
       c: `wyłącznie nazwę i klientelę`,
       d: ``
     },
-    correct: 'a',
+    correct: 'b',
     explanation: `Na podstawie przepisów Kodeksu cywilnego.`,
     difficulty: 'medium',
     tags: ["kodeks cywilny"]
@@ -811,7 +811,7 @@ export const KC_EXAM_QUESTIONS_PART1: ExamQuestion[] = [
       c: `jest wyłączona`,
       d: ``
     },
-    correct: 'a',
+    correct: 'c',
     explanation: `Na podstawie przepisów Kodeksu cywilnego.`,
     difficulty: 'medium',
     tags: ["kodeks cywilny"]
@@ -847,7 +847,7 @@ export const KC_EXAM_QUESTIONS_PART1: ExamQuestion[] = [
       c: `zwrócić mocodawcy dokument pełnomocnictwa`,
       d: ``
     },
-    correct: 'a',
+    correct: 'b',
     explanation: `Na podstawie przepisów Kodeksu cywilnego.`,
     difficulty: 'medium',
     tags: ["kodeks cywilny"]
@@ -901,7 +901,7 @@ export const KC_EXAM_QUESTIONS_PART1: ExamQuestion[] = [
       c: `tylko za zgodą sądu`,
       d: ``
     },
-    correct: 'a',
+    correct: 'b',
     explanation: `Na podstawie przepisów Kodeksu cywilnego.`,
     difficulty: 'medium',
     tags: ["kodeks cywilny"]
@@ -937,7 +937,7 @@ export const KC_EXAM_QUESTIONS_PART1: ExamQuestion[] = [
       c: `nigdy`,
       d: ``
     },
-    correct: 'a',
+    correct: 'c',
     explanation: `Na podstawie przepisów Kodeksu cywilnego.`,
     difficulty: 'medium',
     tags: ["kodeks cywilny"]
@@ -955,7 +955,7 @@ export const KC_EXAM_QUESTIONS_PART1: ExamQuestion[] = [
       c: `jest skuteczne`,
       d: ``
     },
-    correct: 'a',
+    correct: 'b',
     explanation: `Na podstawie przepisów Kodeksu cywilnego.`,
     difficulty: 'medium',
     tags: ["kodeks cywilny"]
@@ -973,7 +973,7 @@ export const KC_EXAM_QUESTIONS_PART1: ExamQuestion[] = [
       c: `w formie dokumentowej`,
       d: ``
     },
-    correct: 'a',
+    correct: 'b',
     explanation: `Na podstawie przepisów Kodeksu cywilnego.`,
     difficulty: 'medium',
     tags: ["kodeks cywilny"]
@@ -991,7 +991,7 @@ export const KC_EXAM_QUESTIONS_PART1: ExamQuestion[] = [
       c: `osoba prawna lub osoba fizyczna mająca pełną zdolność do czynności prawnych`,
       d: ``
     },
-    correct: 'a',
+    correct: 'b',
     explanation: `Na podstawie przepisów Kodeksu cywilnego.`,
     difficulty: 'medium',
     tags: ["kodeks cywilny"]
@@ -1009,7 +1009,7 @@ export const KC_EXAM_QUESTIONS_PART1: ExamQuestion[] = [
       c: `wymaga zgody sądu rejestrowego`,
       d: ``
     },
-    correct: 'a',
+    correct: 'c',
     explanation: `Na podstawie przepisów Kodeksu cywilnego.`,
     difficulty: 'medium',
     tags: ["kodeks cywilny"]
@@ -1045,7 +1045,7 @@ export const KC_EXAM_QUESTIONS_PART1: ExamQuestion[] = [
       c: `choroby prokurenta`,
       d: ``
     },
-    correct: 'a',
+    correct: 'b',
     explanation: `Na podstawie przepisów Kodeksu cywilnego.`,
     difficulty: 'medium',
     tags: ["kodeks cywilny"]
@@ -1063,7 +1063,7 @@ export const KC_EXAM_QUESTIONS_PART1: ExamQuestion[] = [
       c: `z upływem dnia następującego po ostatnim dniu`,
       d: ``
     },
-    correct: 'a',
+    correct: 'b',
     explanation: `Na podstawie przepisów Kodeksu cywilnego.`,
     difficulty: 'medium',
     tags: ["kodeks cywilny"]
@@ -1171,7 +1171,7 @@ export const KC_EXAM_QUESTIONS_PART1: ExamQuestion[] = [
       c: `następnego dnia`,
       d: ``
     },
-    correct: 'a',
+    correct: 'b',
     explanation: `Na podstawie przepisów Kodeksu cywilnego.`,
     difficulty: 'medium',
     tags: ["kodeks cywilny"]
@@ -1189,7 +1189,7 @@ export const KC_EXAM_QUESTIONS_PART1: ExamQuestion[] = [
       c: `jest zwolniony z długu z mocy prawa`,
       d: ``
     },
-    correct: 'a',
+    correct: 'b',
     explanation: `Na podstawie przepisów Kodeksu cywilnego.`,
     difficulty: 'medium',
     tags: ["kodeks cywilny"]
@@ -1207,7 +1207,7 @@ export const KC_EXAM_QUESTIONS_PART1: ExamQuestion[] = [
       c: `konsumentowi`,
       d: ``
     },
-    correct: 'a',
+    correct: 'c',
     explanation: `Na podstawie przepisów Kodeksu cywilnego.`,
     difficulty: 'medium',
     tags: ["kodeks cywilny"]
@@ -1225,7 +1225,7 @@ export const KC_EXAM_QUESTIONS_PART1: ExamQuestion[] = [
       c: `ostatni dzień roku kalendarzowego w każdym przypadku`,
       d: ``
     },
-    correct: 'a',
+    correct: 'b',
     explanation: `Na podstawie przepisów Kodeksu cywilnego.`,
     difficulty: 'medium',
     tags: ["kodeks cywilny"]
@@ -1261,7 +1261,7 @@ export const KC_EXAM_QUESTIONS_PART1: ExamQuestion[] = [
       c: `stwierdzone tytułem wykonawczym`,
       d: ``
     },
-    correct: 'a',
+    correct: 'b',
     explanation: `Na podstawie przepisów Kodeksu cywilnego.`,
     difficulty: 'medium',
     tags: ["kodeks cywilny"]
@@ -1279,7 +1279,7 @@ export const KC_EXAM_QUESTIONS_PART1: ExamQuestion[] = [
       c: `przez czas trwania obowiązku alimentacyjnego`,
       d: ``
     },
-    correct: 'a',
+    correct: 'c',
     explanation: `Na podstawie przepisów Kodeksu cywilnego.`,
     difficulty: 'medium',
     tags: ["kodeks cywilny"]
@@ -1297,7 +1297,7 @@ export const KC_EXAM_QUESTIONS_PART1: ExamQuestion[] = [
       c: `zwłokę dłużnika w spełnieniu świadczenia`,
       d: ``
     },
-    correct: 'a',
+    correct: 'b',
     explanation: `Na podstawie przepisów Kodeksu cywilnego.`,
     difficulty: 'medium',
     tags: ["kodeks cywilny"]
@@ -1315,7 +1315,7 @@ export const KC_EXAM_QUESTIONS_PART1: ExamQuestion[] = [
       c: `dopiero po upływie roku od przerwania`,
       d: ``
     },
-    correct: 'a',
+    correct: 'b',
     explanation: `Na podstawie przepisów Kodeksu cywilnego.`,
     difficulty: 'medium',
     tags: ["kodeks cywilny"]
@@ -1351,7 +1351,7 @@ export const KC_EXAM_QUESTIONS_PART1: ExamQuestion[] = [
       c: `dziesięciu lat`,
       d: ``
     },
-    correct: 'a',
+    correct: 'b',
     explanation: `Na podstawie przepisów Kodeksu cywilnego.`,
     difficulty: 'medium',
     tags: ["kodeks cywilny"]
@@ -1387,7 +1387,7 @@ export const KC_EXAM_QUESTIONS_PART1: ExamQuestion[] = [
       c: `ponad miarę określoną w pozwoleniu na budowę`,
       d: ``
     },
-    correct: 'a',
+    correct: 'b',
     explanation: `Na podstawie przepisów Kodeksu cywilnego.`,
     difficulty: 'medium',
     tags: ["kodeks cywilny"]
@@ -1405,7 +1405,7 @@ export const KC_EXAM_QUESTIONS_PART1: ExamQuestion[] = [
       c: `służebności osobistej przechodu i przejazdu`,
       d: ``
     },
-    correct: 'a',
+    correct: 'b',
     explanation: `Na podstawie przepisów Kodeksu cywilnego.`,
     difficulty: 'medium',
     tags: ["kodeks cywilny"]
@@ -1423,7 +1423,7 @@ export const KC_EXAM_QUESTIONS_PART1: ExamQuestion[] = [
       c: `utratą widoku`,
       d: ``
     },
-    correct: 'a',
+    correct: 'b',
     explanation: `Na podstawie przepisów Kodeksu cywilnego.`,
     difficulty: 'medium',
     tags: ["kodeks cywilny"]
@@ -1441,7 +1441,7 @@ export const KC_EXAM_QUESTIONS_PART1: ExamQuestion[] = [
       c: `tylko za zgodą sąsiada`,
       d: ``
     },
-    correct: 'a',
+    correct: 'b',
     explanation: `Na podstawie przepisów Kodeksu cywilnego.`,
     difficulty: 'medium',
     tags: ["kodeks cywilny"]
@@ -1459,7 +1459,7 @@ export const KC_EXAM_QUESTIONS_PART1: ExamQuestion[] = [
       c: `tylko jeżeli utrudniają mu korzystanie z gruntu`,
       d: ``
     },
-    correct: 'a',
+    correct: 'b',
     explanation: `Na podstawie przepisów Kodeksu cywilnego.`,
     difficulty: 'medium',
     tags: ["kodeks cywilny"]
@@ -1477,7 +1477,7 @@ export const KC_EXAM_QUESTIONS_PART1: ExamQuestion[] = [
       c: `przekroczenie granicy nastąpiło z winy wykonawcy robót`,
       d: ``
     },
-    correct: 'a',
+    correct: 'c',
     explanation: `Na podstawie przepisów Kodeksu cywilnego.`,
     difficulty: 'medium',
     tags: ["kodeks cywilny"]
@@ -1495,7 +1495,7 @@ export const KC_EXAM_QUESTIONS_PART1: ExamQuestion[] = [
       c: `użytku publicznego`,
       d: ``
     },
-    correct: 'a',
+    correct: 'b',
     explanation: `Na podstawie przepisów Kodeksu cywilnego.`,
     difficulty: 'medium',
     tags: ["kodeks cywilny"]
@@ -1531,7 +1531,7 @@ export const KC_EXAM_QUESTIONS_PART1: ExamQuestion[] = [
       c: `chyba że przepis szczególny stanowi inaczej albo że strony inaczej postanowiły`,
       d: ``
     },
-    correct: 'a',
+    correct: 'b',
     explanation: `Na podstawie przepisów Kodeksu cywilnego.`,
     difficulty: 'medium',
     tags: ["kodeks cywilny"]
@@ -1549,7 +1549,7 @@ export const KC_EXAM_QUESTIONS_PART1: ExamQuestion[] = [
       c: `każdego`,
       d: ``
     },
-    correct: 'a',
+    correct: 'b',
     explanation: `Na podstawie przepisów Kodeksu cywilnego.`,
     difficulty: 'medium',
     tags: ["kodeks cywilny"]
@@ -1585,7 +1585,7 @@ export const KC_EXAM_QUESTIONS_PART1: ExamQuestion[] = [
       c: `użytkowaniu przez osoby fizyczne`,
       d: ``
     },
-    correct: 'a',
+    correct: 'b',
     explanation: `Na podstawie przepisów Kodeksu cywilnego.`,
     difficulty: 'medium',
     tags: ["kodeks cywilny"]
@@ -1603,7 +1603,7 @@ export const KC_EXAM_QUESTIONS_PART1: ExamQuestion[] = [
       c: `odszkodowania w wysokości rynkowej wartości służebności`,
       d: ``
     },
-    correct: 'a',
+    correct: 'c',
     explanation: `Na podstawie przepisów Kodeksu cywilnego.`,
     difficulty: 'medium',
     tags: ["kodeks cywilny"]
@@ -1621,7 +1621,7 @@ export const KC_EXAM_QUESTIONS_PART1: ExamQuestion[] = [
       c: `można nabyć przez zasiedzenie tylko w dobrej wierze`,
       d: ``
     },
-    correct: 'a',
+    correct: 'b',
     explanation: `Na podstawie przepisów Kodeksu cywilnego.`,
     difficulty: 'medium',
     tags: ["kodeks cywilny"]
@@ -1675,7 +1675,7 @@ export const KC_EXAM_QUESTIONS_PART1: ExamQuestion[] = [
       c: `wraz z zakończeniem likwidacji przedsiębiorstwa`,
       d: ``
     },
-    correct: 'a',
+    correct: 'b',
     explanation: `Na podstawie przepisów Kodeksu cywilnego.`,
     difficulty: 'medium',
     tags: ["kodeks cywilny"]
@@ -1693,7 +1693,7 @@ export const KC_EXAM_QUESTIONS_PART1: ExamQuestion[] = [
       c: `użytkowaniu`,
       d: ``
     },
-    correct: 'a',
+    correct: 'b',
     explanation: `Na podstawie przepisów Kodeksu cywilnego.`,
     difficulty: 'medium',
     tags: ["kodeks cywilny"]
@@ -1711,7 +1711,7 @@ export const KC_EXAM_QUESTIONS_PART1: ExamQuestion[] = [
       c: `tylko na rzeczach oznaczonych co do gatunku`,
       d: ``
     },
-    correct: 'a',
+    correct: 'c',
     explanation: `Na podstawie przepisów Kodeksu cywilnego.`,
     difficulty: 'medium',
     tags: ["kodeks cywilny"]
@@ -1729,7 +1729,7 @@ export const KC_EXAM_QUESTIONS_PART1: ExamQuestion[] = [
       c: `zachowanie formy aktu notarialnego`,
       d: ``
     },
-    correct: 'a',
+    correct: 'b',
     explanation: `Na podstawie przepisów Kodeksu cywilnego.`,
     difficulty: 'medium',
     tags: ["kodeks cywilny"]
@@ -1765,7 +1765,7 @@ export const KC_EXAM_QUESTIONS_PART1: ExamQuestion[] = [
       c: `chyba że zastawnik działał w złej wierze`,
       d: ``
     },
-    correct: 'a',
+    correct: 'b',
     explanation: `Na podstawie przepisów Kodeksu cywilnego.`,
     difficulty: 'medium',
     tags: ["kodeks cywilny"]
@@ -1801,7 +1801,7 @@ export const KC_EXAM_QUESTIONS_PART1: ExamQuestion[] = [
       c: `poprzez sprzedaż rzeczy z wolnej ręki przez zastawnika`,
       d: ``
     },
-    correct: 'a',
+    correct: 'b',
     explanation: `Na podstawie przepisów Kodeksu cywilnego.`,
     difficulty: 'medium',
     tags: ["kodeks cywilny"]
