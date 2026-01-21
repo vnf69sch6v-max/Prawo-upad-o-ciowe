@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils/cn';
 import { CheckCircle, XCircle, Clock, Target, TrendingUp, RotateCcw, ChevronDown, ChevronUp, BookOpen } from 'lucide-react';
+import { useStudentProfile } from '@/hooks/use-student-profile';
 
 interface QuestionResult {
     id: string;
@@ -13,6 +14,7 @@ interface QuestionResult {
     isCorrect: boolean;
     explanation: string;
     article?: string;
+    domain?: string;
 }
 
 interface ExamResultsProps {
@@ -47,6 +49,28 @@ export function ExamResults({
 }: ExamResultsProps) {
     const [showReview, setShowReview] = useState(false);
     const [expandedQuestions, setExpandedQuestions] = useState<Set<string>>(new Set());
+    const { recordAnswer } = useStudentProfile();
+    const hasRecorded = useRef(false);
+
+    // Record all answers to student profile when results are shown
+    useEffect(() => {
+        if (!questionResults || hasRecorded.current) return;
+        hasRecorded.current = true;
+
+        const avgTimePerQuestion = Math.round((timeSpent * 1000) / questionResults.length);
+
+        questionResults.forEach((q) => {
+            recordAnswer({
+                questionId: q.id,
+                topic: q.domain || examTitle,
+                selectedAnswer: q.userAnswer,
+                correctAnswer: q.correctAnswer,
+                isCorrect: q.isCorrect,
+                difficulty: 5, // Default medium difficulty
+                timeToAnswer: avgTimePerQuestion,
+            });
+        });
+    }, [questionResults, examTitle, timeSpent, recordAnswer]);
 
     const formatTime = (seconds: number) => {
         const mins = Math.floor(seconds / 60);
