@@ -7,6 +7,7 @@ import { BookOpen, Clock, Trophy, Target, ChevronRight, Scale, Sparkles, Play } 
 import { cn } from '@/lib/utils/cn';
 import { ALL_KSH_QUESTIONS, getRandomQuestions, generateBalancedExam, getQuestionStats, type ExamQuestion } from '@/lib/data/ksh';
 import { ALL_PRAWO_UPADLOSCIOWE_QUESTIONS, getQuestionStats as getPUStats } from '@/lib/data/prawo-upadlosciowe';
+import { ALL_KC_QUESTIONS, getKCRandomQuestions, getKCQuestionStats } from '@/lib/data/kodeks-cywilny';
 import { useAuth } from '@/hooks/use-auth';
 import { useUserData } from '@/hooks/use-user-data';
 import { saveExamResult, addActivity, updateStreak } from '@/lib/services/user-service';
@@ -103,6 +104,41 @@ const DOMAIN_EXAMS = {
             icon: <Trophy className="text-yellow-400" size={24} />,
         },
     ],
+    prawo_cywilne: [
+        {
+            id: 'kc-quick-10',
+            title: 'Quick Quiz (10 pytań)',
+            description: 'Szybki test z losowych pytań z Kodeksu Cywilnego',
+            questionCount: 10,
+            timeLimit: 15,
+            difficulty: 'mixed' as const,
+            passRate: 75,
+            isPremium: false,
+            icon: <Sparkles className="text-blue-400" size={24} />,
+        },
+        {
+            id: 'kc-standard-30',
+            title: 'Standard (30 pytań)',
+            description: 'Zbalansowany test z Kodeksu Cywilnego',
+            questionCount: 30,
+            timeLimit: 45,
+            difficulty: 'medium' as const,
+            passRate: 68,
+            isPremium: false,
+            icon: <Scale className="text-blue-400" size={24} />,
+        },
+        {
+            id: 'kc-full-100',
+            title: 'Pełny Test (100 pytań)',
+            description: 'Duży test z Kodeksu Cywilnego',
+            questionCount: 100,
+            timeLimit: 150,
+            difficulty: 'hard' as const,
+            passRate: 60,
+            isPremium: false,
+            icon: <Trophy className="text-yellow-400" size={24} />,
+        },
+    ],
 };
 
 type ViewState = 'list' | 'exam' | 'results';
@@ -138,6 +174,8 @@ export default function ExamPage() {
             return getQuestionStats();
         } else if (selectedDomain === 'prawo_upadlosciowe') {
             return getPUStats();
+        } else if (selectedDomain === 'prawo_cywilne') {
+            return getKCQuestionStats();
         }
         return { total: 0, byDifficulty: { easy: 0, medium: 0, hard: 0 } };
     }, [selectedDomain]);
@@ -167,6 +205,9 @@ export default function ExamPage() {
             const shuffled = [...allPU].sort(() => Math.random() - 0.5);
             const count = Math.min(exam.questionCount, shuffled.length);
             questions = shuffled.slice(0, count);
+        } else if (selectedDomain === 'prawo_cywilne') {
+            // Kodeks Cywilny exams
+            questions = getKCRandomQuestions(exam.questionCount);
         } else {
             questions = [];
         }

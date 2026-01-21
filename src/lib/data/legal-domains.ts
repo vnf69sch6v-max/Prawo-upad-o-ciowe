@@ -107,6 +107,20 @@ export const LEGAL_DOMAINS: DomainConfig[] = [
         ]
     },
     {
+        id: 'prawo_cywilne',
+        name: 'Kodeks Cywilny',
+        icon: '📜',
+        color: 'blue',
+        hasQuestions: true,
+        subdomains: [
+            { id: 'kc_czesc_ogolna', name: 'Część ogólna', shortName: 'Ogólna' },
+            { id: 'kc_prawo_rzeczowe', name: 'Prawo rzeczowe', shortName: 'Rzeczowe' },
+            { id: 'kc_zobowiazania', name: 'Zobowiązania', shortName: 'Zobowiązania' },
+            { id: 'kc_spadki', name: 'Spadki', shortName: 'Spadki' },
+            { id: 'kc_wlasnosc', name: 'Własność i inne prawa', shortName: 'Własność' },
+        ]
+    },
+    {
         id: 'prawo_karne',
         name: 'Prawo Karne',
         icon: '⚔️',
