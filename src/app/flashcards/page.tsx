@@ -9,6 +9,7 @@ import type { Flashcard, LegalDomain } from '@/types';
 import { useAuth } from '@/hooks/use-auth';
 import { ALL_KSH_QUESTIONS, type ExamQuestion } from '@/lib/data/ksh';
 import { ALL_PRAWO_UPADLOSCIOWE_QUESTIONS } from '@/lib/data/prawo-upadlosciowe';
+import { ALL_KC_QUESTIONS } from '@/lib/data/kodeks-cywilny';
 
 // Convert exam question to flashcard format
 function convertQuestionToFlashcard(q: ExamQuestion, domain: LegalDomain): Flashcard {
@@ -37,6 +38,7 @@ function convertQuestionToFlashcard(q: ExamQuestion, domain: LegalDomain): Flash
 const DECKS = [
     { id: 'ksh', name: 'Prawo Handlowe (KSH)', icon: '⚖️', count: ALL_KSH_QUESTIONS.length, color: '#1a365d' },
     { id: 'pu', name: 'Prawo Upadłościowe', icon: '📉', count: ALL_PRAWO_UPADLOSCIOWE_QUESTIONS.length, color: '#ea580c' },
+    { id: 'kc', name: 'Kodeks Cywilny', icon: '📜', count: ALL_KC_QUESTIONS.length, color: '#2563eb' },
 ];
 
 export default function FlashcardsPage() {
@@ -58,6 +60,10 @@ export default function FlashcardsPage() {
         } else if (selectedDeck === 'pu') {
             return ALL_PRAWO_UPADLOSCIOWE_QUESTIONS.slice(0, 20).map(q =>
                 convertQuestionToFlashcard(q, 'prawo_upadlosciowe' as LegalDomain)
+            );
+        } else if (selectedDeck === 'kc') {
+            return ALL_KC_QUESTIONS.slice(0, 20).map(q =>
+                convertQuestionToFlashcard(q, 'prawo_cywilne' as LegalDomain)
             );
         }
         return [];

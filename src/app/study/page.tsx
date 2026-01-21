@@ -8,6 +8,7 @@ import type { Flashcard, LegalDomain } from '@/types';
 import { useAuth } from '@/hooks/use-auth';
 import { ALL_KSH_QUESTIONS, type ExamQuestion } from '@/lib/data/ksh';
 import { ALL_PRAWO_UPADLOSCIOWE_QUESTIONS } from '@/lib/data/prawo-upadlosciowe';
+import { ALL_KC_QUESTIONS } from '@/lib/data/kodeks-cywilny';
 
 // Convert exam question to flashcard format
 function convertQuestionToFlashcard(q: ExamQuestion, domain: LegalDomain): Flashcard {
@@ -42,10 +43,11 @@ const STUDY_MODES = [
         color: '#8b5cf6',
         getCards: () => {
             const all = [
-                ...ALL_KSH_QUESTIONS.slice(0, 10),
-                ...ALL_PRAWO_UPADLOSCIOWE_QUESTIONS.slice(0, 10)
+                ...ALL_KSH_QUESTIONS.slice(0, 7),
+                ...ALL_PRAWO_UPADLOSCIOWE_QUESTIONS.slice(0, 7),
+                ...ALL_KC_QUESTIONS.slice(0, 6)
             ].sort(() => Math.random() - 0.5);
-            return all.map((q, i) => convertQuestionToFlashcard(q, i < 10 ? 'prawo_handlowe' : 'prawo_upadlosciowe' as LegalDomain));
+            return all.map((q, i) => convertQuestionToFlashcard(q, i < 7 ? 'prawo_handlowe' : i < 14 ? 'prawo_upadlosciowe' : 'prawo_cywilne' as LegalDomain));
         }
     },
     {
@@ -63,6 +65,14 @@ const STUDY_MODES = [
         icon: '📉',
         color: '#ea580c',
         getCards: () => ALL_PRAWO_UPADLOSCIOWE_QUESTIONS.slice(0, 20).map(q => convertQuestionToFlashcard(q, 'prawo_upadlosciowe' as LegalDomain))
+    },
+    {
+        id: 'kc',
+        name: 'Kodeks Cywilny',
+        description: `${ALL_KC_QUESTIONS.length} pytań`,
+        icon: '📜',
+        color: '#2563eb',
+        getCards: () => ALL_KC_QUESTIONS.slice(0, 20).map(q => convertQuestionToFlashcard(q, 'prawo_cywilne' as LegalDomain))
     },
 ];
 
@@ -158,7 +168,7 @@ export default function StudyPage() {
                             </div>
                             <h1 className="text-3xl font-bold mb-2">Nauka</h1>
                             <p className="text-[var(--text-muted)]">
-                                {ALL_KSH_QUESTIONS.length + ALL_PRAWO_UPADLOSCIOWE_QUESTIONS.length} pytań w bazie
+                                {ALL_KSH_QUESTIONS.length + ALL_PRAWO_UPADLOSCIOWE_QUESTIONS.length + ALL_KC_QUESTIONS.length} pytań w bazie
                             </p>
                         </div>
 

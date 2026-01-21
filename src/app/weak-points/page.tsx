@@ -8,6 +8,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useUserData } from '@/hooks/use-user-data';
 import { ALL_KSH_QUESTIONS } from '@/lib/data/ksh';
 import { ALL_PRAWO_UPADLOSCIOWE_QUESTIONS } from '@/lib/data/prawo-upadlosciowe';
+import { ALL_KC_QUESTIONS } from '@/lib/data/kodeks-cywilny';
 import Link from 'next/link';
 
 // Question type from data
@@ -17,13 +18,14 @@ interface QuestionData {
     options: { a: string; b: string; c: string; d: string };
     correct: 'a' | 'b' | 'c' | 'd';
     explanation: string;
-    domain: 'ksh' | 'prawo_upadlosciowe';
+    domain: 'ksh' | 'prawo_upadlosciowe' | 'prawo_cywilne';
 }
 
 // Get all questions combined
 const ALL_QUESTIONS: QuestionData[] = [
     ...ALL_KSH_QUESTIONS.map(q => ({ ...q, domain: 'ksh' as const })),
-    ...ALL_PRAWO_UPADLOSCIOWE_QUESTIONS.map(q => ({ ...q, domain: 'prawo_upadlosciowe' as const }))
+    ...ALL_PRAWO_UPADLOSCIOWE_QUESTIONS.map(q => ({ ...q, domain: 'prawo_upadlosciowe' as const })),
+    ...ALL_KC_QUESTIONS.map(q => ({ ...q, domain: 'prawo_cywilne' as const }))
 ];
 
 // Simple Review Component

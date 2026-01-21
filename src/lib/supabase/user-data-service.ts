@@ -174,7 +174,7 @@ export async function getTestHistory(
 export async function saveWrongAnswer(
     userId: string,
     questionId: string,
-    domain: 'ksh' | 'prawo_upadlosciowe'
+    domain: 'ksh' | 'prawo_upadlosciowe' | 'prawo_cywilne'
 ): Promise<void> {
     if (!isSupabaseAvailable()) return;
 

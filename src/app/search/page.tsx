@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils/cn';
 import { useAuth } from '@/hooks/use-auth';
 import { ALL_KSH_QUESTIONS } from '@/lib/data/ksh';
 import { ALL_PRAWO_UPADLOSCIOWE_QUESTIONS } from '@/lib/data/prawo-upadlosciowe';
+import { ALL_KC_QUESTIONS } from '@/lib/data/kodeks-cywilny';
 
 // Article data structure
 interface Article {
@@ -14,7 +15,7 @@ interface Article {
     number: string;
     title: string;
     content: string;
-    domain: 'ksh' | 'prawo_upadlosciowe';
+    domain: 'ksh' | 'prawo_upadlosciowe' | 'prawo_cywilne';
     relatedArticles: string[];
     questionCount: number;
 }
@@ -36,13 +37,19 @@ const ARTICLES: Article[] = [
     { id: 'pu-11', number: 'Art. 11', title: 'Niewypłacalność', content: 'Dłużnik jest niewypłacalny, jeżeli utracił zdolność do wykonywania swoich wymagalnych zobowiązań pieniężnych. Domniemywa się, że dłużnik utracił zdolność do wykonywania swoich wymagalnych zobowiązań pieniężnych, jeżeli opóźnienie w wykonaniu zobowiązań pieniężnych przekracza trzy miesiące.', domain: 'prawo_upadlosciowe', relatedArticles: ['Art. 10', 'Art. 12', 'Art. 21'], questionCount: 25 },
     { id: 'pu-21', number: 'Art. 21', title: 'Obowiązek złożenia wniosku', content: 'Dłużnik jest obowiązany, nie później niż w terminie trzydziestu dni od dnia, w którym wystąpiła podstawa do ogłoszenia upadłości, zgłosić w sądzie wniosek o ogłoszenie upadłości.', domain: 'prawo_upadlosciowe', relatedArticles: ['Art. 10', 'Art. 11', 'Art. 299 KSH'], questionCount: 30 },
     { id: 'pu-127', number: 'Art. 127', title: 'Bezskuteczność czynności', content: 'Bezskuteczne w stosunku do masy upadłości są czynności prawne dokonane przez upadłego w ciągu roku przed dniem złożenia wniosku o ogłoszenie upadłości, którymi rozporządził on swoim majątkiem, jeżeli dokonane zostały nieodpłatnie albo odpłatnie, ale wartość świadczenia upadłego przewyższa w rażącym stopniu wartość świadczenia otrzymanego przez upadłego lub zastrzeżonego dla upadłego lub dla osoby trzeciej.', domain: 'prawo_upadlosciowe', relatedArticles: ['Art. 128', 'Art. 130'], questionCount: 15 },
+    // Kodeks Cywilny key articles
+    { id: 'kc-1', number: 'Art. 1', title: 'Moc wsteczna', content: 'Ustawa nie ma mocy wstecznej, chyba że to wynika z jej brzmienia lub celu.', domain: 'prawo_cywilne', relatedArticles: ['Art. 2', 'Art. 3'], questionCount: 5 },
+    { id: 'kc-5', number: 'Art. 5', title: 'Nadużycie prawa', content: 'Nie można czynić ze swego prawa użytku, który by był sprzeczny ze społeczno-gospodarczym przeznaczeniem tego prawa lub z zasadami współżycia społecznego.', domain: 'prawo_cywilne', relatedArticles: ['Art. 6', 'Art. 7'], questionCount: 15 },
+    { id: 'kc-23', number: 'Art. 23', title: 'Dobra osobiste', content: 'Dobra osobiste człowieka, jak w szczególności zdrowie, wolność, cześć, swoboda sumienia, nazwisko lub pseudonim, wizerunek, tajemnica korespondencji, pozostają pod ochroną prawa cywilnego.', domain: 'prawo_cywilne', relatedArticles: ['Art. 24'], questionCount: 20 },
+    { id: 'kc-415', number: 'Art. 415', title: 'Odpowiedzialność deliktowa', content: 'Kto z winy swej wyrządził drugiemu szkodę, obowiązany jest do jej naprawienia.', domain: 'prawo_cywilne', relatedArticles: ['Art. 416', 'Art. 417'], questionCount: 30 },
+    { id: 'kc-471', number: 'Art. 471', title: 'Odpowiedzialność kontraktowa', content: 'Dłużnik obowiązany jest do naprawienia szkody wynikłej z niewykonania lub nienależytego wykonania zobowiązania, chyba że niewykonanie lub nienależyte wykonanie jest następstwem okoliczności, za które dłużnik odpowiedzialności nie ponosi.', domain: 'prawo_cywilne', relatedArticles: ['Art. 472', 'Art. 473'], questionCount: 25 },
 ];
 
 export default function SearchPage() {
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
-    const [domainFilter, setDomainFilter] = useState<'all' | 'ksh' | 'prawo_upadlosciowe'>('all');
+    const [domainFilter, setDomainFilter] = useState<'all' | 'ksh' | 'prawo_upadlosciowe' | 'prawo_cywilne'>('all');
 
     const { profile, loading: authLoading } = useAuth();
     const stats = profile?.stats;
@@ -69,7 +76,9 @@ export default function SearchPage() {
     const getRelatedQuestions = (article: Article) => {
         const allQuestions = article.domain === 'ksh'
             ? ALL_KSH_QUESTIONS
-            : ALL_PRAWO_UPADLOSCIOWE_QUESTIONS;
+            : article.domain === 'prawo_cywilne'
+                ? ALL_KC_QUESTIONS
+                : ALL_PRAWO_UPADLOSCIOWE_QUESTIONS;
 
         return allQuestions.filter(q =>
             q.article?.includes(article.number.replace('Art. ', '')) ||
@@ -117,7 +126,7 @@ export default function SearchPage() {
                             </div>
                             <h1 className="text-3xl font-bold mb-2">Wyszukiwarka artykułów</h1>
                             <p className="text-[var(--text-muted)]">
-                                Szybki dostęp do przepisów KSH i Prawa Upadłościowego
+                                Szybki dostęp do przepisów KSH, Prawa Upadłościowego i Kodeksu Cywilnego
                             </p>
                         </div>
 
@@ -135,8 +144,8 @@ export default function SearchPage() {
                         </div>
 
                         {/* Domain Filter */}
-                        <div className="flex gap-2">
-                            {(['all', 'ksh', 'prawo_upadlosciowe'] as const).map(d => (
+                        <div className="flex gap-2 flex-wrap">
+                            {(['all', 'ksh', 'prawo_upadlosciowe', 'prawo_cywilne'] as const).map(d => (
                                 <button
                                     key={d}
                                     onClick={() => setDomainFilter(d)}
@@ -147,7 +156,7 @@ export default function SearchPage() {
                                             : 'bg-[var(--bg-card)] text-[var(--text-muted)] hover:text-[#3b82f6]'
                                     )}
                                 >
-                                    {d === 'all' ? 'Wszystkie' : d === 'ksh' ? 'KSH' : 'Prawo Upadłościowe'}
+                                    {d === 'all' ? 'Wszystkie' : d === 'ksh' ? 'KSH' : d === 'prawo_cywilne' ? 'Kodeks Cywilny' : 'Prawo Upadłościowe'}
                                 </button>
                             ))}
                         </div>

@@ -30,7 +30,7 @@ export interface UseUserDataReturn {
 
     // Actions
     saveTestResult: (input: Omit<SaveTestResultInput, 'userId'>) => Promise<string | null>;
-    saveWrongAnswer: (questionId: string, domain: 'ksh' | 'prawo_upadlosciowe') => Promise<void>;
+    saveWrongAnswer: (questionId: string, domain: 'ksh' | 'prawo_upadlosciowe' | 'prawo_cywilne') => Promise<void>;
     markAnswerCorrect: (questionId: string) => Promise<void>;
     removeWrongAnswer: (questionId: string) => Promise<void>;
     clearAllWrongAnswers: () => Promise<void>;
@@ -105,7 +105,7 @@ export function useUserData(): UseUserDataReturn {
     // Save wrong answer
     const saveWrongAnswer = useCallback(async (
         questionId: string,
-        domain: 'ksh' | 'prawo_upadlosciowe'
+        domain: 'ksh' | 'prawo_upadlosciowe' | 'prawo_cywilne'
     ): Promise<void> => {
         if (!user) return;
 
