@@ -1,11 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Sidebar, Header, MobileNav } from '@/components/layout';
 import { ClipboardList, Clock, CheckCircle, XCircle, Loader2, Play } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 import { useAuth } from '@/hooks/use-auth';
 import { useUserData } from '@/hooks/use-user-data';
+import { getUserExamResults } from '@/lib/services/user-service';
+import { isSupabaseAvailable } from '@/lib/supabase';
 import Link from 'next/link';
 
 interface ExamResult {
@@ -25,17 +27,25 @@ export default function ExamResultsPage() {
     const [results, setResults] = useState<ExamResult[]>([]);
     const [loading, setLoading] = useState(true);
 
-    const { profile, loading: authLoading } = useAuth();
+    const { user, profile, loading: authLoading } = useAuth();
     const { getTestHistory } = useUserData();
     const stats = profile?.stats;
 
-    // Load exam results from Supabase
-    useEffect(() => {
-        async function loadResults() {
-            setLoading(true);
-            try {
-                const history = await getTestHistory(20);
-                setResults(history.map(h => ({
+    // Load exam results - try Supabase first, fallback to Firebase
+    const loadResults = useCallback(async () => {
+        if (!user) {
+            setLoading(false);
+            return;
+        }
+
+        setLoading(true);
+        try {
+            let loadedResults: ExamResult[] = [];
+
+            // Try Supabase first
+            if (isSupabaseAvailable()) {
+                const supabaseHistory = await getTestHistory(20);
+                loadedResults = supabaseHistory.map(h => ({
                     examId: h.examId,
                     examTitle: h.examTitle,
                     score: h.score,
@@ -43,15 +53,34 @@ export default function ExamResultsPage() {
                     totalQuestions: h.totalQuestions,
                     correctAnswers: h.correctAnswers,
                     timeSpent: h.timeSpent,
-                })));
-            } catch (error) {
-                console.error('Error loading results:', error);
-            } finally {
-                setLoading(false);
+                }));
             }
+
+            // If no Supabase results, try Firebase
+            if (loadedResults.length === 0) {
+                const firebaseHistory = await getUserExamResults(user.uid, 20);
+                loadedResults = firebaseHistory.map(h => ({
+                    examId: h.examId,
+                    examTitle: h.examTitle,
+                    score: h.score,
+                    passed: h.passed,
+                    totalQuestions: h.totalQuestions,
+                    correctAnswers: h.correctAnswers,
+                    timeSpent: h.timeSpent,
+                }));
+            }
+
+            setResults(loadedResults);
+        } catch (error) {
+            console.error('Error loading results:', error);
+        } finally {
+            setLoading(false);
         }
+    }, [user, getTestHistory]);
+
+    useEffect(() => {
         loadResults();
-    }, [getTestHistory]);
+    }, [loadResults]);
 
     const filteredResults = results.filter(r => {
         if (filter === 'passed') return r.passed;
