@@ -2,8 +2,9 @@
 
 import { useState, useMemo } from 'react';
 import { Sidebar, Header, MobileNav } from '@/components/layout';
-import { FlashcardStudy } from '@/components/study';
-import { Play, Flame, Zap, BookOpen, Target, ChevronRight, Loader2 } from 'lucide-react';
+import { FlashcardStudy, SpeedRunMode, SpeedRunResults } from '@/components/study';
+import type { SpeedRunResults as SpeedRunResultsType } from '@/components/study/speed-run-mode';
+import { Play, Flame, Zap, BookOpen, Target, ChevronRight, Loader2, Timer } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 import type { Flashcard, LegalDomain } from '@/types';
 import { useAuth } from '@/hooks/use-auth';
@@ -141,9 +142,10 @@ function StreakDay({ day, completed, isToday }: { day: string; completed: boolea
 
 export default function FlashcardsPage() {
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-    const [view, setView] = useState<'dashboard' | 'study'>('dashboard');
+    const [view, setView] = useState<'dashboard' | 'study' | 'speedrun' | 'speedrun-results'>('dashboard');
     const [selectedDeck, setSelectedDeck] = useState<string | null>(null);
     const [studyMode, setStudyMode] = useState<'deck' | 'smart'>('deck');
+    const [speedRunResults, setSpeedRunResults] = useState<SpeedRunResultsType | null>(null);
 
     const { profile, loading: authLoading } = useAuth();
     const stats = profile?.stats;
@@ -233,6 +235,53 @@ export default function FlashcardsPage() {
                             console.log('Review:', cardId, quality, responseTime);
                         }}
                         onComplete={handleComplete}
+                    />
+                </div>
+            </div>
+        );
+    }
+
+    // Speed Run mode
+    if (view === 'speedrun') {
+        const speedRunCards = [
+            ...ALL_KSH_QUESTIONS.slice(0, 30).map(q => convertQuestionToFlashcard(q, 'prawo_handlowe')),
+            ...ALL_PRAWO_UPADLOSCIOWE_QUESTIONS.slice(0, 20).map(q => convertQuestionToFlashcard(q, 'prawo_upadlosciowe' as LegalDomain)),
+            ...ALL_KC_QUESTIONS.slice(0, 25).map(q => convertQuestionToFlashcard(q, 'prawo_cywilne' as LegalDomain)),
+            ...ALL_ASO_QUESTIONS.slice(0, 25).map(q => convertQuestionToFlashcard(q, 'aso' as LegalDomain)),
+        ].sort(() => Math.random() - 0.5);
+
+        return (
+            <div className="min-h-screen" style={{ background: 'var(--bg-primary)' }}>
+                <div className="max-w-4xl mx-auto p-6">
+                    <SpeedRunMode
+                        cards={speedRunCards}
+                        duration={300}
+                        onComplete={(results) => {
+                            setSpeedRunResults(results);
+                            setView('speedrun-results');
+                        }}
+                        onExit={() => setView('dashboard')}
+                    />
+                </div>
+            </div>
+        );
+    }
+
+    // Speed Run Results
+    if (view === 'speedrun-results' && speedRunResults) {
+        return (
+            <div className="min-h-screen" style={{ background: 'var(--bg-primary)' }}>
+                <div className="max-w-4xl mx-auto p-6">
+                    <SpeedRunResults
+                        results={speedRunResults}
+                        onPlayAgain={() => {
+                            setSpeedRunResults(null);
+                            setView('speedrun');
+                        }}
+                        onExit={() => {
+                            setSpeedRunResults(null);
+                            setView('dashboard');
+                        }}
                     />
                 </div>
             </div>
@@ -345,6 +394,52 @@ export default function FlashcardsPage() {
                                 <span>• 5 nowych</span>
                             </div>
                         </button>
+
+                        {/* Study Modes Grid */}
+                        <div className="grid md:grid-cols-2 gap-4">
+                            {/* Speed Run CTA */}
+                            <button
+                                onClick={() => setView('speedrun')}
+                                className="p-4 rounded-2xl transition-all hover:scale-[1.02] group text-left"
+                                style={{
+                                    background: 'linear-gradient(135deg, #ea580c20 0%, #f9731615 100%)',
+                                    border: '1px solid #ea580c40'
+                                }}
+                            >
+                                <div className="flex items-center gap-3">
+                                    <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-gradient-to-br from-orange-500 to-red-500">
+                                        <Timer size={24} className="text-white" />
+                                    </div>
+                                    <div>
+                                        <p className="font-bold text-orange-600">Speed Run</p>
+                                        <p className="text-sm text-[var(--text-muted)]">
+                                            5 minut na czas!
+                                        </p>
+                                    </div>
+                                </div>
+                            </button>
+
+                            {/* Weak Points CTA */}
+                            <button
+                                className="p-4 rounded-2xl transition-all hover:scale-[1.02] group text-left"
+                                style={{
+                                    background: 'linear-gradient(135deg, #dc262620 0%, #b91c1c15 100%)',
+                                    border: '1px solid #dc262640'
+                                }}
+                            >
+                                <div className="flex items-center gap-3">
+                                    <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-gradient-to-br from-red-500 to-rose-600">
+                                        <Target size={24} className="text-white" />
+                                    </div>
+                                    <div>
+                                        <p className="font-bold text-red-600">Słabe punkty</p>
+                                        <p className="text-sm text-[var(--text-muted)]">
+                                            Fiszki z błędami
+                                        </p>
+                                    </div>
+                                </div>
+                            </button>
+                        </div>
 
                         {/* Section Title */}
                         <div className="flex items-center gap-2 pt-2">

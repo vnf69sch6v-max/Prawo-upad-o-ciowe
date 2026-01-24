@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils/cn';
 import { RotateCcw, ChevronLeft, ChevronRight, Lightbulb, Link2 } from 'lucide-react';
 import type { Flashcard } from '@/types';
+import { AIExplanationModal } from './ai-explanation-modal';
 
 interface FlashcardStudyProps {
     cards: Flashcard[];
@@ -94,6 +95,7 @@ export function FlashcardStudy({ cards, onReview, onComplete }: FlashcardStudyPr
     const [startTime, setStartTime] = useState(Date.now());
     const [sessionResults, setSessionResults] = useState<SessionResult[]>([]);
     const [showSummary, setShowSummary] = useState(false);
+    const [showAIModal, setShowAIModal] = useState(false);
 
     const currentCard = cards[currentIndex];
     const progress = ((currentIndex) / cards.length) * 100;
@@ -378,7 +380,13 @@ export function FlashcardStudy({ cards, onReview, onComplete }: FlashcardStudyPr
 
                         {/* Action Buttons */}
                         <div className="flex gap-3 mt-4 pt-4 border-t border-[var(--border-color)]">
-                            <button className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-[var(--text-muted)] hover:bg-[var(--bg-hover)] transition-colors">
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setShowAIModal(true);
+                                }}
+                                className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-[#1a365d] bg-[#1a365d]/10 hover:bg-[#1a365d]/20 transition-colors"
+                            >
                                 <Lightbulb size={16} />
                                 Wyjaśnij więcej
                             </button>
@@ -462,6 +470,15 @@ export function FlashcardStudy({ cards, onReview, onComplete }: FlashcardStudyPr
                         Skróty: 1, 2, 3, 4 na klawiaturze
                     </p>
                 </div>
+            )}
+
+            {/* AI Explanation Modal */}
+            {currentCard && (
+                <AIExplanationModal
+                    card={currentCard}
+                    isOpen={showAIModal}
+                    onClose={() => setShowAIModal(false)}
+                />
             )}
         </div>
     );
