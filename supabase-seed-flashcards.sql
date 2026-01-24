@@ -59,15 +59,14 @@ ON CONFLICT (slug) DO NOTHING;
 -- 2. FISZKI - PRAWO HANDLOWE (KSH)
 -- ═══════════════════════════════════════════════════════════════
 
-INSERT INTO flashcards (deck_id, question, answer_short, answer_full, legal_basis, difficulty, difficulty_score, tags) 
+INSERT INTO flashcards (deck_id, question, answer_short, answer_full, legal_basis, base_difficulty, tags) 
 SELECT 
   (SELECT id FROM flashcard_decks WHERE slug = 'prawo-handlowe-ksh'),
   question,
   answer_short,
   answer_full,
   legal_basis,
-  difficulty,
-  difficulty_score,
+  base_difficulty,
   tags
 FROM (VALUES
   (
@@ -88,7 +87,6 @@ Spółki handlowe (Art. 1 § 2 KSH):
 
 💡 Pułapka egzaminacyjna: Często pytają "która spółka nie jest wpisywana do KRS" - odpowiedź: spółka cywilna (wspólnicy są wpisywani do CEIDG jako przedsiębiorcy).',
     'Art. 1 § 2 KSH',
-    'easy',
     3,
     ARRAY['spółki', 'podstawy', 'egzamin']
   ),
@@ -105,7 +103,6 @@ Minimalne kapitały zakładowe:
 
 ⚠️ Minimalna wartość nominalna udziału w sp. z o.o. to 50 zł (Art. 154 § 2 KSH).',
     'Art. 154 § 1 KSH',
-    'easy',
     2,
     ARRAY['sp. z o.o.', 'kapitał', 'egzamin']
   ),
@@ -130,7 +127,6 @@ Charakter odpowiedzialności:
 
 💡 Nie myl z art. 293 KSH (odpowiedzialność wobec SPÓŁKI za szkodę)!',
     'Art. 299 KSH',
-    'medium',
     6,
     ARRAY['odpowiedzialność', 'zarząd', 'sp. z o.o.', 'egzamin']
   ),
@@ -150,7 +146,6 @@ W umowie między spółką a członkiem zarządu spółkę reprezentuje:
 
 🔗 Analogiczny przepis dla S.A.: Art. 379 KSH',
     'Art. 210 KSH',
-    'medium',
     5,
     ARRAY['reprezentacja', 'zarząd', 'sp. z o.o.', 'egzamin']
   ),
@@ -169,7 +164,6 @@ ALE umowa spółki może przewidywać:
 • Uchwał o zmianie umowy spółki
 • Uchwał wymagających 2/3 lub 3/4 głosów',
     'Art. 242 KSH',
-    'medium',
     5,
     ARRAY['głosowanie', 'udziały', 'sp. z o.o.']
   ),
@@ -193,7 +187,6 @@ Art. 293 § 1 KSH - przesłanki:
 
 🔗 Analogiczny przepis dla S.A.: Art. 483 KSH',
     'Art. 293 KSH',
-    'hard',
     7,
     ARRAY['odpowiedzialność', 'zarząd', 'szkoda', 'egzamin']
   ),
@@ -212,7 +205,6 @@ Formy umów spółek:
 
 ⚠️ Wyjątek: Sp. z o.o. może być też założona przez S24 (system online) - wtedy forma elektroniczna.',
     'Art. 157 § 2 KSH',
-    'easy',
     3,
     ARRAY['forma', 'umowa spółki', 'sp. z o.o.']
   ),
@@ -235,7 +227,6 @@ KOMANDYTARIUSZ:
 
 💡 Suma komandytowa to GÓRNA GRANICA odpowiedzialności, wkład to ile faktycznie wniósł.',
     'Art. 102, 104, 111 KSH',
-    'medium',
     5,
     ARRAY['spółka komandytowa', 'odpowiedzialność', 'egzamin']
   ),
@@ -256,7 +247,6 @@ Większość 3/4 głosów (Art. 246 § 3 KSH):
 
 💡 Umowa spółki może przewidywać SUROWSZE wymogi (np. jednomyślność), ale nie łagodniejsze.',
     'Art. 246 KSH',
-    'medium',
     6,
     ARRAY['uchwały', 'większość głosów', 'sp. z o.o.', 'egzamin']
   ),
@@ -279,25 +269,23 @@ Ważne przyczyny (przykłady):
 
 ⚠️ Wspólnik może też sam wystąpić o rozwiązanie spółki przez sąd (Art. 271 KSH).',
     'Art. 266-269 KSH',
-    'hard',
     7,
     ARRAY['wspólnik', 'wyłączenie', 'sp. z o.o.']
   )
-) AS t(question, answer_short, answer_full, legal_basis, difficulty, difficulty_score, tags);
+) AS t(question, answer_short, answer_full, legal_basis, base_difficulty, tags);
 
 -- ═══════════════════════════════════════════════════════════════
 -- 3. FISZKI - KODEKS CYWILNY - CZĘŚĆ OGÓLNA
 -- ═══════════════════════════════════════════════════════════════
 
-INSERT INTO flashcards (deck_id, question, answer_short, answer_full, legal_basis, difficulty, difficulty_score, tags) 
+INSERT INTO flashcards (deck_id, question, answer_short, answer_full, legal_basis, base_difficulty, tags) 
 SELECT 
   (SELECT id FROM flashcard_decks WHERE slug = 'kodeks-cywilny-czesc-ogolna'),
   question,
   answer_short,
   answer_full,
   legal_basis,
-  difficulty,
-  difficulty_score,
+  base_difficulty,
   tags
 FROM (VALUES
   (
@@ -318,7 +306,6 @@ Zdolność do czynności prawnych:
 • Całkowite → brak zdolności
 • Częściowe → ograniczona zdolność',
     'Art. 10-14 KC',
-    'easy',
     2,
     ARRAY['zdolność', 'osoby fizyczne', 'podstawy']
   ),
@@ -341,7 +328,6 @@ Art. 118 KC - terminy przedawnienia:
 • Roszczenia z czynów niedozwolonych: 3 lata od dowiedzenia się
 • Roszczenia stwierdzone prawomocnym wyrokiem: 6 lat',
     'Art. 118 KC',
-    'easy',
     3,
     ARRAY['przedawnienie', 'terminy', 'egzamin']
   ),
@@ -366,7 +352,6 @@ Skutek: Oświadczenie jest WAŻNE, ale można się uchylić (termin: 1 rok od wy
 • Podstęp (Art. 86) → wzruszalność  
 • Groźba (Art. 87) → wzruszalność',
     'Art. 84-88 KC',
-    'medium',
     5,
     ARRAY['wady oświadczeń woli', 'błąd', 'egzamin']
   ),
@@ -390,7 +375,6 @@ OSOBA PRAWNA (Art. 33 KC):
 • Nie mają osobowości prawnej, ale mogą nabywać prawa
 • Np. spółka jawna, partnerska, komandytowa, wspólnota mieszkaniowa',
     'Art. 8, 33, 33¹ KC',
-    'easy',
     3,
     ARRAY['osoby', 'podstawy']
   ),
@@ -413,7 +397,6 @@ Skutki:
 ⚠️ § 3 - częściowa nieważność:
 Jeśli nieważna jest tylko CZĘŚĆ czynności, reszta pozostaje w mocy (chyba że bez tej części czynność nie zostałaby dokonana).',
     'Art. 58 KC',
-    'medium',
     5,
     ARRAY['nieważność', 'czynności prawne', 'egzamin']
   ),
@@ -437,25 +420,23 @@ Rodzaje:
 • Łączna (kilku prokurentów razem)
 • Oddziałowa (ograniczona do oddziału)',
     'Art. 109¹-109⁸ KC',
-    'medium',
     6,
     ARRAY['prokura', 'pełnomocnictwo', 'przedsiębiorca']
   )
-) AS t(question, answer_short, answer_full, legal_basis, difficulty, difficulty_score, tags);
+) AS t(question, answer_short, answer_full, legal_basis, base_difficulty, tags);
 
 -- ═══════════════════════════════════════════════════════════════
 -- 4. FISZKI - KODEKS CYWILNY - ZOBOWIĄZANIA
 -- ═══════════════════════════════════════════════════════════════
 
-INSERT INTO flashcards (deck_id, question, answer_short, answer_full, legal_basis, difficulty, difficulty_score, tags) 
+INSERT INTO flashcards (deck_id, question, answer_short, answer_full, legal_basis, base_difficulty, tags) 
 SELECT 
   (SELECT id FROM flashcard_decks WHERE slug = 'kodeks-cywilny-zobowiazania'),
   question,
   answer_short,
   answer_full,
   legal_basis,
-  difficulty,
-  difficulty_score,
+  base_difficulty,
   tags
 FROM (VALUES
   (
@@ -477,7 +458,6 @@ Art. 415 KC - przesłanki odpowiedzialności:
 • Art. 435 KC - ruch przedsiębiorstwa
 • Art. 436 KC - ruch pojazdu',
     'Art. 415 KC',
-    'medium',
     5,
     ARRAY['odpowiedzialność deliktowa', 'czyn niedozwolony', 'egzamin']
   ),
@@ -504,7 +484,6 @@ Uprawnienia kupującego (Art. 560):
 • Rękojmia - z ustawy, odpowiada sprzedawca
 • Gwarancja - umowna, odpowiada gwarant (producent)',
     'Art. 568 KC',
-    'medium',
     5,
     ARRAY['rękojmia', 'sprzedaż', 'terminy', 'egzamin']
   ),
@@ -530,7 +509,6 @@ Roszczenie: zwrot korzyści w naturze, a gdy niemożliwe - zwrot wartości
 • Świadczenie czyni zadość zasadom współżycia społecznego
 • Wiedział że nie był zobowiązany (wyjątek: działał pod przymusem)',
     'Art. 405-414 KC',
-    'hard',
     7,
     ARRAY['bezpodstawne wzbogacenie', 'zobowiązania']
   ),
@@ -555,7 +533,6 @@ SOLIDARNOŚĆ WIERZYCIELI (Art. 367):
 
 💡 Domniemanie: zobowiązanie z działalności gospodarczej jest solidarne (Art. 370).',
     'Art. 366-378 KC',
-    'medium',
     6,
     ARRAY['solidarność', 'zobowiązania', 'egzamin']
   ),
@@ -584,11 +561,10 @@ Różnica ZWŁOKA vs OPÓŹNIENIE:
 • Zwłoka - zawinione niewykonanie (Art. 476)
 • Opóźnienie - każde niewykonanie w terminie',
     'Art. 491-494 KC',
-    'hard',
     7,
     ARRAY['odstąpienie', 'umowy wzajemne', 'zwłoka', 'egzamin']
   )
-) AS t(question, answer_short, answer_full, legal_basis, difficulty, difficulty_score, tags);
+) AS t(question, answer_short, answer_full, legal_basis, base_difficulty, tags);
 
 -- ═══════════════════════════════════════════════════════════════
 -- 5. AKTUALIZUJ LICZNIKI
