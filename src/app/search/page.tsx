@@ -2,88 +2,100 @@
 
 import { useState, useMemo } from 'react';
 import { Sidebar, Header, MobileNav } from '@/components/layout';
-import { Search, BookOpen, Loader2, ChevronRight, Link as LinkIcon, FileText } from 'lucide-react';
+import { Search, BookOpen, Loader2, ChevronRight, Play, Target } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 import { useAuth } from '@/hooks/use-auth';
 import { ALL_KSH_QUESTIONS } from '@/lib/data/ksh';
 import { ALL_PRAWO_UPADLOSCIOWE_QUESTIONS } from '@/lib/data/prawo-upadlosciowe';
 import { ALL_KC_QUESTIONS } from '@/lib/data/kodeks-cywilny';
+import { ALL_ASO_QUESTIONS } from '@/lib/data/aso';
+import Link from 'next/link';
 
-// Article data structure
-interface Article {
+// Question type
+interface SearchQuestion {
     id: string;
-    number: string;
-    title: string;
-    content: string;
+    question: string;
+    article?: string;
+    articleTitle?: string;
+    section?: string;
+    options: { a: string; b: string; c: string; d: string };
+    correct: 'a' | 'b' | 'c' | 'd';
+    explanation: string;
     domain: 'ksh' | 'prawo_upadlosciowe' | 'prawo_cywilne' | 'aso';
-    relatedArticles: string[];
-    questionCount: number;
 }
 
-// Extract articles from questions (simplified - in real app would have full statute text)
-const ARTICLES: Article[] = [
-    // KSH key articles
-    { id: 'ksh-1', number: 'Art. 1', title: 'Zakres ustawy', content: 'Ustawa reguluje tworzenie, organizację, funkcjonowanie, rozwiązywanie, łączenie, podział i przekształcanie spółek handlowych.', domain: 'ksh', relatedArticles: ['Art. 2', 'Art. 3'], questionCount: 5 },
-    { id: 'ksh-22', number: 'Art. 22', title: 'Spółka jawna - definicja', content: 'Spółką jawną jest spółka osobowa, która prowadzi przedsiębiorstwo pod własną firmą, a nie jest inną spółką handlową.', domain: 'ksh', relatedArticles: ['Art. 23', 'Art. 31'], questionCount: 12 },
-    { id: 'ksh-102', number: 'Art. 102', title: 'Spółka komandytowa - definicja', content: 'Spółką komandytową jest spółka osobowa mająca na celu prowadzenie przedsiębiorstwa pod własną firmą, w której wobec wierzycieli za zobowiązania spółki co najmniej jeden wspólnik odpowiada bez ograniczenia (komplementariusz), a odpowiedzialność co najmniej jednego wspólnika (komandytariusza) jest ograniczona.', domain: 'ksh', relatedArticles: ['Art. 103', 'Art. 111'], questionCount: 18 },
-    { id: 'ksh-151', number: 'Art. 151', title: 'Spółka z o.o. - definicja', content: 'Spółka z ograniczoną odpowiedzialnością może być utworzona przez jedną albo więcej osób w każdym celu prawnie dopuszczalnym, chyba że ustawa stanowi inaczej.', domain: 'ksh', relatedArticles: ['Art. 152', 'Art. 154'], questionCount: 25 },
-    { id: 'ksh-154', number: 'Art. 154', title: 'Kapitał zakładowy sp. z o.o.', content: 'Kapitał zakładowy spółki powinien wynosić co najmniej 5 000 złotych. Wartość nominalna udziału nie może być niższa niż 50 złotych.', domain: 'ksh', relatedArticles: ['Art. 151', 'Art. 158'], questionCount: 15 },
-    { id: 'ksh-201', number: 'Art. 201', title: 'Zarząd sp. z o.o.', content: 'Zarząd prowadzi sprawy spółki i reprezentuje spółkę. Zarząd składa się z jednego albo większej liczby członków.', domain: 'ksh', relatedArticles: ['Art. 202', 'Art. 204'], questionCount: 20 },
-    { id: 'ksh-299', number: 'Art. 299', title: 'Odpowiedzialność zarządu', content: '§ 1. Jeżeli egzekucja przeciwko spółce okaże się bezskuteczna, członkowie zarządu odpowiadają solidarnie za jej zobowiązania.\n\n§ 2. Członek zarządu może się uwolnić od odpowiedzialności, o której mowa w § 1, jeżeli wykaże, że we właściwym czasie zgłoszono wniosek o ogłoszenie upadłości lub w tym samym czasie wydano postanowienie o otwarciu postępowania restrukturyzacyjnego albo o zatwierdzeniu układu w postępowaniu w przedmiocie zatwierdzenia układu, albo że niezgłoszenie wniosku o ogłoszenie upadłości nastąpiło nie z jego winy, albo że pomimo niezgłoszenia wniosku o ogłoszenie upadłości oraz niewydania postanowienia o otwarciu postępowania restrukturyzacyjnego albo niezatwierdzenia układu w postępowaniu w przedmiocie zatwierdzenia układu wierzyciel nie poniósł szkody.', domain: 'ksh', relatedArticles: ['Art. 298', 'Art. 300', 'Art. 21 PU'], questionCount: 35 },
-    { id: 'ksh-301', number: 'Art. 301', title: 'Spółka akcyjna - definicja', content: 'Spółka akcyjna może być zawiązana przez jedną albo więcej osób. Spółka akcyjna nie może być zawiązana wyłącznie przez jednoosobową spółkę z ograniczoną odpowiedzialnością.', domain: 'ksh', relatedArticles: ['Art. 302', 'Art. 308'], questionCount: 15 },
-    { id: 'ksh-308', number: 'Art. 308', title: 'Kapitał zakładowy S.A.', content: 'Kapitał zakładowy spółki powinien wynosić co najmniej 100 000 złotych.', domain: 'ksh', relatedArticles: ['Art. 301', 'Art. 309'], questionCount: 10 },
-    // Prawo upadłościowe key articles
-    { id: 'pu-10', number: 'Art. 10', title: 'Przesłanki upadłości', content: 'Upadłość ogłasza się w stosunku do dłużnika, który stał się niewypłacalny.', domain: 'prawo_upadlosciowe', relatedArticles: ['Art. 11', 'Art. 12'], questionCount: 20 },
-    { id: 'pu-11', number: 'Art. 11', title: 'Niewypłacalność', content: 'Dłużnik jest niewypłacalny, jeżeli utracił zdolność do wykonywania swoich wymagalnych zobowiązań pieniężnych. Domniemywa się, że dłużnik utracił zdolność do wykonywania swoich wymagalnych zobowiązań pieniężnych, jeżeli opóźnienie w wykonaniu zobowiązań pieniężnych przekracza trzy miesiące.', domain: 'prawo_upadlosciowe', relatedArticles: ['Art. 10', 'Art. 12', 'Art. 21'], questionCount: 25 },
-    { id: 'pu-21', number: 'Art. 21', title: 'Obowiązek złożenia wniosku', content: 'Dłużnik jest obowiązany, nie później niż w terminie trzydziestu dni od dnia, w którym wystąpiła podstawa do ogłoszenia upadłości, zgłosić w sądzie wniosek o ogłoszenie upadłości.', domain: 'prawo_upadlosciowe', relatedArticles: ['Art. 10', 'Art. 11', 'Art. 299 KSH'], questionCount: 30 },
-    { id: 'pu-127', number: 'Art. 127', title: 'Bezskuteczność czynności', content: 'Bezskuteczne w stosunku do masy upadłości są czynności prawne dokonane przez upadłego w ciągu roku przed dniem złożenia wniosku o ogłoszenie upadłości, którymi rozporządził on swoim majątkiem, jeżeli dokonane zostały nieodpłatnie albo odpłatnie, ale wartość świadczenia upadłego przewyższa w rażącym stopniu wartość świadczenia otrzymanego przez upadłego lub zastrzeżonego dla upadłego lub dla osoby trzeciej.', domain: 'prawo_upadlosciowe', relatedArticles: ['Art. 128', 'Art. 130'], questionCount: 15 },
-    // Kodeks Cywilny key articles
-    { id: 'kc-1', number: 'Art. 1', title: 'Moc wsteczna', content: 'Ustawa nie ma mocy wstecznej, chyba że to wynika z jej brzmienia lub celu.', domain: 'prawo_cywilne', relatedArticles: ['Art. 2', 'Art. 3'], questionCount: 5 },
-    { id: 'kc-5', number: 'Art. 5', title: 'Nadużycie prawa', content: 'Nie można czynić ze swego prawa użytku, który by był sprzeczny ze społeczno-gospodarczym przeznaczeniem tego prawa lub z zasadami współżycia społecznego.', domain: 'prawo_cywilne', relatedArticles: ['Art. 6', 'Art. 7'], questionCount: 15 },
-    { id: 'kc-23', number: 'Art. 23', title: 'Dobra osobiste', content: 'Dobra osobiste człowieka, jak w szczególności zdrowie, wolność, cześć, swoboda sumienia, nazwisko lub pseudonim, wizerunek, tajemnica korespondencji, pozostają pod ochroną prawa cywilnego.', domain: 'prawo_cywilne', relatedArticles: ['Art. 24'], questionCount: 20 },
-    { id: 'kc-415', number: 'Art. 415', title: 'Odpowiedzialność deliktowa', content: 'Kto z winy swej wyrządził drugiemu szkodę, obowiązany jest do jej naprawienia.', domain: 'prawo_cywilne', relatedArticles: ['Art. 416', 'Art. 417'], questionCount: 30 },
-    { id: 'kc-471', number: 'Art. 471', title: 'Odpowiedzialność kontraktowa', content: 'Dłużnik obowiązany jest do naprawienia szkody wynikłej z niewykonania lub nienależytego wykonania zobowiązania, chyba że niewykonanie lub nienależyte wykonanie jest następstwem okoliczności, za które dłużnik odpowiedzialności nie ponosi.', domain: 'prawo_cywilne', relatedArticles: ['Art. 472', 'Art. 473'], questionCount: 25 },
+// Combine all questions with domain labels
+const ALL_QUESTIONS: SearchQuestion[] = [
+    ...ALL_KSH_QUESTIONS.map(q => ({ ...q, domain: 'ksh' as const })),
+    ...ALL_PRAWO_UPADLOSCIOWE_QUESTIONS.map(q => ({ ...q, domain: 'prawo_upadlosciowe' as const })),
+    ...ALL_KC_QUESTIONS.map(q => ({ ...q, domain: 'prawo_cywilne' as const })),
+    ...ALL_ASO_QUESTIONS.map(q => ({ ...q, domain: 'aso' as const })),
 ];
+
+// Stats per domain
+const DOMAIN_STATS = {
+    ksh: ALL_KSH_QUESTIONS.length,
+    prawo_upadlosciowe: ALL_PRAWO_UPADLOSCIOWE_QUESTIONS.length,
+    prawo_cywilne: ALL_KC_QUESTIONS.length,
+    aso: ALL_ASO_QUESTIONS.length,
+    total: ALL_QUESTIONS.length,
+};
 
 export default function SearchPage() {
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
-    const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
+    const [selectedQuestion, setSelectedQuestion] = useState<SearchQuestion | null>(null);
     const [domainFilter, setDomainFilter] = useState<'all' | 'ksh' | 'prawo_upadlosciowe' | 'prawo_cywilne' | 'aso'>('all');
+    const [showAnswer, setShowAnswer] = useState(false);
 
     const { profile, loading: authLoading } = useAuth();
     const stats = profile?.stats;
 
     // Search results
     const searchResults = useMemo(() => {
-        if (!searchQuery.trim()) {
-            // Show popular articles when no search
-            return ARTICLES.sort((a, b) => b.questionCount - a.questionCount).slice(0, 8);
+        const query = searchQuery.toLowerCase().trim();
+
+        let filtered = ALL_QUESTIONS;
+
+        // Apply domain filter
+        if (domainFilter !== 'all') {
+            filtered = filtered.filter(q => q.domain === domainFilter);
         }
 
-        const query = searchQuery.toLowerCase();
-        return ARTICLES.filter(article => {
-            if (domainFilter !== 'all' && article.domain !== domainFilter) return false;
-            return (
-                article.number.toLowerCase().includes(query) ||
-                article.title.toLowerCase().includes(query) ||
-                article.content.toLowerCase().includes(query)
+        // Apply search query
+        if (query) {
+            filtered = filtered.filter(q =>
+                q.question.toLowerCase().includes(query) ||
+                q.article?.toLowerCase().includes(query) ||
+                q.articleTitle?.toLowerCase().includes(query) ||
+                q.section?.toLowerCase().includes(query) ||
+                q.explanation.toLowerCase().includes(query) ||
+                Object.values(q.options).some(opt => opt.toLowerCase().includes(query))
             );
-        });
+        }
+
+        // Limit results for performance
+        return filtered.slice(0, 50);
     }, [searchQuery, domainFilter]);
 
-    // Related questions count
-    const getRelatedQuestions = (article: Article) => {
-        const allQuestions = article.domain === 'ksh'
-            ? ALL_KSH_QUESTIONS
-            : article.domain === 'prawo_cywilne'
-                ? ALL_KC_QUESTIONS
-                : ALL_PRAWO_UPADLOSCIOWE_QUESTIONS;
+    const getDomainLabel = (domain: string) => {
+        switch (domain) {
+            case 'ksh': return 'KSH';
+            case 'prawo_upadlosciowe': return 'Prawo Upadł.';
+            case 'prawo_cywilne': return 'Kodeks Cywilny';
+            case 'aso': return 'ASO';
+            default: return domain;
+        }
+    };
 
-        return allQuestions.filter(q =>
-            q.article?.includes(article.number.replace('Art. ', '')) ||
-            q.question.includes(article.number)
-        ).length;
+    const getDomainColor = (domain: string) => {
+        switch (domain) {
+            case 'ksh': return { bg: 'bg-[#1a365d]/10', text: 'text-[#1a365d]' };
+            case 'prawo_upadlosciowe': return { bg: 'bg-orange-500/10', text: 'text-orange-500' };
+            case 'prawo_cywilne': return { bg: 'bg-blue-500/10', text: 'text-blue-500' };
+            case 'aso': return { bg: 'bg-teal-500/10', text: 'text-teal-500' };
+            default: return { bg: 'bg-gray-500/10', text: 'text-gray-500' };
+        }
     };
 
     if (authLoading) {
@@ -124,10 +136,34 @@ export default function SearchPage() {
                             <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4" style={{ background: '#3b82f6' }}>
                                 <Search size={32} className="text-white" />
                             </div>
-                            <h1 className="text-3xl font-bold mb-2">Wyszukiwarka artykułów</h1>
+                            <h1 className="text-3xl font-bold mb-2">Wyszukiwarka pytań</h1>
                             <p className="text-[var(--text-muted)]">
-                                Szybki dostęp do przepisów KSH, Prawa Upadłościowego i Kodeksu Cywilnego
+                                Przeszukaj wszystkie {DOMAIN_STATS.total.toLocaleString()} pytań z bazy
                             </p>
+                        </div>
+
+                        {/* Stats Cards */}
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            {[
+                                { key: 'ksh', label: 'KSH', count: DOMAIN_STATS.ksh },
+                                { key: 'prawo_upadlosciowe', label: 'Prawo Upadł.', count: DOMAIN_STATS.prawo_upadlosciowe },
+                                { key: 'prawo_cywilne', label: 'Kodeks Cywilny', count: DOMAIN_STATS.prawo_cywilne },
+                                { key: 'aso', label: 'ASO', count: DOMAIN_STATS.aso },
+                            ].map(d => (
+                                <button
+                                    key={d.key}
+                                    onClick={() => setDomainFilter(d.key as typeof domainFilter)}
+                                    className={cn(
+                                        "p-4 rounded-xl text-center transition-all",
+                                        domainFilter === d.key
+                                            ? "bg-[#3b82f6] text-white"
+                                            : "bg-[var(--bg-card)] hover:bg-[var(--bg-hover)]"
+                                    )}
+                                >
+                                    <p className="text-2xl font-bold">{d.count}</p>
+                                    <p className="text-sm opacity-80">{d.label}</p>
+                                </button>
+                            ))}
                         </div>
 
                         {/* Search Input */}
@@ -137,15 +173,15 @@ export default function SearchPage() {
                                 type="text"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                placeholder="Szukaj artykułu... (np. '299', 'odpowiedzialność zarządu')"
+                                placeholder="Szukaj pytania, artykułu, hasła... (np. 'odpowiedzialność', '299', 'NewConnect')"
                                 className="w-full pl-12 pr-4 py-4 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-2xl focus:border-[#3b82f6] focus:outline-none text-lg"
                                 autoFocus
                             />
                         </div>
 
-                        {/* Domain Filter */}
+                        {/* Domain Filter Pills */}
                         <div className="flex gap-2 flex-wrap">
-                            {(['all', 'ksh', 'prawo_upadlosciowe', 'prawo_cywilne'] as const).map(d => (
+                            {(['all', 'ksh', 'prawo_upadlosciowe', 'prawo_cywilne', 'aso'] as const).map(d => (
                                 <button
                                     key={d}
                                     onClick={() => setDomainFilter(d)}
@@ -156,17 +192,16 @@ export default function SearchPage() {
                                             : 'bg-[var(--bg-card)] text-[var(--text-muted)] hover:text-[#3b82f6]'
                                     )}
                                 >
-                                    {d === 'all' ? 'Wszystkie' : d === 'ksh' ? 'KSH' : d === 'prawo_cywilne' ? 'Kodeks Cywilny' : 'Prawo Upadłościowe'}
+                                    {d === 'all' ? 'Wszystkie' : getDomainLabel(d)}
                                 </button>
                             ))}
                         </div>
 
-                        {/* Search Results */}
-                        {selectedArticle ? (
-                            /* Article Detail View */
+                        {/* Selected Question Detail */}
+                        {selectedQuestion ? (
                             <div className="space-y-4">
                                 <button
-                                    onClick={() => setSelectedArticle(null)}
+                                    onClick={() => { setSelectedQuestion(null); setShowAnswer(false); }}
                                     className="text-sm text-[var(--text-muted)] hover:text-[#3b82f6]"
                                 >
                                     ← Powrót do wyników
@@ -177,90 +212,147 @@ export default function SearchPage() {
                                         <div>
                                             <span className={cn(
                                                 "px-3 py-1 rounded-full text-xs font-medium mb-2 inline-block",
-                                                selectedArticle.domain === 'ksh'
-                                                    ? "bg-[#1a365d]/10 text-[#1a365d]"
-                                                    : "bg-orange-500/10 text-orange-500"
+                                                getDomainColor(selectedQuestion.domain).bg,
+                                                getDomainColor(selectedQuestion.domain).text
                                             )}>
-                                                {selectedArticle.domain === 'ksh' ? 'KSH' : 'Prawo Upadłościowe'}
+                                                {getDomainLabel(selectedQuestion.domain)}
                                             </span>
-                                            <h2 className="text-2xl font-bold">{selectedArticle.number}</h2>
-                                            <p className="text-lg text-[var(--text-muted)]">{selectedArticle.title}</p>
+                                            {selectedQuestion.article && (
+                                                <p className="text-sm text-[var(--text-muted)] mb-2">
+                                                    {selectedQuestion.article} - {selectedQuestion.articleTitle}
+                                                </p>
+                                            )}
                                         </div>
                                     </div>
 
-                                    <div className="prose prose-invert max-w-none">
-                                        <div className="p-4 bg-[var(--bg-hover)] rounded-xl whitespace-pre-wrap">
-                                            {selectedArticle.content}
-                                        </div>
+                                    <p className="text-lg font-medium mb-6">{selectedQuestion.question}</p>
+
+                                    <div className="space-y-3">
+                                        {(['a', 'b', 'c', 'd'] as const).map(key => {
+                                            const isCorrect = key === selectedQuestion.correct;
+                                            return (
+                                                <div
+                                                    key={key}
+                                                    className={cn(
+                                                        "p-4 rounded-xl border-2 transition-all",
+                                                        showAnswer && isCorrect
+                                                            ? "bg-green-500/20 border-green-500"
+                                                            : "bg-[var(--bg-hover)] border-transparent"
+                                                    )}
+                                                >
+                                                    <div className="flex items-center gap-3">
+                                                        <span className={cn(
+                                                            "w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm",
+                                                            showAnswer && isCorrect
+                                                                ? "bg-green-500 text-white"
+                                                                : "bg-[var(--bg-card)]"
+                                                        )}>
+                                                            {key.toUpperCase()}
+                                                        </span>
+                                                        <span className="flex-1">{selectedQuestion.options[key]}</span>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
                                     </div>
 
-                                    {/* Related Articles */}
-                                    {selectedArticle.relatedArticles.length > 0 && (
-                                        <div className="mt-6 pt-6 border-t border-[var(--border-color)]">
-                                            <h3 className="font-semibold mb-3 flex items-center gap-2">
-                                                <LinkIcon size={16} />
-                                                Powiązane artykuły
-                                            </h3>
-                                            <div className="flex flex-wrap gap-2">
-                                                {selectedArticle.relatedArticles.map(ra => (
-                                                    <button
-                                                        key={ra}
-                                                        onClick={() => {
-                                                            const found = ARTICLES.find(a => a.number === ra || a.number.includes(ra));
-                                                            if (found) setSelectedArticle(found);
-                                                        }}
-                                                        className="px-3 py-2 bg-[var(--bg-hover)] rounded-lg text-sm hover:bg-[#3b82f6]/20 hover:text-[#3b82f6] transition-all"
-                                                    >
-                                                        {ra}
-                                                    </button>
-                                                ))}
-                                            </div>
+                                    {/* Show Answer Button */}
+                                    {!showAnswer ? (
+                                        <button
+                                            onClick={() => setShowAnswer(true)}
+                                            className="mt-6 w-full py-3 rounded-xl bg-[#3b82f6] text-white font-medium"
+                                        >
+                                            Pokaż odpowiedź
+                                        </button>
+                                    ) : (
+                                        <div className="mt-6 p-4 bg-[var(--bg-hover)] rounded-xl">
+                                            <p className="text-sm font-medium mb-1">Wyjaśnienie:</p>
+                                            <p className="text-sm text-[var(--text-secondary)]">{selectedQuestion.explanation}</p>
                                         </div>
                                     )}
-
-                                    {/* Questions count */}
-                                    <div className="mt-4 pt-4 border-t border-[var(--border-color)]">
-                                        <div className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
-                                            <FileText size={16} />
-                                            <span>{getRelatedQuestions(selectedArticle)} pytań w bazie dotyczy tego artykułu</span>
-                                        </div>
-                                    </div>
                                 </div>
                             </div>
                         ) : (
                             /* Results List */
                             <div className="space-y-3">
                                 <p className="text-sm text-[var(--text-muted)]">
-                                    {searchQuery ? `${searchResults.length} wyników` : 'Popularne artykuły'}
+                                    {searchQuery
+                                        ? `${searchResults.length}${searchResults.length === 50 ? '+' : ''} wyników dla "${searchQuery}"`
+                                        : `Wyświetlam ${searchResults.length} z ${domainFilter === 'all' ? DOMAIN_STATS.total : DOMAIN_STATS[domainFilter]} pytań`
+                                    }
                                 </p>
-                                {searchResults.map(article => (
-                                    <button
-                                        key={article.id}
-                                        onClick={() => setSelectedArticle(article)}
-                                        className="w-full lex-card text-left hover:border-[#3b82f6]/50 transition-all group"
-                                    >
-                                        <div className="flex items-center gap-4">
-                                            <div className={cn(
-                                                "w-12 h-12 rounded-xl flex items-center justify-center shrink-0",
-                                                article.domain === 'ksh' ? "bg-[#1a365d]/10" : "bg-orange-500/10"
-                                            )}>
-                                                <BookOpen size={20} className={
-                                                    article.domain === 'ksh' ? "text-[#1a365d]" : "text-orange-500"
-                                                } />
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <p className="font-bold">{article.number}</p>
-                                                <p className="text-sm text-[var(--text-muted)] truncate">{article.title}</p>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-xs text-[var(--text-muted)] bg-[var(--bg-hover)] px-2 py-1 rounded">
-                                                    {article.questionCount} pytań
-                                                </span>
-                                                <ChevronRight size={20} className="text-[var(--text-muted)] group-hover:text-[#3b82f6]" />
-                                            </div>
+
+                                {searchResults.length === 0 ? (
+                                    <div className="lex-card py-12 text-center">
+                                        <div className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center text-3xl bg-[var(--bg-hover)]">
+                                            🔍
                                         </div>
-                                    </button>
-                                ))}
+                                        <p className="font-medium">Brak wyników</p>
+                                        <p className="text-sm text-[var(--text-muted)]">Spróbuj innego hasła</p>
+                                    </div>
+                                ) : (
+                                    searchResults.map(q => {
+                                        const colors = getDomainColor(q.domain);
+                                        return (
+                                            <button
+                                                key={q.id}
+                                                onClick={() => setSelectedQuestion(q)}
+                                                className="w-full lex-card text-left hover:border-[#3b82f6]/50 transition-all group"
+                                            >
+                                                <div className="flex items-start gap-4">
+                                                    <div className={cn(
+                                                        "w-10 h-10 rounded-xl flex items-center justify-center shrink-0",
+                                                        colors.bg
+                                                    )}>
+                                                        <BookOpen size={18} className={colors.text} />
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="font-medium line-clamp-2 mb-1">{q.question}</p>
+                                                        <div className="flex items-center gap-2 text-xs text-[var(--text-muted)]">
+                                                            <span className={cn("px-2 py-0.5 rounded-full", colors.bg, colors.text)}>
+                                                                {getDomainLabel(q.domain)}
+                                                            </span>
+                                                            {q.article && (
+                                                                <span>{q.article}</span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                    <ChevronRight size={20} className="text-[var(--text-muted)] group-hover:text-[#3b82f6] shrink-0" />
+                                                </div>
+                                            </button>
+                                        );
+                                    })
+                                )}
+                            </div>
+                        )}
+
+                        {/* Quick Actions */}
+                        {!selectedQuestion && searchResults.length > 0 && (
+                            <div className="grid grid-cols-2 gap-4">
+                                <Link
+                                    href="/exam"
+                                    className="lex-card hover:border-[#3b82f6]/50 transition-all flex items-center gap-3"
+                                >
+                                    <div className="w-10 h-10 rounded-xl bg-[#3b82f6]/10 flex items-center justify-center">
+                                        <Play size={18} className="text-[#3b82f6]" />
+                                    </div>
+                                    <div>
+                                        <p className="font-medium">Rozwiąż egzamin</p>
+                                        <p className="text-xs text-[var(--text-muted)]">Przetestuj wiedzę</p>
+                                    </div>
+                                </Link>
+                                <Link
+                                    href="/weak-points"
+                                    className="lex-card hover:border-[#ef4444]/50 transition-all flex items-center gap-3"
+                                >
+                                    <div className="w-10 h-10 rounded-xl bg-[#ef4444]/10 flex items-center justify-center">
+                                        <Target size={18} className="text-[#ef4444]" />
+                                    </div>
+                                    <div>
+                                        <p className="font-medium">Słabe punkty</p>
+                                        <p className="text-xs text-[var(--text-muted)]">Powtórz trudne</p>
+                                    </div>
+                                </Link>
                             </div>
                         )}
                     </div>
