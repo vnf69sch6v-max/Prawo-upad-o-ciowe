@@ -466,7 +466,7 @@ export default function ExamPage() {
                                     <span className="text-xl">{domain.icon}</span>
                                     <span>{domain.name}</span>
                                     <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full">
-                                        {domain.id === selectedDomain ? stats.total : domain.id === 'ksh' ? 879 : domain.id === 'prawo_cywilne' ? 774 : domain.id === 'aso' ? 250 : 80} pytań
+                                        {domain.id === selectedDomain ? stats.total : domain.id === 'ksh' ? 879 : domain.id === 'prawo_cywilne' ? 774 : domain.id === 'aso' ? 1000 : 80} pytań
                                     </span>
                                 </button>
                             ))}

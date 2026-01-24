@@ -1,17 +1,21 @@
 // ============================================================
 // ASO EXAM QUESTIONS - UNIFIED INDEX
 // Certyfikat Doradcy w Alternatywnym Systemie Obrotu
-// 250 questions covering ASO regulations
+// 1000 questions covering ASO regulations
 // ============================================================
 
 // Import all questions
 import { ASO_EXAM_QUESTIONS, type ExamQuestion, DATABASE_STATS } from './aso-exam-questions';
+import { ASO_EXAM_QUESTIONS_PART2 } from './aso-exam-questions-part2';
 
 // Re-export the type
 export type { ExamQuestion };
 
-// Export all questions
-export const ALL_ASO_QUESTIONS: ExamQuestion[] = ASO_EXAM_QUESTIONS;
+// Combine all questions into one array (1000 questions total)
+export const ALL_ASO_QUESTIONS: ExamQuestion[] = [
+    ...ASO_EXAM_QUESTIONS,
+    ...ASO_EXAM_QUESTIONS_PART2,
+];
 
 // ============================================================
 // HELPER FUNCTIONS
