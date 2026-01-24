@@ -5,6 +5,7 @@ export type LegalDomainCategory =
     | 'ksh'
     | 'prawo_upadlosciowe'
     | 'prawo_cywilne'
+    | 'aso'
     | 'prawo_karne'
     | 'procedura_cywilna'
     | 'procedura_karna'
@@ -42,11 +43,21 @@ export type CriminalLawSubdomain =
     | 'kk_czesc_szczegolna'
     | 'kk_kary';
 
+export type ASOSubdomain =
+    | 'aso_regulamin'
+    | 'aso_zalacznik_1'
+    | 'aso_zalacznik_3'
+    | 'aso_zalacznik_5'
+    | 'aso_ustawy'
+    | 'aso_mar'
+    | 'aso_catalyst';
+
 export type LegalSubdomain =
     | KSHSubdomain
     | PrawoUpadloscioweSubdomain
     | CivilLawSubdomain
     | CriminalLawSubdomain
+    | ASOSubdomain
     | 'all';
 
 // Domain configuration
@@ -118,6 +129,22 @@ export const LEGAL_DOMAINS: DomainConfig[] = [
             { id: 'kc_zobowiazania', name: 'Zobowiązania', shortName: 'Zobowiązania' },
             { id: 'kc_spadki', name: 'Spadki', shortName: 'Spadki' },
             { id: 'kc_wlasnosc', name: 'Własność i inne prawa', shortName: 'Własność' },
+        ]
+    },
+    {
+        id: 'aso',
+        name: 'Certyfikat Doradcy ASO',
+        icon: '📊',
+        color: 'teal',
+        hasQuestions: true,
+        subdomains: [
+            { id: 'aso_regulamin', name: 'Regulamin ASO', shortName: 'Regulamin' },
+            { id: 'aso_zalacznik_1', name: 'Dokument informacyjny', shortName: 'Zał. Nr 1' },
+            { id: 'aso_zalacznik_3', name: 'Obowiązki informacyjne', shortName: 'Zał. Nr 3' },
+            { id: 'aso_zalacznik_5', name: 'Autoryzowany Doradca', shortName: 'Zał. Nr 5' },
+            { id: 'aso_ustawy', name: 'Ustawy', shortName: 'Ustawy' },
+            { id: 'aso_mar', name: 'Rozporządzenie MAR', shortName: 'MAR' },
+            { id: 'aso_catalyst', name: 'Catalyst', shortName: 'Catalyst' },
         ]
     },
     {

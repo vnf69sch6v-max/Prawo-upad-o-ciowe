@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils/cn';
 import { ALL_KSH_QUESTIONS, getRandomQuestions, generateBalancedExam, getQuestionStats, type ExamQuestion } from '@/lib/data/ksh';
 import { ALL_PRAWO_UPADLOSCIOWE_QUESTIONS, getQuestionStats as getPUStats } from '@/lib/data/prawo-upadlosciowe';
 import { ALL_KC_QUESTIONS, getKCRandomQuestions, getKCQuestionStats } from '@/lib/data/kodeks-cywilny';
+import { ALL_ASO_QUESTIONS, getQuestionStats as getASOStats, getRandomQuestions as getASORandomQuestions, generateBalancedExam as generateASOBalancedExam } from '@/lib/data/aso';
 import { useAuth } from '@/hooks/use-auth';
 import { useUserData } from '@/hooks/use-user-data';
 import { saveExamResult, addActivity, updateStreak } from '@/lib/services/user-service';
@@ -139,6 +140,41 @@ const DOMAIN_EXAMS = {
             icon: <Trophy className="text-yellow-400" size={24} />,
         },
     ],
+    aso: [
+        {
+            id: 'aso-quick-10',
+            title: 'Quick Quiz (10 pytań)',
+            description: 'Szybki test z pytań na Certyfikat Doradcy ASO',
+            questionCount: 10,
+            timeLimit: 15,
+            difficulty: 'mixed' as const,
+            passRate: 75,
+            isPremium: false,
+            icon: <Sparkles className="text-teal-400" size={24} />,
+        },
+        {
+            id: 'aso-standard-30',
+            title: 'Standard (30 pytań)',
+            description: 'Zbalansowany test: 30% łatwe, 50% średnie, 20% trudne',
+            questionCount: 30,
+            timeLimit: 45,
+            difficulty: 'medium' as const,
+            passRate: 68,
+            isPremium: false,
+            icon: <Scale className="text-blue-400" size={24} />,
+        },
+        {
+            id: 'aso-full-100',
+            title: 'Symulacja Egzaminu (100 pytań)',
+            description: 'Symulacja egzaminu na Certyfikat Doradcy ASO',
+            questionCount: 100,
+            timeLimit: 150,
+            difficulty: 'hard' as const,
+            passRate: 60,
+            isPremium: false,
+            icon: <Trophy className="text-yellow-400" size={24} />,
+        },
+    ],
 };
 
 type ViewState = 'list' | 'exam' | 'results';
@@ -176,6 +212,8 @@ export default function ExamPage() {
             return getPUStats();
         } else if (selectedDomain === 'prawo_cywilne') {
             return getKCQuestionStats();
+        } else if (selectedDomain === 'aso') {
+            return getASOStats();
         }
         return { total: 0, byDifficulty: { easy: 0, medium: 0, hard: 0 } };
     }, [selectedDomain]);
@@ -208,6 +246,17 @@ export default function ExamPage() {
         } else if (selectedDomain === 'prawo_cywilne') {
             // Kodeks Cywilny exams
             questions = getKCRandomQuestions(exam.questionCount);
+        } else if (selectedDomain === 'aso') {
+            // ASO exams
+            if (exam.id === 'aso-quick-10') {
+                questions = getASORandomQuestions(10);
+            } else if (exam.id === 'aso-standard-30') {
+                questions = generateASOBalancedExam(30);
+            } else if (exam.id === 'aso-full-100') {
+                questions = generateASOBalancedExam(100);
+            } else {
+                questions = getASORandomQuestions(exam.questionCount);
+            }
         } else {
             questions = [];
         }
@@ -417,7 +466,7 @@ export default function ExamPage() {
                                     <span className="text-xl">{domain.icon}</span>
                                     <span>{domain.name}</span>
                                     <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full">
-                                        {domain.id === selectedDomain ? stats.total : domain.id === 'ksh' ? 879 : domain.id === 'prawo_cywilne' ? 774 : 80} pytań
+                                        {domain.id === selectedDomain ? stats.total : domain.id === 'ksh' ? 879 : domain.id === 'prawo_cywilne' ? 774 : domain.id === 'aso' ? 250 : 80} pytań
                                     </span>
                                 </button>
                             ))}
