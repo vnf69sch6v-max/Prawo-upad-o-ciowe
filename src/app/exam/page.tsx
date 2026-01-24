@@ -335,8 +335,11 @@ export default function ExamPage() {
                 const wrongQuestions = currentQuestions.filter(q => answers[q.id] !== q.correctAnswer);
                 for (const wq of wrongQuestions) {
                     // Determine domain from exam ID
-                    const domain = selectedExam.id.startsWith('ksh') ? 'ksh' : 'prawo_upadlosciowe';
-                    await saveWrongAnswer(wq.id, domain as 'ksh' | 'prawo_upadlosciowe');
+                    let domain: 'ksh' | 'prawo_upadlosciowe' | 'prawo_cywilne' | 'aso' = 'ksh';
+                    if (selectedExam.id.startsWith('aso')) domain = 'aso';
+                    else if (selectedExam.id.startsWith('pu-') || selectedExam.id.startsWith('prawo-upadlosciowe')) domain = 'prawo_upadlosciowe';
+                    else if (selectedExam.id.startsWith('kc-') || selectedExam.id.startsWith('prawo-cywilne')) domain = 'prawo_cywilne';
+                    await saveWrongAnswer(wq.id, domain);
                 }
 
                 // Add activity

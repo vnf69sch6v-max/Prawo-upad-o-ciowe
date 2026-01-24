@@ -15,7 +15,7 @@ interface Article {
     number: string;
     title: string;
     content: string;
-    domain: 'ksh' | 'prawo_upadlosciowe' | 'prawo_cywilne';
+    domain: 'ksh' | 'prawo_upadlosciowe' | 'prawo_cywilne' | 'aso';
     relatedArticles: string[];
     questionCount: number;
 }
@@ -49,7 +49,7 @@ export default function SearchPage() {
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
-    const [domainFilter, setDomainFilter] = useState<'all' | 'ksh' | 'prawo_upadlosciowe' | 'prawo_cywilne'>('all');
+    const [domainFilter, setDomainFilter] = useState<'all' | 'ksh' | 'prawo_upadlosciowe' | 'prawo_cywilne' | 'aso'>('all');
 
     const { profile, loading: authLoading } = useAuth();
     const stats = profile?.stats;

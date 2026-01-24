@@ -137,7 +137,7 @@ export interface QuestionResultJson {
 // Converted types for app usage
 export interface WrongAnswer {
     questionId: string;
-    domain: 'ksh' | 'prawo_upadlosciowe';
+    domain: 'ksh' | 'prawo_upadlosciowe' | 'prawo_cywilne' | 'aso';
     wrongCount: number;
     correctStreak: number;
     lastWrongAt: Date;
