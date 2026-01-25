@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Sidebar, Header, MobileNav } from '@/components/layout';
 import { ExamSimulator, ExamResults } from '@/components/exam';
@@ -219,7 +219,7 @@ interface ExamResultData {
     questions: ReturnType<typeof convertToSimulatorFormat>;
 }
 
-export default function ExamPage() {
+function ExamPageContent() {
     const searchParams = useSearchParams();
     const topicParam = searchParams.get('topic');
 
@@ -602,5 +602,21 @@ export default function ExamPage() {
 
             <MobileNav currentView="exam" onNavigate={() => { }} />
         </div>
+    );
+}
+
+// Wrapper with Suspense for useSearchParams
+export default function ExamPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg-primary)' }}>
+                <div className="text-center">
+                    <div className="animate-spin w-8 h-8 border-2 border-[var(--accent-gold)] border-t-transparent rounded-full mx-auto mb-4" />
+                    <p className="text-[var(--text-muted)]">Ładowanie...</p>
+                </div>
+            </div>
+        }>
+            <ExamPageContent />
+        </Suspense>
     );
 }
