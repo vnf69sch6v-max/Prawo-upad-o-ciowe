@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils/cn';
-import { LayoutDashboard, BookOpen, FileText, Bot, Trophy } from 'lucide-react';
+import { LayoutDashboard, BookOpen, FileText, Bot, GraduationCap } from 'lucide-react';
 
 interface MobileNavProps {
     currentView?: string;
@@ -12,10 +12,10 @@ interface MobileNavProps {
 
 const TABS = [
     { id: 'dashboard', href: '/dashboard', label: 'Start', icon: LayoutDashboard },
-    { id: 'flashcards', href: '/flashcards', label: 'Fiszki', icon: BookOpen },
+    { id: 'student-prawa', href: '/student-prawa', label: 'Prawo', icon: GraduationCap },
     { id: 'exam', href: '/exam', label: 'Egzamin', icon: FileText },
+    { id: 'flashcards', href: '/flashcards', label: 'Fiszki', icon: BookOpen },
     { id: 'ai', href: '/ai', label: 'AI', icon: Bot },
-    { id: 'leaderboard', href: '/leaderboard', label: 'Ranking', icon: Trophy },
 ];
 
 export function MobileNav({ currentView, onNavigate }: MobileNavProps) {
