@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Sidebar, Header, MobileNav } from '@/components/layout';
 import { ExamSimulator, ExamResults } from '@/components/exam';
 import { BookOpen, Clock, Trophy, Target, ChevronRight, Scale, Sparkles, Play } from 'lucide-react';
@@ -9,6 +10,7 @@ import { ALL_KSH_QUESTIONS, getRandomQuestions, generateBalancedExam, getQuestio
 import { ALL_PRAWO_UPADLOSCIOWE_QUESTIONS, getQuestionStats as getPUStats } from '@/lib/data/prawo-upadlosciowe';
 import { ALL_KC_QUESTIONS, getKCRandomQuestions, getKCQuestionStats } from '@/lib/data/kodeks-cywilny';
 import { ALL_ASO_QUESTIONS, getQuestionStats as getASOStats, getRandomQuestions as getASORandomQuestions, generateBalancedExam as generateASOBalancedExam } from '@/lib/data/aso';
+import { ALL_MATEMATYKA_FINANSOWA_QUESTIONS } from '@/lib/data/matematyka-finansowa';
 import { useAuth } from '@/hooks/use-auth';
 import { useUserData } from '@/hooks/use-user-data';
 import { saveExamResult, addActivity, updateStreak } from '@/lib/services/user-service';
@@ -175,10 +177,37 @@ const DOMAIN_EXAMS = {
             icon: <Trophy className="text-yellow-400" size={24} />,
         },
     ],
+    makler_a: [
+        {
+            id: 'makler-a-quick-10',
+            title: 'Quick Quiz (10 pytań)',
+            description: 'Szybki test z matematyki finansowej',
+            questionCount: 10,
+            timeLimit: 20,
+            difficulty: 'mixed' as const,
+            passRate: 60,
+            isPremium: false,
+            icon: <Sparkles className="text-purple-400" size={24} />,
+        },
+        {
+            id: 'makler-a-full-36',
+            title: 'Pełny Test (36 pytań)',
+            description: 'Wszystkie pytania z matematyki finansowej',
+            questionCount: 36,
+            timeLimit: 60,
+            difficulty: 'medium' as const,
+            passRate: 60,
+            isPremium: false,
+            icon: <Scale className="text-amber-400" size={24} />,
+        },
+    ],
 };
 
 type ViewState = 'list' | 'exam' | 'results';
 type ExamType = typeof DOMAIN_EXAMS.ksh[0] | typeof DOMAIN_EXAMS.prawo_upadlosciowe[0];
+
+// Extended domain type to include makler topics
+type ExtendedDomain = LegalDomainCategory | 'makler_a';
 
 interface ExamResultData {
     score: number;
@@ -191,18 +220,33 @@ interface ExamResultData {
 }
 
 export default function ExamPage() {
+    const searchParams = useSearchParams();
+    const topicParam = searchParams.get('topic');
+
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const [view, setView] = useState<ViewState>('list');
     const [selectedExam, setSelectedExam] = useState<ExamType | null>(null);
     const [currentQuestions, setCurrentQuestions] = useState<ReturnType<typeof convertToSimulatorFormat>>([]);
     const [examResult, setExamResult] = useState<ExamResultData | null>(null);
     const [isSaving, setIsSaving] = useState(false);
-    const [selectedDomain, setSelectedDomain] = useState<LegalDomainCategory>('ksh');
+    const [selectedDomain, setSelectedDomain] = useState<ExtendedDomain>('ksh');
     const [selectedSubdomain, setSelectedSubdomain] = useState<LegalSubdomain | 'all'>('all');
 
     const { user, profile, refreshProfile } = useAuth();
     const { saveTestResult, saveWrongAnswer } = useUserData();
     const userStats = profile?.stats;
+
+    // Handle URL topic parameter
+    useEffect(() => {
+        if (topicParam) {
+            // Check if it's a makler topic
+            if (topicParam === 'makler_a') {
+                setSelectedDomain('makler_a');
+            } else if (['ksh', 'prawo_upadlosciowe', 'prawo_cywilne', 'aso'].includes(topicParam)) {
+                setSelectedDomain(topicParam as ExtendedDomain);
+            }
+        }
+    }, [topicParam]);
 
     // Get stats for current domain
     const stats = useMemo(() => {
@@ -214,6 +258,16 @@ export default function ExamPage() {
             return getKCQuestionStats();
         } else if (selectedDomain === 'aso') {
             return getASOStats();
+        } else if (selectedDomain === 'makler_a') {
+            const questions = ALL_MATEMATYKA_FINANSOWA_QUESTIONS;
+            return {
+                total: questions.length,
+                byDifficulty: {
+                    easy: questions.filter(q => q.difficulty === 'easy').length,
+                    medium: questions.filter(q => q.difficulty === 'medium').length,
+                    hard: questions.filter(q => q.difficulty === 'hard').length,
+                }
+            };
         }
         return { total: 0, byDifficulty: { easy: 0, medium: 0, hard: 0 } };
     }, [selectedDomain]);
@@ -257,6 +311,12 @@ export default function ExamPage() {
             } else {
                 questions = getASORandomQuestions(exam.questionCount);
             }
+        } else if (selectedDomain === 'makler_a') {
+            // Matematyka Finansowa (Makler A)
+            const allMat = ALL_MATEMATYKA_FINANSOWA_QUESTIONS;
+            const shuffled = [...allMat].sort(() => Math.random() - 0.5);
+            const count = Math.min(exam.questionCount, shuffled.length);
+            questions = shuffled.slice(0, count);
         } else {
             questions = [];
         }
@@ -442,15 +502,33 @@ export default function ExamPage() {
                     <div className="max-w-6xl mx-auto space-y-6">
                         {/* Header */}
                         <div>
-                            <h1 className="text-2xl font-bold">Egzaminy Prawnicze</h1>
+                            <h1 className="text-2xl font-bold">
+                                {selectedDomain === 'makler_a' ? '🔢 Matematyka Finansowa' : 'Egzaminy Prawnicze'}
+                            </h1>
                             <p className="text-[var(--text-muted)]">
-                                Wybierz dziedzinę prawa i rozpocznij naukę
+                                {selectedDomain === 'makler_a'
+                                    ? 'PV/FV, stopy, kapitalizacja, renty, kredyty, statystyka portfelowa'
+                                    : 'Wybierz dziedzinę prawa i rozpocznij naukę'
+                                }
                             </p>
                         </div>
 
                         {/* Domain Tabs - Only show domains with questions */}
                         <div className="flex flex-wrap gap-3">
-                            {getDomainsWithExams().map(domain => (
+                            {/* Makler A specific tab when selected from URL */}
+                            {selectedDomain === 'makler_a' && (
+                                <button
+                                    className="px-5 py-3 rounded-xl text-sm font-medium transition-all flex items-center gap-2 bg-purple-600 text-white"
+                                >
+                                    <span className="text-xl">🔢</span>
+                                    <span>Matematyka Finansowa</span>
+                                    <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full">
+                                        {stats.total} pytań
+                                    </span>
+                                </button>
+                            )}
+                            {/* Regular domain tabs */}
+                            {selectedDomain !== 'makler_a' && getDomainsWithExams().map(domain => (
                                 <button
                                     key={domain.id}
                                     onClick={() => {
