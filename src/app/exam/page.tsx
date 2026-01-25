@@ -45,7 +45,7 @@ const DOMAIN_EXAMS = {
             difficulty: 'mixed' as const,
             passRate: 75,
             isPremium: false,
-            icon: <Sparkles className="text-[#1a365d]" size={24} />,
+            icon: <Sparkles className="text-[var(--accent-gold)]" size={24} />,
         },
         {
             id: 'ksh-standard-30',
@@ -56,7 +56,7 @@ const DOMAIN_EXAMS = {
             difficulty: 'medium' as const,
             passRate: 68,
             isPremium: false,
-            icon: <Scale className="text-blue-400" size={24} />,
+            icon: <Scale className="text-amber-400" size={24} />,
         },
         {
             id: 'ksh-full-150',
@@ -91,7 +91,7 @@ const DOMAIN_EXAMS = {
             difficulty: 'medium' as const,
             passRate: 68,
             isPremium: false,
-            icon: <Scale className="text-blue-400" size={24} />,
+            icon: <Scale className="text-amber-400" size={24} />,
         },
         {
             id: 'pu-full-80',
@@ -115,7 +115,7 @@ const DOMAIN_EXAMS = {
             difficulty: 'mixed' as const,
             passRate: 75,
             isPremium: false,
-            icon: <Sparkles className="text-blue-400" size={24} />,
+            icon: <Sparkles className="text-amber-400" size={24} />,
         },
         {
             id: 'kc-standard-30',
@@ -126,7 +126,7 @@ const DOMAIN_EXAMS = {
             difficulty: 'medium' as const,
             passRate: 68,
             isPremium: false,
-            icon: <Scale className="text-blue-400" size={24} />,
+            icon: <Scale className="text-amber-400" size={24} />,
         },
         {
             id: 'kc-full-100',
@@ -161,7 +161,7 @@ const DOMAIN_EXAMS = {
             difficulty: 'medium' as const,
             passRate: 68,
             isPremium: false,
-            icon: <Scale className="text-blue-400" size={24} />,
+            icon: <Scale className="text-amber-400" size={24} />,
         },
         {
             id: 'aso-full-100',
@@ -461,7 +461,7 @@ export default function ExamPage() {
                                         'px-5 py-3 rounded-xl text-sm font-medium transition-all flex items-center gap-2',
                                         selectedDomain === domain.id
                                             ? domain.id === 'ksh'
-                                                ? 'bg-[#1a365d] text-white'
+                                                ? 'bg-[var(--accent-gold)] text-white'
                                                 : 'bg-orange-600 text-white'
                                             : 'bg-[var(--bg-card)] text-[var(--text-muted)] hover:text-white hover:bg-[var(--bg-hover)]'
                                     )}
@@ -485,7 +485,7 @@ export default function ExamPage() {
                                         onClick={() => handleStartExam(exam)}
                                         className={cn(
                                             "lex-card transition-all text-left group hover:scale-[1.02]",
-                                            index === 0 && "hover:border-[#1a365d]/50 hover:shadow-lg hover:shadow-purple-500/10",
+                                            index === 0 && "hover:border-[var(--accent-gold)]/50 hover:shadow-lg hover:shadow-purple-500/10",
                                             index === 1 && "hover:border-blue-500/50 hover:shadow-lg hover:shadow-blue-500/10",
                                             index === 2 && "hover:border-yellow-500/50 hover:shadow-lg hover:shadow-yellow-500/10"
                                         )}

@@ -42,6 +42,7 @@ const NAV_SECTIONS: NavSection[] = [
         title: 'Narzędzia',
         id: 'narzedzia',
         items: [
+            { id: 'immersive-study', label: 'Tryb Immersyjny', icon: <Sparkles size={18} />, href: '/immersive-study', badge: 'new' },
             { id: 'flashcards', label: 'Fiszki', icon: <Zap size={18} />, href: '/flashcards' },
             { id: 'exam', label: 'Symulacje', icon: <FileText size={18} />, href: '/exam' },
             { id: 'search', label: 'Wyszukiwarka', icon: <Search size={18} />, href: '/search', badge: 'new' },
@@ -121,7 +122,7 @@ export function Sidebar({
             {/* Logo */}
             <div className="p-4 border-b border-[var(--border-color)]">
                 <Link href="/dashboard" className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-[#1a365d] rounded-xl flex items-center justify-center font-bold text-lg shrink-0 text-white">
+                    <div className="w-10 h-10 bg-[var(--accent-gold)] rounded-xl flex items-center justify-center font-bold text-lg shrink-0 text-white">
                         S
                     </div>
                     {!isCollapsed && (
@@ -141,7 +142,7 @@ export function Sidebar({
                             {!isCollapsed ? (
                                 <button
                                     onClick={() => toggleSection(section.id)}
-                                    className="w-full px-4 mb-1 flex items-center justify-between text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wide hover:text-[#1a365d] transition-colors"
+                                    className="w-full px-4 mb-1 flex items-center justify-between text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wide hover:text-[var(--accent-gold)] transition-colors"
                                 >
                                     {section.title}
                                     <ChevronDown
@@ -169,8 +170,8 @@ export function Sidebar({
                                             className={cn(
                                                 'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all',
                                                 active
-                                                    ? 'bg-[#1a365d]/10 text-[#1a365d] border border-[#1a365d]/30'
-                                                    : 'text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] hover:text-[#1a365d]',
+                                                    ? 'bg-[var(--accent-gold)]/10 text-[var(--accent-gold)] border border-[var(--accent-gold)]/30'
+                                                    : 'text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] hover:text-[var(--accent-gold)]',
                                                 isCollapsed && 'justify-center px-2'
                                             )}
                                             title={isCollapsed ? item.label : undefined}
@@ -202,9 +203,9 @@ export function Sidebar({
                 <div className="p-4 border-t border-[var(--border-color)]">
                     <Link
                         href="/settings"
-                        className="flex items-center gap-3 p-3 bg-[var(--bg-hover)] rounded-xl hover:bg-[#1a365d]/10 hover:border-[#1a365d]/50 border border-transparent transition-all"
+                        className="flex items-center gap-3 p-3 bg-[var(--bg-hover)] rounded-xl hover:bg-[var(--accent-gold)]/10 hover:border-[var(--accent-gold)]/50 border border-transparent transition-all"
                     >
-                        <div className="w-10 h-10 bg-[#1a365d] rounded-full flex items-center justify-center text-lg font-bold text-white">
+                        <div className="w-10 h-10 bg-[var(--accent-gold)] rounded-full flex items-center justify-center text-lg font-bold text-white">
                             👤
                         </div>
                         <div className="flex-1 min-w-0">

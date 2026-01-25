@@ -67,7 +67,7 @@ export function SearchPageContent() {
             <div className="bg-[var(--bg-secondary)] border-b border-[var(--border-color)] sticky top-0 z-10">
                 <div className="max-w-5xl mx-auto px-6 py-6">
                     <div className="flex items-center gap-4 mb-6">
-                        <div className="w-12 h-12 rounded-xl bg-[#1a365d] flex items-center justify-center shadow-sm">
+                        <div className="w-12 h-12 rounded-xl bg-[var(--accent-gold)] flex items-center justify-center shadow-sm">
                             <Search className="w-6 h-6 text-white" />
                         </div>
                         <div>
@@ -86,7 +86,7 @@ export function SearchPageContent() {
                             placeholder="Szukaj po pytaniu, artykule (np. art. 299) lub tagu..."
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
-                            className="w-full pl-12 pr-12 h-14 bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-xl text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[#1a365d]/30 focus:border-[#1a365d] transition-all text-lg"
+                            className="w-full pl-12 pr-12 h-14 bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-xl text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-gold)]/30 focus:border-[var(--accent-gold)] transition-all text-lg"
                         />
                         {query && (
                             <button
@@ -143,8 +143,8 @@ export function SearchPageContent() {
                                 className={cn(
                                     'px-3 py-2 rounded-lg text-sm font-medium transition-all',
                                     progressFilter === option.value
-                                        ? 'bg-[#1a365d] text-white shadow-sm'
-                                        : 'text-[var(--text-secondary)] hover:text-[#1a365d] hover:bg-[var(--bg-hover)]'
+                                        ? 'bg-[var(--accent-gold)] text-white shadow-sm'
+                                        : 'text-[var(--text-secondary)] hover:text-[var(--accent-gold)] hover:bg-[var(--bg-hover)]'
                                 )}
                             >
                                 {option.label}
@@ -157,7 +157,7 @@ export function SearchPageContent() {
                     {/* Toggle answers visibility */}
                     <button
                         onClick={() => setShowAnswers(!showAnswers)}
-                        className="flex items-center gap-2 px-3 py-2 text-sm text-[var(--text-secondary)] hover:text-[#1a365d] transition-colors rounded-lg hover:bg-[var(--bg-hover)]"
+                        className="flex items-center gap-2 px-3 py-2 text-sm text-[var(--text-secondary)] hover:text-[var(--accent-gold)] transition-colors rounded-lg hover:bg-[var(--bg-hover)]"
                     >
                         {showAnswers ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
                         <span className="hidden sm:inline">{showAnswers ? 'Ukryj' : 'Pokaż'} odpowiedzi</span>
@@ -167,7 +167,7 @@ export function SearchPageContent() {
                     <select
                         value={sortBy}
                         onChange={(e) => setSortBy(e.target.value as SortOption)}
-                        className="px-3 py-2 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-lg text-sm text-[var(--text-secondary)] focus:outline-none focus:ring-2 focus:ring-[#1a365d]/30"
+                        className="px-3 py-2 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-lg text-sm text-[var(--text-secondary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-gold)]/30"
                     >
                         <option value="relevance">Trafność</option>
                         <option value="newest">Najnowsze</option>
@@ -198,7 +198,7 @@ export function SearchPageContent() {
                 <div className="space-y-3">
                     {isSearching && results.length === 0 ? (
                         <div className="text-center py-16">
-                            <Loader2 className="w-8 h-8 text-[#1a365d] animate-spin mx-auto mb-4" />
+                            <Loader2 className="w-8 h-8 text-[var(--accent-gold)] animate-spin mx-auto mb-4" />
                             <p className="text-[var(--text-muted)]">Szukam...</p>
                         </div>
                     ) : results.length === 0 ? (
@@ -274,8 +274,8 @@ function DeckCard({
             className={cn(
                 'p-3 rounded-xl text-left transition-all border-2',
                 isSelected
-                    ? 'border-[#1a365d] bg-[#1a365d]/5'
-                    : 'border-[var(--border-color)] bg-[var(--bg-secondary)] hover:border-[#1a365d]/30 hover:bg-[var(--bg-hover)]'
+                    ? 'border-[var(--accent-gold)] bg-[var(--accent-gold)]/5'
+                    : 'border-[var(--border-color)] bg-[var(--bg-secondary)] hover:border-[var(--accent-gold)]/30 hover:bg-[var(--bg-hover)]'
             )}
         >
             <div className="flex items-center gap-2 mb-2">
@@ -283,14 +283,14 @@ function DeckCard({
                 <span className="font-medium text-[var(--text-primary)] truncate text-xs">{deck.deck_name}</span>
             </div>
 
-            <div className="text-xl font-bold text-[#1a365d] mb-2">
+            <div className="text-xl font-bold text-[var(--accent-gold)] mb-2">
                 {deck.total_cards}
             </div>
 
             {/* Progress bar */}
             <div className="h-1.5 bg-slate-200 rounded-full overflow-hidden mb-2">
                 <div
-                    className="h-full bg-[#1a365d] rounded-full transition-all"
+                    className="h-full bg-[var(--accent-gold)] rounded-full transition-all"
                     style={{ width: `${progress}%` }}
                 />
             </div>
@@ -328,7 +328,7 @@ function SearchResultCard({
     const { toggleFavorite, addToStudyQueue, isAddingToQueue } = useFlashcardActions()
 
     const statusConfig: Record<string, { icon: string; label: string; bgColor: string; textColor: string }> = {
-        new: { icon: '🆕', label: 'Nowa', bgColor: 'bg-blue-100', textColor: 'text-blue-700' },
+        new: { icon: '🆕', label: 'Nowa', bgColor: 'bg-amber-100', textColor: 'text-amber-700' },
         learning: { icon: '📖', label: 'W nauce', bgColor: 'bg-amber-100', textColor: 'text-amber-700' },
         review: { icon: '🔄', label: 'Powtórka', bgColor: 'bg-orange-100', textColor: 'text-orange-700' },
         mastered: { icon: '✅', label: 'Opanowana', bgColor: 'bg-green-100', textColor: 'text-green-700' },
@@ -366,7 +366,7 @@ function SearchResultCard({
 
                 {/* Question */}
                 <h3
-                    className="font-medium text-[var(--text-primary)] mb-3 cursor-pointer hover:text-[#1a365d] transition-colors"
+                    className="font-medium text-[var(--text-primary)] mb-3 cursor-pointer hover:text-[var(--accent-gold)] transition-colors"
                     onClick={onToggleExpand}
                 >
                     {result.question}
@@ -382,7 +382,7 @@ function SearchResultCard({
                             transition={{ duration: 0.2 }}
                         >
                             <div className="border-t border-[var(--border-color)] pt-4 mt-2">
-                                <p className="text-[#1a365d] font-medium mb-2">
+                                <p className="text-[var(--accent-gold)] font-medium mb-2">
                                     ✓ {result.answer_short}
                                 </p>
                                 {isExpanded && result.answer_full && (
@@ -427,7 +427,7 @@ function SearchResultCard({
                             'flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all',
                             result.is_due
                                 ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
-                                : 'bg-[#1a365d]/10 text-[#1a365d] hover:bg-[#1a365d]/20'
+                                : 'bg-[var(--accent-gold)]/10 text-[var(--accent-gold)] hover:bg-[var(--accent-gold)]/20'
                         )}
                     >
                         <Plus className="w-4 h-4" />
@@ -447,7 +447,7 @@ function SearchResultCard({
 
                     <button
                         onClick={onToggleExpand}
-                        className="flex items-center gap-1 px-3 py-2 rounded-lg text-sm text-[var(--text-secondary)] hover:text-[#1a365d] hover:bg-[var(--bg-hover)] transition-all"
+                        className="flex items-center gap-1 px-3 py-2 rounded-lg text-sm text-[var(--text-secondary)] hover:text-[var(--accent-gold)] hover:bg-[var(--bg-hover)] transition-all"
                     >
                         {isExpanded ? (
                             <><ChevronDown className="w-4 h-4" /> Zwiń</>
