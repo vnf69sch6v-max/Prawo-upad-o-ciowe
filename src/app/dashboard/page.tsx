@@ -116,25 +116,15 @@ export default function DashboardPage() {
                         <div className="space-y-6 animate-fade-in">
                             {/* Welcome Message */}
                             <div className="mb-2">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <h1 className="text-2xl font-bold">
-                                            Cześć, {displayName}! 👋
-                                        </h1>
-                                        <p className="text-[var(--text-muted)]">
-                                            {stats.currentStreak > 0
-                                                ? `Świetnie! Masz ${stats.currentStreak}-dniową passę. Kontynuuj naukę!`
-                                                : 'Rozpocznij naukę, aby zbudować swoją passę!'
-                                            }
-                                        </p>
-                                    </div>
-                                    <Link
-                                        href="/dashboard-flow"
-                                        className="hidden lg:flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-[#651FFF] to-[#2979FF] text-white text-sm font-medium hover:opacity-90 transition-opacity"
-                                    >
-                                        ⚡ Try Flow Mode
-                                    </Link>
-                                </div>
+                                <h1 className="text-2xl font-bold">
+                                    Cześć, {displayName}! 👋
+                                </h1>
+                                <p className="text-[var(--text-muted)]">
+                                    {stats.currentStreak > 0
+                                        ? `Świetnie! Masz ${stats.currentStreak}-dniową passę. Kontynuuj naukę!`
+                                        : 'Rozpocznij naukę, aby zbudować swoją passę!'
+                                    }
+                                </p>
                             </div>
 
                             {/* KPI Cards */}
