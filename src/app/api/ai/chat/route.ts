@@ -1,8 +1,8 @@
-// API Route: AI Chat with Firebase Gemini
-// Free tier AI using Firebase AI
+// API Route: AI Chat with Google Gemini
+// Free tier AI using Google AI Studio
 
 import { NextRequest, NextResponse } from 'next/server';
-import { chat, SYSTEM_PROMPTS } from '@/lib/firebase/ai-service';
+import { chat, SYSTEM_PROMPTS, isAIAvailable } from '@/lib/ai/gemini-service';
 
 export async function POST(request: NextRequest) {
     try {

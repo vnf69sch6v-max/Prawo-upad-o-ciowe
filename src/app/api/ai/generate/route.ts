@@ -1,7 +1,7 @@
-// API Route: Generate flashcards with Firebase AI (Gemini)
+// API Route: Generate flashcards with Google Gemini
 
 import { NextRequest, NextResponse } from 'next/server';
-import { generateFlashcards } from '@/lib/firebase/ai-service';
+import { generateFlashcards } from '@/lib/ai/gemini-service';
 
 export async function POST(request: NextRequest) {
     try {

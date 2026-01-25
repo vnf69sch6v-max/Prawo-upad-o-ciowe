@@ -66,7 +66,7 @@ const NAV_SECTIONS: NavSection[] = [
 ];
 
 // Default expanded sections
-const DEFAULT_EXPANDED = ['przeglad', 'nauka', 'egzaminy'];
+const DEFAULT_EXPANDED = ['przeglad', 'sciezki', 'narzedzia'];
 
 interface SidebarProps {
     currentView?: string;

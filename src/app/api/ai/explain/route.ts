@@ -1,7 +1,7 @@
-// API Route: Explain flashcard with Firebase AI (Gemini)
+// API Route: Explain flashcard with Google Gemini
 
 import { NextRequest, NextResponse } from 'next/server';
-import { explainFlashcard } from '@/lib/firebase/ai-service';
+import { explainFlashcard } from '@/lib/ai/gemini-service';
 
 export async function POST(request: NextRequest) {
     try {
