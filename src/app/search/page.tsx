@@ -17,7 +17,7 @@ export default function SearchPage() {
                 onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
                 userStats={{
                     streak: profile?.stats?.currentStreak || 0,
-                    knowledgeEquity: profile?.stats?.totalXP || 0
+                    knowledgeEquity: profile?.stats?.knowledgeEquity || 0
                 }}
             />
 

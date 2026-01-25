@@ -187,6 +187,16 @@ async function syncDeck(deck: DeckDefinition): Promise<{ success: boolean; cardC
 
     console.log(`  ✅ Inserted ${insertedCount}/${flashcards.length} flashcards`)
 
+    // Update deck total_cards count
+    const { error: updateError } = await supabase
+        .from('flashcard_decks')
+        .update({ total_cards: flashcards.length })
+        .eq('id', deckId)
+
+    if (updateError) {
+        console.error(`  ⚠️ Failed to update deck total_cards:`, updateError)
+    }
+
     return { success: true, cardCount: insertedCount }
 }
 
