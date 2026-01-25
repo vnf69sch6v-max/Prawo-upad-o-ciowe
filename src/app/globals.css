@@ -6,91 +6,98 @@
    ============================================ */
 
 :root {
-  /* ========== REFINED DARK BACKGROUNDS (Softer) ========== */
-  --bg-void: #0d0d0d;
+  /* ========== CYBER-IMMERSIVE BACKGROUNDS ========== */
+  /* Deep focus graphite - reduces eye strain, makes neons pop */
+  --bg-void: #0a0a0a;
   --bg-primary: #121212;
-  --bg-secondary: #181818;
-  --bg-elevated: #1e1e1e;
-  --bg-card: #1a1a1a;
-  --bg-hover: rgba(255, 255, 255, 0.06);
-  --bg-tertiary: #242424;
+  --bg-secondary: #1a1a1a;
+  --bg-elevated: #222222;
+  --bg-card: #1e1e1e;
+  --bg-hover: rgba(255, 255, 255, 0.08);
+  --bg-tertiary: #2a2a2a;
 
   /* ========== GLASSMORPHISM ========== */
   --glass-bg: rgba(255, 255, 255, 0.04);
   --glass-bg-strong: rgba(255, 255, 255, 0.08);
-  --glass-border: rgba(255, 255, 255, 0.10);
-  --glass-border-strong: rgba(255, 255, 255, 0.15);
+  --glass-border: rgba(255, 255, 255, 0.12);
+  --glass-border-strong: rgba(255, 255, 255, 0.18);
   --glass-blur: 20px;
   --glass-blur-light: 12px;
 
-  /* ========== TEXT COLORS (Warm Cream) ========== */
-  --text-primary: #f5f5f0;
-  --text-secondary: rgba(245, 245, 240, 0.80);
-  --text-muted: rgba(245, 245, 240, 0.55);
-  --text-subtle: rgba(245, 245, 240, 0.30);
+  /* ========== TEXT COLORS (Off-White for readability) ========== */
+  --text-primary: #ededed;
+  --text-secondary: rgba(237, 237, 237, 0.80);
+  --text-muted: rgba(237, 237, 237, 0.55);
+  --text-subtle: rgba(237, 237, 237, 0.30);
 
-  /* ========== ACCENT COLORS (Golden/Amber - Elegant Legal) ========== */
-  /* Primary accent - Warm Gold */
-  --accent-gold: #d4a853;
-  --accent-gold-light: #e8c170;
-  --accent-gold-glow: 0 0 30px rgba(212, 168, 83, 0.4);
+  /* ========== PRIMARY ACTION - ELECTRIC BLUE (Flow State) ========== */
+  --accent-flow: #2962FF;
+  --accent-flow-light: #448AFF;
+  --accent-flow-glow: 0 0 30px rgba(41, 98, 255, 0.5), 0 0 60px rgba(41, 98, 255, 0.3);
+  --accent-flow-rgb: 41, 98, 255;
 
-  /* ========== SEMANTIC DOMAIN COLORS ========== */
-  /* Prawo karne - Czerwień/Szkarłat */
-  --neon-karne: #dc2626;
-  --neon-karne-glow: 0 0 25px rgba(220, 38, 38, 0.4);
-  --neon-karne-rgb: 220, 38, 38;
+  /* ========== SEMANTIC DOMAIN COLORS (High Saturation Neons) ========== */
 
-  /* Prawo cywilne - Stonowany błękit (nie krzykliwy) */
-  --neon-cywilne: #60a5fa;
-  --neon-cywilne-glow: 0 0 25px rgba(96, 165, 250, 0.35);
-  --neon-cywilne-rgb: 96, 165, 250;
+  /* Prawo Karne - AGGRESSIVE RED (danger, blood, high stakes) */
+  --neon-karne: #FF1744;
+  --neon-karne-glow: 0 0 30px rgba(255, 23, 68, 0.5);
+  --neon-karne-rgb: 255, 23, 68;
 
-  /* Prawo handlowe - Złoto/Bursztyn (profesjonalizm) */
-  --neon-handlowe: #d4a853;
-  --neon-handlowe-glow: 0 0 25px rgba(212, 168, 83, 0.4);
-  --neon-handlowe-rgb: 212, 168, 83;
+  /* Prawo Cywilne - TECHNICAL BLUE (logic, structure, cool) */
+  --neon-cywilne: #00B0FF;
+  --neon-cywilne-glow: 0 0 30px rgba(0, 176, 255, 0.5);
+  --neon-cywilne-rgb: 0, 176, 255;
 
-  /* Prawo upadłościowe - Ciepły pomarańcz */
-  --neon-upadlosciowe: #f59e0b;
-  --neon-upadlosciowe-glow: 0 0 25px rgba(245, 158, 11, 0.4);
-  --neon-upadlosciowe-rgb: 245, 158, 11;
+  /* Prawo Handlowe - CYBER PURPLE (prestige, intelligence) */
+  --neon-handlowe: #7C4DFF;
+  --neon-handlowe-glow: 0 0 30px rgba(124, 77, 255, 0.5);
+  --neon-handlowe-rgb: 124, 77, 255;
 
-  /* ASO - Teal/morski */
-  --neon-aso: #2dd4bf;
-  --neon-aso-glow: 0 0 25px rgba(45, 212, 191, 0.35);
-  --neon-aso-rgb: 45, 212, 191;
+  /* Prawo Upadłościowe - WARNING ORANGE (alert, caution) */
+  --neon-upadlosciowe: #FF9100;
+  --neon-upadlosciowe-glow: 0 0 30px rgba(255, 145, 0, 0.5);
+  --neon-upadlosciowe-rgb: 255, 145, 0;
 
-  /* Egzamin maklerski - Szmaragdowy */
-  --neon-makler: #34d399;
-  --neon-makler-glow: 0 0 25px rgba(52, 211, 153, 0.35);
-  --neon-makler-rgb: 52, 211, 153;
+  /* ASO/Certyfikat - TEAL TECH (innovation, fintech) */
+  --neon-aso: #1DE9B6;
+  --neon-aso-glow: 0 0 30px rgba(29, 233, 182, 0.5);
+  --neon-aso-rgb: 29, 233, 182;
 
-  /* ========== ACTION COLORS ========== */
-  --accent-success: #34d399;
-  --accent-success-glow: 0 0 20px rgba(52, 211, 153, 0.35);
-  --accent-danger: #f87171;
-  --accent-danger-glow: 0 0 20px rgba(248, 113, 113, 0.35);
-  --accent-warning: #fbbf24;
-  --accent-info: #60a5fa;
-  --accent-premium: #a78bfa;
+  /* Egzamin Maklerski - EMERALD (money, growth) */
+  --neon-makler: #00E676;
+  --neon-makler-glow: 0 0 30px rgba(0, 230, 118, 0.5);
+  --neon-makler-rgb: 0, 230, 118;
+
+  /* ========== ACTION COLORS (High Impact) ========== */
+  --accent-success: #00E676;
+  --accent-success-glow: 0 0 25px rgba(0, 230, 118, 0.5);
+  --accent-danger: #FF1744;
+  --accent-danger-glow: 0 0 25px rgba(255, 23, 68, 0.5);
+  --accent-warning: #FFAB00;
+  --accent-info: #00B0FF;
+  --accent-premium: #7C4DFF;
+
+  /* ========== REWARD GOLD (Achievement, dopamine) ========== */
+  --accent-gold: #FFD600;
+  --accent-gold-light: #FFEA00;
+  --accent-gold-glow: 0 0 30px rgba(255, 214, 0, 0.5), 0 0 60px rgba(255, 214, 0, 0.3);
 
   /* ========== BORDERS ========== */
-  --border-color: rgba(255, 255, 255, 0.10);
-  --border-active: rgba(212, 168, 83, 0.5);
-  --border-subtle: rgba(255, 255, 255, 0.05);
+  --border-color: rgba(255, 255, 255, 0.12);
+  --border-active: rgba(41, 98, 255, 0.6);
+  --border-subtle: rgba(255, 255, 255, 0.06);
 
   /* ========== SHADOWS ========== */
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.25);
-  --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.35);
-  --shadow-lg: 0 8px 40px rgba(0, 0, 0, 0.45);
-  --shadow-glow: 0 0 40px rgba(0, 0, 0, 0.6);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 40px rgba(0, 0, 0, 0.5);
+  --shadow-glow: 0 0 40px rgba(0, 0, 0, 0.7);
 
   /* ========== BRAND COLORS ========== */
-  --brand-gold: #d4a853;
-  --brand-gold-light: #e8c170;
-  --brand-navy: #1e3a5f;
-  --brand-navy-light: #2d5a8a;
+  --brand-gold: #FFD600;
+  --brand-gold-light: #FFEA00;
+  --brand-navy: #1a237e;
+  --brand-navy-light: #3949ab;
 }
 
 /* ============================================
@@ -963,4 +970,212 @@ a:hover {
 
 .backface-hidden {
   backface-visibility: hidden;
+}
+
+/* ============================================
+   HIGH-DOPAMINE / NEURAL OVERRIDE SYSTEM
+   Aggressive psychological trigger animations
+   ============================================ */
+
+/* Alarm Critical Variables */
+:root {
+  --alarm-critical: #FF2E2E;
+  --alarm-critical-glow: 0 0 40px rgba(255, 46, 46, 0.6), 0 0 80px rgba(255, 46, 46, 0.3);
+  --vapor-violet: #651FFF;
+  --vapor-blue: #2979FF;
+}
+
+/* Alarm Pulse - Unstable red glow for critical states */
+@keyframes alarm-pulse {
+
+  0%,
+  100% {
+    box-shadow: 0 0 20px rgba(255, 46, 46, 0.4);
+    filter: brightness(1);
+  }
+
+  50% {
+    box-shadow: 0 0 50px rgba(255, 46, 46, 0.8), 0 0 100px rgba(255, 46, 46, 0.4);
+    filter: brightness(1.1);
+  }
+}
+
+/* Glitch Effect - Digital distortion for anxiety */
+@keyframes glitch {
+
+  0%,
+  100% {
+    transform: translate(0);
+    text-shadow: none;
+  }
+
+  20% {
+    transform: translate(-2px, 2px);
+    text-shadow: 2px 0 #FF2E2E, -2px 0 #00E676;
+  }
+
+  40% {
+    transform: translate(2px, -2px);
+    text-shadow: -2px 0 #FF2E2E, 2px 0 #00E676;
+  }
+
+  60% {
+    transform: translate(-1px, 1px);
+    text-shadow: 1px 0 #FF2E2E, -1px 0 #00E676;
+  }
+
+  80% {
+    transform: translate(1px, -1px);
+    text-shadow: -1px 0 #FF2E2E, 1px 0 #00E676;
+  }
+}
+
+/* Heartbeat Scale - Button pulsing like a heartbeat */
+@keyframes heartbeat-scale {
+
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  14% {
+    transform: scale(1.05);
+  }
+
+  28% {
+    transform: scale(1);
+  }
+
+  42% {
+    transform: scale(1.03);
+  }
+
+  56% {
+    transform: scale(1);
+  }
+}
+
+/* Ticker Scroll - Infinite horizontal scroll for social proof */
+@keyframes ticker-scroll {
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+/* Vapor Gradient - Liquid energy effect for buttons */
+@keyframes vapor-flow {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Node Decay - Subtle fade for decaying knowledge */
+@keyframes node-decay {
+
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+
+  50% {
+    opacity: 0.25;
+  }
+}
+
+/* Utility Classes for Dopamine System */
+.animate-alarm-pulse {
+  animation: alarm-pulse 1.5s ease-in-out infinite;
+}
+
+.animate-glitch {
+  animation: glitch 0.5s ease-in-out infinite;
+}
+
+.animate-heartbeat {
+  animation: heartbeat-scale 3s ease-in-out infinite;
+}
+
+.animate-ticker {
+  animation: ticker-scroll 30s linear infinite;
+}
+
+.animate-vapor {
+  background-size: 200% 200%;
+  animation: vapor-flow 3s ease infinite;
+}
+
+.animate-node-decay {
+  animation: node-decay 3s ease-in-out infinite;
+}
+
+/* Dopamine Button Base */
+.dopamine-btn {
+  background: linear-gradient(135deg, var(--vapor-violet), var(--vapor-blue), var(--vapor-violet));
+  background-size: 200% 200%;
+  animation: vapor-flow 3s ease infinite, heartbeat-scale 3s ease-in-out infinite;
+  box-shadow:
+    0 0 40px rgba(101, 31, 255, 0.5),
+    0 0 80px rgba(41, 121, 255, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.dopamine-btn:hover {
+  box-shadow:
+    0 0 60px rgba(101, 31, 255, 0.7),
+    0 0 120px rgba(41, 121, 255, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  transform: scale(1.02);
+}
+
+/* Retina Grid Node */
+.retina-node {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.retina-node:hover {
+  transform: scale(1.5);
+  z-index: 10;
+}
+
+.retina-node-mastered {
+  background: var(--accent-success);
+  box-shadow: 0 0 8px rgba(0, 230, 118, 0.6);
+}
+
+.retina-node-decaying {
+  background: rgba(255, 255, 255, 0.15);
+  animation: node-decay 3s ease-in-out infinite;
+}
+
+.retina-node-unknown {
+  background: rgba(0, 0, 0, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Social Ticker Bar */
+.ticker-bar {
+  background: linear-gradient(90deg, var(--bg-void), transparent 10%, transparent 90%, var(--bg-void));
+  overflow: hidden;
+}
+
+.ticker-content {
+  display: flex;
+  gap: 3rem;
+  white-space: nowrap;
 }

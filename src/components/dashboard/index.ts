@@ -9,3 +9,16 @@ export { EnhancedKPICard, EnhancedKPICardsGrid, type KPIData } from './enhanced-
 export { EnhancedPerformanceChart, type PerformanceDataPoint } from './enhanced-performance-chart';
 export { EnhancedDomainMastery, DEFAULT_DOMAINS, type DomainData } from './enhanced-domain-mastery';
 export { EnhancedQuickStart, type QuickStartProps } from './enhanced-quick-start';
+
+// Behavioral Psychology Components
+export { KnowledgeHeatmap } from './knowledge-heatmap';
+export { ExamReadiness } from './exam-readiness';
+export { StartFlowButton } from './start-flow-button';
+export { StreakWidget } from './streak-widget';
+export { SocialProof } from './social-proof';
+
+// High-Dopamine Neural Override System
+export { ExamReadinessGauge } from './exam-readiness-gauge';
+export { DopamineButton } from './dopamine-button';
+export { RetinaHeatmap } from './retina-heatmap';
+export { SocialPredatorTicker } from './social-predator-ticker';

@@ -8,6 +8,7 @@ import { ALL_KSH_QUESTIONS, type ExamQuestion } from '@/lib/data/ksh'
 import { ALL_PRAWO_UPADLOSCIOWE_QUESTIONS } from '@/lib/data/prawo-upadlosciowe'
 import { ALL_KC_QUESTIONS } from '@/lib/data/kodeks-cywilny'
 import { ALL_ASO_QUESTIONS } from '@/lib/data/aso'
+import { ALL_MATEMATYKA_FINANSOWA_QUESTIONS } from '@/lib/data/matematyka-finansowa'
 
 // ═══════════════════════════════════════════════════════════════
 // DECK DEFINITIONS
@@ -59,6 +60,15 @@ export const DECK_DEFINITIONS: DeckDefinition[] = [
         color: '#8B5CF6',
         legal_area: 'capital_markets',
         questions: ALL_ASO_QUESTIONS
+    },
+    {
+        slug: 'matematyka-finansowa',
+        name: 'Matematyka Finansowa',
+        description: 'Matematyka, statystyka, rachunek - FV, PV, renty, kredyty, portfel',
+        icon: '📐',
+        color: '#F59E0B',
+        legal_area: 'quantitative',
+        questions: ALL_MATEMATYKA_FINANSOWA_QUESTIONS
     }
 ]
 

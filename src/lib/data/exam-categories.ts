@@ -100,8 +100,8 @@ export const EGZAMIN_MAKLERSKI_TOPICS: CategoryTopic[] = [
             'Renty, kredyty i harmonogramy (annuitet, rata kapitałowa, amortyzacja)',
             'Podstawy statystyki i ryzyka (średnia, odchylenie, wariancja, kowariancja, korelacja)',
         ],
-        questionCount: 0,
-        available: false,
+        questionCount: 36,
+        available: true,
     },
     {
         id: 'makler_b',

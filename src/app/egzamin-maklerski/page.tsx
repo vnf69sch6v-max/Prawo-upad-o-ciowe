@@ -58,16 +58,8 @@ export default function EgzaminMaklerskiPage() {
                         <div>
                             <h2 className="text-xl font-bold mb-4">Grupy tematyczne</h2>
                             <div className="grid md:grid-cols-2 gap-4">
-                                {EGZAMIN_MAKLERSKI_TOPICS.map((topic) => (
-                                    <div
-                                        key={topic.id}
-                                        className={cn(
-                                            "lex-card transition-all group text-left",
-                                            topic.available
-                                                ? "hover:scale-[1.02] hover:border-[#059669]/50 cursor-pointer"
-                                                : "opacity-70"
-                                        )}
-                                    >
+                                {EGZAMIN_MAKLERSKI_TOPICS.map((topic) => {
+                                    const CardContent = (
                                         <div className="flex items-start gap-4">
                                             <div
                                                 className="w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 relative"
@@ -86,7 +78,12 @@ export default function EgzaminMaklerskiPage() {
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center gap-2 mb-1">
                                                     <h3 className="font-bold text-sm">{topic.name}</h3>
-                                                    {!topic.available && (
+                                                    {topic.available ? (
+                                                        <span className="px-2 py-0.5 text-xs font-medium bg-[#059669]/20 text-[#059669] rounded-full flex items-center gap-1">
+                                                            <Play size={10} />
+                                                            {topic.questionCount} pytań
+                                                        </span>
+                                                    ) : (
                                                         <span className="px-2 py-0.5 text-xs font-medium bg-amber-500/20 text-amber-600 rounded-full flex items-center gap-1">
                                                             <Clock size={10} />
                                                             Wkrótce
@@ -113,9 +110,38 @@ export default function EgzaminMaklerskiPage() {
                                                     )}
                                                 </div>
                                             </div>
+                                            {topic.available && (
+                                                <ChevronRight size={20} className="text-[var(--text-muted)] group-hover:text-[#059669] transition-colors flex-shrink-0" />
+                                            )}
                                         </div>
-                                    </div>
-                                ))}
+                                    );
+
+                                    // Available topics are clickable - link to exam
+                                    if (topic.available) {
+                                        return (
+                                            <Link
+                                                key={topic.id}
+                                                href={`/exam?topic=${topic.id}&domain=egzamin-maklerski`}
+                                                className={cn(
+                                                    "lex-card transition-all group text-left block",
+                                                    "hover:scale-[1.02] hover:border-[#059669]/50"
+                                                )}
+                                            >
+                                                {CardContent}
+                                            </Link>
+                                        );
+                                    }
+
+                                    // Unavailable topics are not clickable
+                                    return (
+                                        <div
+                                            key={topic.id}
+                                            className="lex-card transition-all group text-left opacity-70"
+                                        >
+                                            {CardContent}
+                                        </div>
+                                    );
+                                })}
                             </div>
                         </div>
 
