@@ -53,11 +53,11 @@ export const DECK_DEFINITIONS: DeckDefinition[] = [
     },
     {
         slug: 'aso',
-        name: 'ASO - Aplikacja Sędziowska',
-        description: 'Pytania egzaminacyjne na aplikację sędziowską i prokuratorską',
-        icon: '⚔️',
+        name: 'Doradca ASO',
+        description: 'Certyfikat Doradcy w Alternatywnym Systemie Obrotu - NewConnect i Catalyst',
+        icon: '📊',
         color: '#8B5CF6',
-        legal_area: 'judicial',
+        legal_area: 'capital_markets',
         questions: ALL_ASO_QUESTIONS
     }
 ]
