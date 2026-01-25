@@ -30,21 +30,22 @@ const NAV_SECTIONS: NavSection[] = [
         ],
     },
     {
-        title: 'Nauka',
-        id: 'nauka',
+        title: 'Ścieżki nauki',
+        id: 'sciezki',
         items: [
-            { id: 'flashcards', label: 'Fiszki', icon: <BookOpen size={18} />, href: '/flashcards' },
-            { id: 'study', label: 'Nauka', icon: <Brain size={18} />, href: '/study' },
-            { id: 'search', label: 'Wyszukiwarka', icon: <Search size={18} />, href: '/search', badge: 'new' },
+            { id: 'student-prawa', label: 'Student prawa', icon: <BookOpen size={18} />, href: '/student-prawa' },
+            { id: 'egzamin-maklerski', label: 'Egzamin na maklera', icon: <LineChart size={18} />, href: '/egzamin-maklerski', badge: 'new' },
+            { id: 'egzamin-aso', label: 'Egzamin na ASO', icon: <BarChart3 size={18} />, href: '/egzamin-aso' },
         ],
     },
     {
-        title: 'Egzaminy',
-        id: 'egzaminy',
+        title: 'Narzędzia',
+        id: 'narzedzia',
         items: [
+            { id: 'flashcards', label: 'Fiszki', icon: <Zap size={18} />, href: '/flashcards' },
             { id: 'exam', label: 'Symulacje', icon: <FileText size={18} />, href: '/exam' },
-            { id: 'results', label: 'Wyniki', icon: <BarChart3 size={18} />, href: '/exam/results' },
-            { id: 'weak-points', label: 'Słabe punkty', icon: <Target size={18} />, href: '/weak-points', badge: 'new' },
+            { id: 'search', label: 'Wyszukiwarka', icon: <Search size={18} />, href: '/search', badge: 'new' },
+            { id: 'weak-points', label: 'Słabe punkty', icon: <Target size={18} />, href: '/weak-points' },
         ],
     },
     {
@@ -53,14 +54,6 @@ const NAV_SECTIONS: NavSection[] = [
         items: [
             { id: 'cases', label: 'Kazusy', icon: <Scale size={18} />, href: '/cases', badge: 'new' },
             { id: 'deadlines', label: 'Terminy', icon: <Calendar size={18} />, href: '/deadlines', badge: 'new' },
-        ],
-    },
-    {
-        title: 'Analityka',
-        id: 'analityka',
-        items: [
-            { id: 'analytics', label: 'Statystyki', icon: <LineChart size={18} />, href: '/analytics' },
-            { id: 'learning-style', label: 'Profil Nauki', icon: <Brain size={18} />, href: '/profile/learning-style', badge: 'new' },
         ],
     },
     {
