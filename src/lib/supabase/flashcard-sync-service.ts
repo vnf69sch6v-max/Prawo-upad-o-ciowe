@@ -67,11 +67,11 @@ export const DECK_DEFINITIONS: DeckDefinition[] = [
 // ═══════════════════════════════════════════════════════════════
 
 /**
- * Check if sync is needed (no decks exist)
+ * Check if sync is needed (card count < expected)
  */
 export async function checkSyncNeeded(): Promise<boolean> {
-    const { count, error } = await supabase
-        .from('flashcard_decks')
+    const { count: cardCount, error } = await supabase
+        .from('flashcards')
         .select('*', { count: 'exact', head: true })
 
     if (error) {
@@ -79,7 +79,17 @@ export async function checkSyncNeeded(): Promise<boolean> {
         return false
     }
 
-    return count === 0
+    // Calculate expected total from deck definitions
+    const expectedTotal = DECK_DEFINITIONS.reduce((sum, d) => sum + d.questions.length, 0)
+
+    // Sync if we have fewer cards than expected
+    const needsSync = (cardCount || 0) < expectedTotal
+
+    if (needsSync) {
+        console.log(`🔄 Sync needed: ${cardCount || 0} cards in DB, ${expectedTotal} expected`)
+    }
+
+    return needsSync
 }
 
 /**
