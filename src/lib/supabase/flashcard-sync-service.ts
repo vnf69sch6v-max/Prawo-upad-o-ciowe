@@ -184,14 +184,18 @@ async function syncDeck(deck: DeckDefinition): Promise<{ success: boolean; cardC
     for (let i = 0; i < flashcards.length; i += batchSize) {
         const batch = flashcards.slice(i, i + batchSize)
 
-        const { error: insertError } = await supabase
+        const { data, error: insertError } = await supabase
             .from('flashcards')
-            .upsert(batch, { onConflict: 'question,deck_id', ignoreDuplicates: true })
+            .insert(batch)
+            .select('id')
 
         if (insertError) {
-            console.error(`  ⚠️ Batch ${i / batchSize + 1} insert error:`, insertError)
+            // 23505 = unique violation, means card already exists - that's OK
+            if (insertError.code !== '23505') {
+                console.error(`  ⚠️ Batch ${Math.floor(i / batchSize) + 1} insert error:`, insertError.message)
+            }
         } else {
-            insertedCount += batch.length
+            insertedCount += data?.length || batch.length
         }
     }
 
