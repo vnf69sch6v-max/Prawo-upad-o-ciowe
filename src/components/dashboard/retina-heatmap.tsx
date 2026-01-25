@@ -65,7 +65,7 @@ export function RetinaHeatmap({
                 <div>
                     <h3 className="text-lg font-bold flex items-center gap-2">
                         <span className="text-2xl">🧠</span>
-                        Neural Map
+                        Knowledge Retina
                     </h3>
                     <p className="text-xs text-[var(--text-muted)]">
                         {stats.mastered}/{stats.total} secured •

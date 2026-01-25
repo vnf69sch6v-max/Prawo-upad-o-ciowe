@@ -10,6 +10,7 @@ import { ALL_KSH_QUESTIONS } from '@/lib/data/ksh';
 import { ALL_PRAWO_UPADLOSCIOWE_QUESTIONS } from '@/lib/data/prawo-upadlosciowe';
 import { ALL_KC_QUESTIONS } from '@/lib/data/kodeks-cywilny';
 import { ALL_ASO_QUESTIONS } from '@/lib/data/aso';
+import { ALL_MATEMATYKA_FINANSOWA_QUESTIONS } from '@/lib/data/matematyka-finansowa';
 import Link from 'next/link';
 
 // Question type from data
@@ -19,7 +20,7 @@ interface QuestionData {
     options: { a: string; b: string; c: string; d: string };
     correct: 'a' | 'b' | 'c' | 'd';
     explanation: string;
-    domain: 'ksh' | 'prawo_upadlosciowe' | 'prawo_cywilne' | 'aso';
+    domain: 'ksh' | 'prawo_upadlosciowe' | 'prawo_cywilne' | 'aso' | 'makler_a';
 }
 
 // Get all questions combined
@@ -27,7 +28,8 @@ const ALL_QUESTIONS: QuestionData[] = [
     ...ALL_KSH_QUESTIONS.map(q => ({ ...q, domain: 'ksh' as const })),
     ...ALL_PRAWO_UPADLOSCIOWE_QUESTIONS.map(q => ({ ...q, domain: 'prawo_upadlosciowe' as const })),
     ...ALL_KC_QUESTIONS.map(q => ({ ...q, domain: 'prawo_cywilne' as const })),
-    ...ALL_ASO_QUESTIONS.map(q => ({ ...q, domain: 'aso' as const }))
+    ...ALL_ASO_QUESTIONS.map(q => ({ ...q, domain: 'aso' as const })),
+    ...ALL_MATEMATYKA_FINANSOWA_QUESTIONS.map(q => ({ ...q, domain: 'makler_a' as const }))
 ];
 
 // Simple Review Component
@@ -182,7 +184,7 @@ function QuickReview({
 export default function WeakPointsPage() {
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const [view, setView] = useState<'list' | 'practice'>('list');
-    const [filter, setFilter] = useState<'all' | 'ksh' | 'prawo_upadlosciowe' | 'prawo_cywilne' | 'aso'>('all');
+    const [filter, setFilter] = useState<'all' | 'ksh' | 'prawo_upadlosciowe' | 'prawo_cywilne' | 'aso' | 'makler_a'>('all');
 
     const { profile, loading: authLoading } = useAuth();
     const {
@@ -349,7 +351,7 @@ export default function WeakPointsPage() {
                                 {/* Filters */}
                                 <div className="flex flex-wrap items-center justify-between gap-4">
                                     <div className="flex gap-2 flex-wrap">
-                                        {(['all', 'ksh', 'prawo_upadlosciowe', 'prawo_cywilne', 'aso'] as const).map(f => (
+                                        {(['all', 'ksh', 'prawo_upadlosciowe', 'prawo_cywilne', 'aso', 'makler_a'] as const).map(f => (
                                             <button
                                                 key={f}
                                                 onClick={() => setFilter(f)}
@@ -360,7 +362,7 @@ export default function WeakPointsPage() {
                                                         : 'bg-[var(--bg-card)] text-[var(--text-muted)] hover:text-[#ef4444]'
                                                 )}
                                             >
-                                                {f === 'all' ? 'Wszystkie' : f === 'ksh' ? 'KSH' : f === 'prawo_upadlosciowe' ? 'Prawo Upadł.' : f === 'prawo_cywilne' ? 'KC' : 'ASO'}
+                                                {f === 'all' ? 'Wszystkie' : f === 'ksh' ? 'KSH' : f === 'prawo_upadlosciowe' ? 'Prawo Upadł.' : f === 'prawo_cywilne' ? 'KC' : f === 'aso' ? 'ASO' : 'Matematyka'}
                                             </button>
                                         ))}
                                     </div>
@@ -426,9 +428,10 @@ export default function WeakPointsPage() {
                                                             wp!.domain === 'ksh' && "bg-[#1a365d]/10 text-[#1a365d]",
                                                             wp!.domain === 'prawo_upadlosciowe' && "bg-orange-500/10 text-orange-500",
                                                             wp!.domain === 'prawo_cywilne' && "bg-blue-500/10 text-blue-500",
-                                                            wp!.domain === 'aso' && "bg-teal-500/10 text-teal-500"
+                                                            wp!.domain === 'aso' && "bg-teal-500/10 text-teal-500",
+                                                            wp!.domain === 'makler_a' && "bg-purple-500/10 text-purple-500"
                                                         )}>
-                                                            {wp!.domain === 'ksh' ? 'KSH' : wp!.domain === 'prawo_upadlosciowe' ? 'Prawo Upadł.' : wp!.domain === 'prawo_cywilne' ? 'KC' : 'ASO'}
+                                                            {wp!.domain === 'ksh' ? 'KSH' : wp!.domain === 'prawo_upadlosciowe' ? 'Prawo Upadł.' : wp!.domain === 'prawo_cywilne' ? 'KC' : wp!.domain === 'aso' ? 'ASO' : 'Matematyka'}
                                                         </span>
                                                     </div>
                                                 </div>

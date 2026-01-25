@@ -174,7 +174,7 @@ export async function getTestHistory(
 export async function saveWrongAnswer(
     userId: string,
     questionId: string,
-    domain: 'ksh' | 'prawo_upadlosciowe' | 'prawo_cywilne' | 'aso'
+    domain: 'ksh' | 'prawo_upadlosciowe' | 'prawo_cywilne' | 'aso' | 'makler_a'
 ): Promise<void> {
     if (!isSupabaseAvailable()) return;
 
@@ -255,7 +255,7 @@ export async function getWrongAnswers(userId: string): Promise<WrongAnswer[]> {
 
     return data.map(row => ({
         questionId: row.question_id,
-        domain: row.domain as 'ksh' | 'prawo_upadlosciowe' | 'prawo_cywilne' | 'aso',
+        domain: row.domain as 'ksh' | 'prawo_upadlosciowe' | 'prawo_cywilne' | 'aso' | 'makler_a',
         wrongCount: row.wrong_count,
         correctStreak: row.correct_streak,
         lastWrongAt: new Date(row.last_wrong_at),

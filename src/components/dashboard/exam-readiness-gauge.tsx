@@ -17,95 +17,129 @@ export function ExamReadinessGauge({
     const isWarning = readiness >= 50 && readiness < 70;
     const isPassing = readiness >= 70;
 
-    const statusText = isCritical
-        ? 'CRITICAL FAILURE RISK'
-        : isWarning
-            ? 'WARNING: UNSTABLE'
-            : 'STATUS: PASSING';
+    // SVG radial gauge calculations
+    const radius = 90;
+    const strokeWidth = 12;
+    const circumference = Math.PI * radius; // Semi-circle
+    const progress = (readiness / 100) * circumference;
 
     const statusColor = isCritical
-        ? 'var(--alarm-critical)'
+        ? '#FF1744' // Neon Red
         : isWarning
-            ? 'var(--accent-warning)'
-            : 'var(--accent-success)';
+            ? '#FF9100' // Warning Orange
+            : '#00E676'; // Matrix Green
 
-    // Calculate hours until midnight for urgency
-    const hoursUntilExam = 420; // Mock: exam in ~17.5 days
+    const estimatedResult = isCritical
+        ? 'FAIL'
+        : isWarning
+            ? 'AT RISK'
+            : 'PASS';
 
     return (
         <div className={cn(
-            "relative p-6 rounded-2xl border",
-            isCritical && "animate-alarm-pulse border-[var(--alarm-critical)]/50 bg-[var(--alarm-critical)]/5",
+            "relative p-6 rounded-2xl border text-center",
+            isCritical && "animate-alarm-pulse border-[#FF1744]/50 bg-[#FF1744]/5",
             isWarning && "border-orange-500/50 bg-orange-500/5",
-            isPassing && "border-[var(--accent-success)]/30 bg-[var(--accent-success)]/5",
+            isPassing && "border-[#00E676]/30 bg-[#00E676]/5",
             className
         )}>
-            {/* Status Header */}
-            <div className="text-center mb-4">
-                <div
-                    className={cn(
-                        "text-xs font-mono uppercase tracking-widest mb-2",
-                        isCritical && "animate-glitch"
-                    )}
-                    style={{ color: statusColor }}
+            {/* Semi-circular Radial Gauge */}
+            <div className="relative mx-auto" style={{ width: 200, height: 110 }}>
+                <svg
+                    width="200"
+                    height="110"
+                    viewBox="0 0 200 110"
+                    className="overflow-visible"
                 >
-                    {statusText}
-                </div>
+                    {/* Background arc */}
+                    <path
+                        d="M 10 100 A 90 90 0 0 1 190 100"
+                        fill="none"
+                        stroke="rgba(255,255,255,0.1)"
+                        strokeWidth={strokeWidth}
+                        strokeLinecap="round"
+                    />
+                    {/* Progress arc */}
+                    <path
+                        d="M 10 100 A 90 90 0 0 1 190 100"
+                        fill="none"
+                        stroke={statusColor}
+                        strokeWidth={strokeWidth}
+                        strokeLinecap="round"
+                        strokeDasharray={`${progress} ${circumference}`}
+                        style={{
+                            filter: isCritical
+                                ? 'drop-shadow(0 0 15px rgba(255, 23, 68, 0.8))'
+                                : isPassing
+                                    ? 'drop-shadow(0 0 10px rgba(0, 230, 118, 0.6))'
+                                    : 'drop-shadow(0 0 10px rgba(255, 145, 0, 0.6))',
+                            transition: 'stroke-dasharray 0.5s ease'
+                        }}
+                    />
+                </svg>
 
-                {/* Large Percentage Display */}
+                {/* Large Percentage in Center */}
                 <div
-                    className="text-6xl lg:text-7xl font-black tabular-nums"
-                    style={{
-                        color: statusColor,
-                        textShadow: isCritical
-                            ? '0 0 30px rgba(255, 46, 46, 0.5)'
-                            : isPassing
-                                ? '0 0 20px rgba(0, 230, 118, 0.3)'
-                                : undefined
-                    }}
+                    className="absolute inset-0 flex flex-col items-center justify-end pb-0"
                 >
-                    {readiness}%
-                </div>
-
-                {/* Prediction Text */}
-                <div className="mt-3 text-sm text-[var(--text-muted)]">
-                    {isCritical ? (
-                        <span className="text-[var(--alarm-critical)]">
-                            Predicted result: <span className="font-bold">FAILED</span>
-                        </span>
-                    ) : isWarning ? (
-                        <span className="text-orange-400">
-                            Passing threshold at risk
-                        </span>
-                    ) : (
-                        <span className="text-[var(--accent-success)]">
-                            On track to pass
-                        </span>
-                    )}
+                    <span
+                        className={cn(
+                            "text-6xl font-black tabular-nums",
+                            isCritical && "animate-glitch"
+                        )}
+                        style={{
+                            fontFamily: "'JetBrains Mono', monospace",
+                            color: statusColor,
+                            textShadow: isCritical
+                                ? '0 0 30px rgba(255, 23, 68, 0.7)'
+                                : isPassing
+                                    ? '0 0 20px rgba(0, 230, 118, 0.5)'
+                                    : undefined
+                        }}
+                    >
+                        {readiness}%
+                    </span>
                 </div>
             </div>
 
-            {/* Progress Bar */}
-            <div className="h-3 bg-[var(--bg-void)] rounded-full overflow-hidden mb-4">
-                <div
-                    className="h-full rounded-full transition-all duration-500"
-                    style={{
-                        width: `${readiness}%`,
-                        background: isCritical
-                            ? 'linear-gradient(90deg, #FF2E2E, #FF6B6B)'
-                            : isWarning
-                                ? 'linear-gradient(90deg, #FF9100, #FFB74D)'
-                                : 'linear-gradient(90deg, #00E676, #69F0AE)',
-                        boxShadow: `0 0 15px ${statusColor}`
-                    }}
-                />
+            {/* Status Label */}
+            <div
+                className={cn(
+                    "mt-4 text-xs font-mono uppercase tracking-[0.3em]",
+                    isCritical && "animate-pulse"
+                )}
+                style={{ color: statusColor }}
+            >
+                EXAM READINESS
             </div>
 
-            {/* Decay Warning */}
+            {/* Prediction Text - Monospace Data Style */}
+            <div
+                className="mt-3 text-sm font-mono"
+                style={{ fontFamily: "'JetBrains Mono', monospace" }}
+            >
+                {isCritical ? (
+                    <span className="text-[#FF1744]">
+                        Estimated Result: <span className="font-bold">{estimatedResult}</span>
+                    </span>
+                ) : isWarning ? (
+                    <span className="text-orange-400">
+                        Passing threshold at risk
+                    </span>
+                ) : (
+                    <span className="text-[#00E676]">
+                        On track to pass
+                    </span>
+                )}
+            </div>
+
+            {/* Decay Warning - Data Terminal Style */}
             {isCritical && (
-                <div className="text-center text-xs text-[var(--text-muted)] font-mono">
-                    <span className="text-[var(--alarm-critical)]">▼ -{retentionLoss}%</span> retention daily •
-                    <span className="text-[var(--alarm-critical)]"> {hoursUntilExam}h</span> deficit to recover
+                <div
+                    className="mt-2 text-xs text-[var(--text-muted)] font-mono"
+                    style={{ fontFamily: "'JetBrains Mono', monospace" }}
+                >
+                    Knowledge decay rate: <span className="text-[#FF1744]">-{retentionLoss}%</span>/day
                 </div>
             )}
         </div>
