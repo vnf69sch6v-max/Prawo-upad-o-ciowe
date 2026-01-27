@@ -163,10 +163,11 @@ export function trackQuestionResponse(params: {
         currentSession.lastEventTime = new Date();
     }
 
-    // Create event
+    // Create event - convert null to undefined for originalAnswer
     const event = createQuestionResponseEvent({
         ...params,
         ...timingData,
+        originalAnswer: timingData.originalAnswer ?? undefined,
         sessionId,
         questionsInSession: currentSession?.questionsAnswered || 1
     });
