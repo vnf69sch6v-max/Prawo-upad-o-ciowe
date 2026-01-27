@@ -14,6 +14,12 @@ import { ALL_MATEMATYKA_FINANSOWA_QUESTIONS } from '@/lib/data/matematyka-finans
 import { useAuth } from '@/hooks/use-auth';
 import { useUserData } from '@/hooks/use-user-data';
 import { saveExamResult, addActivity, updateStreak } from '@/lib/services/user-service';
+import {
+    startBehaviorSession,
+    endBehaviorSession,
+    trackQuestionResponse,
+    behaviorAPI
+} from '@/lib/agents';
 import { LEGAL_DOMAINS, getDomainsWithExams, type LegalDomainCategory, type KSHSubdomain, type PrawoUpadloscioweSubdomain, type LegalSubdomain } from '@/lib/data/legal-domains';
 
 // Convert KSH questions to ExamSimulator format
@@ -278,6 +284,10 @@ function ExamPageContent() {
     }, [selectedDomain]);
 
     const handleStartExam = (exam: ExamType) => {
+        // Start behavior tracking session
+        const sessionId = startBehaviorSession();
+        console.log('[BehaviorAgent] Started exam session:', sessionId);
+
         let questions: ExamQuestion[];
 
         if (selectedDomain === 'ksh') {
@@ -339,6 +349,37 @@ function ExamPageContent() {
         const totalQuestions = currentQuestions.length;
         const score = Math.round((correctCount / totalQuestions) * 100);
         const passed = score >= 60;
+
+        // Track each question response for Behavior Agent
+        console.log('[BehaviorAgent] Tracking', currentQuestions.length, 'question responses...');
+        const avgTimePerQuestion = (timeSpent * 1000) / currentQuestions.length;
+
+        currentQuestions.forEach((q, index) => {
+            const isCorrect = answers[q.id] === q.correctAnswer;
+            const difficultyMap: Record<string, number> = {
+                'easy': 3,
+                'medium': 5,
+                'hard': 7,
+                'expert': 9
+            };
+
+            trackQuestionResponse({
+                questionId: q.id,
+                topic: selectedDomain,
+                subtopic: q.domain,
+                selectedAnswer: answers[q.id] || '',
+                correctAnswer: q.correctAnswer,
+                isCorrect,
+                questionDifficulty: difficultyMap[q.difficulty] || 5,
+                examWeight: 5,
+                usedHint: false,
+                expandedExplanation: false
+            });
+        });
+
+        // End behavior tracking session
+        endBehaviorSession();
+        console.log('[BehaviorAgent] Exam session ended. Score:', score, '% Correct:', correctCount, '/', totalQuestions);
 
         // Set local result immediately for UI
         setExamResult({
