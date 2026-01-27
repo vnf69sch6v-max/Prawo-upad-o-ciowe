@@ -44,7 +44,7 @@ export function BehaviorRecommendations({
     maxItems = 4,
     onSelectTopic
 }: BehaviorRecommendationsProps) {
-    const { user, getIdToken } = useAuth();
+    const { user } = useAuth();
     const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -56,7 +56,7 @@ export function BehaviorRecommendations({
             }
 
             try {
-                const token = await getIdToken();
+                const token = await user.getIdToken();
                 const response = await fetch('/api/behavior?type=recommendations', {
                     headers: {
                         'Authorization': `Bearer ${token}`

@@ -22,7 +22,7 @@ interface BehaviorPredictionsWidgetProps {
 export function BehaviorPredictionsWidget({
     showTimeToMastery = true
 }: BehaviorPredictionsWidgetProps) {
-    const { user, getIdToken } = useAuth();
+    const { user } = useAuth();
     const [predictions, setPredictions] = useState<BehaviorPredictions | null>(null);
     const [loading, setLoading] = useState(true);
 
@@ -34,7 +34,7 @@ export function BehaviorPredictionsWidget({
             }
 
             try {
-                const token = await getIdToken();
+                const token = await user.getIdToken();
                 const response = await fetch('/api/behavior?type=predictions', {
                     headers: {
                         'Authorization': `Bearer ${token}`

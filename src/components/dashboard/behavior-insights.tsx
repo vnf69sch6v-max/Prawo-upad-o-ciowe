@@ -57,7 +57,7 @@ export function BehaviorInsights({
     showHeader = true,
     compact = false
 }: BehaviorInsightsProps) {
-    const { user, getIdToken } = useAuth();
+    const { user } = useAuth();
     const [insights, setInsights] = useState<BehaviorInsight[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -72,7 +72,7 @@ export function BehaviorInsights({
         if (showRefresh) setRefreshing(true);
 
         try {
-            const token = await getIdToken();
+            const token = await user.getIdToken();
             const response = await fetch(`/api/behavior/insights?limit=${maxItems}&minPriority=3`, {
                 headers: {
                     'Authorization': `Bearer ${token}`

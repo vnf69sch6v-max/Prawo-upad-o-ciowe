@@ -43,7 +43,7 @@ interface UseBehaviorAgentReturn {
 
 export function useBehaviorAgent(options: UseBehaviorAgentOptions = {}): UseBehaviorAgentReturn {
     const { autoFetch = true, fetchInterval = 0 } = options;
-    const { user, getIdToken } = useAuth();
+    const { user } = useAuth();
 
     const [analysis, setAnalysis] = useState<BehaviorAnalysis | null>(null);
     const [loading, setLoading] = useState(false);
@@ -59,7 +59,7 @@ export function useBehaviorAgent(options: UseBehaviorAgentOptions = {}): UseBeha
         setError(null);
 
         try {
-            const token = await getIdToken();
+            const token = await user.getIdToken();
             const response = await fetch('/api/behavior?type=full', {
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -78,14 +78,14 @@ export function useBehaviorAgent(options: UseBehaviorAgentOptions = {}): UseBeha
         } finally {
             setLoading(false);
         }
-    }, [user, getIdToken]);
+    }, [user]);
 
     // Fetch quick insights
     const fetchQuickInsights = useCallback(async (): Promise<BehaviorInsight[]> => {
         if (!user) return [];
 
         try {
-            const token = await getIdToken();
+            const token = await user.getIdToken();
             const response = await fetch('/api/behavior?type=quick', {
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -102,14 +102,14 @@ export function useBehaviorAgent(options: UseBehaviorAgentOptions = {}): UseBeha
             console.error('Error fetching quick insights:', err);
             return [];
         }
-    }, [user, getIdToken]);
+    }, [user]);
 
     // Process a new event
     const processEvent = useCallback(async (event: LearningEvent): Promise<BehaviorInsight[]> => {
         if (!user) return [];
 
         try {
-            const token = await getIdToken();
+            const token = await user.getIdToken();
             const response = await fetch('/api/behavior', {
                 method: 'POST',
                 headers: {
@@ -129,7 +129,7 @@ export function useBehaviorAgent(options: UseBehaviorAgentOptions = {}): UseBeha
             console.error('Error processing event:', err);
             return [];
         }
-    }, [user, getIdToken]);
+    }, [user]);
 
     // Check if intervention is needed
     const checkIntervention = useCallback(async () => {
@@ -138,7 +138,7 @@ export function useBehaviorAgent(options: UseBehaviorAgentOptions = {}): UseBeha
         }
 
         try {
-            const token = await getIdToken();
+            const token = await user.getIdToken();
             const response = await fetch('/api/behavior?type=intervention', {
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -155,7 +155,7 @@ export function useBehaviorAgent(options: UseBehaviorAgentOptions = {}): UseBeha
             console.error('Error checking intervention:', err);
             return { shouldIntervene: false };
         }
-    }, [user, getIdToken]);
+    }, [user]);
 
     // Helper: Get high priority insights
     const getHighPriorityInsights = useCallback((minPriority = 7): BehaviorInsight[] => {
@@ -214,19 +214,19 @@ export function useBehaviorAgent(options: UseBehaviorAgentOptions = {}): UseBeha
 
 // Simplified hook for just insights
 export function useBehaviorInsights(minPriority = 3) {
-    const { user, getIdToken } = useAuth();
+    const { user } = useAuth();
     const [insights, setInsights] = useState<BehaviorInsight[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        async function fetch() {
+        async function fetchInsights() {
             if (!user) {
                 setLoading(false);
                 return;
             }
 
             try {
-                const token = await getIdToken();
+                const token = await user.getIdToken();
                 const response = await fetch(`/api/behavior/insights?minPriority=${minPriority}`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
@@ -244,8 +244,8 @@ export function useBehaviorInsights(minPriority = 3) {
             }
         }
 
-        fetch();
-    }, [user, getIdToken, minPriority]);
+        fetchInsights();
+    }, [user, minPriority]);
 
     return { insights, loading };
 }

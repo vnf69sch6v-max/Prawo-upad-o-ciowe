@@ -36,7 +36,7 @@ export function AgentDebugPanel({
     defaultOpen = false,
     position = 'bottom-right'
 }: AgentDebugPanelProps) {
-    const { user, getIdToken } = useAuth();
+    const { user } = useAuth();
     const [isOpen, setIsOpen] = useState(defaultOpen);
     const [isMinimized, setIsMinimized] = useState(false);
     const [logs, setLogs] = useState<AgentLog[]>([]);
@@ -71,7 +71,7 @@ export function AgentDebugPanel({
         addLog('action', 'Pobieranie analizy zachowania...');
 
         try {
-            const token = await getIdToken();
+            const token = await user.getIdToken();
             const startTime = Date.now();
 
             const response = await fetch('/api/behavior?type=full', {
