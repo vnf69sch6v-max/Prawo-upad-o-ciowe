@@ -22,3 +22,8 @@ export { ExamReadinessGauge } from './exam-readiness-gauge';
 export { DopamineButton } from './dopamine-button';
 export { RetinaHeatmap } from './retina-heatmap';
 export { SocialPredatorTicker } from './social-predator-ticker';
+
+// User Behavior Agent Components
+export { BehaviorInsights } from './behavior-insights';
+export { BehaviorRecommendations } from './behavior-recommendations';
+export { BehaviorPredictionsWidget } from './behavior-predictions';

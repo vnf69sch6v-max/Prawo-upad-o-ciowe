@@ -4,7 +4,13 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Sidebar, Header, MobileNav } from '@/components/layout';
-import { StatCard, PerformanceChart } from '@/components/dashboard';
+import {
+    StatCard,
+    PerformanceChart,
+    BehaviorInsights,
+    BehaviorRecommendations,
+    BehaviorPredictionsWidget
+} from '@/components/dashboard';
 import { useAuth } from '@/hooks/use-auth';
 import { getLeaderboard, LeaderboardEntry } from '@/lib/services/user-service';
 import { BookOpen, Brain, Target, Sparkles, Loader2 } from 'lucide-react';
@@ -272,6 +278,13 @@ export default function DashboardPage() {
                                         </div>
                                     </div>
                                 </div>
+                            </div>
+
+                            {/* AI Behavior Analysis */}
+                            <div className="grid lg:grid-cols-3 gap-6">
+                                <BehaviorInsights maxItems={4} />
+                                <BehaviorRecommendations maxItems={3} />
+                                <BehaviorPredictionsWidget showTimeToMastery={true} />
                             </div>
 
                             {/* Best Exam Score */}
