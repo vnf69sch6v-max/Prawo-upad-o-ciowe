@@ -27,3 +27,4 @@ export { SocialPredatorTicker } from './social-predator-ticker';
 export { BehaviorInsights } from './behavior-insights';
 export { BehaviorRecommendations } from './behavior-recommendations';
 export { BehaviorPredictionsWidget } from './behavior-predictions';
+export { AgentDebugPanel } from './agent-debug-panel';

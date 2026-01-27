@@ -9,7 +9,8 @@ import {
     PerformanceChart,
     BehaviorInsights,
     BehaviorRecommendations,
-    BehaviorPredictionsWidget
+    BehaviorPredictionsWidget,
+    AgentDebugPanel
 } from '@/components/dashboard';
 import { useAuth } from '@/hooks/use-auth';
 import { getLeaderboard, LeaderboardEntry } from '@/lib/services/user-service';
@@ -305,6 +306,9 @@ export default function DashboardPage() {
             </div>
 
             <MobileNav currentView="dashboard" onNavigate={() => { }} />
+
+            {/* Agent Debug Panel - visible in dev mode */}
+            <AgentDebugPanel position="bottom-right" />
         </div>
     );
 }
