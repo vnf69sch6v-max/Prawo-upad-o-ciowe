@@ -90,16 +90,16 @@ const LEGAL_TERM_PATTERNS = [
 
 // Highlight legal terms in text
 function highlightLegalTerms(text: string, domain: string): React.ReactNode {
-    let result: (string | React.ReactNode)[] = [text];
+    let result: React.ReactNode[] = [text];
 
     LEGAL_TERM_PATTERNS.forEach((pattern, patternIndex) => {
-        result = result.flatMap((segment, segmentIndex) => {
-            if (typeof segment !== 'string') return segment;
+        result = result.flatMap((segment, segmentIndex): React.ReactNode[] => {
+            if (typeof segment !== 'string') return [segment];
 
             const matches = segment.split(pattern);
             const matchedTerms = segment.match(pattern) || [];
 
-            if (matches.length === 1) return segment;
+            if (matches.length === 1) return [segment];
 
             return matches.flatMap((part, i) => {
                 if (i === matches.length - 1) return part || [];
