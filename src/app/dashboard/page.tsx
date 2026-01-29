@@ -15,8 +15,9 @@ import { Card, Button } from '@/components/ui';
 import { useAuth } from '@/hooks/use-auth';
 import { getLeaderboard, LeaderboardEntry } from '@/lib/services/user-service';
 import {
-    BookOpen, Brain, Target, Sparkles, Loader2, Trophy,
-    TrendingUp, Flame, Award, ArrowRight, Zap
+    BookOpen, Brain, Target, Loader2, Trophy,
+    TrendingUp, Flame, Award, ArrowRight, Zap,
+    GraduationCap, Sparkles, BarChart3, CheckCircle2
 } from 'lucide-react';
 import { DEFAULT_USER_STATS } from '@/lib/types/user';
 
@@ -66,13 +67,14 @@ export default function DashboardPage() {
     // Use profile stats or defaults
     const stats = profile?.stats || DEFAULT_USER_STATS;
     const displayName = profile?.displayName || user?.displayName || 'Student';
+    const firstName = displayName.split(' ')[0];
 
     // Calculate accuracy percentage
     const accuracy = stats.totalQuestions > 0
         ? Math.round((stats.correctAnswers / stats.totalQuestions) * 100)
         : 0;
 
-    // Generate performance history - show only current value without random fluctuations
+    // Generate performance history
     const performanceHistory = stats.knowledgeEquity > 0
         ? Array.from({ length: 14 }, (_, i) => ({
             date: new Date(Date.now() - (13 - i) * 24 * 60 * 60 * 1000).toLocaleDateString('pl-PL', {
@@ -120,100 +122,113 @@ export default function DashboardPage() {
                 />
 
                 <main className="flex-1 overflow-auto p-4 md:p-6 lg:p-8 pb-24 lg:pb-8">
-                    <div className="max-w-7xl mx-auto space-y-8 animate-subtle">
-                        {/* Page Header */}
-                        <div className="page-header">
-                            <h1 className="page-title">
-                                Cześć, {displayName}!
+                    <div className="max-w-7xl mx-auto space-y-6">
+                        {/* Welcome Header */}
+                        <div className="mb-8">
+                            <h1 className="text-2xl md:text-3xl font-bold mb-2">
+                                Cześć, {firstName}!
+                                <span className="ml-2 inline-block animate-pulse">👋</span>
                             </h1>
-                            <p className="page-subtitle">
+                            <p className="text-[var(--text-muted)] text-base">
                                 {stats.currentStreak > 0
-                                    ? `Masz ${stats.currentStreak}-dniową passę nauki. Tak trzymaj!`
-                                    : 'Rozpocznij naukę, aby zbudować swoją passę!'
+                                    ? `Świetnie! Masz ${stats.currentStreak}-dniową passę. Kontynuuj naukę!`
+                                    : 'Rozpocznij naukę i zbuduj swoją passę!'
                                 }
                             </p>
                         </div>
 
-                        {/* Stats Cards */}
-                        <section>
-                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                                {/* Knowledge Points */}
-                                <Card variant="clean" padding="md">
-                                    <div className="flex items-start justify-between mb-3">
-                                        <div className="w-11 h-11 rounded-xl bg-amber-500/10 flex items-center justify-center">
-                                            <Award className="w-5 h-5 text-amber-400" />
-                                        </div>
-                                        {stats.knowledgeEquity > 0 && (
-                                            <span className="text-xs font-medium px-2 py-1 rounded-full bg-emerald-500/15 text-emerald-400">
-                                                +12%
-                                            </span>
-                                        )}
+                        {/* Stats Cards - Redesigned */}
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                            {/* Knowledge Points */}
+                            <div className="relative overflow-hidden bg-gradient-to-br from-violet-500/10 to-purple-600/5 border border-violet-500/20 rounded-2xl p-5 transition-all hover:border-violet-500/40 hover:shadow-lg hover:shadow-violet-500/5">
+                                <div className="flex items-center justify-between mb-4">
+                                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-violet-500/30">
+                                        <GraduationCap className="w-6 h-6 text-white" />
                                     </div>
-                                    <p className="text-2xl font-bold tracking-tight mb-1">
-                                        {stats.knowledgeEquity.toLocaleString()}
-                                    </p>
-                                    <p className="text-sm text-[var(--text-muted)]">Punkty wiedzy</p>
-                                </Card>
-
-                                {/* Exams Completed */}
-                                <Card variant="clean" padding="md">
-                                    <div className="flex items-start justify-between mb-3">
-                                        <div className="w-11 h-11 rounded-xl bg-blue-500/10 flex items-center justify-center">
-                                            <Target className="w-5 h-5 text-blue-400" />
-                                        </div>
-                                    </div>
-                                    <p className="text-2xl font-bold tracking-tight mb-1">
-                                        {stats.examsCompleted}
-                                    </p>
-                                    <p className="text-sm text-[var(--text-muted)]">Ukończone egzaminy</p>
-                                </Card>
-
-                                {/* Accuracy */}
-                                <Card variant="clean" padding="md">
-                                    <div className="flex items-start justify-between mb-3">
-                                        <div className="w-11 h-11 rounded-xl bg-emerald-500/10 flex items-center justify-center">
-                                            <TrendingUp className="w-5 h-5 text-emerald-400" />
-                                        </div>
-                                        {accuracy >= 70 && (
-                                            <span className="text-xs font-medium px-2 py-1 rounded-full bg-emerald-500/15 text-emerald-400">
-                                                Dobra!
-                                            </span>
-                                        )}
-                                    </div>
-                                    <p className="text-2xl font-bold tracking-tight mb-1">
-                                        {accuracy}%
-                                    </p>
-                                    <p className="text-sm text-[var(--text-muted)]">Dokładność</p>
-                                </Card>
-
-                                {/* Streak */}
-                                <Card variant="clean" padding="md">
-                                    <div className="flex items-start justify-between mb-3">
-                                        <div className="w-11 h-11 rounded-xl bg-orange-500/10 flex items-center justify-center">
-                                            <Flame className="w-5 h-5 text-orange-400" />
-                                        </div>
-                                    </div>
-                                    <p className="text-2xl font-bold tracking-tight mb-1">
-                                        {stats.currentStreak} dni
-                                    </p>
-                                    <p className="text-sm text-[var(--text-muted)]">Seria nauki</p>
-                                </Card>
+                                    {stats.knowledgeEquity > 0 && (
+                                        <span className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-400">
+                                            <TrendingUp className="w-3 h-3" />
+                                            +12%
+                                        </span>
+                                    )}
+                                </div>
+                                <p className="text-3xl font-bold tracking-tight text-white mb-1">
+                                    {stats.knowledgeEquity.toLocaleString()}
+                                </p>
+                                <p className="text-sm text-violet-300/70 font-medium">Punkty wiedzy</p>
                             </div>
-                        </section>
+
+                            {/* Exams Completed */}
+                            <div className="relative overflow-hidden bg-gradient-to-br from-cyan-500/10 to-blue-600/5 border border-cyan-500/20 rounded-2xl p-5 transition-all hover:border-cyan-500/40 hover:shadow-lg hover:shadow-cyan-500/5">
+                                <div className="flex items-center justify-between mb-4">
+                                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/30">
+                                        <Target className="w-6 h-6 text-white" />
+                                    </div>
+                                    {stats.examsCompleted > 0 && (
+                                        <span className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full bg-cyan-500/15 text-cyan-400">
+                                            <CheckCircle2 className="w-3 h-3" />
+                                            +{stats.examsCompleted}
+                                        </span>
+                                    )}
+                                </div>
+                                <p className="text-3xl font-bold tracking-tight text-white mb-1">
+                                    {stats.examsCompleted}
+                                </p>
+                                <p className="text-sm text-cyan-300/70 font-medium">Ukończone Egzaminy</p>
+                            </div>
+
+                            {/* Accuracy */}
+                            <div className="relative overflow-hidden bg-gradient-to-br from-emerald-500/10 to-green-600/5 border border-emerald-500/20 rounded-2xl p-5 transition-all hover:border-emerald-500/40 hover:shadow-lg hover:shadow-emerald-500/5">
+                                <div className="flex items-center justify-between mb-4">
+                                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center shadow-lg shadow-emerald-500/30">
+                                        <BarChart3 className="w-6 h-6 text-white" />
+                                    </div>
+                                    {accuracy >= 70 ? (
+                                        <span className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-400">
+                                            Dobra!
+                                        </span>
+                                    ) : accuracy > 0 && (
+                                        <span className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-500/15 text-amber-400">
+                                            ~ {accuracy}%
+                                        </span>
+                                    )}
+                                </div>
+                                <p className="text-3xl font-bold tracking-tight text-white mb-1">
+                                    {accuracy}%
+                                </p>
+                                <p className="text-sm text-emerald-300/70 font-medium">Dokładność</p>
+                            </div>
+
+                            {/* Streak */}
+                            <div className="relative overflow-hidden bg-gradient-to-br from-orange-500/10 to-red-600/5 border border-orange-500/20 rounded-2xl p-5 transition-all hover:border-orange-500/40 hover:shadow-lg hover:shadow-orange-500/5">
+                                <div className="flex items-center justify-between mb-4">
+                                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center shadow-lg shadow-orange-500/30">
+                                        <Flame className="w-6 h-6 text-white" />
+                                    </div>
+                                    {stats.currentStreak > 0 && (
+                                        <span className="text-2xl">🔥</span>
+                                    )}
+                                </div>
+                                <p className="text-3xl font-bold tracking-tight text-white mb-1">
+                                    {stats.currentStreak} {stats.currentStreak === 1 ? 'dzień' : 'dni'}
+                                </p>
+                                <p className="text-sm text-orange-300/70 font-medium">Seria nauki</p>
+                            </div>
+                        </div>
 
                         {/* Main Content Grid */}
-                        <section className="grid lg:grid-cols-2 gap-6">
-                            {/* Performance Chart / Empty State */}
-                            {stats.knowledgeEquity > 0 ? (
-                                <PerformanceChart data={performanceHistory} target={15000} />
-                            ) : (
-                                <Card variant="highlight" padding="lg">
-                                    <div className="flex flex-col items-center justify-center py-8 text-center">
-                                        <div className="w-16 h-16 rounded-2xl bg-[var(--accent-gold)]/10 flex items-center justify-center mb-4">
-                                            <Zap className="w-8 h-8 text-[var(--accent-gold)]" />
+                        <div className="grid lg:grid-cols-5 gap-6">
+                            {/* Performance Chart - Takes 3 cols */}
+                            <div className="lg:col-span-3">
+                                {stats.knowledgeEquity > 0 ? (
+                                    <PerformanceChart data={performanceHistory} target={15000} />
+                                ) : (
+                                    <div className="bg-gradient-to-br from-[var(--bg-card)] to-[var(--bg-elevated)] border border-[var(--border-color)] rounded-2xl p-8 h-full flex flex-col items-center justify-center text-center">
+                                        <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-[var(--accent-gold)] to-amber-500 flex items-center justify-center mb-6 shadow-lg shadow-amber-500/20">
+                                            <Sparkles className="w-10 h-10 text-[#1a1a1a]" />
                                         </div>
-                                        <h3 className="text-xl font-semibold mb-2">Zacznij swoją przygodę!</h3>
-                                        <p className="text-[var(--text-muted)] text-sm mb-6 max-w-xs">
+                                        <h3 className="text-xl font-bold mb-3">Zacznij swoją przygodę!</h3>
+                                        <p className="text-[var(--text-muted)] text-sm mb-6 max-w-sm">
                                             Odpowiadaj na pytania egzaminacyjne i śledź swoje postępy w nauce prawa.
                                         </p>
                                         <Button
@@ -225,143 +240,165 @@ export default function DashboardPage() {
                                             Rozpocznij egzamin
                                         </Button>
                                     </div>
-                                </Card>
-                            )}
+                                )}
+                            </div>
 
-                            {/* Quick Actions */}
-                            <Card variant="default" padding="md">
-                                <div className="section-header">
-                                    <Zap className="w-5 h-5 text-[var(--accent-gold)]" />
-                                    <h3 className="section-title">Szybkie akcje</h3>
-                                </div>
-                                <div className="grid grid-cols-2 gap-3">
-                                    <Link
-                                        href="/flashcards"
-                                        className="group p-4 bg-[var(--bg-hover)] hover:bg-[var(--accent-gold)]/5 border border-[var(--border-color)] hover:border-[var(--accent-gold)]/30 rounded-xl transition-all"
-                                    >
-                                        <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
-                                            <BookOpen className="w-5 h-5 text-blue-400" />
+                            {/* Quick Actions - Takes 2 cols */}
+                            <div className="lg:col-span-2">
+                                <div className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-2xl p-5 h-full">
+                                    <div className="flex items-center gap-2 mb-5">
+                                        <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center">
+                                            <Zap className="w-4 h-4 text-amber-400" />
                                         </div>
-                                        <span className="font-medium block mb-0.5">Fiszki</span>
-                                        <p className="text-xs text-[var(--text-muted)]">Ucz się z fiszek</p>
-                                    </Link>
-                                    <Link
-                                        href="/exam"
-                                        className="group p-4 bg-[var(--bg-hover)] hover:bg-[var(--accent-gold)]/5 border border-[var(--border-color)] hover:border-[var(--accent-gold)]/30 rounded-xl transition-all"
-                                    >
-                                        <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
-                                            <Target className="w-5 h-5 text-emerald-400" />
-                                        </div>
-                                        <span className="font-medium block mb-0.5">Egzaminy</span>
-                                        <p className="text-xs text-[var(--text-muted)]">Test wiedzy</p>
-                                    </Link>
-                                    <Link
-                                        href="/ai"
-                                        className="group p-4 bg-[var(--bg-hover)] hover:bg-[var(--accent-gold)]/5 border border-[var(--border-color)] hover:border-[var(--accent-gold)]/30 rounded-xl transition-all"
-                                    >
-                                        <div className="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
-                                            <Brain className="w-5 h-5 text-purple-400" />
-                                        </div>
-                                        <span className="font-medium block mb-0.5">AI Asystent</span>
-                                        <p className="text-xs text-[var(--text-muted)]">Zapytaj o prawo</p>
-                                    </Link>
-                                    <Link
-                                        href="/leaderboard"
-                                        className="group p-4 bg-[var(--bg-hover)] hover:bg-[var(--accent-gold)]/5 border border-[var(--border-color)] hover:border-[var(--accent-gold)]/30 rounded-xl transition-all"
-                                    >
-                                        <div className="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
-                                            <Trophy className="w-5 h-5 text-amber-400" />
-                                        </div>
-                                        <span className="font-medium block mb-0.5">Ranking</span>
-                                        <p className="text-xs text-[var(--text-muted)]">Zobacz pozycję</p>
-                                    </Link>
-                                </div>
-                            </Card>
-                        </section>
-
-                        {/* Progress Section */}
-                        <section>
-                            <Card variant="default" padding="md">
-                                <div className="section-header">
-                                    <TrendingUp className="w-5 h-5 text-emerald-400" />
-                                    <h3 className="section-title">Twoje postępy</h3>
-                                </div>
-                                <div className="space-y-5">
-                                    {/* Questions Goal */}
-                                    <div className="progress-container" style={{ marginBottom: 0 }}>
-                                        <div className="progress-header">
-                                            <span className="progress-label">Pytania dzisiaj</span>
-                                            <span className="progress-value">{stats.totalQuestions} / 20</span>
-                                        </div>
-                                        <div className="progress-track">
-                                            <div
-                                                className="progress-fill progress-fill-primary"
-                                                style={{ width: `${Math.min(100, (stats.totalQuestions / 20) * 100)}%` }}
-                                            />
-                                        </div>
+                                        <h3 className="font-semibold text-lg">Szybkie akcje</h3>
                                     </div>
 
-                                    {/* Accuracy Goal */}
-                                    <div className="progress-container" style={{ marginBottom: 0 }}>
-                                        <div className="progress-header">
-                                            <span className="progress-label">Cel dokładności 80%</span>
-                                            <span className={`progress-value ${accuracy >= 80 ? 'text-emerald-400' : ''}`}>
-                                                {accuracy}% {accuracy >= 80 && '✓'}
-                                            </span>
-                                        </div>
-                                        <div className="progress-track">
-                                            <div
-                                                className={`progress-fill ${accuracy >= 80 ? 'progress-fill-success' : 'bg-amber-500'}`}
-                                                style={{ width: `${Math.min(100, (accuracy / 80) * 100)}%` }}
-                                            />
-                                        </div>
-                                    </div>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        {/* Flashcards */}
+                                        <Link
+                                            href="/flashcards"
+                                            className="group relative overflow-hidden p-4 bg-gradient-to-br from-blue-500/5 to-blue-600/10 hover:from-blue-500/10 hover:to-blue-600/15 border border-blue-500/20 hover:border-blue-500/40 rounded-xl transition-all"
+                                        >
+                                            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center mb-3 shadow-lg shadow-blue-500/20 group-hover:scale-110 transition-transform">
+                                                <BookOpen className="w-5 h-5 text-white" />
+                                            </div>
+                                            <span className="font-semibold block text-blue-100 mb-0.5">Fiszki</span>
+                                            <p className="text-xs text-blue-300/60">Ucz się z fiszek</p>
+                                        </Link>
 
-                                    {/* Points Goal */}
-                                    <div className="progress-container" style={{ marginBottom: 0 }}>
-                                        <div className="progress-header">
-                                            <span className="progress-label">Cel: 10,000 punktów</span>
-                                            <span className="progress-value">{stats.knowledgeEquity.toLocaleString()} pkt</span>
-                                        </div>
-                                        <div className="progress-track">
-                                            <div
-                                                className="progress-fill progress-fill-success"
-                                                style={{ width: `${Math.min(100, (stats.knowledgeEquity / 10000) * 100)}%` }}
-                                            />
-                                        </div>
+                                        {/* Exams */}
+                                        <Link
+                                            href="/exam"
+                                            className="group relative overflow-hidden p-4 bg-gradient-to-br from-emerald-500/5 to-emerald-600/10 hover:from-emerald-500/10 hover:to-emerald-600/15 border border-emerald-500/20 hover:border-emerald-500/40 rounded-xl transition-all"
+                                        >
+                                            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center mb-3 shadow-lg shadow-emerald-500/20 group-hover:scale-110 transition-transform">
+                                                <Target className="w-5 h-5 text-white" />
+                                            </div>
+                                            <span className="font-semibold block text-emerald-100 mb-0.5">Egzaminy</span>
+                                            <p className="text-xs text-emerald-300/60">Test wiedzy</p>
+                                        </Link>
+
+                                        {/* AI Assistant */}
+                                        <Link
+                                            href="/ai"
+                                            className="group relative overflow-hidden p-4 bg-gradient-to-br from-purple-500/5 to-purple-600/10 hover:from-purple-500/10 hover:to-purple-600/15 border border-purple-500/20 hover:border-purple-500/40 rounded-xl transition-all"
+                                        >
+                                            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center mb-3 shadow-lg shadow-purple-500/20 group-hover:scale-110 transition-transform">
+                                                <Brain className="w-5 h-5 text-white" />
+                                            </div>
+                                            <span className="font-semibold block text-purple-100 mb-0.5">AI Asystent</span>
+                                            <p className="text-xs text-purple-300/60">Zapytaj o prawo</p>
+                                        </Link>
+
+                                        {/* Leaderboard */}
+                                        <Link
+                                            href="/leaderboard"
+                                            className="group relative overflow-hidden p-4 bg-gradient-to-br from-amber-500/5 to-orange-600/10 hover:from-amber-500/10 hover:to-orange-600/15 border border-amber-500/20 hover:border-amber-500/40 rounded-xl transition-all"
+                                        >
+                                            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center mb-3 shadow-lg shadow-amber-500/20 group-hover:scale-110 transition-transform">
+                                                <Trophy className="w-5 h-5 text-white" />
+                                            </div>
+                                            <span className="font-semibold block text-amber-100 mb-0.5">Ranking</span>
+                                            <p className="text-xs text-amber-300/60">Zobacz pozycję</p>
+                                        </Link>
                                     </div>
                                 </div>
-                            </Card>
-                        </section>
+                            </div>
+                        </div>
+
+                        {/* Progress Section - Full Width */}
+                        <div className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-2xl p-6">
+                            <div className="flex items-center gap-2 mb-6">
+                                <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                                    <TrendingUp className="w-4 h-4 text-emerald-400" />
+                                </div>
+                                <h3 className="font-semibold text-lg">Twoje postępy</h3>
+                            </div>
+
+                            <div className="grid md:grid-cols-3 gap-6">
+                                {/* Questions Goal */}
+                                <div>
+                                    <div className="flex justify-between items-center mb-2">
+                                        <span className="text-sm text-[var(--text-muted)]">Pytania dzisiaj</span>
+                                        <span className="text-sm font-semibold">{Math.min(stats.totalQuestions, 50)} / 20</span>
+                                    </div>
+                                    <div className="h-3 bg-[var(--bg-hover)] rounded-full overflow-hidden">
+                                        <div
+                                            className="h-full rounded-full bg-gradient-to-r from-violet-500 to-purple-600 transition-all duration-500"
+                                            style={{ width: `${Math.min(100, (stats.totalQuestions / 20) * 100)}%` }}
+                                        />
+                                    </div>
+                                    {stats.totalQuestions >= 20 && (
+                                        <p className="text-xs text-emerald-400 mt-1 flex items-center gap-1">
+                                            <CheckCircle2 className="w-3 h-3" /> Cel osiągnięty!
+                                        </p>
+                                    )}
+                                </div>
+
+                                {/* Accuracy Goal */}
+                                <div>
+                                    <div className="flex justify-between items-center mb-2">
+                                        <span className="text-sm text-[var(--text-muted)]">Cel dokładności 80%</span>
+                                        <span className={`text-sm font-semibold ${accuracy >= 80 ? 'text-emerald-400' : ''}`}>
+                                            {accuracy}%
+                                        </span>
+                                    </div>
+                                    <div className="h-3 bg-[var(--bg-hover)] rounded-full overflow-hidden">
+                                        <div
+                                            className={`h-full rounded-full transition-all duration-500 ${accuracy >= 80
+                                                ? 'bg-gradient-to-r from-emerald-500 to-green-600'
+                                                : 'bg-gradient-to-r from-amber-500 to-orange-500'}`}
+                                            style={{ width: `${Math.min(100, (accuracy / 80) * 100)}%` }}
+                                        />
+                                    </div>
+                                    {accuracy >= 80 && (
+                                        <p className="text-xs text-emerald-400 mt-1 flex items-center gap-1">
+                                            <CheckCircle2 className="w-3 h-3" /> Cel osiągnięty!
+                                        </p>
+                                    )}
+                                </div>
+
+                                {/* Points Goal */}
+                                <div>
+                                    <div className="flex justify-between items-center mb-2">
+                                        <span className="text-sm text-[var(--text-muted)]">Cel: 10,000 punktów</span>
+                                        <span className="text-sm font-semibold">{stats.knowledgeEquity.toLocaleString()} pkt</span>
+                                    </div>
+                                    <div className="h-3 bg-[var(--bg-hover)] rounded-full overflow-hidden">
+                                        <div
+                                            className="h-full rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 transition-all duration-500"
+                                            style={{ width: `${Math.min(100, (stats.knowledgeEquity / 10000) * 100)}%` }}
+                                        />
+                                    </div>
+                                    {stats.knowledgeEquity >= 10000 && (
+                                        <p className="text-xs text-emerald-400 mt-1 flex items-center gap-1">
+                                            <CheckCircle2 className="w-3 h-3" /> Cel osiągnięty!
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
 
                         {/* AI Behavior Analysis */}
-                        <section>
-                            <div className="grid lg:grid-cols-3 gap-6">
-                                <BehaviorInsights maxItems={4} />
-                                <BehaviorRecommendations maxItems={3} />
-                                <BehaviorPredictionsWidget showTimeToMastery={true} />
-                            </div>
-                        </section>
+                        <div className="grid lg:grid-cols-3 gap-6">
+                            <BehaviorInsights maxItems={4} />
+                            <BehaviorRecommendations maxItems={3} />
+                            <BehaviorPredictionsWidget showTimeToMastery={true} />
+                        </div>
 
                         {/* Best Exam Score */}
                         {stats.bestExamScore > 0 && (
-                            <section>
-                                <Card
-                                    variant="highlight"
-                                    padding="md"
-                                    className="bg-gradient-to-r from-amber-500/5 to-orange-500/5"
-                                >
-                                    <div className="flex items-center gap-5">
-                                        <div className="w-14 h-14 rounded-2xl bg-amber-500/10 flex items-center justify-center">
-                                            <Trophy className="w-7 h-7 text-amber-400" />
-                                        </div>
-                                        <div>
-                                            <p className="text-sm text-[var(--text-muted)] mb-1">Najlepszy wynik egzaminu</p>
-                                            <p className="text-3xl font-bold text-amber-400">{stats.bestExamScore}%</p>
-                                        </div>
+                            <div className="bg-gradient-to-r from-amber-500/10 via-orange-500/5 to-red-500/10 border border-amber-500/20 rounded-2xl p-6">
+                                <div className="flex items-center gap-5">
+                                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg shadow-amber-500/30">
+                                        <Award className="w-8 h-8 text-white" />
                                     </div>
-                                </Card>
-                            </section>
+                                    <div>
+                                        <p className="text-sm text-amber-300/70 mb-1">Najlepszy wynik egzaminu</p>
+                                        <p className="text-4xl font-bold text-amber-400">{stats.bestExamScore}%</p>
+                                    </div>
+                                </div>
+                            </div>
                         )}
                     </div>
                 </main>

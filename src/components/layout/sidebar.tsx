@@ -176,7 +176,7 @@ export function Sidebar({
                                             className={cn(
                                                 'w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200',
                                                 active
-                                                    ? 'bg-[var(--accent-gold)]/10 text-[var(--accent-gold)] shadow-sm'
+                                                    ? 'bg-gradient-to-r from-cyan-500/15 to-blue-500/10 text-cyan-300 border border-cyan-500/30 shadow-sm shadow-cyan-500/10'
                                                     : 'text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)]',
                                                 isCollapsed && 'justify-center px-2'
                                             )}
@@ -184,7 +184,7 @@ export function Sidebar({
                                         >
                                             <span className={cn(
                                                 'flex items-center justify-center w-6 h-6 transition-colors',
-                                                active && 'text-[var(--accent-gold)]'
+                                                active && 'text-cyan-400'
                                             )}>
                                                 {item.icon}
                                             </span>
@@ -192,12 +192,12 @@ export function Sidebar({
                                                 <>
                                                     <span className="flex-1 text-left">{item.label}</span>
                                                     {item.badge === 'pro' && (
-                                                        <span className="flex items-center gap-1 px-2 py-0.5 text-[10px] font-semibold bg-purple-500/15 text-purple-400 rounded-full">
+                                                        <span className="flex items-center gap-1 px-2 py-0.5 text-[10px] font-semibold bg-gradient-to-r from-violet-500/20 to-purple-500/20 text-violet-300 rounded-full border border-violet-500/30">
                                                             <Crown size={10} />
                                                         </span>
                                                     )}
                                                     {item.badge === 'new' && (
-                                                        <span className="px-2 py-0.5 text-[10px] font-semibold bg-emerald-500/15 text-emerald-400 rounded-full">
+                                                        <span className="px-2 py-0.5 text-[10px] font-semibold bg-gradient-to-r from-cyan-500/20 to-blue-500/20 text-cyan-300 rounded-full border border-cyan-500/30">
                                                             NEW
                                                         </span>
                                                     )}
