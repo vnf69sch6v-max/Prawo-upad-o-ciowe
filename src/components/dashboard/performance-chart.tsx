@@ -41,8 +41,10 @@ export function PerformanceChart({ data, target = 15000 }: PerformanceChartProps
             {/* Header */}
             <div className="flex justify-between items-center">
                 <div className="flex items-center gap-2">
-                    <span className="text-lg">📈</span>
-                    <span className="text-sm font-semibold">Performance Trend</span>
+                    <div className="w-8 h-8 rounded-lg bg-violet-500/10 flex items-center justify-center">
+                        <span className="text-violet-400 text-sm">📈</span>
+                    </div>
+                    <span className="text-base font-semibold">Performance Trend</span>
                 </div>
                 <div className="flex gap-1 bg-[var(--bg-hover)] rounded-lg p-1">
                     {(['7d', '30d', 'all'] as const).map((r) => (
@@ -50,10 +52,10 @@ export function PerformanceChart({ data, target = 15000 }: PerformanceChartProps
                             key={r}
                             onClick={() => setTimeRange(r)}
                             className={cn(
-                                'px-3 py-1 text-xs font-medium rounded transition-all',
+                                'px-3 py-1.5 text-xs font-medium rounded-md transition-all',
                                 timeRange === r
-                                    ? 'bg-[#1a365d] text-white'
-                                    : 'text-[var(--text-muted)] hover:text-white'
+                                    ? 'bg-gradient-to-r from-violet-500 to-purple-600 text-white shadow-sm'
+                                    : 'text-[var(--text-muted)] hover:text-white hover:bg-[var(--bg-card)]'
                             )}
                         >
                             {r === 'all' ? 'All' : r}
@@ -67,10 +69,10 @@ export function PerformanceChart({ data, target = 15000 }: PerformanceChartProps
                 {/* Target Line */}
                 {target && (
                     <div
-                        className="absolute left-0 right-0 border-t-2 border-dashed border-yellow-500/50 z-10"
+                        className="absolute left-0 right-0 border-t-2 border-dashed border-amber-500/60 z-10"
                         style={{ bottom: `${((target - min) / range) * 100}%` }}
                     >
-                        <span className="absolute right-0 -top-5 text-xs text-yellow-500 bg-[var(--bg-card)] px-2 rounded">
+                        <span className="absolute right-0 -top-5 text-xs text-amber-400 bg-[var(--bg-card)] px-2 py-0.5 rounded border border-amber-500/30">
                             Target {(target / 1000).toFixed(1)}k pkt
                         </span>
                     </div>
@@ -101,8 +103,8 @@ export function PerformanceChart({ data, target = 15000 }: PerformanceChartProps
                                     className={cn(
                                         'w-full rounded-t transition-all duration-200 cursor-pointer',
                                         isHovered
-                                            ? 'bg-gradient-to-t from-#1a365d to-purple-300 shadow-lg shadow-#1a365d/30'
-                                            : 'bg-gradient-to-t from-#1a365d/80 to-#1a365d/60'
+                                            ? 'bg-gradient-to-t from-violet-600 to-violet-400 shadow-lg shadow-violet-500/30'
+                                            : 'bg-gradient-to-t from-violet-600/80 to-violet-500/60'
                                     )}
                                     style={{ height: `${Math.max(height, 3)}%` }}
                                 />
@@ -123,14 +125,14 @@ export function PerformanceChart({ data, target = 15000 }: PerformanceChartProps
             <div className="grid grid-cols-3 gap-4 pt-4 border-t border-[var(--border-color)]">
                 <div>
                     <p className="text-xs text-[var(--text-muted)]">Peak Value</p>
-                    <p className="text-sm font-semibold text-[#1a365d]">{peakValue.toLocaleString()} pkt</p>
+                    <p className="text-sm font-semibold text-violet-400">{peakValue.toLocaleString()} pkt</p>
                 </div>
                 <div>
                     <p className="text-xs text-[var(--text-muted)]">Avg. Daily</p>
                     <p
                         className={cn(
                             'text-sm font-semibold',
-                            avgGrowth >= 0 ? 'text-green-400' : 'text-red-400'
+                            avgGrowth >= 0 ? 'text-emerald-400' : 'text-red-400'
                         )}
                     >
                         {avgGrowth >= 0 ? '+' : ''}{avgGrowth} pkt
@@ -141,7 +143,7 @@ export function PerformanceChart({ data, target = 15000 }: PerformanceChartProps
                     <p
                         className={cn(
                             'text-sm font-semibold',
-                            Number(periodChange) >= 0 ? 'text-green-400' : 'text-red-400'
+                            Number(periodChange) >= 0 ? 'text-emerald-400' : 'text-red-400'
                         )}
                     >
                         {Number(periodChange) >= 0 ? '+' : ''}{periodChange}%
