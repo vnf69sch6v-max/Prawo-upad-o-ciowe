@@ -96,12 +96,12 @@ export function ExamSimulator({
     };
 
     return (
-        <div className="h-screen flex flex-col" style={{ background: 'var(--bg-primary)' }}>
+        <div className="h-screen flex flex-col bg-[#F8F9FA]">
             {/* Header */}
-            <header className="flex items-center justify-between p-4 border-b border-[var(--border-color)] bg-[var(--bg-secondary)]">
+            <header className="flex items-center justify-between p-4 border-b border-gray-200 bg-white">
                 <div>
-                    <h1 className="text-lg font-bold">{examTitle}</h1>
-                    <p className="text-sm text-[var(--text-muted)]">
+                    <h1 className="text-lg font-bold text-gray-900">{examTitle}</h1>
+                    <p className="text-sm text-gray-500">
                         Pytanie {currentIndex + 1} z {questions.length}
                     </p>
                 </div>
@@ -109,7 +109,7 @@ export function ExamSimulator({
                 {timeLimit > 0 && (
                     <div className={cn(
                         'flex items-center gap-2 px-4 py-2 rounded-lg',
-                        timeRemaining < 60 ? 'bg-red-500/20 text-red-400' : 'bg-[var(--bg-hover)]'
+                        timeRemaining < 60 ? 'bg-red-500/20 text-red-500' : 'bg-gray-100 text-gray-700'
                     )}>
                         <Clock size={18} />
                         <span className="font-mono text-lg font-bold">{formatTime(timeRemaining)}</span>
@@ -118,16 +118,16 @@ export function ExamSimulator({
 
                 <button
                     onClick={onCancel}
-                    className="px-4 py-2 bg-red-500/10 text-red-400 rounded-lg hover:bg-red-500/20"
+                    className="px-4 py-2 bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500/20"
                 >
                     Anuluj
                 </button>
             </header>
 
             {/* Progress */}
-            <div className="h-1 bg-[var(--bg-hover)]">
+            <div className="h-1 bg-gray-200">
                 <div
-                    className="h-full bg-gradient-to-r from-#1a365d to-#1a365d transition-all"
+                    className="h-full bg-gradient-to-r from-[#1a365d] to-[#2c5282] transition-all"
                     style={{ width: `${progress}%` }}
                 />
             </div>
@@ -135,8 +135,8 @@ export function ExamSimulator({
             {/* Main Content */}
             <div className="flex-1 flex overflow-hidden">
                 {/* Question Navigation Sidebar */}
-                <aside className="hidden lg:block w-64 border-r border-[var(--border-color)] p-4 overflow-y-auto">
-                    <h3 className="text-sm font-semibold mb-3 text-[var(--text-muted)]">Nawigacja</h3>
+                <aside className="hidden lg:block w-64 border-r border-gray-200 p-4 overflow-y-auto bg-white">
+                    <h3 className="text-sm font-semibold mb-3 text-gray-500">Nawigacja</h3>
                     <div className="grid grid-cols-5 gap-2">
                         {questions.map((q, i) => (
                             <button
@@ -146,8 +146,8 @@ export function ExamSimulator({
                                     'w-10 h-10 rounded-lg text-sm font-medium transition-all relative',
                                     i === currentIndex && 'ring-2 ring-[#1a365d]',
                                     answers[q.id]
-                                        ? 'bg-green-500/20 text-green-400'
-                                        : 'bg-[var(--bg-hover)] text-[var(--text-muted)]'
+                                        ? 'bg-green-500/20 text-green-600'
+                                        : 'bg-gray-100 text-gray-500'
                                 )}
                             >
                                 {i + 1}
@@ -161,15 +161,15 @@ export function ExamSimulator({
                     <div className="mt-6 space-y-2 text-xs">
                         <div className="flex items-center gap-2">
                             <div className="w-4 h-4 rounded bg-green-500/20" />
-                            <span className="text-[var(--text-muted)]">Odpowiedziano ({answeredCount})</span>
+                            <span className="text-gray-500">Odpowiedziano ({answeredCount})</span>
                         </div>
                         <div className="flex items-center gap-2">
-                            <div className="w-4 h-4 rounded bg-[var(--bg-hover)]" />
-                            <span className="text-[var(--text-muted)]">Bez odpowiedzi ({questions.length - answeredCount})</span>
+                            <div className="w-4 h-4 rounded bg-gray-100" />
+                            <span className="text-gray-500">Bez odpowiedzi ({questions.length - answeredCount})</span>
                         </div>
                         <div className="flex items-center gap-2">
                             <Flag size={12} className="text-orange-400" />
-                            <span className="text-[var(--text-muted)]">Oznaczone ({flagged.size})</span>
+                            <span className="text-gray-500">Oznaczone ({flagged.size})</span>
                         </div>
                     </div>
                 </aside>
@@ -181,14 +181,14 @@ export function ExamSimulator({
                         <div className="flex items-center gap-2 mb-4">
                             <span className={cn(
                                 'px-2 py-1 rounded text-xs font-medium',
-                                currentQuestion.difficulty === 'easy' && 'bg-green-500/20 text-green-400',
-                                currentQuestion.difficulty === 'medium' && 'bg-yellow-500/20 text-yellow-400',
-                                currentQuestion.difficulty === 'hard' && 'bg-orange-500/20 text-orange-400',
-                                currentQuestion.difficulty === 'expert' && 'bg-red-500/20 text-red-400'
+                                currentQuestion.difficulty === 'easy' && 'bg-green-500/20 text-green-600',
+                                currentQuestion.difficulty === 'medium' && 'bg-yellow-500/20 text-yellow-600',
+                                currentQuestion.difficulty === 'hard' && 'bg-orange-500/20 text-orange-600',
+                                currentQuestion.difficulty === 'expert' && 'bg-red-500/20 text-red-600'
                             )}>
                                 {currentQuestion.difficulty}
                             </span>
-                            <span className="text-xs text-[var(--text-muted)]">
+                            <span className="text-xs text-gray-500">
                                 {currentQuestion.domain.replace('_', ' ')}
                             </span>
                             <button
@@ -196,8 +196,8 @@ export function ExamSimulator({
                                 className={cn(
                                     'ml-auto p-2 rounded-lg',
                                     flagged.has(currentQuestion.id)
-                                        ? 'bg-orange-500/20 text-orange-400'
-                                        : 'bg-[var(--bg-hover)] text-[var(--text-muted)] hover:text-orange-400'
+                                        ? 'bg-orange-500/20 text-orange-500'
+                                        : 'bg-gray-100 text-gray-500 hover:text-orange-500'
                                 )}
                             >
                                 <Flag size={16} />
@@ -206,7 +206,7 @@ export function ExamSimulator({
 
                         {/* Question Text */}
                         <div className="lex-card mb-6">
-                            <p className="text-lg">{currentQuestion.text}</p>
+                            <p className="text-lg text-gray-900">{currentQuestion.text}</p>
                         </div>
 
                         {/* Options */}
@@ -224,18 +224,18 @@ export function ExamSimulator({
                                                 'w-full p-4 rounded-xl text-left transition-all flex items-start gap-4',
                                                 isSelected
                                                     ? 'bg-[#1a365d]/20 border-2 border-[#1a365d]'
-                                                    : 'bg-[var(--bg-card)] border border-[var(--border-color)] hover:border-[#1a365d]/50'
+                                                    : 'bg-white border border-gray-200 hover:border-[#1a365d]/50'
                                             )}
                                         >
                                             <span className={cn(
                                                 'w-8 h-8 rounded-full flex items-center justify-center shrink-0 font-semibold',
                                                 isSelected
                                                     ? 'bg-[#1a365d] text-white'
-                                                    : 'bg-[var(--bg-hover)]'
+                                                    : 'bg-gray-100 text-gray-700'
                                             )}>
                                                 {letter}
                                             </span>
-                                            <span className="flex-1">{option.text}</span>
+                                            <span className="flex-1 text-gray-900">{option.text}</span>
                                             {isSelected && <CheckCircle size={20} className="text-[#1a365d] shrink-0" />}
                                         </button>
                                     );
@@ -246,24 +246,24 @@ export function ExamSimulator({
             </div>
 
             {/* Footer */}
-            <footer className="flex items-center justify-between p-4 border-t border-[var(--border-color)] bg-[var(--bg-secondary)]">
+            <footer className="flex items-center justify-between p-4 border-t border-gray-200 bg-white">
                 <button
                     onClick={() => goToQuestion(currentIndex - 1)}
                     disabled={currentIndex === 0}
-                    className="flex items-center gap-2 px-4 py-2 bg-[var(--bg-hover)] rounded-lg disabled:opacity-50"
+                    className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg disabled:opacity-50"
                 >
                     <ChevronLeft size={18} />
                     Poprzednie
                 </button>
 
-                <div className="text-sm text-[var(--text-muted)]">
+                <div className="text-sm text-gray-500">
                     {answeredCount} / {questions.length} odpowiedzi
                 </div>
 
                 {currentIndex < questions.length - 1 ? (
                     <button
                         onClick={() => goToQuestion(currentIndex + 1)}
-                        className="flex items-center gap-2 px-4 py-2 bg-[#1a365d] text-white rounded-lg hover:bg-[#1a365d]"
+                        className="flex items-center gap-2 px-4 py-2 bg-[#1a365d] text-white rounded-lg hover:bg-[#2c5282]"
                     >
                         Następne
                         <ChevronRight size={18} />
@@ -283,12 +283,12 @@ export function ExamSimulator({
             {showConfirm && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
                     <div className="lex-card max-w-md w-full animate-fade-in">
-                        <AlertCircle size={40} className="mx-auto mb-4 text-yellow-400" />
-                        <h3 className="text-xl font-bold text-center mb-2">Zakończyć egzamin?</h3>
-                        <p className="text-center text-[var(--text-muted)] mb-6">
+                        <AlertCircle size={40} className="mx-auto mb-4 text-yellow-500" />
+                        <h3 className="text-xl font-bold text-center mb-2 text-gray-900">Zakończyć egzamin?</h3>
+                        <p className="text-center text-gray-500 mb-6">
                             Odpowiedziałeś na {answeredCount} z {questions.length} pytań.
                             {questions.length - answeredCount > 0 && (
-                                <span className="text-yellow-400">
+                                <span className="text-yellow-600">
                                     {' '}Pozostało {questions.length - answeredCount} bez odpowiedzi.
                                 </span>
                             )}
@@ -296,7 +296,7 @@ export function ExamSimulator({
                         <div className="flex gap-3">
                             <button
                                 onClick={() => setShowConfirm(false)}
-                                className="flex-1 py-3 bg-[var(--bg-hover)] rounded-xl hover:bg-[var(--bg-elevated)]"
+                                className="flex-1 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200"
                             >
                                 Wróć
                             </button>

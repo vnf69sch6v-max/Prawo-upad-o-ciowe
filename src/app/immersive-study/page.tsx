@@ -189,7 +189,7 @@ export default function ImmersiveStudyPage() {
     // Mode selection view
     if (view === 'select') {
         return (
-            <div className="flex min-h-screen" style={{ background: 'var(--bg-primary)' }}>
+            <div className="flex min-h-screen bg-[#F8F9FA]">
                 <Sidebar
                     currentView="study"
                     onNavigate={() => { }}
@@ -218,8 +218,8 @@ export default function ImmersiveStudyPage() {
                                 <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl mb-4 glass-card">
                                     <span className="text-4xl">🧠</span>
                                 </div>
-                                <h1 className="text-3xl font-bold mb-2">Tryb Immersyjny</h1>
-                                <p className="text-[var(--text-muted)]">
+                                <h1 className="text-3xl font-bold mb-2 text-gray-900">Tryb Immersyjny</h1>
+                                <p className="text-gray-500">
                                     Ucz się przez gesty • Swipe prawo = Wiem • Swipe lewo = Nie wiem
                                 </p>
                             </div>
@@ -243,16 +243,16 @@ export default function ImmersiveStudyPage() {
                                                 {mode.icon}
                                             </div>
                                             <div className="flex-1">
-                                                <h3 className="font-bold mb-1 group-hover:text-[var(--text-primary)] transition-colors">
+                                                <h3 className="font-bold mb-1 text-gray-900 group-hover:text-gray-700 transition-colors">
                                                     {mode.name}
                                                 </h3>
-                                                <p className="text-sm text-[var(--text-muted)]">
+                                                <p className="text-sm text-gray-500">
                                                     {mode.description}
                                                 </p>
                                             </div>
                                             <Play
                                                 size={24}
-                                                className="text-[var(--text-muted)] group-hover:text-[var(--accent-success)] transition-colors"
+                                                className="text-gray-400 group-hover:text-green-500 transition-colors"
                                             />
                                         </div>
                                     </button>
@@ -265,7 +265,7 @@ export default function ImmersiveStudyPage() {
                                     <Sparkles size={18} className="text-[var(--neon-cywilne)]" />
                                     Jak to działa?
                                 </h3>
-                                <div className="grid sm:grid-cols-2 gap-4 text-sm text-[var(--text-secondary)]">
+                                <div className="grid sm:grid-cols-2 gap-4 text-sm text-gray-600">
                                     <div className="flex items-center gap-3">
                                         <span className="text-2xl">👉</span>
                                         <span><strong>Swipe prawo</strong> — Znam odpowiedź</span>
@@ -297,18 +297,17 @@ export default function ImmersiveStudyPage() {
     if (view === 'study' && currentCard) {
         return (
             <div
-                className="min-h-screen flex flex-col"
-                style={{ background: 'var(--bg-void)' }}
+                className="min-h-screen flex flex-col bg-[#F8F9FA]"
             >
                 {/* Minimal header */}
                 <div className="flex items-center justify-between p-4">
                     <button
                         onClick={handleExit}
-                        className="p-2 rounded-full glass-card hover:bg-[var(--bg-hover)] transition-colors"
+                        className="p-2 rounded-full glass-card hover:bg-gray-100 transition-colors"
                     >
                         <X size={20} />
                     </button>
-                    <div className="text-sm text-[var(--text-muted)]">
+                    <div className="text-sm text-gray-500">
                         {currentMode?.name}
                     </div>
                     <div className="w-10" /> {/* Spacer for centering */}
@@ -362,8 +361,7 @@ export default function ImmersiveStudyPage() {
 
         return (
             <div
-                className="min-h-screen flex items-center justify-center p-4"
-                style={{ background: 'var(--bg-primary)' }}
+                className="min-h-screen flex items-center justify-center p-4 bg-[#F8F9FA]"
             >
                 <div className="max-w-md w-full space-y-6 animate-fade-in">
                     {/* Celebration */}
@@ -382,15 +380,15 @@ export default function ImmersiveStudyPage() {
                         <div className="grid grid-cols-3 gap-4 text-center">
                             <div>
                                 <p className="text-2xl font-bold">{total}</p>
-                                <p className="text-sm text-[var(--text-muted)]">Karty</p>
+                                <p className="text-sm text-gray-500">Karty</p>
                             </div>
                             <div>
                                 <p className="text-2xl font-bold text-[var(--accent-success)]">{accuracy}%</p>
-                                <p className="text-sm text-[var(--text-muted)]">Dokładność</p>
+                                <p className="text-sm text-gray-500">Dokładność</p>
                             </div>
                             <div>
                                 <p className="text-2xl font-bold">{duration}m</p>
-                                <p className="text-sm text-[var(--text-muted)]">Czas</p>
+                                <p className="text-sm text-gray-500">Czas</p>
                             </div>
                         </div>
 
@@ -399,7 +397,7 @@ export default function ImmersiveStudyPage() {
                             <div className="flex items-center gap-3">
                                 <span className="text-lg">✅</span>
                                 <span className="text-sm w-16">Wiedziałem</span>
-                                <div className="flex-1 h-4 bg-[var(--bg-hover)] rounded-full overflow-hidden">
+                                <div className="flex-1 h-4 bg-gray-200 rounded-full overflow-hidden">
                                     <div
                                         className="h-full bg-[var(--accent-success)] rounded-full transition-all"
                                         style={{ width: `${total > 0 ? (knew / total) * 100 : 0}%` }}
@@ -410,7 +408,7 @@ export default function ImmersiveStudyPage() {
                             <div className="flex items-center gap-3">
                                 <span className="text-lg">❌</span>
                                 <span className="text-sm w-16">Nie wiedziałem</span>
-                                <div className="flex-1 h-4 bg-[var(--bg-hover)] rounded-full overflow-hidden">
+                                <div className="flex-1 h-4 bg-gray-200 rounded-full overflow-hidden">
                                     <div
                                         className="h-full bg-[var(--accent-danger)] rounded-full transition-all"
                                         style={{ width: `${total > 0 ? (didntKnow / total) * 100 : 0}%` }}

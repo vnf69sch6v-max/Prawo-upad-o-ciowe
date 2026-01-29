@@ -6,15 +6,14 @@
    ============================================ */
 
 :root {
-  /* ========== CYBER-IMMERSIVE BACKGROUNDS ========== */
-  /* Deep focus graphite - reduces eye strain, makes neons pop */
-  --bg-void: #0a0a0a;
-  --bg-primary: #121212;
-  --bg-secondary: #1a1a1a;
-  --bg-elevated: #222222;
-  --bg-card: #1e1e1e;
-  --bg-hover: rgba(255, 255, 255, 0.08);
-  --bg-tertiary: #2a2a2a;
+  /* ========== LIGHT THEME BACKGROUNDS ========== */
+  --bg-void: #F8F9FA;
+  --bg-primary: #F8F9FA;
+  --bg-secondary: #ffffff;
+  --bg-elevated: #f3f4f6;
+  --bg-card: #ffffff;
+  --bg-hover: #f3f4f6;
+  --bg-tertiary: #e5e7eb;
 
   /* ========== GLASSMORPHISM ========== */
   --glass-bg: rgba(255, 255, 255, 0.04);
@@ -24,11 +23,11 @@
   --glass-blur: 20px;
   --glass-blur-light: 12px;
 
-  /* ========== TEXT COLORS (Off-White for readability) ========== */
-  --text-primary: #ededed;
-  --text-secondary: rgba(237, 237, 237, 0.80);
-  --text-muted: rgba(237, 237, 237, 0.55);
-  --text-subtle: rgba(237, 237, 237, 0.30);
+  /* ========== TEXT COLORS (Dark for light theme) ========== */
+  --text-primary: #111827;
+  --text-secondary: #374151;
+  --text-muted: #6b7280;
+  --text-subtle: #9ca3af;
 
   /* ========== PRIMARY ACTION - ELECTRIC BLUE (Flow State) ========== */
   --accent-flow: #2962FF;
@@ -160,23 +159,25 @@ body {
   padding: 1.5rem;
 }
 
-/* Legacy lex-card updated for dark mode */
+/* Legacy lex-card updated for LIGHT mode */
 .lex-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
   border-radius: 16px;
   padding: 1.5rem;
   transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  color: #111827;
 }
 
 .lex-card:hover {
-  border-color: var(--border-active);
-  box-shadow: var(--shadow-md);
+  border-color: #d1d5db;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .lex-card-flat {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
   border-radius: 16px;
   padding: 1.5rem;
 }

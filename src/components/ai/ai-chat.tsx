@@ -90,13 +90,13 @@ export function AIChat({ onSendMessage }: AIChatProps) {
     return (
         <div className="flex flex-col h-[600px] lex-card overflow-hidden">
             {/* Header */}
-            <div className="flex items-center gap-3 p-4 border-b border-[var(--border-color)]">
+            <div className="flex items-center gap-3 p-4 border-b border-gray-200">
                 <div className="w-10 h-10 bg-gradient-to-br from-#1a365d to-pink-600 rounded-xl flex items-center justify-center">
                     <Bot size={20} />
                 </div>
                 <div>
-                    <h3 className="font-semibold">LexCapital AI</h3>
-                    <p className="text-xs text-[var(--text-muted)]">Ekspert prawa polskiego</p>
+                    <h3 className="font-semibold text-gray-900">LexCapital AI</h3>
+                    <p className="text-xs text-gray-500">Ekspert prawa polskiego</p>
                 </div>
                 <div className="ml-auto">
                     <span className="text-xs text-green-400 flex items-center gap-1">
@@ -112,8 +112,8 @@ export function AIChat({ onSendMessage }: AIChatProps) {
                     <div className="text-center py-8 space-y-4">
                         <Sparkles size={40} className="mx-auto text-[#1a365d]" />
                         <div>
-                            <h4 className="font-medium mb-2">Witaj w LexCapital AI!</h4>
-                            <p className="text-sm text-[var(--text-muted)]">
+                            <h4 className="font-medium mb-2 text-gray-900">Witaj w LexCapital AI!</h4>
+                            <p className="text-sm text-gray-500">
                                 Zapytaj mnie o przepisy, instytucje prawne czy przygotowanie do egzaminu.
                             </p>
                         </div>
@@ -123,7 +123,7 @@ export function AIChat({ onSendMessage }: AIChatProps) {
                                 <button
                                     key={item.label}
                                     onClick={() => handleQuickPrompt(item.prompt)}
-                                    className="px-3 py-1.5 text-xs bg-[var(--bg-hover)] hover:bg-[#1a365d]/20 border border-[var(--border-color)] hover:border-[#1a365d]/50 rounded-full transition-all"
+                                    className="px-3 py-1.5 text-xs text-gray-700 bg-gray-100 hover:bg-gray-200 border border-gray-200 hover:border-gray-300 rounded-full transition-all"
                                 >
                                     {item.label}
                                 </button>
@@ -155,7 +155,7 @@ export function AIChat({ onSendMessage }: AIChatProps) {
                                 'max-w-[80%] p-3 rounded-2xl text-sm',
                                 msg.role === 'user'
                                     ? 'bg-[#1a365d] text-white rounded-br-sm'
-                                    : 'bg-[var(--bg-hover)] rounded-bl-sm'
+                                    : 'bg-gray-100 text-gray-900 rounded-bl-sm'
                             )}
                         >
                             <p className="whitespace-pre-wrap">{msg.content}</p>
@@ -168,10 +168,10 @@ export function AIChat({ onSendMessage }: AIChatProps) {
                         <div className="w-8 h-8 rounded-full bg-gradient-to-br from-#1a365d to-pink-600 flex items-center justify-center">
                             <Bot size={14} />
                         </div>
-                        <div className="p-3 rounded-2xl rounded-bl-sm bg-[var(--bg-hover)] text-sm">
+                        <div className="p-3 rounded-2xl rounded-bl-sm bg-gray-100 text-sm text-gray-900">
                             <div className="flex items-center gap-2">
                                 <Loader2 size={14} className="animate-spin" />
-                                <span className="text-[var(--text-muted)]">Myślę...</span>
+                                <span className="text-gray-500">Myślę...</span>
                             </div>
                         </div>
                     </div>
@@ -181,7 +181,7 @@ export function AIChat({ onSendMessage }: AIChatProps) {
             </div>
 
             {/* Input */}
-            <div className="p-4 border-t border-[var(--border-color)]">
+            <div className="p-4 border-t border-gray-200">
                 <div className="flex gap-2">
                     <input
                         type="text"
@@ -189,7 +189,7 @@ export function AIChat({ onSendMessage }: AIChatProps) {
                         onChange={(e) => setInput(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
                         placeholder="Zadaj pytanie prawne..."
-                        className="flex-1 px-4 py-3 bg-[var(--bg-hover)] border border-[var(--border-color)] rounded-xl focus:border-[#1a365d] focus:outline-none transition-colors"
+                        className="flex-1 px-4 py-3 bg-gray-50 text-gray-900 border border-gray-200 rounded-xl focus:border-[#1a365d] focus:outline-none transition-colors placeholder:text-gray-400"
                         disabled={loading}
                     />
                     <button
@@ -205,7 +205,7 @@ export function AIChat({ onSendMessage }: AIChatProps) {
                         <Send size={18} />
                     </button>
                 </div>
-                <p className="text-xs text-[var(--text-muted)] mt-2 text-center">
+                <p className="text-xs text-gray-400 mt-2 text-center">
                     LexCapital AI może popełniać błędy. Weryfikuj odpowiedzi z oficjalnymi źródłami.
                 </p>
             </div>

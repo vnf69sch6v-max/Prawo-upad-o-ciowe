@@ -1,5 +1,6 @@
 // ═══════════════════════════════════════════════════════════════════════════
-// SEARCH COMPONENTS - Light Theme (matching app design)
+// SEARCH PAGE - Apple Design Language
+// Clean, Minimal, Professional
 // ═══════════════════════════════════════════════════════════════════════════
 
 'use client'
@@ -19,19 +20,14 @@ import {
     Search,
     X,
     Star,
-    StarOff,
     Plus,
     ChevronDown,
-    ChevronRight,
-    Eye,
-    EyeOff,
+    ChevronUp,
     Loader2,
-    CheckCircle,
-    Clock
 } from 'lucide-react'
 
 // ═══════════════════════════════════════════════════════════════
-// MAIN SEARCH PAGE CONTENT
+// MAIN SEARCH PAGE - Apple Style
 // ═══════════════════════════════════════════════════════════════
 
 export function SearchPageContent() {
@@ -58,321 +54,268 @@ export function SearchPageContent() {
     } = useSearchFlashcards()
 
     const [expandedCard, setExpandedCard] = useState<string | null>(null)
-
     const totalCards = deckStats.reduce((sum, d) => sum + d.total_cards, 0)
 
     return (
-        <div className="min-h-screen bg-[var(--bg-primary)]">
-            {/* Header */}
-            <div className="bg-[var(--bg-secondary)] border-b border-[var(--border-color)] sticky top-0 z-10">
-                <div className="max-w-5xl mx-auto px-6 py-6">
-                    <div className="flex items-center gap-4 mb-6">
-                        <div className="w-12 h-12 rounded-xl bg-[var(--accent-gold)] flex items-center justify-center shadow-sm">
-                            <Search className="w-6 h-6 text-white" />
-                        </div>
-                        <div>
-                            <h1 className="text-2xl font-bold text-[var(--text-primary)]">Wyszukiwarka</h1>
-                            <p className="text-[var(--text-muted)]">
-                                {totalCards.toLocaleString()} pytań w bazie wiedzy
-                            </p>
-                        </div>
-                    </div>
+        <div className="min-h-screen bg-[#F8F9FA]">
+            {/* ═══════════════════════════════════════════════════════════
+                SEARCH HEADER - Large, Clean, Centered
+            ═══════════════════════════════════════════════════════════ */}
+            <div className="pt-16 pb-8 px-6">
+                <div className="max-w-2xl mx-auto text-center">
+                    {/* Title */}
+                    <motion.h1
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="text-4xl font-semibold text-gray-900 tracking-tight mb-2"
+                        style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif' }}
+                    >
+                        Wyszukaj pytanie
+                    </motion.h1>
+                    <motion.p
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.1 }}
+                        className="text-gray-500 text-lg mb-8"
+                    >
+                        {totalCards.toLocaleString()} pytań w Twojej bazie
+                    </motion.p>
 
-                    {/* Search Input */}
-                    <div className="relative">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--text-muted)]" />
-                        <input
-                            type="text"
-                            placeholder="Szukaj po pytaniu, artykule (np. art. 299) lub tagu..."
-                            value={query}
-                            onChange={(e) => setQuery(e.target.value)}
-                            className="w-full pl-12 pr-12 h-14 bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-xl text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-gold)]/30 focus:border-[var(--accent-gold)] transition-all text-lg"
-                        />
-                        {query && (
-                            <button
-                                onClick={() => setQuery('')}
-                                className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
-                            >
-                                <X className="w-5 h-5" />
-                            </button>
-                        )}
-                    </div>
-
-                    {/* Quick tip */}
-                    {!query && (
-                        <p className="text-sm text-[var(--text-muted)] mt-3">
-                            💡 Możesz szukać po artykule (np. "art 299") lub po opisie (np. "odpowiedzialność zarządu")
-                        </p>
-                    )}
+                    {/* Search Input - Apple Style Light */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 }}
+                        className="relative"
+                    >
+                        <div className="relative">
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                            <input
+                                type="text"
+                                placeholder="Szukaj..."
+                                value={query}
+                                onChange={(e) => setQuery(e.target.value)}
+                                className="w-full h-12 pl-12 pr-12 bg-white text-gray-900 placeholder-gray-400 rounded-xl border border-gray-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-base"
+                                style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif' }}
+                            />
+                            {query && (
+                                <button
+                                    onClick={() => setQuery('')}
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-gray-300 flex items-center justify-center hover:bg-gray-400 transition-colors"
+                                >
+                                    <X className="w-3 h-3 text-white" />
+                                </button>
+                            )}
+                        </div>
+                    </motion.div>
                 </div>
             </div>
 
-            <div className="max-w-5xl mx-auto px-6 py-6">
-                {/* Deck Cards with Progress */}
-                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3 mb-6">
-                    {isLoadingDecks ? (
-                        Array.from({ length: 5 }).map((_, i) => (
-                            <div key={i} className="h-28 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-xl animate-pulse" />
-                        ))
-                    ) : (
-                        deckStats.map((deck) => (
-                            <DeckCard
-                                key={deck.deck_id}
-                                deck={deck}
-                                isSelected={selectedDecks.includes(deck.deck_id)}
-                                onClick={() => toggleDeck(deck.deck_id)}
-                            />
-                        ))
-                    )}
-                </div>
-
-                {/* Filters Row */}
-                <div className="flex flex-wrap items-center gap-3 mb-6">
-                    {/* Progress Filter */}
-                    <div className="flex items-center gap-1 bg-[var(--bg-secondary)] rounded-xl border border-[var(--border-color)] p-1">
-                        {[
-                            { value: 'all', label: 'Wszystkie' },
-                            { value: 'new', label: '🆕 Nowe' },
-                            { value: 'learning', label: '📖 W nauce' },
-                            { value: 'mastered', label: '✅ Opanowane' },
-                            { value: 'due', label: '🔴 Do powtórki' },
-                        ].map((option) => (
-                            <button
-                                key={option.value}
-                                onClick={() => setProgressFilter(option.value as ProgressFilter)}
-                                className={cn(
-                                    'px-3 py-2 rounded-lg text-sm font-medium transition-all',
-                                    progressFilter === option.value
-                                        ? 'bg-[var(--accent-gold)] text-white shadow-sm'
-                                        : 'text-[var(--text-secondary)] hover:text-[var(--accent-gold)] hover:bg-[var(--bg-hover)]'
-                                )}
-                            >
-                                {option.label}
-                            </button>
-                        ))}
-                    </div>
-
-                    <div className="flex-1" />
-
-                    {/* Toggle answers visibility */}
-                    <button
-                        onClick={() => setShowAnswers(!showAnswers)}
-                        className="flex items-center gap-2 px-3 py-2 text-sm text-[var(--text-secondary)] hover:text-[var(--accent-gold)] transition-colors rounded-lg hover:bg-[var(--bg-hover)]"
+            {/* ═══════════════════════════════════════════════════════════
+                CATEGORIES - Horizontal Pills
+            ═══════════════════════════════════════════════════════════ */}
+            <div className="px-6 pb-6">
+                <div className="max-w-4xl mx-auto">
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.3 }}
+                        className="flex flex-wrap justify-center gap-2"
                     >
-                        {showAnswers ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-                        <span className="hidden sm:inline">{showAnswers ? 'Ukryj' : 'Pokaż'} odpowiedzi</span>
-                    </button>
+                        {isLoadingDecks ? (
+                            <div className="h-8 w-32 bg-gray-200 rounded-full animate-pulse" />
+                        ) : (
+                            deckStats.map((deck, i) => (
+                                <motion.button
+                                    key={deck.deck_id}
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    transition={{ delay: 0.3 + i * 0.03 }}
+                                    onClick={() => toggleDeck(deck.deck_id)}
+                                    className={cn(
+                                        'px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 shadow-sm',
+                                        selectedDecks.includes(deck.deck_id)
+                                            ? 'bg-blue-600 text-white'
+                                            : 'bg-white text-gray-600 hover:text-gray-900 hover:bg-gray-50 border border-gray-200'
+                                    )}
+                                >
+                                    {deck.deck_name}
+                                </motion.button>
+                            ))
+                        )}
+                    </motion.div>
+                </div>
+            </div>
 
-                    {/* Sort */}
-                    <select
-                        value={sortBy}
-                        onChange={(e) => setSortBy(e.target.value as SortOption)}
-                        className="px-3 py-2 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-lg text-sm text-[var(--text-secondary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-gold)]/30"
+            {/* ═══════════════════════════════════════════════════════════
+                FILTERS - Minimal Segmented Control
+            ═══════════════════════════════════════════════════════════ */}
+            <div className="px-6 pb-8">
+                <div className="max-w-2xl mx-auto">
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.4 }}
+                        className="flex justify-center"
                     >
-                        <option value="relevance">Trafność</option>
-                        <option value="newest">Najnowsze</option>
-                        <option value="difficulty">Trudność</option>
-                        <option value="due">Do powtórki</option>
-                    </select>
-
-                    {/* Clear filters */}
-                    {hasActiveFilters && (
-                        <button
-                            onClick={clearSearch}
-                            className="text-sm text-red-500 hover:text-red-600 transition-colors font-medium"
-                        >
-                            Wyczyść
-                        </button>
-                    )}
-                </div>
-
-                {/* Results count */}
-                {query && (
-                    <p className="text-sm text-[var(--text-muted)] mb-4">
-                        {totalResults} wyników dla "{query}"
-                        {selectedDecks.length > 0 && ` w ${selectedDecks.length} kategoriach`}
-                    </p>
-                )}
-
-                {/* Results */}
-                <div className="space-y-3">
-                    {isSearching && results.length === 0 ? (
-                        <div className="text-center py-16">
-                            <Loader2 className="w-8 h-8 text-[var(--accent-gold)] animate-spin mx-auto mb-4" />
-                            <p className="text-[var(--text-muted)]">Szukam...</p>
+                        <div className="inline-flex bg-gray-100 rounded-lg p-1">
+                            {[
+                                { value: 'all', label: 'Wszystkie' },
+                                { value: 'new', label: 'Nowe' },
+                                { value: 'learning', label: 'W nauce' },
+                                { value: 'mastered', label: 'Opanowane' },
+                                { value: 'due', label: 'Do powtórki' },
+                            ].map((option) => (
+                                <button
+                                    key={option.value}
+                                    onClick={() => setProgressFilter(option.value as ProgressFilter)}
+                                    className={cn(
+                                        'px-4 py-1.5 rounded-md text-sm font-medium transition-all duration-200',
+                                        progressFilter === option.value
+                                            ? 'bg-white text-gray-900 shadow-sm'
+                                            : 'text-gray-500 hover:text-gray-700'
+                                    )}
+                                >
+                                    {option.label}
+                                </button>
+                            ))}
                         </div>
-                    ) : results.length === 0 ? (
-                        <div className="text-center py-16">
-                            <div className="w-16 h-16 rounded-full bg-[var(--bg-secondary)] border border-[var(--border-color)] flex items-center justify-center mx-auto mb-4">
-                                <Search className="w-8 h-8 text-[var(--text-muted)]" />
-                            </div>
-                            <p className="text-[var(--text-secondary)]">
-                                {query ? 'Brak wyników dla tego wyszukiwania' : 'Wpisz frazę aby wyszukać'}
-                            </p>
-                            {query && (
-                                <p className="text-sm text-[var(--text-muted)] mt-2">
-                                    Spróbuj innych słów kluczowych lub zmień filtry
-                                </p>
-                            )}
-                        </div>
-                    ) : (
-                        results.map((result) => (
-                            <SearchResultCard
-                                key={result.flashcard_id}
-                                result={result}
-                                showAnswer={showAnswers}
-                                isExpanded={expandedCard === result.flashcard_id}
-                                onToggleExpand={() => setExpandedCard(
-                                    expandedCard === result.flashcard_id ? null : result.flashcard_id
-                                )}
-                            />
-                        ))
-                    )}
+                    </motion.div>
                 </div>
+            </div>
 
-                {/* Load more */}
-                {hasMore && (
-                    <div className="text-center mt-8">
-                        <button
-                            onClick={loadMore}
-                            disabled={isSearching}
-                            className="px-6 py-3 bg-[var(--bg-secondary)] hover:bg-[var(--bg-hover)] border border-[var(--border-color)] rounded-xl text-[var(--text-primary)] font-medium transition-all disabled:opacity-50"
+            {/* ═══════════════════════════════════════════════════════════
+                RESULTS
+            ═══════════════════════════════════════════════════════════ */}
+            <div className="px-6 pb-16">
+                <div className="max-w-3xl mx-auto">
+                    {/* Results count */}
+                    {query && (
+                        <motion.p
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="text-sm text-gray-500 mb-6 text-center"
                         >
-                            {isSearching ? (
-                                <><Loader2 className="w-4 h-4 animate-spin inline mr-2" /> Ładowanie...</>
+                            {totalResults} wyników
+                        </motion.p>
+                    )}
+
+                    {/* Results List */}
+                    <div className="space-y-3">
+                        <AnimatePresence mode="popLayout">
+                            {isSearching && results.length === 0 ? (
+                                <motion.div
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    className="text-center py-20"
+                                >
+                                    <Loader2 className="w-6 h-6 text-gray-400 animate-spin mx-auto" />
+                                </motion.div>
+                            ) : results.length === 0 ? (
+                                <motion.div
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    className="text-center py-20"
+                                >
+                                    <Search className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                                    <p className="text-gray-500">
+                                        {query ? 'Brak wyników' : 'Wpisz frazę aby wyszukać'}
+                                    </p>
+                                </motion.div>
                             ) : (
-                                'Załaduj więcej'
+                                results.map((result, index) => (
+                                    <motion.div
+                                        key={result.flashcard_id}
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0 }}
+                                        transition={{ delay: index * 0.03 }}
+                                        layout
+                                    >
+                                        <AppleCard
+                                            result={result}
+                                            showAnswer={showAnswers}
+                                            isExpanded={expandedCard === result.flashcard_id}
+                                            onToggle={() => setExpandedCard(
+                                                expandedCard === result.flashcard_id ? null : result.flashcard_id
+                                            )}
+                                        />
+                                    </motion.div>
+                                ))
                             )}
-                        </button>
+                        </AnimatePresence>
                     </div>
-                )}
+
+                    {/* Load more */}
+                    {hasMore && (
+                        <div className="text-center mt-8">
+                            <button
+                                onClick={loadMore}
+                                disabled={isSearching}
+                                className="px-6 py-2.5 bg-white hover:bg-gray-50 text-gray-700 text-sm font-medium rounded-full border border-gray-200 shadow-sm transition-all disabled:opacity-50"
+                            >
+                                {isSearching ? 'Ładowanie...' : 'Pokaż więcej'}
+                            </button>
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     )
 }
 
-// ═══════════════════════════════════════════════════════════════
-// DeckCard - kategoria z postępem
-// ═══════════════════════════════════════════════════════════════
-
-function DeckCard({
-    deck,
-    isSelected,
-    onClick
-}: {
-    deck: DeckStats
-    isSelected: boolean
-    onClick: () => void
-}) {
-    const progress = deck.total_cards > 0
-        ? Math.round((deck.cards_mastered / deck.total_cards) * 100)
-        : 0
-
-    return (
-        <button
-            onClick={onClick}
-            className={cn(
-                'p-3 rounded-xl text-left transition-all border-2',
-                isSelected
-                    ? 'border-[var(--accent-gold)] bg-[var(--accent-gold)]/5'
-                    : 'border-[var(--border-color)] bg-[var(--bg-secondary)] hover:border-[var(--accent-gold)]/30 hover:bg-[var(--bg-hover)]'
-            )}
-        >
-            <div className="flex items-center gap-2 mb-2">
-                <span className="text-xl">{deck.deck_icon}</span>
-                <span className="font-medium text-[var(--text-primary)] truncate text-xs">{deck.deck_name}</span>
-            </div>
-
-            <div className="text-xl font-bold text-[var(--accent-gold)] mb-2">
-                {deck.total_cards}
-            </div>
-
-            {/* Progress bar */}
-            <div className="h-1.5 bg-slate-200 rounded-full overflow-hidden mb-2">
-                <div
-                    className="h-full bg-[var(--accent-gold)] rounded-full transition-all"
-                    style={{ width: `${progress}%` }}
-                />
-            </div>
-
-            <div className="flex items-center justify-between text-xs">
-                <span className="text-[var(--text-muted)]">
-                    {deck.cards_mastered}/{deck.total_cards}
-                </span>
-                {deck.cards_due > 0 && (
-                    <span className="text-red-500 font-medium flex items-center gap-1">
-                        <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
-                        {deck.cards_due}
-                    </span>
-                )}
-            </div>
-        </button>
-    )
-}
 
 // ═══════════════════════════════════════════════════════════════
-// SearchResultCard - wynik wyszukiwania
+// Apple-Style Card
 // ═══════════════════════════════════════════════════════════════
 
-function SearchResultCard({
+function AppleCard({
     result,
     showAnswer,
     isExpanded,
-    onToggleExpand
+    onToggle
 }: {
     result: SearchResult
     showAnswer: boolean
     isExpanded: boolean
-    onToggleExpand: () => void
+    onToggle: () => void
 }) {
-    const { toggleFavorite, addToStudyQueue, isAddingToQueue } = useFlashcardActions()
-
-    const statusConfig: Record<string, { icon: string; label: string; bgColor: string; textColor: string }> = {
-        new: { icon: '🆕', label: 'Nowa', bgColor: 'bg-amber-100', textColor: 'text-amber-700' },
-        learning: { icon: '📖', label: 'W nauce', bgColor: 'bg-amber-100', textColor: 'text-amber-700' },
-        review: { icon: '🔄', label: 'Powtórka', bgColor: 'bg-orange-100', textColor: 'text-orange-700' },
-        mastered: { icon: '✅', label: 'Opanowana', bgColor: 'bg-green-100', textColor: 'text-green-700' },
-    }
-
-    const status = statusConfig[result.user_status] || statusConfig.new
+    const { toggleFavorite, addToStudyQueue } = useFlashcardActions()
 
     return (
         <motion.div
             layout
-            className="bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-xl overflow-hidden hover:shadow-md transition-shadow"
+            className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100"
         >
             <div className="p-5">
-                {/* Header: Deck + Status */}
-                <div className="flex flex-wrap items-center gap-2 mb-3">
+                {/* Category Tag */}
+                <div className="flex items-center gap-2 mb-3">
                     <span
-                        className="px-2.5 py-1 rounded-lg text-xs font-medium"
+                        className="text-xs font-medium px-2 py-1 rounded-md"
                         style={{
                             backgroundColor: `${result.deck_color}15`,
                             color: result.deck_color
                         }}
                     >
-                        {result.deck_icon} {result.deck_name}
+                        {result.deck_name}
                     </span>
                     {result.legal_basis && (
-                        <span className="px-2.5 py-1 bg-slate-100 rounded-lg text-xs text-slate-600">
-                            📖 {result.legal_basis}
+                        <span className="text-xs text-gray-400">
+                            {result.legal_basis}
                         </span>
                     )}
-                    <div className="flex-1" />
-                    <span className={cn('px-2.5 py-1 rounded-lg text-xs font-medium', status.bgColor, status.textColor)}>
-                        {status.icon} {status.label}
-                    </span>
                 </div>
 
                 {/* Question */}
                 <h3
-                    className="font-medium text-[var(--text-primary)] mb-3 cursor-pointer hover:text-[var(--accent-gold)] transition-colors"
-                    onClick={onToggleExpand}
+                    className="text-gray-900 text-base leading-relaxed cursor-pointer"
+                    onClick={onToggle}
+                    style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif' }}
                 >
                     {result.question}
                 </h3>
 
-                {/* Answer Preview */}
+                {/* Answer */}
                 <AnimatePresence>
                     {(showAnswer || isExpanded) && (
                         <motion.div
@@ -381,117 +324,42 @@ function SearchResultCard({
                             exit={{ height: 0, opacity: 0 }}
                             transition={{ duration: 0.2 }}
                         >
-                            <div className="border-t border-[var(--border-color)] pt-4 mt-2">
-                                <p className="text-[var(--accent-gold)] font-medium mb-2">
-                                    ✓ {result.answer_short}
+                            <div className="mt-4 pt-4 border-t border-gray-100">
+                                <p className="text-green-600 text-sm font-medium">
+                                    {result.answer_short}
                                 </p>
                                 {isExpanded && result.answer_full && (
-                                    <div className="text-[var(--text-secondary)] text-sm whitespace-pre-wrap mt-3 p-4 bg-slate-50 rounded-xl border border-slate-200">
+                                    <p className="mt-3 text-gray-500 text-sm leading-relaxed">
                                         {result.answer_full}
-                                    </div>
+                                    </p>
                                 )}
                             </div>
                         </motion.div>
                     )}
                 </AnimatePresence>
 
-                {/* User Progress Info */}
-                {result.total_reviews > 0 && (
-                    <div className="flex flex-wrap items-center gap-4 mt-4 text-xs text-[var(--text-muted)]">
-                        {result.user_accuracy !== null && (
-                            <span className="flex items-center gap-1">
-                                <CheckCircle className="w-3.5 h-3.5" />
-                                {result.user_accuracy}% poprawnych
-                            </span>
-                        )}
-                        {result.last_review_at && (
-                            <span className="flex items-center gap-1">
-                                <Clock className="w-3.5 h-3.5" />
-                                {formatRelativeTime(result.last_review_at)}
-                            </span>
-                        )}
-                        {result.current_streak > 0 && (
-                            <span className="flex items-center gap-1">
-                                🔥 Seria: {result.current_streak}
-                            </span>
-                        )}
-                    </div>
-                )}
-
-                {/* Actions */}
-                <div className="flex flex-wrap items-center gap-2 mt-4 pt-4 border-t border-[var(--border-color)]">
+                {/* Actions - Minimal */}
+                <div className="flex items-center gap-3 mt-4">
                     <button
                         onClick={() => addToStudyQueue([result.flashcard_id])}
-                        disabled={isAddingToQueue || result.is_due}
-                        className={cn(
-                            'flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all',
-                            result.is_due
-                                ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
-                                : 'bg-[var(--accent-gold)]/10 text-[var(--accent-gold)] hover:bg-[var(--accent-gold)]/20'
-                        )}
+                        className="text-xs text-blue-600 hover:text-blue-700 transition-colors font-medium"
                     >
-                        <Plus className="w-4 h-4" />
-                        {result.is_due ? 'W kolejce' : 'Dodaj do nauki'}
+                        + Do nauki
                     </button>
-
                     <button
-                        onClick={() => toggleFavorite(result.flashcard_id)}
-                        className="p-2 rounded-lg text-[var(--text-muted)] hover:text-amber-500 hover:bg-amber-50 transition-all"
-                    >
-                        {result.is_favorite ? (
-                            <Star className="w-5 h-5 text-amber-500 fill-amber-500" />
-                        ) : (
-                            <StarOff className="w-5 h-5" />
-                        )}
-                    </button>
-
-                    <button
-                        onClick={onToggleExpand}
-                        className="flex items-center gap-1 px-3 py-2 rounded-lg text-sm text-[var(--text-secondary)] hover:text-[var(--accent-gold)] hover:bg-[var(--bg-hover)] transition-all"
+                        onClick={onToggle}
+                        className="text-xs text-gray-400 hover:text-gray-600 transition-colors flex items-center gap-1"
                     >
                         {isExpanded ? (
-                            <><ChevronDown className="w-4 h-4" /> Zwiń</>
+                            <><ChevronUp className="w-3 h-3" /> Zwiń</>
                         ) : (
-                            <><ChevronRight className="w-4 h-4" /> Rozwiń</>
+                            <><ChevronDown className="w-3 h-3" /> Rozwiń</>
                         )}
                     </button>
-
-                    <div className="flex-1" />
-
-                    {result.tags.length > 0 && (
-                        <div className="flex gap-1 flex-wrap">
-                            {result.tags.slice(0, 3).map((tag) => (
-                                <span
-                                    key={tag}
-                                    className="px-2 py-1 bg-slate-100 rounded-lg text-xs text-slate-500"
-                                >
-                                    {tag}
-                                </span>
-                            ))}
-                            {result.tags.length > 3 && (
-                                <span className="text-xs text-[var(--text-muted)]">
-                                    +{result.tags.length - 3}
-                                </span>
-                            )}
-                        </div>
-                    )}
                 </div>
             </div>
         </motion.div>
     )
 }
 
-// Helper
-function formatRelativeTime(dateString: string): string {
-    const date = new Date(dateString)
-    const now = new Date()
-    const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24))
-
-    if (diffDays === 0) return 'dziś'
-    if (diffDays === 1) return 'wczoraj'
-    if (diffDays < 7) return `${diffDays} dni temu`
-    if (diffDays < 30) return `${Math.floor(diffDays / 7)} tyg. temu`
-    return `${Math.floor(diffDays / 30)} mies. temu`
-}
-
-export { DeckCard, SearchResultCard }
+export { AppleCard as SearchResultCard }

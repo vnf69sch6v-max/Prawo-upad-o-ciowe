@@ -156,7 +156,7 @@ function InteractiveCalendar({
                             setViewMonth(viewMonth - 1);
                         }
                     }}
-                    className="p-2 hover:bg-[var(--bg-hover)] rounded-lg"
+                    className="p-2 hover:bg-gray-100 rounded-lg text-gray-600"
                 >
                     <ChevronLeft size={20} />
                 </button>
@@ -170,7 +170,7 @@ function InteractiveCalendar({
                             setViewMonth(viewMonth + 1);
                         }
                     }}
-                    className="p-2 hover:bg-[var(--bg-hover)] rounded-lg"
+                    className="p-2 hover:bg-gray-100 rounded-lg text-gray-600"
                 >
                     <ChevronRight size={20} />
                 </button>
@@ -178,7 +178,7 @@ function InteractiveCalendar({
 
             <div className="grid grid-cols-7 gap-1 mb-2">
                 {dayNames.map(day => (
-                    <div key={day} className="text-center text-xs text-[var(--text-muted)] py-2">
+                    <div key={day} className="text-center text-xs text-gray-500 py-2">
                         {day}
                     </div>
                 ))}
@@ -207,8 +207,8 @@ function InteractiveCalendar({
                                 isSelectedDate(day) && !showResult && "bg-[#8b5cf6] text-white",
                                 showResult && isCorrectDate(day) && "bg-green-500 text-white",
                                 showResult && isSelectedDate(day) && !isCorrectDate(day) && "bg-red-500 text-white",
-                                !isEventDate(day) && !isSelectedDate(day) && !showResult && "hover:bg-[var(--bg-hover)]",
-                                isWeekend && !isEventDate(day) && !isSelectedDate(day) && "text-[var(--text-muted)]"
+                                !isEventDate(day) && !isSelectedDate(day) && !showResult && "hover:bg-gray-100",
+                                isWeekend && !isEventDate(day) && !isSelectedDate(day) && "text-gray-400"
                             )}
                         >
                             {day}
@@ -220,7 +220,7 @@ function InteractiveCalendar({
                 })}
             </div>
 
-            <div className="mt-4 pt-4 border-t border-[var(--border-color)] flex gap-4 text-xs">
+            <div className="mt-4 pt-4 border-t border-gray-200 flex gap-4 text-xs text-gray-700">
                 <div className="flex items-center gap-2">
                     <div className="w-4 h-4 rounded bg-[#3b82f6]" />
                     <span>Data zdarzenia</span>
@@ -281,14 +281,14 @@ export default function DeadlinesPage() {
 
     if (authLoading) {
         return (
-            <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg-primary)' }}>
+            <div className="min-h-screen flex items-center justify-center bg-[#F8F9FA]">
                 <Loader2 className="animate-spin" size={48} style={{ color: '#1a365d' }} />
             </div>
         );
     }
 
     return (
-        <div className="flex min-h-screen" style={{ background: 'var(--bg-primary)' }}>
+        <div className="flex min-h-screen bg-[#F8F9FA]">
             <Sidebar
                 currentView="deadlines"
                 onNavigate={() => { }}
@@ -317,8 +317,8 @@ export default function DeadlinesPage() {
                             <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4" style={{ background: '#8b5cf6' }}>
                                 <Calendar size={32} className="text-white" />
                             </div>
-                            <h1 className="text-3xl font-bold mb-2">Symulator terminów</h1>
-                            <p className="text-[var(--text-muted)]">
+                            <h1 className="text-3xl font-bold mb-2 text-gray-900">Symulator terminów</h1>
+                            <p className="text-gray-500">
                                 Naucz się poprawnie liczyć terminy procesowe
                             </p>
                         </div>
@@ -329,11 +329,11 @@ export default function DeadlinesPage() {
                                 <div className="lex-card px-6 py-3 flex items-center gap-3">
                                     <CheckCircle size={20} className="text-green-500" />
                                     <span className="font-bold">{score.correct}</span>
-                                    <span className="text-[var(--text-muted)]">poprawnych</span>
+                                    <span className="text-gray-500">poprawnych</span>
                                 </div>
                                 <div className="lex-card px-6 py-3 flex items-center gap-3">
                                     <span className="font-bold">{score.total}</span>
-                                    <span className="text-[var(--text-muted)]">łącznie</span>
+                                    <span className="text-gray-500">łącznie</span>
                                 </div>
                                 <button
                                     onClick={handleReset}
@@ -357,13 +357,13 @@ export default function DeadlinesPage() {
                                     {currentScenario.difficulty === 'easy' ? '🟢 Łatwy' :
                                         currentScenario.difficulty === 'medium' ? '🟡 Średni' : '🔴 Trudny'}
                                 </span>
-                                <span className="text-sm text-[var(--text-muted)]">
+                                <span className="text-sm text-gray-500">
                                     Scenariusz {currentScenarioIndex + 1}/{SCENARIOS.length}
                                 </span>
                             </div>
 
-                            <h2 className="text-xl font-bold mb-4">{currentScenario.title}</h2>
-                            <p className="text-[var(--text-secondary)] mb-4">{currentScenario.description}</p>
+                            <h2 className="text-xl font-bold mb-4 text-gray-900">{currentScenario.title}</h2>
+                            <p className="text-gray-600 mb-4">{currentScenario.description}</p>
 
                             <div className="p-4 bg-[#8b5cf6]/10 rounded-xl mb-4">
                                 <p className="font-medium">
@@ -371,7 +371,7 @@ export default function DeadlinesPage() {
                                 </p>
                             </div>
 
-                            <p className="text-sm text-[var(--text-muted)]">
+                            <p className="text-sm text-gray-500">
                                 Podstawa prawna: {currentScenario.legalBasis}
                             </p>
                         </div>
@@ -416,7 +416,7 @@ export default function DeadlinesPage() {
                                     })}
                                 </p>
 
-                                <div className="p-4 bg-[var(--bg-hover)] rounded-xl mt-4">
+                                <div className="p-4 bg-gray-100 rounded-xl mt-4">
                                     <div className="flex items-start gap-2">
                                         <Info size={16} className="text-[#8b5cf6] mt-0.5 shrink-0" />
                                         <p className="text-sm">{currentScenario.explanation}</p>
@@ -435,7 +435,7 @@ export default function DeadlinesPage() {
                                         "flex-1 py-4 rounded-xl font-medium transition-all flex items-center justify-center gap-2",
                                         selectedDate
                                             ? "bg-[#8b5cf6] text-white hover:bg-[#7c3aed]"
-                                            : "bg-[var(--bg-card)] text-[var(--text-muted)] cursor-not-allowed"
+                                            : "bg-white text-gray-400 cursor-not-allowed"
                                     )}
                                 >
                                     <Play size={20} />

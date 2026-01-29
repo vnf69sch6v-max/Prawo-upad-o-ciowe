@@ -1,8 +1,10 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Sidebar, Header, MobileNav } from '@/components/layout';
 import { FlashcardStudy, SpeedRunMode, SpeedRunResults } from '@/components/study';
+import { SessionCoachPanel } from '@/components/study/session-coach-panel';
+import { useSessionCoach } from '@/hooks/use-session-coach';
 import type { SpeedRunResults as SpeedRunResultsType } from '@/components/study/speed-run-mode';
 import { Play, Flame, Zap, BookOpen, Target, ChevronRight, Loader2, Timer } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
@@ -12,6 +14,7 @@ import { ALL_KSH_QUESTIONS, type ExamQuestion } from '@/lib/data/ksh';
 import { ALL_PRAWO_UPADLOSCIOWE_QUESTIONS } from '@/lib/data/prawo-upadlosciowe';
 import { ALL_KC_QUESTIONS } from '@/lib/data/kodeks-cywilny';
 import { ALL_ASO_QUESTIONS } from '@/lib/data/aso';
+import { MAKLER_SEKCJA_A } from '@/lib/data/makler';
 
 // Convert exam question to flashcard format
 function convertQuestionToFlashcard(q: ExamQuestion, domain: LegalDomain): Flashcard {
@@ -47,7 +50,8 @@ const DECKS = [
         color: '#1a365d',
         mastered: 234, // TODO: fetch from user data
         toReview: 47,
-        newToday: 15
+        newToday: 15,
+        category: 'student-prawa'
     },
     {
         id: 'pu',
@@ -57,7 +61,8 @@ const DECKS = [
         color: '#ea580c',
         mastered: 45,
         toReview: 23,
-        newToday: 10
+        newToday: 10,
+        category: 'student-prawa'
     },
     {
         id: 'kc',
@@ -67,7 +72,8 @@ const DECKS = [
         color: '#2563eb',
         mastered: 89,
         toReview: 18,
-        newToday: 12
+        newToday: 12,
+        category: 'student-prawa'
     },
     {
         id: 'aso',
@@ -77,7 +83,19 @@ const DECKS = [
         color: '#0d9488',
         mastered: 156,
         toReview: 34,
-        newToday: 20
+        newToday: 20,
+        category: 'egzamin-aso'
+    },
+    {
+        id: 'makler_a',
+        name: 'Makler: Matematyka',
+        icon: '🔢',
+        total: MAKLER_SEKCJA_A.length,
+        color: '#7c3aed',
+        mastered: 0,
+        toReview: 0,
+        newToday: MAKLER_SEKCJA_A.length,
+        category: 'egzamin-maklerski'
     },
 ];
 
@@ -104,7 +122,7 @@ function ProgressRing({
                 cy={size / 2}
                 r={radius}
                 fill="none"
-                stroke="var(--bg-hover)"
+                stroke="#E5E7EB"
                 strokeWidth={strokeWidth}
             />
             <circle
@@ -127,12 +145,12 @@ function ProgressRing({
 function StreakDay({ day, completed, isToday }: { day: string; completed: boolean; isToday: boolean }) {
     return (
         <div className="flex flex-col items-center gap-1">
-            <span className="text-xs text-[var(--text-muted)]">{day}</span>
+            <span className="text-xs text-gray-500">{day}</span>
             <div className={cn(
                 "w-8 h-8 rounded-full flex items-center justify-center transition-all",
                 completed && "bg-green-500",
-                !completed && isToday && "bg-[var(--bg-hover)] border-2 border-dashed border-[var(--border-color)]",
-                !completed && !isToday && "bg-[var(--bg-hover)]"
+                !completed && isToday && "bg-gray-100 border-2 border-dashed border-gray-300",
+                !completed && !isToday && "bg-gray-100"
             )}>
                 {completed && <span className="text-white text-sm">✓</span>}
             </div>
@@ -151,6 +169,20 @@ export default function FlashcardsPage() {
     const stats = profile?.stats;
     const userName = profile?.displayName?.split(' ')[0] || 'Student';
 
+    // Session Coach integration
+    const coach = useSessionCoach();
+
+    // Start session when entering study mode
+    useEffect(() => {
+        if (view === 'study' && !coach.isActive) {
+            coach.startSession('flashcards');
+        } else if (view === 'speedrun' && !coach.isActive) {
+            coach.startSession('speed_run');
+        } else if (view === 'dashboard' && coach.isActive) {
+            coach.endSession();
+        }
+    }, [view, coach.isActive]);
+
     // Current streak data (TODO: fetch from user data)
     const streakDays = 5;
     const dailyGoal = 20;
@@ -168,6 +200,7 @@ export default function FlashcardsPage() {
                 ...ALL_PRAWO_UPADLOSCIOWE_QUESTIONS.slice(0, 5).map(q => convertQuestionToFlashcard(q, 'prawo_upadlosciowe' as LegalDomain)),
                 ...ALL_KC_QUESTIONS.slice(0, 7).map(q => convertQuestionToFlashcard(q, 'prawo_cywilne' as LegalDomain)),
                 ...ALL_ASO_QUESTIONS.slice(0, 5).map(q => convertQuestionToFlashcard(q, 'aso' as LegalDomain)),
+                ...MAKLER_SEKCJA_A.slice(0, 5).map(q => convertQuestionToFlashcard(q, 'aso' as LegalDomain)), // Using 'aso' as domain type for makler
             ];
             return allCards.sort(() => Math.random() - 0.5);
         }
@@ -189,6 +222,10 @@ export default function FlashcardsPage() {
         } else if (selectedDeck === 'aso') {
             return ALL_ASO_QUESTIONS.slice(0, 25).map(q =>
                 convertQuestionToFlashcard(q, 'aso' as LegalDomain)
+            );
+        } else if (selectedDeck === 'makler_a') {
+            return MAKLER_SEKCJA_A.slice(0, 25).map(q =>
+                convertQuestionToFlashcard(q, 'aso' as LegalDomain) // Using 'aso' as domain type for makler
             );
         }
         return [];
@@ -212,31 +249,38 @@ export default function FlashcardsPage() {
 
     if (authLoading) {
         return (
-            <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg-primary)' }}>
-                <Loader2 className="animate-spin" size={48} style={{ color: '#1a365d' }} />
+            <div className="min-h-screen flex items-center justify-center bg-[#F8F9FA]">
+                <Loader2 className="animate-spin text-blue-500" size={48} />
             </div>
         );
     }
 
-    // Study mode - full screen
     if (view === 'study') {
         return (
-            <div className="min-h-screen" style={{ background: 'var(--bg-primary)' }}>
+            <div className="min-h-screen bg-[#F8F9FA]">
                 <div className="max-w-4xl mx-auto p-6">
                     <button
                         onClick={() => { setView('dashboard'); setSelectedDeck(null); }}
-                        className="mb-6 text-sm text-[var(--text-muted)] hover:text-[#1a365d] transition-colors flex items-center gap-1"
+                        className="mb-6 text-sm text-gray-500 hover:text-blue-600 transition-colors flex items-center gap-1"
                     >
                         ← Powrót do talii
                     </button>
                     <FlashcardStudy
                         cards={cards}
                         onReview={(cardId, quality, responseTime) => {
+                            // Report to Session Coach
+                            coach.reportQuestionAnswered({
+                                questionId: cardId,
+                                isCorrect: quality >= 3,
+                                timeToAnswer: responseTime,
+                            });
                             console.log('Review:', cardId, quality, responseTime);
                         }}
                         onComplete={handleComplete}
                     />
                 </div>
+                {/* Session Coach Panel */}
+                <SessionCoachPanel />
             </div>
         );
     }
@@ -251,7 +295,7 @@ export default function FlashcardsPage() {
         ].sort(() => Math.random() - 0.5);
 
         return (
-            <div className="min-h-screen" style={{ background: 'var(--bg-primary)' }}>
+            <div className="min-h-screen bg-[#F8F9FA]">
                 <div className="max-w-4xl mx-auto p-6">
                     <SpeedRunMode
                         cards={speedRunCards}
@@ -270,7 +314,7 @@ export default function FlashcardsPage() {
     // Speed Run Results
     if (view === 'speedrun-results' && speedRunResults) {
         return (
-            <div className="min-h-screen" style={{ background: 'var(--bg-primary)' }}>
+            <div className="min-h-screen bg-[#F8F9FA]">
                 <div className="max-w-4xl mx-auto p-6">
                     <SpeedRunResults
                         results={speedRunResults}
@@ -289,7 +333,7 @@ export default function FlashcardsPage() {
     }
 
     return (
-        <div className="flex min-h-screen" style={{ background: 'var(--bg-primary)' }}>
+        <div className="flex min-h-screen bg-[#F8F9FA]">
             <Sidebar
                 currentView="flashcards"
                 onNavigate={() => { }}
@@ -302,35 +346,47 @@ export default function FlashcardsPage() {
             />
 
             <div className="flex-1 flex flex-col min-w-0">
-                <Header
-                    userStats={{
-                        streak: stats?.currentStreak || streakDays,
-                        knowledgeEquity: stats?.knowledgeEquity || 0,
-                        rank: 0
-                    }}
-                    currentView="flashcards"
-                />
+                {/* Apple-style Header */}
+                <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-gray-100 px-6 py-4">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center">
+                                <Zap size={20} className="text-white" />
+                            </div>
+                            <div>
+                                <h1 className="text-xl font-semibold text-gray-900">Fiszki</h1>
+                                <p className="text-sm text-gray-500">Ucz się z systemem powtórek</p>
+                            </div>
+                        </div>
+                        {streakDays > 0 && (
+                            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-orange-50 text-orange-600 text-sm font-medium">
+                                <Flame size={16} />
+                                <span>{streakDays} dni</span>
+                            </div>
+                        )}
+                    </div>
+                </header>
 
-                <main className="flex-1 overflow-auto p-6 pb-20 lg:pb-6">
+                <main className="flex-1 overflow-auto p-6 pb-24 lg:pb-6">
                     <div className="max-w-4xl mx-auto space-y-6">
 
                         {/* Greeting */}
                         <div className="mb-2">
-                            <h1 className="text-2xl font-bold">
+                            <h1 className="text-2xl font-bold text-gray-900">
                                 Dzień dobry, {userName} 👋
                             </h1>
                         </div>
 
                         {/* Streak Card */}
-                        <div className="lex-card bg-gradient-to-r from-orange-500/10 to-yellow-500/5">
+                        <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
                             <div className="flex items-center justify-between mb-4">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-12 h-12 rounded-xl bg-orange-500/20 flex items-center justify-center">
+                                    <div className="w-12 h-12 rounded-xl bg-orange-100 flex items-center justify-center">
                                         <Flame size={24} className="text-orange-500" />
                                     </div>
                                     <div>
-                                        <p className="text-2xl font-bold">{streakDays} DNI</p>
-                                        <p className="text-sm text-[var(--text-muted)]">Dzienna seria</p>
+                                        <p className="text-2xl font-bold text-gray-900">{streakDays} DNI</p>
+                                        <p className="text-sm text-gray-500">Dzienna seria</p>
                                     </div>
                                 </div>
                             </div>
@@ -350,16 +406,16 @@ export default function FlashcardsPage() {
                             {/* Daily Goal Progress */}
                             <div className="space-y-2">
                                 <div className="flex justify-between text-sm">
-                                    <span className="text-[var(--text-muted)]">Dzisiejszy cel</span>
-                                    <span className="font-medium">{dailyProgress}/{dailyGoal} fiszek</span>
+                                    <span className="text-gray-500">Dzisiejszy cel</span>
+                                    <span className="font-medium text-gray-900">{dailyProgress}/{dailyGoal} fiszek</span>
                                 </div>
-                                <div className="h-2 bg-[var(--bg-hover)] rounded-full overflow-hidden">
+                                <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
                                     <div
                                         className="h-full bg-gradient-to-r from-orange-500 to-yellow-500 rounded-full transition-all duration-500"
                                         style={{ width: `${(dailyProgress / dailyGoal) * 100}%` }}
                                     />
                                 </div>
-                                <p className="text-sm text-[var(--text-muted)]">
+                                <p className="text-sm text-gray-500">
                                     Jeszcze {dailyGoal - dailyProgress} fiszek do utrzymania serii!
                                 </p>
                             </div>
@@ -368,27 +424,23 @@ export default function FlashcardsPage() {
                         {/* Smart Review CTA */}
                         <button
                             onClick={handleSmartReview}
-                            className="w-full p-6 rounded-2xl transition-all hover:scale-[1.01] group"
-                            style={{
-                                background: 'linear-gradient(135deg, #1a365d20 0%, #3b82f615 100%)',
-                                border: '1px solid #1a365d40'
-                            }}
+                            className="w-full p-6 rounded-2xl transition-all hover:scale-[1.01] group bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 hover:border-blue-300"
                         >
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-4">
-                                    <div className="w-14 h-14 rounded-xl flex items-center justify-center" style={{ background: '#1a365d' }}>
+                                    <div className="w-14 h-14 rounded-xl flex items-center justify-center bg-blue-600">
                                         <Zap size={28} className="text-white" />
                                     </div>
                                     <div className="text-left">
-                                        <p className="text-xl font-bold">Smart Review</p>
-                                        <p className="text-[var(--text-muted)]">
+                                        <p className="text-xl font-bold text-gray-900">Smart Review</p>
+                                        <p className="text-gray-500">
                                             AI wybrał 25 fiszek dopasowanych do Ciebie
                                         </p>
                                     </div>
                                 </div>
-                                <ChevronRight size={24} className="text-[#1a365d] group-hover:translate-x-1 transition-transform" />
+                                <ChevronRight size={24} className="text-blue-600 group-hover:translate-x-1 transition-transform" />
                             </div>
-                            <div className="mt-4 flex gap-4 text-sm text-[var(--text-muted)]">
+                            <div className="mt-4 flex gap-4 text-sm text-gray-500">
                                 <span>• 12 do powtórki</span>
                                 <span>• 8 ze słabych punktów</span>
                                 <span>• 5 nowych</span>
@@ -400,11 +452,7 @@ export default function FlashcardsPage() {
                             {/* Speed Run CTA */}
                             <button
                                 onClick={() => setView('speedrun')}
-                                className="p-4 rounded-2xl transition-all hover:scale-[1.02] group text-left"
-                                style={{
-                                    background: 'linear-gradient(135deg, #ea580c20 0%, #f9731615 100%)',
-                                    border: '1px solid #ea580c40'
-                                }}
+                                className="p-4 rounded-2xl transition-all hover:scale-[1.02] group text-left bg-orange-50 border border-orange-200 hover:border-orange-300"
                             >
                                 <div className="flex items-center gap-3">
                                     <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-gradient-to-br from-orange-500 to-red-500">
@@ -412,7 +460,7 @@ export default function FlashcardsPage() {
                                     </div>
                                     <div>
                                         <p className="font-bold text-orange-600">Speed Run</p>
-                                        <p className="text-sm text-[var(--text-muted)]">
+                                        <p className="text-sm text-gray-500">
                                             5 minut na czas!
                                         </p>
                                     </div>
@@ -421,11 +469,7 @@ export default function FlashcardsPage() {
 
                             {/* Weak Points CTA */}
                             <button
-                                className="p-4 rounded-2xl transition-all hover:scale-[1.02] group text-left"
-                                style={{
-                                    background: 'linear-gradient(135deg, #dc262620 0%, #b91c1c15 100%)',
-                                    border: '1px solid #dc262640'
-                                }}
+                                className="p-4 rounded-2xl transition-all hover:scale-[1.02] group text-left bg-red-50 border border-red-200 hover:border-red-300"
                             >
                                 <div className="flex items-center gap-3">
                                     <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-gradient-to-br from-red-500 to-rose-600">
@@ -433,7 +477,7 @@ export default function FlashcardsPage() {
                                     </div>
                                     <div>
                                         <p className="font-bold text-red-600">Słabe punkty</p>
-                                        <p className="text-sm text-[var(--text-muted)]">
+                                        <p className="text-sm text-gray-500">
                                             Fiszki z błędami
                                         </p>
                                     </div>
@@ -443,8 +487,8 @@ export default function FlashcardsPage() {
 
                         {/* Section Title */}
                         <div className="flex items-center gap-2 pt-2">
-                            <BookOpen size={20} className="text-[var(--text-muted)]" />
-                            <h2 className="text-lg font-semibold">Twoje talie</h2>
+                            <BookOpen size={20} className="text-gray-400" />
+                            <h2 className="text-lg font-semibold text-gray-900">Twoje talie</h2>
                         </div>
 
                         {/* Deck Cards */}
@@ -455,7 +499,7 @@ export default function FlashcardsPage() {
                                     <button
                                         key={deck.id}
                                         onClick={() => handleSelectDeck(deck.id)}
-                                        className="lex-card hover:border-[#1a365d]/30 transition-all hover:scale-[1.01] group text-left"
+                                        className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:border-blue-200 transition-all hover:scale-[1.01] group text-left"
                                     >
                                         <div className="flex items-start gap-4">
                                             {/* Progress Ring */}
@@ -471,8 +515,8 @@ export default function FlashcardsPage() {
                                             </div>
 
                                             <div className="flex-1">
-                                                <h3 className="font-bold mb-1">{deck.name}</h3>
-                                                <p className="text-sm text-[var(--text-muted)] mb-2">
+                                                <h3 className="font-bold text-gray-900 mb-1">{deck.name}</h3>
+                                                <p className="text-sm text-gray-500 mb-2">
                                                     {deck.mastered}/{deck.total} opanowanych
                                                 </p>
                                                 <div className="flex gap-3 text-xs">
@@ -504,14 +548,14 @@ export default function FlashcardsPage() {
 
                         {/* Stats Tip */}
                         {stats && stats.totalQuestions > 0 && (
-                            <div className="lex-card bg-gradient-to-r from-[#1a365d]/5 to-transparent">
+                            <div className="bg-blue-50 rounded-2xl p-5 border border-blue-100">
                                 <div className="flex items-center gap-4">
-                                    <div className="w-10 h-10 rounded-xl bg-[#1a365d]/10 flex items-center justify-center">
-                                        <Target size={20} style={{ color: '#1a365d' }} />
+                                    <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
+                                        <Target size={20} className="text-blue-600" />
                                     </div>
                                     <div>
-                                        <p className="font-medium">Twój postęp</p>
-                                        <p className="text-sm text-[var(--text-muted)]">
+                                        <p className="font-medium text-gray-900">Twój postęp</p>
+                                        <p className="text-sm text-gray-500">
                                             {stats.totalQuestions} pytań przećwiczonych •
                                             {Math.round((stats.correctAnswers / stats.totalQuestions) * 100)}% dokładności
                                         </p>

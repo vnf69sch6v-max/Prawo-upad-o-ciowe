@@ -493,7 +493,7 @@ function ExamPageContent() {
         }));
 
         return (
-            <div className="min-h-screen" style={{ background: 'var(--bg-primary)' }}>
+            <div className="min-h-screen bg-[#F8F9FA]">
                 <ExamResults
                     examTitle={selectedExam.title}
                     score={examResult.score}
@@ -517,7 +517,7 @@ function ExamPageContent() {
     }
 
     return (
-        <div className="flex min-h-screen" style={{ background: 'var(--bg-primary)' }}>
+        <div className="flex min-h-screen bg-[#F8F9FA]">
             <Sidebar
                 currentView="exam"
                 onNavigate={() => { }}
@@ -530,29 +530,25 @@ function ExamPageContent() {
             />
 
             <div className="flex-1 flex flex-col min-w-0">
-                <Header
-                    userStats={{
-                        streak: userStats?.currentStreak || 0,
-                        knowledgeEquity: userStats?.knowledgeEquity || 0,
-                        rank: 0
-                    }}
-                    currentView="exam"
-                />
-
-                <main className="flex-1 overflow-auto p-6 pb-20 lg:pb-6">
-                    <div className="max-w-6xl mx-auto space-y-6">
-                        {/* Header */}
-                        <div>
-                            <h1 className="text-2xl font-bold">
-                                {selectedDomain === 'makler_a' ? '🔢 Matematyka Finansowa' : 'Egzaminy Prawnicze'}
-                            </h1>
-                            <p className="text-[var(--text-muted)]">
-                                {selectedDomain === 'makler_a'
-                                    ? 'PV/FV, stopy, kapitalizacja, renty, kredyty, statystyka portfelowa'
-                                    : 'Wybierz dziedzinę prawa i rozpocznij naukę'
-                                }
-                            </p>
+                {/* Apple-style Header */}
+                <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-gray-100 px-6 py-4">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+                                <BookOpen size={20} className="text-white" />
+                            </div>
+                            <div>
+                                <h1 className="text-xl font-semibold text-gray-900">
+                                    {selectedDomain === 'makler_a' ? 'Matematyka Finansowa' : 'Egzaminy'}
+                                </h1>
+                                <p className="text-sm text-gray-500">Wybierz tryb i testuj swoją wiedzę</p>
+                            </div>
                         </div>
+                    </div>
+                </header>
+
+                <main className="flex-1 overflow-auto p-6 pb-24 lg:pb-6">
+                    <div className="max-w-6xl mx-auto space-y-6">
 
                         {/* Domain Tabs - Only show domains with questions */}
                         <div className="flex flex-wrap gap-3">
@@ -580,14 +576,17 @@ function ExamPageContent() {
                                         'px-5 py-3 rounded-xl text-sm font-medium transition-all flex items-center gap-2',
                                         selectedDomain === domain.id
                                             ? domain.id === 'ksh'
-                                                ? 'bg-[var(--accent-gold)] text-white'
+                                                ? 'bg-blue-600 text-white'
                                                 : 'bg-orange-600 text-white'
-                                            : 'bg-[var(--bg-card)] text-[var(--text-muted)] hover:text-white hover:bg-[var(--bg-hover)]'
+                                            : 'bg-white text-gray-600 hover:text-gray-900 hover:bg-gray-50 border border-gray-200'
                                     )}
                                 >
                                     <span className="text-xl">{domain.icon}</span>
                                     <span>{domain.name}</span>
-                                    <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full">
+                                    <span className={cn(
+                                        "text-xs px-2 py-0.5 rounded-full",
+                                        selectedDomain === domain.id ? "bg-white/20" : "bg-gray-100"
+                                    )}>
                                         {domain.id === selectedDomain ? stats.total : domain.id === 'ksh' ? 879 : domain.id === 'prawo_cywilne' ? 774 : domain.id === 'aso' ? 1000 : 80} pytań
                                     </span>
                                 </button>
@@ -596,17 +595,17 @@ function ExamPageContent() {
 
                         {/* MAIN CTA - Exam Modes - NOW ON TOP */}
                         <div className="space-y-4">
-                            <h2 className="text-lg font-semibold">Wybierz tryb egzaminu</h2>
+                            <h2 className="text-lg font-semibold text-gray-900">Wybierz tryb egzaminu</h2>
                             <div className="grid lg:grid-cols-3 gap-4">
                                 {currentExams.slice(0, 3).map((exam, index) => (
                                     <button
                                         key={exam.id}
                                         onClick={() => handleStartExam(exam)}
                                         className={cn(
-                                            "lex-card transition-all text-left group hover:scale-[1.02]",
-                                            index === 0 && "hover:border-[var(--accent-gold)]/50 hover:shadow-lg hover:shadow-purple-500/10",
-                                            index === 1 && "hover:border-blue-500/50 hover:shadow-lg hover:shadow-blue-500/10",
-                                            index === 2 && "hover:border-yellow-500/50 hover:shadow-lg hover:shadow-yellow-500/10"
+                                            "bg-white rounded-2xl p-5 shadow-sm border border-gray-100 transition-all text-left group hover:scale-[1.02]",
+                                            index === 0 && "hover:border-purple-300 hover:shadow-lg hover:shadow-purple-500/10",
+                                            index === 1 && "hover:border-blue-300 hover:shadow-lg hover:shadow-blue-500/10",
+                                            index === 2 && "hover:border-yellow-300 hover:shadow-lg hover:shadow-yellow-500/10"
                                         )}
                                     >
                                         <div className="flex flex-col items-center text-center p-4">
@@ -620,15 +619,15 @@ function ExamPageContent() {
                                                 {index === 1 && <Scale size={28} className="text-white" />}
                                                 {index === 2 && <Trophy size={28} className="text-white" />}
                                             </div>
-                                            <h3 className="font-bold text-lg mb-1">{exam.title}</h3>
-                                            <p className="text-sm text-[var(--text-muted)] mb-3">
+                                            <h3 className="font-bold text-lg mb-1 text-gray-900">{exam.title}</h3>
+                                            <p className="text-sm text-gray-500 mb-3">
                                                 {exam.description}
                                             </p>
                                             <div className="flex items-center gap-3 text-xs">
-                                                <span className="px-2 py-1 bg-[var(--bg-hover)] rounded-full">
+                                                <span className="px-2 py-1 bg-gray-100 rounded-full text-gray-600">
                                                     📝 {exam.questionCount} pytań
                                                 </span>
-                                                <span className="px-2 py-1 bg-[var(--bg-hover)] rounded-full">
+                                                <span className="px-2 py-1 bg-gray-100 rounded-full text-gray-600">
                                                     ⏱️ {exam.timeLimit} min
                                                 </span>
                                             </div>
@@ -650,10 +649,10 @@ function ExamPageContent() {
 export default function ExamPage() {
     return (
         <Suspense fallback={
-            <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg-primary)' }}>
+            <div className="min-h-screen flex items-center justify-center bg-[#F8F9FA]">
                 <div className="text-center">
-                    <div className="animate-spin w-8 h-8 border-2 border-[var(--accent-gold)] border-t-transparent rounded-full mx-auto mb-4" />
-                    <p className="text-[var(--text-muted)]">Ładowanie...</p>
+                    <div className="animate-spin w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-4" />
+                    <p className="text-gray-500">Ładowanie...</p>
                 </div>
             </div>
         }>

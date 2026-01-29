@@ -15,7 +15,7 @@ export default function StudentPrawaPage() {
     const category = getCategoryById('student-prawa');
 
     return (
-        <div className="flex min-h-screen" style={{ background: 'var(--bg-primary)' }}>
+        <div className="flex min-h-screen bg-[#F8F9FA]">
             <Sidebar
                 currentView="student-prawa"
                 onNavigate={() => { }}
@@ -44,8 +44,8 @@ export default function StudentPrawaPage() {
                             <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl mb-4 bg-gradient-to-br from-[#1a365d] to-[#2563eb]">
                                 <span className="text-4xl">🎓</span>
                             </div>
-                            <h1 className="text-3xl font-bold mb-2">{category?.name}</h1>
-                            <p className="text-[var(--text-muted)] max-w-xl mx-auto">
+                            <h1 className="text-3xl font-bold mb-2 text-gray-900">{category?.name}</h1>
+                            <p className="text-gray-500 max-w-xl mx-auto">
                                 {category?.description}
                             </p>
                         </div>
@@ -92,7 +92,7 @@ export default function StudentPrawaPage() {
 
                         {/* Topic Cards */}
                         <div>
-                            <h2 className="text-xl font-bold mb-4">Dziedziny prawa</h2>
+                            <h2 className="text-xl font-bold mb-4 text-gray-900">Dziedziny prawa</h2>
                             <div className="grid md:grid-cols-2 gap-4">
                                 {STUDENT_PRAWA_TOPICS.map((topic) => (
                                     <Link
@@ -114,7 +114,7 @@ export default function StudentPrawaPage() {
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center gap-2 mb-1">
-                                                    <h3 className="font-bold truncate">{topic.name}</h3>
+                                                    <h3 className="font-bold truncate text-gray-800">{topic.name}</h3>
                                                     {!topic.available && (
                                                         <span className="px-2 py-0.5 text-xs font-medium bg-gray-500/20 text-gray-400 rounded-full flex items-center gap-1">
                                                             <Lock size={10} />
@@ -122,11 +122,11 @@ export default function StudentPrawaPage() {
                                                         </span>
                                                     )}
                                                 </div>
-                                                <p className="text-sm text-[var(--text-muted)] line-clamp-2">
+                                                <p className="text-sm text-gray-500 line-clamp-2">
                                                     {topic.description}
                                                 </p>
-                                                <div className="flex items-center gap-2 mt-2 text-xs text-[var(--text-muted)]">
-                                                    <span className="px-2 py-0.5 bg-[var(--bg-hover)] rounded-full">
+                                                <div className="flex items-center gap-2 mt-2 text-xs text-gray-500">
+                                                    <span className="px-2 py-0.5 bg-gray-100 rounded-full">
                                                         {topic.questionCount > 0 ? `${topic.questionCount} pytań` : 'Brak pytań'}
                                                     </span>
                                                 </div>
@@ -134,7 +134,7 @@ export default function StudentPrawaPage() {
                                             {topic.available && (
                                                 <ChevronRight
                                                     size={20}
-                                                    className="text-[var(--text-muted)] group-hover:text-[#1a365d] group-hover:translate-x-1 transition-all"
+                                                    className="text-gray-400 group-hover:text-[#1a365d] group-hover:translate-x-1 transition-all"
                                                 />
                                             )}
                                         </div>
@@ -151,7 +151,7 @@ export default function StudentPrawaPage() {
                                 </div>
                                 <div>
                                     <p className="font-semibold">Łącznie w tej ścieżce</p>
-                                    <p className="text-sm text-[var(--text-muted)]">
+                                    <p className="text-sm text-gray-500">
                                         {STUDENT_PRAWA_TOPICS.reduce((sum, t) => sum + t.questionCount, 0)} pytań •
                                         {STUDENT_PRAWA_TOPICS.filter(t => t.available).length} dostępnych dziedzin
                                     </p>

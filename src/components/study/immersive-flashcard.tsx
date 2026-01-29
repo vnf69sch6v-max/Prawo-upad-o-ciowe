@@ -222,7 +222,7 @@ export function ImmersiveFlashcard({
         <div className="relative w-full max-w-xl mx-auto select-none">
             {/* Progress indicator */}
             <div className="flex items-center justify-between mb-4 px-2">
-                <span className="text-sm text-[var(--text-muted)]">
+                <span className="text-sm text-gray-500">
                     {cardIndex + 1} / {totalCards}
                 </span>
                 <button
@@ -231,7 +231,7 @@ export function ImmersiveFlashcard({
                         "p-2 rounded-full transition-all",
                         isFavorited
                             ? "text-red-500 bg-red-500/20 animate-heart-pop"
-                            : "text-[var(--text-muted)] hover:text-red-400"
+                            : "text-gray-400 hover:text-red-400"
                     )}
                 >
                     <Heart
@@ -282,7 +282,7 @@ export function ImmersiveFlashcard({
                                 {card.answer}
                             </p>
                             {card.explanation && (
-                                <p className="text-base text-[var(--text-secondary)] leading-relaxed max-w-md mx-auto">
+                                <p className="text-base text-gray-600 leading-relaxed max-w-md mx-auto">
                                     {card.explanation}
                                 </p>
                             )}
@@ -305,7 +305,7 @@ export function ImmersiveFlashcard({
                             <ArrowLeft size={16} />
                             Nie wiem
                         </span>
-                        <span className="text-[var(--text-subtle)]">|</span>
+                        <span className="text-gray-400">|</span>
                         <span className="flex items-center gap-1 text-green-400">
                             Wiem
                             <ArrowRight size={16} />
@@ -316,7 +316,7 @@ export function ImmersiveFlashcard({
                 {/* Long press hint */}
                 {!showAnswer && !showGestureHint && (
                     <div className="absolute bottom-6 left-0 right-0 text-center">
-                        <span className="text-xs text-[var(--text-subtle)] animate-pulse">
+                        <span className="text-xs text-gray-500 animate-pulse">
                             Przytrzymaj aby zobaczyć odpowiedź
                         </span>
                     </div>

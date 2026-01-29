@@ -81,7 +81,7 @@ function QuickReview({
         <div className="space-y-6">
             {/* Progress */}
             <div className="flex items-center justify-between mb-4">
-                <span className="text-sm text-[var(--text-muted)]">
+                <span className="text-sm text-gray-500">
                     Pytanie {currentIndex + 1} z {questions.length}
                 </span>
                 <span className="text-sm font-medium">
@@ -89,7 +89,7 @@ function QuickReview({
                 </span>
             </div>
 
-            <div className="h-2 bg-[var(--bg-hover)] rounded-full">
+            <div className="h-2 bg-gray-100 rounded-full">
                 <div
                     className="h-full bg-[#ef4444] rounded-full transition-all"
                     style={{ width: `${((currentIndex + 1) / questions.length) * 100}%` }}
@@ -105,7 +105,7 @@ function QuickReview({
                         const isSelected = selectedAnswer === key;
                         const isCorrect = key === currentQuestion.correct;
 
-                        let bgClass = 'bg-[var(--bg-hover)] hover:bg-[var(--bg-elevated)]';
+                        let bgClass = 'bg-gray-100 hover:bg-gray-200';
                         if (showResult) {
                             if (isCorrect) bgClass = 'bg-green-500/20 border-green-500';
                             else if (isSelected && !isCorrect) bgClass = 'bg-red-500/20 border-red-500';
@@ -130,7 +130,7 @@ function QuickReview({
                                         showResult && isCorrect && 'bg-green-500 text-white',
                                         showResult && isSelected && !isCorrect && 'bg-red-500 text-white',
                                         !showResult && isSelected && 'bg-[#ef4444] text-white',
-                                        !showResult && !isSelected && 'bg-[var(--bg-card)]'
+                                        !showResult && !isSelected && 'bg-white'
                                     )}>
                                         {key.toUpperCase()}
                                     </span>
@@ -145,9 +145,9 @@ function QuickReview({
 
                 {/* Explanation */}
                 {showResult && (
-                    <div className="mt-6 p-4 bg-[var(--bg-hover)] rounded-xl">
+                    <div className="mt-6 p-4 bg-gray-100 rounded-xl">
                         <p className="text-sm font-medium mb-1">Wyjaśnienie:</p>
-                        <p className="text-sm text-[var(--text-secondary)]">{currentQuestion.explanation}</p>
+                        <p className="text-sm text-gray-600">{currentQuestion.explanation}</p>
                     </div>
                 )}
             </div>
@@ -162,7 +162,7 @@ function QuickReview({
                             'flex-1 py-4 rounded-xl font-medium transition-all',
                             selectedAnswer
                                 ? 'bg-[#ef4444] text-white'
-                                : 'bg-[var(--bg-card)] text-[var(--text-muted)] cursor-not-allowed'
+                                : 'bg-white text-gray-400 cursor-not-allowed'
                         )}
                     >
                         Sprawdź
@@ -251,7 +251,7 @@ export default function WeakPointsPage() {
 
     if (authLoading || dataLoading) {
         return (
-            <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg-primary)' }}>
+            <div className="min-h-screen flex items-center justify-center bg-[#F8F9FA]">
                 <Loader2 className="animate-spin" size={48} style={{ color: '#1a365d' }} />
             </div>
         );
@@ -260,11 +260,11 @@ export default function WeakPointsPage() {
     // Practice mode
     if (view === 'practice' && practiceQuestions.length > 0) {
         return (
-            <div className="min-h-screen" style={{ background: 'var(--bg-primary)' }}>
+            <div className="min-h-screen bg-[#F8F9FA]">
                 <div className="max-w-2xl mx-auto p-6">
                     <button
                         onClick={() => setView('list')}
-                        className="mb-6 text-sm text-[var(--text-muted)] hover:text-[#ef4444] transition-colors flex items-center gap-1"
+                        className="mb-6 text-sm text-gray-500 hover:text-[#ef4444] transition-colors flex items-center gap-1"
                     >
                         <ChevronLeft size={16} />
                         Powrót do listy
@@ -275,7 +275,7 @@ export default function WeakPointsPage() {
                         </div>
                         <div>
                             <h2 className="text-xl font-bold">Sesja powtórkowa</h2>
-                            <p className="text-sm text-[var(--text-muted)]">{practiceQuestions.length} pytań do powtórki</p>
+                            <p className="text-sm text-gray-500">{practiceQuestions.length} pytań do powtórki</p>
                         </div>
                     </div>
                     <QuickReview
@@ -289,7 +289,7 @@ export default function WeakPointsPage() {
     }
 
     return (
-        <div className="flex min-h-screen" style={{ background: 'var(--bg-primary)' }}>
+        <div className="flex min-h-screen bg-[#F8F9FA]">
             <Sidebar
                 currentView="weak-points"
                 onNavigate={() => { }}
@@ -318,8 +318,8 @@ export default function WeakPointsPage() {
                             <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4" style={{ background: '#ef4444' }}>
                                 <Target size={32} className="text-white" />
                             </div>
-                            <h1 className="text-3xl font-bold mb-2">Słabe punkty</h1>
-                            <p className="text-[var(--text-muted)]">
+                            <h1 className="text-3xl font-bold mb-2 text-gray-900">Słabe punkty</h1>
+                            <p className="text-gray-500">
                                 {weakPoints.length > 0
                                     ? `${weakPoints.length} pytań wymaga powtórki`
                                     : 'Brak pytań do powtórki'
@@ -334,7 +334,7 @@ export default function WeakPointsPage() {
                                     🎯
                                 </div>
                                 <h2 className="text-2xl font-bold mb-2">Świetna robota!</h2>
-                                <p className="text-[var(--text-muted)] mb-8 max-w-md mx-auto">
+                                <p className="text-gray-500 mb-8 max-w-md mx-auto">
                                     Nie masz żadnych słabych punktów. Rozwiązuj egzaminy, a pytania na które odpowiesz źle pojawią się tutaj.
                                 </p>
                                 <Link
@@ -359,7 +359,7 @@ export default function WeakPointsPage() {
                                                     'px-4 py-2 rounded-xl text-sm font-medium transition-all',
                                                     filter === f
                                                         ? 'bg-[#ef4444] text-white'
-                                                        : 'bg-[var(--bg-card)] text-[var(--text-muted)] hover:text-[#ef4444]'
+                                                        : 'bg-white text-gray-500 hover:text-[#ef4444]'
                                                 )}
                                             >
                                                 {f === 'all' ? 'Wszystkie' : f === 'ksh' ? 'KSH' : f === 'prawo_upadlosciowe' ? 'Prawo Upadł.' : f === 'prawo_cywilne' ? 'KC' : f === 'aso' ? 'ASO' : 'Matematyka'}
@@ -368,7 +368,7 @@ export default function WeakPointsPage() {
                                     </div>
                                     <button
                                         onClick={handleClearAll}
-                                        className="text-sm text-[var(--text-muted)] hover:text-[#ef4444] flex items-center gap-1"
+                                        className="text-sm text-gray-500 hover:text-[#ef4444] flex items-center gap-1"
                                     >
                                         <Trash2 size={14} />
                                         Wyczyść wszystkie
@@ -391,7 +391,7 @@ export default function WeakPointsPage() {
                                             </div>
                                             <div className="text-left">
                                                 <p className="text-xl font-bold">Rozpocznij powtórkę</p>
-                                                <p className="text-[var(--text-muted)]">{Math.min(10, weakPoints.length)} pytań • ~{Math.min(10, weakPoints.length) * 2} min</p>
+                                                <p className="text-gray-500">{Math.min(10, weakPoints.length)} pytań • ~{Math.min(10, weakPoints.length) * 2} min</p>
                                             </div>
                                         </div>
                                         <ChevronRight size={24} className="text-[#ef4444]" />
@@ -418,7 +418,7 @@ export default function WeakPointsPage() {
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <p className="font-medium mb-2 line-clamp-2">{wp!.question.question}</p>
-                                                    <div className="flex items-center gap-4 text-xs text-[var(--text-muted)]">
+                                                    <div className="flex items-center gap-4 text-xs text-gray-500">
                                                         <span className="flex items-center gap-1">
                                                             <Clock size={12} />
                                                             {new Date(wp!.lastWrongAt).toLocaleDateString('pl-PL')}
@@ -440,7 +440,7 @@ export default function WeakPointsPage() {
                                                     className="opacity-0 group-hover:opacity-100 p-2 hover:bg-[#ef4444]/10 rounded-lg transition-all"
                                                     title="Usuń z listy"
                                                 >
-                                                    <Trash2 size={16} className="text-[var(--text-muted)]" />
+                                                    <Trash2 size={16} className="text-gray-400" />
                                                 </button>
                                             </div>
                                         </div>
@@ -455,7 +455,7 @@ export default function WeakPointsPage() {
                                         </div>
                                         <div>
                                             <p className="font-semibold">Wskazówka</p>
-                                            <p className="text-sm text-[var(--text-muted)]">
+                                            <p className="text-sm text-gray-500">
                                                 Powtarzaj słabe punkty regularnie. System automatycznie dodaje tu pytania, na które odpowiadasz błędnie podczas egzaminów.
                                             </p>
                                         </div>

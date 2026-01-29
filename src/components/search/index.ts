@@ -1,1 +1,1 @@
-export { SearchPageContent, DeckCard, SearchResultCard } from './search-page'
+export { SearchPageContent, SearchResultCard } from './search-page'

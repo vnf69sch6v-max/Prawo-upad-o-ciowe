@@ -128,7 +128,7 @@ function ChatMessage({
             {/* Avatar */}
             <div className={cn(
                 'w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0',
-                isUser ? 'bg-[#1a365d]' : 'bg-[var(--bg-hover)]'
+                isUser ? 'bg-[#1a365d]' : 'bg-gray-100'
             )}>
                 {isUser ? <User size={16} /> : <Bot size={16} />}
             </div>
@@ -138,7 +138,7 @@ function ChatMessage({
                 'max-w-[80%] rounded-2xl p-4',
                 isUser
                     ? 'bg-[#1a365d] rounded-tr-sm'
-                    : 'bg-[var(--bg-card)] border border-[var(--border-color)] rounded-tl-sm'
+                    : 'bg-white border border-gray-200 rounded-tl-sm text-gray-900'
             )}>
                 <p className="whitespace-pre-wrap leading-relaxed">
                     {isUser ? message.content : parseContent(message.content)}
@@ -146,8 +146,8 @@ function ChatMessage({
 
                 {/* Legal references */}
                 {message.metadata?.legalReferences && message.metadata.legalReferences.length > 0 && (
-                    <div className="mt-3 pt-3 border-t border-[var(--border-color)]">
-                        <p className="text-xs text-[var(--text-muted)] mb-2">Podstawy prawne:</p>
+                    <div className="mt-3 pt-3 border-t border-gray-200">
+                        <p className="text-xs text-gray-500 mb-2">Podstawy prawne:</p>
                         <div className="flex flex-wrap gap-1">
                             {message.metadata.legalReferences.map((ref, i) => (
                                 <span
@@ -163,19 +163,19 @@ function ChatMessage({
 
                 {/* Suggested flashcards */}
                 {message.metadata?.suggestedFlashcards && message.metadata.suggestedFlashcards.length > 0 && (
-                    <div className="mt-3 pt-3 border-t border-[var(--border-color)]">
-                        <p className="text-xs text-[var(--text-muted)] mb-2">Sugerowane fiszki:</p>
+                    <div className="mt-3 pt-3 border-t border-gray-200">
+                        <p className="text-xs text-gray-500 mb-2">Sugerowane fiszki:</p>
                         <div className="space-y-2">
                             {message.metadata.suggestedFlashcards.map((card, i) => (
-                                <div key={i} className="p-2 bg-[var(--bg-hover)] rounded-lg flex items-start gap-2">
+                                <div key={i} className="p-2 bg-gray-100 rounded-lg flex items-start gap-2">
                                     <div className="flex-1 text-sm">
-                                        <p className="font-medium">{card.question}</p>
-                                        <p className="text-[var(--text-muted)] text-xs mt-1">{card.answer}</p>
+                                        <p className="font-medium text-gray-900">{card.question}</p>
+                                        <p className="text-gray-500 text-xs mt-1">{card.answer}</p>
                                     </div>
                                     {onAddFlashcard && (
                                         <button
                                             onClick={() => onAddFlashcard(card.question, card.answer)}
-                                            className="p-1.5 rounded-lg hover:bg-[var(--bg-card)] text-green-400"
+                                            className="p-1.5 rounded-lg hover:bg-white text-green-500"
                                         >
                                             <Plus size={14} />
                                         </button>
@@ -191,12 +191,12 @@ function ChatMessage({
                     'flex items-center justify-between mt-2 opacity-0 group-hover:opacity-100 transition-opacity',
                     isUser && 'flex-row-reverse'
                 )}>
-                    <span className="text-xs text-[var(--text-muted)]">
+                    <span className="text-xs text-gray-400">
                         {message.timestamp.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })}
                     </span>
                     <button
                         onClick={handleCopy}
-                        className="p-1 rounded hover:bg-[var(--bg-hover)] text-[var(--text-muted)]"
+                        className="p-1 rounded hover:bg-gray-100 text-gray-400"
                     >
                         {copied ? <Check size={14} className="text-green-400" /> : <Copy size={14} />}
                     </button>
@@ -213,14 +213,14 @@ function ChatMessage({
 function TypingIndicator() {
     return (
         <div className="flex gap-3">
-            <div className="w-8 h-8 rounded-full bg-[var(--bg-hover)] flex items-center justify-center">
+            <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-700">
                 <Bot size={16} />
             </div>
-            <div className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-2xl rounded-tl-sm p-4">
+            <div className="bg-white border border-gray-200 rounded-2xl rounded-tl-sm p-4">
                 <div className="flex gap-1">
-                    <span className="w-2 h-2 bg-[var(--text-muted)] rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                    <span className="w-2 h-2 bg-[var(--text-muted)] rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                    <span className="w-2 h-2 bg-[var(--text-muted)] rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                    <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                 </div>
             </div>
         </div>
@@ -330,7 +330,7 @@ export function EnhancedAIChat({
     return (
         <div className="flex flex-col h-full">
             {/* Mode selector */}
-            <div className="flex gap-2 p-4 border-b border-[var(--border-color)] overflow-x-auto">
+            <div className="flex gap-2 p-4 border-b border-gray-200 overflow-x-auto">
                 {AI_MODES.map(mode => {
                     const ModeIcon = mode.icon;
                     return (
@@ -341,7 +341,7 @@ export function EnhancedAIChat({
                                 'flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all',
                                 selectedMode === mode.id
                                     ? 'text-white'
-                                    : 'bg-[var(--bg-hover)] text-[var(--text-muted)] hover:text-white'
+                                    : 'bg-gray-100 text-gray-600 hover:text-gray-900'
                             )}
                             style={{
                                 background: selectedMode === mode.id ? mode.color : undefined,
@@ -355,7 +355,7 @@ export function EnhancedAIChat({
 
                 <button
                     onClick={handleClearChat}
-                    className="ml-auto p-2 rounded-lg hover:bg-[var(--bg-hover)] text-[var(--text-muted)]"
+                    className="ml-auto p-2 rounded-lg hover:bg-gray-100 text-gray-500"
                 >
                     <RotateCcw size={18} />
                 </button>
@@ -378,13 +378,13 @@ export function EnhancedAIChat({
             {/* Suggested prompts */}
             {messages.length <= 2 && (
                 <div className="px-4 pb-2">
-                    <p className="text-xs text-[var(--text-muted)] mb-2">Sugerowane pytania:</p>
+                    <p className="text-xs text-gray-500 mb-2">Sugerowane pytania:</p>
                     <div className="flex flex-wrap gap-2">
                         {SUGGESTED_PROMPTS.map((prompt, i) => (
                             <button
                                 key={i}
                                 onClick={() => handleSuggestedPrompt(prompt)}
-                                className="px-3 py-1.5 bg-[var(--bg-hover)] rounded-full text-sm hover:bg-[var(--bg-elevated)] transition-colors"
+                                className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-full text-sm hover:bg-gray-200 transition-colors"
                             >
                                 {prompt}
                             </button>
@@ -394,7 +394,7 @@ export function EnhancedAIChat({
             )}
 
             {/* Input */}
-            <div className="p-4 border-t border-[var(--border-color)]">
+            <div className="p-4 border-t border-gray-200">
                 <div className="flex gap-2 items-end">
                     <div className="flex-1 relative">
                         <textarea
@@ -404,7 +404,7 @@ export function EnhancedAIChat({
                             onKeyDown={handleKeyDown}
                             placeholder="Zadaj pytanie..."
                             rows={1}
-                            className="w-full px-4 py-3 bg-[var(--bg-hover)] border border-[var(--border-color)] rounded-xl resize-none focus:border-[#1a365d] focus:outline-none"
+                            className="w-full px-4 py-3 bg-gray-50 text-gray-900 border border-gray-200 rounded-xl resize-none focus:border-[#1a365d] focus:outline-none placeholder:text-gray-400"
                             style={{ maxHeight: '120px' }}
                         />
                     </div>
@@ -416,9 +416,9 @@ export function EnhancedAIChat({
                         {isLoading ? <Loader2 size={20} className="animate-spin" /> : <Send size={20} />}
                     </button>
                 </div>
-                <p className="text-xs text-[var(--text-muted)] mt-2 text-center">
-                    <kbd className="px-1 py-0.5 bg-[var(--bg-hover)] rounded">Enter</kbd> wyślij ·
-                    <kbd className="px-1 py-0.5 bg-[var(--bg-hover)] rounded ml-1">Shift+Enter</kbd> nowa linia
+                <p className="text-xs text-gray-400 mt-2 text-center">
+                    <kbd className="px-1 py-0.5 bg-gray-100 text-gray-600 rounded">Enter</kbd> wyślij ·
+                    <kbd className="px-1 py-0.5 bg-gray-100 text-gray-600 rounded ml-1">Shift+Enter</kbd> nowa linia
                 </p>
             </div>
         </div>
