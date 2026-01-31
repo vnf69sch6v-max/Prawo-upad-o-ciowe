@@ -11,7 +11,12 @@ export default function SearchPage() {
     const { profile } = useAuth();
 
     return (
-        <div className="min-h-screen bg-[#F8F9FA]">
+        <div
+            className="min-h-screen"
+            style={{
+                background: 'linear-gradient(135deg, #F5E6F0 0%, #E8E0F0 25%, #E0EEF5 50%, #F0E8E5 75%, #F5E6F0 100%)',
+            }}
+        >
             {/* Auto-collapsing Sidebar */}
             <LiquidGlassSidebar
                 userStats={{

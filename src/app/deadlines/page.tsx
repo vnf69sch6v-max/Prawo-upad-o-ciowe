@@ -281,14 +281,14 @@ export default function DeadlinesPage() {
 
     if (authLoading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-[#F8F9FA]">
+            <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #F5E6F0 0%, #E8E0F0 25%, #E0EEF5 50%, #F0E8E5 75%, #F5E6F0 100%)' }}>
                 <Loader2 className="animate-spin" size={48} style={{ color: '#1a365d' }} />
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-[#F8F9FA]">
+        <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #F5E6F0 0%, #E8E0F0 25%, #E0EEF5 50%, #F0E8E5 75%, #F5E6F0 100%)' }}>
             <LiquidGlassSidebar
                 userStats={{
                     streak: stats?.currentStreak || 0,

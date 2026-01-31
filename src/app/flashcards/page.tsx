@@ -250,7 +250,7 @@ export default function FlashcardsPage() {
 
     if (authLoading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-[#F8F9FA]">
+            <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #F5E6F0 0%, #E8E0F0 25%, #E0EEF5 50%, #F0E8E5 75%, #F5E6F0 100%)' }}>
                 <Loader2 className="animate-spin text-blue-500" size={48} />
             </div>
         );
@@ -258,7 +258,7 @@ export default function FlashcardsPage() {
 
     if (view === 'study') {
         return (
-            <div className="min-h-screen bg-[#F8F9FA]">
+            <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #F5E6F0 0%, #E8E0F0 25%, #E0EEF5 50%, #F0E8E5 75%, #F5E6F0 100%)' }}>
                 <div className="max-w-4xl mx-auto p-6">
                     <button
                         onClick={() => { setView('dashboard'); setSelectedDeck(null); }}
@@ -296,7 +296,7 @@ export default function FlashcardsPage() {
         ].sort(() => Math.random() - 0.5);
 
         return (
-            <div className="min-h-screen bg-[#F8F9FA]">
+            <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #F5E6F0 0%, #E8E0F0 25%, #E0EEF5 50%, #F0E8E5 75%, #F5E6F0 100%)' }}>
                 <div className="max-w-4xl mx-auto p-6">
                     <SpeedRunMode
                         cards={speedRunCards}
@@ -315,7 +315,7 @@ export default function FlashcardsPage() {
     // Speed Run Results
     if (view === 'speedrun-results' && speedRunResults) {
         return (
-            <div className="min-h-screen bg-[#F8F9FA]">
+            <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #F5E6F0 0%, #E8E0F0 25%, #E0EEF5 50%, #F0E8E5 75%, #F5E6F0 100%)' }}>
                 <div className="max-w-4xl mx-auto p-6">
                     <SpeedRunResults
                         results={speedRunResults}

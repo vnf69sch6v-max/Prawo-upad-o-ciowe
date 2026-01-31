@@ -57,7 +57,7 @@ export function SearchPageContent() {
     const totalCards = deckStats.reduce((sum, d) => sum + d.total_cards, 0)
 
     return (
-        <div className="min-h-screen bg-[#F8F9FA]">
+        <div className="min-h-screen">
             {/* ═══════════════════════════════════════════════════════════
                 SEARCH HEADER - Large, Clean, Centered
             ═══════════════════════════════════════════════════════════ */}

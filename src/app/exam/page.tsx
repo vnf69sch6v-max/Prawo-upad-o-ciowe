@@ -493,7 +493,7 @@ function ExamPageContent() {
         }));
 
         return (
-            <div className="min-h-screen bg-[#F8F9FA]">
+            <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #F5E6F0 0%, #E8E0F0 25%, #E0EEF5 50%, #F0E8E5 75%, #F5E6F0 100%)' }}>
                 <ExamResults
                     examTitle={selectedExam.title}
                     score={examResult.score}
@@ -517,7 +517,7 @@ function ExamPageContent() {
     }
 
     return (
-        <div className="min-h-screen bg-[#F8F9FA]">
+        <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #F5E6F0 0%, #E8E0F0 25%, #E0EEF5 50%, #F0E8E5 75%, #F5E6F0 100%)' }}>
             <LiquidGlassSidebar
                 userStats={{
                     streak: userStats?.currentStreak || 0,
@@ -643,7 +643,7 @@ function ExamPageContent() {
 export default function ExamPage() {
     return (
         <Suspense fallback={
-            <div className="min-h-screen flex items-center justify-center bg-[#F8F9FA]">
+            <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #F5E6F0 0%, #E8E0F0 25%, #E0EEF5 50%, #F0E8E5 75%, #F5E6F0 100%)' }}>
                 <div className="text-center">
                     <div className="animate-spin w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-4" />
                     <p className="text-gray-500">Ładowanie...</p>

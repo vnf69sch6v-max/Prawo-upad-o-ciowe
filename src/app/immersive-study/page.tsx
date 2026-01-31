@@ -190,7 +190,7 @@ export default function ImmersiveStudyPage() {
     // Mode selection view
     if (view === 'select') {
         return (
-            <div className="min-h-screen bg-[#F8F9FA]">
+            <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #F5E6F0 0%, #E8E0F0 25%, #E0EEF5 50%, #F0E8E5 75%, #F5E6F0 100%)' }}>
                 <LiquidGlassSidebar
                     userStats={{
                         streak: stats?.currentStreak || 0,
@@ -292,7 +292,7 @@ export default function ImmersiveStudyPage() {
     if (view === 'study' && currentCard) {
         return (
             <div
-                className="min-h-screen flex flex-col bg-[#F8F9FA]"
+                className="min-h-screen flex flex-col" style={{ background: 'linear-gradient(135deg, #F5E6F0 0%, #E8E0F0 25%, #E0EEF5 50%, #F0E8E5 75%, #F5E6F0 100%)' }}
             >
                 {/* Minimal header */}
                 <div className="flex items-center justify-between p-4">
@@ -356,7 +356,7 @@ export default function ImmersiveStudyPage() {
 
         return (
             <div
-                className="min-h-screen flex items-center justify-center p-4 bg-[#F8F9FA]"
+                className="min-h-screen flex items-center justify-center p-4" style={{ background: 'linear-gradient(135deg, #F5E6F0 0%, #E8E0F0 25%, #E0EEF5 50%, #F0E8E5 75%, #F5E6F0 100%)' }}
             >
                 <div className="max-w-md w-full space-y-6 animate-fade-in">
                     {/* Celebration */}

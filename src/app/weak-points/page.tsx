@@ -251,7 +251,7 @@ export default function WeakPointsPage() {
 
     if (authLoading || dataLoading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-[#F8F9FA]">
+            <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #F5E6F0 0%, #E8E0F0 25%, #E0EEF5 50%, #F0E8E5 75%, #F5E6F0 100%)' }}>
                 <Loader2 className="animate-spin" size={48} style={{ color: '#1a365d' }} />
             </div>
         );
@@ -260,7 +260,7 @@ export default function WeakPointsPage() {
     // Practice mode
     if (view === 'practice' && practiceQuestions.length > 0) {
         return (
-            <div className="min-h-screen bg-[#F8F9FA]">
+            <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #F5E6F0 0%, #E8E0F0 25%, #E0EEF5 50%, #F0E8E5 75%, #F5E6F0 100%)' }}>
                 <div className="max-w-2xl mx-auto p-6">
                     <button
                         onClick={() => setView('list')}
@@ -289,7 +289,7 @@ export default function WeakPointsPage() {
     }
 
     return (
-        <div className="min-h-screen bg-[#F8F9FA]">
+        <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #F5E6F0 0%, #E8E0F0 25%, #E0EEF5 50%, #F0E8E5 75%, #F5E6F0 100%)' }}>
             <LiquidGlassSidebar
                 userStats={{
                     streak: stats?.currentStreak || 0,
