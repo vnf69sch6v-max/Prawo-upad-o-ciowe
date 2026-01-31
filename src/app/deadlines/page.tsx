@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Sidebar, Header, MobileNav } from '@/components/layout';
+import { MobileNav } from '@/components/layout';
+import { LiquidGlassSidebar } from '@/components/liquid-glass';
 import { Calendar, CheckCircle, XCircle, Loader2, ChevronLeft, ChevronRight, Play, RotateCcw, Info } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 import { useAuth } from '@/hooks/use-auth';
@@ -243,7 +244,6 @@ function InteractiveCalendar({
 }
 
 export default function DeadlinesPage() {
-    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const [currentScenarioIndex, setCurrentScenarioIndex] = useState(0);
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
     const [showResult, setShowResult] = useState(false);
@@ -288,172 +288,157 @@ export default function DeadlinesPage() {
     }
 
     return (
-        <div className="flex min-h-screen bg-[#F8F9FA]">
-            <Sidebar
-                currentView="deadlines"
-                onNavigate={() => { }}
-                isCollapsed={sidebarCollapsed}
-                onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+        <div className="min-h-screen bg-[#F8F9FA]">
+            <LiquidGlassSidebar
                 userStats={{
                     streak: stats?.currentStreak || 0,
                     knowledgeEquity: stats?.knowledgeEquity || 0
                 }}
             />
 
-            <div className="flex-1 flex flex-col min-w-0">
-                <Header
-                    userStats={{
-                        streak: stats?.currentStreak || 0,
-                        knowledgeEquity: stats?.knowledgeEquity || 0,
-                        rank: 0
-                    }}
-                    currentView="deadlines"
-                />
-
-                <main className="flex-1 overflow-auto p-6 pb-20 lg:pb-6">
-                    <div className="max-w-4xl mx-auto space-y-6">
-                        {/* Header */}
-                        <div className="text-center mb-6">
-                            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4" style={{ background: '#8b5cf6' }}>
-                                <Calendar size={32} className="text-white" />
-                            </div>
-                            <h1 className="text-3xl font-bold mb-2 text-gray-900">Symulator terminów</h1>
-                            <p className="text-gray-500">
-                                Naucz się poprawnie liczyć terminy procesowe
-                            </p>
+            <main className="overflow-auto p-6 pb-20 lg:pb-6">
+                <div className="max-w-4xl mx-auto space-y-6">
+                    {/* Header */}
+                    <div className="text-center mb-6">
+                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4" style={{ background: '#8b5cf6' }}>
+                            <Calendar size={32} className="text-white" />
                         </div>
-
-                        {/* Score */}
-                        {score.total > 0 && (
-                            <div className="flex justify-center gap-4">
-                                <div className="lex-card px-6 py-3 flex items-center gap-3">
-                                    <CheckCircle size={20} className="text-green-500" />
-                                    <span className="font-bold">{score.correct}</span>
-                                    <span className="text-gray-500">poprawnych</span>
-                                </div>
-                                <div className="lex-card px-6 py-3 flex items-center gap-3">
-                                    <span className="font-bold">{score.total}</span>
-                                    <span className="text-gray-500">łącznie</span>
-                                </div>
-                                <button
-                                    onClick={handleReset}
-                                    className="lex-card px-4 py-3 flex items-center gap-2 hover:border-[#8b5cf6]/50"
-                                >
-                                    <RotateCcw size={16} />
-                                    Reset
-                                </button>
-                            </div>
-                        )}
-
-                        {/* Scenario */}
-                        <div className="lex-card">
-                            <div className="flex items-center gap-2 mb-4">
-                                <span className={cn(
-                                    "px-3 py-1 rounded-full text-xs font-medium",
-                                    currentScenario.difficulty === 'easy' && "bg-green-500/20 text-green-500",
-                                    currentScenario.difficulty === 'medium' && "bg-yellow-500/20 text-yellow-500",
-                                    currentScenario.difficulty === 'hard' && "bg-red-500/20 text-red-500"
-                                )}>
-                                    {currentScenario.difficulty === 'easy' ? '🟢 Łatwy' :
-                                        currentScenario.difficulty === 'medium' ? '🟡 Średni' : '🔴 Trudny'}
-                                </span>
-                                <span className="text-sm text-gray-500">
-                                    Scenariusz {currentScenarioIndex + 1}/{SCENARIOS.length}
-                                </span>
-                            </div>
-
-                            <h2 className="text-xl font-bold mb-4 text-gray-900">{currentScenario.title}</h2>
-                            <p className="text-gray-600 mb-4">{currentScenario.description}</p>
-
-                            <div className="p-4 bg-[#8b5cf6]/10 rounded-xl mb-4">
-                                <p className="font-medium">
-                                    ❓ Kiedy upływa {currentScenario.deadlineDays}-dniowy termin?
-                                </p>
-                            </div>
-
-                            <p className="text-sm text-gray-500">
-                                Podstawa prawna: {currentScenario.legalBasis}
-                            </p>
-                        </div>
-
-                        {/* Calendar */}
-                        <InteractiveCalendar
-                            baseDate={currentScenario.eventDate}
-                            selectedDate={selectedDate}
-                            onSelectDate={setSelectedDate}
-                            correctDate={correctDate}
-                            showResult={showResult}
-                        />
-
-                        {/* Result */}
-                        {showResult && (
-                            <div className={cn(
-                                "lex-card",
-                                selectedDate?.toDateString() === correctDate.toDateString()
-                                    ? "bg-green-500/10 border-green-500/30"
-                                    : "bg-red-500/10 border-red-500/30"
-                            )}>
-                                <div className="flex items-center gap-3 mb-4">
-                                    {selectedDate?.toDateString() === correctDate.toDateString() ? (
-                                        <>
-                                            <CheckCircle size={24} className="text-green-500" />
-                                            <span className="text-xl font-bold text-green-500">Poprawnie!</span>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <XCircle size={24} className="text-red-500" />
-                                            <span className="text-xl font-bold text-red-500">Niepoprawnie</span>
-                                        </>
-                                    )}
-                                </div>
-
-                                <p className="font-medium mb-2">
-                                    Termin upływa: {correctDate.toLocaleDateString('pl-PL', {
-                                        weekday: 'long',
-                                        year: 'numeric',
-                                        month: 'long',
-                                        day: 'numeric'
-                                    })}
-                                </p>
-
-                                <div className="p-4 bg-gray-100 rounded-xl mt-4">
-                                    <div className="flex items-start gap-2">
-                                        <Info size={16} className="text-[#8b5cf6] mt-0.5 shrink-0" />
-                                        <p className="text-sm">{currentScenario.explanation}</p>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Actions */}
-                        <div className="flex gap-4">
-                            {!showResult ? (
-                                <button
-                                    onClick={handleCheck}
-                                    disabled={!selectedDate}
-                                    className={cn(
-                                        "flex-1 py-4 rounded-xl font-medium transition-all flex items-center justify-center gap-2",
-                                        selectedDate
-                                            ? "bg-[#8b5cf6] text-white hover:bg-[#7c3aed]"
-                                            : "bg-white text-gray-400 cursor-not-allowed"
-                                    )}
-                                >
-                                    <Play size={20} />
-                                    Sprawdź odpowiedź
-                                </button>
-                            ) : (
-                                <button
-                                    onClick={handleNext}
-                                    className="flex-1 py-4 rounded-xl font-medium bg-[#8b5cf6] text-white hover:bg-[#7c3aed] transition-all flex items-center justify-center gap-2"
-                                >
-                                    Następny scenariusz
-                                    <ChevronRight size={20} />
-                                </button>
-                            )}
-                        </div>
+                        <h1 className="text-3xl font-bold mb-2 text-gray-900">Symulator terminów</h1>
+                        <p className="text-gray-500">
+                            Naucz się poprawnie liczyć terminy procesowe
+                        </p>
                     </div>
-                </main>
-            </div>
+
+                    {/* Score */}
+                    {score.total > 0 && (
+                        <div className="flex justify-center gap-4">
+                            <div className="lex-card px-6 py-3 flex items-center gap-3">
+                                <CheckCircle size={20} className="text-green-500" />
+                                <span className="font-bold">{score.correct}</span>
+                                <span className="text-gray-500">poprawnych</span>
+                            </div>
+                            <div className="lex-card px-6 py-3 flex items-center gap-3">
+                                <span className="font-bold">{score.total}</span>
+                                <span className="text-gray-500">łącznie</span>
+                            </div>
+                            <button
+                                onClick={handleReset}
+                                className="lex-card px-4 py-3 flex items-center gap-2 hover:border-[#8b5cf6]/50"
+                            >
+                                <RotateCcw size={16} />
+                                Reset
+                            </button>
+                        </div>
+                    )}
+
+                    {/* Scenario */}
+                    <div className="lex-card">
+                        <div className="flex items-center gap-2 mb-4">
+                            <span className={cn(
+                                "px-3 py-1 rounded-full text-xs font-medium",
+                                currentScenario.difficulty === 'easy' && "bg-green-500/20 text-green-500",
+                                currentScenario.difficulty === 'medium' && "bg-yellow-500/20 text-yellow-500",
+                                currentScenario.difficulty === 'hard' && "bg-red-500/20 text-red-500"
+                            )}>
+                                {currentScenario.difficulty === 'easy' ? '🟢 Łatwy' :
+                                    currentScenario.difficulty === 'medium' ? '🟡 Średni' : '🔴 Trudny'}
+                            </span>
+                            <span className="text-sm text-gray-500">
+                                Scenariusz {currentScenarioIndex + 1}/{SCENARIOS.length}
+                            </span>
+                        </div>
+
+                        <h2 className="text-xl font-bold mb-4 text-gray-900">{currentScenario.title}</h2>
+                        <p className="text-gray-600 mb-4">{currentScenario.description}</p>
+
+                        <div className="p-4 bg-[#8b5cf6]/10 rounded-xl mb-4">
+                            <p className="font-medium">
+                                ❓ Kiedy upływa {currentScenario.deadlineDays}-dniowy termin?
+                            </p>
+                        </div>
+
+                        <p className="text-sm text-gray-500">
+                            Podstawa prawna: {currentScenario.legalBasis}
+                        </p>
+                    </div>
+
+                    {/* Calendar */}
+                    <InteractiveCalendar
+                        baseDate={currentScenario.eventDate}
+                        selectedDate={selectedDate}
+                        onSelectDate={setSelectedDate}
+                        correctDate={correctDate}
+                        showResult={showResult}
+                    />
+
+                    {/* Result */}
+                    {showResult && (
+                        <div className={cn(
+                            "lex-card",
+                            selectedDate?.toDateString() === correctDate.toDateString()
+                                ? "bg-green-500/10 border-green-500/30"
+                                : "bg-red-500/10 border-red-500/30"
+                        )}>
+                            <div className="flex items-center gap-3 mb-4">
+                                {selectedDate?.toDateString() === correctDate.toDateString() ? (
+                                    <>
+                                        <CheckCircle size={24} className="text-green-500" />
+                                        <span className="text-xl font-bold text-green-500">Poprawnie!</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <XCircle size={24} className="text-red-500" />
+                                        <span className="text-xl font-bold text-red-500">Niepoprawnie</span>
+                                    </>
+                                )}
+                            </div>
+
+                            <p className="font-medium mb-2">
+                                Termin upływa: {correctDate.toLocaleDateString('pl-PL', {
+                                    weekday: 'long',
+                                    year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric'
+                                })}
+                            </p>
+
+                            <div className="p-4 bg-gray-100 rounded-xl mt-4">
+                                <div className="flex items-start gap-2">
+                                    <Info size={16} className="text-[#8b5cf6] mt-0.5 shrink-0" />
+                                    <p className="text-sm">{currentScenario.explanation}</p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Actions */}
+                    <div className="flex gap-4">
+                        {!showResult ? (
+                            <button
+                                onClick={handleCheck}
+                                disabled={!selectedDate}
+                                className={cn(
+                                    "flex-1 py-4 rounded-xl font-medium transition-all flex items-center justify-center gap-2",
+                                    selectedDate
+                                        ? "bg-[#8b5cf6] text-white hover:bg-[#7c3aed]"
+                                        : "bg-white text-gray-400 cursor-not-allowed"
+                                )}
+                            >
+                                <Play size={20} />
+                                Sprawdź odpowiedź
+                            </button>
+                        ) : (
+                            <button
+                                onClick={handleNext}
+                                className="flex-1 py-4 rounded-xl font-medium bg-[#8b5cf6] text-white hover:bg-[#7c3aed] transition-all flex items-center justify-center gap-2"
+                            >
+                                Następny scenariusz
+                                <ChevronRight size={20} />
+                            </button>
+                        )}
+                    </div>
+                </div>
+            </main>
 
             <MobileNav currentView="deadlines" onNavigate={() => { }} />
         </div>

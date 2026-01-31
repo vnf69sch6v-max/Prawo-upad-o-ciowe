@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
-import { Sidebar, Header, MobileNav } from '@/components/layout';
+import { Header, MobileNav } from '@/components/layout';
+import { LiquidGlassSidebar } from '@/components/liquid-glass';
 import { ImmersiveFlashcard } from '@/components/study/immersive-flashcard';
 import { Play, BookOpen, Loader2, Brain, Target, Clock, Sparkles, TrendingUp, ArrowLeft, X } from 'lucide-react';
 import type { Flashcard, LegalDomain } from '@/types';
@@ -189,104 +190,98 @@ export default function ImmersiveStudyPage() {
     // Mode selection view
     if (view === 'select') {
         return (
-            <div className="flex min-h-screen bg-[#F8F9FA]">
-                <Sidebar
-                    currentView="study"
-                    onNavigate={() => { }}
-                    isCollapsed={false}
-                    onToggle={() => { }}
+            <div className="min-h-screen bg-[#F8F9FA]">
+                <LiquidGlassSidebar
                     userStats={{
                         streak: stats?.currentStreak || 0,
                         knowledgeEquity: stats?.knowledgeEquity || 0
                     }}
                 />
 
-                <div className="flex-1 flex flex-col min-w-0">
-                    <Header
-                        userStats={{
-                            streak: stats?.currentStreak || 0,
-                            knowledgeEquity: stats?.knowledgeEquity || 0,
-                            rank: 0
-                        }}
-                        currentView="study"
-                    />
+                <Header
+                    userStats={{
+                        streak: stats?.currentStreak || 0,
+                        knowledgeEquity: stats?.knowledgeEquity || 0,
+                        rank: 0
+                    }}
+                    currentView="study"
+                />
 
-                    <main className="flex-1 overflow-auto p-6 pb-20 lg:pb-6">
-                        <div className="max-w-4xl mx-auto space-y-8">
-                            {/* Header */}
-                            <div className="text-center">
-                                <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl mb-4 glass-card">
-                                    <span className="text-4xl">🧠</span>
-                                </div>
-                                <h1 className="text-3xl font-bold mb-2 text-gray-900">Tryb Immersyjny</h1>
-                                <p className="text-gray-500">
-                                    Ucz się przez gesty • Swipe prawo = Wiem • Swipe lewo = Nie wiem
-                                </p>
+                <main className="overflow-auto p-6 pb-20 lg:pb-6">
+                    <div className="max-w-4xl mx-auto space-y-8">
+                        {/* Header */}
+                        <div className="text-center">
+                            <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl mb-4 glass-card">
+                                <span className="text-4xl">🧠</span>
                             </div>
+                            <h1 className="text-3xl font-bold mb-2 text-gray-900">Tryb Immersyjny</h1>
+                            <p className="text-gray-500">
+                                Ucz się przez gesty • Swipe prawo = Wiem • Swipe lewo = Nie wiem
+                            </p>
+                        </div>
 
-                            {/* Mode cards */}
-                            <div className="grid md:grid-cols-2 gap-4">
-                                {STUDY_MODES.map((mode) => (
-                                    <button
-                                        key={mode.id}
-                                        onClick={() => handleSelectMode(mode.id)}
-                                        className="glass-card text-left hover:scale-[1.02] transition-all group"
-                                        style={{
-                                            borderColor: `color-mix(in srgb, ${mode.color} 30%, transparent)`,
-                                        }}
-                                    >
-                                        <div className="flex items-start gap-4">
-                                            <div
-                                                className="w-14 h-14 rounded-xl flex items-center justify-center text-2xl flex-shrink-0"
-                                                style={{ background: `color-mix(in srgb, ${mode.color} 20%, transparent)` }}
-                                            >
-                                                {mode.icon}
-                                            </div>
-                                            <div className="flex-1">
-                                                <h3 className="font-bold mb-1 text-gray-900 group-hover:text-gray-700 transition-colors">
-                                                    {mode.name}
-                                                </h3>
-                                                <p className="text-sm text-gray-500">
-                                                    {mode.description}
-                                                </p>
-                                            </div>
-                                            <Play
-                                                size={24}
-                                                className="text-gray-400 group-hover:text-green-500 transition-colors"
-                                            />
+                        {/* Mode cards */}
+                        <div className="grid md:grid-cols-2 gap-4">
+                            {STUDY_MODES.map((mode) => (
+                                <button
+                                    key={mode.id}
+                                    onClick={() => handleSelectMode(mode.id)}
+                                    className="glass-card text-left hover:scale-[1.02] transition-all group"
+                                    style={{
+                                        borderColor: `color-mix(in srgb, ${mode.color} 30%, transparent)`,
+                                    }}
+                                >
+                                    <div className="flex items-start gap-4">
+                                        <div
+                                            className="w-14 h-14 rounded-xl flex items-center justify-center text-2xl flex-shrink-0"
+                                            style={{ background: `color-mix(in srgb, ${mode.color} 20%, transparent)` }}
+                                        >
+                                            {mode.icon}
                                         </div>
-                                    </button>
-                                ))}
-                            </div>
+                                        <div className="flex-1">
+                                            <h3 className="font-bold mb-1 text-gray-900 group-hover:text-gray-700 transition-colors">
+                                                {mode.name}
+                                            </h3>
+                                            <p className="text-sm text-gray-500">
+                                                {mode.description}
+                                            </p>
+                                        </div>
+                                        <Play
+                                            size={24}
+                                            className="text-gray-400 group-hover:text-green-500 transition-colors"
+                                        />
+                                    </div>
+                                </button>
+                            ))}
+                        </div>
 
-                            {/* Instructions */}
-                            <div className="glass-card border-l-4" style={{ borderLeftColor: 'var(--neon-cywilne)' }}>
-                                <h3 className="font-semibold mb-3 flex items-center gap-2">
-                                    <Sparkles size={18} className="text-[var(--neon-cywilne)]" />
-                                    Jak to działa?
-                                </h3>
-                                <div className="grid sm:grid-cols-2 gap-4 text-sm text-gray-600">
-                                    <div className="flex items-center gap-3">
-                                        <span className="text-2xl">👉</span>
-                                        <span><strong>Swipe prawo</strong> — Znam odpowiedź</span>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        <span className="text-2xl">👈</span>
-                                        <span><strong>Swipe lewo</strong> — Nie znam</span>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        <span className="text-2xl">👆</span>
-                                        <span><strong>Przytrzymaj</strong> — Pokaż odpowiedź</span>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        <span className="text-2xl">👆👆</span>
-                                        <span><strong>Double tap</strong> — Ulubione</span>
-                                    </div>
+                        {/* Instructions */}
+                        <div className="glass-card border-l-4" style={{ borderLeftColor: 'var(--neon-cywilne)' }}>
+                            <h3 className="font-semibold mb-3 flex items-center gap-2">
+                                <Sparkles size={18} className="text-[var(--neon-cywilne)]" />
+                                Jak to działa?
+                            </h3>
+                            <div className="grid sm:grid-cols-2 gap-4 text-sm text-gray-600">
+                                <div className="flex items-center gap-3">
+                                    <span className="text-2xl">👉</span>
+                                    <span><strong>Swipe prawo</strong> — Znam odpowiedź</span>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <span className="text-2xl">👈</span>
+                                    <span><strong>Swipe lewo</strong> — Nie znam</span>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <span className="text-2xl">👆</span>
+                                    <span><strong>Przytrzymaj</strong> — Pokaż odpowiedź</span>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <span className="text-2xl">👆👆</span>
+                                    <span><strong>Double tap</strong> — Ulubione</span>
                                 </div>
                             </div>
                         </div>
-                    </main>
-                </div>
+                    </div>
+                </main>
 
                 <MobileNav currentView="study" onNavigate={() => { }} />
             </div>

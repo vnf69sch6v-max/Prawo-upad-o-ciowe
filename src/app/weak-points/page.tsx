@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Sidebar, Header, MobileNav } from '@/components/layout';
+import { MobileNav } from '@/components/layout';
+import { LiquidGlassSidebar } from '@/components/liquid-glass';
 import { Target, Play, Loader2, Trash2, Clock, TrendingUp, ChevronRight, CheckCircle, XCircle, ChevronLeft } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 import { useAuth } from '@/hooks/use-auth';
@@ -182,7 +183,6 @@ function QuickReview({
 }
 
 export default function WeakPointsPage() {
-    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const [view, setView] = useState<'list' | 'practice'>('list');
     const [filter, setFilter] = useState<'all' | 'ksh' | 'prawo_upadlosciowe' | 'prawo_cywilne' | 'aso' | 'makler_a'>('all');
 
@@ -289,183 +289,168 @@ export default function WeakPointsPage() {
     }
 
     return (
-        <div className="flex min-h-screen bg-[#F8F9FA]">
-            <Sidebar
-                currentView="weak-points"
-                onNavigate={() => { }}
-                isCollapsed={sidebarCollapsed}
-                onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+        <div className="min-h-screen bg-[#F8F9FA]">
+            <LiquidGlassSidebar
                 userStats={{
                     streak: stats?.currentStreak || 0,
                     knowledgeEquity: stats?.knowledgeEquity || 0
                 }}
             />
 
-            <div className="flex-1 flex flex-col min-w-0">
-                <Header
-                    userStats={{
-                        streak: stats?.currentStreak || 0,
-                        knowledgeEquity: stats?.knowledgeEquity || 0,
-                        rank: 0
-                    }}
-                    currentView="weak-points"
-                />
-
-                <main className="flex-1 overflow-auto p-6 pb-20 lg:pb-6">
-                    <div className="max-w-4xl mx-auto space-y-6">
-                        {/* Header */}
-                        <div className="text-center mb-8">
-                            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4" style={{ background: '#ef4444' }}>
-                                <Target size={32} className="text-white" />
-                            </div>
-                            <h1 className="text-3xl font-bold mb-2 text-gray-900">Słabe punkty</h1>
-                            <p className="text-gray-500">
-                                {weakPoints.length > 0
-                                    ? `${weakPoints.length} pytań wymaga powtórki`
-                                    : 'Brak pytań do powtórki'
-                                }
-                            </p>
+            <main className="flex-1 overflow-auto p-6 pb-20 lg:pb-6">
+                <div className="max-w-4xl mx-auto space-y-6">
+                    {/* Header */}
+                    <div className="text-center mb-8">
+                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4" style={{ background: '#ef4444' }}>
+                            <Target size={32} className="text-white" />
                         </div>
+                        <h1 className="text-3xl font-bold mb-2 text-gray-900">Słabe punkty</h1>
+                        <p className="text-gray-500">
+                            {weakPoints.length > 0
+                                ? `${weakPoints.length} pytań wymaga powtórki`
+                                : 'Brak pytań do powtórki'
+                            }
+                        </p>
+                    </div>
 
-                        {weakPoints.length === 0 ? (
-                            /* Empty State */
-                            <div className="lex-card py-16 text-center">
-                                <div className="w-24 h-24 rounded-full mx-auto mb-6 flex items-center justify-center text-5xl" style={{ background: '#ef444415' }}>
-                                    🎯
-                                </div>
-                                <h2 className="text-2xl font-bold mb-2">Świetna robota!</h2>
-                                <p className="text-gray-500 mb-8 max-w-md mx-auto">
-                                    Nie masz żadnych słabych punktów. Rozwiązuj egzaminy, a pytania na które odpowiesz źle pojawią się tutaj.
-                                </p>
-                                <Link
-                                    href="/exam"
-                                    className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-white font-medium"
-                                    style={{ background: '#1a365d' }}
-                                >
-                                    <Play size={20} />
-                                    Rozwiąż egzamin
-                                </Link>
+                    {weakPoints.length === 0 ? (
+                        /* Empty State */
+                        <div className="lex-card py-16 text-center">
+                            <div className="w-24 h-24 rounded-full mx-auto mb-6 flex items-center justify-center text-5xl" style={{ background: '#ef444415' }}>
+                                🎯
                             </div>
-                        ) : (
-                            <>
-                                {/* Filters */}
-                                <div className="flex flex-wrap items-center justify-between gap-4">
-                                    <div className="flex gap-2 flex-wrap">
-                                        {(['all', 'ksh', 'prawo_upadlosciowe', 'prawo_cywilne', 'aso', 'makler_a'] as const).map(f => (
-                                            <button
-                                                key={f}
-                                                onClick={() => setFilter(f)}
-                                                className={cn(
-                                                    'px-4 py-2 rounded-xl text-sm font-medium transition-all',
-                                                    filter === f
-                                                        ? 'bg-[#ef4444] text-white'
-                                                        : 'bg-white text-gray-500 hover:text-[#ef4444]'
-                                                )}
-                                            >
-                                                {f === 'all' ? 'Wszystkie' : f === 'ksh' ? 'KSH' : f === 'prawo_upadlosciowe' ? 'Prawo Upadł.' : f === 'prawo_cywilne' ? 'KC' : f === 'aso' ? 'ASO' : 'Matematyka'}
-                                            </button>
-                                        ))}
-                                    </div>
-                                    <button
-                                        onClick={handleClearAll}
-                                        className="text-sm text-gray-500 hover:text-[#ef4444] flex items-center gap-1"
-                                    >
-                                        <Trash2 size={14} />
-                                        Wyczyść wszystkie
-                                    </button>
-                                </div>
-
-                                {/* Start Practice CTA */}
-                                <button
-                                    onClick={() => setView('practice')}
-                                    className="w-full p-6 rounded-2xl transition-all group hover:scale-[1.01]"
-                                    style={{
-                                        background: 'linear-gradient(135deg, #ef444420 0%, #f9731615 100%)',
-                                        border: '1px solid #ef444440'
-                                    }}
-                                >
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-14 h-14 rounded-xl flex items-center justify-center" style={{ background: '#ef4444' }}>
-                                                <Play size={28} className="text-white" />
-                                            </div>
-                                            <div className="text-left">
-                                                <p className="text-xl font-bold">Rozpocznij powtórkę</p>
-                                                <p className="text-gray-500">{Math.min(10, weakPoints.length)} pytań • ~{Math.min(10, weakPoints.length) * 2} min</p>
-                                            </div>
-                                        </div>
-                                        <ChevronRight size={24} className="text-[#ef4444]" />
-                                    </div>
-                                </button>
-
-                                {/* Weak Points List */}
-                                <div className="space-y-3">
-                                    {weakPoints.slice(0, 20).map((wp) => (
-                                        <div
-                                            key={wp!.questionId}
-                                            className="lex-card group hover:border-[#ef4444]/30 transition-all"
+                            <h2 className="text-2xl font-bold mb-2">Świetna robota!</h2>
+                            <p className="text-gray-500 mb-8 max-w-md mx-auto">
+                                Nie masz żadnych słabych punktów. Rozwiązuj egzaminy, a pytania na które odpowiesz źle pojawią się tutaj.
+                            </p>
+                            <Link
+                                href="/exam"
+                                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-white font-medium"
+                                style={{ background: '#1a365d' }}
+                            >
+                                <Play size={20} />
+                                Rozwiąż egzamin
+                            </Link>
+                        </div>
+                    ) : (
+                        <>
+                            {/* Filters */}
+                            <div className="flex flex-wrap items-center justify-between gap-4">
+                                <div className="flex gap-2 flex-wrap">
+                                    {(['all', 'ksh', 'prawo_upadlosciowe', 'prawo_cywilne', 'aso', 'makler_a'] as const).map(f => (
+                                        <button
+                                            key={f}
+                                            onClick={() => setFilter(f)}
+                                            className={cn(
+                                                'px-4 py-2 rounded-xl text-sm font-medium transition-all',
+                                                filter === f
+                                                    ? 'bg-[#ef4444] text-white'
+                                                    : 'bg-white text-gray-500 hover:text-[#ef4444]'
+                                            )}
                                         >
-                                            <div className="flex items-start gap-4">
-                                                <div
-                                                    className={cn(
-                                                        "w-10 h-10 rounded-xl flex items-center justify-center shrink-0 font-bold text-sm",
-                                                        wp!.wrongCount >= 3 ? "bg-[#ef4444]/20 text-[#ef4444]" :
-                                                            wp!.wrongCount >= 2 ? "bg-orange-500/20 text-orange-500" :
-                                                                "bg-yellow-500/20 text-yellow-500"
-                                                    )}
-                                                >
-                                                    ×{wp!.wrongCount}
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <p className="font-medium mb-2 line-clamp-2">{wp!.question.question}</p>
-                                                    <div className="flex items-center gap-4 text-xs text-gray-500">
-                                                        <span className="flex items-center gap-1">
-                                                            <Clock size={12} />
-                                                            {new Date(wp!.lastWrongAt).toLocaleDateString('pl-PL')}
-                                                        </span>
-                                                        <span className={cn(
-                                                            "px-2 py-0.5 rounded-full",
-                                                            wp!.domain === 'ksh' && "bg-[#1a365d]/10 text-[#1a365d]",
-                                                            wp!.domain === 'prawo_upadlosciowe' && "bg-orange-500/10 text-orange-500",
-                                                            wp!.domain === 'prawo_cywilne' && "bg-blue-500/10 text-blue-500",
-                                                            wp!.domain === 'aso' && "bg-teal-500/10 text-teal-500",
-                                                            wp!.domain === 'makler_a' && "bg-purple-500/10 text-purple-500"
-                                                        )}>
-                                                            {wp!.domain === 'ksh' ? 'KSH' : wp!.domain === 'prawo_upadlosciowe' ? 'Prawo Upadł.' : wp!.domain === 'prawo_cywilne' ? 'KC' : wp!.domain === 'aso' ? 'ASO' : 'Matematyka'}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                                <button
-                                                    onClick={() => handleRemoveOne(wp!.questionId)}
-                                                    className="opacity-0 group-hover:opacity-100 p-2 hover:bg-[#ef4444]/10 rounded-lg transition-all"
-                                                    title="Usuń z listy"
-                                                >
-                                                    <Trash2 size={16} className="text-gray-400" />
-                                                </button>
-                                            </div>
-                                        </div>
+                                            {f === 'all' ? 'Wszystkie' : f === 'ksh' ? 'KSH' : f === 'prawo_upadlosciowe' ? 'Prawo Upadł.' : f === 'prawo_cywilne' ? 'KC' : f === 'aso' ? 'ASO' : 'Matematyka'}
+                                        </button>
                                     ))}
                                 </div>
+                                <button
+                                    onClick={handleClearAll}
+                                    className="text-sm text-gray-500 hover:text-[#ef4444] flex items-center gap-1"
+                                >
+                                    <Trash2 size={14} />
+                                    Wyczyść wszystkie
+                                </button>
+                            </div>
 
-                                {/* Tip */}
-                                <div className="lex-card bg-gradient-to-r from-[#ef4444]/10 to-transparent">
+                            {/* Start Practice CTA */}
+                            <button
+                                onClick={() => setView('practice')}
+                                className="w-full p-6 rounded-2xl transition-all group hover:scale-[1.01]"
+                                style={{
+                                    background: 'linear-gradient(135deg, #ef444420 0%, #f9731615 100%)',
+                                    border: '1px solid #ef444440'
+                                }}
+                            >
+                                <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-4">
-                                        <div className="w-10 h-10 rounded-xl bg-[#ef4444]/20 flex items-center justify-center">
-                                            <TrendingUp size={20} className="text-[#ef4444]" />
+                                        <div className="w-14 h-14 rounded-xl flex items-center justify-center" style={{ background: '#ef4444' }}>
+                                            <Play size={28} className="text-white" />
                                         </div>
-                                        <div>
-                                            <p className="font-semibold">Wskazówka</p>
-                                            <p className="text-sm text-gray-500">
-                                                Powtarzaj słabe punkty regularnie. System automatycznie dodaje tu pytania, na które odpowiadasz błędnie podczas egzaminów.
-                                            </p>
+                                        <div className="text-left">
+                                            <p className="text-xl font-bold">Rozpocznij powtórkę</p>
+                                            <p className="text-gray-500">{Math.min(10, weakPoints.length)} pytań • ~{Math.min(10, weakPoints.length) * 2} min</p>
                                         </div>
                                     </div>
+                                    <ChevronRight size={24} className="text-[#ef4444]" />
                                 </div>
-                            </>
-                        )}
-                    </div>
-                </main>
-            </div>
+                            </button>
+
+                            {/* Weak Points List */}
+                            <div className="space-y-3">
+                                {weakPoints.slice(0, 20).map((wp) => (
+                                    <div
+                                        key={wp!.questionId}
+                                        className="lex-card group hover:border-[#ef4444]/30 transition-all"
+                                    >
+                                        <div className="flex items-start gap-4">
+                                            <div
+                                                className={cn(
+                                                    "w-10 h-10 rounded-xl flex items-center justify-center shrink-0 font-bold text-sm",
+                                                    wp!.wrongCount >= 3 ? "bg-[#ef4444]/20 text-[#ef4444]" :
+                                                        wp!.wrongCount >= 2 ? "bg-orange-500/20 text-orange-500" :
+                                                            "bg-yellow-500/20 text-yellow-500"
+                                                )}
+                                            >
+                                                ×{wp!.wrongCount}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="font-medium mb-2 line-clamp-2">{wp!.question.question}</p>
+                                                <div className="flex items-center gap-4 text-xs text-gray-500">
+                                                    <span className="flex items-center gap-1">
+                                                        <Clock size={12} />
+                                                        {new Date(wp!.lastWrongAt).toLocaleDateString('pl-PL')}
+                                                    </span>
+                                                    <span className={cn(
+                                                        "px-2 py-0.5 rounded-full",
+                                                        wp!.domain === 'ksh' && "bg-[#1a365d]/10 text-[#1a365d]",
+                                                        wp!.domain === 'prawo_upadlosciowe' && "bg-orange-500/10 text-orange-500",
+                                                        wp!.domain === 'prawo_cywilne' && "bg-blue-500/10 text-blue-500",
+                                                        wp!.domain === 'aso' && "bg-teal-500/10 text-teal-500",
+                                                        wp!.domain === 'makler_a' && "bg-purple-500/10 text-purple-500"
+                                                    )}>
+                                                        {wp!.domain === 'ksh' ? 'KSH' : wp!.domain === 'prawo_upadlosciowe' ? 'Prawo Upadł.' : wp!.domain === 'prawo_cywilne' ? 'KC' : wp!.domain === 'aso' ? 'ASO' : 'Matematyka'}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <button
+                                                onClick={() => handleRemoveOne(wp!.questionId)}
+                                                className="opacity-0 group-hover:opacity-100 p-2 hover:bg-[#ef4444]/10 rounded-lg transition-all"
+                                                title="Usuń z listy"
+                                            >
+                                                <Trash2 size={16} className="text-gray-400" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Tip */}
+                            <div className="lex-card bg-gradient-to-r from-[#ef4444]/10 to-transparent">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-10 h-10 rounded-xl bg-[#ef4444]/20 flex items-center justify-center">
+                                        <TrendingUp size={20} className="text-[#ef4444]" />
+                                    </div>
+                                    <div>
+                                        <p className="font-semibold">Wskazówka</p>
+                                        <p className="text-sm text-gray-500">
+                                            Powtarzaj słabe punkty regularnie. System automatycznie dodaje tu pytania, na które odpowiadasz błędnie podczas egzaminów.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </>
+                    )}
+                </div>
+            </main>
 
             <MobileNav currentView="weak-points" onNavigate={() => { }} />
         </div>

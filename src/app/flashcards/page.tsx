@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import { Sidebar, Header, MobileNav } from '@/components/layout';
+import { Header, MobileNav } from '@/components/layout';
+import { LiquidGlassSidebar } from '@/components/liquid-glass';
 import { FlashcardStudy, SpeedRunMode, SpeedRunResults } from '@/components/study';
 import { SessionCoachPanel } from '@/components/study/session-coach-panel';
 import { useSessionCoach } from '@/hooks/use-session-coach';
@@ -159,7 +160,7 @@ function StreakDay({ day, completed, isToday }: { day: string; completed: boolea
 }
 
 export default function FlashcardsPage() {
-    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+    // Sidebar is now auto-managed by LiquidGlassSidebar
     const [view, setView] = useState<'dashboard' | 'study' | 'speedrun' | 'speedrun-results'>('dashboard');
     const [selectedDeck, setSelectedDeck] = useState<string | null>(null);
     const [studyMode, setStudyMode] = useState<'deck' | 'smart'>('deck');
@@ -333,19 +334,19 @@ export default function FlashcardsPage() {
     }
 
     return (
-        <div className="flex min-h-screen bg-[#F8F9FA]">
-            <Sidebar
-                currentView="flashcards"
-                onNavigate={() => { }}
-                isCollapsed={sidebarCollapsed}
-                onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+        <div className="min-h-screen" style={{
+            background: 'linear-gradient(135deg, #E8E4F0 0%, #F0E6E8 25%, #E8EEF5 50%, #F5EDE8 75%, #E8E4F0 100%)',
+            backgroundSize: '400% 400%',
+            animation: 'gradientShift 15s ease infinite'
+        }}>
+            <LiquidGlassSidebar
                 userStats={{
                     streak: stats?.currentStreak || streakDays,
                     knowledgeEquity: stats?.knowledgeEquity || 0
                 }}
             />
 
-            <div className="flex-1 flex flex-col min-w-0">
+            <div className="flex flex-col min-h-screen">
                 {/* Apple-style Header */}
                 <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-gray-100 px-6 py-4">
                     <div className="flex items-center justify-between">

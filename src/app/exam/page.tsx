@@ -2,7 +2,8 @@
 
 import { useState, useMemo, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Sidebar, Header, MobileNav } from '@/components/layout';
+import { MobileNav } from '@/components/layout';
+import { LiquidGlassSidebar } from '@/components/liquid-glass';
 import { ExamSimulator, ExamResults } from '@/components/exam';
 import { BookOpen, Clock, Trophy, Target, ChevronRight, Scale, Sparkles, Play } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
@@ -229,7 +230,6 @@ function ExamPageContent() {
     const searchParams = useSearchParams();
     const topicParam = searchParams.get('topic');
 
-    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const [view, setView] = useState<ViewState>('list');
     const [selectedExam, setSelectedExam] = useState<ExamType | null>(null);
     const [currentQuestions, setCurrentQuestions] = useState<ReturnType<typeof convertToSimulatorFormat>>([]);
@@ -517,128 +517,122 @@ function ExamPageContent() {
     }
 
     return (
-        <div className="flex min-h-screen bg-[#F8F9FA]">
-            <Sidebar
-                currentView="exam"
-                onNavigate={() => { }}
-                isCollapsed={sidebarCollapsed}
-                onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+        <div className="min-h-screen bg-[#F8F9FA]">
+            <LiquidGlassSidebar
                 userStats={{
                     streak: userStats?.currentStreak || 0,
                     knowledgeEquity: userStats?.knowledgeEquity || 0
                 }}
             />
 
-            <div className="flex-1 flex flex-col min-w-0">
-                {/* Apple-style Header */}
-                <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-gray-100 px-6 py-4">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
-                                <BookOpen size={20} className="text-white" />
-                            </div>
-                            <div>
-                                <h1 className="text-xl font-semibold text-gray-900">
-                                    {selectedDomain === 'makler_a' ? 'Matematyka Finansowa' : 'Egzaminy'}
-                                </h1>
-                                <p className="text-sm text-gray-500">Wybierz tryb i testuj swoją wiedzę</p>
-                            </div>
+            {/* Apple-style Header */}
+            <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-gray-100 px-6 py-4">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+                            <BookOpen size={20} className="text-white" />
+                        </div>
+                        <div>
+                            <h1 className="text-xl font-semibold text-gray-900">
+                                {selectedDomain === 'makler_a' ? 'Matematyka Finansowa' : 'Egzaminy'}
+                            </h1>
+                            <p className="text-sm text-gray-500">Wybierz tryb i testuj swoją wiedzę</p>
                         </div>
                     </div>
-                </header>
+                </div>
+            </header>
 
-                <main className="flex-1 overflow-auto p-6 pb-24 lg:pb-6">
-                    <div className="max-w-6xl mx-auto space-y-6">
+            <main className="flex-1 overflow-auto p-6 pb-24 lg:pb-6">
+                <div className="max-w-6xl mx-auto space-y-6">
 
-                        {/* Domain Tabs - Only show domains with questions */}
-                        <div className="flex flex-wrap gap-3">
-                            {/* Makler A specific tab when selected from URL */}
-                            {selectedDomain === 'makler_a' && (
+                    {/* Domain Tabs - Only show domains with questions */}
+                    <div className="flex flex-wrap gap-3">
+                        {/* Makler A specific tab when selected from URL */}
+                        {selectedDomain === 'makler_a' && (
+                            <button
+                                className="px-5 py-3 rounded-xl text-sm font-medium transition-all flex items-center gap-2 bg-purple-600 text-white"
+                            >
+                                <span className="text-xl">🔢</span>
+                                <span>Matematyka Finansowa</span>
+                                <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full">
+                                    {stats.total} pytań
+                                </span>
+                            </button>
+                        )}
+                        {/* Regular domain tabs */}
+                        {selectedDomain !== 'makler_a' && getDomainsWithExams().map(domain => (
+                            <button
+                                key={domain.id}
+                                onClick={() => {
+                                    setSelectedDomain(domain.id);
+                                    setSelectedSubdomain('all');
+                                }}
+                                className={cn(
+                                    'px-5 py-3 rounded-xl text-sm font-medium transition-all flex items-center gap-2',
+                                    selectedDomain === domain.id
+                                        ? domain.id === 'ksh'
+                                            ? 'bg-blue-600 text-white'
+                                            : 'bg-orange-600 text-white'
+                                        : 'bg-white text-gray-600 hover:text-gray-900 hover:bg-gray-50 border border-gray-200'
+                                )}
+                            >
+                                <span className="text-xl">{domain.icon}</span>
+                                <span>{domain.name}</span>
+                                <span className={cn(
+                                    "text-xs px-2 py-0.5 rounded-full",
+                                    selectedDomain === domain.id ? "bg-white/20" : "bg-gray-100"
+                                )}>
+                                    {domain.id === selectedDomain ? stats.total : domain.id === 'ksh' ? 879 : domain.id === 'prawo_cywilne' ? 774 : domain.id === 'aso' ? 1000 : 80} pytań
+                                </span>
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* MAIN CTA - Exam Modes - NOW ON TOP */}
+                    <div className="space-y-4">
+                        <h2 className="text-lg font-semibold text-gray-900">Wybierz tryb egzaminu</h2>
+                        <div className="grid lg:grid-cols-3 gap-4">
+                            {currentExams.slice(0, 3).map((exam, index) => (
                                 <button
-                                    className="px-5 py-3 rounded-xl text-sm font-medium transition-all flex items-center gap-2 bg-purple-600 text-white"
-                                >
-                                    <span className="text-xl">🔢</span>
-                                    <span>Matematyka Finansowa</span>
-                                    <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full">
-                                        {stats.total} pytań
-                                    </span>
-                                </button>
-                            )}
-                            {/* Regular domain tabs */}
-                            {selectedDomain !== 'makler_a' && getDomainsWithExams().map(domain => (
-                                <button
-                                    key={domain.id}
-                                    onClick={() => {
-                                        setSelectedDomain(domain.id);
-                                        setSelectedSubdomain('all');
-                                    }}
+                                    key={exam.id}
+                                    onClick={() => handleStartExam(exam)}
                                     className={cn(
-                                        'px-5 py-3 rounded-xl text-sm font-medium transition-all flex items-center gap-2',
-                                        selectedDomain === domain.id
-                                            ? domain.id === 'ksh'
-                                                ? 'bg-blue-600 text-white'
-                                                : 'bg-orange-600 text-white'
-                                            : 'bg-white text-gray-600 hover:text-gray-900 hover:bg-gray-50 border border-gray-200'
+                                        "bg-white rounded-2xl p-5 shadow-sm border border-gray-100 transition-all text-left group hover:scale-[1.02]",
+                                        index === 0 && "hover:border-purple-300 hover:shadow-lg hover:shadow-purple-500/10",
+                                        index === 1 && "hover:border-blue-300 hover:shadow-lg hover:shadow-blue-500/10",
+                                        index === 2 && "hover:border-yellow-300 hover:shadow-lg hover:shadow-yellow-500/10"
                                     )}
                                 >
-                                    <span className="text-xl">{domain.icon}</span>
-                                    <span>{domain.name}</span>
-                                    <span className={cn(
-                                        "text-xs px-2 py-0.5 rounded-full",
-                                        selectedDomain === domain.id ? "bg-white/20" : "bg-gray-100"
-                                    )}>
-                                        {domain.id === selectedDomain ? stats.total : domain.id === 'ksh' ? 879 : domain.id === 'prawo_cywilne' ? 774 : domain.id === 'aso' ? 1000 : 80} pytań
-                                    </span>
+                                    <div className="flex flex-col items-center text-center p-4">
+                                        <div className={cn(
+                                            "w-16 h-16 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform mb-4",
+                                            index === 0 && (selectedDomain === 'ksh' ? "bg-gradient-to-br from-purple-600 to-pink-600" : "bg-gradient-to-br from-orange-600 to-red-600"),
+                                            index === 1 && "bg-gradient-to-br from-blue-600 to-cyan-600",
+                                            index === 2 && "bg-gradient-to-br from-yellow-600 to-orange-600"
+                                        )}>
+                                            {index === 0 && <Play size={28} className="text-white" />}
+                                            {index === 1 && <Scale size={28} className="text-white" />}
+                                            {index === 2 && <Trophy size={28} className="text-white" />}
+                                        </div>
+                                        <h3 className="font-bold text-lg mb-1 text-gray-900">{exam.title}</h3>
+                                        <p className="text-sm text-gray-500 mb-3">
+                                            {exam.description}
+                                        </p>
+                                        <div className="flex items-center gap-3 text-xs">
+                                            <span className="px-2 py-1 bg-gray-100 rounded-full text-gray-600">
+                                                📝 {exam.questionCount} pytań
+                                            </span>
+                                            <span className="px-2 py-1 bg-gray-100 rounded-full text-gray-600">
+                                                ⏱️ {exam.timeLimit} min
+                                            </span>
+                                        </div>
+                                    </div>
                                 </button>
                             ))}
                         </div>
-
-                        {/* MAIN CTA - Exam Modes - NOW ON TOP */}
-                        <div className="space-y-4">
-                            <h2 className="text-lg font-semibold text-gray-900">Wybierz tryb egzaminu</h2>
-                            <div className="grid lg:grid-cols-3 gap-4">
-                                {currentExams.slice(0, 3).map((exam, index) => (
-                                    <button
-                                        key={exam.id}
-                                        onClick={() => handleStartExam(exam)}
-                                        className={cn(
-                                            "bg-white rounded-2xl p-5 shadow-sm border border-gray-100 transition-all text-left group hover:scale-[1.02]",
-                                            index === 0 && "hover:border-purple-300 hover:shadow-lg hover:shadow-purple-500/10",
-                                            index === 1 && "hover:border-blue-300 hover:shadow-lg hover:shadow-blue-500/10",
-                                            index === 2 && "hover:border-yellow-300 hover:shadow-lg hover:shadow-yellow-500/10"
-                                        )}
-                                    >
-                                        <div className="flex flex-col items-center text-center p-4">
-                                            <div className={cn(
-                                                "w-16 h-16 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform mb-4",
-                                                index === 0 && (selectedDomain === 'ksh' ? "bg-gradient-to-br from-purple-600 to-pink-600" : "bg-gradient-to-br from-orange-600 to-red-600"),
-                                                index === 1 && "bg-gradient-to-br from-blue-600 to-cyan-600",
-                                                index === 2 && "bg-gradient-to-br from-yellow-600 to-orange-600"
-                                            )}>
-                                                {index === 0 && <Play size={28} className="text-white" />}
-                                                {index === 1 && <Scale size={28} className="text-white" />}
-                                                {index === 2 && <Trophy size={28} className="text-white" />}
-                                            </div>
-                                            <h3 className="font-bold text-lg mb-1 text-gray-900">{exam.title}</h3>
-                                            <p className="text-sm text-gray-500 mb-3">
-                                                {exam.description}
-                                            </p>
-                                            <div className="flex items-center gap-3 text-xs">
-                                                <span className="px-2 py-1 bg-gray-100 rounded-full text-gray-600">
-                                                    📝 {exam.questionCount} pytań
-                                                </span>
-                                                <span className="px-2 py-1 bg-gray-100 rounded-full text-gray-600">
-                                                    ⏱️ {exam.timeLimit} min
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
                     </div>
-                </main>
-            </div>
+                </div>
+            </main>
 
             <MobileNav currentView="exam" onNavigate={() => { }} />
         </div>

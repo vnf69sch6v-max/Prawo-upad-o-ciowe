@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Sidebar, Header, MobileNav } from '@/components/layout';
+import { MobileNav } from '@/components/layout';
+import { LiquidGlassSidebar } from '@/components/liquid-glass';
 import { Scale, Loader2, ChevronRight, ChevronDown, BookOpen, Clock, Lightbulb, CheckCircle, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 import { useAuth } from '@/hooks/use-auth';
@@ -219,7 +220,6 @@ Termin na złożenie wniosku upływa: 31 MARCA 2026 r.
 ];
 
 export default function CasesPage() {
-    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const [selectedCase, setSelectedCase] = useState<CaseStudy | null>(null);
     const [showHints, setShowHints] = useState<boolean[]>([]);
     const [showSolutions, setShowSolutions] = useState<boolean[]>([]);
@@ -264,243 +264,228 @@ export default function CasesPage() {
     }
 
     return (
-        <div className="flex min-h-screen" style={{ background: 'var(--bg-primary)' }}>
-            <Sidebar
-                currentView="cases"
-                onNavigate={() => { }}
-                isCollapsed={sidebarCollapsed}
-                onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+        <div className="min-h-screen bg-[#F8F9FA]">
+            <LiquidGlassSidebar
                 userStats={{
                     streak: stats?.currentStreak || 0,
                     knowledgeEquity: stats?.knowledgeEquity || 0
                 }}
             />
 
-            <div className="flex-1 flex flex-col min-w-0">
-                <Header
-                    userStats={{
-                        streak: stats?.currentStreak || 0,
-                        knowledgeEquity: stats?.knowledgeEquity || 0,
-                        rank: 0
-                    }}
-                    currentView="cases"
-                />
+            <main className="overflow-auto p-6 pb-20 lg:pb-6">
+                <div className="max-w-4xl mx-auto space-y-6">
+                    {!selectedCase ? (
+                        /* Cases List */
+                        <>
+                            {/* Header */}
+                            <div className="text-center mb-8">
+                                <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4" style={{ background: '#f59e0b' }}>
+                                    <Scale size={32} className="text-white" />
+                                </div>
+                                <h1 className="text-3xl font-bold mb-2">Kazusy prawne</h1>
+                                <p className="text-[var(--text-muted)]">
+                                    Praktyczne stany faktyczne z rozwiązaniami
+                                </p>
+                            </div>
 
-                <main className="flex-1 overflow-auto p-6 pb-20 lg:pb-6">
-                    <div className="max-w-4xl mx-auto space-y-6">
-                        {!selectedCase ? (
-                            /* Cases List */
-                            <>
-                                {/* Header */}
-                                <div className="text-center mb-8">
-                                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4" style={{ background: '#f59e0b' }}>
-                                        <Scale size={32} className="text-white" />
-                                    </div>
-                                    <h1 className="text-3xl font-bold mb-2">Kazusy prawne</h1>
-                                    <p className="text-[var(--text-muted)]">
-                                        Praktyczne stany faktyczne z rozwiązaniami
+                            {/* Filter */}
+                            <div className="flex gap-2">
+                                {(['all', 'ksh', 'prawo_upadlosciowe'] as const).map(d => (
+                                    <button
+                                        key={d}
+                                        onClick={() => setDomainFilter(d)}
+                                        className={cn(
+                                            'px-4 py-2 rounded-xl text-sm font-medium transition-all',
+                                            domainFilter === d
+                                                ? 'bg-[#f59e0b] text-white'
+                                                : 'bg-[var(--bg-card)] text-[var(--text-muted)] hover:text-[#f59e0b]'
+                                        )}
+                                    >
+                                        {d === 'all' ? 'Wszystkie' : d === 'ksh' ? 'KSH' : 'Prawo Upadłościowe'}
+                                    </button>
+                                ))}
+                            </div>
+
+                            {/* Cases Grid */}
+                            <div className="space-y-4">
+                                {filteredCases.map(caseStudy => (
+                                    <button
+                                        key={caseStudy.id}
+                                        onClick={() => handleSelectCase(caseStudy)}
+                                        className="w-full lex-card text-left hover:border-[#f59e0b]/50 transition-all group"
+                                    >
+                                        <div className="flex items-start gap-4">
+                                            <div className={cn(
+                                                "w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 text-2xl",
+                                                caseStudy.domain === 'ksh' ? "bg-[#1a365d]/10" : "bg-orange-500/10"
+                                            )}>
+                                                ⚖️
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <span className={cn(
+                                                        "px-2 py-0.5 rounded-full text-xs font-medium",
+                                                        caseStudy.difficulty === 'easy' && "bg-green-500/20 text-green-500",
+                                                        caseStudy.difficulty === 'medium' && "bg-yellow-500/20 text-yellow-500",
+                                                        caseStudy.difficulty === 'hard' && "bg-red-500/20 text-red-500"
+                                                    )}>
+                                                        {caseStudy.difficulty === 'easy' ? 'Łatwy' :
+                                                            caseStudy.difficulty === 'medium' ? 'Średni' : 'Trudny'}
+                                                    </span>
+                                                    <span className="text-xs text-[var(--text-muted)]">{caseStudy.companyType}</span>
+                                                </div>
+                                                <h3 className="font-bold text-lg mb-1">{caseStudy.title}</h3>
+                                                <div className="flex items-center gap-4 text-sm text-[var(--text-muted)]">
+                                                    <span className="flex items-center gap-1">
+                                                        <Clock size={14} />
+                                                        ~{caseStudy.estimatedTime} min
+                                                    </span>
+                                                    <span className="flex items-center gap-1">
+                                                        <FileText size={14} />
+                                                        {caseStudy.questions.length} pytań
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <ChevronRight size={24} className="text-[var(--text-muted)] group-hover:text-[#f59e0b] shrink-0" />
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+                        </>
+                    ) : (
+                        /* Case Detail */
+                        <>
+                            <button
+                                onClick={() => setSelectedCase(null)}
+                                className="text-sm text-[var(--text-muted)] hover:text-[#f59e0b]"
+                            >
+                                ← Powrót do listy kazusów
+                            </button>
+
+                            {/* Case Header */}
+                            <div className="lex-card">
+                                <div className="flex items-center gap-2 mb-4">
+                                    <span className={cn(
+                                        "px-3 py-1 rounded-full text-xs font-medium",
+                                        selectedCase.domain === 'ksh'
+                                            ? "bg-[#1a365d]/10 text-[#1a365d]"
+                                            : "bg-orange-500/10 text-orange-500"
+                                    )}>
+                                        {selectedCase.domain === 'ksh' ? 'KSH' : 'Prawo Upadłościowe'}
+                                    </span>
+                                    <span className={cn(
+                                        "px-3 py-1 rounded-full text-xs font-medium",
+                                        selectedCase.difficulty === 'easy' && "bg-green-500/20 text-green-500",
+                                        selectedCase.difficulty === 'medium' && "bg-yellow-500/20 text-yellow-500",
+                                        selectedCase.difficulty === 'hard' && "bg-red-500/20 text-red-500"
+                                    )}>
+                                        {selectedCase.difficulty === 'easy' ? '🟢 Łatwy' :
+                                            selectedCase.difficulty === 'medium' ? '🟡 Średni' : '🔴 Trudny'}
+                                    </span>
+                                    <span className="text-sm text-[var(--text-muted)] ml-auto flex items-center gap-1">
+                                        <Clock size={14} />
+                                        ~{selectedCase.estimatedTime} min
+                                    </span>
+                                </div>
+
+                                <h1 className="text-2xl font-bold mb-4">{selectedCase.title}</h1>
+
+                                <div className="p-4 bg-[var(--bg-hover)] rounded-xl">
+                                    <h3 className="font-semibold mb-2 flex items-center gap-2">
+                                        <BookOpen size={16} />
+                                        Stan faktyczny
+                                    </h3>
+                                    <p className="whitespace-pre-wrap text-[var(--text-secondary)]">
+                                        {selectedCase.facts}
                                     </p>
                                 </div>
+                            </div>
 
-                                {/* Filter */}
-                                <div className="flex gap-2">
-                                    {(['all', 'ksh', 'prawo_upadlosciowe'] as const).map(d => (
-                                        <button
-                                            key={d}
-                                            onClick={() => setDomainFilter(d)}
-                                            className={cn(
-                                                'px-4 py-2 rounded-xl text-sm font-medium transition-all',
-                                                domainFilter === d
-                                                    ? 'bg-[#f59e0b] text-white'
-                                                    : 'bg-[var(--bg-card)] text-[var(--text-muted)] hover:text-[#f59e0b]'
-                                            )}
-                                        >
-                                            {d === 'all' ? 'Wszystkie' : d === 'ksh' ? 'KSH' : 'Prawo Upadłościowe'}
-                                        </button>
-                                    ))}
-                                </div>
-
-                                {/* Cases Grid */}
-                                <div className="space-y-4">
-                                    {filteredCases.map(caseStudy => (
-                                        <button
-                                            key={caseStudy.id}
-                                            onClick={() => handleSelectCase(caseStudy)}
-                                            className="w-full lex-card text-left hover:border-[#f59e0b]/50 transition-all group"
-                                        >
-                                            <div className="flex items-start gap-4">
-                                                <div className={cn(
-                                                    "w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 text-2xl",
-                                                    caseStudy.domain === 'ksh' ? "bg-[#1a365d]/10" : "bg-orange-500/10"
-                                                )}>
-                                                    ⚖️
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="flex items-center gap-2 mb-1">
-                                                        <span className={cn(
-                                                            "px-2 py-0.5 rounded-full text-xs font-medium",
-                                                            caseStudy.difficulty === 'easy' && "bg-green-500/20 text-green-500",
-                                                            caseStudy.difficulty === 'medium' && "bg-yellow-500/20 text-yellow-500",
-                                                            caseStudy.difficulty === 'hard' && "bg-red-500/20 text-red-500"
-                                                        )}>
-                                                            {caseStudy.difficulty === 'easy' ? 'Łatwy' :
-                                                                caseStudy.difficulty === 'medium' ? 'Średni' : 'Trudny'}
-                                                        </span>
-                                                        <span className="text-xs text-[var(--text-muted)]">{caseStudy.companyType}</span>
-                                                    </div>
-                                                    <h3 className="font-bold text-lg mb-1">{caseStudy.title}</h3>
-                                                    <div className="flex items-center gap-4 text-sm text-[var(--text-muted)]">
-                                                        <span className="flex items-center gap-1">
-                                                            <Clock size={14} />
-                                                            ~{caseStudy.estimatedTime} min
-                                                        </span>
-                                                        <span className="flex items-center gap-1">
-                                                            <FileText size={14} />
-                                                            {caseStudy.questions.length} pytań
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                                <ChevronRight size={24} className="text-[var(--text-muted)] group-hover:text-[#f59e0b] shrink-0" />
-                                            </div>
-                                        </button>
-                                    ))}
-                                </div>
-                            </>
-                        ) : (
-                            /* Case Detail */
-                            <>
-                                <button
-                                    onClick={() => setSelectedCase(null)}
-                                    className="text-sm text-[var(--text-muted)] hover:text-[#f59e0b]"
-                                >
-                                    ← Powrót do listy kazusów
-                                </button>
-
-                                {/* Case Header */}
-                                <div className="lex-card">
-                                    <div className="flex items-center gap-2 mb-4">
-                                        <span className={cn(
-                                            "px-3 py-1 rounded-full text-xs font-medium",
-                                            selectedCase.domain === 'ksh'
-                                                ? "bg-[#1a365d]/10 text-[#1a365d]"
-                                                : "bg-orange-500/10 text-orange-500"
-                                        )}>
-                                            {selectedCase.domain === 'ksh' ? 'KSH' : 'Prawo Upadłościowe'}
-                                        </span>
-                                        <span className={cn(
-                                            "px-3 py-1 rounded-full text-xs font-medium",
-                                            selectedCase.difficulty === 'easy' && "bg-green-500/20 text-green-500",
-                                            selectedCase.difficulty === 'medium' && "bg-yellow-500/20 text-yellow-500",
-                                            selectedCase.difficulty === 'hard' && "bg-red-500/20 text-red-500"
-                                        )}>
-                                            {selectedCase.difficulty === 'easy' ? '🟢 Łatwy' :
-                                                selectedCase.difficulty === 'medium' ? '🟡 Średni' : '🔴 Trudny'}
-                                        </span>
-                                        <span className="text-sm text-[var(--text-muted)] ml-auto flex items-center gap-1">
-                                            <Clock size={14} />
-                                            ~{selectedCase.estimatedTime} min
-                                        </span>
-                                    </div>
-
-                                    <h1 className="text-2xl font-bold mb-4">{selectedCase.title}</h1>
-
-                                    <div className="p-4 bg-[var(--bg-hover)] rounded-xl">
-                                        <h3 className="font-semibold mb-2 flex items-center gap-2">
-                                            <BookOpen size={16} />
-                                            Stan faktyczny
+                            {/* Questions */}
+                            <div className="space-y-4">
+                                {selectedCase.questions.map((question, idx) => (
+                                    <div key={idx} className="lex-card">
+                                        <h3 className="font-bold mb-4 flex items-center gap-2">
+                                            <span className="w-8 h-8 rounded-lg bg-[#f59e0b]/20 flex items-center justify-center text-[#f59e0b] font-bold text-sm">
+                                                {idx + 1}
+                                            </span>
+                                            {question}
                                         </h3>
-                                        <p className="whitespace-pre-wrap text-[var(--text-secondary)]">
-                                            {selectedCase.facts}
-                                        </p>
+
+                                        {/* Hint */}
+                                        <button
+                                            onClick={() => toggleHint(idx)}
+                                            className="w-full mb-3 p-3 bg-[var(--bg-hover)] rounded-xl text-left flex items-center justify-between hover:bg-[#f59e0b]/10 transition-all"
+                                        >
+                                            <span className="flex items-center gap-2 text-sm">
+                                                <Lightbulb size={16} className="text-[#f59e0b]" />
+                                                Wskazówka
+                                            </span>
+                                            <ChevronDown size={16} className={cn(
+                                                "transition-transform",
+                                                showHints[idx] && "rotate-180"
+                                            )} />
+                                        </button>
+                                        {showHints[idx] && (
+                                            <div className="mb-4 p-3 bg-[#f59e0b]/10 rounded-xl text-sm border border-[#f59e0b]/20">
+                                                {selectedCase.hints[idx]}
+                                            </div>
+                                        )}
+
+                                        {/* Solution */}
+                                        <button
+                                            onClick={() => toggleSolution(idx)}
+                                            className="w-full p-3 bg-green-500/10 rounded-xl text-left flex items-center justify-between hover:bg-green-500/20 transition-all"
+                                        >
+                                            <span className="flex items-center gap-2 text-sm font-medium text-green-500">
+                                                <CheckCircle size={16} />
+                                                Pokaż rozwiązanie
+                                            </span>
+                                            <ChevronDown size={16} className={cn(
+                                                "text-green-500 transition-transform",
+                                                showSolutions[idx] && "rotate-180"
+                                            )} />
+                                        </button>
+                                        {showSolutions[idx] && (
+                                            <div className="mt-3 p-4 bg-green-500/10 rounded-xl border border-green-500/20">
+                                                <div className="whitespace-pre-wrap text-sm mb-4">
+                                                    {selectedCase.solution[idx].answer}
+                                                </div>
+                                                <div className="pt-3 border-t border-green-500/20">
+                                                    <p className="text-xs text-[var(--text-muted)] mb-2">Podstawa prawna:</p>
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {selectedCase.solution[idx].legalBasis.map(basis => (
+                                                            <span key={basis} className="px-2 py-1 bg-[var(--bg-card)] rounded text-xs font-medium">
+                                                                {basis}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
-                                </div>
+                                ))}
+                            </div>
 
-                                {/* Questions */}
-                                <div className="space-y-4">
-                                    {selectedCase.questions.map((question, idx) => (
-                                        <div key={idx} className="lex-card">
-                                            <h3 className="font-bold mb-4 flex items-center gap-2">
-                                                <span className="w-8 h-8 rounded-lg bg-[#f59e0b]/20 flex items-center justify-center text-[#f59e0b] font-bold text-sm">
-                                                    {idx + 1}
-                                                </span>
-                                                {question}
-                                            </h3>
-
-                                            {/* Hint */}
-                                            <button
-                                                onClick={() => toggleHint(idx)}
-                                                className="w-full mb-3 p-3 bg-[var(--bg-hover)] rounded-xl text-left flex items-center justify-between hover:bg-[#f59e0b]/10 transition-all"
-                                            >
-                                                <span className="flex items-center gap-2 text-sm">
-                                                    <Lightbulb size={16} className="text-[#f59e0b]" />
-                                                    Wskazówka
-                                                </span>
-                                                <ChevronDown size={16} className={cn(
-                                                    "transition-transform",
-                                                    showHints[idx] && "rotate-180"
-                                                )} />
-                                            </button>
-                                            {showHints[idx] && (
-                                                <div className="mb-4 p-3 bg-[#f59e0b]/10 rounded-xl text-sm border border-[#f59e0b]/20">
-                                                    {selectedCase.hints[idx]}
-                                                </div>
-                                            )}
-
-                                            {/* Solution */}
-                                            <button
-                                                onClick={() => toggleSolution(idx)}
-                                                className="w-full p-3 bg-green-500/10 rounded-xl text-left flex items-center justify-between hover:bg-green-500/20 transition-all"
-                                            >
-                                                <span className="flex items-center gap-2 text-sm font-medium text-green-500">
-                                                    <CheckCircle size={16} />
-                                                    Pokaż rozwiązanie
-                                                </span>
-                                                <ChevronDown size={16} className={cn(
-                                                    "text-green-500 transition-transform",
-                                                    showSolutions[idx] && "rotate-180"
-                                                )} />
-                                            </button>
-                                            {showSolutions[idx] && (
-                                                <div className="mt-3 p-4 bg-green-500/10 rounded-xl border border-green-500/20">
-                                                    <div className="whitespace-pre-wrap text-sm mb-4">
-                                                        {selectedCase.solution[idx].answer}
-                                                    </div>
-                                                    <div className="pt-3 border-t border-green-500/20">
-                                                        <p className="text-xs text-[var(--text-muted)] mb-2">Podstawa prawna:</p>
-                                                        <div className="flex flex-wrap gap-2">
-                                                            {selectedCase.solution[idx].legalBasis.map(basis => (
-                                                                <span key={basis} className="px-2 py-1 bg-[var(--bg-card)] rounded text-xs font-medium">
-                                                                    {basis}
-                                                                </span>
-                                                            ))}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
+                            {/* Related Articles */}
+                            <div className="lex-card">
+                                <h3 className="font-semibold mb-3">Powiązane artykuły</h3>
+                                <div className="flex flex-wrap gap-2">
+                                    {selectedCase.relatedArticles.map(article => (
+                                        <Link
+                                            key={article}
+                                            href={`/search?q=${encodeURIComponent(article)}`}
+                                            className="px-3 py-2 bg-[var(--bg-hover)] rounded-lg text-sm hover:bg-[#f59e0b]/20 hover:text-[#f59e0b] transition-all"
+                                        >
+                                            {article}
+                                        </Link>
                                     ))}
                                 </div>
-
-                                {/* Related Articles */}
-                                <div className="lex-card">
-                                    <h3 className="font-semibold mb-3">Powiązane artykuły</h3>
-                                    <div className="flex flex-wrap gap-2">
-                                        {selectedCase.relatedArticles.map(article => (
-                                            <Link
-                                                key={article}
-                                                href={`/search?q=${encodeURIComponent(article)}`}
-                                                className="px-3 py-2 bg-[var(--bg-hover)] rounded-lg text-sm hover:bg-[#f59e0b]/20 hover:text-[#f59e0b] transition-all"
-                                            >
-                                                {article}
-                                            </Link>
-                                        ))}
-                                    </div>
-                                </div>
-                            </>
-                        )}
-                    </div>
-                </main>
-            </div>
+                            </div>
+                        </>
+                    )}
+                </div>
+            </main>
 
             <MobileNav currentView="cases" onNavigate={() => { }} />
         </div>

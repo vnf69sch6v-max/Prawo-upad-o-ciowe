@@ -107,15 +107,10 @@ html {
   font-size: 16px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: #0d0d0d !important;
-  background-color: #0d0d0d !important;
 }
 
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  background: #121212 !important;
-  background-color: #121212 !important;
-  color: #f5f5f0 !important;
   line-height: 1.6;
   min-height: 100vh;
 }
@@ -1436,11 +1431,11 @@ a:hover {
 }
 
 /* Spacing Utilities */
-.space-y-section > * + * {
+.space-y-section>*+* {
   margin-top: 1.5rem;
 }
 
-.space-y-card > * + * {
+.space-y-card>*+* {
   margin-top: 1rem;
 }
 
@@ -1572,6 +1567,7 @@ a:hover {
     opacity: 0;
     transform: translateY(8px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -1599,3 +1595,172 @@ a:hover {
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
+
+/* ============================================
+   LIQUID GLASS DESIGN SYSTEM
+   V1 Compact - Apple-inspired glassmorphism
+   ============================================ */
+
+/* Liquid Glass Background Gradient */
+.bg-liquid-glass {
+  background: linear-gradient(135deg,
+      #F5E6F0 0%,
+      /* Soft lavender */
+      #E8E0F0 25%,
+      /* Light purple */
+      #E0EEF5 50%,
+      /* Soft blue */
+      #F0E8E5 75%,
+      /* Soft peach */
+      #F5E6F0 100%
+      /* Soft lavender */
+    );
+  background-size: 400% 400%;
+  animation: liquid-shift 15s ease-in-out infinite;
+}
+
+@keyframes liquid-shift {
+
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* Main Liquid Glass Card */
+.liquid-glass-card {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 24px;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.08),
+    0 0 0 1px rgba(255, 255, 255, 0.3) inset;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Iridescent edge effect */
+.liquid-glass-card::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 25px;
+  padding: 1px;
+  background: linear-gradient(135deg,
+      rgba(249, 168, 212, 0.4),
+      rgba(167, 139, 250, 0.4),
+      rgba(147, 197, 253, 0.4),
+      rgba(253, 186, 116, 0.3));
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* Stat Card Style */
+.liquid-glass-stat {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 20px;
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  transition: all 0.3s ease;
+}
+
+.liquid-glass-stat:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+/* Iridescent stat edge */
+.liquid-glass-stat::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 21px;
+  padding: 1px;
+  background: linear-gradient(180deg,
+      rgba(167, 139, 250, 0.3),
+      rgba(249, 168, 212, 0.2),
+      rgba(253, 186, 116, 0.2));
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* Circular Glass Button */
+.liquid-glass-circle {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  transition: all 0.3s ease;
+}
+
+.liquid-glass-circle:hover {
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow:
+    0 8px 24px rgba(167, 139, 250, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+/* Iridescent circle effect */
+.liquid-glass-circle::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 50%;
+  padding: 1px;
+  background: linear-gradient(135deg,
+      rgba(167, 139, 250, 0.5),
+      rgba(147, 197, 253, 0.4),
+      rgba(249, 168, 212, 0.4));
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* Dashboard specific override - light theme for liquid glass pages */
+.liquid-glass-page,
+.liquid-glass-page body {
+  background: transparent !important;
+  color: #1f2937 !important;
+}
+
+/* Gradient animation for liquid glass background */
+@keyframes gradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
