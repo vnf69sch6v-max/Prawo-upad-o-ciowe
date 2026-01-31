@@ -83,7 +83,7 @@ export function ActionButtons({ className }: ActionButtonsProps) {
             <ActionButton
                 icon={<Zap className="w-6 h-6" />}
                 label="Quick Quiz"
-                onClick={() => router.push('/exam/quick')}
+                onClick={() => router.push('/exam')}
                 borderGradient="linear-gradient(135deg, rgba(251, 191, 36, 0.6), rgba(249, 115, 22, 0.4))"
                 hoverColor="#F59E0B"
             />
