@@ -425,7 +425,7 @@ export default function FlashcardsPage() {
                         {/* Smart Review CTA */}
                         <button
                             onClick={handleSmartReview}
-                            className="w-full p-6 rounded-2xl transition-all hover:scale-[1.01] group bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 hover:border-blue-300"
+                            className="w-full p-6 rounded-2xl transition-all hover:scale-[1.01] hover:-translate-y-0.5 group bg-blue-500/10 backdrop-blur-sm border border-blue-200/50 hover:border-blue-300 hover:bg-blue-500/15 shadow-[0_8px_32px_rgba(59,130,246,0.1)]"
                         >
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-4">
@@ -453,7 +453,7 @@ export default function FlashcardsPage() {
                             {/* Speed Run CTA */}
                             <button
                                 onClick={() => setView('speedrun')}
-                                className="p-4 rounded-2xl transition-all hover:scale-[1.02] group text-left bg-orange-50 border border-orange-200 hover:border-orange-300"
+                                className="p-4 rounded-2xl transition-all hover:scale-[1.02] hover:-translate-y-0.5 group text-left bg-orange-500/10 backdrop-blur-sm border border-orange-200/50 hover:border-orange-300 hover:bg-orange-500/15 shadow-[0_8px_32px_rgba(249,115,22,0.1)]"
                             >
                                 <div className="flex items-center gap-3">
                                     <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-gradient-to-br from-orange-500 to-red-500">
@@ -470,7 +470,7 @@ export default function FlashcardsPage() {
 
                             {/* Weak Points CTA */}
                             <button
-                                className="p-4 rounded-2xl transition-all hover:scale-[1.02] group text-left bg-red-50 border border-red-200 hover:border-red-300"
+                                className="p-4 rounded-2xl transition-all hover:scale-[1.02] hover:-translate-y-0.5 group text-left bg-red-500/10 backdrop-blur-sm border border-red-200/50 hover:border-red-300 hover:bg-red-500/15 shadow-[0_8px_32px_rgba(239,68,68,0.1)]"
                             >
                                 <div className="flex items-center gap-3">
                                     <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-gradient-to-br from-red-500 to-rose-600">

@@ -9,4 +9,4 @@ export { Badge } from './badge';
 export { Skeleton, CardSkeleton, FlashcardSkeleton, ListSkeleton, ChartSkeleton } from './skeleton';
 export { ToastProvider, useToast } from './toast';
 export { Confetti } from './confetti';
-
+export { GlassCard, GlassPanel, GlassStatCard } from './glass-card';

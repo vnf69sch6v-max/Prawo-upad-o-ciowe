@@ -597,10 +597,10 @@ function ExamPageContent() {
                                     key={exam.id}
                                     onClick={() => handleStartExam(exam)}
                                     className={cn(
-                                        "bg-white rounded-2xl p-5 shadow-sm border border-gray-100 transition-all text-left group hover:scale-[1.02]",
-                                        index === 0 && "hover:border-purple-300 hover:shadow-lg hover:shadow-purple-500/10",
-                                        index === 1 && "hover:border-blue-300 hover:shadow-lg hover:shadow-blue-500/10",
-                                        index === 2 && "hover:border-yellow-300 hover:shadow-lg hover:shadow-yellow-500/10"
+                                        "bg-white/70 backdrop-blur-xl rounded-2xl p-5 shadow-[0_8px_32px_rgba(0,0,0,0.08)] border border-white/50 transition-all text-left group hover:scale-[1.02] hover:-translate-y-0.5",
+                                        index === 0 && "hover:border-purple-300/70 hover:shadow-[0_12px_40px_rgba(168,85,247,0.15)] hover:bg-purple-50/50",
+                                        index === 1 && "hover:border-blue-300/70 hover:shadow-[0_12px_40px_rgba(59,130,246,0.15)] hover:bg-blue-50/50",
+                                        index === 2 && "hover:border-yellow-300/70 hover:shadow-[0_12px_40px_rgba(234,179,8,0.15)] hover:bg-yellow-50/50"
                                     )}
                                 >
                                     <div className="flex flex-col items-center text-center p-4">

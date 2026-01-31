@@ -285,7 +285,7 @@ function AppleCard({
     return (
         <motion.div
             layout
-            className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100"
+            className="bg-white/70 backdrop-blur-xl rounded-2xl overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.08)] border border-white/50 hover:bg-white/80 hover:shadow-[0_12px_40px_rgba(0,0,0,0.12)] hover:-translate-y-0.5 transition-all duration-300"
         >
             <div className="p-5">
                 {/* Category Tag */}
