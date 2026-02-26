@@ -5,6 +5,20 @@
     "regions": [
         "fra1"
     ],
+    "crons": [
+        {
+            "path": "/api/cron/nbp",
+            "schedule": "0 13 * * 1-5"
+        },
+        {
+            "path": "/api/cron/stooq",
+            "schedule": "30 17 * * 1-5"
+        },
+        {
+            "path": "/api/cron/gus",
+            "schedule": "0 11 * * 1"
+        }
+    ],
     "headers": [
         {
             "source": "/api/(.*)",

@@ -1,32 +1,19 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { Sidebar } from "@/components/Sidebar";
+import { KeyboardShortcuts } from "@/components/KeyboardShortcuts";
 import { Providers } from "./providers";
 
 export const metadata: Metadata = {
-  title: "Savori Legal - Platforma do nauki prawa",
-  description: "Opanuj egzaminy prawnicze i zdaj egzamin za pierwszym razem. 959+ pytań egzaminacyjnych, AI asystent, inteligentne fiszki.",
-  keywords: ["prawo", "KSH", "prawo upadłościowe", "egzamin radcowski", "egzamin adwokacki", "nauka prawa", "fiszki prawnicze"],
-  manifest: "/manifest.json",
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "default",
-    title: "Savori Legal",
-  },
-  openGraph: {
-    title: "Savori Legal",
-    description: "Platforma do nauki prawa handlowego",
-    type: "website",
-    locale: "pl_PL",
-  },
+  title: "Poland Economic Dashboard",
+  description: "Dane makroekonomiczne Polski w stylu Bloomberg Terminal — kursy walut, GPW, inflacja, stopy procentowe",
+  keywords: ["polska", "ekonomia", "dashboard", "NBP", "GPW", "WIG20", "inflacja", "kursy walut"],
 };
 
 export const viewport: Viewport = {
-  themeColor: "#1a365d",
+  themeColor: "#0A0E17",
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
-  viewportFit: "cover",
 };
 
 export default function RootLayout({
@@ -39,20 +26,20 @@ export default function RootLayout({
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        {/* Inter for body text, Playfair Display for serif headings */}
         <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
           rel="stylesheet"
         />
-        {/* PWA */}
-        <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="mobile-web-app-capable" content="yes" />
       </head>
-      <body className="antialiased bg-[#121212] text-[#f5f5f0] min-h-screen" style={{ background: '#121212', color: '#f5f5f0' }}>
-        <Providers>{children}</Providers>
+      <body className="antialiased min-h-screen overflow-x-hidden">
+        <Providers>
+          <KeyboardShortcuts />
+          <Sidebar />
+          <div className="md:ml-16 lg:ml-52 min-h-screen pb-16 md:pb-0">
+            {children}
+          </div>
+        </Providers>
       </body>
     </html>
   );
 }
-

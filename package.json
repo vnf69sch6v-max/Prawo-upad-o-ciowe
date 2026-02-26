@@ -1,5 +1,5 @@
 {
-  "name": "lexcapital-pro",
+  "name": "nextjs-firebase-boilerplate",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -9,31 +9,23 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.71.2",
-    "@google/genai": "^1.38.0",
-    "@stripe/stripe-js": "^8.6.3",
-    "@supabase/supabase-js": "^2.91.0",
     "@tanstack/react-query": "^5.90.20",
-    "canvas-confetti": "^1.9.4",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "firebase": "^12.7.0",
     "firebase-admin": "^13.6.0",
     "framer-motion": "^12.24.10",
+    "lightweight-charts": "^5.1.0",
     "lucide-react": "^0.562.0",
     "next": "16.1.1",
     "react": "19.2.3",
     "react-dom": "19.2.3",
-    "recharts": "^3.6.0",
-    "stripe": "^20.2.0",
+    "recharts": "^3.7.0",
     "tailwind-merge": "^3.4.0",
-    "xlsx": "^0.18.5",
-    "zod": "^4.3.5",
-    "zustand": "^5.0.9"
+    "zod": "^4.3.5"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
-    "@types/canvas-confetti": "^1.9.0",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",

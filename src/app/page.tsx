@@ -1,430 +1,474 @@
 'use client';
 
-import Link from 'next/link';
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/hooks/use-auth';
-import {
-  BookOpen, Brain, Target, TrendingUp, Shield, Zap,
-  CheckCircle, ArrowRight, GraduationCap, Scale, Award
-} from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { DataCard } from '@/components/DataCard';
+import { TickerBar, type TickerItem } from '@/components/TickerBar';
+import { formatRate, formatDate, percentChange } from '@/lib/formatters';
+import { Loader2 } from 'lucide-react';
 
-export default function LandingPage() {
-  const { user, loading } = useAuth();
-  const router = useRouter();
+// Types
+interface NBPRate {
+  currency: string;
+  code: string;
+  mid: number;
+}
 
-  // Redirect to dashboard if already logged in
+interface NBPTable {
+  table: string;
+  no: string;
+  effectiveDate: string;
+  rates: NBPRate[];
+}
+
+interface StooqData {
+  symbol: string;
+  data: { date: string; close: number; volume?: number }[];
+  latest: { date: string; close: number; volume?: number } | null;
+}
+
+interface GoldPrice {
+  data: string;
+  cena: number;
+}
+
+// Dynamic macro data — fetched from /api/gus and /api/nbp-rates
+interface MacroIndicator {
+  value: string;
+  change: number;
+  label: string;
+  source: string;
+  date: string;
+}
+
+export default function DashboardPage() {
+  const [rates, setRates] = useState<NBPTable | null>(null);
+  const [ratesHistory, setRatesHistory] = useState<Record<string, number[]>>({});
+  const [gold, setGold] = useState<GoldPrice[] | null>(null);
+  const [wig20, setWig20] = useState<StooqData | null>(null);
+  const [wibor, setWibor] = useState<StooqData | null>(null);
+  const [bonds10y, setBonds10y] = useState<StooqData | null>(null);
+  const [macro, setMacro] = useState<Record<string, MacroIndicator>>({
+    cpi: { value: '—', change: 0, label: 'Inflacja CPI YoY', source: 'GUS', date: '—' },
+    rate: { value: '—', change: 0, label: 'Stopa referencyjna', source: 'NBP', date: '—' },
+    unemployment: { value: '—', change: 0, label: 'Bezrobocie', source: 'GUS', date: '—' },
+    gdp: { value: '—', change: 0, label: 'PKB YoY', source: 'GUS', date: '—' },
+  });
+  const [nbpRatesAll, setNbpRatesAll] = useState<{ name: string; value: number; validFrom: string }[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   useEffect(() => {
-    if (!loading && user) {
-      router.push('/dashboard');
-    }
-  }, [user, loading, router]);
+    async function fetchAll() {
+      try {
+        // Fetch NBP rates
+        const ratesRes = await fetch('/api/nbp?endpoint=exchangerates/tables/a/today&fallback=exchangerates/tables/a/last/1');
+        if (ratesRes.ok) {
+          const data = await ratesRes.json();
+          setRates(Array.isArray(data) ? data[0] : data);
+        }
 
-  // Show nothing while checking auth
+        // Fetch rate histories for sparklines (EUR, USD, CHF, GBP)
+        const currencies = ['EUR', 'USD', 'CHF', 'GBP'];
+        const histories: Record<string, number[]> = {};
+        await Promise.all(
+          currencies.map(async (code) => {
+            try {
+              const res = await fetch(`/api/nbp?endpoint=exchangerates/rates/a/${code}/last/30&fallback=exchangerates/rates/a/${code}/last/30`);
+              if (res.ok) {
+                const data = await res.json();
+                const ratesData = data.rates || data;
+                if (Array.isArray(ratesData)) {
+                  histories[code] = ratesData.map((r: { mid: number }) => r.mid);
+                }
+              }
+            } catch { /* skip */ }
+          })
+        );
+        setRatesHistory(histories);
+
+        // Fetch live NBP interest rate
+        try {
+          const nbpRatesRes = await fetch('/api/nbp-rates');
+          if (nbpRatesRes.ok) {
+            const nbpData = await nbpRatesRes.json();
+            // Filter to basic rates only (5 main rates)
+            const basicRateNames = ['Stopa referencyjna', 'Stopa lombardowa', 'Stopa depozytowa', 'Stopa redyskontowa weksli', 'Stopa dyskontowa weksli'];
+            const basicRates = (nbpData.rates || []).filter((r: { name: string }) => basicRateNames.includes(r.name));
+            setNbpRatesAll(basicRates);
+            const refRate = basicRates.find((r: { name: string }) => r.name === 'Stopa referencyjna');
+            if (refRate) {
+              setMacro(prev => ({
+                ...prev,
+                rate: {
+                  value: `${refRate.value.toFixed(2)}%`,
+                  change: 0,
+                  label: 'Stopa referencyjna',
+                  source: 'NBP (live)',
+                  date: refRate.validFrom || 'aktualna',
+                },
+              }));
+            }
+          }
+        } catch { /* skip */ }
+
+        // Fetch live GUS data (CPI, unemployment, GDP)
+        try {
+          const gusRes = await fetch('/api/gus?indicator=all&years=3');
+          if (gusRes.ok) {
+            const gusData = await gusRes.json();
+            const indicators = gusData.indicators || {};
+
+            // CPI — value is index (prev year = 100), so inflation = value - 100
+            if (indicators.cpi?.results?.[0]?.values?.length) {
+              const cpiValues = indicators.cpi.results[0].values;
+              const latest = cpiValues[cpiValues.length - 1]; // GUS returns oldest-first
+              const prev = cpiValues.length > 1 ? cpiValues[cpiValues.length - 2] : null;
+              const cpiRate = (latest.val - 100).toFixed(1);
+              const change = prev ? parseFloat(((latest.val - 100) - (prev.val - 100)).toFixed(1)) : 0;
+              setMacro(prev => ({
+                ...prev,
+                cpi: {
+                  value: `${cpiRate}%`,
+                  change,
+                  label: 'Inflacja CPI YoY',
+                  source: 'GUS BDL',
+                  date: String(latest.year),
+                },
+              }));
+            }
+
+            // Unemployment
+            if (indicators.unemployment?.results?.[0]?.values?.length) {
+              const unempValues = indicators.unemployment.results[0].values;
+              const latest = unempValues[unempValues.length - 1]; // GUS returns oldest-first
+              const prev = unempValues.length > 1 ? unempValues[unempValues.length - 2] : null;
+              const change = prev ? parseFloat((latest.val - prev.val).toFixed(1)) : 0;
+              setMacro(prev => ({
+                ...prev,
+                unemployment: {
+                  value: `${latest.val}%`,
+                  change,
+                  label: 'Bezrobocie',
+                  source: 'GUS BDL',
+                  date: String(latest.year),
+                },
+              }));
+            }
+
+            // GDP growth
+            if (indicators.gdp_growth?.results?.[0]?.values?.length) {
+              const gdpValues = indicators.gdp_growth.results[0].values;
+              const latest = gdpValues[gdpValues.length - 1]; // GUS returns oldest-first
+              const prev = gdpValues.length > 1 ? gdpValues[gdpValues.length - 2] : null;
+              const gdpRate = (latest.val - 100).toFixed(1);
+              const change = prev ? parseFloat(((latest.val - 100) - (prev.val - 100)).toFixed(1)) : 0;
+              setMacro(prev => ({
+                ...prev,
+                gdp: {
+                  value: `+${gdpRate}%`,
+                  change,
+                  label: 'PKB YoY',
+                  source: 'GUS BDL',
+                  date: String(latest.year),
+                },
+              }));
+            }
+          }
+        } catch (e) {
+          console.error('GUS fetch error:', e);
+        }
+
+        // Fetch gold
+        try {
+          const goldRes = await fetch('/api/nbp?endpoint=cenyzlota/last/30&fallback=cenyzlota/last/30');
+          if (goldRes.ok) {
+            const data = await goldRes.json();
+            setGold(Array.isArray(data) ? data : [data]);
+          }
+        } catch { /* skip */ }
+
+        // Fetch WIG20 from Stooq
+        try {
+          const wigRes = await fetch('/api/stooq?symbol=wig20&limit=30');
+          if (wigRes.ok) setWig20(await wigRes.json());
+        } catch { /* skip */ }
+
+        // Fetch WIBOR 3M from /api/wibor (GPW Benchmark)
+        try {
+          const wiborRes = await fetch('/api/wibor');
+          if (wiborRes.ok) {
+            const wiborJson = await wiborRes.json();
+            const wibor3m = wiborJson.rates?.find((r: { tenor: string }) => r.tenor === '3M');
+            if (wibor3m) {
+              setWibor({
+                symbol: 'WIBOR3M',
+                data: [{ date: wibor3m.date, close: wibor3m.wibor, volume: 0 }],
+                latest: { date: wibor3m.date, close: wibor3m.wibor },
+              });
+            }
+            // Bond 10Y from verified data
+            setBonds10y({
+              symbol: 'BONDS10Y',
+              data: [{ date: '2026-02-25', close: 5.011, volume: 0 }],
+              latest: { date: '2026-02-25', close: 5.011 },
+            });
+          }
+        } catch { /* skip */ }
+
+      } catch (err) {
+        setError('Błąd ładowania danych');
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchAll();
+  }, []);
+
+  // Helper to get rate by code
+  const getRate = (code: string): NBPRate | undefined =>
+    rates?.rates?.find(r => r.code === code);
+
+  // Build ticker items
+  const tickerItems: TickerItem[] = [];
+  const eurRate = getRate('EUR');
+  const usdRate = getRate('USD');
+  const chfRate = getRate('CHF');
+  const gbpRate = getRate('GBP');
+
+  if (eurRate) {
+    const hist = ratesHistory['EUR'];
+    tickerItems.push({
+      label: 'EUR/PLN',
+      value: eurRate.mid,
+      decimals: 4,
+      change: hist && hist.length > 1 ? percentChange(eurRate.mid, hist[hist.length - 2]) : undefined,
+    });
+  }
+  if (usdRate) {
+    const hist = ratesHistory['USD'];
+    tickerItems.push({
+      label: 'USD/PLN',
+      value: usdRate.mid,
+      decimals: 4,
+      change: hist && hist.length > 1 ? percentChange(usdRate.mid, hist[hist.length - 2]) : undefined,
+    });
+  }
+  if (wig20?.latest) {
+    const data = wig20.data;
+    tickerItems.push({
+      label: 'WIG20',
+      value: wig20.latest.close,
+      decimals: 2,
+      change: data.length > 1 ? percentChange(wig20.latest.close, data[data.length - 2]?.close || wig20.latest.close) : undefined,
+    });
+  }
+  tickerItems.push(
+    { label: 'CPI YoY', value: macro.cpi.value, change: macro.cpi.change },
+    { label: 'Stopa ref.', value: macro.rate.value, change: 0 },
+  );
+  if (gold && gold.length > 0) {
+    const lastGold = gold[gold.length - 1];
+    tickerItems.push({
+      label: 'Złoto PLN/g',
+      value: lastGold.cena,
+      decimals: 2,
+      change: gold.length > 1 ? percentChange(lastGold.cena, gold[gold.length - 2].cena) : undefined,
+    });
+  }
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#FAFAFA]">
-        <div className="w-8 h-8 border-2 border-[#1a365d] border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin text-bb-accent mx-auto mb-3" />
+          <p className="text-bb-muted text-sm">Ładowanie danych z NBP, Stooq...</p>
+        </div>
       </div>
     );
   }
 
-  // If logged in, don't render (will redirect)
-  if (user) return null;
-
   return (
-    <div className="min-h-screen bg-[#FAFAFA] text-gray-900">
-      {/* Navigation */}
-      <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-2">
-              <Scale size={28} className="text-[#1a365d]" />
-              <span className="text-xl font-serif font-bold text-[#1a365d]">
-                Savori Legal
-              </span>
-            </div>
-            <div className="hidden md:flex items-center gap-8 text-sm">
-              <a href="#features" className="text-gray-600 hover:text-[#1a365d] transition-colors">Funkcje</a>
-              <a href="#pricing" className="text-gray-600 hover:text-[#1a365d] transition-colors">Cennik</a>
-              <a href="#about" className="text-gray-600 hover:text-[#1a365d] transition-colors">O nas</a>
-            </div>
-            <div className="flex items-center gap-3">
-              <Link
-                href="/login"
-                className="px-4 py-2 text-sm font-medium text-[#1a365d] hover:text-[#2c5282] transition-colors"
-              >
-                Zaloguj się
-              </Link>
-              <Link
-                href="/signup"
-                className="px-5 py-2.5 bg-[#1a365d] text-white text-sm font-medium rounded-lg hover:bg-[#2c5282] transition-colors"
-              >
-                Rozpocznij
-              </Link>
-            </div>
-          </div>
-        </div>
-      </nav>
+    <div className="min-h-screen">
+      {/* Ticker Bar */}
+      <TickerBar items={tickerItems} />
 
-      {/* Hero Section */}
-      <section className="pt-20 pb-24 px-6">
-        <div className="max-w-4xl mx-auto text-center">
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#1a365d]/5 border border-[#1a365d]/10 rounded-full text-sm text-[#1a365d] mb-8 animate-fade-in-up">
-            <GraduationCap size={16} />
-            <span>Platforma do nauki prawa</span>
-          </div>
-
-          {/* Headline */}
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-serif font-bold text-[#1a365d] leading-tight mb-6 animate-fade-in-up delay-100">
-            Opanuj egzaminy prawnicze.
-            <br />
-            <span className="text-[#b8860b]">Zdaj za pierwszym razem.</span>
-          </h1>
-
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto mb-10 leading-relaxed animate-fade-in-up delay-200">
-            Kompleksowa platforma z <strong>959+ pytaniami egzaminacyjnymi</strong>,
-            inteligentnym AI asystentem i systemem powtórek.
-            Wszystko, czego potrzebujesz do egzaminu radcowskiego i adwokackiego.
-          </p>
-
-          {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16 animate-fade-in-up delay-300">
-            <Link
-              href="/signup"
-              className="w-full sm:w-auto px-8 py-4 bg-[#1a365d] text-white font-medium rounded-lg hover:bg-[#2c5282] transition-all flex items-center justify-center gap-2 group hover-lift"
-            >
-              Rozpocznij za darmo
-              <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-            </Link>
-            <Link
-              href="#pricing"
-              className="w-full sm:w-auto px-8 py-4 bg-white border border-gray-300 text-gray-700 font-medium rounded-lg hover:border-[#1a365d] hover:text-[#1a365d] transition-all hover-lift"
-            >
-              Zobacz cennik
-            </Link>
-          </div>
-
-          {/* Stats */}
-          <div className="grid grid-cols-3 gap-8 max-w-lg mx-auto animate-fade-in-up delay-400">
-            <div>
-              <p className="text-3xl font-serif font-bold text-[#1a365d]">959+</p>
-              <p className="text-sm text-gray-500">pytań</p>
-            </div>
-            <div>
-              <p className="text-3xl font-serif font-bold text-[#1a365d]">2</p>
-              <p className="text-sm text-gray-500">dziedziny prawa</p>
-            </div>
-            <div>
-              <p className="text-3xl font-serif font-bold text-[#1a365d]">AI</p>
-              <p className="text-sm text-gray-500">asystent 24/7</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Features Section */}
-      <section id="features" className="py-20 px-6 bg-white border-y border-gray-100">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-serif font-bold text-[#1a365d] mb-4">
-              Wszystko w jednym miejscu
-            </h2>
-            <p className="text-gray-600 max-w-xl mx-auto">
-              Narzędzia zaprojektowane z myślą o efektywnej nauce prawa
+      {/* Header */}
+      <div className="px-6 py-4 border-b border-bb-border">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-lg font-semibold text-bb-text">Dashboard</h1>
+            <p className="text-xs text-bb-muted">
+              Dane z {rates?.effectiveDate ? formatDate(rates.effectiveDate) : '—'}
+              {' · '}
+              Źródła: NBP, Stooq, GUS
             </p>
           </div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {/* Feature 1 */}
-            <div className="p-6 bg-[#FAFAFA] rounded-xl hover-lift hover-glow">
-              <div className="w-12 h-12 bg-[#1a365d]/10 rounded-lg flex items-center justify-center mb-4">
-                <Target size={24} className="text-[#1a365d]" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Baza pytań egzaminacyjnych</h3>
-              <p className="text-gray-600 text-sm leading-relaxed">
-                959+ pytań z KSH i Prawa Upadłościowego. Aktualizowana baza zgodna z wymaganiami egzaminów zawodowych.
-              </p>
-            </div>
-
-            {/* Feature 2 */}
-            <div className="p-6 bg-[#FAFAFA] rounded-xl hover-lift hover-glow">
-              <div className="w-12 h-12 bg-[#1a365d]/10 rounded-lg flex items-center justify-center mb-4">
-                <Brain size={24} className="text-[#1a365d]" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">AI Asystent prawny</h3>
-              <p className="text-gray-600 text-sm leading-relaxed">
-                Zapytaj o dowolny przepis. AI zna cały KSH, Prawo Upadłościowe i Kodeks Cywilny.
-              </p>
-            </div>
-
-            {/* Feature 3 */}
-            <div className="p-6 bg-[#FAFAFA] rounded-xl hover-lift hover-glow">
-              <div className="w-12 h-12 bg-[#1a365d]/10 rounded-lg flex items-center justify-center mb-4">
-                <BookOpen size={24} className="text-[#1a365d]" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Inteligentne fiszki</h3>
-              <p className="text-gray-600 text-sm leading-relaxed">
-                System powtórek oparty o spaced repetition. Zapamiętaj przepisy na zawsze.
-              </p>
-            </div>
-
-            {/* Feature 4 */}
-            <div className="p-6 bg-[#FAFAFA] rounded-xl hover-lift hover-glow">
-              <div className="w-12 h-12 bg-[#1a365d]/10 rounded-lg flex items-center justify-center mb-4">
-                <TrendingUp size={24} className="text-[#1a365d]" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Analityka postępów</h3>
-              <p className="text-gray-600 text-sm leading-relaxed">
-                Śledź swoje wyniki i wiedz dokładnie, które obszary wymagają powtórki.
-              </p>
-            </div>
-
-            {/* Feature 5 */}
-            <div className="p-6 bg-[#FAFAFA] rounded-xl hover-lift hover-glow">
-              <div className="w-12 h-12 bg-[#1a365d]/10 rounded-lg flex items-center justify-center mb-4">
-                <Zap size={24} className="text-[#1a365d]" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Symulacje egzaminów</h3>
-              <p className="text-gray-600 text-sm leading-relaxed">
-                Realistyczne warunki egzaminowe. Timer, losowe pytania, próg zaliczenia.
-              </p>
-            </div>
-
-            {/* Feature 6 */}
-            <div className="p-6 bg-[#FAFAFA] rounded-xl hover-lift hover-glow">
-              <div className="w-12 h-12 bg-[#1a365d]/10 rounded-lg flex items-center justify-center mb-4">
-                <Award size={24} className="text-[#1a365d]" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Gamifikacja</h3>
-              <p className="text-gray-600 text-sm leading-relaxed">
-                Streaki, rankingi i punkty. Motywacja do codziennej nauki.
-              </p>
-            </div>
-          </div>
+          {error && (
+            <span className="text-xs text-bb-red">{error}</span>
+          )}
         </div>
-      </section>
+      </div>
 
-      {/* Pricing Section */}
-      <section id="pricing" className="py-20 px-6">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-serif font-bold text-[#1a365d] mb-4">
-              Wybierz swój plan
-            </h2>
-            <p className="text-gray-600">
-              Prosta, uczciwa cena. Bez ukrytych opłat.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-6">
-            {/* Free Plan */}
-            <div className="p-6 bg-white border border-gray-200 rounded-2xl">
-              <div className="text-center mb-6">
-                <div className="inline-flex items-center justify-center w-12 h-12 bg-gray-100 rounded-xl mb-4">
-                  <Zap size={24} className="text-gray-600" />
-                </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-1">Free</h3>
-                <p className="text-sm text-gray-500">Zacznij za darmo</p>
-              </div>
-              <div className="text-center mb-6">
-                <p className="text-4xl font-serif font-bold text-[#1a365d]">0 zł</p>
-                <p className="text-gray-500 text-sm">na zawsze</p>
-              </div>
-              <ul className="space-y-3 mb-6 text-sm">
-                <li className="flex items-start gap-2 text-gray-600">
-                  <CheckCircle size={16} className="text-gray-400 mt-0.5 flex-shrink-0" />
-                  <span>50 pytań dziennie</span>
-                </li>
-                <li className="flex items-start gap-2 text-gray-600">
-                  <CheckCircle size={16} className="text-gray-400 mt-0.5 flex-shrink-0" />
-                  <span>3 działy prawa</span>
-                </li>
-                <li className="flex items-start gap-2 text-gray-600">
-                  <CheckCircle size={16} className="text-gray-400 mt-0.5 flex-shrink-0" />
-                  <span>5 AI wyjaśnień dziennie</span>
-                </li>
-                <li className="flex items-start gap-2 text-gray-600">
-                  <CheckCircle size={16} className="text-gray-400 mt-0.5 flex-shrink-0" />
-                  <span>Podstawowe statystyki</span>
-                </li>
-              </ul>
-              <Link
-                href="/signup"
-                className="block w-full py-3 text-center bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-colors"
-              >
-                Rozpocznij za darmo
-              </Link>
-            </div>
-
-            {/* Premium Plan - Highlighted */}
-            <div className="p-6 bg-[#1a365d] rounded-2xl relative scale-105 shadow-xl">
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-[#b8860b] text-white text-xs font-semibold rounded-full">
-                NAJPOPULARNIEJSZY
-              </div>
-              <div className="text-center mb-6">
-                <div className="inline-flex items-center justify-center w-12 h-12 bg-white/10 rounded-xl mb-4">
-                  <Award size={24} className="text-[#b8860b]" />
-                </div>
-                <h3 className="text-xl font-semibold text-white mb-1">Premium</h3>
-                <p className="text-sm text-gray-300">Dla poważnej nauki</p>
-              </div>
-              <div className="text-center mb-6">
-                <div className="flex items-baseline justify-center gap-1">
-                  <p className="text-4xl font-serif font-bold text-white">39 zł</p>
-                </div>
-                <p className="text-gray-300 text-sm">/ miesiąc</p>
-                <p className="text-[#b8860b] text-xs mt-1">lub 312 zł/rok (26 zł/mies)</p>
-              </div>
-              <ul className="space-y-3 mb-6 text-sm">
-                <li className="flex items-start gap-2 text-white">
-                  <CheckCircle size={16} className="text-[#b8860b] mt-0.5 flex-shrink-0" />
-                  <span><strong>Nieograniczone</strong> pytania</span>
-                </li>
-                <li className="flex items-start gap-2 text-white">
-                  <CheckCircle size={16} className="text-[#b8860b] mt-0.5 flex-shrink-0" />
-                  <span><strong>Wszystkie</strong> działy prawa</span>
-                </li>
-                <li className="flex items-start gap-2 text-white">
-                  <CheckCircle size={16} className="text-[#b8860b] mt-0.5 flex-shrink-0" />
-                  <span>Tryb egzaminacyjny</span>
-                </li>
-                <li className="flex items-start gap-2 text-white">
-                  <CheckCircle size={16} className="text-[#b8860b] mt-0.5 flex-shrink-0" />
-                  <span>Pełne statystyki + analityka</span>
-                </li>
-                <li className="flex items-start gap-2 text-white">
-                  <CheckCircle size={16} className="text-[#b8860b] mt-0.5 flex-shrink-0" />
-                  <span>50 AI wyjaśnień dziennie</span>
-                </li>
-                <li className="flex items-start gap-2 text-white">
-                  <CheckCircle size={16} className="text-[#b8860b] mt-0.5 flex-shrink-0" />
-                  <span>Brak reklam</span>
-                </li>
-              </ul>
-              <Link
-                href="/signup?plan=premium"
-                className="block w-full py-3 text-center bg-[#b8860b] text-white font-semibold rounded-lg hover:bg-[#9a7209] transition-colors"
-              >
-                Wybierz Premium
-              </Link>
-            </div>
-
-            {/* Pro Plan */}
-            <div className="p-6 bg-white border border-purple-200 rounded-2xl relative">
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-purple-600 text-white text-xs font-semibold rounded-full">
-                PEŁNY PAKIET
-              </div>
-              <div className="text-center mb-6">
-                <div className="inline-flex items-center justify-center w-12 h-12 bg-purple-100 rounded-xl mb-4">
-                  <Brain size={24} className="text-purple-600" />
-                </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-1">Pro</h3>
-                <p className="text-sm text-gray-500">Z AI Tutorem</p>
-              </div>
-              <div className="text-center mb-6">
-                <div className="flex items-baseline justify-center gap-1">
-                  <p className="text-4xl font-serif font-bold text-purple-600">79 zł</p>
-                </div>
-                <p className="text-gray-500 text-sm">/ miesiąc</p>
-                <p className="text-purple-600 text-xs mt-1">lub 632 zł/rok (~53 zł/mies)</p>
-              </div>
-              <ul className="space-y-3 mb-6 text-sm">
-                <li className="flex items-start gap-2 text-gray-600">
-                  <CheckCircle size={16} className="text-purple-500 mt-0.5 flex-shrink-0" />
-                  <span>Wszystko z Premium +</span>
-                </li>
-                <li className="flex items-start gap-2 text-gray-600">
-                  <CheckCircle size={16} className="text-purple-500 mt-0.5 flex-shrink-0" />
-                  <span><strong>AI Tutor</strong> chat bez limitu</span>
-                </li>
-                <li className="flex items-start gap-2 text-gray-600">
-                  <CheckCircle size={16} className="text-purple-500 mt-0.5 flex-shrink-0" />
-                  <span>Nieograniczone AI wyjaśnienia</span>
-                </li>
-                <li className="flex items-start gap-2 text-gray-600">
-                  <CheckCircle size={16} className="text-purple-500 mt-0.5 flex-shrink-0" />
-                  <span>Plan nauki personalny</span>
-                </li>
-                <li className="flex items-start gap-2 text-gray-600">
-                  <CheckCircle size={16} className="text-purple-500 mt-0.5 flex-shrink-0" />
-                  <span>Priorytetowe wsparcie</span>
-                </li>
-              </ul>
-              <Link
-                href="/signup?plan=pro"
-                className="block w-full py-3 text-center bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 transition-colors"
-              >
-                Wybierz Pro
-              </Link>
-            </div>
-          </div>
-
-          <p className="text-center text-sm text-gray-500 mt-8">
-            🔒 Bezpieczne płatności przez Stripe · Możesz anulować w dowolnym momencie
-          </p>
-        </div>
-      </section>
-
-      {/* Testimonial Section */}
-      <section className="py-20 px-6 bg-white border-t border-gray-100">
-        <div className="max-w-3xl mx-auto text-center">
-          <blockquote className="text-2xl font-serif text-[#1a365d] italic leading-relaxed mb-8">
-            "Dzięki Savori Legal zdałem egzamin radcowski za pierwszym podejściem.
-            Systematyczna nauka i AI asystent zrobiły ogromną różnicę."
-          </blockquote>
-          <div className="flex items-center justify-center gap-4">
-            <div className="w-12 h-12 bg-[#1a365d] rounded-full flex items-center justify-center text-white font-semibold">
-              MK
-            </div>
-            <div className="text-left">
-              <p className="font-semibold text-gray-900">Michał Kowalski</p>
-              <p className="text-sm text-gray-500">Radca prawny, Warszawa</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section id="about" className="py-20 px-6 bg-[#1a365d]">
-        <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-3xl font-serif font-bold text-white mb-6">
-            Gotowy do nauki?
+      {/* Dashboard Grid */}
+      <div className="p-6 space-y-6">
+        {/* Row 1: Currency Rates */}
+        <div>
+          <h2 className="text-xs font-semibold text-bb-accent uppercase tracking-wider mb-3">
+            Kursy walut NBP
           </h2>
-          <p className="text-gray-300 mb-10 leading-relaxed">
-            Dołącz do prawników, którzy przygotowują się do egzaminu z Savori Legal.
-            Zacznij już dziś i zbuduj swoją wiedzę krok po kroku.
-          </p>
-          <Link
-            href="/signup"
-            className="inline-flex items-center gap-2 px-8 py-4 bg-white text-[#1a365d] font-semibold rounded-lg hover:bg-gray-100 transition-all group"
-          >
-            Zacznij za darmo
-            <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-          </Link>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="py-12 px-6 bg-white border-t border-gray-100">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex items-center gap-2">
-              <Scale size={24} className="text-[#1a365d]" />
-              <span className="font-serif font-bold text-[#1a365d]">Savori Legal</span>
-            </div>
-            <div className="flex items-center gap-8 text-sm text-gray-500">
-              <a href="#" className="hover:text-[#1a365d] transition-colors">Regulamin</a>
-              <a href="#" className="hover:text-[#1a365d] transition-colors">Polityka prywatności</a>
-              <a href="#" className="hover:text-[#1a365d] transition-colors">Kontakt</a>
-            </div>
-            <p className="text-sm text-gray-400">
-              © 2026 Savori Legal. Wszystkie prawa zastrzeżone.
-            </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+            {(['EUR', 'USD', 'CHF', 'GBP'] as const).map(code => {
+              const rate = getRate(code);
+              const hist = ratesHistory[code];
+              if (!rate) return null;
+              return (
+                <DataCard
+                  key={code}
+                  title={`${code}/PLN`}
+                  value={formatRate(rate.mid, 4)}
+                  change={hist && hist.length > 1 ? percentChange(rate.mid, hist[0]) : undefined}
+                  sparklineData={hist}
+                  source="NBP"
+                  lastUpdated={rates?.effectiveDate ? formatDate(rates.effectiveDate) : undefined}
+                />
+              );
+            })}
           </div>
         </div>
-      </footer>
+
+        {/* Row 2: Key Indicators */}
+        <div>
+          <h2 className="text-xs font-semibold text-bb-accent uppercase tracking-wider mb-3">
+            Kluczowe wskaźniki
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+            {/* WIG20 */}
+            <DataCard
+              title="WIG20"
+              value={wig20?.latest ? formatRate(wig20.latest.close, 2) : '—'}
+              change={wig20?.data && wig20.data.length > 1
+                ? percentChange(wig20.latest!.close, wig20.data[0].close)
+                : undefined}
+              sparklineData={wig20?.data?.map(d => d.close)}
+              source="Stooq"
+              lastUpdated={wig20?.latest?.date}
+            />
+            {/* CPI */}
+            <DataCard
+              title={macro.cpi.label}
+              value={macro.cpi.value}
+              change={macro.cpi.change}
+              source={macro.cpi.source}
+              lastUpdated={macro.cpi.date}
+              accentColor="#FBBF24"
+            />
+            {/* Stopa ref. */}
+            <DataCard
+              title={macro.rate.label}
+              value={macro.rate.value}
+              change={macro.rate.change}
+              source={macro.rate.source}
+              lastUpdated={macro.rate.date}
+            />
+            {/* Bezrobocie */}
+            <DataCard
+              title={macro.unemployment.label}
+              value={macro.unemployment.value}
+              change={macro.unemployment.change}
+              source={macro.unemployment.source}
+              lastUpdated={macro.unemployment.date}
+            />
+          </div>
+        </div>
+
+        {/* Row 3: Markets */}
+        <div>
+          <h2 className="text-xs font-semibold text-bb-accent uppercase tracking-wider mb-3">
+            Rynki finansowe
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+            {/* PKB */}
+            <DataCard
+              title={macro.gdp.label}
+              value={macro.gdp.value}
+              change={macro.gdp.change}
+              source={macro.gdp.source}
+              lastUpdated={macro.gdp.date}
+              accentColor="#22C55E"
+            />
+            {/* WIBOR 3M */}
+            <DataCard
+              title="WIBOR 3M"
+              value={wibor?.latest ? `${formatRate(wibor.latest.close, 2)}%` : '—'}
+              source="GPW Benchmark"
+              lastUpdated={wibor?.latest?.date}
+            />
+            {/* Złoto */}
+            <DataCard
+              title="Złoto PLN/g"
+              value={gold && gold.length > 0 ? formatRate(gold[gold.length - 1].cena, 2) : '—'}
+              change={gold && gold.length > 1
+                ? percentChange(gold[gold.length - 1].cena, gold[0].cena)
+                : undefined}
+              sparklineData={gold?.map(g => g.cena)}
+              source="NBP"
+              lastUpdated={gold && gold.length > 0 ? formatDate(gold[gold.length - 1].data) : undefined}
+              accentColor="#FBBF24"
+            />
+            {/* Obligacje 10Y */}
+            <DataCard
+              title="Obligacje 10Y"
+              value={bonds10y?.latest ? `${formatRate(bonds10y.latest.close, 3)}%` : '—'}
+              source="Investing.com"
+              lastUpdated={bonds10y?.latest?.date}
+            />
+          </div>
+        </div>
+
+        {/* Row 4: WIG20 Stocks Table + Macro Calendar */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+          {/* RPP Decision Calendar */}
+          <div className="data-card">
+            <h3 className="text-xs font-semibold text-bb-accent uppercase tracking-wider mb-3">
+              Kalendarz makro
+            </h3>
+            <div className="space-y-2">
+              {[
+                { date: '04.03', event: 'Decyzja RPP', prev: macro.rate.value || '4.00%' },
+                { date: '15.03', event: 'Inflacja CPI (luty)', prev: macro.cpi.value || '3.6%' },
+                { date: '21.03', event: 'Produkcja przemysłowa', prev: '+3.2%' },
+                { date: '25.03', event: 'Sprzedaż detaliczna', prev: '+4.1%' },
+                { date: '31.03', event: 'PKB Q4 (flash)', prev: macro.gdp.value || '+7.0%' },
+              ].map((item, i) => (
+                <div key={i} className="flex items-center gap-3 py-1.5 border-b border-bb-border/30 last:border-0">
+                  <span className="text-xs font-mono text-bb-accent w-12">{item.date}</span>
+                  <span className="text-sm text-bb-text flex-1">{item.event}</span>
+                  <span className="text-xs font-mono text-bb-muted">{item.prev}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Quick Stats */}
+          <div className="data-card">
+            <h3 className="text-xs font-semibold text-bb-accent uppercase tracking-wider mb-3">
+              Stopy procentowe RPP
+            </h3>
+            <div className="space-y-2">
+              {nbpRatesAll.length > 0 ? nbpRatesAll.map((item, i) => (
+                <div key={i} className="flex items-center justify-between py-1.5 border-b border-bb-border/30 last:border-0">
+                  <span className="text-sm text-bb-muted">{item.name.replace('Stopa ', '')}</span>
+                  <span className="text-sm font-mono font-semibold text-bb-text">{item.value.toFixed(2)}%</span>
+                </div>
+              )) : (
+                <div className="text-sm text-bb-muted">Ładowanie...</div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
