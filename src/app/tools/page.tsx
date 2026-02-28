@@ -18,8 +18,9 @@ import {
     type RateDecision, type MortgageParams
 } from '@/lib/calculations/mortgage';
 import { taylorRule, buildHistoricalTaylor, sensitivityMatrix, DEFAULT_TAYLOR, type TaylorParams } from '@/lib/calculations/taylor';
-import { CONSENSUS, CPI_DATA_PL, GDP_QUARTERLY_PL } from '@/lib/static-data';
+import { CONSENSUS, CPI_DATA_PL, GDP_QUARTERLY_PL, PMI_DATA_PL, NBP_GDP_PROJECTION } from '@/lib/static-data';
 import { projectDebt, sensitivityAnalysis, findCrossing, FISCAL_DEFAULTS, INITIAL_DEBT, type FiscalParams } from '@/lib/calculations/fiscal';
+import { pmiToGDP, compositeNowcast, buildPMIvsGDP, pmiScenarioTable, type IndicatorInput } from '@/lib/calculations/leading';
 
 // ===== Shared UI =====
 
@@ -743,84 +744,271 @@ function LeadingIndicatorsTool() {
     const industrialQuery = useIndustrialProduction();
     const retailQuery = useRetailSales();
     const yieldCurve = useYieldCurve();
+    const [showMethodology, setShowMethodology] = useState(false);
 
     const y10 = yieldCurve.curve[2]?.yield ?? 4.96;
     const y2 = yieldCurve.curve[0]?.yield ?? 3.56;
     const spread = +(y10 - y2).toFixed(2);
 
-    const isLoading = industrialQuery.isLoading || retailQuery.isLoading;
-
-    // Get last values — use null to indicate loading
     const lastIndustrial = industrialQuery.data?.data?.PL?.slice(-1)[0]?.value ?? null;
     const lastRetail = retailQuery.data?.data?.PL?.slice(-1)[0]?.value ?? null;
 
-    // Simple CLI calculation
-    const indicators = [
-        { name: 'PMI Manufacturing', value: 48.6, weight: 0.30, loading: false, signal: 48.6 >= 50 ? '🟢' : 48.6 >= 47 ? '🟡' : '🔴' },
-        { name: 'Produkcja przem.', value: lastIndustrial ?? 0, weight: 0.25, loading: lastIndustrial === null, signal: lastIndustrial === null ? '⏳' : lastIndustrial > 2 ? '🟢' : lastIndustrial > 0 ? '🟡' : '🔴' },
-        { name: 'Sprzedaż det.', value: lastRetail ?? 0, weight: 0.20, loading: lastRetail === null, signal: lastRetail === null ? '⏳' : lastRetail > 2 ? '🟢' : lastRetail > 0 ? '🟡' : '🔴' },
-        { name: 'Yield spread 10Y-2Y', value: spread, weight: 0.10, loading: false, signal: spread > 0 ? '🟢' : '🔴' },
+    // Current PMI from static data (latest)
+    const currentPMI = PMI_DATA_PL[PMI_DATA_PL.length - 1].value;
+    const wagesYoY = 8.4; // from STATIC_MACRO.wages
+
+    // Build indicator array
+    const indicators: IndicatorInput[] = [
+        { name: 'PMI', value: currentPMI, weight: 0.35 },
+        { name: 'IP', value: lastIndustrial ?? 2.0, weight: 0.25, loading: lastIndustrial === null },
+        { name: 'RETAIL', value: lastRetail ?? 3.0, weight: 0.20, loading: lastRetail === null },
+        { name: 'YIELD', value: spread, weight: 0.10 },
+        { name: 'WAGES', value: wagesYoY, weight: 0.10 },
     ];
 
-    // Weighted signal
-    const readyIndicators = indicators.filter(i => !i.loading);
-    const greenCount = readyIndicators.filter(i => i.signal === '🟢').length;
-    const overallSignal = isLoading ? '⏳ ŁADOWANIE...' : greenCount >= 3 ? '🟢 EXPANSION' : greenCount >= 2 ? '🟡 NEUTRAL' : '🔴 CONTRACTION';
-    const cli = readyIndicators.reduce((s, ind) => {
-        const normalized = ind.name.includes('PMI') ? (ind.value - 50) / 5 : ind.value / 5;
-        return s + normalized * ind.weight;
-    }, 0);
+    const nowcast = useMemo(() => compositeNowcast(indicators), [currentPMI, lastIndustrial, lastRetail, spread]);
+    const scenarios = useMemo(() => pmiScenarioTable(), []);
+
+    // Historical PMI vs GDP
+    const historicalData = useMemo(() => buildPMIvsGDP(PMI_DATA_PL, GDP_QUARTERLY_PL), []);
+
+    const indicatorLabels: Record<string, string> = {
+        'PMI': 'PMI Manufacturing',
+        'IP': 'Produkcja przem. YoY',
+        'RETAIL': 'Sprzedaż det. YoY',
+        'YIELD': 'Yield spread 10Y-2Y',
+        'WAGES': 'Wynagrodzenia YoY',
+    };
+
+    const signalEmoji = (s: string) => s === 'green' ? '🟢' : s === 'yellow' ? '🟡' : '🔴';
+
+    const phaseColors: Record<string, string> = {
+        'EXPANSION': '#22C55E', 'RECOVERY': '#38BDF8',
+        'SLOWDOWN': '#FB923C', 'CONTRACTION': '#EF4444',
+    };
+    const phaseLabels: Record<string, string> = {
+        'EXPANSION': 'EKSPANSJA ↑', 'RECOVERY': 'OŻYWIENIE ↗',
+        'SLOWDOWN': 'SPOWOLNIENIE ↘', 'CONTRACTION': 'KONTRAKCJA ↓',
+    };
 
     return (
-        <div className="space-y-2">
-            <ChartPanel title="LEADING INDICATORS — BAROMETR KONIUNKTURY" source="Eurostat · Stooq · S&P">
-                <div className="grid grid-cols-3 gap-3 p-3">
-                    <div className="bb-panel p-3 text-center col-span-1">
-                        <div className="text-[9px] text-bb-muted uppercase">Barometr</div>
-                        <div className="text-lg font-mono font-bold">{overallSignal}</div>
-                        <div className="text-xs text-bb-muted font-mono">CLI = {cli.toFixed(2)}</div>
+        <div className="space-y-3">
+            {/* 1. GDP Nowcast headline */}
+            <ChartPanel title="GDP NOWCAST — SZACUNEK PKB" source="Model · S&P Global · Eurostat · NBP">
+                <div className="grid grid-cols-4 gap-3 p-3">
+                    <div className="bb-panel p-4 text-center">
+                        <div className="text-[9px] text-bb-accent tracking-wider mb-1">PMI BRIDGE</div>
+                        <div className="text-3xl font-mono font-bold text-bb-accent">{nowcast.pmiNowcast.toFixed(1)}%</div>
+                        <div className="text-[9px] text-bb-muted mt-1">GDP = 0.582×PMI − 27.8 + 1.0</div>
                     </div>
-                    <div className="bb-panel p-3 text-center">
-                        <div className="text-[9px] text-bb-muted uppercase">Yield 10Y-2Y</div>
-                        <div className={`text-lg font-mono font-bold ${spread > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                            {spread > 0 ? '+' : ''}{spread.toFixed(2)}pp
-                        </div>
-                        <div className="text-[9px] text-bb-muted">{spread > 0 ? 'Normalna krzywa' : '⚠️ Inwersja!'}</div>
+                    <div className="bb-panel p-4 text-center">
+                        <div className="text-[9px] text-bb-muted tracking-wider mb-1">COMPOSITE (5 wsk.)</div>
+                        <div className="text-3xl font-mono font-bold text-bb-text">{nowcast.compositeNowcast.toFixed(1)}%</div>
+                        <div className="text-[9px] text-bb-muted mt-1">Weighted avg (GS CAI)</div>
                     </div>
-                    <div className="bb-panel p-3 text-center">
-                        <div className="text-[9px] text-bb-muted uppercase">PMI</div>
-                        <div className={`text-lg font-mono font-bold ${48.6 >= 50 ? 'text-green-400' : 'text-yellow-400'}`}>
-                            48.6
+                    <div className="bb-panel p-4 text-center">
+                        <div className="text-[9px] text-bb-muted tracking-wider mb-1">KONSENSUS NBP</div>
+                        <div className="text-3xl font-mono font-bold text-bb-text">{NBP_GDP_PROJECTION.year2026}%</div>
+                        <div className="text-[9px] text-bb-muted mt-1">{NBP_GDP_PROJECTION.source}</div>
+                    </div>
+                    <div className="bb-panel p-4 text-center">
+                        <div className="text-[9px] text-bb-muted tracking-wider mb-1">FAZA CYKLU</div>
+                        <div className="text-xl font-mono font-bold" style={{ color: phaseColors[nowcast.cyclePhase] }}>
+                            {phaseLabels[nowcast.cyclePhase]}
                         </div>
-                        <div className="text-[9px] text-bb-muted">{48.6 >= 50 ? 'Ekspansja' : 'Kontrakcja'}</div>
+                        <div className="text-[9px] text-bb-muted mt-1">CLI = {nowcast.cliValue.toFixed(0)}/100</div>
                     </div>
                 </div>
+            </ChartPanel>
 
-                <table className="w-full text-xs mt-2">
+            {/* 2. Business cycle gauge */}
+            <div className="bb-panel p-4">
+                <div className="text-[10px] text-bb-muted tracking-wider font-semibold mb-3">🧭 BAROMETR CYKLU KONIUNKTURALNEGO (OECD)</div>
+                <div className="grid grid-cols-4 gap-2 text-center">
+                    {(['RECOVERY', 'EXPANSION', 'SLOWDOWN', 'CONTRACTION'] as const).map(phase => {
+                        const active = nowcast.cyclePhase === phase;
+                        return (
+                            <div key={phase} className="p-3 rounded-lg transition-all" style={{
+                                background: active ? `${phaseColors[phase]}15` : '#0F172A',
+                                border: active ? `2px solid ${phaseColors[phase]}` : '1px solid #1E293B',
+                            }}>
+                                <div className="text-xl mb-1">
+                                    {phase === 'RECOVERY' ? '↗️' : phase === 'EXPANSION' ? '🚀' : phase === 'SLOWDOWN' ? '📉' : '🔻'}
+                                </div>
+                                <div className="text-[10px] font-mono font-semibold" style={{ color: active ? phaseColors[phase] : '#475569' }}>
+                                    {phaseLabels[phase]}
+                                </div>
+                                <div className="text-[8px] text-bb-muted mt-0.5">
+                                    {phase === 'RECOVERY' ? 'CLI↑ PKB<trend' : phase === 'EXPANSION' ? 'CLI↑ PKB>trend' : phase === 'SLOWDOWN' ? 'CLI↓ PKB>trend' : 'CLI↓ PKB<trend'}
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
+
+            {/* 3. Indicator contribution table (GS CAI style) */}
+            <div className="bb-panel">
+                <div className="px-3 pt-3 text-[10px] text-bb-muted tracking-wider font-semibold">📊 WKŁAD WSKAŹNIKÓW DO NOWCASTU (GS CAI)</div>
+                <table className="w-full text-[11px] mt-2">
                     <thead>
                         <tr className="border-b border-bb-border text-[10px] text-bb-muted">
                             <th className="text-left py-1.5 px-3">Wskaźnik</th>
-                            <th className="text-right py-1.5">Ostatnia</th>
+                            <th className="text-right py-1.5">Wartość</th>
                             <th className="text-right py-1.5">Waga</th>
+                            <th className="text-right py-1.5">Wkład PKB</th>
+                            <th className="text-right py-1.5">Pasek</th>
                             <th className="text-right py-1.5 px-3">Sygnał</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {indicators.map((ind, i) => (
-                            <tr key={i} className="border-b border-bb-border/20">
-                                <td className="py-1.5 px-3 text-bb-text">{ind.name}</td>
-                                <td className="py-1.5 text-right font-mono text-bb-accent">{ind.value.toFixed(1)}{ind.name.includes('spread') ? 'pp' : ind.name.includes('PMI') ? '' : '%'}</td>
-                                <td className="py-1.5 text-right font-mono text-bb-muted">{(ind.weight * 100).toFixed(0)}%</td>
-                                <td className="py-1.5 text-right px-3">{ind.signal}</td>
-                            </tr>
-                        ))}
+                        {nowcast.contributions.map((c, i) => {
+                            const barW = Math.min(100, Math.max(0, (c.gdpContrib + 2) / 8 * 100));
+                            return (
+                                <tr key={i} className="border-b border-bb-border/20">
+                                    <td className="py-2 px-3 text-bb-text font-mono">{indicatorLabels[c.name] || c.name}</td>
+                                    <td className="py-2 text-right font-mono text-bb-accent">
+                                        {indicators[i]?.value?.toFixed(1)}{c.name === 'YIELD' ? 'pp' : c.name === 'PMI' ? '' : '%'}
+                                    </td>
+                                    <td className="py-2 text-right font-mono text-bb-muted">{(c.weight * 100).toFixed(0)}%</td>
+                                    <td className="py-2 text-right font-mono" style={{ color: c.gdpContrib > 3 ? '#22C55E' : c.gdpContrib > 1 ? '#FBBF24' : '#EF4444' }}>
+                                        {c.gdpContrib >= 0 ? '+' : ''}{c.gdpContrib.toFixed(1)}%
+                                    </td>
+                                    <td className="py-2 text-right w-24">
+                                        <div className="h-1.5 bg-bb-border/30 rounded-full inline-block w-20">
+                                            <div className="h-1.5 rounded-full" style={{
+                                                width: `${barW}%`,
+                                                background: c.signal === 'green' ? '#22C55E' : c.signal === 'yellow' ? '#FBBF24' : '#EF4444'
+                                            }} />
+                                        </div>
+                                    </td>
+                                    <td className="py-2 text-right px-3">{signalEmoji(c.signal)}</td>
+                                </tr>
+                            );
+                        })}
                     </tbody>
                 </table>
+                <div className="px-3 py-2 text-[9px] text-bb-muted border-t border-bb-border/30">
+                    Weighted GDP Nowcast = Σ (wkład × waga) = <span className="text-bb-accent font-bold">{nowcast.compositeNowcast.toFixed(2)}%</span>
+                </div>
+            </div>
+
+            {/* 4. PMI Scenario table */}
+            <ChartPanel title="PMI → PKB BRIDGE EQUATION (S&P Global)" source="OLS regression 2008-2019">
+                <div className="px-3 pb-2">
+                    <div className="text-[10px] text-bb-muted mb-2">GDP_annual = 0.582 × PMI − 27.8 + 1.0 (Poland adj.)</div>
+                    <table className="w-full text-[11px] font-mono" style={{ borderCollapse: 'collapse' }}>
+                        <thead>
+                            <tr>
+                                <th className="p-1.5 text-left text-bb-muted border-b border-bb-border text-[10px]">PMI</th>
+                                <th className="p-1.5 text-center text-bb-muted border-b border-bb-border text-[10px]">PKB est.</th>
+                                <th className="p-1.5 text-left text-bb-muted border-b border-bb-border text-[10px]">Scenariusz</th>
+                                <th className="p-1.5 text-right text-bb-muted border-b border-bb-border text-[10px]">Pasek</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {scenarios.map(s => {
+                                const isCurrent = s.pmi === currentPMI;
+                                const barW = Math.min(100, Math.max(0, (s.gdp + 5) / 12 * 100));
+                                return (
+                                    <tr key={s.pmi} style={{
+                                        background: isCurrent ? 'rgba(255,107,0,0.12)' : undefined,
+                                        borderLeft: isCurrent ? '3px solid #FF6B00' : '3px solid transparent',
+                                    }}>
+                                        <td className="p-1.5 border-b border-bb-bg" style={{ color: isCurrent ? '#FF6B00' : s.pmi >= 50 ? '#22C55E' : '#FB923C', fontWeight: isCurrent ? 700 : 400 }}>
+                                            {s.pmi.toFixed(1)}
+                                        </td>
+                                        <td className="p-1.5 text-center border-b border-bb-bg" style={{ color: s.gdp > 3 ? '#22C55E' : s.gdp > 0 ? '#FBBF24' : '#EF4444', fontWeight: isCurrent ? 700 : 400 }}>
+                                            {s.gdp >= 0 ? '+' : ''}{s.gdp.toFixed(1)}%
+                                        </td>
+                                        <td className={`p-1.5 border-b border-bb-bg ${isCurrent ? 'text-bb-accent' : 'text-bb-muted'}`}>
+                                            {s.label}
+                                        </td>
+                                        <td className="p-1.5 border-b border-bb-bg">
+                                            <div className="h-1.5 bg-bb-border/30 rounded-full w-full">
+                                                <div className="h-1.5 rounded-full" style={{
+                                                    width: `${barW}%`,
+                                                    background: s.gdp > 3 ? '#22C55E' : s.gdp > 0 ? '#FBBF24' : '#EF4444'
+                                                }} />
+                                            </div>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                    <div className="text-[9px] text-bb-muted mt-2">🟧 = obecny PMI ({currentPMI}). Każdy punkt PMI ≈ 0.58pp PKB.</div>
+                </div>
             </ChartPanel>
-            <Disclaimer />
+
+            {/* 5. Historical dual-axis: PMI vs GDP */}
+            <ChartPanel title="PMI vs PKB — HISTORIA (dual axis)" source="S&P Global · Eurostat">
+                <div className="text-[9px] text-bb-muted px-3 mb-1">PMI prowadzi PKB o ~1 kwartał. Szary pas = PMI {'<'} 50 (kontrakcja)</div>
+                <ResponsiveContainer width="100%" height={320}>
+                    <ComposedChart data={historicalData} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
+                        <defs>
+                            <linearGradient id="pmiGrad" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stopColor="#FF6B00" stopOpacity={0.2} />
+                                <stop offset="100%" stopColor="#FF6B00" stopOpacity={0.02} />
+                            </linearGradient>
+                        </defs>
+                        <XAxis dataKey="date" tick={{ fill: '#475569', fontSize: 8 }} tickLine={false} axisLine={{ stroke: '#1E293B' }} interval={5} />
+                        <YAxis yAxisId="pmi" tick={{ fill: '#475569', fontSize: 8 }} tickLine={false} axisLine={{ stroke: '#1E293B' }}
+                            domain={[30, 62]} label={{ value: 'PMI', fill: '#475569', fontSize: 9, angle: -90, position: 'insideLeft' }} />
+                        <YAxis yAxisId="gdp" orientation="right" tick={{ fill: '#475569', fontSize: 8 }} tickLine={false} axisLine={{ stroke: '#1E293B' }}
+                            domain={[-10, 14]} unit="%" label={{ value: 'PKB YoY', fill: '#475569', fontSize: 9, angle: 90, position: 'insideRight' }} />
+                        <Tooltip content={({ active, payload }: { active?: boolean; payload?: readonly { payload: Record<string, number | string | null> }[] }) => {
+                            if (!active || !payload?.[0]) return null;
+                            const d = payload[0].payload;
+                            return (
+                                <div className="bg-bb-surface border border-bb-border rounded p-2.5 text-[11px] font-mono shadow-lg">
+                                    <div className="text-bb-muted mb-1 font-semibold">{d.date}</div>
+                                    <div className="text-[#FF6B00]">PMI: {Number(d.pmi).toFixed(1)}</div>
+                                    {d.gdp !== null && <div className="text-[#38BDF8]">PKB YoY: {Number(d.gdp).toFixed(1)}%</div>}
+                                    <div className="text-bb-muted">PMI→PKB est: {Number(d.pmiGDPEstimate).toFixed(1)}%</div>
+                                </div>
+                            );
+                        }} />
+                        <ReferenceLine yAxisId="pmi" y={50} stroke="#334155" strokeDasharray="4 4" label={{ value: 'PMI=50', fill: '#475569', fontSize: 8, position: 'right' }} />
+                        <ReferenceLine yAxisId="gdp" y={0} stroke="#334155" strokeDasharray="4 4" />
+                        <Area yAxisId="pmi" type="monotone" dataKey="pmi" stroke="none" fill="url(#pmiGrad)" fillOpacity={0.4} />
+                        <Line yAxisId="pmi" type="monotone" dataKey="pmi" stroke="#FF6B00" strokeWidth={2} dot={false} name="PMI" />
+                        <Line yAxisId="gdp" type="monotone" dataKey="gdp" stroke="#38BDF8" strokeWidth={2} dot={false} name="PKB YoY" connectNulls />
+                        <Line yAxisId="gdp" type="monotone" dataKey="pmiGDPEstimate" stroke="#A78BFA" strokeWidth={1} strokeDasharray="4 4" dot={false} name="PMI→PKB est." />
+                    </ComposedChart>
+                </ResponsiveContainer>
+                <div className="flex gap-5 justify-center mt-2 text-[10px] pb-2">
+                    <span className="flex items-center gap-1.5"><span className="inline-block w-5 h-[3px] bg-[#FF6B00] rounded" /><span className="text-bb-muted">PMI (lewa oś)</span></span>
+                    <span className="flex items-center gap-1.5"><span className="inline-block w-5 h-[3px] bg-[#38BDF8] rounded" /><span className="text-bb-muted">PKB YoY (prawa oś)</span></span>
+                    <span className="flex items-center gap-1.5"><span className="inline-block w-5 h-[2px] bg-[#A78BFA] rounded" style={{ borderTop: '1px dashed #A78BFA' }} /><span className="text-bb-muted">PMI→PKB estymacja</span></span>
+                </div>
+            </ChartPanel>
+
+            {/* 6. Methodology */}
+            <div className="bb-panel overflow-hidden">
+                <button onClick={() => setShowMethodology(!showMethodology)}
+                    className="w-full px-4 py-3 bg-transparent border-none text-bb-muted text-[10px] text-left cursor-pointer flex justify-between items-center tracking-wider font-semibold"
+                >
+                    ℹ️ METODOLOGIA I ŹRÓDŁA
+                    <span>{showMethodology ? '▲' : '▼'}</span>
+                </button>
+                {showMethodology && (
+                    <div className="px-4 pb-4 text-[11px] text-bb-muted leading-relaxed space-y-2.5">
+                        <p><strong className="text-bb-text">PMI Bridge Equation:</strong> GDP_ann = 0.582 × PMI − 27.8. Źródło: S&P Global (2023), OLS regression na danych 2008-2019. Każdy punkt PMI ≈ 0.58pp PKB. Dla Polski +1.0pp adjustment (wyższy trend wzrostu vs DM).</p>
+                        <p><strong className="text-bb-text">PMI 50 ≠ 0% PKB:</strong> W gospodarkach rozwijających się (EM) PMI=50 odpowiada PKB ~2-4% (Markit). Polska od 2018 klasyfikowana jako Developed Market (FTSE Russell), ale trend wzrostu wciąż wyższy niż DM avg.</p>
+                        <p><strong className="text-bb-text">Composite Nowcast:</strong> Inspirowane Goldman Sachs Current Activity Indicator (CAI) — 24 wskaźniki → GDP equivalent. My upraszczamy do 5: PMI (35%), Produkcja (25%), Retail (20%), Yield spread (10%), Wages (10%).</p>
+                        <p><strong className="text-bb-text">Cykl koniunkturalny:</strong> Metoda OECD CLI — kwadrant: powyżej/poniżej trendu × rosnący/malejący. CLI = amplitude-adjusted, centered=100 (u nas 50).</p>
+                        <p><strong className="text-bb-text">Ograniczenia:</strong> PMI obejmuje tylko przemysł (wg S&P Global korelacja z PKB ~72-82% w strefie euro). Brak subindeksów: nowe zamówienia, zatrudnienie, backlog. Brak PMI Services dla Polski.</p>
+                        <p className="text-yellow-400 font-semibold text-[10px] mt-3">
+                            ⚠️ Nowcast to szacunek modelowy, nie prognoza. Nie stanowi rekomendacji inwestycyjnej.
+                        </p>
+                    </div>
+                )}
+            </div>
         </div>
     );
 }
+
 
 // ===== TOOL 5: REER =====
 

@@ -139,3 +139,54 @@ export const GDP_QUARTERLY_PL: { q: string; value: number }[] = [
     { q: '2025Q1', value: 3.4 }, { q: '2025Q2', value: 3.3 },
     { q: '2025Q3', value: 3.8 }, { q: '2025Q4', value: 3.6 },
 ];
+
+// ═══════════════════════════════════════════════════════════════
+// PMI Manufacturing Poland (S&P Global, monthly, 2020-2025)
+// Source: S&P Global / Markit Poland Manufacturing PMI
+// ═══════════════════════════════════════════════════════════════
+
+export const PMI_DATA_PL: { date: string; value: number }[] = [
+    { date: '2020-01', value: 47.4 }, { date: '2020-02', value: 48.2 },
+    { date: '2020-03', value: 42.4 }, { date: '2020-04', value: 31.9 },
+    { date: '2020-05', value: 40.6 }, { date: '2020-06', value: 47.2 },
+    { date: '2020-07', value: 52.8 }, { date: '2020-08', value: 50.6 },
+    { date: '2020-09', value: 50.8 }, { date: '2020-10', value: 50.8 },
+    { date: '2020-11', value: 50.8 }, { date: '2020-12', value: 51.7 },
+    { date: '2021-01', value: 51.9 }, { date: '2021-02', value: 53.4 },
+    { date: '2021-03', value: 54.3 }, { date: '2021-04', value: 53.7 },
+    { date: '2021-05', value: 57.2 }, { date: '2021-06', value: 59.4 },
+    { date: '2021-07', value: 57.6 }, { date: '2021-08', value: 56.0 },
+    { date: '2021-09', value: 53.4 }, { date: '2021-10', value: 53.8 },
+    { date: '2021-11', value: 54.4 }, { date: '2021-12', value: 56.1 },
+    { date: '2022-01', value: 54.5 }, { date: '2022-02', value: 52.4 },
+    { date: '2022-03', value: 52.7 }, { date: '2022-04', value: 52.4 },
+    { date: '2022-05', value: 48.5 }, { date: '2022-06', value: 44.4 },
+    { date: '2022-07', value: 42.1 }, { date: '2022-08', value: 40.9 },
+    { date: '2022-09', value: 43.0 }, { date: '2022-10', value: 42.0 },
+    { date: '2022-11', value: 43.4 }, { date: '2022-12', value: 45.6 },
+    { date: '2023-01', value: 47.5 }, { date: '2023-02', value: 48.5 },
+    { date: '2023-03', value: 48.3 }, { date: '2023-04', value: 47.0 },
+    { date: '2023-05', value: 47.0 }, { date: '2023-06', value: 45.1 },
+    { date: '2023-07', value: 43.7 }, { date: '2023-08', value: 43.1 },
+    { date: '2023-09', value: 43.9 }, { date: '2023-10', value: 44.5 },
+    { date: '2023-11', value: 48.7 }, { date: '2023-12', value: 47.4 },
+    { date: '2024-01', value: 47.1 }, { date: '2024-02', value: 47.9 },
+    { date: '2024-03', value: 48.0 }, { date: '2024-04', value: 45.9 },
+    { date: '2024-05', value: 45.0 }, { date: '2024-06', value: 45.0 },
+    { date: '2024-07', value: 47.3 }, { date: '2024-08', value: 47.8 },
+    { date: '2024-09', value: 48.6 }, { date: '2024-10', value: 49.2 },
+    { date: '2024-11', value: 48.9 }, { date: '2024-12', value: 48.2 },
+    { date: '2025-01', value: 48.6 }, { date: '2025-02', value: 50.6 },
+    { date: '2025-03', value: 50.7 }, { date: '2025-04', value: 50.4 },
+    { date: '2025-05', value: 49.8 }, { date: '2025-06', value: 49.2 },
+    { date: '2025-07', value: 48.9 }, { date: '2025-08', value: 48.4 },
+    { date: '2025-09', value: 48.6 }, { date: '2025-10', value: 49.1 },
+    { date: '2025-11', value: 48.9 }, { date: '2025-12', value: 48.4 },
+];
+
+// NBP GDP projection (for consensus comparison)
+export const NBP_GDP_PROJECTION = {
+    year2025: 3.4,
+    year2026: 3.6,
+    source: 'Projekcja NBP, XI.2025',
+};
