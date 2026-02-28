@@ -9,8 +9,9 @@ import { ChartPanel, BloombergTooltip, BloombergCursor, CHART_ANIM } from '@/com
 import {
     useNBPInterestRates, useWibor, useYieldCurve,
     useInflationMonthly, useGDPQuarterly, useIndustrialProduction, useRetailSales,
-    useNBPCurrencyHistory, usePLvsEU,
+    usePLvsEU,
 } from '@/lib/hooks';
+import { useQuery } from '@tanstack/react-query';
 import {
     buildRatePath, projectWIBOR, calculateMonthlyPayment, projectYieldCurve,
     RPP_DATES_2026, PRESETS, WIBOR_SPREADS,
@@ -156,8 +157,8 @@ function RateSimulator() {
                                                 {[-50, -25, 0, 25, 50].map(bp => (
                                                     <button key={bp} onClick={() => setChange(i, bp)}
                                                         className={`text-[9px] px-1.5 py-0.5 rounded-sm font-mono transition ${d.change === bp
-                                                                ? bp < 0 ? 'bg-green-900/50 text-green-400' : bp > 0 ? 'bg-red-900/50 text-red-400' : 'bg-bb-accent/20 text-bb-accent'
-                                                                : 'bg-bb-border/20 text-bb-muted hover:bg-bb-border/40'
+                                                            ? bp < 0 ? 'bg-green-900/50 text-green-400' : bp > 0 ? 'bg-red-900/50 text-red-400' : 'bg-bb-accent/20 text-bb-accent'
+                                                            : 'bg-bb-border/20 text-bb-muted hover:bg-bb-border/40'
                                                             }`}>
                                                         {bp > 0 ? `+${bp}` : bp === 0 ? '=' : bp}
                                                     </button>
@@ -396,22 +397,25 @@ function LeadingIndicatorsTool() {
     const y2 = yieldCurve.curve[0]?.yield ?? 3.56;
     const spread = +(y10 - y2).toFixed(2);
 
-    // Get last values
-    const lastIndustrial = industrialQuery.data?.data?.PL?.slice(-1)[0]?.value ?? 0;
-    const lastRetail = retailQuery.data?.data?.PL?.slice(-1)[0]?.value ?? 0;
+    const isLoading = industrialQuery.isLoading || retailQuery.isLoading;
+
+    // Get last values — use null to indicate loading
+    const lastIndustrial = industrialQuery.data?.data?.PL?.slice(-1)[0]?.value ?? null;
+    const lastRetail = retailQuery.data?.data?.PL?.slice(-1)[0]?.value ?? null;
 
     // Simple CLI calculation
     const indicators = [
-        { name: 'PMI Manufacturing', value: 48.6, weight: 0.30, benchmark: 50, signal: 48.6 >= 50 ? '🟢' : 48.6 >= 47 ? '🟡' : '🔴' },
-        { name: 'Produkcja przem.', value: lastIndustrial, weight: 0.25, benchmark: 0, signal: lastIndustrial > 2 ? '🟢' : lastIndustrial > 0 ? '🟡' : '🔴' },
-        { name: 'Sprzedaż det.', value: lastRetail, weight: 0.20, benchmark: 0, signal: lastRetail > 2 ? '🟢' : lastRetail > 0 ? '🟡' : '🔴' },
-        { name: 'Yield spread 10Y-2Y', value: spread, weight: 0.10, benchmark: 0, signal: spread > 0 ? '🟢' : '🔴' },
+        { name: 'PMI Manufacturing', value: 48.6, weight: 0.30, loading: false, signal: 48.6 >= 50 ? '🟢' : 48.6 >= 47 ? '🟡' : '🔴' },
+        { name: 'Produkcja przem.', value: lastIndustrial ?? 0, weight: 0.25, loading: lastIndustrial === null, signal: lastIndustrial === null ? '⏳' : lastIndustrial > 2 ? '🟢' : lastIndustrial > 0 ? '🟡' : '🔴' },
+        { name: 'Sprzedaż det.', value: lastRetail ?? 0, weight: 0.20, loading: lastRetail === null, signal: lastRetail === null ? '⏳' : lastRetail > 2 ? '🟢' : lastRetail > 0 ? '🟡' : '🔴' },
+        { name: 'Yield spread 10Y-2Y', value: spread, weight: 0.10, loading: false, signal: spread > 0 ? '🟢' : '🔴' },
     ];
 
     // Weighted signal
-    const greenCount = indicators.filter(i => i.signal === '🟢').length;
-    const overallSignal = greenCount >= 3 ? '🟢 EXPANSION' : greenCount >= 2 ? '🟡 NEUTRAL' : '🔴 CONTRACTION';
-    const cli = indicators.reduce((s, ind) => {
+    const readyIndicators = indicators.filter(i => !i.loading);
+    const greenCount = readyIndicators.filter(i => i.signal === '🟢').length;
+    const overallSignal = isLoading ? '⏳ ŁADOWANIE...' : greenCount >= 3 ? '🟢 EXPANSION' : greenCount >= 2 ? '🟡 NEUTRAL' : '🔴 CONTRACTION';
+    const cli = readyIndicators.reduce((s, ind) => {
         const normalized = ind.name.includes('PMI') ? (ind.value - 50) / 5 : ind.value / 5;
         return s + normalized * ind.weight;
     }, 0);
@@ -470,7 +474,13 @@ function LeadingIndicatorsTool() {
 // ===== TOOL 5: REER =====
 
 function REERTool() {
-    const eurHistory = useNBPCurrencyHistory('EUR', 365);
+    // Use correct NBP endpoint: exchangerates/rates/a/EUR/last/255
+    // NBP caps at 255 per request
+    const eurHistory = useQuery<{ rates: { effectiveDate: string; mid: number }[] }>({
+        queryKey: ['nbp', 'eurpln-history-255'],
+        queryFn: () => fetch('/api/nbp?endpoint=exchangerates/rates/a/EUR/last/255').then(r => r.json()),
+        staleTime: 60 * 60 * 1000,
+    });
     const cpiPL = useInflationMonthly('PL');
     const plEuCpi = usePLvsEU('cpi');
 
@@ -480,22 +490,21 @@ function REERTool() {
 
     // Build REER index from EUR/PLN history
     const reerData = useMemo(() => {
-        const rates = eurHistory.data as { effectiveDate?: string; mid?: number }[] | undefined;
-        if (!rates || !Array.isArray(rates) || rates.length === 0) return [];
+        const rates = eurHistory.data?.rates;
+        if (!rates || rates.length === 0) return [];
 
-        const base = rates[0]?.mid ?? 4.30;
-        // Simple: sample every 7th day, compute NEER + REER approximate
+        const base = rates[0].mid;
+        // Sample every 5th day for ~50 data points
         return rates
-            .filter((_: unknown, i: number) => i % 7 === 0)
-            .map((r: { effectiveDate?: string; mid?: number }) => {
-                const neer = ((r.mid ?? base) / base) * 100;
-                // REER adjustment: cumulative inflation differential (simplified linear)
-                const dayIdx = rates.indexOf(r);
-                const monthsFraction = dayIdx / 30;
+            .filter((_, i) => i % 5 === 0 || i === rates.length - 1)
+            .map((r, idx, arr) => {
+                const neer = (r.mid / base) * 100;
+                // REER adjustment: cumulative inflation differential (simplified)
+                const monthsFraction = (idx / arr.length) * (rates.length / 30);
                 const cpiAdjust = 1 + (monthsFraction * (lastCpiPL - lastCpiEU) / 100);
                 const reer = neer * cpiAdjust;
                 return {
-                    date: r.effectiveDate?.slice(5) || '',
+                    date: r.effectiveDate.slice(5),
                     neer: +neer.toFixed(1),
                     reer: +reer.toFixed(1),
                 };
@@ -574,8 +583,8 @@ export default function ToolsPage() {
                 {TABS.map(tab => (
                     <button key={tab.key} onClick={() => setActiveTab(tab.key)}
                         className={`px-4 py-2 text-[10px] font-mono tracking-wider transition whitespace-nowrap ${activeTab === tab.key
-                                ? 'text-bb-accent border-b-2 border-bb-accent bg-bb-accent/5'
-                                : 'text-bb-muted hover:text-bb-text hover:bg-bb-border/10'
+                            ? 'text-bb-accent border-b-2 border-bb-accent bg-bb-accent/5'
+                            : 'text-bb-muted hover:text-bb-text hover:bg-bb-border/10'
                             }`}>
                         {tab.label}
                     </button>
