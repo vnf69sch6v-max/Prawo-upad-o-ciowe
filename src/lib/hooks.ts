@@ -150,6 +150,88 @@ export function useGUSData(indicator: string = 'all', years = 3) {
     });
 }
 
+// ─── Eurostat (Monthly/Quarterly Data) ───────────────────
+
+interface EurostatTimeSeries {
+    date: string;
+    value: number | null;
+}
+
+interface EurostatResult {
+    dataset: string;
+    label: string;
+    geo: string[];
+    updated: string;
+    data: Record<string, EurostatTimeSeries[]>;
+    source: string;
+    indicator?: string;
+    indicatorLabel?: string;
+}
+
+export function useEurostat(indicator: string, geo = 'PL') {
+    return useQuery<EurostatResult>({
+        queryKey: ['eurostat', indicator, geo],
+        queryFn: () => fetchJSON(`/api/eurostat?indicator=${indicator}&geo=${geo}`),
+        staleTime: 12 * 60 * 60 * 1000, // 12h — Eurostat updates monthly
+    });
+}
+
+// Convenience hooks for specific indicators
+export function useInflationMonthly(geo = 'PL') {
+    return useEurostat('cpi', geo);
+}
+
+export function useUnemploymentMonthly(geo = 'PL') {
+    return useEurostat('unemployment', geo);
+}
+
+export function useGDPQuarterly(geo = 'PL') {
+    return useEurostat('gdp_yoy', geo);
+}
+
+export function useGDPQoQ(geo = 'PL') {
+    return useEurostat('gdp_qoq', geo);
+}
+
+export function useIndustrialProduction(geo = 'PL') {
+    return useEurostat('industrial', geo);
+}
+
+export function useRetailSales(geo = 'PL') {
+    return useEurostat('retail', geo);
+}
+
+export function useTradeData(flow: 'trade_balance' | 'exports' | 'imports') {
+    return useEurostat(flow, 'PL');
+}
+
+export function useCurrentAccount() {
+    return useEurostat('current_account', 'PL');
+}
+
+// PL vs EU comparison — fetches both geos at once
+export function usePLvsEU(indicator: string) {
+    return useEurostat(indicator, 'PL,EU27_2020');
+}
+
+// ─── Bond Yield Curve (Stooq Live) ──────────────────────
+
+export function useYieldCurve() {
+    const y2 = useStooq('2ypl.b', 30);
+    const y5 = useStooq('5ypl.b', 30);
+    const y10 = useStooq('10ypl.b', 30);
+
+    return {
+        y2, y5, y10,
+        isLoading: y2.isLoading || y5.isLoading || y10.isLoading,
+        curve: [
+            { tenor: '2Y', yield: y2.data?.latest?.close ?? null, history: y2.data?.data },
+            { tenor: '5Y', yield: y5.data?.latest?.close ?? null, history: y5.data?.data },
+            { tenor: '10Y', yield: y10.data?.latest?.close ?? null, history: y10.data?.data },
+        ],
+    };
+}
+
 // ─── Composite Dashboard Hook ────────────────────────────
 
 export function useDashboardData() {
@@ -159,6 +241,10 @@ export function useDashboardData() {
     const interestRates = useNBPInterestRates();
     const wibor = useWibor();
     const gus = useGUSData('all', 3);
+    const cpi = useInflationMonthly();
+    const unemployment = useUnemploymentMonthly();
+    const gdp = useGDPQuarterly();
+    const bondYield = useStooq('10ypl.b', 1);
 
     return {
         nbpRates,
@@ -167,9 +253,14 @@ export function useDashboardData() {
         interestRates,
         wibor,
         gus,
+        cpi,
+        unemployment,
+        gdp,
+        bondYield,
         isLoading: nbpRates.isLoading || gold.isLoading || wig20.isLoading,
     };
 }
 
 // Re-export types for page components
-export type { NBPRate, NBPTable, StooqData, GoldPrice, NBPInterestRate, WiborRate, GUSIndicator };
+export type { NBPRate, NBPTable, StooqData, GoldPrice, NBPInterestRate, WiborRate, GUSIndicator, EurostatTimeSeries, EurostatResult };
+

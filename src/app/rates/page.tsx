@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { formatRate, formatPercent, getChangeColor, getChangeArrow, percentChange } from '@/lib/formatters';
 import { SparklineChart } from '@/components/SparklineChart';
 import { Loader2 } from 'lucide-react';
@@ -8,6 +8,7 @@ import {
     ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip,
     CartesianGrid, LineChart, Line, BarChart, Bar
 } from 'recharts';
+import { useYieldCurve } from '@/lib/hooks';
 
 interface WiborApiRate {
     tenor: string;
@@ -18,8 +19,8 @@ interface WiborApiRate {
     source: string;
 }
 
-// Verified Polish government bond yields (Investing.com 2026-02-28)
-const BOND_YIELDS = [
+// Fallback — used when Stooq is loading
+const FALLBACK_YIELDS = [
     { maturity: '2Y', yield: 3.561 },
     { maturity: '5Y', yield: 4.303 },
     { maturity: '10Y', yield: 4.960 },
@@ -103,8 +104,15 @@ export default function RatesPage() {
         'ON': '#94A3B8', '1M': '#22C55E', '3M': '#3B82F6', '6M': '#A855F7', '1Y': '#FBBF24',
     };
 
-    // Yield curve from verified data
-    const yieldCurve = BOND_YIELDS;
+    // Yield curve from live Stooq data
+    const yieldCurveHook = useYieldCurve();
+    const yieldCurve = useMemo(() => {
+        if (yieldCurveHook.isLoading) return FALLBACK_YIELDS;
+        return yieldCurveHook.curve
+            .filter(p => p.yield !== null)
+            .map(p => ({ maturity: p.tenor, yield: p.yield as number }));
+    }, [yieldCurveHook.curve, yieldCurveHook.isLoading]);
+    const yieldIsLive = !yieldCurveHook.isLoading && yieldCurveHook.curve.some(p => p.yield !== null);
 
     if (loading) {
         return (
@@ -179,8 +187,8 @@ export default function RatesPage() {
                             </LineChart>
                         </ResponsiveContainer>
                         <div className="flex justify-between text-[10px] text-bb-muted mt-2 px-2">
-                            <span>Źródło: Investing.com</span>
-                            <span>Dane: 25.02.2026</span>
+                            <span>{yieldIsLive ? '● Stooq (live)' : '○ Fallback'}</span>
+                            <span>{yieldCurveHook.y10.data?.latest?.date || ''}</span>
                         </div>
                     </div>
                 </div>
@@ -243,7 +251,7 @@ export default function RatesPage() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {BOND_YIELDS.map((bond, i) => (
+                                {yieldCurve.map((bond, i) => (
                                     <tr key={i} className="border-b border-bb-border/30">
                                         <td className="py-2 px-3 font-medium text-bb-text">{bond.maturity}</td>
                                         <td className="py-2 px-3 text-right font-mono font-semibold text-bb-yellow">
@@ -254,7 +262,7 @@ export default function RatesPage() {
                             </tbody>
                         </table>
                         <div className="text-[10px] text-bb-muted mt-2">
-                            Źródło: Investing.com · Dane: 25.02.2026
+                            {yieldIsLive ? '● Stooq (live)' : '○ Fallback (Investing.com)'}
                         </div>
                     </div>
                 </div>
