@@ -10,6 +10,7 @@ const navItems = [
     { href: '/macro', label: 'MAKRO', key: 'F4' },
     { href: '/rates', label: 'STOPY', key: 'F5' },
     { href: '/trade', label: 'TRADE', key: 'F6' },
+    { href: '/tools', label: 'TOOLS', key: 'F7' },
 ];
 
 export function Sidebar() {
