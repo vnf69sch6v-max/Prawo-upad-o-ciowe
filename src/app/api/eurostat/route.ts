@@ -43,27 +43,21 @@ const DATASETS: Record<string, { params: Record<string, string>; label: string; 
         label: 'Retail Sales YoY',
         since: '2024-01',
     },
-    // Trade balance — monthly, mln EUR
-    trade_balance: {
-        params: { partner: 'WORLD', stk_flow: 'BAL' },
-        label: 'Trade Balance (mln EUR)',
-        since: '2024-01',
-    },
-    // Exports
+    // Trade — goods exports (monthly, mln EUR) via Balance of Payments
     exports: {
-        params: { partner: 'WORLD', stk_flow: 'EXP' },
-        label: 'Exports (mln EUR)',
+        params: { bop_item: 'G', stk_flow: 'CRE', currency: 'MIO_EUR', partner: 'WRL_REST', sectpart: 'S1', sector10: 'S1' },
+        label: 'Goods Exports (mln EUR)',
         since: '2024-01',
     },
-    // Imports
+    // Trade — goods imports
     imports: {
-        params: { partner: 'WORLD', stk_flow: 'IMP' },
-        label: 'Imports (mln EUR)',
+        params: { bop_item: 'G', stk_flow: 'DEB', currency: 'MIO_EUR', partner: 'WRL_REST', sectpart: 'S1', sector10: 'S1' },
+        label: 'Goods Imports (mln EUR)',
         since: '2024-01',
     },
     // Current account — monthly, mln EUR
     current_account: {
-        params: { bop_item: 'CA', currency: 'MIO_EUR', partner: 'WRL_REST', stk_flow: 'BAL' },
+        params: { bop_item: 'CA', currency: 'MIO_EUR', partner: 'WRL_REST', stk_flow: 'BAL', sectpart: 'S1', sector10: 'S1' },
         label: 'Current Account Balance (mln EUR)',
         since: '2024-01',
     },
@@ -77,9 +71,8 @@ const DATASET_CODES: Record<string, string> = {
     gdp_yoy: 'namq_10_gdp',
     industrial: 'sts_inpr_m',
     retail: 'sts_trtu_m',
-    trade_balance: 'ext_lt_maineu',
-    exports: 'ext_lt_maineu',
-    imports: 'ext_lt_maineu',
+    exports: 'bop_c6_m',
+    imports: 'bop_c6_m',
     current_account: 'bop_c6_m',
 };
 

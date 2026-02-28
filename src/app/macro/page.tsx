@@ -12,6 +12,7 @@ import {
     useIndustrialProduction, useRetailSales, usePLvsEU,
     EurostatTimeSeries,
 } from '@/lib/hooks';
+import { STATIC_MACRO } from '@/lib/static-data';
 
 // ===== FALLBACK DATA (used when Eurostat is loading/errored) =====
 // Last verified: 2026-02-28 from GUS
@@ -159,15 +160,18 @@ export default function MacroPage() {
                 {/* Summary cards */}
                 <div className="grid grid-cols-2 xl:grid-cols-6 gap-2">
                     {[
-                        { label: 'CPI YoY', value: getLastValue(cpiData), change: getChange(cpiData), color: '#FBBF24', suffix: '%' },
-                        { label: 'Bezrobocie', value: getLastValue(unempData), change: getChange(unempData), color: '#3B82F6', suffix: '%' },
+                        { label: 'CPI (HICP)', value: getLastValue(cpiData), change: getChange(cpiData), color: '#FBBF24', suffix: '%' },
+                        { label: 'Bezrob. (BAEL)', value: getLastValue(unempData), change: getChange(unempData), color: '#3B82F6', suffix: '%' },
+                        { label: 'Bezrob. (GUS)', value: STATIC_MACRO.gusUnemployment.value, change: 0, color: '#60A5FA', suffix: '%', badge: 'STATIC' },
                         { label: 'PKB YoY', value: getLastValue(gdpData), change: getChange(gdpData), color: '#22C55E', suffix: '%', prefix: '+' },
-                        { label: 'Prod. przem.', value: industrialData.length > 0 ? getLastValue(industrialData) : 0, change: industrialData.length > 1 ? getChange(industrialData) : 0, color: '#A855F7', suffix: '%' },
-                        { label: 'Sprzedaż det.', value: retailData.length > 0 ? getLastValue(retailData) : 0, change: retailData.length > 1 ? getChange(retailData) : 0, color: '#06B6D4', suffix: '%' },
+                        { label: 'PMI', value: STATIC_MACRO.pmi.value, change: 0, color: '#F97316', suffix: '', badge: 'STATIC' },
                         { label: 'Stopa ref.', value: 4.00, change: 0, color: '#FF6B00', suffix: '%' },
                     ].map((item, i) => (
                         <div key={i} className="bb-panel" style={{ padding: '8px 10px' }}>
-                            <div className="text-[9px] text-bb-muted uppercase mb-0.5">{item.label}</div>
+                            <div className="text-[9px] text-bb-muted uppercase mb-0.5 flex items-center gap-1">
+                                {item.label}
+                                {(item as any).badge && <span className="text-[7px] px-1 py-0 rounded-sm bg-yellow-900/40 text-yellow-400">{(item as any).badge}</span>}
+                            </div>
                             {anyLoading ? (
                                 <div className="animate-pulse bg-bb-border/30 h-5 w-16 rounded" />
                             ) : (
@@ -307,6 +311,54 @@ export default function MacroPage() {
                                 </ResponsiveContainer>
                             ) : <div className="text-center text-bb-muted py-12 text-sm">Brak danych z Eurostat</div>
                         )}
+                    </ChartPanel>
+                </div>
+
+                {/* Static indicators: PMI, Wages */}
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-2">
+                    <ChartPanel title="WSKAŹNIKI DODATKOWE" source="GUS · S&P Global">
+                        <div className="grid grid-cols-2 gap-3 p-2">
+                            {[
+                                { ...STATIC_MACRO.pmi, color: '#F97316', icon: '🏭' },
+                                { ...STATIC_MACRO.wages, color: '#A855F7', icon: '💰' },
+                                { ...STATIC_MACRO.debtToGdp, color: '#EF4444', icon: '📊' },
+                                { ...STATIC_MACRO.deficitToGdp, color: '#DC2626', icon: '📉' },
+                            ].map((item, i) => (
+                                <div key={i} className="bb-panel" style={{ padding: '8px 10px' }}>
+                                    <div className="text-[9px] text-bb-muted uppercase mb-0.5 flex items-center gap-1">
+                                        <span>{item.icon}</span> {item.label}
+                                        <span className="text-[7px] px-1 py-0 rounded-sm bg-yellow-900/40 text-yellow-400">STATIC</span>
+                                    </div>
+                                    <div className="text-lg font-mono font-bold" style={{ color: item.color }}>
+                                        {item.value}{item.unit || ''}
+                                    </div>
+                                    <div className="text-[9px] text-bb-muted">{item.source} · {item.date}</div>
+                                </div>
+                            ))}
+                        </div>
+                        <div className="text-[9px] text-bb-muted px-2 py-1 border-t border-bb-border/30">
+                            ℹ️ Dane aktualizowane ręcznie — brak darmowego REST API dla PMI (S&P Global) i wynagrodzeń (GUS miesięczne).
+                        </div>
+                    </ChartPanel>
+
+                    {/* Methodology explainer */}
+                    <ChartPanel title="METODOLOGIA DANYCH" source="">
+                        <div className="p-3 space-y-3 text-xs text-bb-muted">
+                            <div>
+                                <span className="text-green-400 font-mono">● LIVE</span> — dane pobierane automatycznie z API
+                            </div>
+                            <div>
+                                <span className="text-yellow-400 font-mono">○ STATIC</span> — dane aktualizowane ręcznie
+                            </div>
+                            <div className="border-t border-bb-border/30 pt-2">
+                                <div className="font-semibold text-bb-text mb-1">Bezrobocie — dwie metodologie:</div>
+                                <div><span className="text-blue-400">BAEL (Eurostat)</span> = {getLastValue(unempData).toFixed(1)}% — ankietowe, standard ILO/UE, porównywalne międzynarodowo</div>
+                                <div className="mt-1"><span className="text-blue-300">Rejestrowane (GUS)</span> = {STATIC_MACRO.gusUnemployment.value}% — zarejestrowani w PUP, wyższe bo obejmuje osoby niezatrudnione ale nieaktywnie szukające</div>
+                            </div>
+                            <div className="border-t border-bb-border/30 pt-2">
+                                <div><span className="text-yellow-400">CPI (HICP)</span> = zharmonizowany koszyk UE, ≈ GUS CPI ±0.1pp</div>
+                            </div>
+                        </div>
                     </ChartPanel>
                 </div>
 

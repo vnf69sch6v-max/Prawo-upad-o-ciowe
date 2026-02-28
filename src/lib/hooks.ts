@@ -201,7 +201,7 @@ export function useRetailSales(geo = 'PL') {
     return useEurostat('retail', geo);
 }
 
-export function useTradeData(flow: 'trade_balance' | 'exports' | 'imports') {
+export function useTradeData(flow: 'exports' | 'imports') {
     return useEurostat(flow, 'PL');
 }
 

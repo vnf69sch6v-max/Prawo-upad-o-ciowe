@@ -5,6 +5,7 @@ import { DataCard } from '@/components/DataCard';
 import { TickerBar, type TickerItem } from '@/components/TickerBar';
 import { formatRate, formatDate, percentChange } from '@/lib/formatters';
 import { Loader2 } from 'lucide-react';
+import { getUpcomingEvents, EVENT_COLORS } from '@/lib/calendar';
 
 // Types
 interface NBPRate {
@@ -48,9 +49,9 @@ export default function DashboardPage() {
   const [wibor, setWibor] = useState<StooqData | null>(null);
   const [bonds10y, setBonds10y] = useState<StooqData | null>(null);
   const [macro, setMacro] = useState<Record<string, MacroIndicator>>({
-    cpi: { value: '—', change: 0, label: 'Inflacja CPI YoY', source: 'GUS', date: '—' },
+    cpi: { value: '—', change: 0, label: 'Inflacja CPI (HICP)', source: 'GUS', date: '—' },
     rate: { value: '—', change: 0, label: 'Stopa referencyjna', source: 'NBP', date: '—' },
-    unemployment: { value: '—', change: 0, label: 'Bezrobocie', source: 'GUS', date: '—' },
+    unemployment: { value: '—', change: 0, label: 'Bezrobocie (BAEL)', source: 'GUS', date: '—' },
     gdp: { value: '—', change: 0, label: 'PKB YoY', source: 'GUS', date: '—' },
   });
   const [nbpRatesAll, setNbpRatesAll] = useState<{ name: string; value: number; validFrom: string }[]>([]);
@@ -417,21 +418,19 @@ export default function DashboardPage() {
                 <tr>
                   <th>Data</th>
                   <th>Wydarzenie</th>
-                  <th className="text-right">Poprz.</th>
+                  <th className="text-right">Typ</th>
                 </tr>
               </thead>
               <tbody>
-                {[
-                  { date: '04.03', event: 'Decyzja RPP', prev: macro.rate.value || '4.00%' },
-                  { date: '15.03', event: 'Inflacja CPI (luty)', prev: macro.cpi.value || '3.6%' },
-                  { date: '21.03', event: 'Produkcja przemysłowa', prev: '+3.2%' },
-                  { date: '25.03', event: 'Sprzedaż detaliczna', prev: '+4.1%' },
-                  { date: '31.03', event: 'PKB Q4 (flash)', prev: macro.gdp.value || '+7.0%' },
-                ].map((item, i) => (
+                {getUpcomingEvents(5).map((item, i) => (
                   <tr key={i}>
-                    <td className="text-bb-accent">{item.date}</td>
-                    <td className="text-bb-text">{item.event}</td>
-                    <td className="text-right text-bb-muted">{item.prev}</td>
+                    <td className="text-bb-accent">{item.date.slice(5).replace('-', '.')}</td>
+                    <td className="text-bb-text">{item.name}</td>
+                    <td className="text-right">
+                      <span className="text-[9px] px-1.5 py-0.5 rounded-sm font-mono" style={{ background: `${EVENT_COLORS[item.type]}20`, color: EVENT_COLORS[item.type] }}>
+                        {item.importance === 'high' ? '🔴' : '🟡'} {item.type.toUpperCase()}
+                      </span>
+                    </td>
                   </tr>
                 ))}
               </tbody>
