@@ -68,8 +68,9 @@ const PIE_COLORS = ['#FF6B00', '#3B82F6', '#22C55E', '#FBBF24', '#A855F7', '#EF4
 
 const TOOLTIP_STYLE = {
     contentStyle: {
-        background: '#111827', border: '1px solid #1E293B',
-        borderRadius: '8px', color: '#E2E8F0', fontSize: '12px',
+        background: '#0D1117', border: '1px solid #2D333B',
+        borderRadius: '2px', color: '#E6EDF3', fontSize: '11px',
+        fontFamily: 'JetBrains Mono, monospace',
     },
 };
 
@@ -82,14 +83,15 @@ export default function TradePage() {
 
     return (
         <div className="min-h-screen">
-            <div className="px-6 py-4 border-b border-bb-border">
-                <h1 className="text-lg font-semibold text-bb-text">Handel zagraniczny</h1>
-                <p className="text-xs text-bb-muted">Bilans handlowy, partnerzy, rachunek bieżący · Źródło: GUS, NBP</p>
+            <div className="px-3 py-1.5 border-b border-bb-border flex items-center gap-3">
+                <span className="bb-label">TRADE & BOP</span>
+                <span className="text-bb-border">│</span>
+                <span className="text-[10px] text-bb-muted">SRC: GUS · NBP</span>
             </div>
 
-            <div className="p-6 space-y-6">
+            <div className="p-2 space-y-2">
                 {/* Summary cards */}
-                <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 xl:grid-cols-4 gap-2">
                     <div className="data-card">
                         <div className="flex items-center gap-2 mb-1">
                             <Ship size={14} className="text-bb-muted" />
@@ -146,7 +148,7 @@ export default function TradePage() {
                     </ResponsiveContainer>
                 </div>
 
-                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-2">
                     {/* Top Partners */}
                     <div className="data-card">
                         <h3 className="text-xs font-semibold text-bb-accent uppercase tracking-wider mb-3">

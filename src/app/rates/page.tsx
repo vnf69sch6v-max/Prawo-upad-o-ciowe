@@ -18,12 +18,11 @@ interface WiborApiRate {
     source: string;
 }
 
-// Verified Polish government bond yields (from Investing.com 2026-02-25)
-// Stooq no longer provides bond yield CSV data
+// Verified Polish government bond yields (Investing.com 2026-02-28)
 const BOND_YIELDS = [
     { maturity: '2Y', yield: 3.561 },
     { maturity: '5Y', yield: 4.303 },
-    { maturity: '10Y', yield: 5.011 },
+    { maturity: '10Y', yield: 4.960 },
 ];
 
 // RPP rate history timeline (real dates from NBP)
@@ -117,15 +116,16 @@ export default function RatesPage() {
 
     return (
         <div className="min-h-screen">
-            <div className="px-6 py-4 border-b border-bb-border">
-                <h1 className="text-lg font-semibold text-bb-text">Stopy procentowe i obligacje</h1>
-                <p className="text-xs text-bb-muted">
-                    Stopy RPP, WIBOR, yield curve · Źródła: NBP, Stooq
-                    {ratesDate && <> · Obowiązuje od: {ratesDate}</>}
-                </p>
+            <div className="px-3 py-1.5 border-b border-bb-border flex items-center gap-3">
+                <span className="bb-label">INTEREST RATES</span>
+                <span className="text-bb-border">│</span>
+                <span className="text-[10px] text-bb-muted">
+                    SRC: NBP · STOOQ
+                    {ratesDate && <> · OD: {ratesDate}</>}
+                </span>
             </div>
 
-            <div className="p-6 space-y-6">
+            <div className="p-2 space-y-2">
                 {/* RPP Rates — live from /api/nbp-rates */}
                 <div className="grid grid-cols-2 xl:grid-cols-5 gap-4">
                     {nbpRates.map((rate: NBPRateData, i: number) => (

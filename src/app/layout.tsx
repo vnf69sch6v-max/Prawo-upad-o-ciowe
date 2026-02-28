@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { Sidebar } from "@/components/Sidebar";
+import { HeaderBar } from "@/components/HeaderBar";
 import { KeyboardShortcuts } from "@/components/KeyboardShortcuts";
 import { Providers } from "./providers";
 
@@ -11,7 +12,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0A0E17",
+  themeColor: "#000000",
   width: "device-width",
   initialScale: 1,
 };
@@ -34,8 +35,9 @@ export default function RootLayout({
       <body className="antialiased min-h-screen overflow-x-hidden">
         <Providers>
           <KeyboardShortcuts />
+          <HeaderBar />
           <Sidebar />
-          <div className="md:ml-16 lg:ml-52 min-h-screen pb-16 md:pb-0">
+          <div className="md:ml-14 min-h-[calc(100vh-28px)] pb-14 md:pb-0">
             {children}
           </div>
         </Providers>

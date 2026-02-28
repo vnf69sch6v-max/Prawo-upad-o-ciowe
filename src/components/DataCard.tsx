@@ -21,27 +21,20 @@ export function DataCard({
     sparklineData,
     source,
     lastUpdated,
-    icon,
     accentColor,
 }: DataCardProps) {
     return (
-        <div className="data-card group">
+        <div className="data-card">
             {/* Header */}
             <div className="flex items-center justify-between mb-1">
-                <div className="flex items-center gap-2">
-                    {icon && <span className="text-bb-muted">{icon}</span>}
-                    <h3 className="text-xs font-medium text-bb-muted uppercase tracking-wide">
-                        {title}
-                    </h3>
-                </div>
-                <span className="live-dot" />
+                <h3 className="bb-label">{title}</h3>
             </div>
 
             {/* Value */}
-            <div className="flex items-end gap-3 mb-2">
+            <div className="flex items-end gap-2 mb-1">
                 <span
-                    className="text-2xl font-mono font-bold text-bb-text leading-none"
-                    style={accentColor ? { color: accentColor } : undefined}
+                    className="text-lg font-mono font-bold leading-none"
+                    style={{ color: accentColor || 'var(--color-bb-text)' }}
                 >
                     {value}
                 </span>
@@ -50,21 +43,21 @@ export function DataCard({
 
             {/* Sparkline */}
             {sparklineData && sparklineData.length > 1 && (
-                <div className="mb-2">
-                    <SparklineChart data={sparklineData} />
+                <div className="mb-1">
+                    <SparklineChart data={sparklineData} height={24} />
                 </div>
             )}
 
             {/* Footer */}
             {(source || lastUpdated) && (
-                <div className="flex items-center justify-between mt-auto pt-2 border-t border-bb-border/50">
+                <div className="flex items-center justify-between pt-1 border-t border-bb-border/40">
                     {source && (
-                        <span className="text-[10px] text-bb-muted uppercase tracking-wider">
+                        <span className="text-[9px] text-bb-muted uppercase tracking-wider">
                             {source}
                         </span>
                     )}
                     {lastUpdated && (
-                        <span className="text-[10px] text-bb-muted">
+                        <span className="text-[9px] text-bb-muted">
                             {lastUpdated}
                         </span>
                     )}

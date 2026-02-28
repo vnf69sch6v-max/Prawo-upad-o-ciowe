@@ -1,41 +1,53 @@
 @import "tailwindcss";
 
 /* ═══════════════════════════════════════════════════════════════
-   BLOOMBERG TERMINAL DARK THEME
+   BLOOMBERG TERMINAL THEME
+   Pure black background, sharp edges, dense data, amber accents
    ═══════════════════════════════════════════════════════════════ */
 
 @theme {
-  --color-bb-bg: #0A0E17;
-  --color-bb-surface: #111827;
-  --color-bb-border: #1E293B;
-  --color-bb-text: #E2E8F0;
-  --color-bb-muted: #64748B;
+  --color-bb-bg: #000000;
+  --color-bb-surface: #0D1117;
+  --color-bb-surface-alt: #161B22;
+  --color-bb-border: #2D333B;
+  --color-bb-border-strong: #444C56;
+  --color-bb-text: #E6EDF3;
+  --color-bb-muted: #7D8590;
   --color-bb-accent: #FF6B00;
-  --color-bb-green: #22C55E;
-  --color-bb-red: #EF4444;
-  --color-bb-blue: #3B82F6;
-  --color-bb-yellow: #FBBF24;
-  --color-bb-header: #1E293B;
+  --color-bb-amber: #FFAB00;
+  --color-bb-green: #3FB950;
+  --color-bb-red: #F85149;
+  --color-bb-blue: #58A6FF;
+  --color-bb-yellow: #D29922;
+  --color-bb-header: #161B22;
+  --color-bb-keycap: #FF6B00;
 }
 
-/* Base */
+/* ── Base ──────────────────────────────────────────────────── */
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', 'Consolas', monospace;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background: var(--color-bb-bg);
   color: var(--color-bb-text);
+  font-size: 12px;
+  line-height: 1.4;
 }
 
-/* Monospace for financial data */
+/* Override Inter for labels/titles only */
+.font-sans {
+  font-family: 'Inter', -apple-system, system-ui, sans-serif !important;
+}
+
+/* Financial data — force monospace */
 .font-mono {
-  font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace !important;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace !important;
 }
 
-/* Scrollbar (Bloomberg style) */
+/* ── Scrollbar (thin, dark) ────────────────────────────────── */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 4px;
+  height: 4px;
 }
 
 ::-webkit-scrollbar-track {
@@ -44,14 +56,14 @@ body {
 
 ::-webkit-scrollbar-thumb {
   background: var(--color-bb-border);
-  border-radius: 3px;
+  border-radius: 2px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-bb-muted);
 }
 
-/* Blinking live dot */
+/* ── Live indicator ────────────────────────────────────────── */
 @keyframes blink {
 
   0%,
@@ -60,20 +72,20 @@ body {
   }
 
   50% {
-    opacity: 0.3;
+    opacity: 0.2;
   }
 }
 
 .live-dot {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
   background: var(--color-bb-green);
   border-radius: 50%;
-  animation: blink 1.5s ease-in-out infinite;
+  animation: blink 1.2s ease-in-out infinite;
   display: inline-block;
 }
 
-/* Ticker bar scroll animation */
+/* ── Ticker bar ────────────────────────────────────────────── */
 @keyframes ticker-scroll {
   0% {
     transform: translateX(0);
@@ -85,53 +97,121 @@ body {
 }
 
 .ticker-animate {
-  animation: ticker-scroll 60s linear infinite;
+  animation: ticker-scroll 50s linear infinite;
 }
 
 .ticker-animate:hover {
   animation-play-state: paused;
 }
 
-/* Card hover */
+/* ── Bloomberg Panel (sharp, dense) ───────────────────────── */
 .data-card {
   background: var(--color-bb-surface);
   border: 1px solid var(--color-bb-border);
-  border-radius: 8px;
-  padding: 16px;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  border-radius: 2px;
+  padding: 10px 12px;
+  transition: border-color 0.15s ease;
 }
 
 .data-card:hover {
   border-color: var(--color-bb-accent);
-  box-shadow: 0 0 20px rgba(255, 107, 0, 0.05);
 }
 
-/* Utility transitions */
+/* Bloomberg tiled panel — no gap, shared borders */
+.bb-panel {
+  background: var(--color-bb-surface);
+  border: 1px solid var(--color-bb-border);
+  border-radius: 0;
+  padding: 8px 10px;
+}
+
+.bb-panel-header {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-bb-accent);
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--color-bb-border);
+  margin-bottom: 6px;
+}
+
+/* ── Bloomberg label ───────────────────────────────────────── */
+.bb-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-bb-muted);
+}
+
+/* ── Bloomberg keycap (F1, F2 etc.) ────────────────────────── */
+.bb-keycap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 20px;
+  padding: 0 4px;
+  font-size: 10px;
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+  border-radius: 2px;
+  background: var(--color-bb-border);
+  color: var(--color-bb-muted);
+  border: 1px solid var(--color-bb-border-strong);
+}
+
+.bb-keycap-active {
+  background: var(--color-bb-keycap);
+  color: #000;
+  border-color: var(--color-bb-keycap);
+}
+
+/* ── Data table (alternating rows) ─────────────────────────── */
+.bb-table tbody tr:nth-child(even) {
+  background: var(--color-bb-surface-alt);
+}
+
+.bb-table tbody tr:hover {
+  background: rgba(255, 107, 0, 0.06);
+}
+
+.bb-table th {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-bb-muted);
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--color-bb-border-strong);
+  text-align: left;
+}
+
+.bb-table td {
+  font-size: 11px;
+  padding: 3px 8px;
+  border-bottom: 1px solid var(--color-bb-border);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* ── Transitions (minimal, fast) ───────────────────────────── */
 * {
-  transition-property: color, background-color, border-color, opacity, box-shadow, transform;
+  transition-property: color, background-color, border-color, opacity;
   transition-timing-function: ease;
-  transition-duration: 150ms;
+  transition-duration: 100ms;
 }
 
-/* ===== MOBILE RESPONSIVE ===== */
-
-/* Safe area for iOS notch / bottom bar */
+/* ── Mobile ────────────────────────────────────────────────── */
 .safe-area-bottom {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
-/* Mobile data cards — smaller padding */
 @media (max-width: 767px) {
   .data-card {
-    padding: 12px;
+    padding: 8px 10px;
   }
 
-  /* Page headers — smaller on mobile */
-  .page-header {
-    padding: 12px 16px;
-  }
-
-  /* Tables — horizontal scroll on mobile */
   table {
     display: block;
     overflow-x: auto;
@@ -147,13 +227,10 @@ body {
     table-layout: fixed;
   }
 
-  /* Ticker bar — smaller on mobile */
   .ticker-animate {
-    animation-duration: 40s;
-    font-size: 11px;
+    animation-duration: 35s;
   }
 
-  /* Charts — ensure minimum touch target */
   .recharts-wrapper {
     max-width: 100%;
     overflow: hidden;

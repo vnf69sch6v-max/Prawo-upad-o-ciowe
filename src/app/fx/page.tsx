@@ -118,16 +118,17 @@ export default function FXPage() {
     return (
         <div className="min-h-screen">
             {/* Header */}
-            <div className="px-6 py-4 border-b border-bb-border">
-                <h1 className="text-lg font-semibold text-bb-text">Kursy walut NBP</h1>
-                <p className="text-xs text-bb-muted">
-                    Tabela {activeTab} — {activeTab === 'A' ? 'kursy średnie' : 'kursy kupna/sprzedaży'}
+            <div className="px-3 py-1.5 border-b border-bb-border flex items-center gap-3">
+                <span className="bb-label">FX RATES</span>
+                <span className="text-bb-border">│</span>
+                <span className="text-[10px] text-bb-muted">
+                    TAB {activeTab} — {activeTab === 'A' ? 'AVG' : 'BID/ASK'}
                     {' · '}
                     {(activeTab === 'A' ? effectiveDate : effectiveDateC) ? formatDate(activeTab === 'A' ? effectiveDate : effectiveDateC) : '—'}
-                </p>
+                </span>
             </div>
 
-            <div className="p-6 space-y-6">
+            <div className="p-2 space-y-2">
                 {/* Chart for selected currency */}
                 <div className="data-card">
                     <div className="flex items-center justify-between mb-4">
@@ -203,8 +204,8 @@ export default function FXPage() {
                     <button
                         onClick={() => setActiveTab('A')}
                         className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${activeTab === 'A'
-                                ? 'bg-bb-accent text-white'
-                                : 'bg-bb-surface text-bb-muted border border-bb-border hover:text-bb-text'
+                            ? 'bg-bb-accent text-white'
+                            : 'bg-bb-surface text-bb-muted border border-bb-border hover:text-bb-text'
                             }`}
                     >
                         Tabela A — kursy średnie
@@ -212,8 +213,8 @@ export default function FXPage() {
                     <button
                         onClick={() => setActiveTab('C')}
                         className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${activeTab === 'C'
-                                ? 'bg-bb-accent text-white'
-                                : 'bg-bb-surface text-bb-muted border border-bb-border hover:text-bb-text'
+                            ? 'bg-bb-accent text-white'
+                            : 'bg-bb-surface text-bb-muted border border-bb-border hover:text-bb-text'
                             }`}
                     >
                         Tabela C — kupno/sprzedaż

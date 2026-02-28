@@ -1,7 +1,6 @@
-// NBP interest rates — fetches from official XML endpoint + Firestore cache
+// NBP interest rates — fetches from official XML endpoint
 // https://static.nbp.pl/dane/stopy/stopy_procentowe.xml
 import { NextResponse } from 'next/server';
-import { withCache } from '@/lib/server-cache';
 
 interface NBPRate {
     name: string;
@@ -22,7 +21,7 @@ async function fetchNBPRates(): Promise<{ rates: NBPRate[]; publishDate: string 
     const res = await fetch(
         'https://static.nbp.pl/dane/stopy/stopy_procentowe.xml',
         {
-            next: { revalidate: 86400 }, // Cache 24h — rates rarely change
+            next: { revalidate: 86400 },
             headers: {
                 'User-Agent': 'Mozilla/5.0 (compatible; EcoDashboard/1.0)',
                 'Accept': 'application/xml, text/xml',
@@ -39,32 +38,32 @@ async function fetchNBPRates(): Promise<{ rates: NBPRate[]; publishDate: string 
     const pubMatch = xml.match(/data_publikacji="([^"]+)"/);
     const publishDate = pubMatch ? pubMatch[1] : '';
 
-    // Parse each <pozycja> element from the first table (stoproc = basic rates)
-    // Only parse items from the first <tabela id="stoproc">
-    const stroprocMatch = xml.match(/<tabela id="stoproc"[^>]*>([\s\S]*?)<\/tabela>/);
-    const stroprocBlock = stroprocMatch ? stroprocMatch[1] : xml;
+    // Extract the first table block (id="stoproc" = base rates)
+    const tableMatch = xml.match(/<tabela[\s\S]*?id="stoproc"[\s\S]*?<\/tabela>/);
+    const tableBlock = tableMatch ? tableMatch[0] : xml;
 
-    const pozycjaRegex = /<pozycja\s([^>]+)\/?\s*>/g;
-    let match;
-    while ((match = pozycjaRegex.exec(stroprocBlock)) !== null) {
-        const attrs = match[1];
+    // Split by <pozycja to get each rate entry
+    const entries = tableBlock.split('<pozycja');
 
-        // Extract individual attributes
-        const nazwaMatch = attrs.match(/nazwa="([^"]+)"/);
-        const oprMatch = attrs.match(/oprocentowanie="([^"]+)"/);
-        const odMatch = attrs.match(/obowiazuje_od="([^"]+)"/);
+    for (const entry of entries) {
+        const nazwaMatch = entry.match(/nazwa="([^"]+)"/);
+        const oprMatch = entry.match(/oprocentowanie="([^"]+)"/);
+        const odMatch = entry.match(/obowiazuje_od="([^"]+)"/);
 
         if (nazwaMatch && oprMatch) {
             const name = nazwaMatch[1];
             const value = parseFloat(oprMatch[1].replace(',', '.'));
             const validFrom = odMatch ? odMatch[1] : publishDate;
 
-            rates.push({
-                name,
-                nameEn: NAME_MAP[name] || name,
-                value,
-                validFrom,
-            });
+            // Only include main rates (skip reserve requirements etc.)
+            if (NAME_MAP[name]) {
+                rates.push({
+                    name,
+                    nameEn: NAME_MAP[name],
+                    value,
+                    validFrom,
+                });
+            }
         }
     }
 
@@ -73,23 +72,9 @@ async function fetchNBPRates(): Promise<{ rates: NBPRate[]; publishDate: string 
 
 export async function GET() {
     try {
-        const result = await withCache(
-            'interest_rates',
-            'nbp_rates',
-            async () => {
-                const { rates, publishDate } = await fetchNBPRates();
-                return {
-                    timestamp: new Date().toISOString(),
-                    source: 'static.nbp.pl/dane/stopy/stopy_procentowe.xml',
-                    publishDate,
-                    rates,
-                };
-            },
-            'NBP XML',
-            24 * 3600 * 1000
-        );
+        const { rates, publishDate } = await fetchNBPRates();
 
-        if (!result.rates?.length) {
+        if (rates.length === 0) {
             return NextResponse.json({
                 error: 'Could not parse NBP XML — format may have changed',
                 fallback: true,
@@ -97,7 +82,12 @@ export async function GET() {
             }, { status: 206 });
         }
 
-        return NextResponse.json(result);
+        return NextResponse.json({
+            timestamp: new Date().toISOString(),
+            source: 'static.nbp.pl/dane/stopy/stopy_procentowe.xml',
+            publishDate,
+            rates,
+        });
     } catch (error) {
         return NextResponse.json({ error: String(error) }, { status: 500 });
     }

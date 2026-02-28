@@ -112,14 +112,15 @@ export default function MarketPage() {
 
     return (
         <div className="min-h-screen">
-            <div className="px-6 py-4 border-b border-bb-border">
-                <h1 className="text-lg font-semibold text-bb-text">Rynek GPW</h1>
-                <p className="text-xs text-bb-muted">Indeksy i spółki WIG20 · Źródło: Stooq</p>
+            <div className="px-3 py-1.5 border-b border-bb-border flex items-center gap-3">
+                <span className="bb-label">GPW MARKET</span>
+                <span className="text-bb-border">│</span>
+                <span className="text-[10px] text-bb-muted">SRC: STOOQ</span>
             </div>
 
-            <div className="p-6 space-y-6">
+            <div className="p-2 space-y-2">
                 {/* Index Cards */}
-                <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 xl:grid-cols-4 gap-2">
                     {Object.entries(INDEX_NAMES).map(([sym, name]) => {
                         const d = indexData[sym];
                         const latest = d?.latest;
