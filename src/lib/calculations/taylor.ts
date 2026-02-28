@@ -1,20 +1,20 @@
-// Taylor Rule calculations — Pro version
+// Taylor Rule calculations — V2 (correct Taylor 1993 formula)
 import { getRPPRate } from '@/lib/static-data';
 
 export interface TaylorParams {
-    rNeutral: number;        // r* neutral rate (default 2.0%)
+    rStar: number;           // r* neutral rate (default 1.5%)
     piTarget: number;        // π* inflation target (default 2.5%)
-    potentialGDP: number;    // y* potential GDP growth (default 3.2%)
+    potentialGDP: number;    // y* potential GDP growth (default 3.0%)
     weightInflation: number; // α coefficient (default 0.5)
-    weightGDP: number;       // β coefficient (default 0.5)
+    weightOutput: number;    // β coefficient (default 0.5)
 }
 
 export const DEFAULT_TAYLOR: TaylorParams = {
-    rNeutral: 2.0,
+    rStar: 1.5,
     piTarget: 2.5,
-    potentialGDP: 3.2,
+    potentialGDP: 3.0,
     weightInflation: 0.5,
-    weightGDP: 0.5,
+    weightOutput: 0.5,
 };
 
 export interface TaylorResult {
@@ -25,12 +25,13 @@ export interface TaylorResult {
     outputContrib: number;
 }
 
+// Taylor 1993: i = π + r* + α(π − π*) + β(y − y*)
 export function taylorRule(params: TaylorParams, currentInflation: number, currentGDP: number): TaylorResult {
     const inflationGap = currentInflation - params.piTarget;
     const outputGap = currentGDP - params.potentialGDP;
     const inflationContrib = params.weightInflation * inflationGap;
-    const outputContrib = params.weightGDP * outputGap;
-    const optimalRate = +(params.rNeutral + inflationContrib + outputContrib).toFixed(2);
+    const outputContrib = params.weightOutput * outputGap;
+    const optimalRate = +(currentInflation + params.rStar + inflationContrib + outputContrib).toFixed(2);
 
     return { optimalRate, inflationGap, outputGap, inflationContrib, outputContrib };
 }
@@ -38,68 +39,47 @@ export function taylorRule(params: TaylorParams, currentInflation: number, curre
 // Historical Taylor Rule point
 export interface TaylorPoint {
     date: string;
-    taylorRate: number;
-    rppRate: number;
+    taylor: number;
+    rpp: number;
     gap: number;          // rpp - taylor (+ = restrictive)
     inflation: number;
-    gdpGrowth: number;
+    gdp: number;
 }
 
-// Interpolate quarterly GDP to monthly
-function interpolateGDP(
-    gdpData: { date: string; value: number }[],
-    month: string  // "2020-03"
-): number | null {
-    const [year, m] = month.split('-');
-    const quarter = Math.ceil(parseInt(m) / 3);
-
-    // Try various Eurostat date formats
-    const qKeys = [
-        `${year}Q${quarter}`,
-        `${year}-Q${quarter}`,
-        `${year}Q0${quarter}`,
-    ];
-
-    const match = gdpData.find(d =>
-        qKeys.some(k => d.date.replace('-', '').replace('Q0', 'Q') === k.replace('-', '').replace('Q0', 'Q'))
-    );
-
-    return match?.value ?? null;
-}
-
-// Calculate historical Taylor Rule for entire CPI series
-export function calculateHistoricalTaylor(
-    inflationData: { date: string; value: number }[],
-    gdpData: { date: string; value: number }[],
-    params: TaylorParams
+// Calculate historical Taylor Rule from hardcoded or Eurostat data
+export function buildHistoricalTaylor(
+    cpiData: { date: string; value: number }[],
+    gdpQuarterly: { q: string; value: number }[],
+    params: TaylorParams,
+    rangeMonths: number // 0 = MAX
 ): TaylorPoint[] {
-    const results: TaylorPoint[] = [];
+    const startIndex = rangeMonths === 0 ? 0 : Math.max(0, cpiData.length - rangeMonths);
 
-    for (const cpiPoint of inflationData) {
-        const month = cpiPoint.date;
-        const pi = cpiPoint.value;
+    return cpiData.slice(startIndex).map(cpi => {
+        const gdp = getGDPForMonth(gdpQuarterly, cpi.date);
+        if (gdp === null) return null;
+        const taylor = +(cpi.value + params.rStar
+            + params.weightInflation * (cpi.value - params.piTarget)
+            + params.weightOutput * (gdp - params.potentialGDP)).toFixed(2);
+        const rpp = getRPPRate(cpi.date);
+        return {
+            date: cpi.date,
+            taylor,
+            rpp,
+            gap: +(rpp - taylor).toFixed(2),
+            inflation: cpi.value,
+            gdp,
+        };
+    }).filter((p): p is TaylorPoint => p !== null);
+}
 
-        const gdp = interpolateGDP(gdpData, month);
-        if (gdp === null) continue;
-
-        const outputGap = gdp - params.potentialGDP;
-        const taylorRate = +(params.rNeutral
-            + params.weightInflation * (pi - params.piTarget)
-            + params.weightGDP * outputGap).toFixed(2);
-
-        const rppRate = getRPPRate(month);
-
-        results.push({
-            date: month,
-            taylorRate,
-            rppRate,
-            gap: +(rppRate - taylorRate).toFixed(2),
-            inflation: pi,
-            gdpGrowth: gdp,
-        });
-    }
-
-    return results;
+// Interpolate quarterly GDP to month
+function getGDPForMonth(gdpData: { q: string; value: number }[], month: string): number | null {
+    const [y, m] = month.split('-').map(Number);
+    const q = Math.ceil(m / 3);
+    const qKey = `${y}Q${q}`;
+    const match = gdpData.find(d => d.q === qKey);
+    return match ? match.value : null;
 }
 
 // Sensitivity table computation
@@ -110,8 +90,9 @@ export function sensitivityMatrix(
 ): number[][] {
     return cpiRange.map(cpi =>
         gdpRange.map(gdp => {
-            const outputGap = gdp - params.potentialGDP;
-            return +(params.rNeutral + params.weightInflation * (cpi - params.piTarget) + params.weightGDP * outputGap).toFixed(1);
+            const inflGap = cpi - params.piTarget;
+            const outGap = gdp - params.potentialGDP;
+            return +(cpi + params.rStar + params.weightInflation * inflGap + params.weightOutput * outGap).toFixed(1);
         })
     );
 }

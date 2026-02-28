@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useCallback } from 'react';
 import {
-    ResponsiveContainer, AreaChart, Area, LineChart, Line, BarChart, Bar,
+    ResponsiveContainer, AreaChart, Area, LineChart, Line, BarChart, Bar, Cell,
     ComposedChart, XAxis, YAxis, Tooltip, CartesianGrid, Legend, ReferenceLine
 } from 'recharts';
 import { ChartPanel, BloombergTooltip, BloombergCursor, CHART_ANIM } from '@/components/ChartUtils';
@@ -17,8 +17,8 @@ import {
     RPP_DATES_2026, PRESETS, WIBOR_SPREADS,
     type RateDecision, type MortgageParams
 } from '@/lib/calculations/mortgage';
-import { taylorRule, calculateHistoricalTaylor, sensitivityMatrix, DEFAULT_TAYLOR, type TaylorParams } from '@/lib/calculations/taylor';
-import { CONSENSUS } from '@/lib/static-data';
+import { taylorRule, buildHistoricalTaylor, sensitivityMatrix, DEFAULT_TAYLOR, type TaylorParams } from '@/lib/calculations/taylor';
+import { CONSENSUS, CPI_DATA_PL, GDP_QUARTERLY_PL } from '@/lib/static-data';
 import { projectDebt, sensitivityAnalysis, findCrossing, FISCAL_DEFAULTS, INITIAL_DEBT, type FiscalParams } from '@/lib/calculations/fiscal';
 
 // ===== Shared UI =====
@@ -63,46 +63,46 @@ function Disclaimer() {
 // ===== Gauge Meter =====
 
 function GaugeMeter({ gap }: { gap: number }) {
-    const min = -4, max = 4;
+    const min = -6, max = 6;
     const percent = Math.max(0, Math.min(100, ((gap - min) / (max - min)) * 100));
 
     const getColor = (g: number) => {
-        if (g < -1) return '#22C55E';
-        if (g < -0.25) return '#86EFAC';
-        if (g < 0.25) return '#FBBF24';
-        if (g < 1) return '#FB923C';
+        if (g < -2) return '#22C55E';
+        if (g < -0.5) return '#86EFAC';
+        if (g < 0.5) return '#FBBF24';
+        if (g < 2) return '#FB923C';
         return '#EF4444';
     };
 
     const getLabel = (g: number) => {
-        if (g < -1) return 'BARDZO LUŹNA';
-        if (g < -0.25) return 'LUŹNA';
-        if (g < 0.25) return 'NEUTRALNA';
-        if (g < 1) return 'RESTRYKCYJNA';
+        if (g < -2) return 'BARDZO LUŹNA';
+        if (g < -0.5) return 'LUŹNA';
+        if (g < 0.5) return 'NEUTRALNA';
+        if (g < 2) return 'RESTRYKCYJNA';
         return 'BARDZO RESTRYKCYJNA';
     };
 
     return (
-        <div className="px-3 py-2">
-            <div className="text-center mb-2">
-                <span className="font-mono text-xl font-bold" style={{ color: getColor(gap) }}>
+        <div className="px-4 py-3">
+            <div className="text-center mb-3">
+                <span className="font-mono text-[28px] font-bold" style={{ color: getColor(gap) }}>
                     {gap >= 0 ? '+' : ''}{gap.toFixed(2)}pp
                 </span>
-                <span className="block text-xs font-mono" style={{ color: getColor(gap) }}>
-                    → POLITYKA {getLabel(gap)}
-                </span>
+                <div className="text-[11px] font-mono tracking-widest font-semibold mt-0.5" style={{ color: getColor(gap) }}>
+                    {getLabel(gap)}
+                </div>
             </div>
-            <div className="relative h-2.5 rounded-full overflow-hidden border border-bb-border/30">
-                <div className="absolute inset-0" style={{
-                    background: 'linear-gradient(to right, #22C55E, #86EFAC, #FBBF24, #FB923C, #EF4444)'
+            <div className="relative h-3.5 rounded-full overflow-hidden border border-bb-border/30">
+                <div className="absolute inset-0 opacity-70" style={{
+                    background: 'linear-gradient(to right, #22C55E 0%, #86EFAC 25%, #FBBF24 45%, #FB923C 65%, #EF4444 100%)'
                 }} />
-                <div className="absolute top-0 w-1 h-full bg-white shadow-lg rounded-full"
+                <div className="absolute top-0 bottom-0 w-[3px] bg-white rounded shadow-[0_0_8px_rgba(255,255,255,0.6)]"
                     style={{ left: `${percent}%`, transform: 'translateX(-50%)', transition: 'left 0.3s ease' }} />
             </div>
             <div className="flex justify-between mt-1 text-[9px] text-bb-muted font-mono">
-                <span>LUŹNA -4pp</span>
+                <span>← LUŹNA</span>
                 <span>0</span>
-                <span>RESTRYKCYJNA +4pp</span>
+                <span>RESTRYKCYJNA →</span>
             </div>
         </div>
     );
@@ -113,22 +113,22 @@ function GaugeMeter({ gap }: { gap: number }) {
 function SensitivityTable({ params, currentCPI, currentGDP }: {
     params: TaylorParams; currentCPI: number; currentGDP: number;
 }) {
-    const cpiRange = [1.0, 2.0, 2.5, 3.0, 4.0, 5.0];
-    const gdpRange = [1.0, 2.0, 3.0, 3.6, 4.0, 5.0];
+    const cpiRange = [1.0, 2.0, 2.5, 3.0, 4.0, 5.0, 8.0];
+    const gdpRange = [0.0, 1.0, 2.0, 3.0, 3.8, 5.0];
     const matrix = sensitivityMatrix(params, cpiRange, gdpRange);
 
-    const closestCPI = cpiRange.reduce((a, b) => Math.abs(b - currentCPI) < Math.abs(a - currentCPI) ? b : a);
-    const closestGDP = gdpRange.reduce((a, b) => Math.abs(b - currentGDP) < Math.abs(a - currentGDP) ? b : a);
+    const closest = (arr: number[], val: number) => arr.reduce((a, b) => Math.abs(b - val) < Math.abs(a - val) ? b : a);
+    const closestCPI = closest(cpiRange, currentCPI);
+    const closestGDP = closest(gdpRange, currentGDP);
 
     return (
-        <div className="overflow-x-auto mt-2">
-            <div className="text-[10px] text-bb-muted mb-1.5 px-2">Sensitivity: optymalna stopa dla kombinacji CPI × PKB</div>
-            <table className="w-full text-[10px] font-mono">
+        <div className="overflow-x-auto">
+            <table className="w-full text-[11px] font-mono" style={{ borderCollapse: 'collapse' }}>
                 <thead>
                     <tr>
-                        <th className="p-1.5 text-left text-bb-muted border-b border-bb-border">CPI↓\PKB→</th>
+                        <th className="p-1.5 text-left text-bb-muted border-b border-bb-border text-[10px]">CPI↓ \ PKB→</th>
                         {gdpRange.map(g => (
-                            <th key={g} className={`p-1.5 text-center border-b border-bb-border ${g === closestGDP ? 'text-bb-accent' : 'text-bb-muted'}`}>
+                            <th key={g} className={`p-1.5 text-center border-b border-bb-border text-[10px] ${g === closestGDP ? 'text-bb-accent' : 'text-bb-muted'}`}>
                                 {g.toFixed(1)}%
                             </th>
                         ))}
@@ -137,16 +137,22 @@ function SensitivityTable({ params, currentCPI, currentGDP }: {
                 <tbody>
                     {cpiRange.map((cpi, ci) => (
                         <tr key={cpi}>
-                            <td className={`p-1.5 border-b border-bb-border/30 ${cpi === closestCPI ? 'text-bb-accent' : 'text-bb-muted'}`}>
+                            <td className={`p-1.5 border-b border-bb-bg ${cpi === closestCPI ? 'text-bb-accent font-bold' : 'text-bb-muted'}`}>
                                 {cpi.toFixed(1)}%
                             </td>
                             {gdpRange.map((gdp, gi) => {
                                 const rate = matrix[ci][gi];
-                                const isActive = cpi === closestCPI && gdp === closestGDP;
+                                const isCurrent = cpi === closestCPI && gdp === closestGDP;
                                 return (
-                                    <td key={gdp} className={`p-1.5 text-center border-b border-bb-border/30 transition-colors ${isActive ? 'bg-bb-accent/20 text-bb-accent font-bold ring-1 ring-bb-accent/40'
-                                        : rate < 2 ? 'text-green-400' : rate > 5 ? 'text-red-400' : 'text-bb-text'
-                                        }`}>
+                                    <td key={gdp} className="p-1.5 text-center border-b border-bb-bg"
+                                        style={{
+                                            background: isCurrent ? 'rgba(255,107,0,0.15)' : undefined,
+                                            border: isCurrent ? '1px solid #FF6B00' : undefined,
+                                            borderRadius: isCurrent ? 3 : 0,
+                                            color: isCurrent ? '#FF6B00' : rate < 2 ? '#22C55E' : rate > 6 ? '#EF4444' : rate > 4 ? '#FB923C' : '#E2E8F0',
+                                            fontWeight: isCurrent ? 700 : 400,
+                                        }}
+                                    >
                                         {rate.toFixed(1)}%
                                     </td>
                                 );
@@ -155,222 +161,335 @@ function SensitivityTable({ params, currentCPI, currentGDP }: {
                     ))}
                 </tbody>
             </table>
-            <div className="text-[9px] text-bb-muted mt-1 px-2">
-                🟧 = obecna kombinacja. Parametry: r*={params.rNeutral}%, π*={params.piTarget}%, y*={params.potentialGDP}%, α={params.weightInflation}, β={params.weightGDP}
-            </div>
         </div>
     );
 }
 
-// ===== TOOL 2: Taylor Rule PRO =====
+// ===== TOOL 2: Taylor Rule PRO V2 =====
 
 function TaylorRuleTool() {
-    const cpiQuery = useInflationMonthly();
-    const gdpQuery = useGDPQuarterly();
     const { data: nbpRates } = useNBPInterestRates();
-
-    const currentRate = nbpRates?.rates?.find((r: { name: string }) => r.name === 'Stopa referencyjna')?.value ?? 4.00;
-    const lastCPI = cpiQuery.data?.data?.PL?.slice(-1)[0]?.value ?? 2.5;
-    const lastGDP = gdpQuery.data?.data?.PL?.slice(-1)[0]?.value ?? 3.6;
+    const currentRPP = nbpRates?.rates?.find((r: { name: string }) => r.name === 'Stopa referencyjna')?.value ?? 4.00;
 
     const [params, setParams] = useState<TaylorParams>(DEFAULT_TAYLOR);
-    const [chartRange, setChartRange] = useState(60); // months to show
+    const [range, setRange] = useState('MAX');
+    const [showMethodology, setShowMethodology] = useState(false);
 
-    const result = useMemo(() => taylorRule(params, lastCPI, lastGDP), [params, lastCPI, lastGDP]);
-    const diff = +(currentRate - result.optimalRate).toFixed(2);
+    const update = (key: keyof TaylorParams, val: number) => setParams(p => ({ ...p, [key]: val }));
+
+    const presets: Record<string, Partial<TaylorParams>> = {
+        classic: { weightInflation: 0.5, weightOutput: 0.5, rStar: 1.5 },
+        yellen: { weightInflation: 0.5, weightOutput: 1.0, rStar: 1.5 },
+        hawkish: { weightInflation: 1.0, weightOutput: 0.5, rStar: 1.5 },
+        bisEME: { weightInflation: 0.5, weightOutput: 1.0, rStar: 2.0 },
+    };
+
+    const applyPreset = (name: string) => setParams(p => ({ ...p, ...presets[name] }));
+
+    // Current values from hardcoded data
+    const currentCPI = CPI_DATA_PL[CPI_DATA_PL.length - 1].value;
+    const currentGDP = (() => {
+        const lastCPI = CPI_DATA_PL[CPI_DATA_PL.length - 1];
+        const [y, m] = lastCPI.date.split('-').map(Number);
+        const q = Math.ceil(m / 3);
+        const qKey = `${y}Q${q}`;
+        return GDP_QUARTERLY_PL.find(d => d.q === qKey)?.value ?? 3.6;
+    })();
+
+    const result = useMemo(() => taylorRule(params, currentCPI, currentGDP), [params, currentCPI, currentGDP]);
+    const currentGap = +(currentRPP - result.optimalRate).toFixed(2);
 
     // Historical data
-    const historicalData = useMemo(() => {
-        const cpiSeries = (cpiQuery.data?.data?.PL ?? []).filter((d: { value: number | null }) => d.value !== null) as { date: string; value: number }[];
-        const gdpSeries = (gdpQuery.data?.data?.PL ?? []).filter((d: { value: number | null }) => d.value !== null) as { date: string; value: number }[];
-        if (cpiSeries.length === 0 || gdpSeries.length === 0) return [];
-        return calculateHistoricalTaylor(cpiSeries, gdpSeries, params);
-    }, [cpiQuery.data, gdpQuery.data, params]);
+    const rangeMonths = range === 'MAX' ? 0 : range === '5Y' ? 60 : range === '3Y' ? 36 : range === '2Y' ? 24 : 12;
+    const historicalData = useMemo(() =>
+        buildHistoricalTaylor(CPI_DATA_PL, GDP_QUARTERLY_PL, params, rangeMonths),
+        [params, rangeMonths]
+    );
 
-    const filteredHistory = useMemo(() => {
-        if (chartRange === 0) return historicalData; // MAX
-        return historicalData.slice(-chartRange);
-    }, [historicalData, chartRange]);
+    const chartInterval = range === 'MAX' ? 5 : range === '5Y' ? 5 : range === '3Y' ? 3 : range === '2Y' ? 2 : 1;
 
     return (
-        <div className="space-y-2">
-            {/* Params row */}
-            <ChartPanel title="TAYLOR RULE MONITOR — PRO" source="Model + Eurostat + NBP">
-                <div className="px-3 space-y-1.5 pb-2">
-                    <div className="text-[10px] text-bb-muted font-semibold mb-0.5">Parametry modelu:</div>
-                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-x-6 gap-y-1">
-                        <Slider label="r* (neutralna)" value={params.rNeutral} min={0} max={4} step={0.1}
-                            onChange={v => setParams(p => ({ ...p, rNeutral: v }))} />
-                        <Slider label="Cel inflacyjny" value={params.piTarget} min={1} max={5} step={0.1}
-                            onChange={v => setParams(p => ({ ...p, piTarget: v }))} />
-                        <Slider label="PKB potencjalny" value={params.potentialGDP} min={1} max={5} step={0.1}
-                            onChange={v => setParams(p => ({ ...p, potentialGDP: v }))} />
-                        <div className="flex items-center gap-3">
-                            <Slider label="Waga inflacji (α)" value={params.weightInflation} min={0} max={1.5} step={0.1}
-                                onChange={v => setParams(p => ({ ...p, weightInflation: v }))} unit="" liveLabel={params.weightInflation.toFixed(1)} />
-                        </div>
-                        <Slider label="Waga PKB (β)" value={params.weightGDP} min={0} max={1.5} step={0.1}
-                            onChange={v => setParams(p => ({ ...p, weightGDP: v }))} unit="" liveLabel={params.weightGDP.toFixed(1)} />
-                    </div>
-                    <div className="flex gap-2 mt-1">
-                        {[
-                            { label: 'Klasyczny (0.5/0.5)', a: 0.5, b: 0.5 },
-                            { label: 'Anty-inflacyjny (1.0/0.5)', a: 1.0, b: 0.5 },
-                            { label: 'Pro-wzrostowy (0.5/1.0)', a: 0.5, b: 1.0 },
-                        ].map(p => (
-                            <button key={p.label} onClick={() => setParams(prev => ({ ...prev, weightInflation: p.a, weightGDP: p.b }))}
-                                className={`text-[9px] px-2 py-1 rounded-sm font-mono transition ${params.weightInflation === p.a && params.weightGDP === p.b
-                                    ? 'bg-bb-accent/20 text-bb-accent' : 'bg-bb-border/20 text-bb-muted hover:bg-bb-border/40'
-                                    }`}>{p.label}</button>
-                        ))}
-                    </div>
+        <div className="space-y-3">
+            {/* Header + current data */}
+            <ChartPanel title="TAYLOR RULE MONITOR — PRO" source="Eurostat HICP · NBP · Model">
+                <div className="flex justify-end px-3 pb-1 text-[10px] text-bb-muted font-mono">
+                    CPI: {currentCPI}% | PKB: {currentGDP}% | RPP: {currentRPP}%
                 </div>
             </ChartPanel>
 
-            {/* Main cards */}
+            {/* Parameter sliders */}
+            <div className="bb-panel p-3">
+                <div className="flex flex-wrap gap-4 mb-3">
+                    {[
+                        { label: 'r* neutralna', key: 'rStar' as const, min: 0, max: 3.5, step: 0.25, unit: '%', sub: 'NBP szacunek ~1.5%' },
+                        { label: 'Cel inflacyjny π*', key: 'piTarget' as const, min: 1, max: 4, step: 0.5, unit: '%', sub: 'NBP oficjalny = 2.5%' },
+                        { label: 'PKB potencjalny y*', key: 'potentialGDP' as const, min: 1, max: 5, step: 0.25, unit: '%', sub: 'Projekcja NBP ~3.0%' },
+                        { label: 'Waga inflacji α', key: 'weightInflation' as const, min: 0, max: 1.5, step: 0.1, unit: '', sub: 'Taylor 1993: 0.5' },
+                        { label: 'Waga PKB β', key: 'weightOutput' as const, min: 0, max: 1.5, step: 0.1, unit: '', sub: 'Taylor 1993: 0.5' },
+                    ].map(s => (
+                        <div key={s.key} className="flex-1 min-w-[130px]">
+                            <div className="flex justify-between items-baseline mb-1">
+                                <span className="text-[10px] text-bb-muted tracking-wide">{s.label}</span>
+                                <span className="font-mono text-sm text-bb-accent font-bold">
+                                    {params[s.key].toFixed(s.step < 1 ? 1 : 0)}{s.unit}
+                                </span>
+                            </div>
+                            <input type="range" min={s.min} max={s.max} step={s.step} value={params[s.key]}
+                                onChange={e => update(s.key, +e.target.value)}
+                                className="w-full h-1 rounded-full accent-[#FF6B00] bg-bb-border cursor-pointer"
+                            />
+                            <div className="text-[9px] text-bb-muted/60 mt-0.5">{s.sub}</div>
+                        </div>
+                    ))}
+                </div>
+                {/* Presets */}
+                <div className="flex gap-2 flex-wrap">
+                    {[
+                        { key: 'classic', label: 'Classic (0.5/0.5)', desc: 'Taylor 1993' },
+                        { key: 'yellen', label: 'Balanced (0.5/1.0)', desc: 'Taylor-Yellen 1999' },
+                        { key: 'hawkish', label: 'Anty-inflacyjny (1.0/0.5)', desc: 'Jastrzębi' },
+                        { key: 'bisEME', label: 'BIS EME (0.5/1.0, r*=2)', desc: 'Gosp. wschodzące' },
+                    ].map(({ key, label, desc }) => {
+                        const p = presets[key];
+                        const active = params.weightInflation === p.weightInflation && params.weightOutput === p.weightOutput && params.rStar === p.rStar;
+                        return (
+                            <button key={key} onClick={() => applyPreset(key)}
+                                className="text-[10px] px-3 py-1.5 rounded font-mono transition-all text-bb-muted"
+                                style={{
+                                    background: active ? 'rgba(255,107,0,0.15)' : '#0F172A',
+                                    border: active ? '1px solid #FF6B00' : '1px solid #1E293B',
+                                }}
+                            >
+                                {label}
+                                <span className="block text-[8px] text-bb-muted/50">{desc}</span>
+                            </button>
+                        );
+                    })}
+                </div>
+            </div>
+
+            {/* Main metrics */}
             <div className="grid grid-cols-3 gap-2">
-                <div className="bb-panel p-3 text-center">
-                    <div className="text-[9px] text-bb-muted uppercase">Stopa Taylor</div>
-                    <div className="text-2xl font-mono font-bold text-bb-accent">{result.optimalRate.toFixed(2)}%</div>
-                </div>
-                <div className="bb-panel p-3 text-center">
-                    <div className="text-[9px] text-bb-muted uppercase">Stopa RPP</div>
-                    <div className="text-2xl font-mono font-bold text-bb-text">{currentRate.toFixed(2)}%</div>
-                </div>
-                <div className="bb-panel p-3 text-center">
-                    <div className="text-[9px] text-bb-muted uppercase">RPP vs Taylor</div>
-                    <div className={`text-2xl font-mono font-bold ${diff > 0.25 ? 'text-red-400' : diff < -0.25 ? 'text-green-400' : 'text-yellow-400'}`}>
-                        {diff > 0 ? '+' : ''}{diff.toFixed(2)}pp
+                <div className="bb-panel p-4 text-center">
+                    <div className="text-[10px] text-bb-accent tracking-wider mb-1">STOPA TAYLORA</div>
+                    <div className="text-3xl font-mono font-bold text-bb-accent">{result.optimalRate.toFixed(2)}%</div>
+                    <div className="text-[9px] text-bb-muted mt-1 font-mono">
+                        i = {currentCPI} + {params.rStar} + {params.weightInflation}×({currentCPI}−{params.piTarget}) + {params.weightOutput}×({currentGDP}−{params.potentialGDP})
                     </div>
+                </div>
+                <div className="bb-panel p-4 text-center">
+                    <div className="text-[10px] text-bb-muted tracking-wider mb-1">STOPA RPP</div>
+                    <div className="text-3xl font-mono font-bold text-bb-text">{currentRPP.toFixed(2)}%</div>
+                    <div className="text-[9px] text-bb-muted mt-1">NBP referencyjna, II.2026</div>
+                </div>
+                <div className="bb-panel p-4 text-center">
+                    <div className="text-[10px] text-bb-muted tracking-wider mb-1">RÓŻNICA</div>
+                    <div className={`text-3xl font-mono font-bold ${currentGap > 0.5 ? 'text-red-400' : currentGap < -0.5 ? 'text-green-400' : 'text-yellow-400'}`}>
+                        {currentGap >= 0 ? '+' : ''}{currentGap.toFixed(2)}pp
+                    </div>
+                    <div className="text-[9px] text-bb-muted mt-1">RPP − Taylor (+ = restrykcyjna)</div>
                 </div>
             </div>
 
             {/* Gauge */}
             <div className="bb-panel">
-                <GaugeMeter gap={diff} />
+                <GaugeMeter gap={currentGap} />
             </div>
 
             {/* Consensus comparison */}
-            <div className="bb-panel p-3">
-                <div className="text-[10px] text-bb-muted mb-2 font-semibold">📝 PORÓWNANIE Z KONSENSUSEM RYNKOWYM</div>
+            <div className="bb-panel p-4">
+                <div className="text-[10px] text-bb-muted tracking-wider font-semibold mb-3">📝 PORÓWNANIE Z KONSENSUSEM RYNKOWYM</div>
                 <div className="grid grid-cols-3 gap-3 text-center">
                     <div>
-                        <div className="text-[9px] text-bb-muted">Konsensus rynkowy</div>
-                        <div className="text-lg font-mono font-bold text-bb-text">{CONSENSUS.rateEndYear}%</div>
-                        <div className="text-[9px] text-bb-muted">stopa na XII.2026</div>
+                        <div className="text-[9px] text-bb-muted">Konsensus XII.2026</div>
+                        <div className="text-xl font-mono font-bold text-bb-text">{CONSENSUS.rateEndYear}%</div>
                     </div>
                     <div>
-                        <div className="text-[9px] text-bb-muted">Taylor Rule</div>
-                        <div className="text-lg font-mono font-bold text-bb-accent">{result.optimalRate.toFixed(2)}%</div>
-                        <div className="text-[9px] text-bb-muted">optymalna dziś</div>
+                        <div className="text-[9px] text-bb-muted">Taylor (bazowy)</div>
+                        <div className="text-xl font-mono font-bold text-bb-accent">{result.optimalRate.toFixed(2)}%</div>
                     </div>
                     <div>
-                        <div className="text-[9px] text-bb-muted">RPP rzeczywista</div>
-                        <div className="text-lg font-mono font-bold text-bb-text">{currentRate.toFixed(2)}%</div>
-                        <div className="text-[9px] text-bb-muted">obecna</div>
+                        <div className="text-[9px] text-bb-muted">RPP obecna</div>
+                        <div className="text-xl font-mono font-bold text-bb-text">{currentRPP}%</div>
                     </div>
                 </div>
-                <div className="text-[10px] text-bb-muted mt-2 pt-2 border-t border-bb-border/30">
-                    {result.optimalRate < CONSENSUS.rateEndYear
-                        ? `→ Taylor sugeruje więcej cięć niż wycenia rynek (${(CONSENSUS.rateEndYear - result.optimalRate).toFixed(1)}pp niżej)`
-                        : `→ Rynek wycenia więcej cięć niż sugeruje Taylor (${(result.optimalRate - CONSENSUS.rateEndYear).toFixed(1)}pp różnicy)`
-                    }
-                    <span className="block text-[9px] mt-0.5">Źródło: {CONSENSUS.source}</span>
+                <div className="text-[10px] text-bb-muted mt-3 pt-2 border-t border-bb-border/30 leading-relaxed">
+                    → {result.optimalRate < CONSENSUS.rateEndYear
+                        ? `Taylor sugeruje więcej cięć niż wycenia rynek (${(CONSENSUS.rateEndYear - result.optimalRate).toFixed(1)}pp niżej)`
+                        : `Rynek wycenia więcej cięć niż sugeruje Taylor (${(result.optimalRate - CONSENSUS.rateEndYear).toFixed(1)}pp różnicy)`}
+                    <br />
+                    <span className="text-[9px] text-bb-muted/60">Źródło: {CONSENSUS.source}</span>
                 </div>
             </div>
 
             {/* Historical chart */}
-            <ChartPanel title="TAYLOR RULE VS STOPA RPP — HISTORIA" source="Eurostat · NBP">
-                <div className="flex gap-1 px-2 mb-2">
-                    {[{ label: '1Y', val: 12 }, { label: '2Y', val: 24 }, { label: '3Y', val: 36 }, { label: '5Y', val: 60 }, { label: 'MAX', val: 0 }].map(r => (
-                        <button key={r.label} onClick={() => setChartRange(r.val)}
-                            className={`text-[9px] px-2 py-0.5 rounded-sm font-mono ${chartRange === r.val ? 'bg-bb-accent/20 text-bb-accent' : 'bg-bb-border/20 text-bb-muted'}`}>
-                            {r.label}
+            <ChartPanel title="STOPA TAYLORA vs RPP — HISTORIA" source="Eurostat · NBP">
+                <div className="flex gap-1 px-3 mb-2 justify-end">
+                    {['1Y', '2Y', '3Y', '5Y', 'MAX'].map(r => (
+                        <button key={r} onClick={() => setRange(r)}
+                            className="px-2 py-0.5 text-[9px] font-mono font-semibold rounded"
+                            style={{
+                                background: range === r ? '#FF6B00' : 'transparent',
+                                border: range === r ? 'none' : '1px solid #334155',
+                                color: range === r ? '#0A0E17' : '#64748B',
+                            }}
+                        >
+                            {r}
                         </button>
                     ))}
                 </div>
-                {filteredHistory.length > 0 ? (
-                    <ResponsiveContainer width="100%" height={350}>
-                        <ComposedChart data={filteredHistory} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
+                {historicalData.length > 0 ? (
+                    <ResponsiveContainer width="100%" height={380}>
+                        <ComposedChart data={historicalData} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
                             <defs>
-                                <linearGradient id="redTaylorFill" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="0%" stopColor="#EF4444" stopOpacity={0.25} />
-                                    <stop offset="100%" stopColor="#EF4444" stopOpacity={0.02} />
-                                </linearGradient>
-                                <linearGradient id="greenTaylorFill" x1="0" y1="0" x2="0" y2="1">
+                                <linearGradient id="taylorAreaGrad" x1="0" y1="0" x2="0" y2="1">
                                     <stop offset="0%" stopColor="#22C55E" stopOpacity={0.25} />
                                     <stop offset="100%" stopColor="#22C55E" stopOpacity={0.02} />
                                 </linearGradient>
                             </defs>
-                            <CartesianGrid {...GRID} />
-                            <XAxis dataKey="date" tick={{ fill: '#64748B', fontSize: 9 }} stroke="#1E293B" interval={Math.max(1, Math.floor(filteredHistory.length / 12))} />
-                            <YAxis domain={[-2, 'auto']} tick={TICK} stroke="#1E293B" unit="%" />
+                            <XAxis dataKey="date" tick={{ fill: '#475569', fontSize: 9 }} tickLine={false} axisLine={{ stroke: '#1E293B' }}
+                                interval={chartInterval} />
+                            <YAxis tick={{ fill: '#475569', fontSize: 9 }} tickLine={false} axisLine={{ stroke: '#1E293B' }}
+                                domain={['auto', 'auto']} unit="%" />
                             <Tooltip content={({ active, payload }: { active?: boolean; payload?: readonly { payload: Record<string, number | string> }[] }) => {
                                 if (!active || !payload?.[0]) return null;
                                 const d = payload[0].payload;
+                                const gapColor = Number(d.gap) > 0.5 ? '#EF4444' : Number(d.gap) < -0.5 ? '#22C55E' : '#FBBF24';
                                 return (
-                                    <div className="bg-bb-surface border border-bb-border rounded p-2 text-xs font-mono shadow-lg">
-                                        <div className="text-bb-accent mb-1">{d.date}</div>
-                                        <div className="text-[#FF6B00]">Taylor: {Number(d.taylorRate).toFixed(2)}%</div>
-                                        <div className="text-bb-text">RPP: {Number(d.rppRate).toFixed(2)}%</div>
-                                        <div className={Number(d.gap) > 0 ? 'text-red-400' : 'text-green-400'}>Gap: {Number(d.gap) > 0 ? '+' : ''}{Number(d.gap).toFixed(2)}pp</div>
-                                        <div className="text-bb-muted mt-1">CPI: {Number(d.inflation).toFixed(1)}% | PKB: {Number(d.gdpGrowth).toFixed(1)}%</div>
+                                    <div className="bg-bb-surface border border-bb-border rounded p-2.5 text-[11px] font-mono shadow-lg">
+                                        <div className="text-bb-muted mb-1.5 font-semibold">{d.date}</div>
+                                        <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
+                                            <span className="text-[#FF6B00]">Taylor:</span>
+                                            <span className="text-[#FF6B00] text-right">{Number(d.taylor).toFixed(2)}%</span>
+                                            <span className="text-bb-text">RPP:</span>
+                                            <span className="text-bb-text text-right">{Number(d.rpp).toFixed(2)}%</span>
+                                            <span style={{ color: gapColor }}>Gap:</span>
+                                            <span style={{ color: gapColor }} className="text-right">{Number(d.gap) >= 0 ? '+' : ''}{Number(d.gap).toFixed(2)}pp</span>
+                                            <span className="text-bb-muted">CPI:</span>
+                                            <span className="text-bb-muted text-right">{Number(d.inflation).toFixed(1)}%</span>
+                                            <span className="text-bb-muted">PKB:</span>
+                                            <span className="text-bb-muted text-right">{Number(d.gdp).toFixed(1)}%</span>
+                                        </div>
                                     </div>
                                 );
                             }} />
-                            <Legend wrapperStyle={{ fontSize: '10px', color: '#64748B' }} />
-                            <ReferenceLine y={0} stroke="#64748B" strokeDasharray="3 3" />
-                            <Line type="stepAfter" dataKey="rppRate" stroke="#E2E8F0" strokeWidth={2} dot={false} name="Stopa RPP" />
-                            <Line type="monotone" dataKey="taylorRate" stroke="#FF6B00" strokeWidth={2} dot={false} name="Taylor Rule" />
+                            <ReferenceLine y={0} stroke="#1E293B" strokeDasharray="3 3" />
+                            <Area type="monotone" dataKey="taylor" stroke="none" fill="url(#taylorAreaGrad)" fillOpacity={0.3} />
+                            <Line type="monotone" dataKey="taylor" stroke="#FF6B00" strokeWidth={2.5} dot={false} name="Taylor Rule" />
+                            <Line type="monotone" dataKey="rpp" stroke="#E2E8F0" strokeWidth={2} dot={false} name="Stopa RPP" />
                         </ComposedChart>
                     </ResponsiveContainer>
                 ) : (
-                    <div className="text-center text-bb-muted py-12 text-sm">Ładowanie danych historycznych z Eurostat...</div>
+                    <div className="text-center text-bb-muted py-16">Brak danych...</div>
                 )}
-                <div className="flex gap-3 px-2 mt-1 text-[9px] text-bb-muted">
-                    <span className="flex items-center gap-1">🟥 RPP &gt; Taylor = za restrykcyjna</span>
-                    <span className="flex items-center gap-1">🟩 RPP &lt; Taylor = za luźna</span>
+                <div className="flex gap-5 justify-center mt-2 text-[10px]">
+                    <span className="flex items-center gap-1.5"><span className="inline-block w-5 h-[3px] bg-[#FF6B00] rounded" /><span className="text-bb-muted">Taylor Rule (optymalna)</span></span>
+                    <span className="flex items-center gap-1.5"><span className="inline-block w-5 h-[3px] bg-bb-text rounded" /><span className="text-bb-muted">Stopa RPP (rzeczywista)</span></span>
                 </div>
             </ChartPanel>
 
-            {/* Data breakdown */}
-            <div className="bb-panel px-3 py-2 grid grid-cols-2 gap-2 text-xs">
-                <div>
-                    <span className="text-bb-muted">Inflacja (HICP): </span>
-                    <span className="text-bb-accent font-mono">{lastCPI.toFixed(1)}%</span>
-                    <span className="text-bb-muted"> → gap: </span>
-                    <span className="font-mono">{result.inflationGap > 0 ? '+' : ''}{result.inflationGap.toFixed(1)}pp → wkład: {result.inflationContrib > 0 ? '+' : ''}{result.inflationContrib.toFixed(2)}%</span>
+            {/* Gap bar chart */}
+            <ChartPanel title="ODCHYLENIE RPP OD TAYLORA (pp)" source="">
+                <ResponsiveContainer width="100%" height={120}>
+                    <BarChart data={historicalData} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
+                        <XAxis dataKey="date" tick={{ fill: '#475569', fontSize: 8 }} tickLine={false} axisLine={{ stroke: '#1E293B' }}
+                            interval={chartInterval > 2 ? chartInterval + 3 : 2} />
+                        <YAxis tick={{ fill: '#475569', fontSize: 8 }} tickLine={false} axisLine={{ stroke: '#1E293B' }} unit="pp" />
+                        <ReferenceLine y={0} stroke="#334155" />
+                        <Tooltip content={({ active, payload }: { active?: boolean; payload?: readonly { payload: Record<string, number | string> }[] }) => {
+                            if (!active || !payload?.[0]) return null;
+                            const d = payload[0].payload;
+                            return (
+                                <div className="bg-bb-surface border border-bb-border rounded p-2 text-[10px] font-mono shadow-lg">
+                                    <div className="text-bb-muted">{d.date}</div>
+                                    <div className={Number(d.gap) > 0 ? 'text-red-400' : 'text-green-400'}>
+                                        Gap: {Number(d.gap) >= 0 ? '+' : ''}{Number(d.gap).toFixed(2)}pp
+                                    </div>
+                                </div>
+                            );
+                        }} />
+                        <Bar dataKey="gap" radius={[2, 2, 0, 0]}>
+                            {historicalData.map((entry, i) => (
+                                <Cell key={i} fill={entry.gap > 0.5 ? '#EF444488' : entry.gap < -0.5 ? '#22C55E88' : '#FBBF2488'} />
+                            ))}
+                        </Bar>
+                    </BarChart>
+                </ResponsiveContainer>
+                <div className="flex gap-4 justify-center text-[9px] text-bb-muted mt-1">
+                    <span>🟢 RPP poniżej Taylora (za luźna)</span>
+                    <span>🔴 RPP powyżej Taylora (za restrykcyjna)</span>
                 </div>
-                <div>
-                    <span className="text-bb-muted">PKB YoY: </span>
-                    <span className="text-bb-accent font-mono">{lastGDP.toFixed(1)}%</span>
-                    <span className="text-bb-muted"> → gap: </span>
-                    <span className="font-mono">{result.outputGap > 0 ? '+' : ''}{result.outputGap.toFixed(1)}pp → wkład: {result.outputContrib > 0 ? '+' : ''}{result.outputContrib.toFixed(2)}%</span>
-                </div>
-            </div>
+            </ChartPanel>
 
             {/* Sensitivity table */}
-            <div className="bb-panel">
-                <SensitivityTable params={params} currentCPI={lastCPI} currentGDP={lastGDP} />
+            <ChartPanel title="ANALIZA WRAŻLIWOŚCI — OPTYMALNA STOPA DLA KOMBINACJI CPI × PKB" source="">
+                <SensitivityTable params={params} currentCPI={currentCPI} currentGDP={currentGDP} />
+                <div className="text-[9px] text-bb-muted px-3 mt-2">
+                    🟧 = obecna kombinacja. Parametry: r*={params.rStar}%, π*={params.piTarget}%, y*={params.potentialGDP}%, α={params.weightInflation}, β={params.weightOutput}
+                </div>
+            </ChartPanel>
+
+            {/* Formula decomposition */}
+            <div className="bb-panel p-4">
+                <div className="text-[10px] text-bb-muted tracking-wider font-semibold mb-3">DEKOMPOZYCJA WZORU</div>
+                <div className="font-mono text-xs leading-relaxed">
+                    <div className="text-bb-muted mb-3">
+                        i = <span className="text-[#FF6B00]">π</span> + <span className="text-[#38BDF8]">r*</span> + <span className="text-[#A78BFA]">α</span>(<span className="text-[#FF6B00]">π</span> − <span className="text-[#38BDF8]">π*</span>) + <span className="text-[#A78BFA]">β</span>(<span className="text-green-400">y</span> − <span className="text-[#38BDF8]">y*</span>)
+                    </div>
+                    {[
+                        { label: 'π (inflacja)', color: '#FF6B00', barW: (currentCPI / 18) * 100, value: `+${currentCPI.toFixed(1)}%` },
+                        { label: 'r* (neutralna)', color: '#38BDF8', barW: (params.rStar / 3.5) * 100, value: `+${params.rStar.toFixed(1)}%` },
+                        {
+                            label: 'Inflation gap', color: '#A78BFA', barW: Math.min(100, Math.abs(currentCPI - params.piTarget) / 5 * 100),
+                            value: `${result.inflationContrib >= 0 ? '+' : ''}${result.inflationContrib.toFixed(2)}%`
+                        },
+                        {
+                            label: 'Output gap', color: '#22C55E', barW: Math.min(100, Math.abs(currentGDP - params.potentialGDP) / 5 * 100),
+                            value: `${result.outputContrib >= 0 ? '+' : ''}${result.outputContrib.toFixed(2)}%`
+                        },
+                    ].map(({ label, color, barW, value }) => (
+                        <div key={label} className="grid grid-cols-[120px_1fr_80px] gap-3 items-center mb-1.5">
+                            <span style={{ color }}>{label}</span>
+                            <div className="h-1 bg-bb-border/50 rounded-full relative">
+                                <div className="h-1 rounded-full" style={{ background: color, width: `${barW}%` }} />
+                            </div>
+                            <span className="text-right" style={{ color }}>{value}</span>
+                        </div>
+                    ))}
+                    <div className="grid grid-cols-[120px_1fr_80px] gap-3 items-center mt-2 pt-2 border-t border-bb-border/30">
+                        <span className="text-bb-accent font-bold">SUMA</span>
+                        <div />
+                        <span className="text-right text-bb-accent font-bold">= {result.optimalRate.toFixed(2)}%</span>
+                    </div>
+                </div>
             </div>
 
             {/* Methodology */}
-            <div className="bb-panel px-3 py-2 text-[10px] text-bb-muted">
-                <details>
-                    <summary className="cursor-pointer hover:text-bb-text">ℹ️ Metodologia</summary>
-                    <div className="mt-1 space-y-1">
-                        <div>r_taylor = r* + α×(π - π*) + β×(y - y*)</div>
-                        <div>r* = stopa neutralna, π = inflacja HICP, π* = cel NBP, y = PKB YoY, y* = PKB potencjalny</div>
-                        <div>α = waga inflacji, β = waga output gap. Klasyczny Taylor: α=β=0.5</div>
-                        <div>Dane PKB kwartalne interpolowane na miesiące. Historia RPP od 2020 (hardcoded).</div>
+            <div className="bb-panel overflow-hidden">
+                <button onClick={() => setShowMethodology(!showMethodology)}
+                    className="w-full px-4 py-3 bg-transparent border-none text-bb-muted text-[10px] text-left cursor-pointer flex justify-between items-center tracking-wider font-semibold"
+                >
+                    ℹ️ METODOLOGIA I OGRANICZENIA
+                    <span>{showMethodology ? '▲' : '▼'}</span>
+                </button>
+                {showMethodology && (
+                    <div className="px-4 pb-4 text-[11px] text-bb-muted leading-relaxed space-y-2.5">
+                        <p><strong className="text-bb-text">Wzór:</strong> i = π + r* + α(π − π*) + β(y − y*) — wariant Taylora (1993), gdzie π to bieżąca inflacja HICP.</p>
+                        <p><strong className="text-bb-text">Inflacja (π):</strong> HICP YoY z Eurostat (zharmonizowany indeks cen). Taylor oryginalnie używał deflatora PKB.</p>
+                        <p><strong className="text-bb-text">Output gap:</strong> Uproszczony: PKB_actual − PKB_potencjalny. Nie stosujemy filtra HP ani funkcji produkcji (metoda NBP/OECD). Potencjał ~3.0% wg projekcji NBP z XI.2025.</p>
+                        <p><strong className="text-bb-text">r* (stopa neutralna):</strong> Domyślnie 1.5% (nominalnie). Bielecki et al. (2023, NBP WP 364) szacują r* dla PL za pomocą wielu modeli — wyniki wskazują na spadek NRI w ostatnich dekadach.</p>
+                        <p><strong className="text-bb-text">Cel inflacyjny π*:</strong> 2.5% — oficjalny ciągły cel NBP od 2004 (±1pp pasmo tolerancji).</p>
+                        <p><strong className="text-bb-text">Warianty:</strong> Classic (Taylor 1993, α=β=0.5), Balanced (Taylor-Yellen 1999, β=1.0), BIS EME (r*=2.0, β=1.0). Grabia (2019, Olsztyn Economic Journal) wykazał, że zmodyfikowana wersja reguły najlepiej pasuje do decyzji RPP w okresie 2000-2017.</p>
+                        <p><strong className="text-bb-text">Ograniczenia:</strong> Nie uwzględnia: kursu walutowego, cen energii, interest rate smoothing (inertia), forward guidance ECB, ryzyka geopolitycznego.</p>
+                        <p className="text-yellow-400 font-semibold text-[10px] mt-3">
+                            ⚠️ Narzędzie edukacyjne. Nie stanowi rekomendacji inwestycyjnej ani oceny polityki monetarnej.
+                        </p>
                     </div>
-                </details>
+                )}
             </div>
-            <Disclaimer />
         </div>
     );
 }
-
 function RateSimulator() {
     const { data: nbpRates } = useNBPInterestRates();
     const { data: wiborData } = useWibor();
