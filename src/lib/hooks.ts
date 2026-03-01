@@ -209,6 +209,19 @@ export function useCurrentAccount() {
     return useEurostat('current_account', 'PL');
 }
 
+// ─── CPI Forecaster Data Hooks ──────────────────────────
+
+export function useHICPIndex(component: 'hicp_index' | 'hicp_food' | 'hicp_fuel' | 'hicp_energy' | 'hicp_core' = 'hicp_index') {
+    return useEurostat(component, 'PL');
+}
+
+export function useHICPFoodYoY() { return useEurostat('hicp_food_yoy', 'PL'); }
+export function useHICPCoreYoY() { return useEurostat('hicp_core_yoy', 'PL'); }
+export function usePPI() { return useEurostat('ppi', 'PL'); }
+export function useBrent() { return useStooq('brent.c', 90); }
+export function useUSDPLN() { return useNBPCurrencyHistory('usd', 90); }
+export function useEURPLN() { return useNBPCurrencyHistory('eur', 90); }
+
 // PL vs EU comparison — fetches both geos at once
 export function usePLvsEU(indicator: string) {
     return useEurostat(indicator, 'PL,EU27_2020');

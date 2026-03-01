@@ -13,6 +13,48 @@ const DATASETS: Record<string, { params: Record<string, string>; label: string; 
         label: 'HICP Inflation YoY',
         since: '2024-01',
     },
+    // ─── HICP Index (2015=100) — for CPI Forecaster M/M calculations ───
+    hicp_index: {
+        params: { coicop: 'CP00', unit: 'I15' },
+        label: 'HICP Index (2015=100)',
+        since: '2019-01',
+    },
+    hicp_food: {
+        params: { coicop: 'CP01', unit: 'I15' },
+        label: 'HICP Food Index',
+        since: '2019-01',
+    },
+    hicp_fuel: {
+        params: { coicop: 'CP0722', unit: 'I15' },
+        label: 'HICP Fuels Index',
+        since: '2019-01',
+    },
+    hicp_energy: {
+        params: { coicop: 'CP04', unit: 'I15' },
+        label: 'HICP Housing/Energy Index',
+        since: '2019-01',
+    },
+    hicp_core: {
+        params: { coicop: 'TOT_X_NRG_FOOD', unit: 'I15' },
+        label: 'HICP Core (ex food & energy) Index',
+        since: '2019-01',
+    },
+    hicp_food_yoy: {
+        params: { coicop: 'CP01' },
+        label: 'HICP Food YoY',
+        since: '2019-01',
+    },
+    hicp_core_yoy: {
+        params: { coicop: 'TOT_X_NRG_FOOD' },
+        label: 'HICP Core YoY',
+        since: '2019-01',
+    },
+    // PPI — producer prices for CPI forecaster core block
+    ppi: {
+        params: { nace_r2: 'B-D', s_adj: 'NSA', unit: 'PCH_SM', indic_bt: 'PRIN' },
+        label: 'PPI YoY',
+        since: '2019-01',
+    },
     // Unemployment — seasonally adjusted, % of active population
     unemployment: {
         params: { sex: 'T', age: 'TOTAL', s_adj: 'SA', unit: 'PC_ACT' },
@@ -66,6 +108,14 @@ const DATASETS: Record<string, { params: Record<string, string>; label: string; 
 // Eurostat dataset code mapping
 const DATASET_CODES: Record<string, string> = {
     cpi: 'prc_hicp_manr',
+    hicp_index: 'prc_hicp_midx',
+    hicp_food: 'prc_hicp_midx',
+    hicp_fuel: 'prc_hicp_midx',
+    hicp_energy: 'prc_hicp_midx',
+    hicp_core: 'prc_hicp_midx',
+    hicp_food_yoy: 'prc_hicp_manr',
+    hicp_core_yoy: 'prc_hicp_manr',
+    ppi: 'sts_inpp_m',
     unemployment: 'une_rt_m',
     gdp_qoq: 'namq_10_gdp',
     gdp_yoy: 'namq_10_gdp',

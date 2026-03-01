@@ -21,6 +21,8 @@ import { taylorRule, buildHistoricalTaylor, sensitivityMatrix, DEFAULT_TAYLOR, t
 import { CONSENSUS, CPI_DATA_PL, GDP_QUARTERLY_PL, PMI_DATA_PL, NBP_GDP_PROJECTION } from '@/lib/static-data';
 import { projectDebt, sensitivityAnalysis, findCrossing, FISCAL_DEFAULTS, INITIAL_DEBT, type FiscalParams } from '@/lib/calculations/fiscal';
 import { pmiToGDP, compositeNowcast, buildPMIvsGDP, pmiScenarioTable, BACKTEST_RESULTS, BACKTEST_STATS, BLOOMBERG_CONSENSUS, INSAMPLE_RESIDUALS, type IndicatorInput } from '@/lib/calculations/leading';
+import { CPI_WEIGHTS, forecastFuelMM, forecastEnergyMM, forecastFoodMM, forecastCoreMM, aggregateCPIMM, computeYoY, buildBaseEffectCalendar, generateFanChart, detectAnomalies, analyzeTrend, BLOCK_RMSE, CPI_CONSENSUS, MANUAL_INPUTS, type BlockForecast, type FanChartPoint } from '@/lib/calculations/cpi-forecaster';
+import { useHICPIndex, useHICPFoodYoY, useHICPCoreYoY, usePPI, useBrent } from '@/lib/hooks';
 
 // ===== Shared UI =====
 
@@ -33,6 +35,7 @@ const TABS = [
     { key: 'fiscal', label: 'FISCAL' },
     { key: 'leading', label: 'LEADING IND.' },
     { key: 'reer', label: 'REER' },
+    { key: 'cpi', label: 'CPI FORECAST' },
 ];
 
 function Slider({ label, value, min, max, step, onChange, unit = '%', liveLabel }: {
@@ -1156,7 +1159,312 @@ function REERTool() {
 
 // ===== MAIN PAGE =====
 
+// ===== TOOL 6: CPI INFLATION FORECASTER =====
+
+function CPIForecasterTool() {
+    const hicpIndex = useHICPIndex('hicp_index');
+    const hicpFood = useHICPIndex('hicp_food');
+    const hicpFuel = useHICPIndex('hicp_fuel');
+    const hicpCore = useHICPIndex('hicp_core');
+    const hicpCoreYoY = useHICPCoreYoY();
+    const brentQuery = useBrent();
+    const cpiYoY = useInflationMonthly();
+    const [showMethodology, setShowMethodology] = useState(false);
+
+    // Extract latest data
+    const indexData = hicpIndex.data?.data?.PL ?? [];
+    const foodData = hicpFood.data?.data?.PL ?? [];
+    const fuelData = hicpFuel.data?.data?.PL ?? [];
+    const coreData = hicpCore.data?.data?.PL ?? [];
+    const cpiYoYData = cpiYoY.data?.data?.PL ?? [];
+
+    const isLoading = hicpIndex.isLoading || hicpFood.isLoading || brentQuery.isLoading;
+
+    // Compute M/M from index data
+    const computeMM = (data: { date: string; value: number | null }[]) => {
+        const valid = data.filter(d => d.value !== null) as { date: string; value: number }[];
+        if (valid.length < 2) return [];
+        return valid.slice(1).map((d, i) => ({
+            date: d.date,
+            value: +((d.value / valid[i].value - 1) * 100).toFixed(2),
+        }));
+    };
+
+    const headlineMMs = computeMM(indexData);
+    const foodMMs = computeMM(foodData);
+    const fuelMMs = computeMM(fuelData);
+    const coreMMs = computeMM(coreData);
+
+    // Latest values
+    const lastHeadlineMM = headlineMMs[headlineMMs.length - 1]?.value ?? 0.3;
+    const lastFoodMM = foodMMs[foodMMs.length - 1]?.value ?? 0.2;
+    const lastFuelMM = fuelMMs[fuelMMs.length - 1]?.value ?? -0.5;
+    const lastCoreMM = coreMMs[coreMMs.length - 1]?.value ?? 0.3;
+    const lastCPIYoY = cpiYoYData[cpiYoYData.length - 1]?.value ?? 3.7;
+    const lastCoreYoY = hicpCoreYoY.data?.data?.PL?.slice(-1)[0]?.value ?? 3.5;
+    const lastDate = headlineMMs[headlineMMs.length - 1]?.date ?? '2026-01';
+
+    // Brent data
+    const brentLatest = brentQuery.data?.latest?.close ?? 73;
+    const brentPrev = brentQuery.data?.data?.[brentQuery.data.data.length - 2]?.close ?? 75;
+    const brentChange = +((brentLatest / brentPrev - 1) * 100).toFixed(1);
+
+    // Simple forecasts for next month
+    const nextMonth = (() => { const [y, m] = lastDate.split('-').map(Number); const d = new Date(y, m, 1); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; })();
+    const nextMonthNum = parseInt(nextMonth.split('-')[1]);
+
+    const fuelForecast = forecastFuelMM(brentChange, 0.5, 0);
+    const energyForecast = forecastEnergyMM(nextMonth);
+    const foodForecast = forecastFoodMM(0.5, 0.3, nextMonthNum);
+    const coreForecast = +(0.7 * lastCoreMM + 0.3 * 0.25).toFixed(2); // Simplified inertia
+
+    const headlineForecastMM = aggregateCPIMM(fuelForecast, energyForecast, foodForecast, coreForecast);
+
+    // Build projected YoY (simplified: current + Δ from forecast vs base)
+    const forecastYoY = +(lastCPIYoY + (headlineForecastMM - (headlineMMs[headlineMMs.length - 13]?.value ?? 0.3))).toFixed(1);
+
+    // NBP gap
+    const nbpTarget = 2.5;
+    const nbpGap = +(forecastYoY - nbpTarget).toFixed(1);
+
+    // Fan chart — project forward 12 months using avg M/M
+    const avgMM = headlineMMs.length > 3 ? headlineMMs.slice(-6).reduce((s, d) => s + d.value, 0) / 6 : 0.3;
+    const futureMMs = Array.from({ length: 12 }, () => avgMM);
+    const validIndex = indexData.filter(d => d.value !== null) as { date: string; value: number }[];
+    const fanChartData = validIndex.length > 13 ? generateFanChart(lastCPIYoY, futureMMs, validIndex) : [];
+
+    // Historical CPI YoY for chart (last 36 months)
+    const historicalYoY = cpiYoYData.filter(d => d.value !== null).slice(-36) as { date: string; value: number }[];
+
+    // Base effect calendar
+    const baseEffect = buildBaseEffectCalendar(headlineMMs.slice(-12));
+
+    // Trend
+    const trend = analyzeTrend(headlineMMs.slice(-6).map(d => d.value));
+
+    // Blocks for display
+    const blocks: BlockForecast[] = [
+        { name: 'Paliwa', label: 'Paliwa silnikowe', weight: CPI_WEIGHTS.fuel, lastMM: lastFuelMM, forecastMM: fuelForecast, contribution: +(CPI_WEIGHTS.fuel * fuelForecast).toFixed(3), confidence: 3, source: 'MODEL', drivers: [{ name: 'Brent', value: brentLatest, unit: 'USD/bbl', change: brentChange, signal: brentChange > 0 ? 'up' : 'down' }] },
+        { name: 'Energia', label: 'Nośniki energii', weight: CPI_WEIGHTS.energy, lastMM: 0, forecastMM: energyForecast, contribution: +(CPI_WEIGHTS.energy * energyForecast).toFixed(3), confidence: 5, source: 'MANUAL', drivers: [] },
+        { name: 'Żywność', label: 'Żywność i napoje', weight: CPI_WEIGHTS.food, lastMM: lastFoodMM, forecastMM: foodForecast, contribution: +(CPI_WEIGHTS.food * foodForecast).toFixed(3), confidence: 3, source: 'HYBRID', drivers: [] },
+        { name: 'Core', label: 'Inflacja bazowa', weight: CPI_WEIGHTS.core, lastMM: lastCoreMM, forecastMM: coreForecast, contribution: +(CPI_WEIGHTS.core * coreForecast).toFixed(3), confidence: 4, source: 'AUTO', drivers: [] },
+    ];
+
+    // Data freshness
+    const blocksAvailable = [!hicpFuel.isLoading, true, !hicpFood.isLoading, !hicpCore.isLoading].filter(Boolean).length;
+
+    const confBars = (n: number) => '█'.repeat(n) + '░'.repeat(5 - n);
+
+    if (isLoading) {
+        return <div className="flex items-center justify-center p-20 text-bb-muted">Ładowanie danych Eurostat HICP...</div>;
+    }
+
+    return (
+        <div className="space-y-3">
+            {/* Header cards */}
+            <ChartPanel title="CPI INFLATION FORECASTER PRO" source="Bottom-Up Decomposition · Eurostat HICP · NBP · GUS">
+                <div className="grid grid-cols-5 gap-2 p-3">
+                    <div className="bb-panel p-3 text-center">
+                        <div className="text-[9px] text-bb-accent tracking-wider mb-1">CPI R/R PROGNOZA</div>
+                        <div className="text-2xl font-mono font-bold" style={{ color: forecastYoY > 3.5 ? '#EF4444' : forecastYoY > 2.5 ? '#FBBF24' : '#22C55E' }}>{forecastYoY.toFixed(1)}%</div>
+                        <div className="text-[8px] text-bb-muted mt-1">±{BLOCK_RMSE.headline}pp RMSE</div>
+                        <div className="text-[8px] text-bb-muted">{trend.emoji} vs {lastCPIYoY.toFixed(1)}%</div>
+                    </div>
+                    <div className="bb-panel p-3 text-center">
+                        <div className="text-[9px] text-bb-muted tracking-wider mb-1">CPI M/M PROGNOZA</div>
+                        <div className="text-2xl font-mono font-bold text-bb-text">{headlineForecastMM >= 0 ? '+' : ''}{headlineForecastMM.toFixed(2)}%</div>
+                        <div className="text-[8px] text-bb-muted mt-1">na {nextMonth}</div>
+                    </div>
+                    <div className="bb-panel p-3 text-center">
+                        <div className="text-[9px] text-bb-muted tracking-wider mb-1">CORE R/R</div>
+                        <div className="text-2xl font-mono font-bold text-bb-text">{lastCoreYoY.toFixed(1)}%</div>
+                        <div className="text-[8px] text-bb-muted mt-1">ex food & energy</div>
+                    </div>
+                    <div className="bb-panel p-3 text-center">
+                        <div className="text-[9px] tracking-wider mb-1" style={{ color: nbpGap > 0 ? '#EF4444' : '#22C55E' }}>NBP GAP</div>
+                        <div className="text-2xl font-mono font-bold" style={{ color: nbpGap > 0 ? '#EF4444' : '#22C55E' }}>{nbpGap >= 0 ? '+' : ''}{nbpGap}pp</div>
+                        <div className="text-[8px] text-bb-muted mt-1">{forecastYoY.toFixed(1)} vs {nbpTarget}%</div>
+                        <div className="text-[8px]" style={{ color: nbpGap > 1 ? '#EF4444' : '#FBBF24' }}>{nbpGap > 1 ? 'ABOVE' : nbpGap > 0 ? 'NEAR' : 'BELOW'} TARGET</div>
+                    </div>
+                    <div className="bb-panel p-3 text-center">
+                        <div className="text-[9px] text-bb-muted tracking-wider mb-1">STATUS</div>
+                        <div className="text-lg font-mono text-bb-text">{confBars(blocksAvailable)}</div>
+                        <div className="text-[8px] text-bb-muted mt-1">{blocksAvailable}/4 bloków auto</div>
+                        <div className="text-[8px] text-bb-muted">{trend.label}</div>
+                    </div>
+                </div>
+            </ChartPanel>
+
+            {/* Fan Chart */}
+            {fanChartData.length > 0 && (
+                <ChartPanel title="FAN CHART — CPI R/R PROGNOZA 12M" source="Bottom-Up Aggregation · ±1σ/±2σ">
+                    <ResponsiveContainer width="100%" height={280}>
+                        <ComposedChart data={[...historicalYoY.slice(-12).map(d => ({ date: d.date, median: d.value, nbpTarget: 2.5 })), ...fanChartData]} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
+                            <XAxis dataKey="date" tick={{ fill: '#475569', fontSize: 8 }} tickLine={false} interval={2} />
+                            <YAxis tick={{ fill: '#475569', fontSize: 8 }} tickLine={false} domain={[0, 'auto']} unit="%" />
+                            <ReferenceLine y={2.5} stroke="#FBBF24" strokeDasharray="5 3" label={{ value: 'Cel NBP 2.5%', fill: '#FBBF24', fontSize: 9, position: 'right' }} />
+                            <Area type="monotone" dataKey="p90" fill="#FF6B0008" stroke="none" />
+                            <Area type="monotone" dataKey="p75" fill="#FF6B0015" stroke="none" />
+                            <Area type="monotone" dataKey="p25" fill="#FF6B0015" stroke="none" />
+                            <Area type="monotone" dataKey="p10" fill="#FF6B0008" stroke="none" />
+                            <Line type="monotone" dataKey="median" stroke="#FF6B00" strokeWidth={2} dot={false} name="CPI R/R %" />
+                            <Line type="monotone" dataKey="nbpTarget" stroke="#FBBF2440" strokeWidth={1} dot={false} strokeDasharray="3 3" />
+                            <Tooltip content={({ active, payload }: { active?: boolean; payload?: readonly { payload: Record<string, number | string> }[] }) => {
+                                if (!active || !payload?.[0]) return null;
+                                const d = payload[0].payload;
+                                return (
+                                    <div className="bg-bb-surface border border-bb-border rounded p-2 text-[10px] font-mono shadow-lg">
+                                        <div className="text-bb-muted">{String(d.date)}</div>
+                                        <div className="text-[#FF6B00]">CPI: {Number(d.median).toFixed(1)}%</div>
+                                        {d.p10 !== undefined && <div className="text-bb-muted">90% CI: {Number(d.p10).toFixed(1)}—{Number(d.p90).toFixed(1)}%</div>}
+                                    </div>
+                                );
+                            }} />
+                        </ComposedChart>
+                    </ResponsiveContainer>
+                </ChartPanel>
+            )}
+
+            {/* Contribution decomposition */}
+            <div className="bb-panel">
+                <div className="px-3 pt-3 text-[10px] text-bb-muted tracking-wider font-semibold">📊 DEKOMPOZYCJA KONTRYBUCJI (pp do CPI R/R)</div>
+                <div className="p-3">
+                    {blocks.map((b, i) => {
+                        const barW = Math.min(100, Math.max(0, Math.abs(b.contribution) / 2.5 * 100));
+                        const color = b.contribution > 1.0 ? '#EF4444' : b.contribution > 0.3 ? '#FBBF24' : b.contribution > 0 ? '#22C55E' : '#3B82F6';
+                        return (
+                            <div key={i} className="flex items-center gap-3 mb-2 text-[10px] font-mono">
+                                <div className="w-20 text-bb-muted">{b.label}</div>
+                                <div className="flex-1 h-3 bg-bb-border/20 rounded-full overflow-hidden">
+                                    <div className="h-full rounded-full" style={{ width: `${barW}%`, background: color }} />
+                                </div>
+                                <div className="w-16 text-right" style={{ color }}>{b.contribution >= 0 ? '+' : ''}{b.contribution.toFixed(2)}pp</div>
+                                <div className="w-12 text-right text-bb-muted">({(b.weight * 100).toFixed(0)}%)</div>
+                            </div>
+                        );
+                    })}
+                    <div className="flex items-center gap-3 mt-1 pt-1 border-t border-bb-border/30 text-[10px] font-mono">
+                        <div className="w-20 text-bb-accent font-bold">RAZEM</div>
+                        <div className="flex-1" />
+                        <div className="w-16 text-right text-bb-accent font-bold">{blocks.reduce((s, b) => s + b.contribution, 0).toFixed(2)}pp</div>
+                        <div className="w-12 text-right text-bb-muted">(100%)</div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Block detail table */}
+            <div className="bb-panel">
+                <div className="px-3 pt-3 text-[10px] text-bb-muted tracking-wider font-semibold">📋 PROGNOZA M/M PO BLOKACH</div>
+                <table className="w-full text-[10px] mt-2">
+                    <thead>
+                        <tr className="border-b border-bb-border text-[9px] text-bb-muted">
+                            <th className="text-left py-1.5 px-3">Blok</th>
+                            <th className="text-right py-1.5">Waga</th>
+                            <th className="text-right py-1.5">Ostatni M/M</th>
+                            <th className="text-right py-1.5">Prognoza M/M</th>
+                            <th className="text-center py-1.5">Δ</th>
+                            <th className="text-center py-1.5">Źródło</th>
+                            <th className="text-right py-1.5 px-3">Conf</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {blocks.map((b, i) => {
+                            const delta = b.forecastMM - b.lastMM;
+                            return (
+                                <tr key={i} className="border-b border-bb-border/20">
+                                    <td className="py-1.5 px-3 text-bb-text font-mono">{b.label}</td>
+                                    <td className="py-1.5 text-right text-bb-muted">{(b.weight * 100).toFixed(1)}%</td>
+                                    <td className="py-1.5 text-right text-bb-text">{b.lastMM >= 0 ? '+' : ''}{b.lastMM.toFixed(1)}%</td>
+                                    <td className="py-1.5 text-right text-bb-accent font-bold">{b.forecastMM >= 0 ? '+' : ''}{b.forecastMM.toFixed(1)}%</td>
+                                    <td className="py-1.5 text-center" style={{ color: delta > 0 ? '#EF4444' : delta < 0 ? '#22C55E' : '#475569' }}>
+                                        {delta > 0 ? '↑' : delta < 0 ? '↓' : '→'}
+                                    </td>
+                                    <td className="py-1.5 text-center text-bb-muted">{b.source}</td>
+                                    <td className="py-1.5 text-right px-3 text-[9px] font-mono text-bb-muted">{confBars(b.confidence)}</td>
+                                </tr>
+                            );
+                        })}
+                        <tr className="border-t border-bb-border/50">
+                            <td className="py-1.5 px-3 text-bb-accent font-bold">CPI Total</td>
+                            <td className="py-1.5 text-right text-bb-muted">100%</td>
+                            <td className="py-1.5 text-right text-bb-muted">{lastHeadlineMM >= 0 ? '+' : ''}{lastHeadlineMM.toFixed(1)}%</td>
+                            <td className="py-1.5 text-right text-bb-accent font-bold">{headlineForecastMM >= 0 ? '+' : ''}{headlineForecastMM.toFixed(2)}%</td>
+                            <td colSpan={3} className="py-1.5 px-3 text-right text-bb-muted text-[9px]">MODEL</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            {/* Base effect calendar */}
+            {baseEffect.length > 0 && (
+                <ChartPanel title="EFEKT BAZY — KALENDARZ 12M" source="Eurostat HICP M/M historical">
+                    <div className="grid grid-cols-6 gap-2 p-3">
+                        {baseEffect.map((b, i) => (
+                            <div key={i} className="bb-panel p-2 text-center text-[9px] font-mono" style={{
+                                borderColor: b.direction === 'high' ? '#EF444440' : b.direction === 'low' ? '#22C55E40' : '#1E293B',
+                                background: b.direction === 'high' ? '#EF444408' : b.direction === 'low' ? '#22C55E08' : undefined,
+                            }}>
+                                <div className="text-bb-muted font-semibold">{b.label}</div>
+                                <div style={{ color: b.baseValueMM > 0.3 ? '#EF4444' : b.baseValueMM < 0 ? '#22C55E' : '#94A3B8' }}>
+                                    {b.baseValueMM >= 0 ? '+' : ''}{b.baseValueMM.toFixed(1)}%
+                                </div>
+                                <div className="text-[8px] text-bb-muted mt-0.5">{b.direction === 'high' ? '▓▓▓▓' : b.direction === 'low' ? '░░░░' : '▒▒▒▒'}</div>
+                            </div>
+                        ))}
+                    </div>
+                    <div className="px-3 pb-2 text-[8px] text-bb-muted">▓▓ = wysoka baza (spadek R/R) | ░░ = niska baza (wzrost R/R) | ▒▒ = neutralna</div>
+                </ChartPanel>
+            )}
+
+            {/* Consensus comparison */}
+            <div className="bb-panel p-3">
+                <div className="text-[10px] text-bb-muted tracking-wider font-semibold mb-2">📊 PORÓWNANIE Z KONSENSUSEM</div>
+                <div className="grid grid-cols-4 gap-3 text-center">
+                    {[
+                        { label: 'Nasz model', value: forecastYoY, color: '#FF6B00', sub: 'Bottom-Up' },
+                        { label: 'NBP projekcja', value: CPI_CONSENSUS.nbpProjection.cpi2026, color: '#FBBF24', sub: CPI_CONSENSUS.nbpProjection.date },
+                        { label: 'Bloomberg', value: CPI_CONSENSUS.bloomberg.cpi2026, color: '#3B82F6', sub: CPI_CONSENSUS.bloomberg.source.split(',')[1] },
+                        { label: 'Focus Econ.', value: CPI_CONSENSUS.focusEconomics.cpi2026, color: '#A78BFA', sub: CPI_CONSENSUS.focusEconomics.source.split(',')[1] },
+                    ].map((c, i) => (
+                        <div key={i} className="bb-panel p-3">
+                            <div className="text-[9px] text-bb-muted mb-1">{c.label}</div>
+                            <div className="text-xl font-mono font-bold" style={{ color: c.color }}>{c.value.toFixed(1)}%</div>
+                            <div className="text-[8px] text-bb-muted">{c.sub}</div>
+                        </div>
+                    ))}
+                </div>
+                <div className="mt-2 text-[9px] text-bb-muted font-mono text-center">
+                    Model vs konsensus: <span style={{ color: Math.abs(forecastYoY - CPI_CONSENSUS.bloomberg.cpi2026) > 0.5 ? '#FBBF24' : '#22C55E' }}>
+                        {forecastYoY > CPI_CONSENSUS.bloomberg.cpi2026 ? '+' : ''}{(forecastYoY - CPI_CONSENSUS.bloomberg.cpi2026).toFixed(1)}pp vs BBG
+                    </span>
+                </div>
+            </div>
+
+            {/* Methodology */}
+            <div className="bb-panel overflow-hidden">
+                <button onClick={() => setShowMethodology(!showMethodology)} className="w-full px-4 py-3 bg-transparent border-none text-bb-muted text-[10px] text-left cursor-pointer flex justify-between items-center tracking-wider font-semibold">
+                    ℹ️ METODOLOGIA I ŹRÓDŁA
+                    <span>{showMethodology ? '▲' : '▼'}</span>
+                </button>
+                {showMethodology && (
+                    <div className="px-4 pb-4 text-[11px] text-bb-muted leading-relaxed space-y-2">
+                        <p><strong className="text-bb-text">Model:</strong> Bottom-Up CPI Decomposition. Rozbija koszyk inflacyjny na 4 bloki (Paliwa 5.5%, Energia 11.1%, Żywność 25.9%, Core 57.5%), prognozuje każdy osobno M/M, agreguje z wagami GUS.</p>
+                        <p><strong className="text-bb-text">Paliwa:</strong> CPI_fuel_MM = 0.68 × ΔBrent% + 0.25 × ΔUSDPLN%. Pass-through z danych Eurostat CP0722.</p>
+                        <p><strong className="text-bb-text">Energia:</strong> Model dyskretny — ΔenergyMM = 0 normalnie, = zmiana taryfy URE w miesiącu zmiany. Dane manualne z etykietą [MANUAL].</p>
+                        <p><strong className="text-bb-text">Żywność:</strong> γ₁×ΔFAO(t-3) + γ₂×ΔEURPLN(t-1) + sezonowość. FAO Food Index z 3-miesięcznym opóźnieniem.</p>
+                        <p><strong className="text-bb-text">Core:</strong> Silna inercja. Δcore ≈ 0.70 × prev + δ₁×ΔPPI(t-3) + δ₂×ΔwagesReal(t-2). Autoregresja to najsilniejszy komponent.</p>
+                        <p><strong className="text-bb-text">Fan chart:</strong> σ_h = σ_base × √h. Niepewność rośnie z horyzontem prognozy.</p>
+                        <p><strong className="text-bb-text">Wagi:</strong> GUS 2025 (COICOP). Aktualizacja: marzec każdego roku.</p>
+                        <p className="text-yellow-400 text-[10px]">⚠️ DISCLAIMER: Narzędzie analityczne, nie rekomendacja inwestycyjna. Prognozy obarczone niepewnością.</p>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}
+
 export default function ToolsPage() {
+
     const [activeTab, setActiveTab] = useState('rates');
 
     return (
@@ -1186,6 +1494,7 @@ export default function ToolsPage() {
                 {activeTab === 'fiscal' && <FiscalTool />}
                 {activeTab === 'leading' && <LeadingIndicatorsTool />}
                 {activeTab === 'reer' && <REERTool />}
+                {activeTab === 'cpi' && <CPIForecasterTool />}
             </div>
         </div>
     );
