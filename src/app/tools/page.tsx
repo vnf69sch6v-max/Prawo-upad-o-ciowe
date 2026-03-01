@@ -21,7 +21,7 @@ import { taylorRule, buildHistoricalTaylor, sensitivityMatrix, DEFAULT_TAYLOR, t
 import { CONSENSUS, CPI_DATA_PL, GDP_QUARTERLY_PL, PMI_DATA_PL, NBP_GDP_PROJECTION } from '@/lib/static-data';
 import { projectDebt, sensitivityAnalysis, findCrossing, FISCAL_DEFAULTS, INITIAL_DEBT, type FiscalParams } from '@/lib/calculations/fiscal';
 import { pmiToGDP, compositeNowcast, buildPMIvsGDP, pmiScenarioTable, BACKTEST_RESULTS, BACKTEST_STATS, BLOOMBERG_CONSENSUS, INSAMPLE_RESIDUALS, type IndicatorInput } from '@/lib/calculations/leading';
-import { CPI_WEIGHTS, forecastFuelMM, forecastEnergyMM, forecastFoodMM, forecastCoreMM, aggregateCPIMM, computeYoY, buildBaseEffectCalendar, generateFanChart, detectAnomalies, analyzeTrend, BLOCK_RMSE, CPI_CONSENSUS, MANUAL_INPUTS, type BlockForecast, type FanChartPoint } from '@/lib/calculations/cpi-forecaster';
+import { CPI_WEIGHTS, forecastFuelMM, forecastEnergyMM, forecastFoodMM, forecastCoreMM, aggregateCPIMM, computeYoY, buildBaseEffectCalendar, generateFanChart, detectAnomalies, analyzeTrend, BLOCK_RMSE, CPI_CONSENSUS, MANUAL_INPUTS, impliedNBPRate, type BlockForecast, type FanChartPoint } from '@/lib/calculations/cpi-forecaster';
 import { useHICPIndex, useHICPFoodYoY, useHICPCoreYoY, usePPI, useBrent } from '@/lib/hooks';
 
 // ===== Shared UI =====
@@ -1213,15 +1213,18 @@ function CPIForecasterTool() {
     const nextMonth = (() => { const [y, m] = lastDate.split('-').map(Number); const d = new Date(y, m, 1); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; })();
     const nextMonthNum = parseInt(nextMonth.split('-')[1]);
 
-    const fuelForecast = forecastFuelMM(brentChange, 0.5, 0);
+    const fuelForecast = forecastFuelMM(brentChange + 0.5); // Brent in PLN = ΔBrent + ΔUSDPLN
     const energyForecast = forecastEnergyMM(nextMonth);
-    const foodForecast = forecastFoodMM(0.5, 0.3, nextMonthNum);
-    const coreForecast = +(0.7 * lastCoreMM + 0.3 * 0.25).toFixed(2); // Simplified inertia
+    const foodForecast = forecastFoodMM(0.5, lastFoodMM, foodMMs[foodMMs.length - 2]?.value ?? 0.2, nextMonthNum);
+    const coreForecast = +forecastCoreMM(lastCoreMM, 8.0, 0.1); // wages ~8% YoY, import ~0.1 M/M
 
     const headlineForecastMM = aggregateCPIMM(fuelForecast, energyForecast, foodForecast, coreForecast);
 
     // Build projected YoY (simplified: current + Δ from forecast vs base)
     const forecastYoY = +(lastCPIYoY + (headlineForecastMM - (headlineMMs[headlineMMs.length - 13]?.value ?? 0.3))).toFixed(1);
+
+    // Implied NBP rate (NECMOD Taylor rule)
+    const impliedRate = impliedNBPRate(5.75, forecastYoY);
 
     // NBP gap
     const nbpTarget = 2.5;
@@ -1263,7 +1266,7 @@ function CPIForecasterTool() {
         <div className="space-y-3">
             {/* Header cards */}
             <ChartPanel title="CPI INFLATION FORECASTER PRO" source="Bottom-Up Decomposition · Eurostat HICP · NBP · GUS">
-                <div className="grid grid-cols-5 gap-2 p-3">
+                <div className="grid grid-cols-6 gap-2 p-3">
                     <div className="bb-panel p-3 text-center">
                         <div className="text-[9px] text-bb-accent tracking-wider mb-1">CPI R/R PROGNOZA</div>
                         <div className="text-2xl font-mono font-bold" style={{ color: forecastYoY > 3.5 ? '#EF4444' : forecastYoY > 2.5 ? '#FBBF24' : '#22C55E' }}>{forecastYoY.toFixed(1)}%</div>
@@ -1285,6 +1288,12 @@ function CPIForecasterTool() {
                         <div className="text-2xl font-mono font-bold" style={{ color: nbpGap > 0 ? '#EF4444' : '#22C55E' }}>{nbpGap >= 0 ? '+' : ''}{nbpGap}pp</div>
                         <div className="text-[8px] text-bb-muted mt-1">{forecastYoY.toFixed(1)} vs {nbpTarget}%</div>
                         <div className="text-[8px]" style={{ color: nbpGap > 1 ? '#EF4444' : '#FBBF24' }}>{nbpGap > 1 ? 'ABOVE' : nbpGap > 0 ? 'NEAR' : 'BELOW'} TARGET</div>
+                    </div>
+                    <div className="bb-panel p-3 text-center">
+                        <div className="text-[9px] tracking-wider mb-1" style={{ color: impliedRate.direction === 'HIKE' ? '#EF4444' : impliedRate.direction === 'CUT' ? '#22C55E' : '#FBBF24' }}>TAYLOR RULE</div>
+                        <div className="text-xl font-mono font-bold" style={{ color: impliedRate.direction === 'HIKE' ? '#EF4444' : impliedRate.direction === 'CUT' ? '#22C55E' : '#FBBF24' }}>{impliedRate.impliedRate.toFixed(1)}%</div>
+                        <div className="text-[8px] text-bb-muted mt-1">vs WIBOR {impliedRate.currentRate}%</div>
+                        <div className="text-[8px] font-bold" style={{ color: impliedRate.direction === 'HIKE' ? '#EF4444' : impliedRate.direction === 'CUT' ? '#22C55E' : '#FBBF24' }}>{impliedRate.direction} {impliedRate.gap >= 0 ? '+' : ''}{impliedRate.gap}pp</div>
                     </div>
                     <div className="bb-panel p-3 text-center">
                         <div className="text-[9px] text-bb-muted tracking-wider mb-1">STATUS</div>
@@ -1448,14 +1457,14 @@ function CPIForecasterTool() {
                 </button>
                 {showMethodology && (
                     <div className="px-4 pb-4 text-[11px] text-bb-muted leading-relaxed space-y-2">
-                        <p><strong className="text-bb-text">Model:</strong> Bottom-Up CPI Decomposition. Rozbija koszyk inflacyjny na 4 bloki (Paliwa 5.5%, Energia 11.1%, Żywność 25.9%, Core 57.5%), prognozuje każdy osobno M/M, agreguje z wagami GUS.</p>
-                        <p><strong className="text-bb-text">Paliwa:</strong> CPI_fuel_MM = 0.68 × ΔBrent% + 0.25 × ΔUSDPLN%. Pass-through z danych Eurostat CP0722.</p>
-                        <p><strong className="text-bb-text">Energia:</strong> Model dyskretny — ΔenergyMM = 0 normalnie, = zmiana taryfy URE w miesiącu zmiany. Dane manualne z etykietą [MANUAL].</p>
-                        <p><strong className="text-bb-text">Żywność:</strong> γ₁×ΔFAO(t-3) + γ₂×ΔEURPLN(t-1) + sezonowość. FAO Food Index z 3-miesięcznym opóźnieniem.</p>
-                        <p><strong className="text-bb-text">Core:</strong> Silna inercja. Δcore ≈ 0.70 × prev + δ₁×ΔPPI(t-3) + δ₂×ΔwagesReal(t-2). Autoregresja to najsilniejszy komponent.</p>
-                        <p><strong className="text-bb-text">Fan chart:</strong> σ_h = σ_base × √h. Niepewność rośnie z horyzontem prognozy.</p>
-                        <p><strong className="text-bb-text">Wagi:</strong> GUS 2025 (COICOP). Aktualizacja: marzec każdego roku.</p>
-                        <p className="text-yellow-400 text-[10px]">⚠️ DISCLAIMER: Narzędzie analityczne, nie rekomendacja inwestycyjna. Prognozy obarczone niepewnością.</p>
+                        <p><strong className="text-bb-text">Model:</strong> Bottom-Up CPI Decomposition, parametry skalibrowane z NBP NECMOD 2012 (Greszta et al.). 4 bloki: Paliwa 5.5%, Energia 11.1%, Żywność 25.9%, Core 57.5%.</p>
+                        <p><strong className="text-bb-text">Paliwa (NECMOD eq.6):</strong> 0.03 × ΔBrent_PLN + 0.08 × prev. Pass-through 3% kwartalnie do CPI energii.</p>
+                        <p><strong className="text-bb-text">Energia:</strong> Model dyskretny — taryfy URE [MANUAL]. NECMOD R²=0.12 potwierdza: ceny administrowane, nie rynkowe.</p>
+                        <p><strong className="text-bb-text">Żywność (NECMOD eq.7-8):</strong> 0.025×ΔFAO + 0.11×lag1 + 0.18×lag2 + anchor + ECM(-0.15). Kluczowy insight: 92% cen krajowych, tylko 8% światowych!</p>
+                        <p><strong className="text-bb-text">Core (NECMOD eq.1-2, R²=0.94):</strong> Inercja <strong>0.52</strong> (nie 0.70!). + anchor 0.07 ku celowi NBP + 0.04 koszty pracy + 0.01 import + ECM(-0.02). 69% waga kosztów pracy.</p>
+                        <p><strong className="text-bb-text">Taylor Rule (NECMOD eq.36, R²=0.98):</strong> I_3M = 0.88×prev + 0.12×[r_eq + π + 0.77×(π-π*) + 0.40×GAP]. Smoothing 88%.</p>
+                        <p><strong className="text-bb-text">Wagi:</strong> GUS 2025 (COICOP). Fan chart: σ_h = σ × √h.</p>
+                        <p className="text-yellow-400 text-[10px]">⚠️ NECMOD 2012 — parametry estymowane na 1996-2011. Traktuj jako bayesowski prior, nie wyrocznię. Narzędzie analityczne, nie rekomendacja.</p>
                     </div>
                 )}
             </div>
