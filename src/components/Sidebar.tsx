@@ -12,6 +12,7 @@ const navItems = [
     { href: '/trade', label: 'TRADE', key: 'F6' },
     { href: '/tools', label: 'TOOLS', key: 'F7' },
     { href: '/nowcast', label: 'NOWCAST', key: 'F8' },
+    { href: '/labor', label: 'LABOR', key: 'F9' },
 ];
 
 export function Sidebar() {
