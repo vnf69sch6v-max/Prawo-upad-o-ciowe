@@ -27,7 +27,8 @@ const FALLBACK_YIELDS = [
 ];
 
 // RPP rate history timeline (real dates from NBP)
-const RPP_HISTORY = [
+// The component auto-appends the latest rate from /api/nbp-rates if it differs
+const RPP_HISTORY_BASE = [
     { date: '09.2023', rate: 6.00, decision: 'Obniżka o 0.75 pp' },
     { date: '10.2023', rate: 5.75, decision: 'Obniżka o 0.25 pp' },
     { date: '11.2023', rate: 5.75, decision: 'Bez zmian' },
@@ -38,6 +39,7 @@ const RPP_HISTORY = [
     { date: '09.2025', rate: 4.50, decision: 'Obniżka o 0.75 pp' },
     { date: '12.2025', rate: 4.00, decision: 'Obniżka o 0.50 pp' },
     { date: '02.2026', rate: 4.00, decision: 'Bez zmian' },
+    { date: '03.2026', rate: 3.75, decision: 'Obniżka o 0.25 pp' },
 ];
 
 interface NBPRateData {
@@ -113,6 +115,29 @@ export default function RatesPage() {
             .map(p => ({ maturity: p.tenor, yield: p.yield as number }));
     }, [yieldCurveHook.curve, yieldCurveHook.isLoading]);
     const yieldIsLive = !yieldCurveHook.isLoading && yieldCurveHook.curve.some(p => p.yield !== null);
+
+    // Build RPP history: base + auto-append latest from API if rate changed
+    const RPP_HISTORY = useMemo(() => {
+        const base = [...RPP_HISTORY_BASE];
+        const refRate = nbpRates.find(r => r.name === 'Stopa referencyjna');
+        if (refRate && base.length > 0) {
+            const lastEntry = base[base.length - 1];
+            if (Math.abs(refRate.value - lastEntry.rate) > 0.001) {
+                // New rate detected — auto-append
+                const validDate = refRate.validFrom; // YYYY-MM-DD
+                const [y, m] = validDate.split('-');
+                const dateLabel = `${m}.${y}`;
+                const diff = +(refRate.value - lastEntry.rate).toFixed(2);
+                const decision = diff < 0
+                    ? `Obniżka o ${Math.abs(diff).toFixed(2)} pp`
+                    : diff > 0
+                        ? `Podwyżka o ${diff.toFixed(2)} pp`
+                        : 'Bez zmian';
+                base.push({ date: dateLabel, rate: refRate.value, decision });
+            }
+        }
+        return base;
+    }, [nbpRates]);
 
     if (loading) {
         return (
