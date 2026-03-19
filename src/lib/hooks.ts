@@ -162,7 +162,7 @@ export function useGUSWages(years = 5) {
             const latest = vals[vals.length - 1];
             const prev = vals[vals.length - 2];
             const yoy = prev.val && latest.val ? +((latest.val / prev.val - 1) * 100).toFixed(1) : null;
-            return { latest: latest.val, prevYear: prev.val, yoy, source: 'GUS BDL var:58787' };
+            return { latest: latest.val, prevYear: prev.val, yoy, source: 'GUS BDL var:196229' };
         },
         staleTime: 24 * 60 * 60 * 1000,
     });

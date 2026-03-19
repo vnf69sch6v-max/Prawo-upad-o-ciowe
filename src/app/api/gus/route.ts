@@ -12,19 +12,26 @@ import { withCache } from '@/lib/server-cache';
 const GUS_BASE = 'https://bdl.stat.gov.pl/api/v1';
 
 // Key variable IDs from GUS BDL
+// Discovered via BDL API search + manual verification 2026-03-19
 const VARIABLE_IDS = {
-    // Prices (annual)
+    // Prices (annual, unit-level=0)
     cpi: '217230',           // Wskaźniki cen towarów i usług konsumpcyjnych - ogółem
     cpi_food: '217231',      // CPI - żywność
     cpi_housing: '217234',   // CPI - mieszkanie  
     cpi_transport: '217236', // CPI - transport
-    // Labor market
-    wages_enterprise: '58787',  // Przeciętne mies. wynagrodzenie brutto na 1 zatrudnionego, ogółem (PLN)
+    // Labor market (annual, unit-level=0)
+    wages_enterprise: '196229',  // P2895: Przeciętne mies. wynagrodzenie brutto, ogółem, national (2024: 8414 PLN)
     unemployment: '60270',   // Stopa bezrobocia rejestrowanego - ogółem
-    // GDP
+    // GDP (annual, unit-level=0)
     gdp_total: '458271',     // PKB ogółem (mln zł)
     gdp_growth: '458272',    // Dynamika PKB (prev year = 100)
 };
+
+// Build year params for GUS BDL query (last N years)
+function buildYearParams(n: number): string {
+    const currentYear = new Date().getFullYear();
+    return Array.from({ length: n }, (_, i) => `year=${currentYear - n + 1 + i}`).join('&');
+}
 
 async function fetchBDL(endpoint: string, apiKey?: string): Promise<unknown> {
     const headers: Record<string, string> = {
@@ -83,7 +90,7 @@ export async function GET(request: NextRequest) {
                         entries.map(async ([key, vid]) => {
                             try {
                                 results[key] = await fetchBDL(
-                                    `data/by-variable/${vid}?unit-level=0&format=json&page-size=${years}`,
+                                    `data/by-variable/${vid}?unit-level=0&format=json&${buildYearParams(parseInt(years))}`,
                                     apiKey
                                 );
                             } catch (err) {
@@ -108,7 +115,7 @@ export async function GET(request: NextRequest) {
             'macro_data',
             `gus_${targetVarId}_${years}`,
             () => fetchBDL(
-                `data/by-variable/${targetVarId}?unit-level=0&format=json&page-size=${years}`,
+                `data/by-variable/${targetVarId}?unit-level=0&format=json&${buildYearParams(parseInt(years))}`,
                 apiKey
             ),
             'GUS BDL API',
