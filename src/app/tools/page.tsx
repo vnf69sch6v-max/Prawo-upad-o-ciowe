@@ -22,7 +22,7 @@ import { CONSENSUS, CPI_DATA_PL, GDP_QUARTERLY_PL, PMI_DATA_PL, NBP_GDP_PROJECTI
 import { projectDebt, sensitivityAnalysis, findCrossing, FISCAL_DEFAULTS, INITIAL_DEBT, type FiscalParams } from '@/lib/calculations/fiscal';
 import { pmiToGDP, compositeNowcast, buildPMIvsGDP, pmiScenarioTable, BACKTEST_RESULTS, BACKTEST_STATS, BLOOMBERG_CONSENSUS, INSAMPLE_RESIDUALS, type IndicatorInput } from '@/lib/calculations/leading';
 import { CPI_WEIGHTS, forecastFuelMM, forecastEnergyMM, forecastFoodMM, forecastCoreMM, aggregateCPIMM, computeYoY, buildBaseEffectCalendar, generateFanChart, detectAnomalies, analyzeTrend, BLOCK_RMSE, CPI_CONSENSUS, MANUAL_INPUTS, impliedNBPRate, type BlockForecast, type FanChartPoint } from '@/lib/calculations/cpi-forecaster';
-import { useHICPIndex, useHICPFoodYoY, useHICPCoreYoY, usePPI, useBrent } from '@/lib/hooks';
+import { useHICPIndex, useHICPFoodYoY, useHICPCoreYoY, usePPI, useBrent, useGUSWages } from '@/lib/hooks';
 
 // ===== Shared UI =====
 
@@ -1169,6 +1169,7 @@ function CPIForecasterTool() {
     const hicpCoreYoY = useHICPCoreYoY();
     const brentQuery = useBrent();
     const cpiYoY = useInflationMonthly();
+    const wagesQuery = useGUSWages(5);
     const [showMethodology, setShowMethodology] = useState(false);
 
     // Extract latest data
@@ -1216,7 +1217,9 @@ function CPIForecasterTool() {
     const fuelForecast = forecastFuelMM(brentChange + 0.5); // Brent in PLN = ΔBrent + ΔUSDPLN
     const energyForecast = forecastEnergyMM(nextMonth);
     const foodForecast = forecastFoodMM(0.5, lastFoodMM, foodMMs[foodMMs.length - 2]?.value ?? 0.2, nextMonthNum);
-    const coreForecast = +forecastCoreMM(lastCoreMM, 8.0, 0.1); // wages ~8% YoY, import ~0.1 M/M
+    // Use live GUS wages if available, fallback to 8.0% estimate
+    const wagesYoY = wagesQuery.data?.yoy ?? 8.0;
+    const coreForecast = +forecastCoreMM(lastCoreMM, wagesYoY, 0.1);
 
     const headlineForecastMM = aggregateCPIMM(fuelForecast, energyForecast, foodForecast, coreForecast);
 
@@ -1250,7 +1253,7 @@ function CPIForecasterTool() {
         { name: 'Paliwa', label: 'Paliwa silnikowe', weight: CPI_WEIGHTS.fuel, lastMM: lastFuelMM, forecastMM: fuelForecast, contribution: +(CPI_WEIGHTS.fuel * fuelForecast).toFixed(3), confidence: 3, source: 'MODEL', drivers: [{ name: 'Brent', value: brentLatest, unit: 'USD/bbl', change: brentChange, signal: brentChange > 0 ? 'up' : 'down' }] },
         { name: 'Energia', label: 'Nośniki energii', weight: CPI_WEIGHTS.energy, lastMM: 0, forecastMM: energyForecast, contribution: +(CPI_WEIGHTS.energy * energyForecast).toFixed(3), confidence: 5, source: 'MANUAL', drivers: [] },
         { name: 'Żywność', label: 'Żywność i napoje', weight: CPI_WEIGHTS.food, lastMM: lastFoodMM, forecastMM: foodForecast, contribution: +(CPI_WEIGHTS.food * foodForecast).toFixed(3), confidence: 3, source: 'HYBRID', drivers: [] },
-        { name: 'Core', label: 'Inflacja bazowa', weight: CPI_WEIGHTS.core, lastMM: lastCoreMM, forecastMM: coreForecast, contribution: +(CPI_WEIGHTS.core * coreForecast).toFixed(3), confidence: 4, source: 'AUTO', drivers: [] },
+        { name: 'Core', label: 'Inflacja bazowa', weight: CPI_WEIGHTS.core, lastMM: lastCoreMM, forecastMM: coreForecast, contribution: +(CPI_WEIGHTS.core * coreForecast).toFixed(3), confidence: wagesQuery.data ? 4 : 3, source: wagesQuery.data ? 'AUTO' : 'HYBRID', drivers: [{ name: 'Wages YoY', value: wagesYoY, unit: '%', change: wagesYoY, signal: wagesYoY > 5 ? 'up' : 'flat' }] },
     ];
 
     // Data freshness

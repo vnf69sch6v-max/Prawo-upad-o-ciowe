@@ -1,8 +1,10 @@
 // GUS BDL API proxy — fetches macroeconomic data with correct variable IDs
-// Variable IDs confirmed from BDL API:
+// Variable IDs confirmed from BDL API discovery:
 //   CPI: 217230 (subject P2955) — annual, prev year = 100
 //   Unemployment: 60270 (subject P2392) — annual %
 //   GDP growth: 458272 (subject P3498) — annual, prev year = 100
+//   Wages: 58787 (subject P2303) — monthly gross wage per employee, PLN
+//   + CPI subcomponents for food, housing, transport
 
 import { NextRequest, NextResponse } from 'next/server';
 import { withCache } from '@/lib/server-cache';
@@ -11,11 +13,15 @@ const GUS_BASE = 'https://bdl.stat.gov.pl/api/v1';
 
 // Key variable IDs from GUS BDL
 const VARIABLE_IDS = {
+    // Prices (annual)
     cpi: '217230',           // Wskaźniki cen towarów i usług konsumpcyjnych - ogółem
     cpi_food: '217231',      // CPI - żywność
     cpi_housing: '217234',   // CPI - mieszkanie  
     cpi_transport: '217236', // CPI - transport
+    // Labor market
+    wages_enterprise: '58787',  // Przeciętne mies. wynagrodzenie brutto na 1 zatrudnionego, ogółem (PLN)
     unemployment: '60270',   // Stopa bezrobocia rejestrowanego - ogółem
+    // GDP
     gdp_total: '458271',     // PKB ogółem (mln zł)
     gdp_growth: '458272',    // Dynamika PKB (prev year = 100)
 };
@@ -31,6 +37,14 @@ async function fetchBDL(endpoint: string, apiKey?: string): Promise<unknown> {
         next: { revalidate: 86400 }, // Cache 24h
     });
 
+    // Rate limit retry (429)
+    if (res.status === 429) {
+        await new Promise(r => setTimeout(r, 15000));
+        const retry = await fetch(`${GUS_BASE}/${endpoint}`, { headers });
+        if (!retry.ok) throw new Error(`GUS API rate limited: ${retry.status}`);
+        return retry.json();
+    }
+
     if (!res.ok) {
         throw new Error(`GUS API ${res.status}: ${res.statusText}`);
     }
@@ -39,11 +53,11 @@ async function fetchBDL(endpoint: string, apiKey?: string): Promise<unknown> {
 
 export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
-    const indicator = searchParams.get('indicator'); // cpi, unemployment, gdp_growth, etc.
+    const indicator = searchParams.get('indicator'); // cpi, unemployment, gdp_growth, wages_enterprise, etc.
     const varId = searchParams.get('var-id');        // direct variable ID
     const years = searchParams.get('years') || '10'; // how many years of data
 
-    const apiKey = process.env.GUS_API_KEY;
+    const apiKey = process.env.GUS_BDL_KEY || process.env.GUS_API_KEY;
 
     try {
         // If direct variable ID is provided, use it

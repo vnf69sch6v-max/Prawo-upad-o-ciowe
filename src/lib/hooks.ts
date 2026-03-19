@@ -150,6 +150,24 @@ export function useGUSData(indicator: string = 'all', years = 3) {
     });
 }
 
+// ─── GUS Wages (for CPI Core block — NECMOD) ────────────
+
+export function useGUSWages(years = 5) {
+    return useQuery<{ latest: number | null; prevYear: number | null; yoy: number | null; source: string }>({
+        queryKey: ['gus-wages', years],
+        queryFn: async () => {
+            const data = await fetchJSON<{ results?: Array<{ name: string; values: Array<{ year: number; val: number | null }> }> }>(`/api/gus?indicator=wages_enterprise&years=${years}`);
+            const vals = data?.results?.[0]?.values?.filter((v: { val: number | null }) => v.val !== null) ?? [];
+            if (vals.length < 2) return { latest: vals[0]?.val ?? null, prevYear: null, yoy: null, source: 'GUS BDL' };
+            const latest = vals[vals.length - 1];
+            const prev = vals[vals.length - 2];
+            const yoy = prev.val && latest.val ? +((latest.val / prev.val - 1) * 100).toFixed(1) : null;
+            return { latest: latest.val, prevYear: prev.val, yoy, source: 'GUS BDL var:58787' };
+        },
+        staleTime: 24 * 60 * 60 * 1000,
+    });
+}
+
 // ─── Eurostat (Monthly/Quarterly Data) ───────────────────
 
 interface EurostatTimeSeries {
