@@ -1,7 +1,7 @@
 // GDP Nowcasting Tool — Bottom-Up Quarterly GDP Estimate
 // Uses monthly indicators to estimate GDP before official GUS release
-// Methodology: weighted average of production-side indicators (ESA 2010)
-// Sources: Eurostat sts_inpr_m, sts_trtu_m, sts_copr_m, namq_10_gdp
+// Methodology: weighted average of production-side + demand-side indicators (ESA 2010)
+// Sources: GUS BDL (retail, wages), Eurostat (industrial, construction, trade, GDP official)
 
 // ═══════════════════════════════════════════════════════════════
 // TYPES
@@ -45,15 +45,19 @@ export interface NowcastResult {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// SECTOR WEIGHTS (GUS Rachunki Narodowe 2024, strona produkcyjna)
+// SECTOR WEIGHTS (GUS Rachunki Narodowe 2024, production + demand side)
 // ═══════════════════════════════════════════════════════════════
 
 export const GDP_WEIGHTS = {
-    industrial: 0.24,      // Przemysł (sekcje B-D PKD) ~24% GVA
-    retail: 0.52,          // Usługi rynkowe (proxy: retail G47) ~52% GVA
-    construction: 0.08,    // Budownictwo (sekcja F) ~8% GVA
-    // Remainder: agriculture (~3%) + public admin (~13%) ≈ stable, enters as constant
-    constant: 0.5,         // Correction for non-tracked sectors (pp)
+    // Production side
+    industrial: 0.18,      // Przemysł (sekcje B-D PKD) — downweighted from 0.24
+    retail: 0.32,          // Usługi rynkowe (proxy: retail G47) — downweighted from 0.52
+    construction: 0.06,    // Budownictwo (sekcja F)
+    // Demand side (new)
+    wages: 0.22,           // Płace realne → proxy popytu konsumpcyjnego (~60% PKB expenditure)
+    trade: 0.10,           // Eksport netto → saldo handlu zagranicznego (~10% PKB)
+    // Remainder
+    constant: 0.3,         // Correction for non-tracked sectors (agriculture, public admin)
     lastUpdated: '2024',
 };
 
@@ -67,14 +71,12 @@ export const GDP_CONSENSUS = {
 // HELPERS
 // ═══════════════════════════════════════════════════════════════
 
-/** Convert YYYY-MM date to quarter label */
 export function dateToQuarter(date: string): { quarter: string; year: number; q: number } {
     const [y, m] = date.split('-').map(Number);
     const q = Math.ceil(m / 3);
     return { quarter: `Q${q}.${y}`, year: y, q };
 }
 
-/** Get months belonging to a quarter */
 function quarterMonths(year: number, q: number): string[] {
     const startMonth = (q - 1) * 3 + 1;
     return [0, 1, 2].map(i => {
@@ -83,7 +85,6 @@ function quarterMonths(year: number, q: number): string[] {
     });
 }
 
-/** Compute trend from recent values */
 function computeTrend(values: number[]): 'up' | 'down' | 'flat' {
     if (values.length < 2) return 'flat';
     const last = values[values.length - 1];
@@ -95,7 +96,7 @@ function computeTrend(values: number[]): 'up' | 'down' | 'flat' {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// CORE NOWCAST COMPUTATION
+// CORE NOWCAST COMPUTATION — 5 components
 // ═══════════════════════════════════════════════════════════════
 
 export interface TimeSeriesPoint {
@@ -104,8 +105,7 @@ export interface TimeSeriesPoint {
 }
 
 /**
- * Compute GDP nowcast for a given quarter from monthly indicators.
- * Each indicator is an array of {date, value} with YoY % changes.
+ * Compute GDP nowcast for a given quarter from 5 monthly indicators.
  */
 export function computeQuarterNowcast(
     year: number,
@@ -113,11 +113,12 @@ export function computeQuarterNowcast(
     industrial: TimeSeriesPoint[],
     retail: TimeSeriesPoint[],
     construction: TimeSeriesPoint[],
+    wages: TimeSeriesPoint[],
+    trade: TimeSeriesPoint[],
 ): QuarterlyEstimate {
     const qMonths = quarterMonths(year, q);
     const quarter = `Q${q}.${year}`;
 
-    // Helper: get values for this quarter's months
     const getQuarterValues = (data: TimeSeriesPoint[]): number[] => {
         return qMonths
             .map(m => data.find(d => d.date === m)?.value)
@@ -127,94 +128,78 @@ export function computeQuarterNowcast(
     const indVals = getQuarterValues(industrial);
     const retVals = getQuarterValues(retail);
     const conVals = getQuarterValues(construction);
+    const wagVals = getQuarterValues(wages);
+    const trdVals = getQuarterValues(trade);
 
-    // Average each component for available months
     const avg = (arr: number[]) => arr.length > 0 ? arr.reduce((s, v) => s + v, 0) / arr.length : null;
 
     const indAvg = avg(indVals);
     const retAvg = avg(retVals);
     const conAvg = avg(conVals);
+    const wagAvg = avg(wagVals);
+    const trdAvg = avg(trdVals);
 
-    // Total months available
-    const totalMonths = Math.max(indVals.length, retVals.length, conVals.length);
+    // Coverage = max months across all components
+    const totalMonths = Math.max(indVals.length, retVals.length, conVals.length, wagVals.length, trdVals.length);
     const coverage = totalMonths / 3;
 
-    // Weighted nowcast
-    let nowcast = GDP_WEIGHTS.constant; // start with constant
+    let nowcast = GDP_WEIGHTS.constant;
     let hasData = false;
 
     const components: NowcastComponent[] = [];
 
-    // Industrial
-    const indContrib = indAvg !== null ? GDP_WEIGHTS.industrial * indAvg : 0;
-    components.push({
-        name: 'industrial',
-        label: 'Produkcja przemysłowa',
-        weight: GDP_WEIGHTS.industrial,
-        value: indAvg,
-        contribution: indAvg !== null ? +indContrib.toFixed(2) : 0,
-        monthsAvailable: indVals.length,
-        source: 'Eurostat sts_inpr_m',
-        trend: computeTrend(indVals),
-    });
-    if (indAvg !== null) { nowcast += indContrib; hasData = true; }
+    // Helper to add component
+    const addComponent = (
+        name: string, label: string, weight: number,
+        avgVal: number | null, vals: number[], source: string
+    ) => {
+        const contrib = avgVal !== null ? weight * avgVal : 0;
+        components.push({
+            name, label, weight,
+            value: avgVal,
+            contribution: avgVal !== null ? +contrib.toFixed(2) : 0,
+            monthsAvailable: vals.length,
+            source,
+            trend: computeTrend(vals),
+        });
+        if (avgVal !== null) { nowcast += contrib; hasData = true; }
+    };
 
-    // Retail (proxy for services)
-    const retContrib = retAvg !== null ? GDP_WEIGHTS.retail * retAvg : 0;
-    components.push({
-        name: 'retail',
-        label: 'Sprzedaż detaliczna',
-        weight: GDP_WEIGHTS.retail,
-        value: retAvg,
-        contribution: retAvg !== null ? +retContrib.toFixed(2) : 0,
-        monthsAvailable: retVals.length,
-        source: 'Eurostat sts_trtu_m',
-        trend: computeTrend(retVals),
-    });
-    if (retAvg !== null) { nowcast += retContrib; hasData = true; }
+    addComponent('industrial', 'Produkcja przemysłowa', GDP_WEIGHTS.industrial, indAvg, indVals, 'Eurostat sts_inpr_m');
+    addComponent('retail', 'Sprzedaż detaliczna', GDP_WEIGHTS.retail, retAvg, retVals, 'GUS BDL P3860');
+    addComponent('construction', 'Budownictwo', GDP_WEIGHTS.construction, conAvg, conVals, 'Eurostat sts_copr_m');
+    addComponent('wages', 'Płace nominalne', GDP_WEIGHTS.wages, wagAvg, wagVals, 'GUS BDL P2687');
+    addComponent('trade', 'Eksport netto', GDP_WEIGHTS.trade, trdAvg, trdVals, 'Eurostat BOP');
 
-    // Construction
-    const conContrib = conAvg !== null ? GDP_WEIGHTS.construction * conAvg : 0;
-    components.push({
-        name: 'construction',
-        label: 'Budownictwo',
-        weight: GDP_WEIGHTS.construction,
-        value: conAvg,
-        contribution: conAvg !== null ? +conContrib.toFixed(2) : 0,
-        monthsAvailable: conVals.length,
-        source: 'Eurostat sts_copr_m',
-        trend: computeTrend(conVals),
-    });
-    if (conAvg !== null) { nowcast += conContrib; hasData = true; }
-
-    // Confidence based on coverage
-    const confidence = !hasData ? 1 : coverage >= 1.0 ? 5 : coverage >= 0.67 ? 4 : coverage >= 0.33 ? 3 : 2;
+    // Confidence: more dimensions = better
+    const dimCount = components.filter(c => c.value !== null).length;
+    const confidence = !hasData ? 1
+        : coverage >= 1.0 && dimCount >= 4 ? 5
+        : coverage >= 0.67 || dimCount >= 3 ? 4
+        : coverage >= 0.33 || dimCount >= 2 ? 3
+        : 2;
 
     return {
-        quarter,
-        year,
-        q,
+        quarter, year, q,
         nowcast: hasData ? +nowcast.toFixed(1) : 0,
-        coverage,
-        components,
-        confidence,
+        coverage, components, confidence,
     };
 }
 
 // ═══════════════════════════════════════════════════════════════
-// BACKTEST: compare nowcast vs official GDP
+// BACKTEST
 // ═══════════════════════════════════════════════════════════════
 
 export function backtestNowcast(
     industrial: TimeSeriesPoint[],
     retail: TimeSeriesPoint[],
     construction: TimeSeriesPoint[],
-    officialGDP: TimeSeriesPoint[],  // quarterly: date = "2024-Q1" or "2024-01" (Q start month)
-    quarters: number = 8,           // how many quarters to backtest
+    wages: TimeSeriesPoint[],
+    trade: TimeSeriesPoint[],
+    officialGDP: TimeSeriesPoint[],
+    quarters: number = 8,
 ): { rows: BacktestRow[]; mae: number | null } {
     const rows: BacktestRow[] = [];
-
-    // Determine the latest quarter we can backtest
     const now = new Date();
     const currentQ = Math.ceil((now.getMonth() + 1) / 3);
     const currentYear = now.getFullYear();
@@ -224,11 +209,8 @@ export function backtestNowcast(
         let qq = currentQ - i;
         while (qq <= 0) { qq += 4; y--; }
 
-        const estimate = computeQuarterNowcast(y, qq, industrial, retail, construction);
+        const estimate = computeQuarterNowcast(y, qq, industrial, retail, construction, wages, trade);
 
-        // Find official GDP for this quarter
-        const qLabel = `Q${qq}.${y}`;
-        // Eurostat quarterly dates: "2024-Q1" format or "2024-01" (first month of Q)
         const qStartMonth = `${y}-${String((qq - 1) * 3 + 1).padStart(2, '0')}`;
         const officialPt = officialGDP.find(d =>
             d.date === qStartMonth || d.date === `${y}-Q${qq}` || d.date === `${y}Q${qq}`
@@ -237,10 +219,9 @@ export function backtestNowcast(
         const official = officialPt?.value ?? null;
         const error = official !== null && estimate.nowcast !== 0 ? +(estimate.nowcast - official).toFixed(1) : null;
 
-        rows.push({ quarter: qLabel, nowcast: estimate.nowcast, official, error });
+        rows.push({ quarter: `Q${qq}.${y}`, nowcast: estimate.nowcast, official, error });
     }
 
-    // MAE
     const errors = rows.filter(r => r.error !== null).map(r => Math.abs(r.error!));
     const mae = errors.length > 0 ? +(errors.reduce((s, e) => s + e, 0) / errors.length).toFixed(1) : null;
 
@@ -255,41 +236,32 @@ export function buildNowcastResult(
     industrial: TimeSeriesPoint[],
     retail: TimeSeriesPoint[],
     construction: TimeSeriesPoint[],
+    wages: TimeSeriesPoint[],
+    trade: TimeSeriesPoint[],
     officialGDP: TimeSeriesPoint[],
 ): NowcastResult {
     const now = new Date();
     const currentQ = Math.ceil((now.getMonth() + 1) / 3);
     const currentYear = now.getFullYear();
 
-    // Current quarter nowcast
-    const current = computeQuarterNowcast(currentYear, currentQ, industrial, retail, construction);
+    const current = computeQuarterNowcast(currentYear, currentQ, industrial, retail, construction, wages, trade);
 
-    // Previous quarter
     let prevY = currentYear;
     let prevQ = currentQ - 1;
     if (prevQ <= 0) { prevQ = 4; prevY--; }
-    const previous = computeQuarterNowcast(prevY, prevQ, industrial, retail, construction);
+    const previous = computeQuarterNowcast(prevY, prevQ, industrial, retail, construction, wages, trade);
 
-    // Backtest
-    const { rows: backtest, mae } = backtestNowcast(industrial, retail, construction, officialGDP, 8);
+    const { rows: backtest, mae } = backtestNowcast(industrial, retail, construction, wages, trade, officialGDP, 8);
 
-    // Consensus
     const yearConsensus = GDP_CONSENSUS[String(currentYear) as keyof typeof GDP_CONSENSUS]
         ?? GDP_CONSENSUS[String(currentYear - 1) as keyof typeof GDP_CONSENSUS]
         ?? { value: 3.0, source: 'Estimate', date: '' };
 
-    const modelStatus = current.coverage >= 0.67
-        ? `${Math.round(current.coverage * 3)}/3 miesięcy`
-        : current.coverage > 0
-            ? `${Math.round(current.coverage * 3)}/3 miesięcy (partial)`
-            : 'Brak danych miesięcznych';
+    const dimCount = current.components.filter(c => c.value !== null).length;
+    const modelStatus = `${Math.round(current.coverage * 3)}/3 mies. · ${dimCount}/5 wsk.`;
 
     return {
-        current,
-        previous,
-        backtest,
-        mae,
-        consensus: yearConsensus,
-        modelStatus,
+        current, previous, backtest, mae,
+        consensus: yearConsensus, modelStatus,
     };
 }
