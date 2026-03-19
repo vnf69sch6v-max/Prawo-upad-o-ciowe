@@ -263,7 +263,7 @@ interface EIABrentResponse {
 
 export function useBrentMM(): { data: BrentMMResult | undefined; isLoading: boolean } {
     // Try Stooq first (90 days)
-    const stooq = useStooq('brent.c', 90);
+    const stooq = useStooq('cb.c', 90);  // cb.c = Brent crude on Stooq (brent.c is broken)
 
     // Try EIA as fallback
     const eia = useQuery<EIABrentResponse>({
