@@ -8,8 +8,14 @@ import { Loader2 } from 'lucide-react';
 // DATA HOOK
 // ═══════════════════════════════════════════════════════════════
 
+interface TimelineEntry {
+    month: string; // "YYYY-MM"
+    rates: Record<string, number>; // slug → rate
+}
+
 interface RegionalResponse {
     regions: RegionData[];
+    timeline: TimelineEntry[];
     national: { avgUnemployment: number | null; avgWages: number | null };
     source: string;
     timestamp: string;
@@ -99,9 +105,31 @@ function PressureIndicator({ regions }: { regions: RegionData[] }) {
 // MAIN PAGE
 // ═══════════════════════════════════════════════════════════════
 
+const MONTH_LABELS: Record<string, string> = {
+    '01': 'sty', '02': 'lut', '03': 'mar', '04': 'kwi',
+    '05': 'maj', '06': 'cze', '07': 'lip', '08': 'sie',
+    '09': 'wrz', '10': 'paź', '11': 'lis', '12': 'gru',
+};
+
+function formatPeriod(month: string): string {
+    const [y, m] = month.split('-');
+    return `${MONTH_LABELS[m] || m} ${y}`;
+}
+
 export default function LaborPage() {
     const { data, isLoading } = useRegionalData();
     const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
+    const [selectedPeriod, setSelectedPeriod] = useState<string>('latest');
+
+    const overrideRates = useMemo(() => {
+        if (selectedPeriod === 'latest' || !data?.timeline) return undefined;
+        const entry = data.timeline.find(t => t.month === selectedPeriod);
+        return entry?.rates;
+    }, [selectedPeriod, data]);
+
+    const currentPeriodLabel = selectedPeriod === 'latest'
+        ? 'Najnowsze'
+        : formatPeriod(selectedPeriod);
 
     const selectedData = useMemo(() => {
         if (!selectedRegion || !data) return null;
@@ -140,6 +168,21 @@ export default function LaborPage() {
                 <span className="text-[10px] text-bb-muted">
                     MAPA RYNKU PRACY · 16 WOJEWÓDZTW · GUS BDL
                 </span>
+                <span className="text-bb-border">│</span>
+                {/* ──── PERIOD SWITCHER ──── */}
+                <select
+                    value={selectedPeriod}
+                    onChange={e => setSelectedPeriod(e.target.value)}
+                    className="bg-transparent border border-bb-border rounded px-2 py-0.5 text-xs text-bb-text font-mono focus:outline-none focus:border-bb-accent cursor-pointer"
+                >
+                    <option value="latest" className="bg-gray-900">Najnowsze</option>
+                    {data?.timeline && [...data.timeline].reverse().map(t => (
+                        <option key={t.month} value={t.month} className="bg-gray-900">
+                            {formatPeriod(t.month)}
+                        </option>
+                    ))}
+                </select>
+                <span className="text-[10px] text-bb-accent font-mono">{currentPeriodLabel}</span>
             </div>
 
             <div className="p-2 space-y-2">
@@ -198,6 +241,7 @@ export default function LaborPage() {
                             national={national}
                             selectedRegion={selectedRegion}
                             onRegionSelect={setSelectedRegion}
+                            overrideRates={overrideRates}
                         />
                         {/* Legend */}
                         <div className="flex items-center gap-3 mt-2 text-[10px] text-bb-muted justify-center flex-wrap">
