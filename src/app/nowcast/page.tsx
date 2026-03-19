@@ -6,7 +6,7 @@ import {
     CartesianGrid, LineChart, Line, ReferenceLine, Legend,
     ComposedChart, Bar
 } from 'recharts';
-import { useIndustrialProduction, useConstruction, useGDPQuarterly, useTradeData } from '@/lib/hooks';
+import { useIndustrialProduction, useConstruction, useGDPQuarterly, useTradeData, useEurostat } from '@/lib/hooks';
 import {
     buildNowcastResult, GDP_WEIGHTS, GDP_CONSENSUS,
     type NowcastResult, type TimeSeriesPoint, type NowcastComponent
@@ -152,15 +152,16 @@ function ComponentCard({ comp }: { comp: NowcastComponent }) {
 // ═══════════════════════════════════════════════════════════════
 
 export default function NowcastPage() {
-    // GUS BDL — retail + wages
+    // GUS BDL — retail + wages (nominal)
     const gus = useGUSMonthly();
 
-    // Eurostat — industrial, construction, exports, imports, official GDP
+    // Eurostat — industrial, construction, exports, imports, official GDP, CPI
     const industrialQ = useIndustrialProduction('PL');
     const constructionQ = useConstruction('PL');
     const exportsQ = useTradeData('exports');
     const importsQ = useTradeData('imports');
     const gdpOfficialQ = useGDPQuarterly('PL');
+    const cpiQ = useEurostat('cpi', 'PL'); // HICP YoY for wage deflation
 
     const isLoading = gus.isLoading || industrialQ.isLoading || constructionQ.isLoading || exportsQ.isLoading;
 
@@ -171,16 +172,26 @@ export default function NowcastPage() {
         const industrial = extractTimeSeries(industrialQ.data);
         const retail = gus.retail;
         const construction = extractTimeSeries(constructionQ.data);
-        const wages = gus.wages;
+        const nominalWages = gus.wages;
+        const cpiSeries = extractTimeSeries(cpiQ.data);
         const exportsTS = extractTimeSeries(exportsQ.data);
         const importsTS = extractTimeSeries(importsQ.data);
         const trade = computeTradeBalance(exportsTS, importsTS);
         const gdpOfficial = extractTimeSeries(gdpOfficialQ.data);
 
-        if (industrial.length === 0 && retail.length === 0 && wages.length === 0) return null;
+        // Deflate wages: real wages YoY% ≈ nominal YoY% - CPI YoY%
+        const realWages: TimeSeriesPoint[] = nominalWages.map(w => {
+            const cpi = cpiSeries.find(c => c.date === w.date);
+            return {
+                date: w.date,
+                value: cpi ? +(w.value - cpi.value).toFixed(1) : w.value,
+            };
+        });
 
-        return buildNowcastResult(industrial, retail, construction, wages, trade, gdpOfficial);
-    }, [isLoading, industrialQ.data, gus.retail, gus.wages, constructionQ.data, exportsQ.data, importsQ.data, gdpOfficialQ.data]);
+        if (industrial.length === 0 && retail.length === 0 && realWages.length === 0) return null;
+
+        return buildNowcastResult(industrial, retail, construction, realWages, trade, gdpOfficial);
+    }, [isLoading, industrialQ.data, gus.retail, gus.wages, constructionQ.data, exportsQ.data, importsQ.data, gdpOfficialQ.data, cpiQ.data]);
 
     if (isLoading) {
         return (
@@ -198,7 +209,7 @@ export default function NowcastPage() {
         );
     }
 
-    const { current, previous, backtest, mae, consensus } = result;
+    const { current, previous, backtest, mae, ciLow, ciHigh, consensus } = result;
 
     // Chart data
     const chartData = [
@@ -252,6 +263,11 @@ export default function NowcastPage() {
                         <div className="text-3xl font-mono font-bold text-green-400">
                             {current.nowcast > 0 ? '+' : ''}{current.nowcast.toFixed(1)}%
                         </div>
+                        {ciLow !== null && ciHigh !== null && (
+                            <div className="text-xs font-mono text-bb-muted mt-0.5">
+                                CI: {ciLow > 0 ? '+' : ''}{ciLow.toFixed(1)}% — {ciHigh > 0 ? '+' : ''}{ciHigh.toFixed(1)}%
+                            </div>
+                        )}
                         <div className="text-[10px] text-bb-muted mt-1">
                             PKB YoY szacunek · {result.modelStatus}
                         </div>
@@ -406,7 +422,7 @@ export default function NowcastPage() {
                             <li><span style={{color:'#3B82F6'}}>■</span> Produkcja przemysłowa — {(GDP_WEIGHTS.industrial * 100).toFixed(0)}% (Eurostat sts_inpr_m)</li>
                             <li><span style={{color:'#22C55E'}}>■</span> Sprzedaż detaliczna — {(GDP_WEIGHTS.retail * 100).toFixed(0)}% (GUS BDL P3860)</li>
                             <li><span style={{color:'#FBBF24'}}>■</span> Budownictwo — {(GDP_WEIGHTS.construction * 100).toFixed(0)}% (Eurostat sts_copr_m)</li>
-                            <li><span style={{color:'#A78BFA'}}>■</span> Płace nominalne — {(GDP_WEIGHTS.wages * 100).toFixed(0)}% (GUS BDL P2687, YoY)</li>
+                            <li><span style={{color:'#A78BFA'}}>■</span> Płace realne — {(GDP_WEIGHTS.wages * 100).toFixed(0)}% (GUS P2687 nominalne − HICP CPI)</li>
                             <li><span style={{color:'#F97316'}}>■</span> Eksport netto — {(GDP_WEIGHTS.trade * 100).toFixed(0)}% (Eurostat BOP, △saldo)</li>
                             <li>Korekta stała: +{GDP_WEIGHTS.constant}pp (rolnictwo, administracja)</li>
                         </ul>

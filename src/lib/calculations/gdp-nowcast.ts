@@ -40,6 +40,8 @@ export interface NowcastResult {
     previous: QuarterlyEstimate | null;
     backtest: BacktestRow[];
     mae: number | null;        // Mean Absolute Error
+    ciLow: number | null;      // Confidence interval low (nowcast - MAE)
+    ciHigh: number | null;     // Confidence interval high (nowcast + MAE)
     consensus: { value: number; source: string; date: string };
     modelStatus: string;
 }
@@ -168,7 +170,7 @@ export function computeQuarterNowcast(
     addComponent('industrial', 'Produkcja przemysłowa', GDP_WEIGHTS.industrial, indAvg, indVals, 'Eurostat sts_inpr_m');
     addComponent('retail', 'Sprzedaż detaliczna', GDP_WEIGHTS.retail, retAvg, retVals, 'GUS BDL P3860');
     addComponent('construction', 'Budownictwo', GDP_WEIGHTS.construction, conAvg, conVals, 'Eurostat sts_copr_m');
-    addComponent('wages', 'Płace nominalne', GDP_WEIGHTS.wages, wagAvg, wagVals, 'GUS BDL P2687');
+    addComponent('wages', 'Płace realne', GDP_WEIGHTS.wages, wagAvg, wagVals, 'GUS P2687 − HICP');
     addComponent('trade', 'Eksport netto', GDP_WEIGHTS.trade, trdAvg, trdVals, 'Eurostat BOP');
 
     // Confidence: more dimensions = better
@@ -262,6 +264,8 @@ export function buildNowcastResult(
 
     return {
         current, previous, backtest, mae,
+        ciLow: mae !== null ? +(current.nowcast - mae).toFixed(1) : null,
+        ciHigh: mae !== null ? +(current.nowcast + mae).toFixed(1) : null,
         consensus: yearConsensus, modelStatus,
     };
 }
