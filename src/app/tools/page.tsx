@@ -22,7 +22,7 @@ import { CONSENSUS, CPI_DATA_PL, GDP_QUARTERLY_PL, PMI_DATA_PL, NBP_GDP_PROJECTI
 import { projectDebt, sensitivityAnalysis, findCrossing, FISCAL_DEFAULTS, INITIAL_DEBT, type FiscalParams } from '@/lib/calculations/fiscal';
 import { pmiToGDP, compositeNowcast, buildPMIvsGDP, pmiScenarioTable, BACKTEST_RESULTS, BACKTEST_STATS, BLOOMBERG_CONSENSUS, INSAMPLE_RESIDUALS, type IndicatorInput } from '@/lib/calculations/leading';
 import { CPI_WEIGHTS, forecastFuelMM, forecastEnergyMM, forecastFoodMM, forecastCoreMM, aggregateCPIMM, computeYoY, buildBaseEffectCalendar, generateFanChart, detectAnomalies, analyzeTrend, BLOCK_RMSE, CPI_CONSENSUS, MANUAL_INPUTS, impliedNBPRate, type BlockForecast, type FanChartPoint } from '@/lib/calculations/cpi-forecaster';
-import { useHICPIndex, useHICPFoodYoY, useHICPCoreYoY, usePPI, useBrent, useGUSWages } from '@/lib/hooks';
+import { useHICPIndex, useHICPFoodYoY, useHICPCoreYoY, usePPI, useBrentMM, useGUSWages } from '@/lib/hooks';
 
 // ===== Shared UI =====
 
@@ -1167,7 +1167,7 @@ function CPIForecasterTool() {
     const hicpFuel = useHICPIndex('hicp_fuel');
     const hicpCore = useHICPIndex('hicp_core');
     const hicpCoreYoY = useHICPCoreYoY();
-    const brentQuery = useBrent();
+    const brentMM = useBrentMM();
     const cpiYoY = useInflationMonthly();
     const wagesQuery = useGUSWages(5);
     const [showMethodology, setShowMethodology] = useState(false);
@@ -1179,7 +1179,7 @@ function CPIForecasterTool() {
     const coreData = hicpCore.data?.data?.PL ?? [];
     const cpiYoYData = cpiYoY.data?.data?.PL ?? [];
 
-    const isLoading = hicpIndex.isLoading || hicpFood.isLoading || brentQuery.isLoading;
+    const isLoading = hicpIndex.isLoading || hicpFood.isLoading || brentMM.isLoading;
 
     // Compute M/M from index data
     const computeMM = (data: { date: string; value: number | null }[]) => {
@@ -1205,16 +1205,17 @@ function CPIForecasterTool() {
     const lastCoreYoY = hicpCoreYoY.data?.data?.PL?.slice(-1)[0]?.value ?? 3.5;
     const lastDate = headlineMMs[headlineMMs.length - 1]?.date ?? '2026-01';
 
-    // Brent data
-    const brentLatest = brentQuery.data?.latest?.close ?? 73;
-    const brentPrev = brentQuery.data?.data?.[brentQuery.data.data.length - 2]?.close ?? 75;
-    const brentChange = +((brentLatest / brentPrev - 1) * 100).toFixed(1);
+    // Brent data — proper M/M from 30d averages (Stooq → EIA fallback)
+    const brentChangeMM = brentMM.data?.changeMM ?? null;
+    const brentLatest = brentMM.data?.latest ?? null;
+    const brentSource = brentMM.data?.source ?? 'NO DATA';
+    const brentHasData = brentChangeMM !== null;
 
     // Simple forecasts for next month
     const nextMonth = (() => { const [y, m] = lastDate.split('-').map(Number); const d = new Date(y, m, 1); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; })();
     const nextMonthNum = parseInt(nextMonth.split('-')[1]);
 
-    const fuelForecast = forecastFuelMM(brentChange + 0.5); // Brent in PLN = ΔBrent + ΔUSDPLN
+    const fuelForecast = brentHasData ? forecastFuelMM(brentChangeMM + 0.5) : 0; // 0 when no data
     const energyForecast = forecastEnergyMM(nextMonth);
     const foodForecast = forecastFoodMM(0.5, lastFoodMM, foodMMs[foodMMs.length - 2]?.value ?? 0.2, nextMonthNum);
     // Use live GUS wages if available, fallback to 8.0% estimate
@@ -1250,7 +1251,7 @@ function CPIForecasterTool() {
 
     // Blocks for display
     const blocks: BlockForecast[] = [
-        { name: 'Paliwa', label: 'Paliwa silnikowe', weight: CPI_WEIGHTS.fuel, lastMM: lastFuelMM, forecastMM: fuelForecast, contribution: +(CPI_WEIGHTS.fuel * fuelForecast).toFixed(3), confidence: 3, source: 'MODEL', drivers: [{ name: 'Brent', value: brentLatest, unit: 'USD/bbl', change: brentChange, signal: brentChange > 0 ? 'up' : 'down' }] },
+        { name: 'Paliwa', label: 'Paliwa silnikowe', weight: CPI_WEIGHTS.fuel, lastMM: lastFuelMM, forecastMM: fuelForecast, contribution: +(CPI_WEIGHTS.fuel * fuelForecast).toFixed(3), confidence: brentHasData ? 3 : 1, source: brentHasData ? 'MODEL' : 'MANUAL', drivers: [{ name: `Brent [${brentSource}]`, value: brentLatest ?? 0, unit: 'USD/bbl', change: brentChangeMM ?? 0, signal: (brentChangeMM ?? 0) > 0 ? 'up' : 'down' }], alert: !brentHasData ? '⚠️ BRENT NO DATA — prognoza paliw = 0' : undefined },
         { name: 'Energia', label: 'Nośniki energii', weight: CPI_WEIGHTS.energy, lastMM: 0, forecastMM: energyForecast, contribution: +(CPI_WEIGHTS.energy * energyForecast).toFixed(3), confidence: 5, source: 'MANUAL', drivers: [] },
         { name: 'Żywność', label: 'Żywność i napoje', weight: CPI_WEIGHTS.food, lastMM: lastFoodMM, forecastMM: foodForecast, contribution: +(CPI_WEIGHTS.food * foodForecast).toFixed(3), confidence: 3, source: 'HYBRID', drivers: [] },
         { name: 'Core', label: 'Inflacja bazowa', weight: CPI_WEIGHTS.core, lastMM: lastCoreMM, forecastMM: coreForecast, contribution: +(CPI_WEIGHTS.core * coreForecast).toFixed(3), confidence: wagesQuery.data ? 4 : 3, source: wagesQuery.data ? 'AUTO' : 'HYBRID', drivers: [{ name: 'Wages YoY', value: wagesYoY, unit: '%', change: wagesYoY, signal: wagesYoY > 5 ? 'up' : 'flat' }] },

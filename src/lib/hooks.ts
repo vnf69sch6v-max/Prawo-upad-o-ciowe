@@ -240,6 +240,88 @@ export function useBrent() { return useStooq('brent.c', 90); }
 export function useUSDPLN() { return useNBPCurrencyHistory('usd', 90); }
 export function useEURPLN() { return useNBPCurrencyHistory('eur', 90); }
 
+// ─── Brent M/M (proper monthly avg, Stooq→EIA fallback) ─
+
+interface BrentMMResult {
+    avg30d: number | null;
+    avgPrev30d: number | null;
+    changeMM: number | null;  // M/M %
+    latest: number | null;
+    source: string;
+    error: boolean;
+}
+
+interface EIABrentResponse {
+    data: Array<{ date: string; close: number }>;
+    latest: { date: string; close: number } | null;
+    avg30d: number | null;
+    avgPrev30d: number | null;
+    changeMM: number | null;
+    source: string;
+    error?: string;
+}
+
+export function useBrentMM(): { data: BrentMMResult | undefined; isLoading: boolean } {
+    // Try Stooq first (90 days)
+    const stooq = useStooq('brent.c', 90);
+
+    // Try EIA as fallback
+    const eia = useQuery<EIABrentResponse>({
+        queryKey: ['eia-brent'],
+        queryFn: () => fetchJSON('/api/eia?limit=90'),
+        staleTime: 2 * 60 * 60 * 1000, // 2h
+        enabled: !stooq.data || (stooq.data?.data?.length ?? 0) < 10, // only fetch if Stooq fails
+    });
+
+    const isLoading = stooq.isLoading || (eia.isLoading && !stooq.data);
+
+    // Compute M/M from Stooq data (30d avg vs prev 30d avg)
+    if (stooq.data && stooq.data.data && stooq.data.data.length >= 30) {
+        const closes = stooq.data.data.map((d: { close: number }) => d.close);
+        const last30 = closes.slice(-30);
+        const prev30 = closes.slice(-60, -30);
+        const avg = (a: number[]) => a.length > 0 ? a.reduce((s, v) => s + v, 0) / a.length : null;
+        const a30 = avg(last30);
+        const p30 = avg(prev30);
+        const mm = a30 && p30 ? +((a30 / p30 - 1) * 100).toFixed(1) : null;
+        return {
+            data: {
+                avg30d: a30 ? +a30.toFixed(2) : null,
+                avgPrev30d: p30 ? +p30.toFixed(2) : null,
+                changeMM: mm,
+                latest: stooq.data.latest?.close ?? null,
+                source: 'Stooq brent.c',
+                error: false,
+            },
+            isLoading,
+        };
+    }
+
+    // Fallback to EIA
+    if (eia.data && !eia.data.error) {
+        return {
+            data: {
+                avg30d: eia.data.avg30d,
+                avgPrev30d: eia.data.avgPrev30d,
+                changeMM: eia.data.changeMM,
+                latest: eia.data.latest?.close ?? null,
+                source: 'EIA RBRTE',
+                error: false,
+            },
+            isLoading,
+        };
+    }
+
+    // Both failed
+    return {
+        data: {
+            avg30d: null, avgPrev30d: null, changeMM: null, latest: null,
+            source: 'NO DATA', error: true,
+        },
+        isLoading,
+    };
+}
+
 // PL vs EU comparison — fetches both geos at once
 export function usePLvsEU(indicator: string) {
     return useEurostat(indicator, 'PL,EU27_2020');
