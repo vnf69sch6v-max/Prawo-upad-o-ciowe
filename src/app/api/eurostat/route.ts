@@ -73,21 +73,21 @@ const DATASETS: Record<string, { params: Record<string, string>; label: string; 
         label: 'GDP YoY Growth',
         since: '2023-Q1',
     },
-    // Industrial production — monthly, YoY change
+    // Industrial production — monthly, YoY change (CA = calendar adjusted; SCA not available for PL)
     industrial: {
-        params: { nace_r2: 'B-D', s_adj: 'SCA', unit: 'PCH_SM' },
+        params: { nace_r2: 'B-D', s_adj: 'CA', unit: 'PCH_SM' },
         label: 'Industrial Production YoY',
         since: '2022-01',
     },
     // Retail sales — monthly, YoY change
     retail: {
-        params: { nace_r2: 'G47', s_adj: 'SCA', unit: 'PCH_SM' },
+        params: { nace_r2: 'G47', s_adj: 'CA', unit: 'PCH_SM' },
         label: 'Retail Sales YoY',
         since: '2022-01',
     },
     // Construction output — monthly, YoY change
     construction: {
-        params: { nace_r2: 'F', s_adj: 'SCA', unit: 'PCH_SM' },
+        params: { nace_r2: 'F', s_adj: 'CA', unit: 'PCH_SM' },
         label: 'Construction Output YoY',
         since: '2022-01',
     },
