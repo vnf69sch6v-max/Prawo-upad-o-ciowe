@@ -236,7 +236,7 @@ export function useHICPIndex(component: 'hicp_index' | 'hicp_food' | 'hicp_fuel'
 export function useHICPFoodYoY() { return useEurostat('hicp_food_yoy', 'PL'); }
 export function useHICPCoreYoY() { return useEurostat('hicp_core_yoy', 'PL'); }
 export function usePPI() { return useEurostat('ppi', 'PL'); }
-export function useBrent() { return useStooq('brent.c', 90); }
+export function useBrent() { return useStooq('cb.c', 90); } // legacy — prefer useBrentMM()
 export function useUSDPLN() { return useNBPCurrencyHistory('usd', 90); }
 export function useEURPLN() { return useNBPCurrencyHistory('eur', 90); }
 

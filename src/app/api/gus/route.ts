@@ -3,7 +3,7 @@
 //   CPI: 217230 (subject P2955) — annual, prev year = 100
 //   Unemployment: 60270 (subject P2392) — annual %
 //   GDP growth: 458272 (subject P3498) — annual, prev year = 100
-//   Wages: 58787 (subject P2303) — monthly gross wage per employee, PLN
+//   Wages: 196229 (subject P2895) — monthly gross wage per employee, PLN, national
 //   + CPI subcomponents for food, housing, transport
 
 import { NextRequest, NextResponse } from 'next/server';

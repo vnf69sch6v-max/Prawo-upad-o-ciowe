@@ -22,7 +22,7 @@ import { CONSENSUS, CPI_DATA_PL, GDP_QUARTERLY_PL, PMI_DATA_PL, NBP_GDP_PROJECTI
 import { projectDebt, sensitivityAnalysis, findCrossing, FISCAL_DEFAULTS, INITIAL_DEBT, type FiscalParams } from '@/lib/calculations/fiscal';
 import { pmiToGDP, compositeNowcast, buildPMIvsGDP, pmiScenarioTable, BACKTEST_RESULTS, BACKTEST_STATS, BLOOMBERG_CONSENSUS, INSAMPLE_RESIDUALS, type IndicatorInput } from '@/lib/calculations/leading';
 import { CPI_WEIGHTS, forecastFuelMM, forecastEnergyMM, forecastFoodMM, forecastCoreMM, aggregateCPIMM, computeYoY, buildBaseEffectCalendar, generateFanChart, detectAnomalies, analyzeTrend, BLOCK_RMSE, CPI_CONSENSUS, MANUAL_INPUTS, impliedNBPRate, type BlockForecast, type FanChartPoint } from '@/lib/calculations/cpi-forecaster';
-import { useHICPIndex, useHICPFoodYoY, useHICPCoreYoY, usePPI, useBrentMM, useGUSWages } from '@/lib/hooks';
+import { useHICPIndex, useHICPFoodYoY, useHICPCoreYoY, usePPI, useBrentMM, useGUSWages, useUSDPLN, useEURPLN } from '@/lib/hooks';
 
 // ===== Shared UI =====
 
@@ -1170,6 +1170,9 @@ function CPIForecasterTool() {
     const brentMM = useBrentMM();
     const cpiYoY = useInflationMonthly();
     const wagesQuery = useGUSWages(5);
+    const usdplnHistory = useUSDPLN();   // Fix #3: live USD/PLN
+    const eurplnHistory = useEURPLN();   // Fix #5: live EUR/PLN for import proxy
+    const wiborQuery = useWibor();       // Fix #1: live WIBOR 3M
     const [showMethodology, setShowMethodology] = useState(false);
 
     // Extract latest data
@@ -1215,20 +1218,53 @@ function CPIForecasterTool() {
     const nextMonth = (() => { const [y, m] = lastDate.split('-').map(Number); const d = new Date(y, m, 1); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; })();
     const nextMonthNum = parseInt(nextMonth.split('-')[1]);
 
-    const fuelForecast = brentHasData ? forecastFuelMM(brentChangeMM + 0.5) : 0; // 0 when no data
+    // ─── Fix #3: Live ΔUSD/PLN M/M from NBP ───
+    const usdplnData = Array.isArray(usdplnHistory.data) ? usdplnHistory.data : [];
+    const usdplnMM = (() => {
+        if (usdplnData.length >= 30) {
+            const last30 = usdplnData.slice(-30);
+            const prev30 = usdplnData.slice(-60, -30);
+            const avg = (arr: { mid?: number }[]) => arr.filter(d => d.mid).reduce((s, d) => s + (d.mid ?? 0), 0) / arr.filter(d => d.mid).length;
+            const a = avg(last30); const p = avg(prev30);
+            return p > 0 ? +((a / p - 1) * 100).toFixed(1) : 0.5;
+        }
+        return 0.5; // fallback
+    })();
+
+    // ─── Fix #5: Live ΔEUR/PLN as import price proxy ───
+    const eurplnData = Array.isArray(eurplnHistory.data) ? eurplnHistory.data : [];
+    const eurplnMM = (() => {
+        if (eurplnData.length >= 30) {
+            const last30 = eurplnData.slice(-30);
+            const prev30 = eurplnData.slice(-60, -30);
+            const avg = (arr: { mid?: number }[]) => arr.filter(d => d.mid).reduce((s, d) => s + (d.mid ?? 0), 0) / arr.filter(d => d.mid).length;
+            const a = avg(last30); const p = avg(prev30);
+            return p > 0 ? +((a / p - 1) * 100).toFixed(1) : 0.1;
+        }
+        return 0.1; // fallback
+    })();
+    // NECMOD eq.25: import prices ≈ ΔREER (dominated by EUR/PLN)
+    const importPriceMM = -eurplnMM; // PLN appreciation → lower import prices
+
+    // ─── Fix #4: FAO proxy from HICP food M/M lag ───
+    // No live FAO API; use prev food M/M as proxy (correlated, lagged indicator)
+    const faoProxy = foodMMs.length >= 2 ? foodMMs[foodMMs.length - 2]?.value ?? 0.5 : 0.5;
+
+    const fuelForecast = brentHasData ? forecastFuelMM(brentChangeMM + usdplnMM) : 0;
     const energyForecast = forecastEnergyMM(nextMonth);
-    const foodForecast = forecastFoodMM(0.5, lastFoodMM, foodMMs[foodMMs.length - 2]?.value ?? 0.2, nextMonthNum);
+    const foodForecast = forecastFoodMM(faoProxy, lastFoodMM, foodMMs[foodMMs.length - 2]?.value ?? 0.2, nextMonthNum);
     // Use live GUS wages if available, fallback to 8.0% estimate
     const wagesYoY = wagesQuery.data?.yoy ?? 8.0;
-    const coreForecast = +forecastCoreMM(lastCoreMM, wagesYoY, 0.1);
+    const coreForecast = +forecastCoreMM(lastCoreMM, wagesYoY, importPriceMM);
 
     const headlineForecastMM = aggregateCPIMM(fuelForecast, energyForecast, foodForecast, coreForecast);
 
     // Build projected YoY (simplified: current + Δ from forecast vs base)
     const forecastYoY = +(lastCPIYoY + (headlineForecastMM - (headlineMMs[headlineMMs.length - 13]?.value ?? 0.3))).toFixed(1);
 
-    // Implied NBP rate (NECMOD Taylor rule)
-    const impliedRate = impliedNBPRate(5.75, forecastYoY);
+    // ─── Fix #1: Live WIBOR 3M from useWibor() ───
+    const wibor3M = wiborQuery.data?.rates?.find((r: { tenor: string }) => r.tenor === '3M')?.wibor ?? 5.75;
+    const impliedRate = impliedNBPRate(wibor3M, forecastYoY);
 
     // NBP gap
     const nbpTarget = 2.5;

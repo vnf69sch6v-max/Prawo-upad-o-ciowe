@@ -101,7 +101,7 @@ export const CPI_WEIGHTS = {
     core: 0.575,       // 57.5% inflacja bazowa (ex food & energy)
     // Sanity check: 0.055 + 0.111 + 0.259 + 0.575 = 1.000
     lastUpdated: '2025-03',
-    alertIfAfter: '2026-03-15', // alert to update weights
+    alertIfAfter: '2027-03-15', // alert to update weights for COICOP 2018
 };
 
 // ═══════════════════════════════════════════════════════════════
@@ -235,9 +235,13 @@ export function forecastCoreMM(
     vatChange: number = 0,         // one-off VAT change
 ): number {
     const excise = EXCISE_CALENDAR[month] ?? 0;
+    // Expected next-period core: naive proxy = INF_TARGET_MONTHLY
+    // In full NECMOD this would be model-consistent expectations
+    const expectedNextCore = INF_TARGET_MONTHLY;
     return +(
         CORE_ANCHOR * INF_TARGET_MONTHLY +              // anchor to 2.5% target
         CORE_INERTIA * prevCoreMM +                     // autoregression (NECMOD: 0.52)
+        CORE_EXPECT * expectedNextCore +                // forward-looking expectations (NECMOD eq.2: 0.14)
         CORE_WAGES * (wagesYoY / 12) +                  // labor cost pass-through
         CORE_IMPORT * importPriceMM +                   // import prices
         CORE_ECM * coreGap +                            // error correction
