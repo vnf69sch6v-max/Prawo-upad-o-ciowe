@@ -77,13 +77,19 @@ const DATASETS: Record<string, { params: Record<string, string>; label: string; 
     industrial: {
         params: { nace_r2: 'B-D', s_adj: 'SCA', unit: 'PCH_SM' },
         label: 'Industrial Production YoY',
-        since: '2024-01',
+        since: '2022-01',
     },
     // Retail sales — monthly, YoY change
     retail: {
         params: { nace_r2: 'G47', s_adj: 'SCA', unit: 'PCH_SM' },
         label: 'Retail Sales YoY',
-        since: '2024-01',
+        since: '2022-01',
+    },
+    // Construction output — monthly, YoY change
+    construction: {
+        params: { nace_r2: 'F', s_adj: 'SCA', unit: 'PCH_SM' },
+        label: 'Construction Output YoY',
+        since: '2022-01',
     },
     // Trade — goods exports (monthly, mln EUR) via Balance of Payments
     exports: {
@@ -121,6 +127,7 @@ const DATASET_CODES: Record<string, string> = {
     gdp_yoy: 'namq_10_gdp',
     industrial: 'sts_inpr_m',
     retail: 'sts_trtu_m',
+    construction: 'sts_copr_m',
     exports: 'bop_c6_m',
     imports: 'bop_c6_m',
     current_account: 'bop_c6_m',

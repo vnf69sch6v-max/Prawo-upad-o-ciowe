@@ -11,6 +11,7 @@ const navItems = [
     { href: '/rates', label: 'STOPY', key: 'F5' },
     { href: '/trade', label: 'TRADE', key: 'F6' },
     { href: '/tools', label: 'TOOLS', key: 'F7' },
+    { href: '/nowcast', label: 'NOWCAST', key: 'F8' },
 ];
 
 export function Sidebar() {

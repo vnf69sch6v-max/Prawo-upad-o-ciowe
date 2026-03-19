@@ -219,6 +219,10 @@ export function useRetailSales(geo = 'PL') {
     return useEurostat('retail', geo);
 }
 
+export function useConstruction(geo = 'PL') {
+    return useEurostat('construction', geo);
+}
+
 export function useTradeData(flow: 'exports' | 'imports') {
     return useEurostat(flow, 'PL');
 }
