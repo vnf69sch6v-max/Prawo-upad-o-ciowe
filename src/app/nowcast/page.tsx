@@ -1,12 +1,12 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
-    ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip,
+    ResponsiveContainer, XAxis, YAxis, Tooltip,
     CartesianGrid, LineChart, Line, ReferenceLine, Legend,
-    ComposedChart, Area
+    ComposedChart, Bar
 } from 'recharts';
-import { useEurostat, useGDPQuarterly, useIndustrialProduction, useRetailSales, useConstruction } from '@/lib/hooks';
+import { useIndustrialProduction, useConstruction, useGDPQuarterly } from '@/lib/hooks';
 import {
     buildNowcastResult, GDP_WEIGHTS, GDP_CONSENSUS,
     type NowcastResult, type TimeSeriesPoint, type NowcastComponent
@@ -49,6 +49,40 @@ function TrendArrow({ trend }: { trend: 'up' | 'down' | 'flat' }) {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// GUS RETAIL HOOK
+// ═══════════════════════════════════════════════════════════════
+
+interface GUSRetailData {
+    retail: Array<{ date: string; value: number; raw: number }>;
+    source: string;
+}
+
+function useGUSRetailMonthly(): { data: TimeSeriesPoint[]; isLoading: boolean; source: string } {
+    const [data, setData] = useState<TimeSeriesPoint[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [source, setSource] = useState('');
+
+    useEffect(() => {
+        async function fetch_data() {
+            try {
+                const res = await fetch('/api/gus-monthly?years=4');
+                if (res.ok) {
+                    const json: GUSRetailData = await res.json();
+                    setData(json.retail.map(r => ({ date: r.date, value: r.value })));
+                    setSource(json.source);
+                }
+            } catch (e) {
+                console.error('GUS retail error:', e);
+            }
+            setIsLoading(false);
+        }
+        fetch_data();
+    }, []);
+
+    return { data, isLoading, source };
+}
+
+// ═══════════════════════════════════════════════════════════════
 // COMPONENT CARD
 // ═══════════════════════════════════════════════════════════════
 
@@ -80,31 +114,42 @@ function ComponentCard({ comp }: { comp: NowcastComponent }) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// MAIN PAGE
+// MAIN PAGE — hybrid: GUS retail + Eurostat industrial/construction
 // ═══════════════════════════════════════════════════════════════
 
 export default function NowcastPage() {
-    // Fetch all three monthly indicators from Eurostat
+    // GUS BDL — retail sales dynamics (primary source)
+    const retailGUS = useGUSRetailMonthly();
+
+    // Eurostat — industrial production + construction (CA adjustment)
     const industrialQ = useIndustrialProduction('PL');
-    const retailQ = useRetailSales('PL');
     const constructionQ = useConstruction('PL');
     const gdpOfficialQ = useGDPQuarterly('PL');
 
-    const isLoading = industrialQ.isLoading || retailQ.isLoading || constructionQ.isLoading;
+    const isLoading = retailGUS.isLoading || industrialQ.isLoading || constructionQ.isLoading;
 
     // Build nowcast result
     const result: NowcastResult | null = useMemo(() => {
         if (isLoading) return null;
 
         const industrial = extractTimeSeries(industrialQ.data);
-        const retail = extractTimeSeries(retailQ.data);
+        const retail = retailGUS.data;    // Already TimeSeriesPoint[]
         const construction = extractTimeSeries(constructionQ.data);
         const gdpOfficial = extractTimeSeries(gdpOfficialQ.data);
 
         if (industrial.length === 0 && retail.length === 0) return null;
 
-        return buildNowcastResult(industrial, retail, construction, gdpOfficial);
-    }, [isLoading, industrialQ.data, retailQ.data, constructionQ.data, gdpOfficialQ.data]);
+        // Override source labels
+        const result = buildNowcastResult(industrial, retail, construction, gdpOfficial);
+
+        // Tag retail component with GUS source
+        const retailComp = result.current.components.find(c => c.name === 'retail');
+        if (retailComp) retailComp.source = 'GUS BDL P3860';
+        const prevRetailComp = result.previous?.components.find(c => c.name === 'retail');
+        if (prevRetailComp) prevRetailComp.source = 'GUS BDL P3860';
+
+        return result;
+    }, [isLoading, industrialQ.data, retailGUS.data, constructionQ.data, gdpOfficialQ.data]);
 
     if (isLoading) {
         return (
@@ -133,22 +178,27 @@ export default function NowcastPage() {
         })),
         {
             quarter: current.quarter,
-            official: null,
+            official: null as number | null,
             nowcast: current.nowcast,
         },
     ];
 
-    // Monthly indicator sparkline data
-    const industrialTS = extractTimeSeries(industrialQ.data).slice(-12);
-    const retailTS = extractTimeSeries(retailQ.data).slice(-12);
-    const constructionTS = extractTimeSeries(constructionQ.data).slice(-12);
+    // Monthly indicator sparkline data — merge all 3 sources
+    const allDates = new Set<string>();
+    const industrialTS = extractTimeSeries(industrialQ.data);
+    const retailTS = retailGUS.data;
+    const constructionTS = extractTimeSeries(constructionQ.data);
 
-    // Merge monthly data for sparkline chart
-    const monthlyChart = industrialTS.map((d, i) => ({
-        date: d.date.slice(5), // MM
-        industrial: d.value,
-        retail: retailTS[i]?.value ?? null,
-        construction: constructionTS[i]?.value ?? null,
+    industrialTS.forEach(d => allDates.add(d.date));
+    retailTS.forEach(d => allDates.add(d.date));
+    constructionTS.forEach(d => allDates.add(d.date));
+
+    const sortedDates = [...allDates].sort().slice(-18); // Last 18 months
+    const monthlyChart = sortedDates.map(date => ({
+        date: date.slice(2), // YY-MM
+        industrial: industrialTS.find(d => d.date === date)?.value ?? null,
+        retail: retailTS.find(d => d.date === date)?.value ?? null,
+        construction: constructionTS.find(d => d.date === date)?.value ?? null,
     }));
 
     return (
@@ -158,7 +208,7 @@ export default function NowcastPage() {
                 <span className="bb-label">GDP NOWCAST</span>
                 <span className="text-bb-border">│</span>
                 <span className="text-[10px] text-bb-muted">
-                    BOTTOM-UP PRODUCTION · EUROSTAT · GUS
+                    BOTTOM-UP PRODUCTION · GUS BDL + EUROSTAT
                 </span>
             </div>
 
@@ -197,9 +247,7 @@ export default function NowcastPage() {
                             <div className="text-2xl font-mono font-bold text-bb-text">
                                 {previous.nowcast > 0 ? '+' : ''}{previous.nowcast.toFixed(1)}%
                             </div>
-                            <div className="text-[10px] text-bb-muted mt-1">
-                                Poprzedni kwartał
-                            </div>
+                            <div className="text-[10px] text-bb-muted mt-1">Poprzedni kwartał</div>
                         </div>
                     )}
 
@@ -257,7 +305,7 @@ export default function NowcastPage() {
                     {/* Monthly indicator sparklines */}
                     <div className="data-card">
                         <h3 className="text-xs font-semibold text-bb-accent uppercase tracking-wider mb-3">
-                            📈 Wskaźniki miesięczne (YoY%) — ostatnie 12M
+                            📈 Wskaźniki miesięczne (YoY%) — ostatnie 18M
                         </h3>
                         <ResponsiveContainer width="100%" height={280}>
                             <LineChart data={monthlyChart} margin={{ top: 10, right: 20, left: 10, bottom: 0 }}>
@@ -267,13 +315,13 @@ export default function NowcastPage() {
                                 <Tooltip {...TOOLTIP_STYLE} formatter={(v: unknown) => [`${Number(v).toFixed(1)}%`]} />
                                 <Legend wrapperStyle={{ fontSize: 10, color: '#94A3B8' }} />
                                 <ReferenceLine y={0} stroke="#475569" strokeDasharray="3 3" />
-                                <Line type="monotone" dataKey="industrial" stroke="#3B82F6" strokeWidth={2} name="Przemysł" dot={false} connectNulls />
-                                <Line type="monotone" dataKey="retail" stroke="#22C55E" strokeWidth={2} name="Sprzedaż det." dot={false} connectNulls />
-                                <Line type="monotone" dataKey="construction" stroke="#FBBF24" strokeWidth={2} name="Budownictwo" dot={false} connectNulls />
+                                <Line type="monotone" dataKey="industrial" stroke="#3B82F6" strokeWidth={2} name="Przemysł (Eurostat)" dot={false} connectNulls />
+                                <Line type="monotone" dataKey="retail" stroke="#22C55E" strokeWidth={2} name="Sprzedaż det. (GUS)" dot={false} connectNulls />
+                                <Line type="monotone" dataKey="construction" stroke="#FBBF24" strokeWidth={2} name="Budownictwo (Eurostat)" dot={false} connectNulls />
                             </LineChart>
                         </ResponsiveContainer>
                         <div className="text-[10px] text-bb-muted mt-1 px-2">
-                            Źródło: Eurostat (sts_inpr_m, sts_trtu_m, sts_copr_m)
+                            Źródło: GUS BDL (retail) · Eurostat STS (industrial, construction)
                         </div>
                     </div>
                 </div>
@@ -334,12 +382,17 @@ export default function NowcastPage() {
                             korekta +{GDP_WEIGHTS.constant}pp.
                         </p>
                         <p>
-                            <strong className="text-bb-text">Źródła:</strong> Eurostat STS (Short-Term Statistics) — te same dane co GUS DG-1 meldunki,
-                            ale w czystszym API. Częstotliwość: miesięczna, publikacja ~20. dnia następnego miesiąca.
+                            <strong className="text-bb-text">Źródła danych:</strong>
                         </p>
+                        <ul className="list-disc list-inside space-y-1">
+                            <li><span className="text-green-400">Sprzedaż detaliczna</span> — GUS BDL P3860 (dynamika, analogiczny okres roku poprzedniego = 100)</li>
+                            <li><span className="text-blue-400">Produkcja przemysłowa</span> — Eurostat sts_inpr_m (CA, PCH_SM)</li>
+                            <li><span className="text-yellow-400">Budownictwo</span> — Eurostat sts_copr_m (CA, PCH_SM)</li>
+                            <li><span className="text-bb-text">PKB oficjalny</span> — Eurostat namq_10_gdp (backtest)</li>
+                        </ul>
                         <p>
                             <strong className="text-bb-text">Ograniczenia:</strong> Retail nie jest idealnym proxy usług. Brak eksportu netto.
-                            Wagi stałe (nie zmieniają się w cyklu). Sezonowość nieuwzględniona (Eurostat SCA = seasonally + calendar adjusted).
+                            Wagi stałe. Brak korekty sezonowej dla danych GUS (Eurostat: calendar adjusted).
                         </p>
                         <p>
                             <strong className="text-bb-text">Konsensus:</strong> Bloomberg {GDP_CONSENSUS['2026']?.value}% ({GDP_CONSENSUS['2026']?.date}),
