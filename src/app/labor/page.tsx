@@ -152,15 +152,38 @@ export default function LaborPage() {
         ? 'Najnowsze'
         : selectedPeriod.includes('-') ? formatPeriod(selectedPeriod) : `Śr. roczna ${selectedPeriod}`;
 
+    // Build display regions: merge overrideRates into base region data
+    const displayRegions = useMemo(() => {
+        if (!data) return [];
+        if (!overrideRates) return data.regions;
+        return data.regions.map(r => ({
+            ...r,
+            unemployment: overrideRates[r.slug] ?? r.unemployment,
+            // Clear YoY when viewing non-latest period (not directly comparable)
+            unemploymentPrev: null,
+            unemploymentMonth: null,
+        }));
+    }, [data, overrideRates]);
+
     const selectedData = useMemo(() => {
-        if (!selectedRegion || !data) return null;
-        return data.regions.find(r => r.slug === selectedRegion) ?? null;
-    }, [selectedRegion, data]);
+        if (!selectedRegion) return null;
+        return displayRegions.find(r => r.slug === selectedRegion) ?? null;
+    }, [selectedRegion, displayRegions]);
 
     const sortedByUnemployment = useMemo(() => {
-        if (!data) return [];
-        return [...data.regions].sort((a, b) => (a.unemployment ?? 99) - (b.unemployment ?? 99));
-    }, [data]);
+        return [...displayRegions].sort((a, b) => (a.unemployment ?? 99) - (b.unemployment ?? 99));
+    }, [displayRegions]);
+
+    // Compute national averages for current period
+    const displayNational = useMemo(() => {
+        if (!data) return { avgUnemployment: null, avgWages: null };
+        if (!overrideRates) return data.national;
+        const validUnemp = displayRegions.filter(r => r.unemployment !== null);
+        const avgUnemployment = validUnemp.length > 0
+            ? +(validUnemp.reduce((s, r) => s + r.unemployment!, 0) / validUnemp.length).toFixed(1)
+            : null;
+        return { avgUnemployment, avgWages: data.national.avgWages };
+    }, [data, overrideRates, displayRegions]);
 
     if (isLoading) {
         return (
@@ -177,8 +200,6 @@ export default function LaborPage() {
             </div>
         );
     }
-
-    const { national } = data;
 
     return (
         <div className="min-h-screen">
@@ -224,15 +245,15 @@ export default function LaborPage() {
                 <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
                     <div className="data-card">
                         <div className="text-xs text-bb-muted mb-1">ŚR. BEZROBOCIE (KRAJ)</div>
-                        <div className={`text-2xl font-mono font-bold ${getColorClass(national.avgUnemployment)}`}>
-                            {national.avgUnemployment !== null ? `${national.avgUnemployment}%` : 'N/A'}
+                        <div className={`text-2xl font-mono font-bold ${getColorClass(displayNational.avgUnemployment)}`}>
+                            {displayNational.avgUnemployment !== null ? `${displayNational.avgUnemployment}%` : 'N/A'}
                         </div>
                         <div className="text-[10px] text-bb-muted mt-1">Rejestrowane, średnia 16 woj.</div>
                     </div>
                     <div className="data-card">
                         <div className="text-xs text-bb-muted mb-1">ŚR. WYNAGRODZENIE</div>
                         <div className="text-2xl font-mono font-bold text-bb-text">
-                            {national.avgWages !== null ? `${national.avgWages.toLocaleString()} PLN` : 'N/A'}
+                            {displayNational.avgWages !== null ? `${displayNational.avgWages.toLocaleString()} PLN` : 'N/A'}
                         </div>
                         <div className="text-[10px] text-bb-muted mt-1">Brutto rocznie, średnia</div>
                     </div>
@@ -272,7 +293,7 @@ export default function LaborPage() {
                         </h3>
                         <PolandMap
                             regions={data.regions}
-                            national={national}
+                            national={displayNational}
                             selectedRegion={selectedRegion}
                             onRegionSelect={setSelectedRegion}
                             overrideRates={overrideRates}
@@ -324,11 +345,11 @@ export default function LaborPage() {
                                                 </span>
                                             </div>
                                         )}
-                                        {national.avgWages && selectedData.wages && (
+                                        {displayNational.avgWages && selectedData.wages && (
                                             <div className="text-[10px] text-bb-muted mt-0.5">
-                                                vs krajowa ({national.avgWages.toLocaleString()} PLN):
-                                                <span className={`ml-1 font-mono ${selectedData.wages > national.avgWages ? 'text-green-400' : 'text-red-400'}`}>
-                                                    {((selectedData.wages / national.avgWages - 1) * 100).toFixed(1)}%
+                                                vs krajowa ({displayNational.avgWages.toLocaleString()} PLN):
+                                                <span className={`ml-1 font-mono ${selectedData.wages > displayNational.avgWages ? 'text-green-400' : 'text-red-400'}`}>
+                                                    {((selectedData.wages / displayNational.avgWages - 1) * 100).toFixed(1)}%
                                                 </span>
                                             </div>
                                         )}
@@ -343,7 +364,7 @@ export default function LaborPage() {
                             </div>
                         )}
 
-                        <PressureIndicator regions={data.regions} />
+                        <PressureIndicator regions={displayRegions} />
                     </div>
                 </div>
 
