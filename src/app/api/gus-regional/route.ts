@@ -31,6 +31,23 @@ const UNEMPLOYMENT_IDS = Array.from({ length: 12 }, (_, i) => 461680 + i);
 // Wages: var 64428 (ogółem, annual, PLN)
 const WAGES_VAR = 64428;
 
+// PKD sector wages (P2797) — national level
+const PKD_SECTORS: Array<{ id: number; code: string; name: string }> = [
+    { id: 151739, code: 'Ogółem', name: 'Ogółem' },
+    { id: 151742, code: 'A', name: 'Rolnictwo' },
+    { id: 151749, code: 'C', name: 'Przetwórstwo przemysłowe' },
+    { id: 151752, code: 'F', name: 'Budownictwo' },
+    { id: 151753, code: 'G', name: 'Handel' },
+    { id: 151746, code: 'H', name: 'Transport' },
+    { id: 151750, code: 'I', name: 'Gastronomia' },
+    { id: 151735, code: 'J', name: 'IT i komunikacja' },
+    { id: 151740, code: 'K', name: 'Finanse i ubezpieczenia' },
+    { id: 151741, code: 'M', name: 'Działalność naukowa' },
+    { id: 151754, code: 'O', name: 'Administracja publiczna' },
+    { id: 151747, code: 'P', name: 'Edukacja' },
+    { id: 151745, code: 'Q', name: 'Opieka zdrowotna' },
+];
+
 interface RegionData {
     id: string;
     name: string;
@@ -175,6 +192,51 @@ export async function GET() {
                     .sort(([a], [b]) => a.localeCompare(b))
                     .map(([month, rates]) => ({ month, rates }));
 
+                // Compute yearly averages from timeline
+                const yearlyMap: Record<string, Record<string, number[]>> = {};
+                for (const { month, rates } of timeline) {
+                    const year = month.split('-')[0];
+                    if (!yearlyMap[year]) yearlyMap[year] = {};
+                    for (const [slug, val] of Object.entries(rates)) {
+                        if (!yearlyMap[year][slug]) yearlyMap[year][slug] = [];
+                        yearlyMap[year][slug].push(val);
+                    }
+                }
+                const yearly = Object.entries(yearlyMap)
+                    .sort(([a], [b]) => a.localeCompare(b))
+                    .map(([year, slugData]) => ({
+                        year,
+                        rates: Object.fromEntries(
+                            Object.entries(slugData).map(([slug, vals]) => [
+                                slug,
+                                +(vals.reduce((s, v) => s + v, 0) / vals.length).toFixed(1),
+                            ])
+                        ),
+                    }));
+
+                // Fetch PKD sector wages (national)
+                let sectorWages: Array<{ code: string; name: string; wage: number | null; wagePrev: number | null; yoy: number | null }> = [];
+                try {
+                    const pkdVarIds = PKD_SECTORS.map(s => s.id).join('&var-id=');
+                    const pkdData = await fetchBDL(
+                        `data/by-unit/000000000000?var-id=${pkdVarIds}&format=json&year=${new Date().getFullYear()}&year=${new Date().getFullYear() - 1}&year=${new Date().getFullYear() - 2}`,
+                        apiKey
+                    ) as { results?: Array<{ id: number; values: Array<{ year: number; val: number | null }> }> };
+
+                    sectorWages = PKD_SECTORS.map(sector => {
+                        const entry = pkdData?.results?.find(r => r.id === sector.id);
+                        const sorted = [...(entry?.values || [])].sort((a, b) => b.year - a.year);
+                        const latest = sorted.find(v => v.val !== null);
+                        const prev = sorted.find(v => v.val !== null && v.year < (latest?.year ?? 9999));
+                        const wage = latest?.val ?? null;
+                        const wagePrev = prev?.val ?? null;
+                        const yoy = wage && wagePrev ? +((wage / wagePrev - 1) * 100).toFixed(1) : null;
+                        return { code: sector.code, name: sector.name, wage, wagePrev, yoy };
+                    });
+                } catch (err) {
+                    console.error('PKD wages error:', err);
+                }
+
                 // National averages
                 const validUnemp = regions.filter(r => r.unemployment !== null);
                 const validWages = regions.filter(r => r.wages !== null);
@@ -186,12 +248,14 @@ export async function GET() {
                 return {
                     regions,
                     timeline,
+                    yearly,
+                    sectorWages,
                     national: { avgUnemployment, avgWages },
-                    source: 'GUS BDL P3559+P2497',
+                    source: 'GUS BDL P3559+P2497+P2797',
                     timestamp: new Date().toISOString(),
                 };
             },
-            'GUS BDL Regional v2',
+            'GUS BDL Regional v3',
             24 * 3600 * 1000
         );
 

@@ -9,13 +9,28 @@ import { Loader2 } from 'lucide-react';
 // ═══════════════════════════════════════════════════════════════
 
 interface TimelineEntry {
-    month: string; // "YYYY-MM"
-    rates: Record<string, number>; // slug → rate
+    month: string;
+    rates: Record<string, number>;
+}
+
+interface YearlyEntry {
+    year: string;
+    rates: Record<string, number>;
+}
+
+interface SectorWage {
+    code: string;
+    name: string;
+    wage: number | null;
+    wagePrev: number | null;
+    yoy: number | null;
 }
 
 interface RegionalResponse {
     regions: RegionData[];
     timeline: TimelineEntry[];
+    yearly: YearlyEntry[];
+    sectorWages: SectorWage[];
     national: { avgUnemployment: number | null; avgWages: number | null };
     source: string;
     timestamp: string;
@@ -122,14 +137,20 @@ export default function LaborPage() {
     const [selectedPeriod, setSelectedPeriod] = useState<string>('latest');
 
     const overrideRates = useMemo(() => {
-        if (selectedPeriod === 'latest' || !data?.timeline) return undefined;
-        const entry = data.timeline.find(t => t.month === selectedPeriod);
+        if (selectedPeriod === 'latest' || !data) return undefined;
+        // Yearly period
+        if (!selectedPeriod.includes('-')) {
+            const entry = data.yearly?.find(y => y.year === selectedPeriod);
+            return entry?.rates;
+        }
+        // Monthly period
+        const entry = data.timeline?.find(t => t.month === selectedPeriod);
         return entry?.rates;
     }, [selectedPeriod, data]);
 
     const currentPeriodLabel = selectedPeriod === 'latest'
         ? 'Najnowsze'
-        : formatPeriod(selectedPeriod);
+        : selectedPeriod.includes('-') ? formatPeriod(selectedPeriod) : `Śr. roczna ${selectedPeriod}`;
 
     const selectedData = useMemo(() => {
         if (!selectedRegion || !data) return null;
@@ -176,11 +197,24 @@ export default function LaborPage() {
                     className="bg-transparent border border-bb-border rounded px-2 py-0.5 text-xs text-bb-text font-mono focus:outline-none focus:border-bb-accent cursor-pointer"
                 >
                     <option value="latest" className="bg-gray-900">Najnowsze</option>
-                    {data?.timeline && [...data.timeline].reverse().map(t => (
-                        <option key={t.month} value={t.month} className="bg-gray-900">
-                            {formatPeriod(t.month)}
-                        </option>
-                    ))}
+                    {data?.yearly && data.yearly.length > 0 && (
+                        <optgroup label="Średnia roczna">
+                            {[...data.yearly].reverse().map(y => (
+                                <option key={y.year} value={y.year} className="bg-gray-900">
+                                    Śr. {y.year}
+                                </option>
+                            ))}
+                        </optgroup>
+                    )}
+                    {data?.timeline && (
+                        <optgroup label="Miesięczne">
+                            {[...data.timeline].reverse().map(t => (
+                                <option key={t.month} value={t.month} className="bg-gray-900">
+                                    {formatPeriod(t.month)}
+                                </option>
+                            ))}
+                        </optgroup>
+                    )}
                 </select>
                 <span className="text-[10px] text-bb-accent font-mono">{currentPeriodLabel}</span>
             </div>
@@ -362,6 +396,63 @@ export default function LaborPage() {
                         Źródło: GUS BDL P3559 (bezrobocie rejestrowane) + P2497 (wynagrodzenia)
                     </div>
                 </div>
+
+                {/* ─── PKD SECTOR WAGES ─── */}
+                {data.sectorWages && data.sectorWages.length > 0 && (() => {
+                    const sectors = data.sectorWages.filter(s => s.code !== 'Ogółem' && s.wage !== null);
+                    const overallWage = data.sectorWages.find(s => s.code === 'Ogółem')?.wage || 1;
+                    const maxWage = Math.max(...sectors.map(s => s.wage || 0));
+                    return (
+                        <div className="data-card">
+                            <h3 className="text-xs font-semibold text-bb-accent uppercase tracking-wider mb-3">
+                                🏢 Wynagrodzenia brutto wg sekcji PKD (kraj)
+                            </h3>
+                            <div className="space-y-1.5">
+                                {sectors.sort((a, b) => (b.wage || 0) - (a.wage || 0)).map(s => {
+                                    const pct = ((s.wage || 0) / maxWage) * 100;
+                                    const vsAvg = overallWage ? +((s.wage! / overallWage - 1) * 100).toFixed(0) : 0;
+                                    return (
+                                        <div key={s.code} className="flex items-center gap-2 group">
+                                            <div className="w-[140px] text-[10px] text-bb-muted truncate shrink-0"
+                                                 title={`Sekcja ${s.code}: ${s.name}`}>
+                                                <span className="text-bb-text font-mono">{s.code}</span> {s.name}
+                                            </div>
+                                            <div className="flex-1 h-5 bg-white/5 rounded-sm relative overflow-hidden">
+                                                <div
+                                                    className="h-full rounded-sm transition-all duration-500"
+                                                    style={{
+                                                        width: `${pct}%`,
+                                                        background: vsAvg >= 20 ? '#3B82F6'
+                                                            : vsAvg >= 0 ? '#10B981'
+                                                            : vsAvg >= -15 ? '#EAB308'
+                                                            : '#EF4444',
+                                                    }}
+                                                />
+                                                <span className="absolute inset-0 flex items-center px-2 text-[10px] font-mono text-white/90">
+                                                    {Math.round(s.wage!).toLocaleString()} PLN
+                                                </span>
+                                            </div>
+                                            <div className={`w-[50px] text-right text-[10px] font-mono ${(s.yoy || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                                {s.yoy !== null ? `${s.yoy > 0 ? '+' : ''}${s.yoy}%` : '—'}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                            <div className="flex items-center justify-between text-[10px] text-bb-muted mt-3 pt-2 border-t border-bb-border">
+                                <span>Źródło: GUS BDL P2797 (PKD 2007)</span>
+                                <span className="font-mono">
+                                    Śr. krajowa: {Math.round(overallWage).toLocaleString()} PLN
+                                    {data.sectorWages.find(s => s.code === 'Ogółem')?.yoy != null && (
+                                        <span className="text-green-400 ml-1">
+                                            +{data.sectorWages.find(s => s.code === 'Ogółem')!.yoy}% YoY
+                                        </span>
+                                    )}
+                                </span>
+                            </div>
+                        </div>
+                    );
+                })()}
             </div>
         </div>
     );
