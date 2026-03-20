@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import PolandMap, { type RegionData } from '@/components/PolandMap';
+import { useExtraLaborData, StrukturaTab, DynamikaTab, BranzeTab, WynagrodzeniaTab, type SectorWage } from './LaborTabs';
 import { Loader2 } from 'lucide-react';
 
 // ═══════════════════════════════════════════════════════════════
@@ -18,13 +19,14 @@ interface YearlyEntry {
     rates: Record<string, number>;
 }
 
-interface SectorWage {
-    code: string;
-    name: string;
-    wage: number | null;
-    wagePrev: number | null;
-    yoy: number | null;
-}
+type TabId = 'mapa' | 'struktura' | 'dynamika' | 'branze' | 'wynagrodzenia';
+const TABS: { id: TabId; label: string; desc: string }[] = [
+    { id: 'mapa', label: 'MAPA', desc: 'Bezrobocie regionalne' },
+    { id: 'struktura', label: 'STRUKTURA', desc: 'BAEL wg wykształcenia i wieku' },
+    { id: 'dynamika', label: 'DYNAMIKA', desc: 'Wolne miejsca i kreacja pracy' },
+    { id: 'branze', label: 'BRANŻE', desc: 'Zatrudnienie i płace wg PKD' },
+    { id: 'wynagrodzenia', label: 'WYNAGRODZENIA', desc: 'Kwartalne wg regionów' },
+];
 
 interface RegionalResponse {
     regions: RegionData[];
@@ -133,8 +135,10 @@ function formatPeriod(month: string): string {
 
 export default function LaborPage() {
     const { data, isLoading } = useRegionalData();
+    const { data: extraData, isLoading: extraLoading } = useExtraLaborData();
     const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
     const [selectedPeriod, setSelectedPeriod] = useState<string>('latest');
+    const [activeTab, setActiveTab] = useState<TabId>('mapa');
 
     const overrideRates = useMemo(() => {
         if (selectedPeriod === 'latest' || !data) return undefined;
@@ -207,40 +211,64 @@ export default function LaborPage() {
             <div className="px-3 py-1.5 border-b border-bb-border flex items-center gap-3">
                 <span className="bb-label">LABOR MARKET</span>
                 <span className="text-bb-border">│</span>
-                <span className="text-[10px] text-bb-muted">
-                    MAPA RYNKU PRACY · 16 WOJEWÓDZTW · GUS BDL
-                </span>
-                <span className="text-bb-border">│</span>
-                {/* ──── PERIOD SWITCHER ──── */}
-                <select
-                    value={selectedPeriod}
-                    onChange={e => setSelectedPeriod(e.target.value)}
-                    className="bg-transparent border border-bb-border rounded px-2 py-0.5 text-xs text-bb-text font-mono focus:outline-none focus:border-bb-accent cursor-pointer"
-                >
-                    <option value="latest" className="bg-gray-900">Najnowsze</option>
-                    {data?.yearly && data.yearly.length > 0 && (
-                        <optgroup label="Średnia roczna">
-                            {[...data.yearly].reverse().map(y => (
-                                <option key={y.year} value={y.year} className="bg-gray-900">
-                                    Śr. {y.year}
-                                </option>
-                            ))}
-                        </optgroup>
-                    )}
-                    {data?.timeline && (
-                        <optgroup label="Miesięczne">
-                            {[...data.timeline].reverse().map(t => (
-                                <option key={t.month} value={t.month} className="bg-gray-900">
-                                    {formatPeriod(t.month)}
-                                </option>
-                            ))}
-                        </optgroup>
-                    )}
-                </select>
-                <span className="text-[10px] text-bb-accent font-mono">{currentPeriodLabel}</span>
+                {/* ──── TABS ──── */}
+                <div className="flex items-center gap-0">
+                    {TABS.map(tab => (
+                        <button
+                            key={tab.id}
+                            onClick={() => setActiveTab(tab.id)}
+                            className={`px-3 py-1 text-[10px] font-mono uppercase tracking-wider border-b-2 transition-colors ${
+                                activeTab === tab.id
+                                    ? 'text-bb-accent border-bb-accent'
+                                    : 'text-bb-muted border-transparent hover:text-bb-text hover:border-bb-border'
+                            }`}
+                            title={tab.desc}
+                        >
+                            {tab.label}
+                        </button>
+                    ))}
+                </div>
+                {activeTab === 'mapa' && (
+                    <>
+                        <span className="text-bb-border">│</span>
+                        <select
+                            value={selectedPeriod}
+                            onChange={e => setSelectedPeriod(e.target.value)}
+                            className="bg-transparent border border-bb-border rounded px-2 py-0.5 text-xs text-bb-text font-mono focus:outline-none focus:border-bb-accent cursor-pointer"
+                        >
+                            <option value="latest" className="bg-gray-900">Najnowsze</option>
+                            {data?.yearly && data.yearly.length > 0 && (
+                                <optgroup label="Średnia roczna">
+                                    {[...data.yearly].reverse().map(y => (
+                                        <option key={y.year} value={y.year} className="bg-gray-900">
+                                            Śr. {y.year}
+                                        </option>
+                                    ))}
+                                </optgroup>
+                            )}
+                            {data?.timeline && (
+                                <optgroup label="Miesięczne">
+                                    {[...data.timeline].reverse().map(t => (
+                                        <option key={t.month} value={t.month} className="bg-gray-900">
+                                            {formatPeriod(t.month)}
+                                        </option>
+                                    ))}
+                                </optgroup>
+                            )}
+                        </select>
+                        <span className="text-[10px] text-bb-accent font-mono">{currentPeriodLabel}</span>
+                    </>
+                )}
             </div>
 
             <div className="p-2 space-y-2">
+                {/* ─── EXTRA TABS ─── */}
+                {activeTab === 'struktura' && (extraData ? <StrukturaTab data={extraData} /> : <div className="data-card flex items-center justify-center h-32"><span className="text-bb-muted text-xs">{extraLoading ? 'Ładowanie BAEL...' : 'Brak danych'}</span></div>)}
+                {activeTab === 'dynamika' && (extraData ? <DynamikaTab data={extraData} /> : <div className="data-card flex items-center justify-center h-32"><span className="text-bb-muted text-xs">{extraLoading ? 'Ładowanie...' : 'Brak danych'}</span></div>)}
+                {activeTab === 'branze' && (extraData ? <BranzeTab data={extraData} sectorWages={data.sectorWages || []} /> : <div className="data-card flex items-center justify-center h-32"><span className="text-bb-muted text-xs">{extraLoading ? 'Ładowanie...' : 'Brak danych'}</span></div>)}
+                {activeTab === 'wynagrodzenia' && (extraData ? <WynagrodzeniaTab data={extraData} /> : <div className="data-card flex items-center justify-center h-32"><span className="text-bb-muted text-xs">{extraLoading ? 'Ładowanie...' : 'Brak danych'}</span></div>)}
+
+                {activeTab === 'mapa' && (<>
                 {/* ─── NATIONAL SUMMARY ─── */}
                 <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
                     <div className="data-card">
@@ -474,6 +502,7 @@ export default function LaborPage() {
                         </div>
                     );
                 })()}
+                </>)}
             </div>
         </div>
     );
