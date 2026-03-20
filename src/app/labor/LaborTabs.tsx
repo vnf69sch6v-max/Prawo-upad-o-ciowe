@@ -231,11 +231,12 @@ export function DynamikaTab({ data }: { data: LaborExtraData }) {
         ...data.jobsFlow.history.map(j => Math.max(j.created || 0, j.destroyed || 0)),
         1
     );
+    const BAR_H = 80; // px
 
     return (
         <div className="space-y-4">
-            {/* Vacancies */}
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                {/* Vacancies */}
                 <div className="data-card">
                     <h3 className="text-xs font-semibold text-bb-accent uppercase tracking-wider mb-3">
                         🏢 Wolne miejsca pracy
@@ -256,15 +257,16 @@ export function DynamikaTab({ data }: { data: LaborExtraData }) {
                             </div>
                         )}
                     </div>
-                    <div className="flex items-end gap-1 h-20">
+                    <div className="flex items-end gap-1" style={{ height: BAR_H + 20 }}>
                         {data.vacancies.history.map((v, i) => {
-                            const h = (v.value / maxVac) * 100;
+                            const h = (v.value / maxVac) * BAR_H;
                             const isLatest = i === data.vacancies.history.length - 1;
                             return (
-                                <div key={i} className="flex-1 flex flex-col items-center" title={`${v.year}: ${v.value} tys.`}>
+                                <div key={i} className="flex-1 flex flex-col items-center justify-end" title={`${v.year}: ${v.value} tys.`}>
+                                    <div className="text-[8px] text-bb-muted mb-0.5 font-mono">{Math.round(v.value)}</div>
                                     <div
-                                        className={`w-full rounded-t-sm transition-all ${isLatest ? 'bg-blue-400' : 'bg-blue-500/40'}`}
-                                        style={{ height: `${h}%` }}
+                                        className={`w-full rounded-t-sm transition-all ${isLatest ? 'bg-blue-400' : 'bg-blue-500/50'}`}
+                                        style={{ height: `${Math.max(h, 4)}px` }}
                                     />
                                     <div className="text-[8px] text-bb-muted mt-0.5">{v.year}</div>
                                 </div>
@@ -283,29 +285,41 @@ export function DynamikaTab({ data }: { data: LaborExtraData }) {
                         <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-emerald-500" /> Nowo utworzone</span>
                         <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-red-500" /> Zlikwidowane</span>
                     </div>
-                    <div className="space-y-2">
-                        {data.jobsFlow.history.map(j => (
-                            <div key={j.year} className="space-y-0.5">
-                                <div className="flex justify-between text-[10px]">
-                                    <span className="text-bb-muted font-mono">{j.year}</span>
-                                    <span className={`font-mono ${(j.net || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                                        netto: {j.net !== null ? `${j.net > 0 ? '+' : ''}${j.net} tys.` : '—'}
-                                    </span>
+                    <div className="space-y-3">
+                        {data.jobsFlow.history.map(j => {
+                            const createdW = ((j.created || 0) / maxFlow) * 100;
+                            const destroyedW = ((j.destroyed || 0) / maxFlow) * 100;
+                            return (
+                                <div key={j.year} className="space-y-1">
+                                    <div className="flex justify-between text-[10px]">
+                                        <span className="text-bb-muted font-mono">{j.year}</span>
+                                        <span className={`font-mono ${(j.net || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                            netto: {j.net !== null ? `${j.net > 0 ? '+' : ''}${j.net} tys.` : '—'}
+                                        </span>
+                                    </div>
+                                    <div className="space-y-0.5">
+                                        <div className="flex items-center gap-1">
+                                            <div className="w-[14px] text-[8px] text-emerald-400">+</div>
+                                            <div className="flex-1 h-4 bg-white/5 rounded-sm overflow-hidden relative">
+                                                <div className="h-full bg-emerald-500/70 rounded-sm" style={{ width: `${createdW}%` }} />
+                                                <span className="absolute inset-0 flex items-center px-2 text-[8px] font-mono text-white/80">
+                                                    {j.created !== null ? `${j.created} tys.` : ''}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-1">
+                                            <div className="w-[14px] text-[8px] text-red-400">−</div>
+                                            <div className="flex-1 h-4 bg-white/5 rounded-sm overflow-hidden relative">
+                                                <div className="h-full bg-red-500/70 rounded-sm" style={{ width: `${destroyedW}%` }} />
+                                                <span className="absolute inset-0 flex items-center px-2 text-[8px] font-mono text-white/80">
+                                                    {j.destroyed !== null ? `${j.destroyed} tys.` : ''}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className="flex gap-0.5 h-3">
-                                    <div
-                                        className="bg-emerald-500/70 rounded-sm"
-                                        style={{ width: `${((j.created || 0) / maxFlow) * 100}%` }}
-                                        title={`Utworzone: ${j.created} tys.`}
-                                    />
-                                    <div
-                                        className="bg-red-500/70 rounded-sm"
-                                        style={{ width: `${((j.destroyed || 0) / maxFlow) * 100}%` }}
-                                        title={`Zlikwidowane: ${j.destroyed} tys.`}
-                                    />
-                                </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                     <div className="text-[9px] text-bb-muted mt-2">Źródło: GUS BDL P3441 (roczne, tys. miejsc)</div>
                 </div>
