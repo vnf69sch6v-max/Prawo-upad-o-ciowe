@@ -25,26 +25,31 @@ export interface LaborExtraData {
     jobsFlow: { history: JobFlowEntry[]; };
     employmentByPKD: EmpPKD[];
     quarterlyWages: RegionWages[];
+    focusYear: number;
     source: string;
     timestamp: string;
 }
 
-export function useExtraLaborData() {
+export function useExtraLaborData(year?: number) {
     const [data, setData] = useState<LaborExtraData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
+        let cancelled = false;
+        setIsLoading(true);
         async function load() {
             try {
-                const res = await fetch('/api/gus-labor-extra');
-                if (res.ok) setData(await res.json());
+                const url = year ? `/api/gus-labor-extra?year=${year}` : '/api/gus-labor-extra';
+                const res = await fetch(url);
+                if (res.ok && !cancelled) setData(await res.json());
             } catch (e) {
                 console.error('Labor extra data error:', e);
             }
-            setIsLoading(false);
+            if (!cancelled) setIsLoading(false);
         }
         load();
-    }, []);
+        return () => { cancelled = true; };
+    }, [year]);
 
     return { data, isLoading };
 }

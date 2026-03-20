@@ -122,19 +122,22 @@ function getPrevVal(values: Array<{ year: number; val: number | null }> | undefi
 
 // ═══════════ MAIN ═══════════
 
-export async function GET() {
+export async function GET(request: Request) {
     try {
         const apiKey = process.env.GUS_BDL_KEY || process.env.GUS_API_KEY || '';
         if (!apiKey) {
             return NextResponse.json({ error: 'GUS_BDL_KEY not configured' }, { status: 500 });
         }
 
-        const currentYear = new Date().getFullYear();
-        const yearParams = Array.from({ length: 6 }, (_, i) => `year=${currentYear - i}`).join('&');
+        const { searchParams } = new URL(request.url);
+        const focusYear = parseInt(searchParams.get('year') || '') || new Date().getFullYear();
+        // Fetch range: [focusYear-3, focusYear+1] for historical context in bar charts
+        const yearParams = Array.from({ length: 5 }, (_, i) => `year=${focusYear - 3 + i}`).join('&');
+        const currentYear = focusYear;
 
         const data = await withCache(
             'api_cache',
-            'gus_labor_extra_v4',
+            `gus_labor_extra_v5_${focusYear}`,
             async () => {
                 // BAEL education (P3435) — national annual
                 const eduVarIds = BAEL_EDUCATION.map(e => `var-id=${e.id}`).join('&');
@@ -310,7 +313,8 @@ export async function GET() {
                     // WYNAGRODZENIA
                     quarterlyWages,
                     // Meta
-                    source: 'GUS BDL P3435+P3754+P2567+P4294+P3441+P2836+P2504',
+                    focusYear,
+                    source: 'GUS BDL P4099+P4100+P3981+P3982+P4294+P3441+P2836+P2504',
                     timestamp: new Date().toISOString(),
                 };
             },

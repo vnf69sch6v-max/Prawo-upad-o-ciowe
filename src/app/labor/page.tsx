@@ -135,10 +135,18 @@ function formatPeriod(month: string): string {
 
 export default function LaborPage() {
     const { data, isLoading } = useRegionalData();
-    const { data: extraData, isLoading: extraLoading } = useExtraLaborData();
     const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
     const [selectedPeriod, setSelectedPeriod] = useState<string>('latest');
     const [activeTab, setActiveTab] = useState<TabId>('mapa');
+
+    // Extract year from selectedPeriod for extra data tabs
+    const selectedYear = useMemo(() => {
+        if (selectedPeriod === 'latest') return undefined;
+        if (selectedPeriod.includes('-')) return parseInt(selectedPeriod.split('-')[0]);
+        return parseInt(selectedPeriod);
+    }, [selectedPeriod]);
+
+    const { data: extraData, isLoading: extraLoading } = useExtraLaborData(selectedYear);
 
     const overrideRates = useMemo(() => {
         if (selectedPeriod === 'latest' || !data) return undefined;
@@ -228,37 +236,34 @@ export default function LaborPage() {
                         </button>
                     ))}
                 </div>
-                {activeTab === 'mapa' && (
-                    <>
-                        <span className="text-bb-border">│</span>
-                        <select
-                            value={selectedPeriod}
-                            onChange={e => setSelectedPeriod(e.target.value)}
-                            className="bg-transparent border border-bb-border rounded px-2 py-0.5 text-xs text-bb-text font-mono focus:outline-none focus:border-bb-accent cursor-pointer"
-                        >
-                            <option value="latest" className="bg-gray-900">Najnowsze</option>
-                            {data?.yearly && data.yearly.length > 0 && (
-                                <optgroup label="Średnia roczna">
-                                    {[...data.yearly].reverse().map(y => (
-                                        <option key={y.year} value={y.year} className="bg-gray-900">
-                                            Śr. {y.year}
-                                        </option>
-                                    ))}
-                                </optgroup>
-                            )}
-                            {data?.timeline && (
-                                <optgroup label="Miesięczne">
-                                    {[...data.timeline].reverse().map(t => (
-                                        <option key={t.month} value={t.month} className="bg-gray-900">
-                                            {formatPeriod(t.month)}
-                                        </option>
-                                    ))}
-                                </optgroup>
-                            )}
-                        </select>
-                        <span className="text-[10px] text-bb-accent font-mono">{currentPeriodLabel}</span>
-                    </>
-                )}
+                {/* ──── PERIOD SELECTOR (all tabs) ──── */}
+                <span className="text-bb-border">│</span>
+                <select
+                    value={selectedPeriod}
+                    onChange={e => setSelectedPeriod(e.target.value)}
+                    className="bg-transparent border border-bb-border rounded px-2 py-0.5 text-xs text-bb-text font-mono focus:outline-none focus:border-bb-accent cursor-pointer"
+                >
+                    <option value="latest" className="bg-gray-900">Najnowsze</option>
+                    {data?.yearly && data.yearly.length > 0 && (
+                        <optgroup label="Średnia roczna">
+                            {[...data.yearly].reverse().map(y => (
+                                <option key={y.year} value={y.year} className="bg-gray-900">
+                                    Śr. {y.year}
+                                </option>
+                            ))}
+                        </optgroup>
+                    )}
+                    {activeTab === 'mapa' && data?.timeline && (
+                        <optgroup label="Miesięczne">
+                            {[...data.timeline].reverse().map(t => (
+                                <option key={t.month} value={t.month} className="bg-gray-900">
+                                    {formatPeriod(t.month)}
+                                </option>
+                            ))}
+                        </optgroup>
+                    )}
+                </select>
+                <span className="text-[10px] text-bb-accent font-mono">{currentPeriodLabel}</span>
             </div>
 
             <div className="p-2 space-y-2">
