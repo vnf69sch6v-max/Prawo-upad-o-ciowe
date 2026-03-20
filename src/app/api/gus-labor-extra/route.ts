@@ -134,7 +134,7 @@ export async function GET() {
 
         const data = await withCache(
             'api_cache',
-            'gus_labor_extra_v1',
+            'gus_labor_extra_v3',
             async () => {
                 // BAEL education (P3435) — national annual
                 const eduVarIds = BAEL_EDUCATION.map(e => `var-id=${e.id}`).join('&');

@@ -257,16 +257,16 @@ export function DynamikaTab({ data }: { data: LaborExtraData }) {
                             </div>
                         )}
                     </div>
-                    <div className="flex items-end gap-1" style={{ height: BAR_H + 20 }}>
+                    <div className="flex items-end gap-2" style={{ height: `${BAR_H + 24}px` }}>
                         {data.vacancies.history.map((v, i) => {
-                            const h = (v.value / maxVac) * BAR_H;
+                            const h = Math.max((v.value / maxVac) * BAR_H, 4);
                             const isLatest = i === data.vacancies.history.length - 1;
                             return (
-                                <div key={i} className="flex-1 flex flex-col items-center justify-end" title={`${v.year}: ${v.value} tys.`}>
+                                <div key={i} className="flex-1 min-w-[24px] flex flex-col items-center justify-end" title={`${v.year}: ${v.value} tys.`}>
                                     <div className="text-[8px] text-bb-muted mb-0.5 font-mono">{Math.round(v.value)}</div>
                                     <div
-                                        className={`w-full rounded-t-sm transition-all ${isLatest ? 'bg-blue-400' : 'bg-blue-500/50'}`}
-                                        style={{ height: `${Math.max(h, 4)}px` }}
+                                        className={`w-full rounded-t-sm ${isLatest ? 'bg-blue-400' : 'bg-blue-500/50'}`}
+                                        style={{ height: `${h}px`, minHeight: '4px' }}
                                     />
                                     <div className="text-[8px] text-bb-muted mt-0.5">{v.year}</div>
                                 </div>
