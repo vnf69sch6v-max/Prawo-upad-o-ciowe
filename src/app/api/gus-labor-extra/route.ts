@@ -134,7 +134,7 @@ export async function GET() {
 
         const data = await withCache(
             'api_cache',
-            'gus_labor_extra_v3',
+            'gus_labor_extra_v4',
             async () => {
                 // BAEL education (P3435) — national annual
                 const eduVarIds = BAEL_EDUCATION.map(e => `var-id=${e.id}`).join('&');
@@ -228,8 +228,8 @@ export async function GET() {
                 const jobsFlow = {
                     history: Array.from({ length: 6 }, (_, i) => {
                         const yr = currentYear - 5 + i;
-                        const created = createdEntry?.values?.find((v: { year: number }) => v.year === yr)?.val ?? null;
-                        const destroyed = destroyedEntry?.values?.find((v: { year: number }) => v.year === yr)?.val ?? null;
+                        const created = createdEntry?.values?.find((v: { year: string | number }) => Number(v.year) === yr)?.val ?? null;
+                        const destroyed = destroyedEntry?.values?.find((v: { year: string | number }) => Number(v.year) === yr)?.val ?? null;
                         const net = created !== null && destroyed !== null ? +(created - destroyed).toFixed(1) : null;
                         return { year: yr, created, destroyed, net };
                     }).filter(x => x.created !== null || x.destroyed !== null),
