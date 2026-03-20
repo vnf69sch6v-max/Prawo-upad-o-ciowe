@@ -31,30 +31,30 @@ const REGIONS = [
 
 // ═══════════ VARIABLE IDs ═══════════
 
-// BAEL: unemployment by education level (P3435, annual averages, "wartość liczbowa")
+// BAEL: unemployment by education level (P4099, annual, "wartość liczbowa")
 const BAEL_EDUCATION = [
-    { id: 478484, name: 'Wyższe' },
-    { id: 478483, name: 'Policealne i średnie zawodowe' },
-    { id: 478482, name: 'Średnie ogólnokształcące' },
-    { id: 478481, name: 'Zasadnicze zawodowe' },
-    { id: 478480, name: 'Gimnazjalne i niższe' },
+    { id: 1632595, name: 'Wyższe' },
+    { id: 1632597, name: 'Policealne i średnie zawodowe' },
+    { id: 1632599, name: 'Średnie ogólnokształcące' },
+    { id: 1632601, name: 'Zasadnicze zawodowe' },
+    { id: 1632603, name: 'Gimnazjalne i niższe' },
 ];
 
-// BAEL: unemployment by age group (P3754, annual averages, "wartość liczbowa")
+// BAEL: unemployment by age group (P4100, annual, "wartość liczbowa")
 const BAEL_AGE = [
-    { id: 567351, name: 'Ogółem' },
-    { id: 567353, name: '15-29 lat' },
-    { id: 567355, name: '30-39 lat' },
-    { id: 567357, name: '40-49 lat' },
-    { id: 567359, name: '50+ lat' },
+    { id: 1632605, name: 'Ogółem' },
+    { id: 1726362, name: '15-24 lat' },
+    { id: 1632609, name: '15-29 lat' },
+    { id: 1632611, name: '30-39 lat' },
+    { id: 1632613, name: '40-49 lat' },
+    { id: 1632615, name: '50-89 lat' },
 ];
 
-// BAEL quarterly (P2567): activity rate + employment rate + unemployment rate
-// Pattern: Q1 value IDs, shifted by +1 for Q2, +2 for Q3, +3 for Q4
+// BAEL quarterly (P3981 activity rate + P3982 unemployment rate)
+// For each Q the IDs are offset by 12 (Q1→Q2→Q3→Q4)
 const BAEL_QUARTERLY = {
-    activityRate: { q1: 77557, q2: 77558, q3: 77559, q4: 77560 },  // współczynnik aktywności zawodowej, ogółem
-    employmentRate: { q1: 77561, q2: 77562, q3: 77563, q4: 77564 },  // wskaźnik zatrudnienia, ogółem
-    unemploymentRate: { q1: 77553, q2: 77554, q3: 77555, q4: 77556 }, // stopa bezrobocia, ogółem
+    activityRate:     { q1: 1615065, q2: 1615077, q3: 1615089, q4: 1615101 },  // P3981 ogółem
+    unemploymentRate: { q1: 1615673, q2: 1615679, q3: 1615685, q4: 1615691 },  // P3982 ogółem
 };
 
 // Vacancies (P4294)
@@ -163,7 +163,6 @@ export async function GET() {
                 // BAEL quarterly activity/employment/unemployment rate (P2567) — national
                 const baelQVarIds = [
                     ...Object.values(BAEL_QUARTERLY.activityRate),
-                    ...Object.values(BAEL_QUARTERLY.employmentRate),
                     ...Object.values(BAEL_QUARTERLY.unemploymentRate),
                 ].map(id => `var-id=${id}`).join('&');
                 const baelQData = await fetchBDL(
@@ -194,7 +193,6 @@ export async function GET() {
 
                 const baelQuarterly = {
                     activityRate: extractQuarterly(BAEL_QUARTERLY.activityRate),
-                    employmentRate: extractQuarterly(BAEL_QUARTERLY.employmentRate),
                     unemploymentRate: extractQuarterly(BAEL_QUARTERLY.unemploymentRate),
                 };
 

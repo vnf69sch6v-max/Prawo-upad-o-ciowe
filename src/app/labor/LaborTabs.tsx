@@ -19,7 +19,6 @@ export interface LaborExtraData {
     baelAge: BaelEntry[];
     baelQuarterly: {
         activityRate: QuarterlyPoint[];
-        employmentRate: QuarterlyPoint[];
         unemploymentRate: QuarterlyPoint[];
     };
     vacancies: { count: number | null; rate: number | null; year: number | null; history: VacancyHistory[]; };
@@ -72,7 +71,7 @@ export function StrukturaTab({ data }: { data: LaborExtraData }) {
     const maxAgeRate = Math.max(...data.baelAge.filter(a => a.name !== 'Ogółem').map(a => a.rate || 0), 1);
     const latestActivity = data.baelQuarterly.activityRate.slice(-1)[0];
     const prevActivity = data.baelQuarterly.activityRate.slice(-5, -4)[0];
-    const latestEmployment = data.baelQuarterly.employmentRate.slice(-1)[0];
+    const latestUnemp = data.baelQuarterly.unemploymentRate.slice(-1)[0];
 
     return (
         <div className="space-y-4">
@@ -187,11 +186,11 @@ export function StrukturaTab({ data }: { data: LaborExtraData }) {
                                 <div className="text-[9px] text-bb-muted">{latestActivity?.quarter}</div>
                             </div>
                             <div>
-                                <div className="text-[10px] text-bb-muted">Wskaźnik zatrudnienia</div>
-                                <div className="text-2xl font-mono font-bold text-emerald-400">
-                                    {latestEmployment?.value ?? '—'}%
+                                <div className="text-[10px] text-bb-muted">Stopa bezrobocia BAEL</div>
+                                <div className="text-2xl font-mono font-bold text-red-400">
+                                    {latestUnemp?.value ?? '—'}%
                                 </div>
-                                <div className="text-[9px] text-bb-muted">{latestEmployment?.quarter}</div>
+                                <div className="text-[9px] text-bb-muted">{latestUnemp?.quarter}</div>
                             </div>
                         </div>
                         {/* Mini trend */}
