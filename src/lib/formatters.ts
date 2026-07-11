@@ -48,16 +48,40 @@ export const formatTime = (d: string | Date): string =>
     });
 
 /**
- * Get Tailwind color class based on change direction
+ * Get Tailwind color class based on change direction (legacy dark theme)
  */
 export const getChangeColor = (n: number): string =>
     n > 0 ? 'text-bb-green' : n < 0 ? 'text-bb-red' : 'text-bb-muted';
+
+/**
+ * Get Tailwind color class based on change direction (light theme)
+ */
+export const getChangeColorLight = (n: number): string =>
+    n > 0 ? 'text-mk-positive' : n < 0 ? 'text-mk-negative' : 'text-mk-muted';
+
+/**
+ * Delta chip class (light theme) — colored pill background + text
+ */
+export const getDeltaChipClass = (n: number): string =>
+    n > 0 ? 'mk-chip mk-chip-up' : n < 0 ? 'mk-chip mk-chip-down' : 'mk-chip mk-chip-flat';
 
 /**
  * Get change arrow
  */
 export const getChangeArrow = (n: number): string =>
     n > 0 ? '▲' : n < 0 ? '▼' : '–';
+
+/**
+ * Format a percentage-point delta (+0,3 p.p.) — Polish decimal comma
+ */
+export const formatPP = (n: number, decimals = 1): string =>
+    `${n >= 0 ? '+' : '−'}${Math.abs(n).toFixed(decimals).replace('.', ',')} p.p.`;
+
+/**
+ * Format a plain number with Polish decimal comma (4,2)
+ */
+export const formatDecimalPL = (n: number, decimals = 1): string =>
+    n.toFixed(decimals).replace('.', ',');
 
 /**
  * Calculate percent change between two values

@@ -1,11 +1,48 @@
 @import "tailwindcss";
 
 /* ═══════════════════════════════════════════════════════════════
-   BLOOMBERG TERMINAL THEME
-   Pure black background, sharp edges, dense data, amber accents
+   MAKRO DATA PLATFORM — LIGHT THEME
+   White surfaces, soft shadows, Inter, tabular numerals.
+   Legacy Bloomberg (bb-*) tokens kept below for un-migrated pages.
    ═══════════════════════════════════════════════════════════════ */
 
 @theme {
+  /* ── Light surfaces & text ── */
+  --color-mk-bg: #F7F8FA;
+  --color-mk-surface: #FFFFFF;
+  --color-mk-surface-alt: #F1F3F7;
+  --color-mk-border: #E7EAF0;
+  --color-mk-border-strong: #D4D9E2;
+  --color-mk-text: #0F172A;
+  --color-mk-text-soft: #334155;
+  --color-mk-muted: #64748B;
+  --color-mk-faint: #94A3B8;
+
+  /* ── Semantic ── */
+  --color-mk-primary: #2563EB;
+  --color-mk-primary-strong: #1D4ED8;
+  --color-mk-primary-soft: #EFF4FF;
+  --color-mk-positive: #16A34A;
+  --color-mk-positive-soft: #E7F6EC;
+  --color-mk-negative: #DC2626;
+  --color-mk-negative-soft: #FCECEC;
+  --color-mk-warn: #D97706;
+  --color-mk-warn-soft: #FDF3E7;
+
+  /* ── KPI accent palette ── */
+  --color-mk-blue: #2563EB;
+  --color-mk-violet: #7C3AED;
+  --color-mk-green: #16A34A;
+  --color-mk-amber: #D97706;
+  --color-mk-rose: #E11D48;
+  --color-mk-cyan: #0891B2;
+  --color-mk-slate: #475569;
+
+  --radius-mk: 14px;
+  --shadow-mk: 0 1px 2px rgba(16, 24, 40, .06), 0 1px 3px rgba(16, 24, 40, .10);
+  --shadow-mk-lg: 0 6px 16px rgba(16, 24, 40, .08), 0 2px 6px rgba(16, 24, 40, .05);
+
+  /* ── Legacy Bloomberg tokens (un-migrated pages) ── */
   --color-bb-bg: #000000;
   --color-bb-surface: #0D1117;
   --color-bb-surface-alt: #161B22;
@@ -24,43 +61,283 @@
 }
 
 /* ── Base ──────────────────────────────────────────────────── */
-body {
-  font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', 'Consolas', monospace;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  background: var(--color-bb-bg);
-  color: var(--color-bb-text);
-  font-size: 12px;
-  line-height: 1.4;
+html {
+  background: var(--color-mk-bg);
 }
 
-/* Override Inter for labels/titles only */
+body {
+  font-family: 'Inter', -apple-system, system-ui, 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: var(--color-mk-bg);
+  color: var(--color-mk-text);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
 .font-sans {
   font-family: 'Inter', -apple-system, system-ui, sans-serif !important;
 }
 
-/* Financial data — force monospace */
 .font-mono {
   font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace !important;
 }
 
-/* ── Scrollbar (thin, dark) ────────────────────────────────── */
+/* Tabular numerals for aligned data */
+.tnum {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* ── Scrollbar (light, thin) ───────────────────────────────── */
 ::-webkit-scrollbar {
-  width: 4px;
-  height: 4px;
+  width: 10px;
+  height: 10px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--color-bb-bg);
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--color-bb-border);
-  border-radius: 2px;
+  background: #CBD2DD;
+  border-radius: 6px;
+  border: 3px solid var(--color-mk-bg);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-bb-muted);
+  background: #A9B2C0;
+}
+
+/* ═══ Light component classes ═══════════════════════════════ */
+
+.mk-card {
+  background: var(--color-mk-surface);
+  border: 1px solid var(--color-mk-border);
+  border-radius: var(--radius-mk);
+  box-shadow: var(--shadow-mk);
+}
+
+.mk-card-pad {
+  padding: 20px;
+}
+
+a.mk-card,
+button.mk-card,
+.mk-card-interactive {
+  transition: box-shadow .15s ease, border-color .15s ease, transform .15s ease;
+}
+
+.mk-card-interactive:hover {
+  box-shadow: var(--shadow-mk-lg);
+  border-color: var(--color-mk-border-strong);
+}
+
+/* KPI big number */
+.mk-kpi-value {
+  font-size: clamp(2rem, 4.5vw, 3rem);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--color-mk-text);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Label (uppercase, muted) */
+.mk-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-mk-muted);
+}
+
+.mk-eyebrow {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--color-mk-muted);
+}
+
+/* Delta chip */
+.mk-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.mk-chip-up {
+  color: var(--color-mk-positive);
+  background: var(--color-mk-positive-soft);
+}
+
+.mk-chip-down {
+  color: var(--color-mk-negative);
+  background: var(--color-mk-negative-soft);
+}
+
+.mk-chip-flat {
+  color: var(--color-mk-muted);
+  background: var(--color-mk-surface-alt);
+}
+
+/* Nav tabs */
+.mk-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-mk-muted);
+  transition: color .12s ease, background .12s ease;
+}
+
+.mk-tab:hover {
+  color: var(--color-mk-text);
+  background: var(--color-mk-surface-alt);
+}
+
+.mk-tab-active {
+  color: var(--color-mk-primary);
+  background: var(--color-mk-primary-soft);
+  font-weight: 600;
+}
+
+/* Buttons */
+.mk-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 9px 16px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  border: 1px solid var(--color-mk-border-strong);
+  background: var(--color-mk-surface);
+  color: var(--color-mk-text-soft);
+  cursor: pointer;
+  transition: background .12s ease, border-color .12s ease, box-shadow .12s ease;
+}
+
+.mk-btn:hover {
+  background: var(--color-mk-surface-alt);
+}
+
+.mk-btn-primary {
+  background: var(--color-mk-primary);
+  border-color: var(--color-mk-primary);
+  color: #fff;
+}
+
+.mk-btn-primary:hover {
+  background: var(--color-mk-primary-strong);
+}
+
+.mk-btn:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+}
+
+/* Segmented control (toggles) */
+.mk-seg {
+  display: inline-flex;
+  padding: 3px;
+  gap: 2px;
+  border-radius: 10px;
+  background: var(--color-mk-surface-alt);
+  border: 1px solid var(--color-mk-border);
+}
+
+.mk-seg-btn {
+  padding: 5px 12px;
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-mk-muted);
+  cursor: pointer;
+  transition: all .12s ease;
+}
+
+.mk-seg-btn:hover {
+  color: var(--color-mk-text);
+}
+
+.mk-seg-btn-active {
+  background: var(--color-mk-surface);
+  color: var(--color-mk-primary);
+  box-shadow: var(--shadow-mk);
+}
+
+/* Inputs */
+.mk-input {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--color-mk-border-strong);
+  background: var(--color-mk-surface);
+  color: var(--color-mk-text);
+  font-size: 14px;
+  outline: none;
+  transition: border-color .12s ease, box-shadow .12s ease;
+}
+
+.mk-input::placeholder {
+  color: var(--color-mk-faint);
+}
+
+.mk-input:focus {
+  border-color: var(--color-mk-primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, .15);
+}
+
+/* Section title inside cards */
+.mk-section-title {
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--color-mk-text);
+}
+
+/* Light table */
+.mk-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.mk-table th {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-mk-muted);
+  padding: 8px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--color-mk-border);
+}
+
+.mk-table td {
+  font-size: 14px;
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--color-mk-border);
+  color: var(--color-mk-text-soft);
+}
+
+.mk-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.mk-table tbody tr:hover {
+  background: var(--color-mk-surface-alt);
 }
 
 /* ── Live indicator ────────────────────────────────────────── */
@@ -72,20 +349,59 @@ body {
   }
 
   50% {
-    opacity: 0.2;
+    opacity: 0.25;
   }
 }
 
 .live-dot {
-  width: 5px;
-  height: 5px;
-  background: var(--color-bb-green);
+  width: 7px;
+  height: 7px;
+  background: var(--color-mk-positive);
   border-radius: 50%;
-  animation: blink 1.2s ease-in-out infinite;
+  animation: blink 1.6s ease-in-out infinite;
   display: inline-block;
 }
 
-/* ── Ticker bar ────────────────────────────────────────────── */
+/* Fade-in for content */
+@keyframes mk-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.mk-fade-in {
+  animation: mk-fade-in .3s ease-out both;
+}
+
+/* Skeleton shimmer */
+@keyframes mk-shimmer {
+  0% {
+    background-position: -400px 0;
+  }
+
+  100% {
+    background-position: 400px 0;
+  }
+}
+
+.mk-skeleton {
+  background: linear-gradient(90deg, #EEF1F5 25%, #E2E7EF 37%, #EEF1F5 63%);
+  background-size: 800px 100%;
+  animation: mk-shimmer 1.4s ease-in-out infinite;
+  border-radius: 6px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   LEGACY BLOOMBERG CLASSES (un-migrated pages: fx, rates, market …)
+   Kept until each page is ported, then removed in the final phase.
+   ═══════════════════════════════════════════════════════════════ */
+
 @keyframes ticker-scroll {
   0% {
     transform: translateX(0);
@@ -104,7 +420,6 @@ body {
   animation-play-state: paused;
 }
 
-/* ── Bloomberg Panel (sharp, dense) ───────────────────────── */
 .data-card {
   background: var(--color-bb-surface);
   border: 1px solid var(--color-bb-border);
@@ -117,7 +432,6 @@ body {
   border-color: var(--color-bb-accent);
 }
 
-/* Bloomberg tiled panel — no gap, shared borders */
 .bb-panel {
   background: var(--color-bb-surface);
   border: 1px solid var(--color-bb-border);
@@ -136,7 +450,6 @@ body {
   margin-bottom: 6px;
 }
 
-/* ── Bloomberg label ───────────────────────────────────────── */
 .bb-label {
   font-size: 10px;
   font-weight: 600;
@@ -145,7 +458,6 @@ body {
   color: var(--color-bb-muted);
 }
 
-/* ── Bloomberg keycap (F1, F2 etc.) ────────────────────────── */
 .bb-keycap {
   display: inline-flex;
   align-items: center;
@@ -168,7 +480,6 @@ body {
   border-color: var(--color-bb-keycap);
 }
 
-/* ── Data table (alternating rows) ─────────────────────────── */
 .bb-table tbody tr:nth-child(even) {
   background: var(--color-bb-surface-alt);
 }
@@ -195,40 +506,14 @@ body {
   font-family: 'JetBrains Mono', monospace;
 }
 
-/* ── Transitions (minimal, fast) ───────────────────────────── */
-* {
-  transition-property: color, background-color, border-color, opacity;
-  transition-timing-function: ease;
-  transition-duration: 100ms;
-}
-
 /* ── Mobile ────────────────────────────────────────────────── */
 .safe-area-bottom {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 @media (max-width: 767px) {
-  .data-card {
-    padding: 8px 10px;
-  }
-
-  table {
-    display: block;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    white-space: nowrap;
-  }
-
-  thead,
-  tbody,
-  tr {
-    display: table;
-    width: 100%;
-    table-layout: fixed;
-  }
-
-  .ticker-animate {
-    animation-duration: 35s;
+  .mk-card-pad {
+    padding: 16px;
   }
 
   .recharts-wrapper {

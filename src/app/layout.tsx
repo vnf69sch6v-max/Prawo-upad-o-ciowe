@@ -1,18 +1,17 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
-import { Sidebar } from "@/components/Sidebar";
-import { HeaderBar } from "@/components/HeaderBar";
-import { KeyboardShortcuts } from "@/components/KeyboardShortcuts";
 import { Providers } from "./providers";
+import { ShellFrame } from "@/components/shell/ShellFrame";
 
 export const metadata: Metadata = {
-  title: "Poland Economic Dashboard",
-  description: "Dane makroekonomiczne Polski w stylu Bloomberg Terminal — kursy walut, GPW, inflacja, stopy procentowe",
-  keywords: ["polska", "ekonomia", "dashboard", "NBP", "GPW", "WIG20", "inflacja", "kursy walut"],
+  title: "Makro Data Platform — dane makroekonomiczne Polski",
+  description:
+    "Nowoczesna platforma danych makroekonomicznych dla Polski — inflacja, PKB, rynek pracy, stopy procentowe, rynki i prognozy aktualizowane na bieżąco.",
+  keywords: ["polska", "makroekonomia", "dashboard", "GUS", "NBP", "inflacja", "PKB", "prognozy", "CPI", "koszyk inflacyjny"],
 };
 
 export const viewport: Viewport = {
-  themeColor: "#000000",
+  themeColor: "#F7F8FA",
   width: "device-width",
   initialScale: 1,
 };
@@ -28,18 +27,13 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
           rel="stylesheet"
         />
       </head>
-      <body className="antialiased min-h-screen overflow-x-hidden">
+      <body className="min-h-screen antialiased">
         <Providers>
-          <KeyboardShortcuts />
-          <HeaderBar />
-          <Sidebar />
-          <div className="md:ml-14 min-h-[calc(100vh-28px)] pb-14 md:pb-0">
-            {children}
-          </div>
+          <ShellFrame>{children}</ShellFrame>
         </Providers>
       </body>
     </html>

@@ -20,8 +20,15 @@ async function fetchStooq(symbol: string, interval: string, limit: number): Prom
     if (!res.ok) throw new Error(`Stooq error: ${res.status}`);
 
     const csv = await res.text();
-    const lines = csv.trim().split('\n');
 
+    // Stooq now serves a JS/anti-bot challenge (HTML) to server-side fetches.
+    // Detect it and fail cleanly instead of parsing HTML into garbage rows.
+    const head = csv.trimStart().slice(0, 200).toLowerCase();
+    if (head.startsWith('<') || head.includes('<html') || head.includes('<script') || head.includes('<!doctype')) {
+        throw new Error('Stooq zwrócił stronę-wyzwanie (blokada anty-bot)');
+    }
+
+    const lines = csv.trim().split('\n');
     if (lines.length < 2 || lines[1]?.trim() === 'Brak danych') {
         throw new Error('Empty data from Stooq');
     }
@@ -32,7 +39,7 @@ async function fetchStooq(symbol: string, interval: string, limit: number): Prom
             date: v[0], open: parseFloat(v[1]) || 0, high: parseFloat(v[2]) || 0,
             low: parseFloat(v[3]) || 0, close: parseFloat(v[4]) || 0, volume: parseFloat(v[5]) || 0,
         };
-    }).filter(d => d.date && !isNaN(d.close));
+    }).filter(d => /^\d{4}-\d{2}-\d{2}$/.test(d.date) && d.close > 0);
 
     const limited = data.slice(-limit);
     return { symbol, data: limited, latest: limited[limited.length - 1] || null };

@@ -1,36 +1,70 @@
-// NBP API Proxy — handles weekend/holiday fallback + Firestore cache
+// NBP API Proxy — tables, single-currency history, gold. Weekend/holiday fallback + Firestore cache.
 import { NextRequest, NextResponse } from 'next/server';
 import { withCache } from '@/lib/server-cache';
 
 const NBP_BASE = 'https://api.nbp.pl/api';
 
-async function fetchNBP(endpoint: string, fallback: string) {
-    const res = await fetch(`${NBP_BASE}/${endpoint}/?format=json`, {
-        next: { revalidate: 300 },
-    });
+async function fetchNBP(endpoint: string, fallback?: string): Promise<unknown> {
+    const res = await fetch(`${NBP_BASE}/${endpoint}/?format=json`, { next: { revalidate: 300 } });
     if (res.ok) return res.json();
 
     if (res.status === 404 && fallback) {
-        const fallbackRes = await fetch(`${NBP_BASE}/${fallback}/?format=json`, {
-            next: { revalidate: 300 },
-        });
-        if (fallbackRes.ok) return fallbackRes.json();
+        const fb = await fetch(`${NBP_BASE}/${fallback}/?format=json`, { next: { revalidate: 300 } });
+        if (fb.ok) return fb.json();
     }
-
     throw new Error(`NBP API error: ${res.status}`);
 }
 
 export async function GET(request: NextRequest) {
-    const { searchParams } = new URL(request.url);
-    const endpoint = searchParams.get('endpoint') || 'exchangerates/tables/a/today';
-    const fallback = searchParams.get('fallback') || 'exchangerates/tables/a/last/1';
-    const cacheKey = endpoint.replace(/\//g, '_');
+    const sp = new URL(request.url).searchParams;
+    const table = sp.get('table');
+    const code = sp.get('code');
+    const last = sp.get('last');
+    const gold = sp.get('gold');
+
+    let endpoint: string;
+    let fallback: string | undefined;
+    let cacheKey: string;
+    let mode: 'gold' | 'history' | 'table' | 'raw';
+
+    if (gold === 'true') {
+        const n = last || '30';
+        endpoint = `cenyzlota/last/${n}`;
+        cacheKey = `gold_${n}`;
+        mode = 'gold';
+    } else if (code) {
+        // Single-currency history: /exchangerates/rates/{table}/{code}/last/{n}
+        const t = (table || 'a').toLowerCase();
+        const n = last || '30';
+        endpoint = `exchangerates/rates/${t}/${code.toLowerCase()}/last/${n}`;
+        cacheKey = `hist_${t}_${code.toLowerCase()}_${n}`;
+        mode = 'history';
+    } else if (table) {
+        endpoint = `exchangerates/tables/${table}/today`;
+        fallback = `exchangerates/tables/${table}/last/1`;
+        cacheKey = `table_${table}`;
+        mode = 'table';
+    } else {
+        // Backward-compatible endpoint/fallback form
+        endpoint = sp.get('endpoint') || 'exchangerates/tables/a/today';
+        fallback = sp.get('fallback') || 'exchangerates/tables/a/last/1';
+        cacheKey = endpoint.replace(/\//g, '_');
+        mode = 'raw';
+    }
 
     try {
         const data = await withCache(
             'exchange_rates',
             cacheKey,
-            () => fetchNBP(endpoint, fallback),
+            async () => {
+                const raw = await fetchNBP(endpoint, fallback);
+                // Normalise currency history to a flat [{ no, effectiveDate, mid }] array
+                if (mode === 'history') {
+                    const rates = (raw as { rates?: unknown[] })?.rates;
+                    return Array.isArray(rates) ? rates : [];
+                }
+                return raw; // table → [{ rates, ... }]; gold → [{ data, cena }]; raw → as-is
+            },
             'NBP API',
             6 * 3600 * 1000
         );

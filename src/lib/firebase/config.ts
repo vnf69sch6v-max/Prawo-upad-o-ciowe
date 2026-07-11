@@ -19,6 +19,7 @@ let _app: FirebaseApp | null = null;
 let _auth: Auth | null = null;
 let _db: Firestore | null = null;
 let _storage: FirebaseStorage | null = null;
+let _warnedMissing = false;
 
 function isConfigValid(): boolean {
     return !!(
@@ -32,11 +33,10 @@ function getFirebaseApp(): FirebaseApp | null {
     if (_app) return _app;
 
     if (!isConfigValid()) {
-        // During SSR/build, env vars may not be available
-        if (typeof window === 'undefined') {
-            console.warn('Firebase: Missing config (SSR/build time - this is expected)');
-        } else {
-            console.error('Firebase: Missing required configuration');
+        // Missing config is an expected state in demo mode — warn once, don't spam.
+        if (!_warnedMissing) {
+            _warnedMissing = true;
+            console.warn('Firebase: brak konfiguracji klienta — tryb bez logowania (demo).');
         }
         return null;
     }
