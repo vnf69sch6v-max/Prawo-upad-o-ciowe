@@ -45,7 +45,7 @@ function CpiNationalSection() {
 
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                 <SectionCard title="CPI krajowy — trend" subtitle="GUS · r/r (%)"
-                    actions={<div className="flex items-center gap-2"><StaleBadge date={latest?.date} label="GUS do" /><CsvExport filename="cpi-krajowy" headers={['Miesiąc', 'CPI r/r']} rows={trend.map((t) => [t.date, t.value])} /></div>}>
+                    actions={<div className="flex items-center gap-2"><StaleBadge date={latest?.date} label="GUS do" warnAfterMonths={4} /><CsvExport filename="cpi-krajowy" headers={['Miesiąc', 'CPI r/r']} rows={trend.map((t) => [t.date, t.value])} /></div>}>
                     {q.isLoading ? <div className="mk-skeleton h-[280px] w-full" /> : (
                         <InteractiveChart data={trend} xKey="date" height={280} unit="%" valueFormatter={(v) => formatDecimalPL(v, 1)} xTickFormatter={monthTick}
                             referenceLines={[{ y: 2.5, label: 'Cel NBP', color: '#94A3B8' }]}
