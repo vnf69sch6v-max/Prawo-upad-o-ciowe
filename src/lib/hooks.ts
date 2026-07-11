@@ -381,16 +381,23 @@ export function usePLvsEU(indicator: string) {
 
 // ─── GUS CPI pełny (headline y/y+m/m + 13 działów COICOP, DBW) ───
 
+export interface CpiSubcategory {
+    code: string; name: string;
+    yoy: number | null; mom: number | null; weight?: number | null;
+}
 export interface CpiDivision {
     code: string; name: string; weight: number;
     yoy: number | null; mom: number | null; contribution: number | null;
     history: { date: string; yoy: number | null }[];
+    subcategories?: CpiSubcategory[];
 }
 interface CpiFullData {
     headline: { date: string; yoy: number | null; mom: number | null }[];
     divisions: CpiDivision[];
     dataDate: string;
     weightsApprox: boolean;
+    spliceDate?: string | null;   // od kiedy krajowy CPI (wcześniej szkielet HICP)
+    backboneSource?: string;
 }
 
 export function useCpiFull(year = new Date().getFullYear()) {

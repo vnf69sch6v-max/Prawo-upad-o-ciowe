@@ -1,16 +1,16 @@
-// Full CPI detail from DBW — headline y/y + m/m trend (2025 COICOP 1999 + 2026 COICOP 2018)
-// and all 13 COICOP 2018 divisions with y/y, m/m, weight (approx), contribution and 2026 history.
+// Pełny obraz inflacji CPI:
+//  • headline r/r + m/m: krajowy CPI (GUS DBW) dla świeżych ~2 lat, poprzedzony 10-letnim
+//    szkieletem HICP (Eurostat) — DBW zwraca 1 okres/zapytanie i limituje ~100 req/15min,
+//    więc 10 lat monthly z DBW jest nierealne; HICP daje pełną historię jednym zapytaniem.
+//  • 13 działów COICOP 2018 (od 2026) z wagą, wkładem i historią,
+//  • dla każdego działu — klasy 4-cyfrowe COICOP (podkategorie, np. Żywność → pieczywo/mięso),
+//    wyciągane z TEGO SAMEGO pobrania 1698 (zero dodatkowych zapytań DBW).
 import { NextRequest, NextResponse } from 'next/server';
 import { withCache } from '@/lib/server-cache';
+import { dbwFetchMany, pick, monthlyPeriods, monthOkres, type DbwPeriod, type DbwRow } from '@/lib/dbw-fetch';
+import { COICOP_CLASSES } from '@/lib/coicop-subcategories';
+import { fetchEurostat } from '../eurostat/route';
 
-const DBW = 'https://api-dbw.stat.gov.pl/api/1.1.0/variable/variable-data-section';
-const POLSKA = 33617;
-const GRUPA_OGOLEM = 6902025;
-
-interface DbwRow { 'id-pozycja-1': number; 'id-pozycja-2': number; 'id-pozycja-3': number; 'id-sposob-prezentacji-miara': number; wartosc: number }
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-
-// COICOP 2018 divisions (przekrój 1698) + approx 2026 basket weights (sum ≈ 100).
 const DIVISIONS = [
     { poz: 14150568, code: '01', name: 'Żywność i napoje bezalk.', weight: 25.9 },
     { poz: 14150567, code: '02', name: 'Alkohol i tytoń', weight: 6.1 },
@@ -27,64 +27,95 @@ const DIVISIONS = [
     { poz: 14150556, code: '13', name: 'Higiena i pozostałe', weight: 3.0 },
 ];
 
-async function fetchMonth(rok: number, okres: number, przekroj: number): Promise<DbwRow[] | null> {
-    const url = `${DBW}?id-zmienna=305&id-przekroj=${przekroj}&id-rok=${rok}&id-okres=${okres}&ile-na-stronie=9000&numer-strony=0&lang=pl`;
-    for (let attempt = 0; attempt < 2; attempt++) {
-        const res = await fetch(url, { headers: { Accept: 'application/json' }, next: { revalidate: 86400 } });
-        if (res.status === 429) { await sleep(3500); continue; }
-        if (!res.ok) return null;
-        const json = await res.json();
-        return (json?.data as DbwRow[]) ?? null;
-    }
-    return null;
-}
+const HEADLINE_POZ = (przekroj: number) => (przekroj === 1722 ? 14916914 : 6656078);
+const mm = (m: number) => String(m).padStart(2, '0');
+const r1 = (v: number | null | undefined) => (v == null ? null : +v.toFixed(1));
 
-// Extract value for a position at presentation `prez` (5=y/y, 2=m/m). Index → % change (val-100).
-function pick(rows: DbwRow[], poz: number, prez: number): number | null {
-    const m = rows.filter((r) => r['id-pozycja-1'] === POLSKA && r['id-pozycja-2'] === poz && r['id-sposob-prezentacji-miara'] === prez);
-    if (!m.length) return null;
-    const row = m.find((r) => r['id-pozycja-3'] === GRUPA_OGOLEM) ?? m[0];
-    return row.wartosc != null ? +(row.wartosc - 100).toFixed(1) : null;
-}
+interface HeadPoint { date: string; yoy: number | null; mom: number | null }
 
 export async function GET(request: NextRequest) {
-    const year = parseInt(new URL(request.url).searchParams.get('year') || String(new Date().getFullYear()));
+    const now = parseInt(new URL(request.url).searchParams.get('year') || String(new Date().getFullYear()));
+    const startYear = now - 1;      // krajowe DBW: świeże ~2 lata (koszt zapytań)
+    const backboneStart = now - 9;  // szkielet HICP: ~10 lat
 
     try {
         const result = await withCache(
             'dbw',
-            `gus_cpi_full_${year}_v1`,
+            `gus_cpi_full_${now}_v3`,
             async () => {
-                const headline: { date: string; yoy: number | null; mom: number | null }[] = [];
+                // ── Krajowy headline (DBW): COICOP 1999 (739) ≤2025, COICOP 2018 agregaty (1722) ≥2026 ──
+                const hPeriods = monthlyPeriods(startYear, now, (y) => (y >= 2026 ? 1722 : 739));
+                const hRows = await dbwFetchMany(305, hPeriods, 2);
+                const national: HeadPoint[] = hPeriods
+                    .map((p) => {
+                        const rows = hRows.get(p.key);
+                        if (!rows) return null;
+                        const poz = HEADLINE_POZ(p.przekroj);
+                        const yoy = pick(rows, poz, 5);
+                        if (yoy == null) return null;
+                        return { date: p.key, yoy, mom: pick(rows, poz, 2) };
+                    })
+                    .filter((x): x is NonNullable<typeof x> => x !== null);
+
+                // ── Szkielet 10-letni: HICP y/y + m/m (Eurostat) ──
+                const hicpYoY = new Map<string, number>();
+                const hicpMoM = new Map<string, number>();
+                try {
+                    const since = `${backboneStart}-01`;
+                    const [yoyR, momR] = await Promise.all([
+                        fetchEurostat('prc_hicp_manr', { coicop: 'CP00' }, ['PL'], since),
+                        fetchEurostat('prc_hicp_mmor', { coicop: 'CP00' }, ['PL'], since),
+                    ]);
+                    for (const s of yoyR.data['PL'] ?? []) if (s.value != null) hicpYoY.set(s.date, s.value);
+                    for (const s of momR.data['PL'] ?? []) if (s.value != null) hicpMoM.set(s.date, s.value);
+                } catch (e) {
+                    console.error('HICP backbone fetch failed (fallback: tylko krajowe):', e);
+                }
+
+                // ── Sklejenie: krajowy CPI tam gdzie jest, wcześniej HICP ──
+                const natlMap = new Map(national.map((h) => [h.date, h]));
+                const lastNatl = national.length ? national[national.length - 1].date : '';
+                const lastHicp = [...hicpYoY.keys()].sort().pop() ?? '';
+                const endDate = lastNatl > lastHicp ? lastNatl : lastHicp;
+                const spliceDate = national.length ? national[0].date : null; // od kiedy dane krajowe
+                const headline: HeadPoint[] = [];
+                for (let y = backboneStart; y <= now; y++) {
+                    for (let m = 1; m <= 12; m++) {
+                        const date = `${y}-${mm(m)}`;
+                        if (endDate && date > endDate) break;
+                        const n = natlMap.get(date);
+                        if (n && n.yoy != null) { headline.push(n); continue; }
+                        const hy = hicpYoY.get(date);
+                        if (hy != null) headline.push({ date, yoy: r1(hy), mom: hicpMoM.has(date) ? r1(hicpMoM.get(date)!) : null });
+                    }
+                }
+
+                // ── Działy COICOP 2018 (przekrój 1698 — od 2026) + podkategorie (klasy 4-cyfr) ──
+                const dStart = Math.max(2026, startYear);
+                const dPeriods: DbwPeriod[] = [];
+                for (let y = dStart; y <= now; y++) for (let m = 1; m <= 12; m++) dPeriods.push({ rok: y, okres: monthOkres(m), przekroj: 1698, key: `${y}-${mm(m)}` });
+                const dRows = await dbwFetchMany(305, dPeriods, 2);
+
                 const divHistory: Record<string, { date: string; yoy: number | null }[]> = {};
                 DIVISIONS.forEach((d) => (divHistory[d.code] = []));
                 let latestRows: DbwRow[] | null = null;
                 let latestDate = '';
-
-                // 2025 — headline only (przekrój 739, COICOP 1999, Ogółem 6656078)
-                for (let m = 1; m <= 12; m++) {
-                    const rows = await fetchMonth(year - 1, 246 + m, 739);
-                    await sleep(110);
+                for (const p of dPeriods) {
+                    const rows = dRows.get(p.key);
                     if (!rows) continue;
-                    const yoy = pick(rows, 6656078, 5);
-                    if (yoy == null) continue;
-                    headline.push({ date: `${year - 1}-${String(m).padStart(2, '0')}`, yoy, mom: pick(rows, 6656078, 2) });
+                    const hasAny = DIVISIONS.some((d) => pick(rows, d.poz, 5) != null);
+                    if (!hasAny) continue;
+                    latestRows = rows; latestDate = p.key;
+                    for (const d of DIVISIONS) divHistory[d.code].push({ date: p.key, yoy: pick(rows, d.poz, 5) });
                 }
 
-                // 2026 — headline (przekrój 1722, OGÓŁEM 14916914) + divisions (przekrój 1698)
-                for (let m = 1; m <= 12; m++) {
-                    const hRows = await fetchMonth(year, 246 + m, 1722);
-                    await sleep(110);
-                    const yoy = hRows ? pick(hRows, 14916914, 5) : null;
-                    if (yoy == null) continue;
-                    const date = `${year}-${String(m).padStart(2, '0')}`;
-                    headline.push({ date, yoy, mom: hRows ? pick(hRows, 14916914, 2) : null });
-
-                    const dRows = await fetchMonth(year, 246 + m, 1698);
-                    await sleep(110);
-                    if (dRows) {
-                        latestRows = dRows; latestDate = date;
-                        for (const d of DIVISIONS) divHistory[d.code].push({ date, yoy: pick(dRows, d.poz, 5) });
+                // podkategorie (klasy) z najświeższego miesiąca — grupowane po dziale nadrzędnym
+                const subsByDiv: Record<string, { code: string; name: string; yoy: number | null; mom: number | null }[]> = {};
+                if (latestRows) {
+                    for (const cls of COICOP_CLASSES) {
+                        const yoy = pick(latestRows, cls.poz, 5);
+                        if (yoy == null) continue;
+                        (subsByDiv[cls.div] ??= []).push({ code: cls.code, name: cls.name, yoy, mom: pick(latestRows, cls.poz, 2) });
                     }
                 }
 
@@ -95,10 +126,12 @@ export async function GET(request: NextRequest) {
                         code: d.code, name: d.name, weight: d.weight, yoy, mom,
                         contribution: yoy != null ? +((d.weight / 100) * yoy).toFixed(2) : null,
                         history: divHistory[d.code],
+                        subcategories: (subsByDiv[d.code] ?? []).sort((a, b) => (b.yoy ?? -99) - (a.yoy ?? -99)),
                     };
                 });
 
-                return { headline, divisions, dataDate: latestDate || (headline.length ? headline[headline.length - 1].date : ''), weightsApprox: true };
+                const dataDate = latestDate || lastNatl || (headline.length ? headline[headline.length - 1].date : '');
+                return { headline, divisions, dataDate, weightsApprox: true, spliceDate, backboneSource: 'HICP (Eurostat)' };
             },
             'GUS DBW CPI full',
             24 * 3600 * 1000,

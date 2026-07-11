@@ -25,6 +25,7 @@ export function InflacjaFull() {
     const headline = useMemo(() => data?.headline ?? [], [data]);
     const divisions = useMemo(() => data?.divisions ?? [], [data]);
     const dataDate = data?.dataDate ?? null;
+    const spliceDate = data?.spliceDate ?? null;
     const latest = headline.length ? headline[headline.length - 1] : null;
     const prev = headline.length > 1 ? headline[headline.length - 2] : null;
     const core = lastOf(plSeries(coreQ.data));
@@ -43,6 +44,8 @@ export function InflacjaFull() {
 
     const chartData = useMemo(() => headline.map((h) => ({ date: h.date, value: freq === 'yoy' ? h.yoy : h.mom })), [headline, freq]);
     const selHistory = useMemo(() => (sel?.history ?? []).map((h) => ({ date: h.date, value: h.yoy })), [sel]);
+    const subs = useMemo(() => (sel?.subcategories ?? []).filter((s) => s.yoy != null).sort((a, b) => (b.yoy ?? -99) - (a.yoy ?? -99)), [sel]);
+    const maxSubAbs = useMemo(() => Math.max(...subs.map((s) => Math.abs(s.yoy ?? 0)), 0.1), [subs]);
     const pieData = useMemo(() => divisions.map((d, i) => ({ name: d.name, value: d.weight, color: colorFor(i), yoy: d.yoy })), [divisions]);
 
     const cols: Column<CpiDivision>[] = [
@@ -69,13 +72,13 @@ export function InflacjaFull() {
             </div>
 
             {/* ── Hero: trend r/r ↔ m/m ── */}
-            <SectionCard title="Inflacja CPI — trend" subtitle={`GUS · krajowy CPI · ${freq === 'yoy' ? 'rok do roku' : 'miesiąc do miesiąca'} (%)`}
+            <SectionCard title="Inflacja CPI — trend (10 lat)" subtitle={`${freq === 'yoy' ? 'rok do roku' : 'miesiąc do miesiąca'} (%) · krajowy CPI (GUS)${spliceDate ? ` od ${spliceDate.slice(0, 4)}` : ''}, wcześniej HICP (Eurostat)`}
                 actions={<div className="flex flex-wrap items-center gap-2">
                     <Segmented value={freq} onChange={setFreq} options={[{ value: 'yoy', label: 'r/r' }, { value: 'mom', label: 'm/m' }]} />
                     <StaleBadge date={dataDate} label="GUS do" warnAfterMonths={4} />
-                    <CsvExport filename="cpi-krajowy" headers={['Miesiąc', 'r/r', 'm/m']} rows={headline.map((h) => [h.date, h.yoy, h.mom])} />
+                    <CsvExport filename="cpi-10lat" headers={['Miesiąc', 'r/r', 'm/m']} rows={headline.map((h) => [h.date, h.yoy, h.mom])} />
                 </div>}>
-                <InteractiveChart data={chartData} xKey="date" height={320} unit="%" showRange initialRange="1R"
+                <InteractiveChart data={chartData} xKey="date" height={320} unit="%" showRange initialRange="5L" ranges={['1R', '3L', '5L', 'ALL']}
                     valueFormatter={(v) => formatDecimalPL(v, 1)} xTickFormatter={monthTick}
                     referenceLines={freq === 'yoy' ? [{ y: 2.5, label: 'Cel NBP', color: '#94A3B8' }] : [{ y: 0, color: '#CBD2DD' }]}
                     series={[{ key: 'value', name: freq === 'yoy' ? 'CPI r/r' : 'CPI m/m', color: '#D97706', type: 'area', strokeWidth: 2.5 }]} />
@@ -122,6 +125,25 @@ export function InflacjaFull() {
                                 <InteractiveChart data={selHistory} xKey="date" height={200} unit="%" valueFormatter={(v) => formatDecimalPL(v, 1)} xTickFormatter={monthTick}
                                     series={[{ key: 'value', name: `${sel.name} r/r`, color: selColor, type: 'area', strokeWidth: 2.5 }]} />
                             ) : <p className="py-8 text-center text-sm text-mk-faint">Krótka historia (dane od 2026).</p>}
+
+                            {subs.length > 0 && (
+                                <div className="mt-4 border-t border-mk-border pt-3">
+                                    <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-mk-muted">Szczegóły działu · {subs.length} kategorii (r/r)</div>
+                                    <div className="max-h-[240px] space-y-1 overflow-auto pr-1">
+                                        {subs.map((s) => {
+                                            const y = s.yoy ?? 0;
+                                            const w = (Math.abs(y) / maxSubAbs) * 100;
+                                            return (
+                                                <div key={s.code} className="flex items-center gap-2 text-xs">
+                                                    <span className="w-36 shrink-0 truncate text-mk-text-soft" title={s.name}>{s.name}</span>
+                                                    <span className="h-2.5 flex-1 rounded-full bg-mk-surface-alt"><span className="block h-2.5 rounded-full" style={{ width: `${w}%`, marginLeft: y < 0 ? 'auto' : undefined, background: y >= 0 ? selColor : '#16A34A' }} /></span>
+                                                    <span className="w-12 shrink-0 text-right font-semibold tnum" style={{ color: y >= 0 ? '#DC2626' : '#16A34A' }}>{y > 0 ? '+' : ''}{formatDecimalPL(y, 1)}%</span>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            )}
                         </>
                     )}
                 </SectionCard>
@@ -167,8 +189,8 @@ export function InflacjaFull() {
             </div>
 
             <div className="rounded-xl bg-mk-surface-alt p-4 text-sm text-mk-text-soft">
-                <span className="font-semibold text-mk-text">Źródło: </span>GUS (DBW) — krajowy wskaźnik cen towarów i usług konsumpcyjnych (COICOP 2018 od 2026, COICOP 1999 do 2025).
-                Dynamiki działów są oficjalne; wagi koszyka przybliżone (do zastąpienia oficjalnymi wagami GUS). Inflacja bazowa: HICP core (Eurostat).
+                <span className="font-semibold text-mk-text">Źródło: </span>GUS (DBW) — krajowy CPI (COICOP 2018 od 2026, COICOP 1999 do 2025); trend 10-letni uzupełniony szkieletem HICP (Eurostat) sprzed okresu danych krajowych.
+                Działy i podkategorie (klasy COICOP 4-cyfrowe, np. Żywność → pieczywo/mięso/nabiał) — dynamiki oficjalne z GUS; wagi koszyka przybliżone. Inflacja bazowa: HICP core (Eurostat).
             </div>
         </div>
     );

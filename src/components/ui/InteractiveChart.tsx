@@ -16,7 +16,8 @@ export interface ChartSeries {
     strokeWidth?: number;
 }
 
-type RangeKey = '3M' | '6M' | '1R' | 'ALL';
+type RangeKey = '3M' | '6M' | '1R' | '3L' | '5L' | 'ALL';
+const RANGE_MONTHS: Record<RangeKey, number | null> = { '3M': 3, '6M': 6, '1R': 12, '3L': 36, '5L': 60, ALL: null };
 
 interface InteractiveChartProps {
     data: Record<string, unknown>[];
@@ -27,9 +28,11 @@ interface InteractiveChartProps {
     valueFormatter?: (v: number) => string;
     xTickFormatter?: (v: string) => string;
     referenceLines?: { y: number; label?: string; color?: string; axis?: 'left' | 'right' }[];
-    /** Show the built-in 3M/6M/1R/ALL range picker */
+    /** Show the built-in range picker */
     showRange?: boolean;
     initialRange?: RangeKey;
+    /** Custom set of range buttons (default 3M/6M/1R/ALL); use ['1R','3L','5L','ALL'] for long series */
+    ranges?: RangeKey[];
     legend?: boolean;
     /** Right controls slot (e.g. M/M vs R/R toggle) rendered next to range */
     controls?: ReactNode;
@@ -58,18 +61,19 @@ function LightTooltip({ active, payload, label, valueFormatter, unit }: {
     );
 }
 
-const RANGES: RangeKey[] = ['3M', '6M', '1R', 'ALL'];
+const DEFAULT_RANGES: RangeKey[] = ['3M', '6M', '1R', 'ALL'];
 
 export function InteractiveChart({
     data, xKey, series, height = 300, unit = '', valueFormatter, xTickFormatter,
-    referenceLines, showRange = false, initialRange = 'ALL', legend = false, controls,
+    referenceLines, showRange = false, initialRange = 'ALL', ranges, legend = false, controls,
 }: InteractiveChartProps) {
     const [range, setRange] = useState<RangeKey>(initialRange);
+    const rangeButtons = ranges ?? DEFAULT_RANGES;
 
     const view = useMemo(() => {
         if (!showRange || range === 'ALL') return data;
-        const n = range === '3M' ? 3 : range === '6M' ? 6 : 12;
-        return data.slice(-n);
+        const n = RANGE_MONTHS[range];
+        return n ? data.slice(-n) : data;
     }, [data, range, showRange]);
 
     const hasRight = series.some((s) => s.yAxis === 'right');
@@ -84,7 +88,7 @@ export function InteractiveChart({
                     <div>{controls}</div>
                     {showRange && (
                         <div className="mk-seg" role="tablist" aria-label="Zakres">
-                            {RANGES.map((r) => (
+                            {rangeButtons.map((r) => (
                                 <button key={r} type="button" onClick={() => setRange(r)} className={`mk-seg-btn ${range === r ? 'mk-seg-btn-active' : ''}`} style={{ padding: '3px 9px', fontSize: 12 }}>
                                     {r}
                                 </button>

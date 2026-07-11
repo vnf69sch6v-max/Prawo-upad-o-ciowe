@@ -216,7 +216,7 @@ function parseJsonStat(
     return result;
 }
 
-async function fetchEurostat(
+export async function fetchEurostat(
     datasetCode: string,
     params: Record<string, string>,
     geo: string[],
