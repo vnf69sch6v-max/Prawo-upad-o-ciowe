@@ -16,6 +16,19 @@ const nextConfig: NextConfig = {
   },
   // External packages that should not be bundled
   serverExternalPackages: ['firebase-admin'],
+  // Legacy (dark) routes → new light domains
+  async redirects() {
+    return [
+      { source: '/macro', destination: '/gospodarka', permanent: false },
+      { source: '/rates', destination: '/rynki', permanent: false },
+      { source: '/labor', destination: '/praca', permanent: false },
+      { source: '/fx', destination: '/rynki', permanent: false },
+      { source: '/market', destination: '/rynki', permanent: false },
+      { source: '/trade', destination: '/rynki', permanent: false },
+      { source: '/nowcast', destination: '/prognozy', permanent: false },
+      { source: '/tools', destination: '/prognozy', permanent: false },
+    ];
+  },
 };
 
 export default nextConfig;
