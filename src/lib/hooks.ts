@@ -395,6 +395,23 @@ export function useCpiNational(year = 2025) {
     });
 }
 
+// ─── GUS koniunktura (badanie koniunktury, DBW) — proxy PMI ───
+
+interface KoniunkturaData {
+    trend: Record<string, number | string>[];
+    latest: { date: string; sectors: { name: string; value: number | null }[] } | null;
+    sectors: { key: string; name: string }[];
+    source: string;
+}
+
+export function useKoniunktura(year = 2025) {
+    return useQuery<KoniunkturaData>({
+        queryKey: ['gus-koniunktura', year],
+        queryFn: () => fetchJSON(`/api/gus-koniunktura?year=${year}`),
+        staleTime: 24 * 60 * 60 * 1000,
+    });
+}
+
 // ─── CPI z koszyka (COICOP 2026) — 12 dywizji HICP na żywo ───
 
 export function useCPIBasket() {
