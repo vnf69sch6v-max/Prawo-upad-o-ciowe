@@ -73,6 +73,9 @@ export function InteractiveChart({
     }, [data, range, showRange]);
 
     const hasRight = series.some((s) => s.yAxis === 'right');
+    const hasBar = series.some((s) => s.type === 'bar');
+    // Bars need a 0 baseline; line/area charts look better tightly fitted to the data.
+    const yDomain: [number | string, number | string] = hasBar ? [0, 'auto'] : ['auto', 'auto'];
 
     return (
         <div>
@@ -102,8 +105,8 @@ export function InteractiveChart({
                     </defs>
                     <CartesianGrid stroke="#EDF0F5" vertical={false} />
                     <XAxis dataKey={xKey} tick={{ fill: '#94A3B8', fontSize: 12 }} tickFormatter={xTickFormatter} axisLine={{ stroke: '#E7EAF0' }} tickLine={false} minTickGap={24} />
-                    <YAxis yAxisId="left" tick={{ fill: '#94A3B8', fontSize: 12 }} axisLine={false} tickLine={false} width={44} tickFormatter={valueFormatter} />
-                    {hasRight && <YAxis yAxisId="right" orientation="right" tick={{ fill: '#94A3B8', fontSize: 12 }} axisLine={false} tickLine={false} width={44} />}
+                    <YAxis yAxisId="left" domain={yDomain} tick={{ fill: '#94A3B8', fontSize: 12 }} axisLine={false} tickLine={false} width={44} tickFormatter={valueFormatter} />
+                    {hasRight && <YAxis yAxisId="right" orientation="right" domain={['auto', 'auto']} tick={{ fill: '#94A3B8', fontSize: 12 }} axisLine={false} tickLine={false} width={44} />}
                     <Tooltip content={<LightTooltip valueFormatter={valueFormatter} unit={unit} />} cursor={{ stroke: '#CBD2DD', strokeWidth: 1, strokeDasharray: '3 3' }} />
                     {legend && <Legend wrapperStyle={{ fontSize: 12, paddingTop: 8 }} iconType="circle" iconSize={8} />}
 
