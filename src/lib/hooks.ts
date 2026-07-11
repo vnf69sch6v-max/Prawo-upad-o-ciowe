@@ -395,6 +395,16 @@ export function useCpiNational(year = 2025) {
     });
 }
 
+// ─── Generic BDL series (zatrudnienie, bezrobotni, wakaty) ───
+
+export function useBdlSeries(start: number, count = 12, year = 2025, freq: 'm' | 'q' = 'm') {
+    return useQuery<{ series: { date: string; value: number }[]; source: string }>({
+        queryKey: ['bdl-series', start, count, year, freq],
+        queryFn: () => fetchJSON(`/api/bdl-series?start=${start}&count=${count}&year=${year}&freq=${freq}`),
+        staleTime: 24 * 60 * 60 * 1000,
+    });
+}
+
 // ─── Generic DBW series (PPI, ceny nieruchomości/budowlane/rolne) ───
 
 export interface DbwSeriesConfig {
