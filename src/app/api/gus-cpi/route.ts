@@ -1,12 +1,11 @@
-// GUS national CPI (official) from DBW — monthly y/y, stitched across a year.
-// DBW returns one period per call, so we fetch each month and assemble a series.
+// GUS national CPI (official) from DBW — monthly y/y, stitched across the last ~2 years
+// to the latest published month. DBW returns one period per call.
 // var 305 / przekrój 739 (6 aggregates), presentation 5 = "analog. m-c poprz. roku = 100".
 import { NextRequest, NextResponse } from 'next/server';
 import { withCache } from '@/lib/server-cache';
 
 const DBW = 'https://api-dbw.stat.gov.pl/api/1.1.0/variable/variable-data-section';
 
-// przekrój 739 category positions (dim 565)
 const CATS = [
     { poz: 6656078, name: 'Ogółem', key: 'ogolem' },
     { poz: 6656079, name: 'Żywność i napoje bezalk.', key: 'zywnosc' },
@@ -16,7 +15,6 @@ const CATS = [
 ];
 
 interface DbwRow { 'id-pozycja-2': number; 'id-sposob-prezentacji-miara': number; wartosc: number }
-
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 async function fetchMonth(rok: number, okres: number): Promise<DbwRow[] | null> {
@@ -32,32 +30,32 @@ async function fetchMonth(rok: number, okres: number): Promise<DbwRow[] | null> 
 }
 
 export async function GET(request: NextRequest) {
-    const year = parseInt(new URL(request.url).searchParams.get('year') || '2025');
+    const year = parseInt(new URL(request.url).searchParams.get('year') || String(new Date().getFullYear()));
+    const years = [year - 1, year];
 
     try {
         const result = await withCache(
             'dbw',
-            `gus_cpi_national_${year}`,
+            `gus_cpi_national_${year}_v2`,
             async () => {
                 const trend: { date: string; value: number }[] = [];
                 let latest: { date: string; ogolem: number; categories: { name: string; yoy: number | null }[] } | null = null;
 
-                for (let m = 1; m <= 12; m++) {
-                    const rows = await fetchMonth(year, 246 + m); // M01 = 247
-                    await sleep(150);
-                    if (!rows) continue;
-                    const yoy = (poz: number) => {
-                        const r = rows.find((x) => x['id-pozycja-2'] === poz && x['id-sposob-prezentacji-miara'] === 5);
-                        return r && r.wartosc != null ? +(r.wartosc - 100).toFixed(1) : null;
-                    };
-                    const ogolem = yoy(6656078);
-                    if (ogolem == null) continue;
-                    const date = `${year}-${String(m).padStart(2, '0')}`;
-                    trend.push({ date, value: ogolem });
-                    latest = {
-                        date, ogolem,
-                        categories: CATS.filter((c) => c.key !== 'ogolem').map((c) => ({ name: c.name, yoy: yoy(c.poz) })),
-                    };
+                for (const y of years) {
+                    for (let m = 1; m <= 12; m++) {
+                        const rows = await fetchMonth(y, 246 + m);
+                        await sleep(120);
+                        if (!rows) continue;
+                        const yoy = (poz: number) => {
+                            const r = rows.find((x) => x['id-pozycja-2'] === poz && x['id-sposob-prezentacji-miara'] === 5);
+                            return r && r.wartosc != null ? +(r.wartosc - 100).toFixed(1) : null;
+                        };
+                        const ogolem = yoy(6656078);
+                        if (ogolem == null) continue;
+                        const date = `${y}-${String(m).padStart(2, '0')}`;
+                        trend.push({ date, value: ogolem });
+                        latest = { date, ogolem, categories: CATS.filter((c) => c.key !== 'ogolem').map((c) => ({ name: c.name, yoy: yoy(c.poz) })) };
+                    }
                 }
                 return { trend, latest, source: 'GUS (DBW) — krajowy CPI' };
             },

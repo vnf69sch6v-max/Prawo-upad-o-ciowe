@@ -1,5 +1,6 @@
 // GUS business tendency (koniunktura) from DBW — the free PMI-style leading indicator.
-// var 184 / przekrój 803, measure 117 = climate balance (nie indeks). POLSKA = poz-1 33617.
+// var 184 / przekrój 803, measure 117 = climate balance. POLSKA = poz-1 33617.
+// Stitched across the last ~2 years to the latest published month.
 import { NextRequest, NextResponse } from 'next/server';
 import { withCache } from '@/lib/server-cache';
 
@@ -15,7 +16,6 @@ const SECTORS = [
 ];
 
 interface DbwRow { 'id-pozycja-1': number; 'id-pozycja-2': number; 'id-sposob-prezentacji-miara': number; wartosc: number }
-
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 async function fetchMonth(rok: number, okres: number): Promise<DbwRow[] | null> {
@@ -31,31 +31,34 @@ async function fetchMonth(rok: number, okres: number): Promise<DbwRow[] | null> 
 }
 
 export async function GET(request: NextRequest) {
-    const year = parseInt(new URL(request.url).searchParams.get('year') || '2025');
+    const year = parseInt(new URL(request.url).searchParams.get('year') || String(new Date().getFullYear()));
+    const years = [year - 1, year];
 
     try {
         const result = await withCache(
             'dbw',
-            `gus_koniunktura_${year}`,
+            `gus_koniunktura_${year}_v2`,
             async () => {
                 const trend: Record<string, number | string>[] = [];
                 let latest: { date: string; sectors: { name: string; value: number | null }[] } | null = null;
 
-                for (let m = 1; m <= 12; m++) {
-                    const rows = await fetchMonth(year, 246 + m);
-                    await sleep(150);
-                    if (!rows) continue;
-                    const val = (poz: number) => {
-                        const r = rows.find((x) => x['id-pozycja-1'] === POLSKA && x['id-pozycja-2'] === poz && x['id-sposob-prezentacji-miara'] === 117);
-                        return r && r.wartosc != null ? +r.wartosc.toFixed(1) : null;
-                    };
-                    const date = `${year}-${String(m).padStart(2, '0')}`;
-                    const point: Record<string, number | string> = { date };
-                    let any = false;
-                    for (const s of SECTORS) { const v = val(s.poz); if (v != null) { point[s.key] = v; any = true; } }
-                    if (!any) continue;
-                    trend.push(point);
-                    latest = { date, sectors: SECTORS.map((s) => ({ name: s.name, value: val(s.poz) })) };
+                for (const y of years) {
+                    for (let m = 1; m <= 12; m++) {
+                        const rows = await fetchMonth(y, 246 + m);
+                        await sleep(120);
+                        if (!rows) continue;
+                        const val = (poz: number) => {
+                            const r = rows.find((x) => x['id-pozycja-1'] === POLSKA && x['id-pozycja-2'] === poz && x['id-sposob-prezentacji-miara'] === 117);
+                            return r && r.wartosc != null ? +r.wartosc.toFixed(1) : null;
+                        };
+                        const date = `${y}-${String(m).padStart(2, '0')}`;
+                        const point: Record<string, number | string> = { date };
+                        let any = false;
+                        for (const s of SECTORS) { const v = val(s.poz); if (v != null) { point[s.key] = v; any = true; } }
+                        if (!any) continue;
+                        trend.push(point);
+                        latest = { date, sectors: SECTORS.map((s) => ({ name: s.name, value: val(s.poz) })) };
+                    }
                 }
                 return { trend, latest, sectors: SECTORS.map((s) => ({ key: s.key, name: s.name })), source: 'GUS (DBW) — badanie koniunktury' };
             },

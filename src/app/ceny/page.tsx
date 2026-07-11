@@ -10,6 +10,7 @@ import { InteractiveChart } from '@/components/ui/InteractiveChart';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { Segmented } from '@/components/ui/Segmented';
 import { CsvExport } from '@/components/ui/CsvExport';
+import { StaleBadge } from '@/components/ui/StaleBadge';
 import { DbwPriceSection } from '@/components/sections/DbwPriceSection';
 
 type Tab = 'inflacja' | 'ppi' | 'nieruchomosci' | 'budowlane' | 'rolne';
@@ -24,7 +25,7 @@ const TABS: { value: Tab; label: string }[] = [
 const monthTick = (d: string) => { const [y, m] = d.split('-'); return m ? `${m}.${y.slice(2)}` : d; };
 
 function CpiNationalSection() {
-    const q = useCpiNational(2025);
+    const q = useCpiNational();
     const trend = q.data?.trend ?? [];
     const latest = q.data?.latest ?? null;
     const cats = latest?.categories ?? [];
@@ -43,8 +44,8 @@ function CpiNationalSection() {
             </div>
 
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                <SectionCard title="CPI krajowy — trend 2025" subtitle="GUS · r/r (%)"
-                    actions={<CsvExport filename="cpi-krajowy" headers={['Miesiąc', 'CPI r/r']} rows={trend.map((t) => [t.date, t.value])} />}>
+                <SectionCard title="CPI krajowy — trend" subtitle="GUS · r/r (%)"
+                    actions={<div className="flex items-center gap-2"><StaleBadge date={latest?.date} label="GUS do" /><CsvExport filename="cpi-krajowy" headers={['Miesiąc', 'CPI r/r']} rows={trend.map((t) => [t.date, t.value])} /></div>}>
                     {q.isLoading ? <div className="mk-skeleton h-[280px] w-full" /> : (
                         <InteractiveChart data={trend} xKey="date" height={280} unit="%" valueFormatter={(v) => formatDecimalPL(v, 1)} xTickFormatter={monthTick}
                             referenceLines={[{ y: 2.5, label: 'Cel NBP', color: '#94A3B8' }]}

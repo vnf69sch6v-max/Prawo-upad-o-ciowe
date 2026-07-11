@@ -387,7 +387,7 @@ interface CpiNationalData {
     source: string;
 }
 
-export function useCpiNational(year = 2025) {
+export function useCpiNational(year = new Date().getFullYear()) {
     return useQuery<CpiNationalData>({
         queryKey: ['gus-cpi', year],
         queryFn: () => fetchJSON(`/api/gus-cpi?year=${year}`),
@@ -397,7 +397,7 @@ export function useCpiNational(year = 2025) {
 
 // ─── Generic BDL series (zatrudnienie, bezrobotni, wakaty) ───
 
-export function useBdlSeries(start: number, count = 12, year = 2025, freq: 'm' | 'q' = 'm') {
+export function useBdlSeries(start: number, count = 12, year = new Date().getFullYear(), freq: 'm' | 'q' = 'm') {
     return useQuery<{ series: { date: string; value: number }[]; source: string }>({
         queryKey: ['bdl-series', start, count, year, freq],
         queryFn: () => fetchJSON(`/api/bdl-series?start=${start}&count=${count}&year=${year}&freq=${freq}`),
@@ -413,7 +413,7 @@ export interface DbwSeriesConfig {
 }
 
 export function useDbwSeries(config: DbwSeriesConfig) {
-    const { var: v, przekroj, poz, year = 2025, freq = 'm', prez = 5, poz1 = 33617, sub100 = true } = config;
+    const { var: v, przekroj, poz, year = new Date().getFullYear(), freq = 'm', prez = 5, poz1 = 33617, sub100 = true } = config;
     const qs = new URLSearchParams({ var: String(v), przekroj: String(przekroj), year: String(year), freq, prez: String(prez), poz1: String(poz1), sub100: sub100 ? '1' : '0' });
     poz.forEach((p) => qs.append('poz', String(p)));
     return useQuery<{ series: Record<string, number | string>[]; source: string }>({
@@ -432,7 +432,7 @@ interface KoniunkturaData {
     source: string;
 }
 
-export function useKoniunktura(year = 2025) {
+export function useKoniunktura(year = new Date().getFullYear()) {
     return useQuery<KoniunkturaData>({
         queryKey: ['gus-koniunktura', year],
         queryFn: () => fetchJSON(`/api/gus-koniunktura?year=${year}`),

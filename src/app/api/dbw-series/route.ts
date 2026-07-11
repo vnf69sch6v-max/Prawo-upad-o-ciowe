@@ -28,14 +28,14 @@ export async function GET(request: NextRequest) {
     if (!varId || !przekroj || poz.length === 0) {
         return NextResponse.json({ error: 'Wymagane: var, przekroj, poz' }, { status: 400 });
     }
-    const year = parseInt(sp.get('year') || '2025');
+    const year = parseInt(sp.get('year') || String(new Date().getFullYear()));
     const prez = parseInt(sp.get('prez') || '5');
     const poz1 = parseInt(sp.get('poz1') || '33617'); // POLSKA
     const freq = sp.get('freq') === 'q' ? 'q' : 'm';
     const sub100 = sp.get('sub100') !== '0';
     const pozNums = poz.map(Number);
 
-    const cacheKey = `dbwser_${varId}_${przekroj}_${poz.join('-')}_${year}_${freq}_${prez}`.slice(0, 120);
+    const cacheKey = `dbwser_${varId}_${przekroj}_${poz.join('-')}_${year}_${freq}_${prez}_v2`.slice(0, 120);
 
     try {
         const result = await withCache(
@@ -43,20 +43,23 @@ export async function GET(request: NextRequest) {
             cacheKey,
             async () => {
                 const count = freq === 'q' ? 4 : 12;
+                const years = [year - 1, year];
                 const series: Record<string, number | string>[] = [];
-                for (let i = 1; i <= count; i++) {
-                    const okres = freq === 'q' ? 269 + i : 246 + i; // Q1=270, M01=247
-                    const rows = await fetchPeriod(varId, przekroj, year, okres);
-                    await sleep(150);
-                    if (!rows) continue;
-                    const date = freq === 'q' ? `${year}-Q${i}` : `${year}-${String(i).padStart(2, '0')}`;
-                    const point: Record<string, number | string> = { date };
-                    let any = false;
-                    for (const p of pozNums) {
-                        const r = rows.find((x) => x['id-pozycja-1'] === poz1 && x['id-pozycja-2'] === p && x['id-sposob-prezentacji-miara'] === prez);
-                        if (r && r.wartosc != null) { point[String(p)] = sub100 ? +(r.wartosc - 100).toFixed(1) : +r.wartosc.toFixed(1); any = true; }
+                for (const y of years) {
+                    for (let i = 1; i <= count; i++) {
+                        const okres = freq === 'q' ? 269 + i : 246 + i; // Q1=270, M01=247
+                        const rows = await fetchPeriod(varId, przekroj, y, okres);
+                        await sleep(120);
+                        if (!rows) continue;
+                        const date = freq === 'q' ? `${y}-Q${i}` : `${y}-${String(i).padStart(2, '0')}`;
+                        const point: Record<string, number | string> = { date };
+                        let any = false;
+                        for (const p of pozNums) {
+                            const r = rows.find((x) => x['id-pozycja-1'] === poz1 && x['id-pozycja-2'] === p && x['id-sposob-prezentacji-miara'] === prez);
+                            if (r && r.wartosc != null) { point[String(p)] = sub100 ? +(r.wartosc - 100).toFixed(1) : +r.wartosc.toFixed(1); any = true; }
+                        }
+                        if (any) series.push(point);
                     }
-                    if (any) series.push(point);
                 }
                 return { series, source: 'GUS (DBW)' };
             },

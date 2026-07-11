@@ -1,49 +1,57 @@
 // Generic BDL series stitcher — monthly/quarterly BDL data lives as consecutive
-// variable ids (one per month/quarter). Fetch a run of ids at unit-level=0 and assemble.
+// variable ids (one per month/quarter). Each variable holds several years, so we
+// fetch the previous + current year at once and assemble a rolling series to the latest.
 import { NextRequest, NextResponse } from 'next/server';
 import { withCache } from '@/lib/server-cache';
 
 const BDL = 'https://bdl.stat.gov.pl/api/v1/data/by-variable';
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-async function fetchVar(id: number, year: number, apiKey?: string): Promise<number | null> {
+async function fetchVarYears(id: number, years: number[], apiKey?: string): Promise<Record<string, number | null>> {
     const headers: Record<string, string> = { Accept: 'application/json' };
     if (apiKey) headers['X-ClientId'] = apiKey;
+    const yq = years.map((y) => `year=${y}`).join('&');
     for (let attempt = 0; attempt < 2; attempt++) {
-        const res = await fetch(`${BDL}/${id}?unit-level=0&format=json&year=${year}`, { headers, next: { revalidate: 86400 } });
+        const res = await fetch(`${BDL}/${id}?unit-level=0&format=json&${yq}`, { headers, next: { revalidate: 86400 } });
         if (res.status === 429) { await sleep(12000); continue; }
-        if (!res.ok) return null;
+        if (!res.ok) return {};
         const json = await res.json();
-        const values = json?.results?.[0]?.values as { year: string; val: number | null }[] | undefined;
-        const hit = values?.find((v) => String(v.year) === String(year));
-        return hit?.val ?? null;
+        const values = (json?.results?.[0]?.values as { year: string; val: number | null }[] | undefined) ?? [];
+        return Object.fromEntries(values.map((v) => [String(v.year), v.val]));
     }
-    return null;
+    return {};
 }
 
 export async function GET(request: NextRequest) {
     const sp = new URL(request.url).searchParams;
     const start = parseInt(sp.get('start') || '');
     const count = parseInt(sp.get('count') || '12');
-    const year = parseInt(sp.get('year') || '2025');
+    const year = parseInt(sp.get('year') || String(new Date().getFullYear()));
     const freq = sp.get('freq') === 'q' ? 'q' : 'm';
     if (!start) return NextResponse.json({ error: 'Wymagane: start (id zmiennej)' }, { status: 400 });
 
     const apiKey = process.env.GUS_BDL_KEY || process.env.GUS_API_KEY;
-    const cacheKey = `bdl_series_${start}_${count}_${year}_${freq}`;
+    const years = [year - 1, year];
+    const cacheKey = `bdl_series_${start}_${count}_${year}_${freq}_v2`;
 
     try {
         const result = await withCache(
             'macro_data',
             cacheKey,
             async () => {
-                const series: { date: string; value: number }[] = [];
+                const perVar: Record<string, number | null>[] = [];
                 for (let i = 0; i < count; i++) {
-                    const val = await fetchVar(start + i, year, apiKey);
+                    perVar[i] = await fetchVarYears(start + i, years, apiKey);
                     await sleep(120);
-                    if (val == null) continue;
-                    const date = freq === 'q' ? `${year}-Q${i + 1}` : `${year}-${String(i + 1).padStart(2, '0')}`;
-                    series.push({ date, value: val });
+                }
+                const series: { date: string; value: number }[] = [];
+                for (const y of years) {
+                    for (let i = 0; i < count; i++) {
+                        const v = perVar[i]?.[String(y)];
+                        if (v == null) continue;
+                        const date = freq === 'q' ? `${y}-Q${i + 1}` : `${y}-${String(i + 1).padStart(2, '0')}`;
+                        series.push({ date, value: +v });
+                    }
                 }
                 return { series, source: 'GUS BDL' };
             },

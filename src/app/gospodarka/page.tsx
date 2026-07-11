@@ -27,7 +27,7 @@ const SECTOR_META: Record<string, { color: string; accent: AccentKey; icon: type
 };
 
 function KoniunkturaSection() {
-    const q = useKoniunktura(2025);
+    const q = useKoniunktura();
     const trend = q.data?.trend ?? [];
     const sectors = q.data?.sectors ?? [];
     const latest = q.data?.latest ?? null;
