@@ -10,6 +10,8 @@ const CACHE_TTL: Record<string, number> = {
     'wibor': 6 * 3600 * 1000,            // 6h
     'gold': 6 * 3600 * 1000,             // 6h
     'eurostat': 12 * 3600 * 1000,        // 12h
+    'smup': 24 * 3600 * 1000,            // 24h — public services data
+    'sdp': 24 * 3600 * 1000,             // 24h — GUS SDP warehouse
 };
 
 /**

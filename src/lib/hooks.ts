@@ -407,6 +407,26 @@ export function useCPIBasket() {
     return { basket: buildBasket(COICOP_2026, yoyByCode, official, dataDate), isLoading };
 }
 
+// ─── SMUP (System Monitorowania Usług Publicznych) ──────
+
+export interface SmupArea { 'id-ou': number; 'nazwa-obszaru': string }
+export interface SmupService { 'id-up': number; 'nazwa-uslugi': string }
+export interface SmupIndicator { id: number; 'nazwa-wskaznika': string; 'id-up'?: number; 'nazwa-uslugi'?: string; 'wymiar-opisu-uslugi'?: string }
+export interface SmupDataRow { id: number; 'id-daty': number; 'id-teryt': number; 'id-flaga': number; wartosc: number; precyzja: number }
+
+export function useSmupAreas() {
+    return useQuery<SmupArea[]>({ queryKey: ['smup', 'areas'], queryFn: () => fetchJSON('/api/smup?resource=areas-list'), staleTime: 7 * 24 * 60 * 60 * 1000 });
+}
+export function useSmupServices(areaId?: number) {
+    return useQuery<SmupService[]>({ queryKey: ['smup', 'services', areaId], queryFn: () => fetchJSON(`/api/smup?resource=public-services&id=${areaId}`), enabled: !!areaId, staleTime: 7 * 24 * 60 * 60 * 1000 });
+}
+export function useSmupIndicators(serviceId?: number) {
+    return useQuery<SmupIndicator[]>({ queryKey: ['smup', 'indicators', serviceId], queryFn: () => fetchJSON(`/api/smup?resource=indicators-list&id=${serviceId}`), enabled: !!serviceId, staleTime: 7 * 24 * 60 * 60 * 1000 });
+}
+export function useSmupData(indicatorId?: number) {
+    return useQuery<{ data: SmupDataRow[] } | SmupDataRow[]>({ queryKey: ['smup', 'data', indicatorId], queryFn: () => fetchJSON(`/api/smup?resource=indicator-date-data&id=${indicatorId}&page-size=2000`), enabled: !!indicatorId, staleTime: 24 * 60 * 60 * 1000 });
+}
+
 // ─── Bond Yield Curve (Stooq Live) ──────────────────────
 
 export function useYieldCurve() {
