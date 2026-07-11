@@ -1,12 +1,13 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Sparkles, Scale, TrendingUp, Target, BarChart3, Gauge } from 'lucide-react';
-import { useCPIBasket, useInflationMonthly, useGDPQuarterly, useNBPInterestRates, useIndustrialProduction, useRetailSales } from '@/lib/hooks';
+import { Sparkles, Scale, TrendingUp, Target, BarChart3, Gauge, Home } from 'lucide-react';
+import { useCPIBasket, useInflationMonthly, useGDPQuarterly, useNBPInterestRates, useIndustrialProduction, useRetailSales, useWibor } from '@/lib/hooks';
 import { plSeries, lastOf, fmtPL, monthTick } from '@/lib/series';
-import { formatDecimalPL } from '@/lib/formatters';
+import { formatDecimalPL, formatPLN, formatNumber } from '@/lib/formatters';
 import { taylorRule, DEFAULT_TAYLOR } from '@/lib/calculations/taylor';
 import { pmiToGDP, multiModelGDP } from '@/lib/calculations/leading';
+import { calculateMonthlyPayment, buildRatePath, projectWIBOR, PRESETS, type MortgageParams } from '@/lib/calculations/mortgage';
 import { PMI_DATA_PL, NBP_GDP_PROJECTION } from '@/lib/static-data';
 import { BASKET_WEIGHTS_YEAR } from '@/lib/calculations/cpi-basket';
 import { KpiCard } from '@/components/ui/KpiCard';
@@ -16,7 +17,22 @@ import { Segmented } from '@/components/ui/Segmented';
 import { CsvExport } from '@/components/ui/CsvExport';
 import { StaleBadge } from '@/components/ui/StaleBadge';
 
-type Section = 'inflacja' | 'pkb' | 'taylor';
+type Section = 'inflacja' | 'pkb' | 'taylor' | 'symulatory';
+
+function Slider({ label, value, min, max, step, onChange, display }: {
+    label: string; value: number; min: number; max: number; step: number; onChange: (v: number) => void; display: string;
+}) {
+    return (
+        <div>
+            <div className="mb-1.5 flex items-baseline justify-between">
+                <span className="mk-label">{label}</span>
+                <span className="text-lg font-bold tnum text-mk-text">{display}</span>
+            </div>
+            <input type="range" min={min} max={max} step={step} value={value} onChange={(e) => onChange(Number(e.target.value))}
+                className="w-full" style={{ accentColor: '#2563EB' }} />
+        </div>
+    );
+}
 
 // ═══ CPI z koszyka ═══
 function InflacjaNowcast() {
@@ -197,10 +213,91 @@ function PkbNowcast() {
     );
 }
 
+// ═══ Symulator kredytu ═══
+function Symulatory() {
+    const wiborQ = useWibor();
+    const ratesQ = useNBPInterestRates();
+    const [principal, setPrincipal] = useState(400000);
+    const [years, setYears] = useState(25);
+    const [margin, setMargin] = useState(2.0);
+    const [tenor, setTenor] = useState<'3M' | '6M'>('3M');
+
+    const wibor = useMemo(() => wiborQ.data?.rates?.find((r) => r.tenor === tenor)?.wibor ?? null, [wiborQ.data, tenor]);
+    const ref = useMemo(() => ratesQ.data?.rates?.find((r) => /referen/i.test(r.name) || /referen/i.test(r.nameEn))?.value ?? null, [ratesQ.data]);
+
+    const params: MortgageParams = { principal, years, margin, wiborTenor: tenor };
+    const payment = wibor != null ? calculateMonthlyPayment(params, wibor) : null;
+    const totalRate = wibor != null ? wibor + margin : null;
+    const totalCost = payment != null ? payment * years * 12 : null;
+    const totalInterest = totalCost != null ? totalCost - principal : null;
+
+    const scenarios = useMemo(() => {
+        if (ref == null || wibor == null) return [];
+        return ([['dovish', 'Gołębi (cięcia)'], ['market', 'Rynkowy'], ['hawkish', 'Jastrzębi (hold)']] as const).map(([k, label]) => {
+            const path = buildRatePath(ref, PRESETS[k]);
+            const proj = projectWIBOR(path, tenor);
+            const endWibor = proj.length ? proj[proj.length - 1].wibor : wibor;
+            return { label, endWibor, pay: calculateMonthlyPayment(params, endWibor) };
+        });
+    }, [ref, wibor, tenor, principal, years, margin]);
+
+    return (
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <SectionCard title="Symulator raty kredytu" subtitle="żywy WIBOR z NBP + marża banku">
+                <div className="space-y-5">
+                    <Slider label="Kwota kredytu" value={principal} min={100000} max={1500000} step={10000} onChange={setPrincipal} display={formatPLN(principal)} />
+                    <Slider label="Okres" value={years} min={5} max={35} step={1} onChange={setYears} display={`${years} lat`} />
+                    <Slider label="Marża banku" value={margin} min={1} max={4} step={0.1} onChange={setMargin} display={`${formatDecimalPL(margin, 1)}%`} />
+                    <div>
+                        <span className="mk-label mb-1.5 block">WIBOR</span>
+                        <Segmented value={tenor} onChange={setTenor} options={[{ value: '3M', label: 'WIBOR 3M' }, { value: '6M', label: 'WIBOR 6M' }]} />
+                    </div>
+                </div>
+            </SectionCard>
+
+            <SectionCard title="Wynik">
+                <div className="rounded-xl bg-mk-primary-soft p-5 text-center">
+                    <div className="mk-label">Rata miesięczna</div>
+                    <div className="mt-1 text-4xl font-extrabold tnum text-mk-primary">{payment != null ? formatPLN(payment) : '—'}</div>
+                    <div className="mt-1 text-xs text-mk-muted">oprocentowanie {totalRate != null ? `${formatDecimalPL(totalRate, 2)}%` : '—'} (WIBOR {wibor != null ? formatDecimalPL(wibor, 2) : '—'}% + marża {formatDecimalPL(margin, 1)}%)</div>
+                </div>
+                <div className="mt-4 grid grid-cols-2 gap-3">
+                    <div className="rounded-xl border border-mk-border p-3">
+                        <div className="text-xs text-mk-muted">Całkowity koszt</div>
+                        <div className="mt-1 text-lg font-bold tnum text-mk-text">{totalCost != null ? formatPLN(totalCost) : '—'}</div>
+                    </div>
+                    <div className="rounded-xl border border-mk-border p-3">
+                        <div className="text-xs text-mk-muted">Odsetki łącznie</div>
+                        <div className="mt-1 text-lg font-bold tnum text-mk-negative">{totalInterest != null ? formatPLN(totalInterest) : '—'}</div>
+                    </div>
+                </div>
+                {scenarios.length > 0 && (
+                    <div className="mt-4">
+                        <div className="mk-label mb-2">Rata wg ścieżki RPP (koniec 2026)</div>
+                        <table className="mk-table">
+                            <thead><tr><th>Scenariusz</th><th className="text-right">WIBOR</th><th className="text-right">Rata</th></tr></thead>
+                            <tbody>
+                                {scenarios.map((s) => (
+                                    <tr key={s.label}>
+                                        <td>{s.label}</td>
+                                        <td className="text-right tnum">{formatDecimalPL(s.endWibor, 2)}%</td>
+                                        <td className="text-right font-semibold tnum">{formatNumber(s.pay, 0)} zł</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+            </SectionCard>
+        </div>
+    );
+}
+
 const SECTIONS: { value: Section; label: string }[] = [
     { value: 'inflacja', label: 'Inflacja (koszyk)' },
     { value: 'pkb', label: 'Nowcast PKB' },
     { value: 'taylor', label: 'Reguła Taylora' },
+    { value: 'symulatory', label: 'Symulatory' },
 ];
 
 export default function PrognozyPage() {
@@ -218,6 +315,7 @@ export default function PrognozyPage() {
             {section === 'inflacja' && <InflacjaNowcast />}
             {section === 'pkb' && <PkbNowcast />}
             {section === 'taylor' && <TaylorSection />}
+            {section === 'symulatory' && <Symulatory />}
         </div>
     );
 }
