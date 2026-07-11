@@ -168,6 +168,53 @@ export function useGUSWages(years = 5) {
     });
 }
 
+// ─── GUS Regional (registered unemployment + wages by voivodeship) ───
+
+interface GusRegion {
+    id: string;
+    name: string;
+    slug: string;
+    unemployment: number | null;
+    unemploymentMonth: string | null;
+    unemploymentPrev: number | null;
+    wages: number | null;
+    wagesPrev: number | null;
+    wagesYoY: number | null;
+}
+
+interface GusRegionalData {
+    regions: GusRegion[];
+    timeline: { month: string; label?: string; rates: Record<string, number> }[];
+    yearly?: { year: string; rates: Record<string, number> }[];
+    sectorWages?: { code: string; name: string; wage: number; yoy: number }[];
+    national: { avgUnemployment: number | null; avgWages: number | null };
+    timestamp: string;
+}
+
+export function useGusRegional() {
+    return useQuery<GusRegionalData>({
+        queryKey: ['gus-regional'],
+        queryFn: () => fetchJSON('/api/gus-regional'),
+        staleTime: 24 * 60 * 60 * 1000, // 24h — monthly data
+    });
+}
+
+// ─── GUS Monthly (retail sales + wages) ──────────────────
+
+interface GusMonthlyData {
+    retail: { date: string; value: number; raw: number }[];
+    wages: { date: string; value: number; raw: number }[];
+    timestamp: string;
+}
+
+export function useGusMonthly() {
+    return useQuery<GusMonthlyData>({
+        queryKey: ['gus-monthly'],
+        queryFn: () => fetchJSON('/api/gus-monthly'),
+        staleTime: 24 * 60 * 60 * 1000,
+    });
+}
+
 // ─── Eurostat (Monthly/Quarterly Data) ───────────────────
 
 interface EurostatTimeSeries {
