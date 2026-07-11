@@ -379,6 +379,28 @@ export function usePLvsEU(indicator: string) {
     return useEurostat(indicator, 'PL,EU27_2020');
 }
 
+// ─── GUS CPI pełny (headline y/y+m/m + 13 działów COICOP, DBW) ───
+
+export interface CpiDivision {
+    code: string; name: string; weight: number;
+    yoy: number | null; mom: number | null; contribution: number | null;
+    history: { date: string; yoy: number | null }[];
+}
+interface CpiFullData {
+    headline: { date: string; yoy: number | null; mom: number | null }[];
+    divisions: CpiDivision[];
+    dataDate: string;
+    weightsApprox: boolean;
+}
+
+export function useCpiFull(year = new Date().getFullYear()) {
+    return useQuery<CpiFullData>({
+        queryKey: ['gus-cpi-full', year],
+        queryFn: () => fetchJSON(`/api/gus-cpi-full?year=${year}`),
+        staleTime: 24 * 60 * 60 * 1000,
+    });
+}
+
 // ─── GUS krajowy CPI (oficjalny, DBW) ───────────────────
 
 interface CpiNationalData {

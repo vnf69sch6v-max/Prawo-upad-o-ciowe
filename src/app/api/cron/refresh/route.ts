@@ -8,6 +8,7 @@ export const maxDuration = 300;
 const ENDPOINTS = [
     // Ceny (DBW)
     '/api/gus-cpi',
+    '/api/gus-cpi-full',
     '/api/dbw-series?var=314&przekroj=657&poz=6966261&poz=6971743',
     '/api/dbw-series?var=310&przekroj=484&poz=4801795&poz=4801796&freq=q',
     '/api/dbw-series?var=312&przekroj=93&poz=6661787',
