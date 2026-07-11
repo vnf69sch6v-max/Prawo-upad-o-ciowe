@@ -1,6 +1,7 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueries } from '@tanstack/react-query';
+import { COICOP_2026, buildBasket } from '@/lib/calculations/cpi-basket';
 
 // ─── Types ───────────────────────────────────────────────
 
@@ -376,6 +377,34 @@ export function useBrentMM(): { data: BrentMMResult | undefined; isLoading: bool
 // PL vs EU comparison — fetches both geos at once
 export function usePLvsEU(indicator: string) {
     return useEurostat(indicator, 'PL,EU27_2020');
+}
+
+// ─── CPI z koszyka (COICOP 2026) — 12 dywizji HICP na żywo ───
+
+export function useCPIBasket() {
+    const results = useQueries({
+        queries: [
+            { queryKey: ['hicp-div', 'CP00'], queryFn: () => fetchJSON<EurostatResult>('/api/eurostat?dataset=prc_hicp_manr&coicop=CP00&geo=PL&since=2023-01'), staleTime: 12 * 60 * 60 * 1000 },
+            ...COICOP_2026.map((d) => ({
+                queryKey: ['hicp-div', d.coicop],
+                queryFn: () => fetchJSON<EurostatResult>(`/api/eurostat?dataset=prc_hicp_manr&coicop=${d.coicop}&geo=PL&since=2023-01`),
+                staleTime: 12 * 60 * 60 * 1000,
+            })),
+        ],
+    });
+
+    const isLoading = results.some((r) => r.isLoading);
+    const headSeries = results[0]?.data?.data?.PL ?? [];
+    const official = headSeries.length ? (headSeries[headSeries.length - 1].value ?? null) : null;
+    const dataDate = headSeries.length ? headSeries[headSeries.length - 1].date : null;
+
+    const yoyByCode: Record<string, number | null> = {};
+    COICOP_2026.forEach((d, i) => {
+        const s = results[i + 1]?.data?.data?.PL ?? [];
+        yoyByCode[d.code] = s.length ? (s[s.length - 1].value ?? null) : null;
+    });
+
+    return { basket: buildBasket(COICOP_2026, yoyByCode, official, dataDate), isLoading };
 }
 
 // ─── Bond Yield Curve (Stooq Live) ──────────────────────
