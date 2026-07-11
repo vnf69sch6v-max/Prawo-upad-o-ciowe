@@ -15,8 +15,9 @@ import { SectionCard } from '@/components/ui/SectionCard';
 import { Segmented } from '@/components/ui/Segmented';
 import { CsvExport } from '@/components/ui/CsvExport';
 import { DataTable, type Column } from '@/components/ui/DataTable';
+import { StopySection } from '@/components/sections/macro-sections';
 
-type Section = 'kursy' | 'gpw' | 'handel';
+type Section = 'kursy' | 'stopy' | 'gpw' | 'handel';
 type Hist = { mid?: number; effectiveDate?: string }[];
 
 const histPoints = (h?: Hist): Point[] =>
@@ -191,6 +192,7 @@ function HandelSection() {
 
 const SECTIONS: { value: Section; label: string }[] = [
     { value: 'kursy', label: 'Kursy walut' },
+    { value: 'stopy', label: 'Stopy i WIBOR' },
     { value: 'gpw', label: 'GPW' },
     { value: 'handel', label: 'Handel zagraniczny' },
 ];
@@ -208,6 +210,7 @@ export default function RynkiPage() {
             </div>
 
             {section === 'kursy' && <KursySection />}
+            {section === 'stopy' && <StopySection />}
             {section === 'gpw' && <GpwSection />}
             {section === 'handel' && <HandelSection />}
         </div>

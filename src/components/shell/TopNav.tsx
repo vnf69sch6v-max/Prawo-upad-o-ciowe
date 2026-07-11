@@ -2,17 +2,18 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, BarChart3, TrendingUp, Sparkles, CalendarDays, Landmark, type LucideIcon } from 'lucide-react';
+import { LayoutDashboard, Tag, Factory, Users, TrendingUp, Sparkles, Map, type LucideIcon } from 'lucide-react';
 
 export interface NavItem { label: string; href: string; icon: LucideIcon }
 
 export const NAV_ITEMS: NavItem[] = [
     { label: 'Przegląd', href: '/', icon: LayoutDashboard },
-    { label: 'Dane makro', href: '/dane', icon: BarChart3 },
+    { label: 'Ceny', href: '/ceny', icon: Tag },
+    { label: 'Gospodarka', href: '/gospodarka', icon: Factory },
+    { label: 'Rynek pracy', href: '/praca', icon: Users },
     { label: 'Rynki', href: '/rynki', icon: TrendingUp },
     { label: 'Prognozy', href: '/prognozy', icon: Sparkles },
-    { label: 'Publikacje', href: '/publikacje', icon: CalendarDays },
-    { label: 'Samorząd', href: '/samorzad', icon: Landmark },
+    { label: 'Regiony', href: '/regiony', icon: Map },
 ];
 
 export function isActive(pathname: string, href: string): boolean {
