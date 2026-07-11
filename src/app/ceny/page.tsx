@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { TrendingUp, ShoppingCart, Wrench, Package } from 'lucide-react';
+import { TrendingUp, ShoppingCart, Wrench, Package, Factory, Home, HardHat, Wheat } from 'lucide-react';
 import { useCpiNational } from '@/lib/hooks';
 import { fmtPL } from '@/lib/series';
 import { formatDecimalPL } from '@/lib/formatters';
@@ -10,7 +10,7 @@ import { InteractiveChart } from '@/components/ui/InteractiveChart';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { Segmented } from '@/components/ui/Segmented';
 import { CsvExport } from '@/components/ui/CsvExport';
-import { SoonNote } from '@/components/ui/SoonNote';
+import { DbwPriceSection } from '@/components/sections/DbwPriceSection';
 
 type Tab = 'inflacja' | 'ppi' | 'nieruchomosci' | 'budowlane' | 'rolne';
 const TABS: { value: Tab; label: string }[] = [
@@ -93,10 +93,41 @@ export default function CenyPage() {
             </div>
 
             {tab === 'inflacja' && <CpiNationalSection />}
-            {tab === 'ppi' && <SoonNote title="PPI — ceny produkcji sprzedanej przemysłu" note="Źródło DBW (var 314). Podpinane w tym etapie." />}
-            {tab === 'nieruchomosci' && <SoonNote title="Ceny nieruchomości mieszkaniowych" note="Rynek pierwotny i wtórny (DBW, kwartalnie)." />}
-            {tab === 'budowlane' && <SoonNote title="Ceny robót budowlano-montażowych" note="Źródło DBW (var 312)." />}
-            {tab === 'rolne' && <SoonNote title="Ceny skupu produktów rolnych" note="Pszenica, żywiec, mleko… (DBW, var 324)." />}
+            {tab === 'ppi' && (
+                <DbwPriceSection title="PPI — ceny produkcji sprzedanej przemysłu" subtitle="GUS · r/r (%)" csvName="ppi" refline={0}
+                    config={{ var: 314, przekroj: 657, poz: [6966261, 6971743] }}
+                    series={[
+                        { poz: 6966261, name: 'PPI ogółem', color: '#2563EB', accent: 'blue', icon: Factory },
+                        { poz: 6971743, name: 'Przetwórstwo przem.', color: '#7C3AED', accent: 'violet', icon: Factory },
+                    ]}
+                    note="PPI = ceny producenta (u bramy fabryki), zwykle wyprzedzają CPI. Ujemne = deflacja producencka." />
+            )}
+            {tab === 'nieruchomosci' && (
+                <DbwPriceSection title="Ceny mieszkań — indeks (r/r)" subtitle="GUS · kwartalnie (%)" csvName="ceny-nieruchomosci" refline={0}
+                    config={{ var: 310, przekroj: 484, poz: [4801795, 4801796], freq: 'q' }}
+                    series={[
+                        { poz: 4801795, name: 'Rynek pierwotny', color: '#16A34A', accent: 'green', icon: Home },
+                        { poz: 4801796, name: 'Rynek wtórny', color: '#D97706', accent: 'amber', icon: Home },
+                    ]}
+                    note="Wskaźnik cen nieruchomości mieszkaniowych GUS — dynamika r/r dla rynku pierwotnego i wtórnego." />
+            )}
+            {tab === 'budowlane' && (
+                <DbwPriceSection title="Ceny robót budowlano-montażowych" subtitle="GUS · r/r (%)" csvName="ceny-budowlane" refline={0}
+                    config={{ var: 312, przekroj: 93, poz: [6661787] }}
+                    series={[{ poz: 6661787, name: 'Budownictwo (r/r)', color: '#0891B2', accent: 'cyan', icon: HardHat }]} />
+            )}
+            {tab === 'rolne' && (
+                <DbwPriceSection title="Ceny skupu produktów rolnych (r/r)" subtitle="GUS · r/r (%)" csvName="ceny-rolne" refline={0}
+                    config={{ var: 324, przekroj: 775, poz: [7124703, 7124713, 7124724, 7189791, 7121981] }}
+                    series={[
+                        { poz: 7124703, name: 'Pszenica', color: '#D97706', accent: 'amber', icon: Wheat },
+                        { poz: 7124713, name: 'Żyto', color: '#CA8A04', accent: 'amber', icon: Wheat },
+                        { poz: 7124724, name: 'Żywiec — trzoda', color: '#E11D48', accent: 'rose' },
+                        { poz: 7189791, name: 'Żywiec — bydło', color: '#7C3AED', accent: 'violet' },
+                        { poz: 7121981, name: 'Mleko', color: '#0891B2', accent: 'cyan' },
+                    ]}
+                    note="Dynamika cen skupu podstawowych produktów rolnych." />
+            )}
         </div>
     );
 }

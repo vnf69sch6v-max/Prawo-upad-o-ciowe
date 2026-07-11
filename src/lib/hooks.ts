@@ -395,6 +395,24 @@ export function useCpiNational(year = 2025) {
     });
 }
 
+// ─── Generic DBW series (PPI, ceny nieruchomości/budowlane/rolne) ───
+
+export interface DbwSeriesConfig {
+    var: number; przekroj: number; poz: number[];
+    year?: number; freq?: 'm' | 'q'; prez?: number; poz1?: number; sub100?: boolean;
+}
+
+export function useDbwSeries(config: DbwSeriesConfig) {
+    const { var: v, przekroj, poz, year = 2025, freq = 'm', prez = 5, poz1 = 33617, sub100 = true } = config;
+    const qs = new URLSearchParams({ var: String(v), przekroj: String(przekroj), year: String(year), freq, prez: String(prez), poz1: String(poz1), sub100: sub100 ? '1' : '0' });
+    poz.forEach((p) => qs.append('poz', String(p)));
+    return useQuery<{ series: Record<string, number | string>[]; source: string }>({
+        queryKey: ['dbw-series', v, przekroj, poz.join('-'), year, freq, prez, sub100],
+        queryFn: () => fetchJSON(`/api/dbw-series?${qs}`),
+        staleTime: 24 * 60 * 60 * 1000,
+    });
+}
+
 // ─── GUS koniunktura (badanie koniunktury, DBW) — proxy PMI ───
 
 interface KoniunkturaData {
