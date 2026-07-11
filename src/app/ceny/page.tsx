@@ -1,9 +1,16 @@
 'use client';
 
 import { useState } from 'react';
+import { TrendingUp, ShoppingCart, Wrench, Package } from 'lucide-react';
+import { useCpiNational } from '@/lib/hooks';
+import { fmtPL } from '@/lib/series';
+import { formatDecimalPL } from '@/lib/formatters';
+import { KpiCard } from '@/components/ui/KpiCard';
+import { InteractiveChart } from '@/components/ui/InteractiveChart';
+import { SectionCard } from '@/components/ui/SectionCard';
 import { Segmented } from '@/components/ui/Segmented';
+import { CsvExport } from '@/components/ui/CsvExport';
 import { SoonNote } from '@/components/ui/SoonNote';
-import { InflacjaSection } from '@/components/sections/macro-sections';
 
 type Tab = 'inflacja' | 'ppi' | 'nieruchomosci' | 'budowlane' | 'rolne';
 const TABS: { value: Tab; label: string }[] = [
@@ -13,6 +20,65 @@ const TABS: { value: Tab; label: string }[] = [
     { value: 'budowlane', label: 'Budowlano-montażowe' },
     { value: 'rolne', label: 'Rolne' },
 ];
+
+const monthTick = (d: string) => { const [y, m] = d.split('-'); return m ? `${m}.${y.slice(2)}` : d; };
+
+function CpiNationalSection() {
+    const q = useCpiNational(2025);
+    const trend = q.data?.trend ?? [];
+    const latest = q.data?.latest ?? null;
+    const cats = latest?.categories ?? [];
+    const cat = (n: string) => cats.find((c) => c.name.startsWith(n))?.yoy ?? null;
+    const delta = trend.length > 1 ? +(trend[trend.length - 1].value - trend[trend.length - 2].value).toFixed(1) : null;
+    const maxAbs = Math.max(...cats.map((c) => Math.abs(c.yoy ?? 0)), 1);
+
+    return (
+        <div className="space-y-6">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <KpiCard label="CPI krajowy (r/r)" value={fmtPL(latest?.ogolem)} unit="%" accent="amber" icon={TrendingUp}
+                    delta={delta != null ? { value: delta, unit: 'pp', invert: true } : undefined} footnote={latest ? `GUS · ${latest.date}` : 'GUS'} loading={q.isLoading} />
+                <KpiCard label="Żywność (r/r)" value={fmtPL(cat('Żywność'))} unit="%" accent="green" icon={ShoppingCart} footnote="GUS" loading={q.isLoading} />
+                <KpiCard label="Usługi (r/r)" value={fmtPL(cat('Usługi'))} unit="%" accent="violet" icon={Wrench} footnote="GUS" loading={q.isLoading} />
+                <KpiCard label="Towary nieżywn. (r/r)" value={fmtPL(cat('Towary'))} unit="%" accent="cyan" icon={Package} footnote="GUS" loading={q.isLoading} />
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                <SectionCard title="CPI krajowy — trend 2025" subtitle="GUS · r/r (%)"
+                    actions={<CsvExport filename="cpi-krajowy" headers={['Miesiąc', 'CPI r/r']} rows={trend.map((t) => [t.date, t.value])} />}>
+                    {q.isLoading ? <div className="mk-skeleton h-[280px] w-full" /> : (
+                        <InteractiveChart data={trend} xKey="date" height={280} unit="%" valueFormatter={(v) => formatDecimalPL(v, 1)} xTickFormatter={monthTick}
+                            referenceLines={[{ y: 2.5, label: 'Cel NBP', color: '#94A3B8' }]}
+                            series={[{ key: 'value', name: 'CPI krajowy r/r', color: '#D97706', type: 'area', strokeWidth: 2.5 }]} />
+                    )}
+                </SectionCard>
+                <SectionCard title="Struktura inflacji — komponenty" subtitle={latest ? `GUS · ${latest.date}` : 'GUS'}>
+                    {q.isLoading ? <div className="mk-skeleton h-[280px] w-full" /> : (
+                        <table className="mk-table">
+                            <thead><tr><th>Komponent</th><th className="text-right">r/r</th><th style={{ width: '45%' }}>Skala</th></tr></thead>
+                            <tbody>
+                                {cats.map((c) => {
+                                    const v = c.yoy ?? 0; const w = (Math.abs(v) / maxAbs) * 100; const pos = v >= 0;
+                                    return (
+                                        <tr key={c.name}>
+                                            <td className="font-medium text-mk-text">{c.name}</td>
+                                            <td className="text-right font-semibold tnum" style={{ color: pos ? '#DC2626' : '#16A34A' }}>{pos ? '+' : ''}{formatDecimalPL(v, 1)}%</td>
+                                            <td><div className="h-2.5 rounded-full" style={{ width: `${w}%`, background: pos ? '#D97706' : '#16A34A' }} /></td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    )}
+                </SectionCard>
+            </div>
+
+            <div className="rounded-xl bg-mk-surface-alt p-4 text-sm text-mk-text-soft">
+                <span className="font-semibold text-mk-text">Źródło: </span>GUS (DBW) — krajowy wskaźnik cen towarów i usług konsumpcyjnych (oficjalny, miesięczny).
+                To „polska" inflacja z komunikatów GUS; różni się od zharmonizowanego HICP (Eurostat) użytego w nowcastcie koszykowym (Prognozy).
+            </div>
+        </div>
+    );
+}
 
 export default function CenyPage() {
     const [tab, setTab] = useState<Tab>('inflacja');
@@ -26,11 +92,11 @@ export default function CenyPage() {
                 <Segmented value={tab} onChange={setTab} options={TABS} aria-label="Sekcja cen" />
             </div>
 
-            {tab === 'inflacja' && <InflacjaSection />}
-            {tab === 'ppi' && <SoonNote title="PPI — ceny produkcji sprzedanej przemysłu" note="Podpinane z GUS (ceny producenta, miesięcznie)." />}
-            {tab === 'nieruchomosci' && <SoonNote title="Ceny nieruchomości mieszkaniowych" note="Rynek pierwotny i wtórny — podpinane z GUS." />}
-            {tab === 'budowlane' && <SoonNote title="Ceny robót budowlano-montażowych" />}
-            {tab === 'rolne' && <SoonNote title="Ceny skupu produktów rolnych" />}
+            {tab === 'inflacja' && <CpiNationalSection />}
+            {tab === 'ppi' && <SoonNote title="PPI — ceny produkcji sprzedanej przemysłu" note="Źródło DBW (var 314). Podpinane w tym etapie." />}
+            {tab === 'nieruchomosci' && <SoonNote title="Ceny nieruchomości mieszkaniowych" note="Rynek pierwotny i wtórny (DBW, kwartalnie)." />}
+            {tab === 'budowlane' && <SoonNote title="Ceny robót budowlano-montażowych" note="Źródło DBW (var 312)." />}
+            {tab === 'rolne' && <SoonNote title="Ceny skupu produktów rolnych" note="Pszenica, żywiec, mleko… (DBW, var 324)." />}
         </div>
     );
 }

@@ -379,6 +379,22 @@ export function usePLvsEU(indicator: string) {
     return useEurostat(indicator, 'PL,EU27_2020');
 }
 
+// ─── GUS krajowy CPI (oficjalny, DBW) ───────────────────
+
+interface CpiNationalData {
+    trend: { date: string; value: number }[];
+    latest: { date: string; ogolem: number; categories: { name: string; yoy: number | null }[] } | null;
+    source: string;
+}
+
+export function useCpiNational(year = 2025) {
+    return useQuery<CpiNationalData>({
+        queryKey: ['gus-cpi', year],
+        queryFn: () => fetchJSON(`/api/gus-cpi?year=${year}`),
+        staleTime: 24 * 60 * 60 * 1000,
+    });
+}
+
 // ─── CPI z koszyka (COICOP 2026) — 12 dywizji HICP na żywo ───
 
 export function useCPIBasket() {
