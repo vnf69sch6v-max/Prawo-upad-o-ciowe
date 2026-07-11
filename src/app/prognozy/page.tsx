@@ -1,19 +1,22 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Sparkles, Scale, TrendingUp, Target } from 'lucide-react';
-import { useCPIBasket, useInflationMonthly, useGDPQuarterly, useNBPInterestRates } from '@/lib/hooks';
-import { plSeries, lastOf, fmtPL } from '@/lib/series';
+import { Sparkles, Scale, TrendingUp, Target, BarChart3, Gauge } from 'lucide-react';
+import { useCPIBasket, useInflationMonthly, useGDPQuarterly, useNBPInterestRates, useIndustrialProduction, useRetailSales } from '@/lib/hooks';
+import { plSeries, lastOf, fmtPL, monthTick } from '@/lib/series';
 import { formatDecimalPL } from '@/lib/formatters';
 import { taylorRule, DEFAULT_TAYLOR } from '@/lib/calculations/taylor';
+import { pmiToGDP, multiModelGDP } from '@/lib/calculations/leading';
+import { PMI_DATA_PL, NBP_GDP_PROJECTION } from '@/lib/static-data';
 import { BASKET_WEIGHTS_YEAR } from '@/lib/calculations/cpi-basket';
 import { KpiCard } from '@/components/ui/KpiCard';
+import { InteractiveChart } from '@/components/ui/InteractiveChart';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { Segmented } from '@/components/ui/Segmented';
 import { CsvExport } from '@/components/ui/CsvExport';
 import { StaleBadge } from '@/components/ui/StaleBadge';
 
-type Section = 'inflacja' | 'taylor';
+type Section = 'inflacja' | 'pkb' | 'taylor';
 
 // ═══ CPI z koszyka ═══
 function InflacjaNowcast() {
@@ -136,8 +139,67 @@ function TaylorSection() {
     );
 }
 
+// ═══ Nowcast PKB / PMI ═══
+function PkbNowcast() {
+    const indQ = useIndustrialProduction();
+    const retQ = useRetailSales();
+    const gdpQ = useGDPQuarterly();
+    const ip = lastOf(plSeries(indQ.data));
+    const retail = lastOf(plSeries(retQ.data));
+    const pmiLast = PMI_DATA_PL[PMI_DATA_PL.length - 1];
+    const pmi = pmiLast?.value ?? null;
+    const bridge = pmi != null ? +pmiToGDP(pmi).toFixed(1) : null;
+    const multi = pmi != null && ip != null && retail != null ? +multiModelGDP(pmi, ip, retail).toFixed(1) : null;
+    const scenarios = [42, 45, 47, 48, 50, 52, 54, 56].map((p) => ({ pmi: p, gdp: +pmiToGDP(p).toFixed(1) }));
+    const pmiChart = PMI_DATA_PL.map((d) => ({ date: d.date, pmi: d.value }));
+    const maxG = Math.max(...scenarios.map((s) => Math.abs(s.gdp)), 1);
+
+    return (
+        <div className="space-y-6">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <KpiCard label="PMI przemysłowy" value={pmi != null ? formatDecimalPL(pmi, 1) : '—'} accent={pmi != null && pmi >= 50 ? 'green' : 'rose'} icon={Gauge}
+                    footnote={pmiLast ? `S&P Global · ${pmiLast.date}` : 'S&P Global'} />
+                <KpiCard label="Nowcast PKB — PMI bridge" value={bridge != null ? fmtPL(bridge, 1) : '—'} unit="%" accent="blue" icon={TrendingUp} footnote="model: 1 wskaźnik" />
+                <KpiCard label="Nowcast PKB — 3-czynnikowy" value={multi != null ? fmtPL(multi, 1) : '—'} unit="%" accent="violet" icon={BarChart3} footnote="PMI + produkcja + sprzedaż" />
+                <KpiCard label="Konsensus NBP 2026" value={fmtPL(NBP_GDP_PROJECTION.year2026, 1)} unit="%" accent="amber" icon={Target} footnote={NBP_GDP_PROJECTION.source} />
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                <SectionCard title="PMI przemysłowy — historia" subtitle="S&P Global · próg 50 = neutralny"
+                    actions={<CsvExport filename="pmi" headers={['Data', 'PMI']} rows={pmiChart.map((r) => [r.date, r.pmi])} />}>
+                    <InteractiveChart data={pmiChart} xKey="date" height={280} showRange initialRange="1R"
+                        valueFormatter={(v) => formatDecimalPL(v, 0)} xTickFormatter={monthTick}
+                        referenceLines={[{ y: 50, label: 'neutralny', color: '#94A3B8' }]}
+                        series={[{ key: 'pmi', name: 'PMI', color: '#7C3AED', type: 'area' }]} />
+                    <p className="mt-3 text-xs text-mk-faint">PMI aktualizowany ręcznie (brak darmowego API). Zostanie zastąpiony żywą koniunkturą GUS w domenie Gospodarka.</p>
+                </SectionCard>
+
+                <SectionCard title="Scenariusze PMI → PKB" subtitle="model pomostowy (bridge equation)">
+                    <table className="mk-table">
+                        <thead><tr><th>PMI</th><th className="text-right">Szac. PKB</th><th style={{ width: '55%' }}>Skala</th></tr></thead>
+                        <tbody>
+                            {scenarios.map((s) => {
+                                const w = (Math.abs(s.gdp) / maxG) * 100;
+                                const pos = s.gdp >= 0;
+                                return (
+                                    <tr key={s.pmi}>
+                                        <td className="font-medium">{s.pmi}</td>
+                                        <td className="text-right font-semibold tnum" style={{ color: pos ? '#16A34A' : '#DC2626' }}>{pos ? '+' : ''}{formatDecimalPL(s.gdp, 1)}%</td>
+                                        <td><div className="h-2.5 rounded-full" style={{ width: `${w}%`, background: pos ? '#16A34A' : '#DC2626' }} /></td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                </SectionCard>
+            </div>
+        </div>
+    );
+}
+
 const SECTIONS: { value: Section; label: string }[] = [
     { value: 'inflacja', label: 'Inflacja (koszyk)' },
+    { value: 'pkb', label: 'Nowcast PKB' },
     { value: 'taylor', label: 'Reguła Taylora' },
 ];
 
@@ -154,6 +216,7 @@ export default function PrognozyPage() {
             </div>
 
             {section === 'inflacja' && <InflacjaNowcast />}
+            {section === 'pkb' && <PkbNowcast />}
             {section === 'taylor' && <TaylorSection />}
         </div>
     );
