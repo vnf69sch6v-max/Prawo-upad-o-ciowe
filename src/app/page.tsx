@@ -131,7 +131,12 @@ export default function OverviewPage() {
         return out.slice(0, 6);
     }, [cpi, unemp, industrial, refRate]);
 
-    const dataDate = cpi.length ? cpi[cpi.length - 1].date : gdp.length ? gdp[gdp.length - 1].date : '';
+    // Freshest available monthly date across sources (CPI/HICP lags; others reach the current month)
+    const dataDate = [unemp, industrial, retail, cpi]
+        .map((s) => (s.length ? s[s.length - 1].date : ''))
+        .filter(Boolean)
+        .sort()
+        .pop() ?? '';
 
     return (
         <div className="mk-fade-in space-y-6">
