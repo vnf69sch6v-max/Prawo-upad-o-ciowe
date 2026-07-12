@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
     const sub100 = sp.get('sub100') !== '0';
     const pozNums = poz.map(Number);
 
-    const cacheKey = `dbwser_${varId}_${przekroj}_${poz.join('-')}_${year}_${freq}_${prez}_v2`.slice(0, 120);
+    const cacheKey = `dbwser_${varId}_${przekroj}_${poz.join('-')}_${year}_${freq}_${prez}_v3`.slice(0, 120);
 
     try {
         const result = await withCache(
@@ -56,7 +56,9 @@ export async function GET(request: NextRequest) {
                         let any = false;
                         for (const p of pozNums) {
                             const r = rows.find((x) => x['id-pozycja-1'] === poz1 && x['id-pozycja-2'] === p && x['id-sposob-prezentacji-miara'] === prez);
-                            if (r && r.wartosc != null) { point[String(p)] = sub100 ? +(r.wartosc - 100).toFixed(1) : +r.wartosc.toFixed(1); any = true; }
+                            // wartosc===0 = placeholder „brak publikacji" dla tego okresu (indeks bazowy=100 nigdy nie jest 0);
+                            // sub100 dałoby fałszywe −100% i zjazd wykresu do dna → pomiń (luka w serii zamiast artefaktu).
+                            if (r && r.wartosc != null && r.wartosc !== 0) { point[String(p)] = sub100 ? +(r.wartosc - 100).toFixed(1) : +r.wartosc.toFixed(1); any = true; }
                         }
                         if (any) series.push(point);
                     }

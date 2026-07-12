@@ -23,20 +23,24 @@ export function DbwPriceSection({ title, subtitle, config, series, unit = '%', r
 }) {
     const q = useDbwSeries(config);
     const data = q.data?.series ?? [];
-    const latest = data.length ? data[data.length - 1] : null;
-    const prev = data.length > 1 ? data[data.length - 2] : null;
 
     return (
         <div className="space-y-6">
             <div className={`grid grid-cols-1 gap-4 sm:grid-cols-2 ${series.length >= 3 ? 'lg:grid-cols-4' : 'lg:grid-cols-2'}`}>
                 {series.map((s) => {
-                    const v = latest ? ((latest[String(s.poz)] as number | undefined) ?? null) : null;
-                    const pv = prev ? prev[String(s.poz)] : undefined;
+                    // Ostatnia DOSTĘPNA wartość tej serii (serie mogą kończyć się w różnych okresach —
+                    // np. GUS publikuje „bydło" później niż pszenicę → nie pokazuj „—", tylko ostatni odczyt z jego datą).
+                    const key = String(s.poz);
+                    const pts = data.filter((r) => typeof r[key] === 'number');
+                    const last = pts.length ? pts[pts.length - 1] : null;
+                    const prevPt = pts.length > 1 ? pts[pts.length - 2] : null;
+                    const v = last ? (last[key] as number) : null;
+                    const pv = prevPt ? (prevPt[key] as number) : undefined;
                     const d = v != null && typeof pv === 'number' ? +(v - pv).toFixed(1) : null;
                     return (
                         <KpiCard key={s.poz} label={s.name} value={fmtPL(v)} unit={unit} accent={s.accent} icon={s.icon}
                             delta={d != null ? { value: d, unit: 'pp', invert: invertKpi } : undefined}
-                            footnote={latest ? `GUS · ${latest.date}` : 'GUS'} loading={q.isLoading} />
+                            footnote={last ? `GUS · ${last.date}` : 'GUS'} loading={q.isLoading} />
                     );
                 })}
             </div>
