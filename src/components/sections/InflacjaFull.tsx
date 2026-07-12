@@ -19,6 +19,13 @@ const PALETTE = ['#2563EB', '#16A34A', '#D97706', '#7C3AED', '#E11D48', '#0891B2
 const monthTick = (d: string) => { const [y, m] = d.split('-'); return m ? `${m}.${y.slice(2)}` : d; };
 const colorFor = (i: number) => PALETTE[i % PALETTE.length];
 
+// % zmiana z indeksu cen: r/r = lag 12 mies., kw/kw = lag 3, m/m = lag 1 (HICP miesięczny jest ciągły).
+type Pt = { date: string; value: number };
+const changeFromIndex = (idx: Pt[], lag: number): Pt[] =>
+    idx.map((p, i) => (i >= lag && idx[i - lag].value ? { date: p.date, value: +((p.value / idx[i - lag].value - 1) * 100).toFixed(1) } : null))
+        .filter((x): x is Pt => x !== null);
+const METRIC_LABEL: Record<'yoy' | 'qoq' | 'mom', string> = { yoy: 'rocznie (r/r)', qoq: 'kwartalnie (kw/kw)', mom: 'miesięcznie (m/m)' };
+
 // Dział COICOP 2018 → kod HICP (Eurostat) dla 10-letniej historii (12→13 dzielą CP12).
 const COICOP_MAP: Record<string, string> = {
     '01': 'CP01', '02': 'CP02', '03': 'CP03', '04': 'CP04', '05': 'CP05', '06': 'CP06',
@@ -101,14 +108,11 @@ export function InflacjaFull() {
     const sel: CpiDivision | null = selCode ? divisions.find((d) => d.code === selCode) ?? null : null;
     const selColor = sel ? colorOf(sel.code) : '#2563EB';
 
-    // 10-letnia historia r/r wybranego działu: szkielet HICP (Eurostat) + GUS na wierzchu (spójne z bieżącą wartością)
+    // 10-letni indeks cen wybranego działu (HICP) → zmiana roczna / kwartalna / miesięczna
+    const [divMetric, setDivMetric] = useState<'yoy' | 'qoq' | 'mom'>('yoy');
     const hicpDivQ = useHicpDivision(sel ? COICOP_MAP[sel.code] : undefined);
-    const selLong = useMemo(() => {
-        const by = new Map<string, number>();
-        for (const p of plSeries(hicpDivQ.data)) by.set(p.date, p.value);
-        for (const g of sel?.history ?? []) if (g.yoy != null) by.set(g.date, g.yoy);
-        return [...by.entries()].sort((a, b) => a[0].localeCompare(b[0])).map(([date, value]) => ({ date, value }));
-    }, [hicpDivQ.data, sel]);
+    const divIndex = useMemo(() => plSeries(hicpDivQ.data), [hicpDivQ.data]);
+    const divChange = useMemo(() => changeFromIndex(divIndex, divMetric === 'yoy' ? 12 : divMetric === 'qoq' ? 3 : 1), [divIndex, divMetric]);
 
     const subs = useMemo(() => (sel?.subcategories ?? []).filter((s) => s.yoy != null).sort((a, b) => (b.yoy ?? -99) - (a.yoy ?? -99)), [sel]);
     const maxSubAbs = useMemo(() => Math.max(...subs.map((s) => Math.abs(s.yoy ?? 0)), 0.1), [subs]);
@@ -272,13 +276,16 @@ export function InflacjaFull() {
                         </div>
 
                         <div>
-                            <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-mk-muted">Dynamika r/r — 10 lat</div>
-                            {selLong.length > 1 ? (
-                                <InteractiveChart data={selLong} xKey="date" height={220} unit="%" showRange initialRange="ALL" ranges={['1R', '3L', '5L', 'ALL']}
+                            <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                                <div className="text-[11px] font-semibold uppercase tracking-wide text-mk-muted">Dynamika cen — {METRIC_LABEL[divMetric]}</div>
+                                <Segmented value={divMetric} onChange={setDivMetric} options={[{ value: 'yoy', label: 'r/r' }, { value: 'qoq', label: 'kw/kw' }, { value: 'mom', label: 'm/m' }]} />
+                            </div>
+                            {divChange.length > 1 ? (
+                                <InteractiveChart data={divChange} xKey="date" height={220} unit="%" showRange initialRange="ALL" ranges={['1R', '3L', '5L', 'ALL']}
                                     valueFormatter={(v) => formatDecimalPL(v, 1)} xTickFormatter={monthTick} referenceLines={[{ y: 0, color: '#CBD2DD' }]}
-                                    series={[{ key: 'value', name: `${sel.name}`, color: selColor, type: 'area', strokeWidth: 2.5 }]} />
+                                    series={[{ key: 'value', name: sel.name, color: selColor, type: 'area', strokeWidth: 2.5 }]} />
                             ) : <div className="mk-skeleton h-[220px] w-full" />}
-                            <p className="mt-1.5 text-[11px] text-mk-faint">Historia 10-letnia: HICP (Eurostat), najnowsze miesiące — krajowy GUS.</p>
+                            <p className="mt-1.5 text-[11px] text-mk-faint">Zmiana {METRIC_LABEL[divMetric]} liczona z indeksu cen HICP (Eurostat), 10 lat.</p>
                         </div>
 
                         {subs.length > 0 && (
