@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { TrendingUp, Activity, Fuel, DollarSign, Factory, Banknote, Info, ChevronRight } from 'lucide-react';
-import { useCpiFull, useHICPCoreYoY, usePPI, useBrentMM, useEURPLN, useUSDPLN, useHicpDivision, type CpiDivision } from '@/lib/hooks';
+import { useCpiFull, useHICPCoreYoY, usePPI, useBrentMM, useEURPLN, useUSDPLN, type CpiDivision, type CpiHistPoint } from '@/lib/hooks';
 import { plSeries, lastOf, fmtPL } from '@/lib/series';
 import { formatDecimalPL } from '@/lib/formatters';
 import { KpiCard } from '@/components/ui/KpiCard';
@@ -19,18 +19,13 @@ const PALETTE = ['#2563EB', '#16A34A', '#D97706', '#7C3AED', '#E11D48', '#0891B2
 const monthTick = (d: string) => { const [y, m] = d.split('-'); return m ? `${m}.${y.slice(2)}` : d; };
 const colorFor = (i: number) => PALETTE[i % PALETTE.length];
 
-// % zmiana z indeksu cen: r/r = lag 12 mies., kw/kw = lag 3, m/m = lag 1 (HICP miesięczny jest ciągły).
 type Pt = { date: string; value: number };
-const changeFromIndex = (idx: Pt[], lag: number): Pt[] =>
-    idx.map((p, i) => (i >= lag && idx[i - lag].value ? { date: p.date, value: +((p.value / idx[i - lag].value - 1) * 100).toFixed(1) } : null))
-        .filter((x): x is Pt => x !== null);
+// Wybór metryki z historii GUS: r/r=yoy (kwartalnie COICOP 1999 + miesięcznie 2026), kw/kw=qoq
+// (kwartalnie 1999), m/m=mom (miesięcznie 2026). Pusta seria = brak danych dla metryki na tym poziomie.
+const seriesFor = (hist: CpiHistPoint[] | undefined, metric: 'yoy' | 'qoq' | 'mom'): Pt[] =>
+    (hist ?? []).map((h) => ({ date: h.date, value: metric === 'yoy' ? h.yoy : metric === 'qoq' ? (h.qoq ?? null) : (h.mom ?? null) }))
+        .filter((p): p is Pt => p.value != null);
 const METRIC_LABEL: Record<'yoy' | 'qoq' | 'mom', string> = { yoy: 'rocznie (r/r)', qoq: 'kwartalnie (kw/kw)', mom: 'miesięcznie (m/m)' };
-
-// Dział COICOP 2018 → kod HICP (Eurostat) dla 10-letniej historii (12→13 dzielą CP12).
-const COICOP_MAP: Record<string, string> = {
-    '01': 'CP01', '02': 'CP02', '03': 'CP03', '04': 'CP04', '05': 'CP05', '06': 'CP06',
-    '07': 'CP07', '08': 'CP08', '09': 'CP09', '10': 'CP10', '11': 'CP11', '12': 'CP12', '13': 'CP12',
-};
 
 // „Co wpływa na tę kategorię" — czynniki cenotwórcze per dział.
 const DIVISION_INFO: Record<string, string> = {
@@ -94,7 +89,6 @@ export function InflacjaFull() {
     const headline = useMemo(() => data?.headline ?? [], [data]);
     const divisions = useMemo(() => data?.divisions ?? [], [data]);
     const dataDate = data?.dataDate ?? null;
-    const spliceDate = data?.spliceDate ?? null;
     const latest = headline.length ? headline[headline.length - 1] : null;
     const prev = headline.length > 1 ? headline[headline.length - 2] : null;
 
@@ -143,19 +137,9 @@ export function InflacjaFull() {
     const sel: CpiDivision | null = selCode ? divisions.find((d) => d.code === selCode) ?? null : null;
     const selColor = sel ? colorOf(sel.code) : '#2563EB';
 
-    // 10-letni indeks cen wybranego działu (HICP) → zmiana roczna / kwartalna / miesięczna
+    // Trend wybranego działu — w 100% GUS (historia z route: r/r pełna, kw/kw kwartalnie, m/m od 2026)
     const [divMetric, setDivMetric] = useState<'yoy' | 'qoq' | 'mom'>('yoy');
-    const hicpDivQ = useHicpDivision(sel ? COICOP_MAP[sel.code] : undefined);
-    const divIndex = useMemo(() => plSeries(hicpDivQ.data), [hicpDivQ.data]);
-    const lagFor = (m: 'yoy' | 'qoq' | 'mom') => (m === 'yoy' ? 12 : m === 'qoq' ? 3 : 1);
-    // Dopięcie bieżącej wartości GUS na końcu serii HICP → ostatni punkt wykresu = liczba w wierszu/kafelku (spójność)
-    const appendGusTip = (base: Pt[], gus: number | null): Pt[] =>
-        (gus != null && dataDate && (!base.length || base[base.length - 1].date < dataDate)) ? [...base, { date: dataDate, value: gus }] : base;
-    const divMv = sel ? (divMetric === 'yoy' ? sel.yoy : divMetric === 'qoq' ? (sel.qoq ?? null) : sel.mom) : null;
-    const divChange = useMemo(() => appendGusTip(changeFromIndex(divIndex, lagFor(divMetric)), divMv), [divIndex, divMetric, divMv, dataDate]);
-
-    // Drill-down podkategorii: 10-letni trend klasy COICOP (HICP CP + kod), gdy rozwinięta
-    const hicpSubQ = useHicpDivision(expandedSub ? `CP${expandedSub}` : undefined);
+    const divChange = useMemo(() => seriesFor(sel?.history, divMetric), [sel, divMetric]);
 
     const subs = useMemo(() => (sel?.subcategories ?? [])
         .map((s) => ({ ...s, mv: divMetric === 'yoy' ? s.yoy : divMetric === 'qoq' ? (s.qoq ?? null) : s.mom }))
@@ -163,7 +147,7 @@ export function InflacjaFull() {
         .sort((a, b) => b.mv - a.mv), [sel, divMetric]);
     const maxSubAbs = useMemo(() => Math.max(...subs.map((s) => Math.abs(s.mv)), 0.1), [subs]);
     const expSub = useMemo(() => subs.find((s) => s.code === expandedSub) ?? null, [subs, expandedSub]);
-    const subChange = useMemo(() => appendGusTip(changeFromIndex(plSeries(hicpSubQ.data), lagFor(divMetric)), expSub?.mv ?? null), [hicpSubQ.data, divMetric, expSub, dataDate]);
+    const subChange = useMemo(() => seriesFor(expSub?.history, divMetric), [expSub, divMetric]);
 
     const chartData = useMemo(() => headline.map((h) => ({ date: h.date, value: freq === 'yoy' ? h.yoy : h.mom })), [headline, freq]);
     const pieData = useMemo(() => divisions.map((d, i) => ({ name: d.name, value: d.weight, color: colorFor(i), yoy: d.yoy })), [divisions]);
@@ -189,7 +173,7 @@ export function InflacjaFull() {
             </div>
 
             {/* ── Hero: trend r/r ↔ m/m ── */}
-            <SectionCard title="Inflacja CPI — trend (10 lat)" subtitle={`${freq === 'yoy' ? 'rok do roku' : 'miesiąc do miesiąca'} (%) · krajowy CPI (GUS)${spliceDate ? ` od ${spliceDate.slice(0, 4)}` : ''}, wcześniej HICP (Eurostat)`}
+            <SectionCard title="Inflacja CPI — trend (10 lat)" subtitle={`${freq === 'yoy' ? 'rok do roku' : 'miesiąc do miesiąca'} (%) · krajowy CPI (GUS) · kwartalnie do 2025, miesięcznie od 2026`}
                 actions={<div className="flex flex-wrap items-center gap-2">
                     <Segmented value={freq} onChange={setFreq} options={[{ value: 'yoy', label: 'r/r' }, { value: 'mom', label: 'm/m' }]} />
                     <StaleBadge date={dataDate} label="GUS do" warnAfterMonths={4} />
@@ -295,8 +279,8 @@ export function InflacjaFull() {
             </div>
 
             <div className="rounded-xl bg-mk-surface-alt p-4 text-sm text-mk-text-soft">
-                <span className="font-semibold text-mk-text">Źródło: </span>GUS (DBW) — krajowy CPI (COICOP 2018 od 2026, COICOP 1999 do 2025); trend 10-letni uzupełniony szkieletem HICP (Eurostat) sprzed okresu danych krajowych.
-                Działy i podkategorie (klasy COICOP 4-cyfrowe, np. Żywność → pieczywo/mięso/nabiał) — dynamiki oficjalne z GUS; wagi koszyka przybliżone.
+                <span className="font-semibold text-mk-text">Źródło: </span>GUS (DBW) — krajowy CPI w 100%: COICOP 1999 kwartalnie (do 2025) + COICOP 2018 miesięcznie (od 2026).
+                Działy z historią ~10-letnią; podkategorie (klasy COICOP 4-cyfrowe, np. Żywność → pieczywo/mięso) — miesięcznie od 2026. Wagi koszyka przybliżone.
             </div>
 
             {/* ── Drawer: szczegóły klikniętego działu ── */}
@@ -332,8 +316,8 @@ export function InflacjaFull() {
                                 <InteractiveChart data={divChange} xKey="date" height={220} unit="%" showRange initialRange="ALL" ranges={['1R', '3L', '5L', 'ALL']}
                                     valueFormatter={(v) => formatDecimalPL(v, 1)} xTickFormatter={monthTick} referenceLines={[{ y: 0, color: '#CBD2DD' }]}
                                     series={[{ key: 'value', name: sel.name, color: selColor, type: 'area', strokeWidth: 2.5 }]} />
-                            ) : <div className="mk-skeleton h-[220px] w-full" />}
-                            <p className="mt-1.5 text-[11px] text-mk-faint">Trend 10-letni z indeksu HICP (Eurostat); ostatni punkt — bieżąca wartość krajowa (GUS).</p>
+                            ) : <p className="flex h-[120px] items-center justify-center text-center text-xs text-mk-faint">Brak danych GUS dla wybranej metryki na tym poziomie.</p>}
+                            <p className="mt-1.5 text-[11px] text-mk-faint">GUS: r/r kwartalnie (COICOP 1999) do 2025 + miesięcznie (2026); kw/kw kwartalnie; m/m od 2026.</p>
                         </div>
 
                         {subs.length > 0 && (
@@ -357,12 +341,12 @@ export function InflacjaFull() {
                                                     <div className="mb-1.5 ml-5 mt-1 rounded-lg border border-mk-border p-3">
                                                         <p className="text-xs font-semibold leading-snug text-mk-text">{s.name}</p>
                                                         {(SUB_INFO[s.code] || subFallback(s.name)) && <p className="mb-2 mt-0.5 text-xs leading-relaxed text-mk-text-soft">{SUB_INFO[s.code] ?? subFallback(s.name)}</p>}
-                                                        <div className="mb-1 mt-2 text-[10px] font-semibold uppercase tracking-wide text-mk-faint">Trend cen — {METRIC_LABEL[divMetric]} (HICP + bieżący GUS)</div>
+                                                        <div className="mb-1 mt-2 text-[10px] font-semibold uppercase tracking-wide text-mk-faint">Trend cen — {METRIC_LABEL[divMetric]} · GUS (miesięcznie od 2026)</div>
                                                         {subChange.length > 1 ? (
                                                             <InteractiveChart data={subChange} xKey="date" height={150} unit="%" showRange initialRange="ALL" ranges={['1R', '5L', 'ALL']}
                                                                 valueFormatter={(v) => formatDecimalPL(v, 1)} xTickFormatter={monthTick} referenceLines={[{ y: 0, color: '#CBD2DD' }]}
                                                                 series={[{ key: 'value', name: s.name, color: selColor, type: 'area', strokeWidth: 2 }]} />
-                                                        ) : <div className="mk-skeleton h-[150px] w-full" />}
+                                                        ) : <p className="flex h-[90px] items-center justify-center text-center text-[11px] text-mk-faint">{divMetric === 'qoq' ? 'kw/kw niedostępne dla podkategorii — wybierz r/r lub m/m.' : 'Za mało danych (podkategorie od 2026).'}</p>}
                                                     </div>
                                                 )}
                                             </div>

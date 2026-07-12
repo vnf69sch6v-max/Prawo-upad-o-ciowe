@@ -1,15 +1,14 @@
-// Pełny obraz inflacji CPI:
-//  • headline r/r + m/m: krajowy CPI (GUS DBW) dla świeżych ~2 lat, poprzedzony 10-letnim
-//    szkieletem HICP (Eurostat) — DBW zwraca 1 okres/zapytanie i limituje ~100 req/15min,
-//    więc 10 lat monthly z DBW jest nierealne; HICP daje pełną historię jednym zapytaniem.
-//  • 13 działów COICOP 2018 (od 2026) z wagą, wkładem i historią,
-//  • dla każdego działu — klasy 4-cyfrowe COICOP (podkategorie, np. Żywność → pieczywo/mięso),
-//    wyciągane z TEGO SAMEGO pobrania 1698 (zero dodatkowych zapytań DBW).
+// Pełny obraz inflacji CPI — w 100% GUS (DBW), bez HICP:
+//  • headline r/r: COICOP 1999 kwartalnie (przekrój 736, 2016–2025) + COICOP 2018 miesięcznie
+//    (przekrój 1722, 2026). DBW zwraca 1 okres/zapytanie i limituje ~100/15min, więc 10 lat
+//    monthly jest nierealne — kwartalnie (40 zapytań) mieści się w limicie i daje pełny trend.
+//  • 13 działów COICOP 2018 z wagą/wkładem oraz historią (kwartalnie 1999 + miesięcznie 2026),
+//  • podkategorie (klasy 4-cyfrowe COICOP 2018) — historia miesięczna od 2026 (stara klasyfikacja
+//    COICOP 1999 nie mapuje się na klasy 2018).
 import { NextRequest, NextResponse } from 'next/server';
 import { withCache } from '@/lib/server-cache';
-import { dbwFetchMany, pick, monthlyPeriods, monthOkres, type DbwPeriod, type DbwRow } from '@/lib/dbw-fetch';
+import { dbwFetchMany, pick, monthlyPeriods, quarterlyPeriods, monthOkres, type DbwPeriod, type DbwRow } from '@/lib/dbw-fetch';
 import { COICOP_CLASSES } from '@/lib/coicop-subcategories';
-import { fetchEurostat } from '../eurostat/route';
 
 const DIVISIONS = [
     { poz: 14150568, code: '01', name: 'Żywność i napoje bezalk.', weight: 25.9 },
@@ -27,90 +26,62 @@ const DIVISIONS = [
     { poz: 14150556, code: '13', name: 'Higiena i pozostałe', weight: 3.0 },
 ];
 
-const HEADLINE_POZ = (przekroj: number) => (przekroj === 1722 ? 14916914 : 6656078);
+// COICOP 1999 (przekrój 736): pozycje działów → kod COICOP 2018 (13 dzieli „inne" z 12).
+const DIV_1999: Record<string, number> = {
+    '01': 6656079, '02': 6656117, '03': 6656123, '04': 6656133, '05': 6656143, '06': 6656146,
+    '07': 6656151, '08': 6656159, '09': 6656162, '10': 6656167, '11': 6656168, '12': 6656169, '13': 6656169,
+};
+const OGOLEM_1999 = 6656078;   // Ogółem CPI w COICOP 1999 (736)
+const HEADLINE_2026 = 14916914; // Ogółem CPI w COICOP 2018 agregaty (1722)
 const mm = (m: number) => String(m).padStart(2, '0');
-const r1 = (v: number | null | undefined) => (v == null ? null : +v.toFixed(1));
 
 interface HeadPoint { date: string; yoy: number | null; mom: number | null }
+interface HistPoint { date: string; yoy: number | null; qoq?: number | null; mom?: number | null }
 
 export async function GET(request: NextRequest) {
     const now = parseInt(new URL(request.url).searchParams.get('year') || String(new Date().getFullYear()));
-    const startYear = now - 1;      // krajowe DBW: świeże ~2 lata (koszt zapytań)
-    const backboneStart = now - 9;  // szkielet HICP: ~10 lat
 
     try {
         const result = await withCache(
             'dbw',
-            `gus_cpi_full_${now}_v4`,
+            `gus_cpi_full_${now}_v5`,
             async () => {
-                // ── Krajowy headline (DBW): COICOP 1999 (739) ≤2025, COICOP 2018 agregaty (1722) ≥2026 ──
-                const hPeriods = monthlyPeriods(startYear, now, (y) => (y >= 2026 ? 1722 : 739));
-                const hRows = await dbwFetchMany(305, hPeriods, 2);
-                const national: HeadPoint[] = hPeriods
-                    .map((p) => {
-                        const rows = hRows.get(p.key);
-                        if (!rows) return null;
-                        const poz = HEADLINE_POZ(p.przekroj);
-                        const yoy = pick(rows, poz, 5);
-                        if (yoy == null) return null;
-                        return { date: p.key, yoy, mom: pick(rows, poz, 2) };
-                    })
-                    .filter((x): x is NonNullable<typeof x> => x !== null);
+                // ── Pobrania GUS DBW ──
+                const qPeriods = quarterlyPeriods(now - 10, 2025, () => 736);         // COICOP 1999 kwartalnie 2016–2025
+                const hPeriods = monthlyPeriods(2026, now, () => 1722);               // COICOP 2018 headline miesięcznie 2026
+                const dPeriods: DbwPeriod[] = [];                                     // COICOP 2018 działy/klasy miesięcznie 2026
+                for (let m = 1; m <= 12; m++) dPeriods.push({ rok: 2026, okres: monthOkres(m), przekroj: 1698, key: `2026-${mm(m)}` });
 
-                // ── Szkielet 10-letni: HICP y/y + m/m (Eurostat) ──
-                const hicpYoY = new Map<string, number>();
-                const hicpMoM = new Map<string, number>();
-                try {
-                    const since = `${backboneStart}-01`;
-                    const [yoyR, momR] = await Promise.all([
-                        fetchEurostat('prc_hicp_manr', { coicop: 'CP00' }, ['PL'], since),
-                        fetchEurostat('prc_hicp_mmor', { coicop: 'CP00' }, ['PL'], since),
-                    ]);
-                    for (const s of yoyR.data['PL'] ?? []) if (s.value != null) hicpYoY.set(s.date, s.value);
-                    for (const s of momR.data['PL'] ?? []) if (s.value != null) hicpMoM.set(s.date, s.value);
-                } catch (e) {
-                    console.error('HICP backbone fetch failed (fallback: tylko krajowe):', e);
-                }
+                const [qRows, hRows, dRows] = await Promise.all([
+                    dbwFetchMany(305, qPeriods, 3),
+                    dbwFetchMany(305, hPeriods, 2),
+                    dbwFetchMany(305, dPeriods, 2),
+                ]);
 
-                // ── Sklejenie: krajowy CPI tam gdzie jest, wcześniej HICP ──
-                const natlMap = new Map(national.map((h) => [h.date, h]));
-                const lastNatl = national.length ? national[national.length - 1].date : '';
-                const lastHicp = [...hicpYoY.keys()].sort().pop() ?? '';
-                const endDate = lastNatl > lastHicp ? lastNatl : lastHicp;
-                const spliceDate = national.length ? national[0].date : null; // od kiedy dane krajowe
+                // ── Headline: kwartalnie (Ogółem 1999) + miesięcznie 2026 (Ogółem 2018) ──
                 const headline: HeadPoint[] = [];
-                for (let y = backboneStart; y <= now; y++) {
-                    for (let m = 1; m <= 12; m++) {
-                        const date = `${y}-${mm(m)}`;
-                        if (endDate && date > endDate) break;
-                        const n = natlMap.get(date);
-                        if (n && n.yoy != null) { headline.push(n); continue; }
-                        const hy = hicpYoY.get(date);
-                        if (hy != null) headline.push({ date, yoy: r1(hy), mom: hicpMoM.has(date) ? r1(hicpMoM.get(date)!) : null });
-                    }
+                for (const q of qPeriods) {
+                    const rows = qRows.get(q.key); if (!rows) continue;
+                    const yoy = pick(rows, OGOLEM_1999, 5);
+                    if (yoy != null) headline.push({ date: q.key, yoy, mom: null });
                 }
+                for (const p of hPeriods) {
+                    const rows = hRows.get(p.key); if (!rows) continue;
+                    const yoy = pick(rows, HEADLINE_2026, 5);
+                    if (yoy != null) headline.push({ date: p.key, yoy, mom: pick(rows, HEADLINE_2026, 2) });
+                }
+                const spliceDate = headline.find((h) => /^\d{4}-\d{2}$/.test(h.date))?.date ?? '2026-01';
 
-                // ── Działy COICOP 2018 (przekrój 1698 — od 2026) + podkategorie (klasy 4-cyfr) ──
-                const dStart = Math.max(2026, startYear);
-                const dPeriods: DbwPeriod[] = [];
-                for (let y = dStart; y <= now; y++) for (let m = 1; m <= 12; m++) dPeriods.push({ rok: y, okres: monthOkres(m), przekroj: 1698, key: `${y}-${mm(m)}` });
-                const dRows = await dbwFetchMany(305, dPeriods, 2);
-
-                const divHistory: Record<string, { date: string; yoy: number | null }[]> = {};
-                DIVISIONS.forEach((d) => (divHistory[d.code] = []));
+                // ── Działy 2026 (miesięcznie, przekrój 1698) ──
                 const monthsWithData: { key: string; rows: DbwRow[] }[] = [];
                 for (const p of dPeriods) {
-                    const rows = dRows.get(p.key);
-                    if (!rows) continue;
+                    const rows = dRows.get(p.key); if (!rows) continue;
                     if (!DIVISIONS.some((d) => pick(rows, d.poz, 5) != null)) continue;
                     monthsWithData.push({ key: p.key, rows });
-                    for (const d of DIVISIONS) divHistory[d.code].push({ date: p.key, yoy: pick(rows, d.poz, 5) });
                 }
                 const latestRows: DbwRow[] | null = monthsWithData.length ? monthsWithData[monthsWithData.length - 1].rows : null;
                 const latestDate = monthsWithData.length ? monthsWithData[monthsWithData.length - 1].key : '';
                 const last3 = monthsWithData.slice(-3);
-
-                // kw/kw = złożenie 3 ostatnich zmian m/m (GUS nie ma gotowej stopy kwartalnej)
                 const qoqOf = (poz: number): number | null => {
                     if (last3.length < 3) return null;
                     const moms = last3.map((m) => pick(m.rows, poz, 2));
@@ -118,13 +89,40 @@ export async function GET(request: NextRequest) {
                     return +(((1 + moms[0]! / 100) * (1 + moms[1]! / 100) * (1 + moms[2]! / 100) - 1) * 100).toFixed(1);
                 };
 
-                // podkategorie (klasy) z r/r, m/m, kw/kw — grupowane po dziale nadrzędnym
-                const subsByDiv: Record<string, { code: string; name: string; yoy: number | null; mom: number | null; qoq: number | null }[]> = {};
+                // ── Historia działu: kwartalnie COICOP 1999 (yoy + qoq) + miesięcznie 2026 (yoy + mom) ──
+                const divHist: Record<string, HistPoint[]> = {};
+                DIVISIONS.forEach((d) => (divHist[d.code] = []));
+                for (const q of qPeriods) {
+                    const rows = qRows.get(q.key); if (!rows) continue;
+                    for (const d of DIVISIONS) {
+                        const p9 = DIV_1999[d.code];
+                        const yoy = pick(rows, p9, 5);
+                        if (yoy != null) divHist[d.code].push({ date: q.key, yoy, qoq: pick(rows, p9, 2) });
+                    }
+                }
+                for (const m of monthsWithData) {
+                    for (const d of DIVISIONS) {
+                        const yoy = pick(m.rows, d.poz, 5);
+                        if (yoy != null) divHist[d.code].push({ date: m.key, yoy, mom: pick(m.rows, d.poz, 2) });
+                    }
+                }
+
+                // ── Historia podkategorii (klas): miesięcznie 2026 (yoy + mom) ──
+                const subHist: Record<string, HistPoint[]> = {};
+                for (const cls of COICOP_CLASSES) subHist[cls.code] = [];
+                for (const m of monthsWithData) {
+                    for (const cls of COICOP_CLASSES) {
+                        const yoy = pick(m.rows, cls.poz, 5);
+                        if (yoy != null) subHist[cls.code].push({ date: m.key, yoy, mom: pick(m.rows, cls.poz, 2) });
+                    }
+                }
+
+                const subsByDiv: Record<string, { code: string; name: string; yoy: number | null; mom: number | null; qoq: number | null; history: HistPoint[] }[]> = {};
                 if (latestRows) {
                     for (const cls of COICOP_CLASSES) {
                         const yoy = pick(latestRows, cls.poz, 5);
                         if (yoy == null) continue;
-                        (subsByDiv[cls.div] ??= []).push({ code: cls.code, name: cls.name, yoy, mom: pick(latestRows, cls.poz, 2), qoq: qoqOf(cls.poz) });
+                        (subsByDiv[cls.div] ??= []).push({ code: cls.code, name: cls.name, yoy, mom: pick(latestRows, cls.poz, 2), qoq: qoqOf(cls.poz), history: subHist[cls.code] });
                     }
                 }
 
@@ -134,13 +132,13 @@ export async function GET(request: NextRequest) {
                     return {
                         code: d.code, name: d.name, weight: d.weight, yoy, mom, qoq: qoqOf(d.poz),
                         contribution: yoy != null ? +((d.weight / 100) * yoy).toFixed(2) : null,
-                        history: divHistory[d.code],
+                        history: divHist[d.code],
                         subcategories: (subsByDiv[d.code] ?? []).sort((a, b) => (b.yoy ?? -99) - (a.yoy ?? -99)),
                     };
                 });
 
-                const dataDate = latestDate || lastNatl || (headline.length ? headline[headline.length - 1].date : '');
-                return { headline, divisions, dataDate, weightsApprox: true, spliceDate, backboneSource: 'HICP (Eurostat)' };
+                const dataDate = latestDate || (headline.length ? headline[headline.length - 1].date : '');
+                return { headline, divisions, dataDate, weightsApprox: true, spliceDate, source: 'GUS DBW — COICOP 1999 (kwartalnie ≤2025) + COICOP 2018 (miesięcznie 2026)' };
             },
             'GUS DBW CPI full',
             24 * 3600 * 1000,
