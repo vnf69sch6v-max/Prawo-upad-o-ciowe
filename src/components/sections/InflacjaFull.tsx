@@ -16,6 +16,7 @@ import { DataTable, type Column } from '@/components/ui/DataTable';
 import { Drawer } from '@/components/ui/Drawer';
 import { Heatmap } from '@/components/ui/Heatmap';
 import { Sparkline } from '@/components/ui/Sparkline';
+import { InflationBubbles } from '@/components/sections/InflationBubbles';
 
 const PALETTE = ['#2563EB', '#16A34A', '#D97706', '#7C3AED', '#E11D48', '#0891B2', '#CA8A04', '#DB2777', '#059669', '#4F46E5', '#EA580C', '#0D9488', '#64748B'];
 const monthTick = (d: string) => { const [y, m] = d.split('-'); return m ? `${m}.${y.slice(2)}` : d; };
@@ -397,6 +398,9 @@ export function InflacjaFull() {
                 )}
                 <p className="mt-2 text-[11px] text-mk-faint">Kolor = dynamika cen: <span className="font-medium" style={{ color: '#B91C1C' }}>czerwony</span> silny wzrost, biały ≈ 0, <span className="font-medium" style={{ color: '#1D4ED8' }}>niebieski</span> spadek. Skala nieliniowa (√) — żeby spokojne okresy nie zlewały się obok skoku 2022–23.</p>
             </SectionCard>
+
+            {/* ── Animowana mapa działów w czasie (bąbelki) ── */}
+            <InflationBubbles divisions={divisions} colorFor={colorFor} onSelect={openDiv} />
 
             {/* ── Symulator „co gdyby" (interaktywny koszyk) ── */}
             <SectionCard title="Symulator inflacji — co gdyby?" subtitle="przesuwaj roczną dynamikę działów i patrz, jak zmienia się CPI (koszyk × r/r)"
