@@ -193,6 +193,16 @@ interface GusRegionalData {
     timestamp: string;
 }
 
+export interface RegionalEURow { slug: string; name: string; gdpTotal: number | null; population: number | null; gdpPerCapita: number | null }
+interface RegionalEUData { regions: RegionalEURow[]; gdpYear: string; popYear: string; national: { population: number | null; gdpPerCapita: number | null } }
+export function useRegionalEU() {
+    return useQuery<RegionalEUData>({
+        queryKey: ['regional-eu'],
+        queryFn: () => fetchJSON('/api/regional-eu'),
+        staleTime: 7 * 24 * 60 * 60 * 1000,
+    });
+}
+
 export function useGusRegional() {
     return useQuery<GusRegionalData>({
         queryKey: ['gus-regional'],
@@ -259,6 +269,10 @@ export function useGDPQuarterly(geo = 'PL') {
 export function useGDPQoQ(geo = 'PL') {
     return useEurostat('gdp_qoq', geo);
 }
+export function useGDPConsumption() { return useEurostat('gdp_consumption', 'PL'); }
+export function useGDPInvestment() { return useEurostat('gdp_investment', 'PL'); }
+export function useGDPExports() { return useEurostat('gdp_exports', 'PL'); }
+export function useGDPImports() { return useEurostat('gdp_imports', 'PL'); }
 
 export function useIndustrialProduction(geo = 'PL') {
     return useEurostat('industrial', geo);

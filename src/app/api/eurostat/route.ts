@@ -71,8 +71,13 @@ const DATASETS: Record<string, { params: Record<string, string>; label: string; 
     gdp_yoy: {
         params: { na_item: 'B1GQ', s_adj: 'NSA', unit: 'CLV_PCH_SM' },
         label: 'GDP YoY Growth',
-        since: '2023-Q1',
+        since: '2018-Q1',
     },
+    // GDP — składowe wydatkowe (r/r, ceny stałe): spożycie, inwestycje, eksport, import
+    gdp_consumption: { params: { na_item: 'P3', s_adj: 'SCA', unit: 'CLV_PCH_SM' }, label: 'Spożycie r/r', since: '2018-Q1' },
+    gdp_investment: { params: { na_item: 'P51G', s_adj: 'SCA', unit: 'CLV_PCH_SM' }, label: 'Inwestycje (nakłady brutto) r/r', since: '2018-Q1' },
+    gdp_exports: { params: { na_item: 'P6', s_adj: 'SCA', unit: 'CLV_PCH_SM' }, label: 'Eksport r/r', since: '2018-Q1' },
+    gdp_imports: { params: { na_item: 'P7', s_adj: 'SCA', unit: 'CLV_PCH_SM' }, label: 'Import r/r', since: '2018-Q1' },
     // Industrial production — monthly, YoY change (CA = calendar adjusted; SCA not available for PL)
     industrial: {
         params: { nace_r2: 'B-D', s_adj: 'CA', unit: 'PCH_SM' },
@@ -125,6 +130,10 @@ const DATASET_CODES: Record<string, string> = {
     unemployment: 'une_rt_m',
     gdp_qoq: 'namq_10_gdp',
     gdp_yoy: 'namq_10_gdp',
+    gdp_consumption: 'namq_10_gdp',
+    gdp_investment: 'namq_10_gdp',
+    gdp_exports: 'namq_10_gdp',
+    gdp_imports: 'namq_10_gdp',
     industrial: 'sts_inpr_m',
     retail: 'sts_trtu_m',
     construction: 'sts_copr_m',
@@ -226,8 +235,9 @@ export async function fetchEurostat(
         format: 'JSON',
         lang: 'en',
         ...params,
-        geo: geo.join(','),
     });
+    // Eurostat wymaga powtórzonych parametrów geo (geo=PL21&geo=PL22), nie listy przez przecinek
+    for (const g of geo) searchParams.append('geo', g);
 
     const url = `${EUROSTAT_BASE}/${datasetCode}?${searchParams}`;
     const res = await fetch(url, { next: { revalidate: 43200 } }); // 12h revalidation

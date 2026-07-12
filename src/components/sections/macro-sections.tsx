@@ -4,7 +4,8 @@ import { useMemo, useState } from 'react';
 import { TrendingUp, Factory, ShoppingCart, HardHat, Users, Wallet, Percent, Landmark } from 'lucide-react';
 import {
     useInflationMonthly, useHICPFoodYoY, useHICPCoreYoY,
-    useGDPQuarterly, useIndustrialProduction, useRetailSales, useConstruction,
+    useGDPQuarterly, useGDPQoQ, useIndustrialProduction, useRetailSales, useConstruction,
+    useGDPConsumption, useGDPInvestment, useGDPExports, useGDPImports,
     useGusRegional, useGusMonthly, useNBPInterestRates, useWibor, useYieldCurve, useCpiFull,
 } from '@/lib/hooks';
 import { plSeries, lastOf, deltaOf, monthTick, fmtPL, type Point } from '@/lib/series';
@@ -83,49 +84,98 @@ export function InflacjaSection() {
 // ═══ AKTYWNOŚĆ ═══
 export function AktywnoscSection() {
     const gdpQ = useGDPQuarterly();
+    const gdpQoQ = useGDPQoQ();
     const indQ = useIndustrialProduction();
     const retQ = useRetailSales();
     const conQ = useConstruction();
+    const consQ = useGDPConsumption();
+    const invQ = useGDPInvestment();
+    const expQ = useGDPExports();
+    const impQ = useGDPImports();
+
     const gdpS = useMemo(() => plSeries(gdpQ.data), [gdpQ.data]);
+    const gdpM = useMemo(() => plSeries(gdpQoQ.data), [gdpQoQ.data]);
     const ind = useMemo(() => plSeries(indQ.data), [indQ.data]);
     const ret = useMemo(() => plSeries(retQ.data), [retQ.data]);
     const con = useMemo(() => plSeries(conQ.data), [conQ.data]);
+    const cons = useMemo(() => plSeries(consQ.data), [consQ.data]);
+    const inv = useMemo(() => plSeries(invQ.data), [invQ.data]);
+    const exp = useMemo(() => plSeries(expQ.data), [expQ.data]);
+    const imp = useMemo(() => plSeries(impQ.data), [impQ.data]);
 
+    // PKB: r/r (słupki) + kw/kw (linia)
+    const gdpChart = useMemo(() => {
+        const mm = byDate(gdpM);
+        return gdpS.map((p) => ({ date: p.date, yoy: +p.value.toFixed(1), qoq: mm.has(p.date) ? +mm.get(p.date)!.toFixed(1) : null }));
+    }, [gdpS, gdpM]);
+
+    // Produkcja / sprzedaż / budownictwo (miesięcznie)
     const activity = useMemo(() => {
-        const rm = byDate(ret);
-        return ind.map((p) => ({ date: p.date, ind: p.value, ret: rm.get(p.date) ?? null }));
-    }, [ind, ret]);
+        const rm = byDate(ret), cm = byDate(con);
+        return ind.map((p) => ({ date: p.date, ind: p.value, ret: rm.get(p.date) ?? null, con: cm.get(p.date) ?? null }));
+    }, [ind, ret, con]);
+
+    // Składowe PKB (r/r)
+    const comp = useMemo(() => {
+        const cm = byDate(cons), im = byDate(inv), em = byDate(exp), mm = byDate(imp);
+        const dates = Array.from(new Set([...cons, ...inv, ...exp, ...imp].map((p) => p.date))).sort();
+        return dates.map((d) => ({ date: d, cons: cm.get(d) ?? null, inv: im.get(d) ?? null, exp: em.get(d) ?? null, imp: mm.get(d) ?? null }));
+    }, [cons, inv, exp, imp]);
 
     return (
         <div className="space-y-6">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <Kpi label="PKB (r/r)" series={gdpS} accent="green" icon={TrendingUp} />
+                <Kpi label="PKB (r/r)" series={gdpS} accent="green" icon={TrendingUp} footnote="Eurostat · kwartalnie" />
                 <Kpi label="Produkcja przemysłowa (r/r)" series={ind} accent="violet" icon={Factory} />
                 <Kpi label="Sprzedaż detaliczna (r/r)" series={ret} accent="amber" icon={ShoppingCart} />
                 <Kpi label="Budownictwo (r/r)" series={con} accent="cyan" icon={HardHat} />
             </div>
 
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                <SectionCard title="PKB — dynamika r/r" subtitle="Eurostat · kwartalnie"
-                    actions={<CsvExport filename="pkb" headers={['Kwartał', 'PKB r/r']} rows={gdpS.map((p) => [p.date, p.value])} />}>
-                    {gdpS.length === 0 ? <div className="mk-skeleton h-[260px] w-full" /> : (
-                        <InteractiveChart data={gdpS.map((p) => ({ date: p.date, value: +p.value.toFixed(1) }))} xKey="date"
-                            series={[{ key: 'value', name: 'PKB r/r', color: '#16A34A', type: 'bar' }]} height={260} unit="%"
-                            valueFormatter={(v) => formatDecimalPL(v, 1)} referenceLines={[{ y: 0, color: '#CBD2DD' }]} />
+                <SectionCard title="PKB — dynamika r/r i kw/kw" subtitle="Eurostat · kwartalnie (%)"
+                    actions={<CsvExport filename="pkb" headers={['Kwartał', 'r/r', 'kw/kw']} rows={gdpChart.map((p) => [p.date, p.yoy, p.qoq])} />}>
+                    {gdpChart.length === 0 ? <div className="mk-skeleton h-[260px] w-full" /> : (
+                        <InteractiveChart data={gdpChart} xKey="date" height={260} unit="%" legend
+                            valueFormatter={(v) => formatDecimalPL(v, 1)} xTickFormatter={monthTick} referenceLines={[{ y: 0, color: '#CBD2DD' }]}
+                            series={[
+                                { key: 'yoy', name: 'PKB r/r', color: '#16A34A', type: 'bar' },
+                                { key: 'qoq', name: 'PKB kw/kw', color: '#2563EB', type: 'line', strokeWidth: 2.5 },
+                            ]} />
                     )}
                 </SectionCard>
-                <SectionCard title="Produkcja vs sprzedaż detaliczna" subtitle="Eurostat · miesięcznie (r/r)"
-                    actions={<CsvExport filename="produkcja-sprzedaz" headers={['Data', 'Produkcja', 'Sprzedaż']} rows={activity.map((r) => [r.date, r.ind, r.ret])} />}>
+                <SectionCard title="Produkcja, sprzedaż, budownictwo" subtitle="Eurostat · miesięcznie (r/r)"
+                    actions={<CsvExport filename="aktywnosc" headers={['Data', 'Produkcja', 'Sprzedaż', 'Budownictwo']} rows={activity.map((r) => [r.date, r.ind, r.ret, r.con])} />}>
                     {activity.length === 0 ? <div className="mk-skeleton h-[260px] w-full" /> : (
                         <InteractiveChart data={activity} xKey="date" height={260} unit="%" legend showRange initialRange="1R"
                             valueFormatter={(v) => formatDecimalPL(v, 1)} xTickFormatter={monthTick}
                             series={[
                                 { key: 'ind', name: 'Produkcja', color: '#7C3AED', type: 'line' },
                                 { key: 'ret', name: 'Sprzedaż', color: '#D97706', type: 'line' },
+                                { key: 'con', name: 'Budownictwo', color: '#0891B2', type: 'line' },
                             ]} />
                     )}
                 </SectionCard>
             </div>
+
+            <SectionCard title="Składowe PKB — wydatkowe (r/r)" subtitle="Eurostat · kwartalnie · ceny stałe · co napędza wzrost"
+                actions={<CsvExport filename="pkb-skladowe" headers={['Kwartał', 'Spożycie', 'Inwestycje', 'Eksport', 'Import']} rows={comp.map((r) => [r.date, r.cons, r.inv, r.exp, r.imp])} />}>
+                <div className="mb-4 grid grid-cols-2 gap-4 lg:grid-cols-4">
+                    <Kpi label="Spożycie" series={cons} accent="green" icon={ShoppingCart} />
+                    <Kpi label="Inwestycje" series={inv} accent="violet" icon={HardHat} />
+                    <Kpi label="Eksport" series={exp} accent="blue" icon={TrendingUp} />
+                    <Kpi label="Import" series={imp} accent="amber" icon={Factory} />
+                </div>
+                {comp.length === 0 ? <div className="mk-skeleton h-[280px] w-full" /> : (
+                    <InteractiveChart data={comp} xKey="date" height={280} unit="%" legend
+                        valueFormatter={(v) => formatDecimalPL(v, 1)} xTickFormatter={monthTick} referenceLines={[{ y: 0, color: '#CBD2DD' }]}
+                        series={[
+                            { key: 'cons', name: 'Spożycie', color: '#16A34A', type: 'line' },
+                            { key: 'inv', name: 'Inwestycje', color: '#7C3AED', type: 'line' },
+                            { key: 'exp', name: 'Eksport', color: '#2563EB', type: 'line' },
+                            { key: 'imp', name: 'Import', color: '#D97706', type: 'line', dashed: true },
+                        ]} />
+                )}
+            </SectionCard>
         </div>
     );
 }
