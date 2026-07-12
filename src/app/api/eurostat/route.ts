@@ -49,11 +49,11 @@ const DATASETS: Record<string, { params: Record<string, string>; label: string; 
         label: 'HICP Core YoY',
         since: '2019-01',
     },
-    // PPI — producer prices for CPI forecaster core block
+    // PPI — ceny producenta w przemyśle, rynek krajowy (r/r %); wskaźnik wyprzedzający CPI
     ppi: {
-        params: { nace_r2: 'B-D', s_adj: 'NSA', unit: 'PCH_SM', indic_bt: 'PRIN' },
+        params: { nace_r2: 'B-D', s_adj: 'NSA', unit: 'PCH_SM' },
         label: 'PPI YoY',
-        since: '2019-01',
+        since: '2016-01',
     },
     // Unemployment — seasonally adjusted, % of active population
     unemployment: {
@@ -121,7 +121,7 @@ const DATASET_CODES: Record<string, string> = {
     hicp_core: 'prc_hicp_midx',
     hicp_food_yoy: 'prc_hicp_manr',
     hicp_core_yoy: 'prc_hicp_manr',
-    ppi: 'sts_inpp_m',
+    ppi: 'sts_inppd_m',
     unemployment: 'une_rt_m',
     gdp_qoq: 'namq_10_gdp',
     gdp_yoy: 'namq_10_gdp',

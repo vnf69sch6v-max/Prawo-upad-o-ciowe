@@ -2,8 +2,8 @@
 
 import { useMemo, useState } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
-import { TrendingUp, Flame, ShoppingCart, Percent, Activity } from 'lucide-react';
-import { useCpiFull, useHICPCoreYoY, type CpiDivision } from '@/lib/hooks';
+import { TrendingUp, Flame, ShoppingCart, Percent, Activity, Fuel, DollarSign, Factory, Banknote } from 'lucide-react';
+import { useCpiFull, useHICPCoreYoY, usePPI, useBrentMM, useEURPLN, useUSDPLN, type CpiDivision } from '@/lib/hooks';
 import { plSeries, lastOf, fmtPL } from '@/lib/series';
 import { formatDecimalPL } from '@/lib/formatters';
 import { KpiCard } from '@/components/ui/KpiCard';
@@ -21,6 +21,10 @@ const colorFor = (i: number) => PALETTE[i % PALETTE.length];
 export function InflacjaFull() {
     const { data, isLoading } = useCpiFull();
     const coreQ = useHICPCoreYoY();
+    const ppiQ = usePPI();
+    const brentQ = useBrentMM();
+    const eurQ = useEURPLN();
+    const usdQ = useUSDPLN();
 
     const headline = useMemo(() => data?.headline ?? [], [data]);
     const divisions = useMemo(() => data?.divisions ?? [], [data]);
@@ -30,6 +34,35 @@ export function InflacjaFull() {
     const prev = headline.length > 1 ? headline[headline.length - 2] : null;
     const core = lastOf(plSeries(coreQ.data));
     const divByCode = (c: string) => divisions.find((d) => d.code === c);
+
+    // ── Struktura inflacji: CPI (ogółem) vs bazowa vs PPI (producent), r/r ──
+    const coreSeries = useMemo(() => plSeries(coreQ.data), [coreQ.data]);
+    const ppiSeries = useMemo(() => plSeries(ppiQ.data), [ppiQ.data]);
+    const structureData = useMemo(() => {
+        const by = new Map<string, { date: string; cpi: number | null; core: number | null; ppi: number | null }>();
+        const put = (date: string, key: 'cpi' | 'core' | 'ppi', v: number | null) => {
+            const e = by.get(date) ?? { date, cpi: null, core: null, ppi: null };
+            e[key] = v; by.set(date, e);
+        };
+        for (const h of headline) put(h.date, 'cpi', h.yoy);
+        for (const p of coreSeries) put(p.date, 'core', p.value);
+        for (const p of ppiSeries) put(p.date, 'ppi', p.value);
+        return [...by.values()].sort((a, b) => a.date.localeCompare(b.date));
+    }, [headline, coreSeries, ppiSeries]);
+
+    // ── Czynniki cenotwórcze (drivers): ropa, kursy, PPI ──
+    const brent = brentQ.data;
+    const fxCard = (arr: { mid?: number }[] | undefined) => {
+        const s = (arr ?? []).filter((r) => r.mid != null);
+        const last = s.length ? s[s.length - 1].mid! : null;
+        const ref = s.length > 22 ? s[s.length - 23].mid! : (s[0]?.mid ?? null);
+        const chg = last != null && ref != null && ref !== 0 ? +((last / ref - 1) * 100).toFixed(1) : null;
+        return { last, chg };
+    };
+    const eur = fxCard(eurQ.data);
+    const usd = fxCard(usdQ.data);
+    const ppiLast = lastOf(ppiSeries);
+    const ppiPrev = ppiSeries.length > 1 ? ppiSeries[ppiSeries.length - 2].value : null;
 
     const contrib = useMemo(
         () => divisions.map((d, i) => ({ ...d, color: colorFor(i) })).filter((d) => d.contribution != null).sort((a, b) => (b.contribution ?? 0) - (a.contribution ?? 0)),
@@ -82,6 +115,40 @@ export function InflacjaFull() {
                     valueFormatter={(v) => formatDecimalPL(v, 1)} xTickFormatter={monthTick}
                     referenceLines={freq === 'yoy' ? [{ y: 2.5, label: 'Cel NBP', color: '#94A3B8' }] : [{ y: 0, color: '#CBD2DD' }]}
                     series={[{ key: 'value', name: freq === 'yoy' ? 'CPI r/r' : 'CPI m/m', color: '#D97706', type: 'area', strokeWidth: 2.5 }]} />
+            </SectionCard>
+
+            {/* ── Struktura inflacji: CPI vs bazowa vs PPI ── */}
+            <SectionCard title="Struktura inflacji" subtitle="CPI ogółem · inflacja bazowa · PPI (ceny producenta) — r/r (%)">
+                <InteractiveChart data={structureData} xKey="date" height={300} unit="%" showRange initialRange="5L" ranges={['1R', '3L', '5L', 'ALL']} legend
+                    valueFormatter={(v) => formatDecimalPL(v, 1)} xTickFormatter={monthTick}
+                    referenceLines={[{ y: 2.5, label: 'Cel NBP', color: '#94A3B8' }]}
+                    series={[
+                        { key: 'cpi', name: 'CPI ogółem', color: '#D97706', type: 'line', strokeWidth: 2.5 },
+                        { key: 'core', name: 'Inflacja bazowa', color: '#7C3AED', type: 'line', strokeWidth: 2 },
+                        { key: 'ppi', name: 'PPI (producent)', color: '#0891B2', type: 'line', strokeWidth: 2, dashed: true },
+                    ]} />
+                <p className="mt-2 text-xs text-mk-faint">
+                    <span className="font-medium text-mk-muted">PPI</span> (ceny producenta) zwykle wyprzedza CPI — presja u producentów przekłada się na ceny konsumenckie z opóźnieniem.
+                    <span className="font-medium text-mk-muted"> Inflacja bazowa</span> (bez żywności i energii) pokazuje trwałość presji cenowej. Bazowa: HICP core (Eurostat), PPI: Eurostat.
+                </p>
+            </SectionCard>
+
+            {/* ── Czynniki cenotwórcze (drivers) ── */}
+            <SectionCard title="Czynniki cenotwórcze" subtitle="zewnętrzne presje na ceny — ropa, kursy walut, ceny producenta">
+                <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+                    <KpiCard label="Ropa Brent" value={fmtPL(brent?.latest, 1)} unit=" USD" accent="amber" icon={Fuel}
+                        delta={brent?.changeMM != null ? { value: brent.changeMM, unit: 'pct', invert: true } : undefined}
+                        footnote="napędza paliwa i transport" loading={brentQ.isLoading} />
+                    <KpiCard label="EUR/PLN" value={fmtPL(eur.last, 3)} accent="blue" icon={Banknote}
+                        delta={eur.chg != null ? { value: eur.chg, unit: 'pct', invert: true } : undefined}
+                        footnote="import, żywność (30 dni)" loading={eurQ.isLoading} />
+                    <KpiCard label="USD/PLN" value={fmtPL(usd.last, 3)} accent="violet" icon={DollarSign}
+                        delta={usd.chg != null ? { value: usd.chg, unit: 'pct', invert: true } : undefined}
+                        footnote="ropa w USD, surowce (30 dni)" loading={usdQ.isLoading} />
+                    <KpiCard label="PPI (r/r)" value={fmtPL(ppiLast)} unit="%" accent="rose" icon={Factory}
+                        delta={ppiLast != null && ppiPrev != null ? { value: +(ppiLast - ppiPrev).toFixed(1), unit: 'pp', invert: true } : undefined}
+                        footnote="ceny producenta — wyprzedza CPI" loading={ppiQ.isLoading} />
+                </div>
             </SectionCard>
 
             {/* ── Kontrybucje (klikalne) + drill-down ── */}
