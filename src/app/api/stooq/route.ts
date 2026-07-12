@@ -11,7 +11,7 @@ interface StooqResult { symbol: string; data: Bar[]; latest: Bar | null }
 const YAHOO_MAP: Record<string, string> = {
     wig: 'WIG.WA', mwig40: 'MWIG40.WA', swig80: 'SWIG80.WA',
     'cb.c': 'BZ=F', 'cl.c': 'CL=F', // Brent / WTI (dodatkowy fallback obok EIA)
-    'gc.c': 'GC=F', // złoto
+    'gc.c': 'GC=F', 'hg.c': 'HG=F', 'ng.c': 'NG=F', // złoto / miedź / gaz ziemny
 };
 
 // Symbole, dla których Yahoo NIE ma historii samego indeksu (np. WIG20.WA = tylko bieżąca wartość),

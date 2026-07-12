@@ -1,9 +1,9 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Euro, DollarSign, Coins, TrendingUp, Ship, Landmark, PoundSterling } from 'lucide-react';
+import { Euro, DollarSign, Coins, TrendingUp, Ship, Landmark, PoundSterling, Fuel, Flame, Gem, Factory, BarChart3 } from 'lucide-react';
 import {
-    useNBPTable, useNBPCurrencyHistory, useGold,
+    useNBPTable, useNBPCurrencyHistory, useGold, useStooq,
     useTradeData, useCurrentAccount,
     type NBPTable, type NBPRate,
 } from '@/lib/hooks';
@@ -118,20 +118,112 @@ function KursySection() {
     );
 }
 
-// ═══ GPW (Stooq blocked) ═══
+// ═══ GPW + Surowce (Yahoo Finance) ═══
+type QBar = { date: string; close: number };
+const barsOf = (q: { data?: { data: QBar[] } }): QBar[] => q.data?.data ?? [];
+const lastCloseOf = (q: { data?: { latest: QBar | null } }): number | null => q.data?.latest?.close ?? null;
+const pctDelta = (bars: QBar[]): number | null => (bars.length > 1 ? +percentChange(bars[bars.length - 1].close, bars[bars.length - 2].close).toFixed(2) : null);
+
 function GpwSection() {
+    // Indeksy GPW — WIG20 ma historię (seria z ETF WIG20TR skalowana do indeksu); reszta = wartość bieżąca (Yahoo)
+    const wig20 = useStooq('wig20', 60);
+    const wig = useStooq('wig', 2);
+    const mwig = useStooq('mwig40', 2);
+    const swig = useStooq('swig80', 2);
+    // Surowce — pełna historia (Yahoo Finance)
+    const brent = useStooq('cb.c', 90);
+    const wti = useStooq('cl.c', 90);
+    const gold = useStooq('gc.c', 90);
+    const copper = useStooq('hg.c', 90);
+    const gas = useStooq('ng.c', 90);
+
+    const wig20Chart = useMemo(() => barsOf(wig20).map((b) => ({ date: b.date, value: b.close })), [wig20.data]);
+
+    const indices = [
+        { label: 'WIG20', q: wig20, accent: 'blue' as AccentKey },
+        { label: 'WIG', q: wig, accent: 'slate' as AccentKey },
+        { label: 'mWIG40', q: mwig, accent: 'violet' as AccentKey },
+        { label: 'sWIG80', q: swig, accent: 'cyan' as AccentKey },
+    ];
+    const commods = [
+        { key: 'brent', label: 'Ropa Brent', q: brent, unit: 'USD/bbl', icon: Fuel, accent: 'amber' as AccentKey, dec: 1 },
+        { key: 'wti', label: 'Ropa WTI', q: wti, unit: 'USD/bbl', icon: Fuel, accent: 'amber' as AccentKey, dec: 1 },
+        { key: 'gold', label: 'Złoto', q: gold, unit: 'USD/oz', icon: Gem, accent: 'amber' as AccentKey, dec: 0 },
+        { key: 'copper', label: 'Miedź', q: copper, unit: 'USD/lb', icon: Factory, accent: 'rose' as AccentKey, dec: 2 },
+        { key: 'gas', label: 'Gaz ziemny', q: gas, unit: 'USD/MMBtu', icon: Flame, accent: 'cyan' as AccentKey, dec: 2 },
+    ];
+
+    // Wykres znormalizowany (rebazowany do 100) — różne skale surowców na jednej osi
+    const commodChart = useMemo(() => {
+        const src = [{ key: 'brent', q: brent }, { key: 'wti', q: wti }, { key: 'gold', q: gold }, { key: 'copper', q: copper }, { key: 'gas', q: gas }];
+        const maps = src.map((s) => {
+            const bars = barsOf(s.q);
+            const base = bars.length ? bars[0].close : null;
+            return { key: s.key, m: new Map(bars.map((b) => [b.date, base ? +((b.close / base) * 100).toFixed(1) : null])) };
+        });
+        const dates = Array.from(new Set(maps.flatMap((x) => [...x.m.keys()]))).sort();
+        return dates.map((date) => {
+            const row: Record<string, string | number | null> = { date };
+            maps.forEach((x) => { row[x.key] = x.m.get(date) ?? null; });
+            return row;
+        });
+    }, [brent.data, wti.data, gold.data, copper.data, gas.data]);
+
     return (
-        <SectionCard title="GPW — indeksy i akcje" subtitle="WIG20 · WIG · mWIG40 · sWIG80">
-            <div className="flex flex-col items-center justify-center py-16 text-center">
-                <span className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-mk-warn-soft text-mk-warn"><TrendingUp size={26} /></span>
-                <h3 className="mk-section-title">Dane GPW chwilowo niedostępne</h3>
-                <p className="mt-2 max-w-md text-sm text-mk-muted">
-                    Dotychczasowe źródło (Stooq) zaczęło serwować stronę-wyzwanie JS i blokuje pobieranie po stronie serwera.
-                    Trwa dobór alternatywnego źródła notowań GPW (indeksy, akcje, obligacje).
-                </p>
-                <p className="mt-2 text-xs text-mk-faint">Kursy walut i złota (NBP) oraz handel zagraniczny (Eurostat) działają w pozostałych zakładkach.</p>
+        <div className="space-y-6">
+            {/* Indeksy GPW */}
+            <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+                {indices.map((ix) => {
+                    const bars = barsOf(ix.q);
+                    const last = lastCloseOf(ix.q);
+                    return (
+                        <KpiCard key={ix.label} label={ix.label} value={last != null ? formatNumber(Math.round(last)) : '—'} unit="pkt" accent={ix.accent} icon={BarChart3}
+                            delta={pctDelta(bars) != null ? { value: pctDelta(bars)!, unit: 'pct' } : undefined}
+                            footnote={bars.length > 2 ? 'GPW · notowania' : 'GPW · poziom bieżący'} loading={ix.q.isLoading} />
+                    );
+                })}
             </div>
-        </SectionCard>
+
+            <SectionCard title="WIG20 — 60 sesji" subtitle="poziom indeksu · seria z ETF WIG20TR skalowana do poziomu indeksu (Yahoo)"
+                actions={<CsvExport filename="wig20" headers={['Data', 'Zamknięcie']} rows={wig20Chart.map((r) => [r.date, r.value])} />}>
+                {wig20Chart.length < 2 ? <div className="mk-skeleton h-[280px] w-full" /> : (
+                    <InteractiveChart data={wig20Chart} xKey="date" height={280} showRange initialRange="ALL"
+                        valueFormatter={(v) => formatNumber(Math.round(v))} xTickFormatter={monthTick}
+                        series={[{ key: 'value', name: 'WIG20', color: '#2563EB', type: 'area', strokeWidth: 2.5 }]} />
+                )}
+            </SectionCard>
+
+            {/* Surowce */}
+            <div>
+                <h3 className="mk-section-title mb-3">Surowce <span className="text-sm font-normal text-mk-muted">— notowania światowe, także czynniki inflacji (Yahoo Finance)</span></h3>
+                <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
+                    {commods.map((c) => {
+                        const bars = barsOf(c.q);
+                        const last = lastCloseOf(c.q);
+                        return (
+                            <KpiCard key={c.key} label={c.label} value={last != null ? formatDecimalPL(last, c.dec) : '—'} accent={c.accent} icon={c.icon}
+                                delta={pctDelta(bars) != null ? { value: pctDelta(bars)!, unit: 'pct' } : undefined}
+                                footnote={c.unit} loading={c.q.isLoading} />
+                        );
+                    })}
+                </div>
+            </div>
+
+            <SectionCard title="Surowce — dynamika (rebazowane do 100)" subtitle="porównanie zmian %: ropa Brent/WTI, złoto, miedź, gaz ziemny"
+                actions={<CsvExport filename="surowce" headers={['Data', 'Brent', 'WTI', 'Złoto', 'Miedź', 'Gaz']} rows={commodChart.map((r) => [r.date, r.brent, r.wti, r.gold, r.copper, r.gas])} />}>
+                {commodChart.length < 2 ? <div className="mk-skeleton h-[320px] w-full" /> : (
+                    <InteractiveChart data={commodChart} xKey="date" height={320} legend showRange initialRange="3M"
+                        valueFormatter={(v) => formatDecimalPL(v, 0)} xTickFormatter={monthTick} referenceLines={[{ y: 100, color: '#CBD2DD' }]}
+                        series={[
+                            { key: 'brent', name: 'Brent', color: '#D97706', type: 'line' },
+                            { key: 'wti', name: 'WTI', color: '#B45309', type: 'line' },
+                            { key: 'gold', name: 'Złoto', color: '#CA8A04', type: 'line' },
+                            { key: 'copper', name: 'Miedź', color: '#EA580C', type: 'line' },
+                            { key: 'gas', name: 'Gaz', color: '#0891B2', type: 'line' },
+                        ]} />
+                )}
+            </SectionCard>
+        </div>
     );
 }
 
