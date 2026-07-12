@@ -395,11 +395,11 @@ export function usePLvsEU(indicator: string) {
 
 export interface CpiSubcategory {
     code: string; name: string;
-    yoy: number | null; mom: number | null; weight?: number | null;
+    yoy: number | null; mom: number | null; qoq?: number | null; weight?: number | null;
 }
 export interface CpiDivision {
     code: string; name: string; weight: number;
-    yoy: number | null; mom: number | null; contribution: number | null;
+    yoy: number | null; mom: number | null; qoq?: number | null; contribution: number | null;
     history: { date: string; yoy: number | null }[];
     subcategories?: CpiSubcategory[];
 }

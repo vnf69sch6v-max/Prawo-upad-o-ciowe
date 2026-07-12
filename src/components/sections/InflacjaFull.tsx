@@ -114,8 +114,11 @@ export function InflacjaFull() {
     const divIndex = useMemo(() => plSeries(hicpDivQ.data), [hicpDivQ.data]);
     const divChange = useMemo(() => changeFromIndex(divIndex, divMetric === 'yoy' ? 12 : divMetric === 'qoq' ? 3 : 1), [divIndex, divMetric]);
 
-    const subs = useMemo(() => (sel?.subcategories ?? []).filter((s) => s.yoy != null).sort((a, b) => (b.yoy ?? -99) - (a.yoy ?? -99)), [sel]);
-    const maxSubAbs = useMemo(() => Math.max(...subs.map((s) => Math.abs(s.yoy ?? 0)), 0.1), [subs]);
+    const subs = useMemo(() => (sel?.subcategories ?? [])
+        .map((s) => ({ ...s, mv: divMetric === 'yoy' ? s.yoy : divMetric === 'qoq' ? (s.qoq ?? null) : s.mom }))
+        .filter((s): s is typeof s & { mv: number } => s.mv != null)
+        .sort((a, b) => b.mv - a.mv), [sel, divMetric]);
+    const maxSubAbs = useMemo(() => Math.max(...subs.map((s) => Math.abs(s.mv)), 0.1), [subs]);
 
     const chartData = useMemo(() => headline.map((h) => ({ date: h.date, value: freq === 'yoy' ? h.yoy : h.mom })), [headline, freq]);
     const pieData = useMemo(() => divisions.map((d, i) => ({ name: d.name, value: d.weight, color: colorFor(i), yoy: d.yoy })), [divisions]);
@@ -290,10 +293,10 @@ export function InflacjaFull() {
 
                         {subs.length > 0 && (
                             <div className="border-t border-mk-border pt-4">
-                                <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-mk-muted">Szczegóły działu · {subs.length} kategorii (r/r)</div>
+                                <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-mk-muted">Szczegóły działu · {subs.length} kategorii ({divMetric === 'yoy' ? 'r/r' : divMetric === 'qoq' ? 'kw/kw' : 'm/m'})</div>
                                 <div className="space-y-1">
                                     {subs.map((s) => {
-                                        const y = s.yoy ?? 0;
+                                        const y = s.mv;
                                         const w = (Math.abs(y) / maxSubAbs) * 100;
                                         return (
                                             <div key={s.code} className="flex items-center gap-2 text-xs">

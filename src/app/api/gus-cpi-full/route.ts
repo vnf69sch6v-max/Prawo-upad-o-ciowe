@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
     try {
         const result = await withCache(
             'dbw',
-            `gus_cpi_full_${now}_v3`,
+            `gus_cpi_full_${now}_v4`,
             async () => {
                 // ── Krajowy headline (DBW): COICOP 1999 (739) ≤2025, COICOP 2018 agregaty (1722) ≥2026 ──
                 const hPeriods = monthlyPeriods(startYear, now, (y) => (y >= 2026 ? 1722 : 739));
@@ -98,24 +98,33 @@ export async function GET(request: NextRequest) {
 
                 const divHistory: Record<string, { date: string; yoy: number | null }[]> = {};
                 DIVISIONS.forEach((d) => (divHistory[d.code] = []));
-                let latestRows: DbwRow[] | null = null;
-                let latestDate = '';
+                const monthsWithData: { key: string; rows: DbwRow[] }[] = [];
                 for (const p of dPeriods) {
                     const rows = dRows.get(p.key);
                     if (!rows) continue;
-                    const hasAny = DIVISIONS.some((d) => pick(rows, d.poz, 5) != null);
-                    if (!hasAny) continue;
-                    latestRows = rows; latestDate = p.key;
+                    if (!DIVISIONS.some((d) => pick(rows, d.poz, 5) != null)) continue;
+                    monthsWithData.push({ key: p.key, rows });
                     for (const d of DIVISIONS) divHistory[d.code].push({ date: p.key, yoy: pick(rows, d.poz, 5) });
                 }
+                const latestRows: DbwRow[] | null = monthsWithData.length ? monthsWithData[monthsWithData.length - 1].rows : null;
+                const latestDate = monthsWithData.length ? monthsWithData[monthsWithData.length - 1].key : '';
+                const last3 = monthsWithData.slice(-3);
 
-                // podkategorie (klasy) z najświeższego miesiąca — grupowane po dziale nadrzędnym
-                const subsByDiv: Record<string, { code: string; name: string; yoy: number | null; mom: number | null }[]> = {};
+                // kw/kw = złożenie 3 ostatnich zmian m/m (GUS nie ma gotowej stopy kwartalnej)
+                const qoqOf = (poz: number): number | null => {
+                    if (last3.length < 3) return null;
+                    const moms = last3.map((m) => pick(m.rows, poz, 2));
+                    if (moms.some((v) => v == null)) return null;
+                    return +(((1 + moms[0]! / 100) * (1 + moms[1]! / 100) * (1 + moms[2]! / 100) - 1) * 100).toFixed(1);
+                };
+
+                // podkategorie (klasy) z r/r, m/m, kw/kw — grupowane po dziale nadrzędnym
+                const subsByDiv: Record<string, { code: string; name: string; yoy: number | null; mom: number | null; qoq: number | null }[]> = {};
                 if (latestRows) {
                     for (const cls of COICOP_CLASSES) {
                         const yoy = pick(latestRows, cls.poz, 5);
                         if (yoy == null) continue;
-                        (subsByDiv[cls.div] ??= []).push({ code: cls.code, name: cls.name, yoy, mom: pick(latestRows, cls.poz, 2) });
+                        (subsByDiv[cls.div] ??= []).push({ code: cls.code, name: cls.name, yoy, mom: pick(latestRows, cls.poz, 2), qoq: qoqOf(cls.poz) });
                     }
                 }
 
@@ -123,7 +132,7 @@ export async function GET(request: NextRequest) {
                     const yoy = latestRows ? pick(latestRows, d.poz, 5) : null;
                     const mom = latestRows ? pick(latestRows, d.poz, 2) : null;
                     return {
-                        code: d.code, name: d.name, weight: d.weight, yoy, mom,
+                        code: d.code, name: d.name, weight: d.weight, yoy, mom, qoq: qoqOf(d.poz),
                         contribution: yoy != null ? +((d.weight / 100) * yoy).toFixed(2) : null,
                         history: divHistory[d.code],
                         subcategories: (subsByDiv[d.code] ?? []).sort((a, b) => (b.yoy ?? -99) - (a.yoy ?? -99)),
