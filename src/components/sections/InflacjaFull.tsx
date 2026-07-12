@@ -1,8 +1,8 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, AreaChart, Area, CartesianGrid } from 'recharts';
-import { TrendingUp, Activity, Fuel, DollarSign, Factory, Banknote, Info, ChevronRight } from 'lucide-react';
+import { TrendingUp, Activity, Fuel, DollarSign, Factory, Banknote, Info, ChevronRight, Grid3x3, SlidersHorizontal, RotateCcw, Target } from 'lucide-react';
 import { useCpiFull, usePPI, useBrentMM, useEURPLN, useUSDPLN, type CpiDivision, type CpiHistPoint } from '@/lib/hooks';
 import { plSeries, lastOf, fmtPL } from '@/lib/series';
 import { formatDecimalPL } from '@/lib/formatters';
@@ -14,6 +14,8 @@ import { CsvExport } from '@/components/ui/CsvExport';
 import { StaleBadge } from '@/components/ui/StaleBadge';
 import { DataTable, type Column } from '@/components/ui/DataTable';
 import { Drawer } from '@/components/ui/Drawer';
+import { Heatmap } from '@/components/ui/Heatmap';
+import { Sparkline } from '@/components/ui/Sparkline';
 
 const PALETTE = ['#2563EB', '#16A34A', '#D97706', '#7C3AED', '#E11D48', '#0891B2', '#CA8A04', '#DB2777', '#059669', '#4F46E5', '#EA580C', '#0D9488', '#64748B'];
 const monthTick = (d: string) => { const [y, m] = d.split('-'); return m ? `${m}.${y.slice(2)}` : d; };
@@ -166,6 +168,30 @@ export function InflacjaFull() {
         });
     }, [divisions]);
 
+    // ── Mapa ciepła: dział × okres. r/r = pełne 10 lat; m/m = gęsty widok 2026 ──
+    const [heatMetric, setHeatMetric] = useState<'yoy' | 'mom'>('yoy');
+    const heat = useMemo(() => {
+        const lookup = new Map<string, Map<string, { yoy: number | null; mom: number | null }>>();
+        const datesY = new Set<string>(), datesM = new Set<string>();
+        divisions.forEach((d) => {
+            const m = new Map<string, { yoy: number | null; mom: number | null }>();
+            d.history.forEach((h) => { m.set(h.date, { yoy: h.yoy, mom: h.mom ?? null }); if (h.yoy != null) datesY.add(h.date); if (h.mom != null) datesM.add(h.date); });
+            lookup.set(d.code, m);
+        });
+        return { lookup, datesY: [...datesY].sort(), datesM: [...datesM].sort() };
+    }, [divisions]);
+    const heatRows = useMemo(() => divisions.map((d) => ({ key: d.code, label: `${d.code} · ${d.name}` })), [divisions]);
+    const heatCols = heatMetric === 'yoy' ? heat.datesY : heat.datesM;
+    const heatValue = useCallback((code: string, date: string) => heat.lookup.get(code)?.get(date)?.[heatMetric] ?? null, [heat, heatMetric]);
+
+    // ── Symulator „co gdyby": suwaki r/r per dział → CPI z koszyka (Σ waga×r/r) ──
+    const baselineSum = useMemo(() => +divisions.reduce((s, d) => s + (d.yoy != null ? (d.weight / 100) * d.yoy : 0), 0).toFixed(2), [divisions]);
+    const [sim, setSim] = useState<Record<string, number>>({});
+    const simSum = useMemo(() => +divisions.reduce((s, d) => s + (d.weight / 100) * (sim[d.code] ?? d.yoy ?? 0), 0).toFixed(2), [divisions, sim]);
+    const simDelta = +(simSum - baselineSum).toFixed(2);
+    const simDirty = Object.keys(sim).length > 0;
+    const simColor = simDelta > 0.005 ? '#DC2626' : simDelta < -0.005 ? '#16A34A' : '#64748B';
+
     // ── Top movers: podkategorie (klasy), r/r lub m/m ──
     const [moverMetric, setMoverMetric] = useState<'yoy' | 'mom'>('yoy');
     const movers = useMemo(() => {
@@ -210,6 +236,7 @@ export function InflacjaFull() {
         { key: 'yoy', header: 'r/r', align: 'right', sortable: true, sortValue: (d) => d.yoy ?? -99, render: (d) => <span style={{ color: (d.yoy ?? 0) >= 0 ? '#DC2626' : '#16A34A', fontWeight: 600 }}>{d.yoy != null ? `${d.yoy > 0 ? '+' : ''}${formatDecimalPL(d.yoy, 1)}%` : '—'}</span> },
         { key: 'mom', header: 'm/m', align: 'right', sortable: true, sortValue: (d) => d.mom ?? -99, render: (d) => d.mom != null ? `${d.mom > 0 ? '+' : ''}${formatDecimalPL(d.mom, 1)}%` : '—' },
         { key: 'contribution', header: 'Wkład', align: 'right', sortable: true, sortValue: (d) => d.contribution ?? -99, render: (d) => <span className="font-semibold">{d.contribution != null ? `${d.contribution > 0 ? '+' : ''}${formatDecimalPL(d.contribution, 2)}` : '—'}</span> },
+        { key: 'trend', header: 'Trend r/r (10 lat)', align: 'center', render: (d) => <Sparkline data={d.history.map((h) => h.yoy)} /> },
     ];
 
     if (isLoading) return <div className="space-y-4"><div className="grid grid-cols-2 gap-4">{Array.from({ length: 2 }).map((_, i) => <div key={i} className="mk-card h-28" />)}</div><div className="mk-skeleton h-[340px] w-full" /></div>;
@@ -312,7 +339,7 @@ export function InflacjaFull() {
                             </Bar>
                         </BarChart>
                     </ResponsiveContainer>
-                    <p className="mt-1 text-[11px] text-mk-faint">Czerwone podbijają inflację, zielone obniżają; ciemny słupek „CPI ogółem" = suma wkładów.</p>
+                    <p className="mt-1 text-[11px] text-mk-faint">Czerwone podbijają inflację, zielone obniżają; ciemny słupek &bdquo;CPI ogółem&rdquo; = suma wkładów.</p>
                 </SectionCard>
 
                 <SectionCard title="Największe ruchy cen" subtitle="podkategorie (klasy COICOP) — co najbardziej zdrożało i staniało"
@@ -359,6 +386,60 @@ export function InflacjaFull() {
                     </ResponsiveContainer>
                 )}
                 <p className="mt-1 text-[11px] text-mk-faint">Suma warstw ≈ CPI ogółem. Wagi koszyka bieżące (2026) zastosowane do całej historii — przybliżenie dla starszych lat.</p>
+            </SectionCard>
+
+            {/* ── Mapa ciepła inflacji (dział × czas) ── */}
+            <SectionCard title="Mapa ciepła inflacji" subtitle={heatMetric === 'yoy' ? 'dynamika r/r każdego działu w czasie — 10 lat · kliknij wiersz, aby otworzyć szczegóły' : 'dynamika m/m każdego działu — miesięcznie 2026 · kliknij wiersz, aby otworzyć szczegóły'}
+                actions={<div className="flex items-center gap-2"><Grid3x3 size={15} className="text-mk-faint" /><Segmented value={heatMetric} onChange={setHeatMetric} options={[{ value: 'yoy', label: 'r/r (10 lat)' }, { value: 'mom', label: 'm/m (2026)' }]} /></div>}>
+                {heatCols.length < 2 ? <div className="flex h-[280px] items-center justify-center text-sm text-mk-faint">Brak danych dla wybranej metryki.</div> : (
+                    <Heatmap rows={heatRows} cols={heatCols} valueAt={heatValue} unit="%"
+                        colTickFormatter={monthTick} valueFormatter={(v) => formatDecimalPL(v, 1)} onRowClick={openDiv} cellHeight={heatMetric === 'yoy' ? 20 : 26} />
+                )}
+                <p className="mt-2 text-[11px] text-mk-faint">Kolor = dynamika cen: <span className="font-medium" style={{ color: '#B91C1C' }}>czerwony</span> silny wzrost, biały ≈ 0, <span className="font-medium" style={{ color: '#1D4ED8' }}>niebieski</span> spadek. Skala nieliniowa (√) — żeby spokojne okresy nie zlewały się obok skoku 2022–23.</p>
+            </SectionCard>
+
+            {/* ── Symulator „co gdyby" (interaktywny koszyk) ── */}
+            <SectionCard title="Symulator inflacji — co gdyby?" subtitle="przesuwaj roczną dynamikę działów i patrz, jak zmienia się CPI (koszyk × r/r)"
+                actions={<div className="flex items-center gap-2">
+                    <button onClick={() => setSim(Object.fromEntries(divisions.map((d) => [d.code, 2.5])))} className="inline-flex items-center gap-1.5 rounded-lg border border-mk-border px-2.5 py-1.5 text-xs font-medium text-mk-muted transition-colors hover:bg-mk-surface-alt hover:text-mk-text"><Target size={13} /> Cel NBP</button>
+                    <button onClick={() => setSim({})} disabled={!simDirty} className="inline-flex items-center gap-1.5 rounded-lg border border-mk-border px-2.5 py-1.5 text-xs font-medium text-mk-muted transition-colors enabled:hover:bg-mk-surface-alt enabled:hover:text-mk-text disabled:opacity-40"><RotateCcw size={13} /> Reset</button>
+                </div>}>
+                <div className="mb-4 grid grid-cols-3 items-center gap-3 rounded-xl border border-mk-border bg-mk-surface-alt p-4">
+                    <div className="text-center">
+                        <div className="text-[11px] uppercase tracking-wide text-mk-muted">Bazowy CPI</div>
+                        <div className="mt-0.5 text-2xl font-extrabold tnum text-mk-text">{formatDecimalPL(baselineSum, 1)}%</div>
+                        <div className="text-[10px] text-mk-faint">z koszyka · dziś</div>
+                    </div>
+                    <div className="text-center">
+                        <SlidersHorizontal size={18} className="mx-auto text-mk-faint" />
+                        <div className="mt-1.5 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold tnum" style={{ background: simDelta > 0.005 ? '#FEF2F2' : simDelta < -0.005 ? '#F0FDF4' : '#F1F5F9', color: simColor }}>
+                            {simDelta > 0 ? '+' : ''}{formatDecimalPL(simDelta, 2)} pp
+                        </div>
+                    </div>
+                    <div className="text-center">
+                        <div className="text-[11px] uppercase tracking-wide text-mk-muted">Symulowany CPI</div>
+                        <div className="mt-0.5 text-2xl font-extrabold tnum" style={{ color: simColor }}>{formatDecimalPL(simSum, 1)}%</div>
+                        <div className="text-[10px] text-mk-faint">{simDirty ? 'wg suwaków' : '= bazowy'}</div>
+                    </div>
+                </div>
+                <div className="grid grid-cols-1 gap-x-6 gap-y-2.5 md:grid-cols-2">
+                    {divisions.map((d, i) => {
+                        const cur = sim[d.code] ?? d.yoy ?? 0;
+                        const changed = sim[d.code] != null && Math.abs((sim[d.code] ?? 0) - (d.yoy ?? 0)) > 0.01;
+                        const color = colorFor(i);
+                        return (
+                            <div key={d.code} className="flex items-center gap-3">
+                                <span className="w-[8.5rem] shrink-0 truncate text-xs text-mk-text-soft" title={d.name}><span className="text-mk-faint">{d.code}</span> {d.name}</span>
+                                <span className="w-9 shrink-0 text-right text-[10px] text-mk-faint" title="waga w koszyku">{formatDecimalPL(d.weight, 1)}%</span>
+                                <input type="range" min={-15} max={40} step={0.5} value={cur} aria-label={`Dynamika r/r: ${d.name}`}
+                                    onChange={(e) => setSim((s) => ({ ...s, [d.code]: +e.target.value }))}
+                                    className="h-1.5 flex-1 cursor-pointer" style={{ accentColor: color }} />
+                                <span className="w-14 shrink-0 text-right text-xs font-semibold tnum" style={{ color: changed ? color : '#64748B' }}>{cur > 0 ? '+' : ''}{formatDecimalPL(cur, 1)}%</span>
+                            </div>
+                        );
+                    })}
+                </div>
+                <p className="mt-3 text-[11px] text-mk-faint">Uproszczenie: CPI ≈ Σ(waga działu × dynamika r/r). Dział waży tyle, ile jego udział w koszyku — dlatego żywność (25,9%) i mieszkanie/energia (19,5%) ruszają wskaźnikiem najmocniej, a edukacja (1%) minimalnie.</p>
             </SectionCard>
 
             {/* ── Koszyk (donut) + tabela działów ── */}
