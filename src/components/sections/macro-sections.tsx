@@ -5,7 +5,7 @@ import { TrendingUp, Factory, ShoppingCart, HardHat, Users, Wallet, Percent, Lan
 import {
     useInflationMonthly, useHICPFoodYoY, useHICPCoreYoY,
     useGDPQuarterly, useIndustrialProduction, useRetailSales, useConstruction,
-    useGusRegional, useGusMonthly, useNBPInterestRates, useWibor, useYieldCurve,
+    useGusRegional, useGusMonthly, useNBPInterestRates, useWibor, useYieldCurve, useCpiFull,
 } from '@/lib/hooks';
 import { plSeries, lastOf, deltaOf, monthTick, fmtPL, type Point } from '@/lib/series';
 import { formatDecimalPL, formatNumber, formatDate } from '@/lib/formatters';
@@ -133,12 +133,21 @@ export function AktywnoscSection() {
 export function RynekPracySection() {
     const regQ = useGusRegional();
     const monthlyQ = useGusMonthly();
+    const cpiQ = useCpiFull();
     const [selected, setSelected] = useState<string | null>(null);
 
     const regions = regQ.data?.regions ?? [];
     const national = regQ.data?.national ?? { avgUnemployment: null, avgWages: null };
     const wages = monthlyQ.data?.wages ?? [];
     const lastWage = wages.length ? wages[wages.length - 1] : null;
+
+    // Płace realne = wzrost płac nominalnych (r/r) − inflacja CPI (r/r) = zmiana siły nabywczej
+    const cpiByDate = useMemo(() => new Map((cpiQ.data?.headline ?? []).map((h) => [h.date, h.yoy])), [cpiQ.data]);
+    const realWages = useMemo(() => wages.map((w) => {
+        const cpi = cpiByDate.get(w.date) ?? null;
+        return { date: w.date, nominal: w.value, cpi, real: cpi != null ? +(w.value - cpi).toFixed(1) : null };
+    }), [wages, cpiByDate]);
+    const lastReal = useMemo(() => [...realWages].reverse().find((r) => r.real != null) ?? null, [realWages]);
 
     const selectedRegion = regions.find((r) => r.slug === selected) ?? null;
 
@@ -183,6 +192,25 @@ export function RynekPracySection() {
                     </SectionCard>
                 </div>
             </div>
+
+            {/* Płace realne — siła nabywcza (płace nominalne − CPI) */}
+            <SectionCard title="Płace realne — siła nabywcza" subtitle="wzrost płac nominalnych minus inflacja CPI (r/r, %) · dodatnie = rosnąca siła nabywcza"
+                actions={<div className="flex items-center gap-2"><StaleBadge date={lastReal?.date ?? null} label="do" warnAfterMonths={4} /><CsvExport filename="place-realne" headers={['Miesiąc', 'Nominalne', 'CPI', 'Realne']} rows={realWages.map((r) => [r.date, r.nominal, r.cpi, r.real])} /></div>}>
+                <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
+                    <KpiCard label="Płace nominalne (r/r)" value={fmtPL(lastReal?.nominal)} unit="%" accent="green" icon={Wallet} footnote={lastReal ? `GUS · ${lastReal.date}` : 'GUS'} loading={monthlyQ.isLoading} />
+                    <KpiCard label="Inflacja CPI (r/r)" value={fmtPL(lastReal?.cpi)} unit="%" accent="amber" icon={TrendingUp} footnote="GUS · krajowy CPI" loading={cpiQ.isLoading} />
+                    <KpiCard label="Płace realne (r/r)" value={fmtPL(lastReal?.real)} unit="%" accent={(lastReal?.real ?? 0) >= 0 ? 'blue' : 'rose'} icon={Percent} footnote="zmiana siły nabywczej" loading={monthlyQ.isLoading || cpiQ.isLoading} />
+                </div>
+                {realWages.length < 2 ? <div className="mk-skeleton h-[300px] w-full" /> : (
+                    <InteractiveChart data={realWages} xKey="date" height={300} unit="%" legend showRange initialRange="3L" ranges={['1R', '3L', '5L', 'ALL']}
+                        valueFormatter={(v) => formatDecimalPL(v, 1)} xTickFormatter={monthTick} referenceLines={[{ y: 0, color: '#CBD2DD' }]}
+                        series={[
+                            { key: 'nominal', name: 'Płace nominalne', color: '#16A34A', type: 'line', strokeWidth: 2 },
+                            { key: 'cpi', name: 'Inflacja CPI', color: '#D97706', type: 'line', strokeWidth: 2, dashed: true },
+                            { key: 'real', name: 'Płace realne', color: '#2563EB', type: 'area', strokeWidth: 2.5 },
+                        ]} />
+                )}
+            </SectionCard>
         </div>
     );
 }
