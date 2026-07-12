@@ -49,6 +49,37 @@ const DIVISION_INFO: Record<string, string> = {
     '13': 'Higiena osobista i pozostałe — kosmetyki i usługi fryzjerskie, biżuteria, ochrona socjalna, artykuły osobiste.',
 };
 
+// „Co obejmuje" — opis wybranych klas COICOP (podkategorii); reszta pokazuje sam trend.
+const SUB_INFO: Record<string, string> = {
+    '0111': 'Pieczywo, mąka, makarony, kasze, ryż — ceny zbóż, energii i kosztów wypieku.',
+    '0112': 'Mięso i wędliny (wołowina, wieprzowina, drób) — ceny pasz i energii, sytuacja epizootyczna (ASF, ptasia grypa).',
+    '0113': 'Ryby i owoce morza — połowy, import, koszty chłodzenia i transportu.',
+    '0114': 'Mleko, sery, jogurty, jaja — ceny skupu mleka, pasz i energii.',
+    '0115': 'Oleje i tłuszcze (masło, oleje roślinne) — ceny surowców roślinnych na rynkach światowych.',
+    '0116': 'Owoce świeże i przetwory — sezonowość, pogoda (przymrozki, susze), import.',
+    '0117': 'Warzywa i ziemniaki — silna sezonowość i wrażliwość na pogodę.',
+    '0118': 'Cukier, słodycze, dżemy, miód — ceny cukru i kakao na rynkach światowych.',
+    '0121': 'Soki owocowe i warzywne — ceny owoców i kosztów przetwórstwa.',
+    '0122': 'Kawa i substytuty — notowania kawy na giełdach, kurs USD/PLN.',
+    '0211': 'Napoje spirytusowe i likiery — dominuje akcyza i jej coroczne podwyżki.',
+    '0213': 'Piwo — akcyza, ceny surowców (słód, chmiel) i energii.',
+    '0230': 'Wyroby tytoniowe — głównie akcyza i coroczna mapa akcyzowa.',
+    '0312': 'Odzież (ubrania) — kursy walut (import z Azji), ceny bawełny i frachtu.',
+    '0451': 'Energia elektryczna — taryfy zatwierdzane przez URE; mrożenie cen i tarcze osłonowe mają duży wpływ.',
+    '0452': 'Gaz ziemny — taryfy URE, notowania hurtowe (TTF) i polityka osłonowa.',
+    '0453': 'Paliwa płynne do ogrzewania (olej opałowy) — ceny ropy naftowej i kurs USD/PLN.',
+    '0454': 'Paliwa stałe (węgiel, drewno) — ceny surowca i jego dostępność.',
+    '0711': 'Samochody osobowe (nowe) — kursy walut, dostępność i popyt.',
+    '0722': 'Paliwa i smary do aut (benzyna, ON, LPG) — ceny ropy Brent, kurs USD/PLN, akcyza i marże stacji.',
+    '0731': 'Transport kolejowy pasażerski — taryfy przewoźników i dopłaty.',
+    '0732': 'Transport drogowy pasażerski (autobusy) — ceny paliw i koszty pracy.',
+    '0733': 'Transport lotniczy pasażerski — ceny paliwa lotniczego, sezonowość, popyt.',
+    '0832': 'Usługi telefonii komórkowej — konkurencja operatorów i pakiety.',
+    '1111': 'Restauracje i kawiarnie — koszty pracy, żywności i energii.',
+    '1120': 'Usługi zakwaterowania (hotele) — popyt turystyczny i sezonowość.',
+    '1313': 'Salony fryzjerskie i kosmetyczne — koszty pracy i wynajmu lokali.',
+};
+
 export function InflacjaFull() {
     const { data, isLoading } = useCpiFull();
     const coreQ = useHICPCoreYoY();
@@ -103,7 +134,8 @@ export function InflacjaFull() {
     const [freq, setFreq] = useState<'yoy' | 'mom'>('yoy');
     const [selCode, setSelCode] = useState<string | null>(null);
     const [drawerOpen, setDrawerOpen] = useState(false);
-    const openDiv = (code: string) => { setSelCode(code); setDrawerOpen(true); };
+    const [expandedSub, setExpandedSub] = useState<string | null>(null);
+    const openDiv = (code: string) => { setSelCode(code); setDrawerOpen(true); setExpandedSub(null); };
 
     const sel: CpiDivision | null = selCode ? divisions.find((d) => d.code === selCode) ?? null : null;
     const selColor = sel ? colorOf(sel.code) : '#2563EB';
@@ -112,7 +144,12 @@ export function InflacjaFull() {
     const [divMetric, setDivMetric] = useState<'yoy' | 'qoq' | 'mom'>('yoy');
     const hicpDivQ = useHicpDivision(sel ? COICOP_MAP[sel.code] : undefined);
     const divIndex = useMemo(() => plSeries(hicpDivQ.data), [hicpDivQ.data]);
-    const divChange = useMemo(() => changeFromIndex(divIndex, divMetric === 'yoy' ? 12 : divMetric === 'qoq' ? 3 : 1), [divIndex, divMetric]);
+    const lagFor = (m: 'yoy' | 'qoq' | 'mom') => (m === 'yoy' ? 12 : m === 'qoq' ? 3 : 1);
+    const divChange = useMemo(() => changeFromIndex(divIndex, lagFor(divMetric)), [divIndex, divMetric]);
+
+    // Drill-down podkategorii: 10-letni trend klasy COICOP (HICP CP + kod), gdy rozwinięta
+    const hicpSubQ = useHicpDivision(expandedSub ? `CP${expandedSub}` : undefined);
+    const subChange = useMemo(() => changeFromIndex(plSeries(hicpSubQ.data), lagFor(divMetric)), [hicpSubQ.data, divMetric]);
 
     const subs = useMemo(() => (sel?.subcategories ?? [])
         .map((s) => ({ ...s, mv: divMetric === 'yoy' ? s.yoy : divMetric === 'qoq' ? (s.qoq ?? null) : s.mom }))
@@ -293,16 +330,32 @@ export function InflacjaFull() {
 
                         {subs.length > 0 && (
                             <div className="border-t border-mk-border pt-4">
-                                <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-mk-muted">Szczegóły działu · {subs.length} kategorii ({divMetric === 'yoy' ? 'r/r' : divMetric === 'qoq' ? 'kw/kw' : 'm/m'})</div>
-                                <div className="space-y-1">
+                                <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-mk-muted">Szczegóły działu · {subs.length} kategorii ({divMetric === 'yoy' ? 'r/r' : divMetric === 'qoq' ? 'kw/kw' : 'm/m'}) · kliknij, aby rozwinąć</div>
+                                <div className="space-y-0.5">
                                     {subs.map((s) => {
                                         const y = s.mv;
                                         const w = (Math.abs(y) / maxSubAbs) * 100;
+                                        const isExp = expandedSub === s.code;
                                         return (
-                                            <div key={s.code} className="flex items-center gap-2 text-xs">
-                                                <span className="w-40 shrink-0 truncate text-mk-text-soft" title={s.name}>{s.name}</span>
-                                                <span className="h-2.5 flex-1 rounded-full bg-mk-surface-alt"><span className="block h-2.5 rounded-full" style={{ width: `${w}%`, marginLeft: y < 0 ? 'auto' : undefined, background: y >= 0 ? selColor : '#16A34A' }} /></span>
-                                                <span className="w-12 shrink-0 text-right font-semibold tnum" style={{ color: y >= 0 ? '#DC2626' : '#16A34A' }}>{y > 0 ? '+' : ''}{formatDecimalPL(y, 1)}%</span>
+                                            <div key={s.code}>
+                                                <button onClick={() => setExpandedSub(isExp ? null : s.code)}
+                                                    className={`flex w-full items-center gap-2 rounded-md px-1.5 py-1 text-left text-xs transition-colors ${isExp ? 'bg-mk-surface-alt' : 'hover:bg-mk-surface-alt'}`}>
+                                                    <ChevronRight size={12} className="shrink-0 text-mk-faint transition-transform" style={{ transform: isExp ? 'rotate(90deg)' : undefined }} />
+                                                    <span className="w-[8.5rem] shrink-0 truncate text-mk-text-soft" title={s.name}>{s.name}</span>
+                                                    <span className="h-2.5 flex-1 rounded-full bg-mk-surface-alt"><span className="block h-2.5 rounded-full" style={{ width: `${w}%`, marginLeft: y < 0 ? 'auto' : undefined, background: y >= 0 ? selColor : '#16A34A' }} /></span>
+                                                    <span className="w-12 shrink-0 text-right font-semibold tnum" style={{ color: y >= 0 ? '#DC2626' : '#16A34A' }}>{y > 0 ? '+' : ''}{formatDecimalPL(y, 1)}%</span>
+                                                </button>
+                                                {isExp && (
+                                                    <div className="mb-1.5 ml-5 mt-1 rounded-lg border border-mk-border p-3">
+                                                        {SUB_INFO[s.code] && <p className="mb-2 text-xs leading-relaxed text-mk-text-soft">{SUB_INFO[s.code]}</p>}
+                                                        <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-mk-faint">Trend cen — {METRIC_LABEL[divMetric]} (HICP, 10 lat)</div>
+                                                        {subChange.length > 1 ? (
+                                                            <InteractiveChart data={subChange} xKey="date" height={150} unit="%" showRange initialRange="ALL" ranges={['1R', '5L', 'ALL']}
+                                                                valueFormatter={(v) => formatDecimalPL(v, 1)} xTickFormatter={monthTick} referenceLines={[{ y: 0, color: '#CBD2DD' }]}
+                                                                series={[{ key: 'value', name: s.name, color: selColor, type: 'area', strokeWidth: 2 }]} />
+                                                        ) : <div className="mk-skeleton h-[150px] w-full" />}
+                                                    </div>
+                                                )}
                                             </div>
                                         );
                                     })}
