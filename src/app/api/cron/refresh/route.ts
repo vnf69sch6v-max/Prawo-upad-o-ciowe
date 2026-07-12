@@ -30,11 +30,20 @@ const OTHER_ENDPOINTS = [
     '/api/eurostat?indicator=gdp_yoy&geo=PL',
     '/api/eurostat?indicator=industrial&geo=PL',
     '/api/eurostat?indicator=retail&geo=PL',
+    '/api/eurostat?indicator=ppi&geo=PL',            // struktura inflacji (CPI vs PPI)
+    '/api/eurostat?indicator=hicp_core_yoy&geo=PL',  // inflacja bazowa
     // NBP + rynki
     '/api/nbp?table=a',
     '/api/nbp-rates',
     '/api/wibor',
     '/api/nbp?gold=true&last=90',
+    // Rynki: indeks GPW + surowce (Yahoo Finance)
+    '/api/stooq?symbol=wig20&limit=60',
+    '/api/stooq?symbol=cb.c&limit=90',
+    '/api/stooq?symbol=cl.c&limit=90',
+    '/api/stooq?symbol=gc.c&limit=90',
+    '/api/stooq?symbol=hg.c&limit=90',
+    '/api/stooq?symbol=ng.c&limit=90',
     // Samorząd
     '/api/smup?resource=areas-list',
 ];
