@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, AreaChart, Area, CartesianGrid } from 'recharts';
 import { TrendingUp, Activity, Fuel, DollarSign, Factory, Banknote, Info, ChevronRight } from 'lucide-react';
 import { useCpiFull, useHICPCoreYoY, usePPI, useBrentMM, useEURPLN, useUSDPLN, type CpiDivision, type CpiHistPoint } from '@/lib/hooks';
 import { plSeries, lastOf, fmtPL } from '@/lib/series';
@@ -128,6 +128,48 @@ export function InflacjaFull() {
     const maxAbs = Math.max(...contrib.map((d) => Math.abs(d.contribution ?? 0)), 0.01);
     const colorOf = (code: string) => colorFor(divisions.findIndex((d) => d.code === code));
 
+    // ── Dekompozycja: wodospad wkładów działów budujący headline (pp) ──
+    const waterfall = useMemo(() => {
+        const sorted = [...divisions].filter((d) => d.contribution != null).sort((a, b) => (b.contribution ?? 0) - (a.contribution ?? 0));
+        let cum = 0;
+        const rows = sorted.map((d) => {
+            const c = d.contribution as number;
+            const base = c >= 0 ? cum : cum + c;
+            cum += c;
+            return { name: d.name, base: +base.toFixed(2), value: +Math.abs(c).toFixed(2), c, up: c >= 0, total: false };
+        });
+        rows.push({ name: 'CPI ogółem', base: 0, value: +cum.toFixed(2), c: +cum.toFixed(2), up: true, total: true });
+        return rows;
+    }, [divisions]);
+
+    // ── Wkłady w czasie: wkład_i(t) = waga × r/r_i(t) (wagi bieżące — przybliżenie dla starszych lat) ──
+    const contribTime = useMemo(() => {
+        const dates = new Set<string>();
+        divisions.forEach((d) => d.history.forEach((h) => { if (h.yoy != null) dates.add(h.date); }));
+        return [...dates].sort().map((date) => {
+            const row: Record<string, string | number | null> = { date };
+            divisions.forEach((d) => {
+                const h = d.history.find((x) => x.date === date);
+                row[d.code] = h?.yoy != null ? +((d.weight / 100) * h.yoy).toFixed(2) : null;
+            });
+            return row;
+        });
+    }, [divisions]);
+
+    // ── Top movers: podkategorie (klasy), r/r lub m/m ──
+    const [moverMetric, setMoverMetric] = useState<'yoy' | 'mom'>('yoy');
+    const movers = useMemo(() => {
+        const items: { name: string; div: string; v: number }[] = [];
+        divisions.forEach((d) => (d.subcategories ?? []).forEach((s) => {
+            const v = moverMetric === 'yoy' ? s.yoy : s.mom;
+            if (v != null && Math.abs(v) < 95) items.push({ name: s.name, div: d.name, v }); // odrzuć artefakty „brak danych" (indeks=0 → −100%)
+        }));
+        const risers = [...items].sort((a, b) => b.v - a.v).slice(0, 8);
+        const fallers = [...items].sort((a, b) => a.v - b.v).slice(0, 8);
+        const maxV = Math.max(...items.map((x) => Math.abs(x.v)), 1);
+        return { risers, fallers, maxV };
+    }, [divisions, moverMetric]);
+
     const [freq, setFreq] = useState<'yoy' | 'mom'>('yoy');
     const [selCode, setSelCode] = useState<string | null>(null);
     const [drawerOpen, setDrawerOpen] = useState(false);
@@ -143,7 +185,7 @@ export function InflacjaFull() {
 
     const subs = useMemo(() => (sel?.subcategories ?? [])
         .map((s) => ({ ...s, mv: divMetric === 'yoy' ? s.yoy : divMetric === 'qoq' ? (s.qoq ?? null) : s.mom }))
-        .filter((s): s is typeof s & { mv: number } => s.mv != null)
+        .filter((s): s is typeof s & { mv: number } => s.mv != null && s.mv > -95)
         .sort((a, b) => b.mv - a.mv), [sel, divMetric]);
     const maxSubAbs = useMemo(() => Math.max(...subs.map((s) => Math.abs(s.mv)), 0.1), [subs]);
     const expSub = useMemo(() => subs.find((s) => s.code === expandedSub) ?? null, [subs, expandedSub]);
@@ -237,6 +279,76 @@ export function InflacjaFull() {
                         );
                     })}
                 </div>
+            </SectionCard>
+
+            {/* ── Dekompozycja (wodospad) + Top movers ── */}
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                <SectionCard title="Dekompozycja CPI — wkłady działów" subtitle={`z czego składa się inflacja${dataDate ? ` (${dataDate})` : ''} · słupki budują wskaźnik ogółem (pp)`}>
+                    <ResponsiveContainer width="100%" height={Math.max(300, waterfall.length * 28)}>
+                        <BarChart data={waterfall} layout="vertical" margin={{ top: 4, right: 44, left: 6, bottom: 4 }} barCategoryGap={5}>
+                            <CartesianGrid stroke="#EDF0F5" horizontal={false} />
+                            <XAxis type="number" tick={{ fill: '#94A3B8', fontSize: 12 }} axisLine={false} tickLine={false} tickFormatter={(v) => formatDecimalPL(v, 1)} />
+                            <YAxis type="category" dataKey="name" width={140} tick={{ fill: '#475569', fontSize: 11 }} axisLine={false} tickLine={false} />
+                            <Tooltip cursor={{ fill: 'rgba(0,0,0,0.03)' }} content={({ active, payload }) => {
+                                if (!active || !payload?.length) return null;
+                                const p = payload[0].payload as { name: string; c: number };
+                                return <div style={{ background: '#fff', border: '1px solid #E7EAF0', borderRadius: 10, padding: '6px 10px', fontSize: 13, boxShadow: '0 6px 16px rgba(16,24,40,.12)' }}>
+                                    <div style={{ fontWeight: 600, color: '#0F172A' }}>{p.name}</div><div style={{ color: '#64748B' }}>wkład {p.c > 0 ? '+' : ''}{formatDecimalPL(p.c, 2)} pp</div>
+                                </div>;
+                            }} />
+                            <Bar dataKey="base" stackId="a" fill="transparent" />
+                            <Bar dataKey="value" stackId="a" radius={[0, 3, 3, 0]}>
+                                {waterfall.map((r, i) => <Cell key={i} fill={r.total ? '#0F172A' : r.up ? '#DC2626' : '#16A34A'} />)}
+                            </Bar>
+                        </BarChart>
+                    </ResponsiveContainer>
+                    <p className="mt-1 text-[11px] text-mk-faint">Czerwone podbijają inflację, zielone obniżają; ciemny słupek „CPI ogółem" = suma wkładów.</p>
+                </SectionCard>
+
+                <SectionCard title="Największe ruchy cen" subtitle="podkategorie (klasy COICOP) — co najbardziej zdrożało i staniało"
+                    actions={<Segmented value={moverMetric} onChange={setMoverMetric} options={[{ value: 'yoy', label: 'r/r' }, { value: 'mom', label: 'm/m' }]} />}>
+                    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                        {[{ t: 'Najbardziej zdrożało', arr: movers.risers, up: true }, { t: 'Najbardziej staniało', arr: movers.fallers, up: false }].map((col) => (
+                            <div key={col.t}>
+                                <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide" style={{ color: col.up ? '#DC2626' : '#16A34A' }}>{col.up ? '▲' : '▼'} {col.t}</div>
+                                <div className="space-y-1.5">
+                                    {col.arr.map((m, i) => (
+                                        <div key={i} className="flex items-center gap-2 text-xs">
+                                            <span className="w-32 shrink-0 truncate text-mk-text-soft" title={`${m.name} · ${m.div}`}>{m.name}</span>
+                                            <span className="h-2.5 flex-1 rounded-full bg-mk-surface-alt"><span className="block h-2.5 rounded-full" style={{ width: `${(Math.abs(m.v) / movers.maxV) * 100}%`, marginLeft: m.v < 0 ? 'auto' : undefined, background: m.v >= 0 ? '#DC2626' : '#16A34A' }} /></span>
+                                            <span className="w-12 shrink-0 text-right font-semibold tnum" style={{ color: m.v >= 0 ? '#DC2626' : '#16A34A' }}>{m.v > 0 ? '+' : ''}{formatDecimalPL(m.v, 1)}%</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </SectionCard>
+            </div>
+
+            {/* ── Wkłady do inflacji w czasie (stacked area) ── */}
+            <SectionCard title="Wkłady do inflacji w czasie" subtitle="wkład każdego działu (waga × r/r) — co napędzało CPI · kwartalnie do 2025, miesięcznie 2026 (pp)">
+                {contribTime.length < 2 ? <div className="mk-skeleton h-[320px] w-full" /> : (
+                    <ResponsiveContainer width="100%" height={340}>
+                        <AreaChart data={contribTime} margin={{ top: 6, right: 12, left: -6, bottom: 0 }}>
+                            <CartesianGrid stroke="#EDF0F5" vertical={false} />
+                            <XAxis dataKey="date" tick={{ fill: '#94A3B8', fontSize: 11 }} tickFormatter={monthTick} axisLine={{ stroke: '#E7EAF0' }} tickLine={false} minTickGap={28} />
+                            <YAxis tick={{ fill: '#94A3B8', fontSize: 12 }} axisLine={false} tickLine={false} width={40} tickFormatter={(v) => formatDecimalPL(v, 0)} />
+                            <Tooltip content={({ active, payload, label }) => {
+                                if (!active || !payload?.length) return null;
+                                const nums = payload.filter((p) => typeof p.value === 'number') as { value: number; color?: string; name?: string }[];
+                                const total = nums.reduce((s, p) => s + p.value, 0);
+                                const top = [...nums].filter((p) => Math.abs(p.value) > 0.01).sort((a, b) => Math.abs(b.value) - Math.abs(a.value)).slice(0, 5);
+                                return <div style={{ background: '#fff', border: '1px solid #E7EAF0', borderRadius: 10, padding: '8px 12px', fontSize: 12, boxShadow: '0 6px 16px rgba(16,24,40,.12)', minWidth: 190 }}>
+                                    <div style={{ fontWeight: 600, color: '#0F172A', marginBottom: 4 }}>{monthTick(String(label))} · CPI ≈ {formatDecimalPL(total, 1)} pp</div>
+                                    {top.map((p, i) => <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#64748B', marginTop: 2 }}><span style={{ width: 8, height: 8, borderRadius: 2, background: p.color, flexShrink: 0 }} /><span style={{ flex: 1 }}>{p.name}</span><span style={{ fontWeight: 600, color: '#0F172A', fontVariantNumeric: 'tabular-nums' }}>{formatDecimalPL(p.value, 2)}</span></div>)}
+                                </div>;
+                            }} />
+                            {divisions.map((d, i) => <Area key={d.code} type="monotone" dataKey={d.code} name={d.name} stackId="1" stroke="none" fill={colorFor(i)} fillOpacity={0.88} />)}
+                        </AreaChart>
+                    </ResponsiveContainer>
+                )}
+                <p className="mt-1 text-[11px] text-mk-faint">Suma warstw ≈ CPI ogółem. Wagi koszyka bieżące (2026) zastosowane do całej historii — przybliżenie dla starszych lat.</p>
             </SectionCard>
 
             {/* ── Koszyk (donut) + tabela działów ── */}
