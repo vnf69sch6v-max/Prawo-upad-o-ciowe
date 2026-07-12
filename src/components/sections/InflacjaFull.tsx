@@ -79,6 +79,9 @@ const SUB_INFO: Record<string, string> = {
     '1120': 'Usługi zakwaterowania (hotele) — popyt turystyczny i sezonowość.',
     '1313': 'Salony fryzjerskie i kosmetyczne — koszty pracy i wynajmu lokali.',
 };
+// Zapasowy opis, gdy brak szczegółowego (kategorie zbiorcze/„pozostałe"); dla reszty wystarcza pełna nazwa.
+const subFallback = (name: string): string =>
+    /pozostał|gdzie indziej|niesklasyfikowan/i.test(name) ? 'Kategoria zbiorcza — obejmuje pozycje nieujęte w pozostałych klasach tego działu.' : '';
 
 export function InflacjaFull() {
     const { data, isLoading } = useCpiFull();
@@ -145,17 +148,22 @@ export function InflacjaFull() {
     const hicpDivQ = useHicpDivision(sel ? COICOP_MAP[sel.code] : undefined);
     const divIndex = useMemo(() => plSeries(hicpDivQ.data), [hicpDivQ.data]);
     const lagFor = (m: 'yoy' | 'qoq' | 'mom') => (m === 'yoy' ? 12 : m === 'qoq' ? 3 : 1);
-    const divChange = useMemo(() => changeFromIndex(divIndex, lagFor(divMetric)), [divIndex, divMetric]);
+    // Dopięcie bieżącej wartości GUS na końcu serii HICP → ostatni punkt wykresu = liczba w wierszu/kafelku (spójność)
+    const appendGusTip = (base: Pt[], gus: number | null): Pt[] =>
+        (gus != null && dataDate && (!base.length || base[base.length - 1].date < dataDate)) ? [...base, { date: dataDate, value: gus }] : base;
+    const divMv = sel ? (divMetric === 'yoy' ? sel.yoy : divMetric === 'qoq' ? (sel.qoq ?? null) : sel.mom) : null;
+    const divChange = useMemo(() => appendGusTip(changeFromIndex(divIndex, lagFor(divMetric)), divMv), [divIndex, divMetric, divMv, dataDate]);
 
     // Drill-down podkategorii: 10-letni trend klasy COICOP (HICP CP + kod), gdy rozwinięta
     const hicpSubQ = useHicpDivision(expandedSub ? `CP${expandedSub}` : undefined);
-    const subChange = useMemo(() => changeFromIndex(plSeries(hicpSubQ.data), lagFor(divMetric)), [hicpSubQ.data, divMetric]);
 
     const subs = useMemo(() => (sel?.subcategories ?? [])
         .map((s) => ({ ...s, mv: divMetric === 'yoy' ? s.yoy : divMetric === 'qoq' ? (s.qoq ?? null) : s.mom }))
         .filter((s): s is typeof s & { mv: number } => s.mv != null)
         .sort((a, b) => b.mv - a.mv), [sel, divMetric]);
     const maxSubAbs = useMemo(() => Math.max(...subs.map((s) => Math.abs(s.mv)), 0.1), [subs]);
+    const expSub = useMemo(() => subs.find((s) => s.code === expandedSub) ?? null, [subs, expandedSub]);
+    const subChange = useMemo(() => appendGusTip(changeFromIndex(plSeries(hicpSubQ.data), lagFor(divMetric)), expSub?.mv ?? null), [hicpSubQ.data, divMetric, expSub, dataDate]);
 
     const chartData = useMemo(() => headline.map((h) => ({ date: h.date, value: freq === 'yoy' ? h.yoy : h.mom })), [headline, freq]);
     const pieData = useMemo(() => divisions.map((d, i) => ({ name: d.name, value: d.weight, color: colorFor(i), yoy: d.yoy })), [divisions]);
@@ -325,7 +333,7 @@ export function InflacjaFull() {
                                     valueFormatter={(v) => formatDecimalPL(v, 1)} xTickFormatter={monthTick} referenceLines={[{ y: 0, color: '#CBD2DD' }]}
                                     series={[{ key: 'value', name: sel.name, color: selColor, type: 'area', strokeWidth: 2.5 }]} />
                             ) : <div className="mk-skeleton h-[220px] w-full" />}
-                            <p className="mt-1.5 text-[11px] text-mk-faint">Zmiana {METRIC_LABEL[divMetric]} liczona z indeksu cen HICP (Eurostat), 10 lat.</p>
+                            <p className="mt-1.5 text-[11px] text-mk-faint">Trend 10-letni z indeksu HICP (Eurostat); ostatni punkt — bieżąca wartość krajowa (GUS).</p>
                         </div>
 
                         {subs.length > 0 && (
@@ -347,8 +355,9 @@ export function InflacjaFull() {
                                                 </button>
                                                 {isExp && (
                                                     <div className="mb-1.5 ml-5 mt-1 rounded-lg border border-mk-border p-3">
-                                                        {SUB_INFO[s.code] && <p className="mb-2 text-xs leading-relaxed text-mk-text-soft">{SUB_INFO[s.code]}</p>}
-                                                        <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-mk-faint">Trend cen — {METRIC_LABEL[divMetric]} (HICP, 10 lat)</div>
+                                                        <p className="text-xs font-semibold leading-snug text-mk-text">{s.name}</p>
+                                                        {(SUB_INFO[s.code] || subFallback(s.name)) && <p className="mb-2 mt-0.5 text-xs leading-relaxed text-mk-text-soft">{SUB_INFO[s.code] ?? subFallback(s.name)}</p>}
+                                                        <div className="mb-1 mt-2 text-[10px] font-semibold uppercase tracking-wide text-mk-faint">Trend cen — {METRIC_LABEL[divMetric]} (HICP + bieżący GUS)</div>
                                                         {subChange.length > 1 ? (
                                                             <InteractiveChart data={subChange} xKey="date" height={150} unit="%" showRange initialRange="ALL" ranges={['1R', '5L', 'ALL']}
                                                                 valueFormatter={(v) => formatDecimalPL(v, 1)} xTickFormatter={monthTick} referenceLines={[{ y: 0, color: '#CBD2DD' }]}
