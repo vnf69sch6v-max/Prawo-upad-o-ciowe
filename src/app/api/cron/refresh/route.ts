@@ -28,10 +28,16 @@ const OTHER_ENDPOINTS = [
     '/api/eurostat?indicator=cpi&geo=PL',
     '/api/eurostat?indicator=unemployment&geo=PL',
     '/api/eurostat?indicator=gdp_yoy&geo=PL',
+    '/api/eurostat?indicator=gdp_qoq&geo=PL',
+    '/api/eurostat?indicator=gdp_consumption&geo=PL',
+    '/api/eurostat?indicator=gdp_investment&geo=PL',
+    '/api/eurostat?indicator=gdp_exports&geo=PL',
+    '/api/eurostat?indicator=gdp_imports&geo=PL',
     '/api/eurostat?indicator=industrial&geo=PL',
     '/api/eurostat?indicator=retail&geo=PL',
     '/api/eurostat?indicator=ppi&geo=PL',            // struktura inflacji (CPI vs PPI)
     '/api/eurostat?indicator=hicp_core_yoy&geo=PL',  // inflacja bazowa
+    '/api/regional-eu',                              // PKB regionalne + demografia (NUTS-2)
     // NBP + rynki
     '/api/nbp?table=a',
     '/api/nbp-rates',
