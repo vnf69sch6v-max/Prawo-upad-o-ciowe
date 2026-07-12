@@ -15,6 +15,7 @@ import { SectionCard } from '@/components/ui/SectionCard';
 import { CsvExport } from '@/components/ui/CsvExport';
 import { DataTable, type Column } from '@/components/ui/DataTable';
 import { StaleBadge } from '@/components/ui/StaleBadge';
+import { Drawer } from '@/components/ui/Drawer';
 import PolandMap from '@/components/PolandMap';
 
 const byDate = (pts: Point[]) => new Map(pts.map((p) => [p.date, p.value]));
@@ -135,6 +136,8 @@ export function RynekPracySection() {
     const monthlyQ = useGusMonthly();
     const cpiQ = useCpiFull();
     const [selected, setSelected] = useState<string | null>(null);
+    const [regionDrawer, setRegionDrawer] = useState(false);
+    const openRegion = (slug: string | null) => { setSelected(slug); if (slug) setRegionDrawer(true); };
 
     const regions = regQ.data?.regions ?? [];
     const national = regQ.data?.national ?? { avgUnemployment: null, avgWages: null };
@@ -150,6 +153,15 @@ export function RynekPracySection() {
     const lastReal = useMemo(() => [...realWages].reverse().find((r) => r.real != null) ?? null, [realWages]);
 
     const selectedRegion = regions.find((r) => r.slug === selected) ?? null;
+
+    // 10-letnie serie wybranego województwa
+    const regUnemp = useMemo(() => {
+        const tl = regQ.data?.timeline ?? [];
+        return selected
+            ? tl.map((t) => ({ date: t.month, value: t.rates?.[selected] })).filter((p): p is { date: string; value: number } => p.value != null)
+            : [];
+    }, [regQ.data, selected]);
+    const regWages = useMemo(() => (selectedRegion?.wagesSeries ?? []).map((w) => ({ date: String(w.year), value: w.value })), [selectedRegion]);
 
     const cols: Column<typeof regions[number]>[] = [
         { key: 'name', header: 'Województwo', sortable: true, sortValue: (r) => r.name, render: (r) => r.name },
@@ -169,21 +181,24 @@ export function RynekPracySection() {
             </div>
 
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-                <SectionCard className="lg:col-span-2" title="Bezrobocie rejestrowane — mapa województw" subtitle="GUS · kliknij region"
+                <SectionCard className="lg:col-span-2" title="Bezrobocie rejestrowane — mapa województw" subtitle="GUS · kliknij region, aby zobaczyć 10-letnią historię"
                     actions={<CsvExport filename="bezrobocie-regiony" headers={['Województwo', 'Bezrobocie %', 'Płace PLN']} rows={regions.map((r) => [r.name, r.unemployment, r.wages])} />}>
                     {regQ.isLoading ? <div className="mk-skeleton h-[360px] w-full" /> : (
-                        <PolandMap regions={regions} national={national} selectedRegion={selected} onRegionSelect={setSelected} />
+                        <PolandMap regions={regions} national={national} selectedRegion={selected} onRegionSelect={openRegion} />
                     )}
                 </SectionCard>
                 <div className="space-y-4">
                     <SectionCard title={selectedRegion ? selectedRegion.name : 'Wybierz województwo'} padded>
                         {selectedRegion ? (
-                            <dl className="space-y-3 text-sm">
-                                <div className="flex justify-between"><dt className="text-mk-muted">Bezrobocie</dt><dd className="font-semibold tnum">{selectedRegion.unemployment != null ? `${formatDecimalPL(selectedRegion.unemployment, 1)}%` : '—'}</dd></div>
-                                <div className="flex justify-between"><dt className="text-mk-muted">Płace</dt><dd className="font-semibold tnum">{selectedRegion.wages != null ? `${formatNumber(selectedRegion.wages, 0)} zł` : '—'}</dd></div>
-                                <div className="flex justify-between"><dt className="text-mk-muted">Płace r/r</dt><dd className="font-semibold tnum">{selectedRegion.wagesYoY != null ? `${formatDecimalPL(selectedRegion.wagesYoY, 1)}%` : '—'}</dd></div>
-                            </dl>
-                        ) : <p className="text-sm text-mk-faint">Kliknij region na mapie, aby zobaczyć szczegóły.</p>}
+                            <>
+                                <dl className="space-y-3 text-sm">
+                                    <div className="flex justify-between"><dt className="text-mk-muted">Bezrobocie</dt><dd className="font-semibold tnum">{selectedRegion.unemployment != null ? `${formatDecimalPL(selectedRegion.unemployment, 1)}%` : '—'}</dd></div>
+                                    <div className="flex justify-between"><dt className="text-mk-muted">Płace</dt><dd className="font-semibold tnum">{selectedRegion.wages != null ? `${formatNumber(selectedRegion.wages, 0)} zł` : '—'}</dd></div>
+                                    <div className="flex justify-between"><dt className="text-mk-muted">Płace r/r</dt><dd className="font-semibold tnum">{selectedRegion.wagesYoY != null ? `${formatDecimalPL(selectedRegion.wagesYoY, 1)}%` : '—'}</dd></div>
+                                </dl>
+                                <button onClick={() => setRegionDrawer(true)} className="mt-4 w-full rounded-lg border border-mk-border px-3 py-2 text-sm font-medium text-mk-text transition-colors hover:bg-mk-surface-alt">Historia 10 lat →</button>
+                            </>
+                        ) : <p className="text-sm text-mk-faint">Kliknij region na mapie, aby zobaczyć szczegóły i 10-letnią historię.</p>}
                     </SectionCard>
                     <SectionCard title="Ranking" padded>
                         <div className="max-h-[240px] overflow-auto">
@@ -211,6 +226,44 @@ export function RynekPracySection() {
                         ]} />
                 )}
             </SectionCard>
+
+            {/* Drawer województwa — 10-letnia historia */}
+            <Drawer open={regionDrawer && !!selectedRegion} onClose={() => setRegionDrawer(false)} accent="#0891B2"
+                title={selectedRegion?.name ?? ''} subtitle="rynek pracy województwa — 10 lat">
+                {selectedRegion && (
+                    <div className="space-y-5">
+                        <div className="grid grid-cols-3 gap-2">
+                            {[
+                                { l: 'Bezrobocie', v: selectedRegion.unemployment != null ? `${formatDecimalPL(selectedRegion.unemployment, 1)}%` : '—' },
+                                { l: 'Płace', v: selectedRegion.wages != null ? `${formatNumber(selectedRegion.wages, 0)} zł` : '—' },
+                                { l: 'Płace r/r', v: selectedRegion.wagesYoY != null ? `${formatDecimalPL(selectedRegion.wagesYoY, 1)}%` : '—' },
+                            ].map((x) => (
+                                <div key={x.l} className="rounded-xl border border-mk-border p-2 text-center">
+                                    <div className="text-[11px] text-mk-muted">{x.l}</div>
+                                    <div className="mt-0.5 text-sm font-bold tnum text-mk-text">{x.v}</div>
+                                </div>
+                            ))}
+                        </div>
+                        <div>
+                            <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-mk-muted">Stopa bezrobocia — 10 lat (miesięcznie)</div>
+                            {regUnemp.length > 1 ? (
+                                <InteractiveChart data={regUnemp} xKey="date" height={220} unit="%" showRange initialRange="ALL" ranges={['1R', '3L', '5L', 'ALL']}
+                                    valueFormatter={(v) => formatDecimalPL(v, 1)} xTickFormatter={monthTick}
+                                    series={[{ key: 'value', name: 'Bezrobocie', color: '#0891B2', type: 'area', strokeWidth: 2.5 }]} />
+                            ) : <div className="mk-skeleton h-[220px] w-full" />}
+                        </div>
+                        <div>
+                            <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-mk-muted">Przeciętne wynagrodzenie — rocznie (PLN)</div>
+                            {regWages.length > 1 ? (
+                                <InteractiveChart data={regWages} xKey="date" height={200} unit=" zł"
+                                    valueFormatter={(v) => formatNumber(v, 0)}
+                                    series={[{ key: 'value', name: 'Płace', color: '#16A34A', type: 'area', strokeWidth: 2.5 }]} />
+                            ) : <p className="py-6 text-center text-sm text-mk-faint">Brak serii płac dla województwa.</p>}
+                        </div>
+                        <p className="text-[11px] text-mk-faint">Źródło: GUS BDL — bezrobocie rejestrowane (miesięcznie) i przeciętne wynagrodzenie brutto (rocznie) dla województwa.</p>
+                    </div>
+                )}
+            </Drawer>
         </div>
     );
 }

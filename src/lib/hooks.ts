@@ -181,6 +181,7 @@ interface GusRegion {
     wages: number | null;
     wagesPrev: number | null;
     wagesYoY: number | null;
+    wagesSeries?: { year: number | string; value: number }[];
 }
 
 interface GusRegionalData {

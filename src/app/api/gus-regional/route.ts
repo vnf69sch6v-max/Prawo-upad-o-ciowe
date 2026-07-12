@@ -58,6 +58,7 @@ interface RegionData {
     wages: number | null;            // Annual PLN
     wagesPrev: number | null;        // Previous year PLN
     wagesYoY: number | null;         // YoY % change
+    wagesSeries: { year: number; value: number }[]; // 10-letnia historia płac (roczna)
 }
 
 const MONTH_NAMES = ['styczeń', 'luty', 'marzec', 'kwiecień', 'maj', 'czerwiec',
@@ -83,7 +84,7 @@ async function fetchRegionData(region: typeof REGIONS[0], apiKey?: string): Prom
     monthly: Record<string, number>; // "YYYY-MM" → rate
 }> {
     const currentYear = new Date().getFullYear();
-    const years = `year=${currentYear}&year=${currentYear - 1}&year=${currentYear - 2}`;
+    const years = Array.from({ length: 10 }, (_, i) => `year=${currentYear - i}`).join('&'); // ostatnie 10 lat
     const varIds = [...UNEMPLOYMENT_IDS, WAGES_VAR].join('&var-id=');
     const monthly: Record<string, number> = {};
 
@@ -133,12 +134,16 @@ async function fetchRegionData(region: typeof REGIONS[0], apiKey?: string): Prom
         const wages = latestWage?.val ?? null;
         const wagesPrev = prevWage?.val ?? null;
         const wagesYoY = wages && wagesPrev ? +((wages / wagesPrev - 1) * 100).toFixed(1) : null;
+        const wagesSeries = [...(wageEntry?.values || [])]
+            .filter((v) => v.val !== null)
+            .map((v) => ({ year: v.year, value: v.val as number }))
+            .sort((a, b) => a.year - b.year);
 
         return {
             regionData: {
                 id: region.id, name: region.name, slug: region.slug,
                 unemployment, unemploymentMonth, unemploymentPrev,
-                wages, wagesPrev, wagesYoY,
+                wages, wagesPrev, wagesYoY, wagesSeries,
             },
             monthly,
         };
@@ -148,7 +153,7 @@ async function fetchRegionData(region: typeof REGIONS[0], apiKey?: string): Prom
             regionData: {
                 id: region.id, name: region.name, slug: region.slug,
                 unemployment: null, unemploymentMonth: null, unemploymentPrev: null,
-                wages: null, wagesPrev: null, wagesYoY: null,
+                wages: null, wagesPrev: null, wagesYoY: null, wagesSeries: [],
             },
             monthly: {},
         };
@@ -161,7 +166,7 @@ export async function GET() {
     try {
         const data = await withCache(
             'macro_data',
-            'gus_regional_labor_v2',
+            'gus_regional_labor_v3',
             async () => {
                 const allResults: Array<{ regionData: RegionData; monthly: Record<string, number> }> = [];
                 const batches = [REGIONS.slice(0, 8), REGIONS.slice(8)];
