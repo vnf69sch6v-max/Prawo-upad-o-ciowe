@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, AreaChart, Area, CartesianGrid } from 'recharts';
 import { TrendingUp, Activity, Fuel, DollarSign, Factory, Banknote, Info, ChevronRight } from 'lucide-react';
-import { useCpiFull, useHICPCoreYoY, usePPI, useBrentMM, useEURPLN, useUSDPLN, type CpiDivision, type CpiHistPoint } from '@/lib/hooks';
+import { useCpiFull, usePPI, useBrentMM, useEURPLN, useUSDPLN, type CpiDivision, type CpiHistPoint } from '@/lib/hooks';
 import { plSeries, lastOf, fmtPL } from '@/lib/series';
 import { formatDecimalPL } from '@/lib/formatters';
 import { KpiCard } from '@/components/ui/KpiCard';
@@ -80,7 +80,6 @@ const subFallback = (name: string): string =>
 
 export function InflacjaFull() {
     const { data, isLoading } = useCpiFull();
-    const coreQ = useHICPCoreYoY();
     const ppiQ = usePPI();
     const brentQ = useBrentMM();
     const eurQ = useEURPLN();
@@ -92,20 +91,31 @@ export function InflacjaFull() {
     const latest = headline.length ? headline[headline.length - 1] : null;
     const prev = headline.length > 1 ? headline[headline.length - 2] : null;
 
-    // ── Struktura inflacji: CPI (ogółem) vs bazowa vs PPI (producent), r/r ──
-    const coreSeries = useMemo(() => plSeries(coreQ.data), [coreQ.data]);
+    // ── Struktura inflacji: CPI vs bazowa (GUS, bez żywności) vs PPI — wszystko na datach headline ──
     const ppiSeries = useMemo(() => plSeries(ppiQ.data), [ppiQ.data]);
-    const structureData = useMemo(() => {
-        const by = new Map<string, { date: string; cpi: number | null; core: number | null; ppi: number | null }>();
-        const put = (date: string, key: 'cpi' | 'core' | 'ppi', v: number | null) => {
-            const e = by.get(date) ?? { date, cpi: null, core: null, ppi: null };
-            e[key] = v; by.set(date, e);
-        };
-        for (const h of headline) put(h.date, 'cpi', h.yoy);
-        for (const p of coreSeries) put(p.date, 'core', p.value);
-        for (const p of ppiSeries) put(p.date, 'ppi', p.value);
-        return [...by.values()].sort((a, b) => a.date.localeCompare(b.date));
-    }, [headline, coreSeries, ppiSeries]);
+    // Bazowa GUS ≈ CPI bez żywności: ważona średnia r/r działów poza „01" (dane GUS), po datach headline
+    const exFood = useMemo(() => {
+        const nonFood = divisions.filter((d) => d.code !== '01');
+        const dates = new Set<string>();
+        nonFood.forEach((d) => d.history.forEach((h) => { if (h.yoy != null) dates.add(h.date); }));
+        const map = new Map<string, number>();
+        for (const date of dates) {
+            let sum = 0, w = 0;
+            nonFood.forEach((d) => { const h = d.history.find((x) => x.date === date); if (h?.yoy != null) { sum += d.weight * h.yoy; w += d.weight; } });
+            if (w > 0) map.set(date, +(sum / w).toFixed(1));
+        }
+        return map;
+    }, [divisions]);
+    // PPI (Eurostat, dane GUS) dopasowany do dat headline: miesięcznie wprost + kwartalna średnia dla „YYYY-QN"
+    const ppiByDate = useMemo(() => {
+        const map = new Map<string, number>();
+        ppiSeries.forEach((p) => map.set(p.date, p.value));
+        const byQ: Record<string, number[]> = {};
+        ppiSeries.forEach((p) => { const [y, m] = p.date.split('-'); const q = Math.ceil(parseInt(m) / 3); (byQ[`${y}-Q${q}`] ??= []).push(p.value); });
+        Object.entries(byQ).forEach(([k, arr]) => map.set(k, +(arr.reduce((s, v) => s + v, 0) / arr.length).toFixed(1)));
+        return map;
+    }, [ppiSeries]);
+    const structureData = useMemo(() => headline.map((h) => ({ date: h.date, cpi: h.yoy, core: exFood.get(h.date) ?? null, ppi: ppiByDate.get(h.date) ?? null })), [headline, exFood, ppiByDate]);
 
     // ── Czynniki cenotwórcze (drivers): ropa, kursy, PPI ──
     const brent = brentQ.data;
@@ -228,18 +238,18 @@ export function InflacjaFull() {
             </SectionCard>
 
             {/* ── Struktura inflacji: CPI vs bazowa vs PPI ── */}
-            <SectionCard title="Struktura inflacji" subtitle="CPI ogółem · inflacja bazowa · PPI (ceny producenta) — r/r (%)">
+            <SectionCard title="Struktura inflacji" subtitle="CPI ogółem · CPI bez żywności (bazowa) · PPI (ceny producenta) — r/r (%)">
                 <InteractiveChart data={structureData} xKey="date" height={300} unit="%" showRange initialRange="5L" ranges={['1R', '3L', '5L', 'ALL']} legend
                     valueFormatter={(v) => formatDecimalPL(v, 1)} xTickFormatter={monthTick}
                     referenceLines={[{ y: 2.5, label: 'Cel NBP', color: '#94A3B8' }]}
                     series={[
                         { key: 'cpi', name: 'CPI ogółem', color: '#D97706', type: 'line', strokeWidth: 2.5 },
-                        { key: 'core', name: 'Inflacja bazowa', color: '#7C3AED', type: 'line', strokeWidth: 2 },
+                        { key: 'core', name: 'CPI bez żywności', color: '#7C3AED', type: 'line', strokeWidth: 2 },
                         { key: 'ppi', name: 'PPI (producent)', color: '#0891B2', type: 'line', strokeWidth: 2, dashed: true },
                     ]} />
                 <p className="mt-2 text-xs text-mk-faint">
                     <span className="font-medium text-mk-muted">PPI</span> (ceny producenta) zwykle wyprzedza CPI — presja u producentów przekłada się na ceny konsumenckie z opóźnieniem.
-                    <span className="font-medium text-mk-muted"> Inflacja bazowa</span> (bez żywności i energii) pokazuje trwałość presji cenowej. Bazowa: HICP core (Eurostat), PPI: Eurostat.
+                    <span className="font-medium text-mk-muted"> CPI bez żywności</span> (przybliżenie bazowej) liczony z działów GUS — pokazuje trwałość presji poza najbardziej zmienną żywnością. PPI: Eurostat (dane GUS).
                 </p>
             </SectionCard>
 
