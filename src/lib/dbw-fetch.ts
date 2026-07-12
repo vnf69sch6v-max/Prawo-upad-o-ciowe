@@ -47,7 +47,9 @@ export function pick(rows: DbwRow[], poz: number, prez: number): number | null {
     const m = rows.filter((r) => r['id-pozycja-1'] === POLSKA && r['id-pozycja-2'] === poz && r['id-sposob-prezentacji-miara'] === prez);
     if (!m.length) return null;
     const row = m.find((r) => r['id-pozycja-3'] === GRUPA_OGOLEM) ?? m[0];
-    return row.wartosc != null ? +(row.wartosc - 100).toFixed(1) : null;
+    // wartosc===0 = placeholder „brak publikacji" dla okresu (indeks bazowy=100 nigdy nie jest 0);
+    // bez tego wartosc−100 dałoby fałszywe −100% w podkategoriach jeszcze nieopublikowanych.
+    return row.wartosc != null && row.wartosc !== 0 ? +(row.wartosc - 100).toFixed(1) : null;
 }
 
 /** Same as pick(), but also filters to a single period (id-okres) — for whole-year fetches. */
