@@ -2,8 +2,8 @@
 
 import { useMemo, useState } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
-import { TrendingUp, Flame, ShoppingCart, Percent, Activity, Fuel, DollarSign, Factory, Banknote } from 'lucide-react';
-import { useCpiFull, useHICPCoreYoY, usePPI, useBrentMM, useEURPLN, useUSDPLN, type CpiDivision } from '@/lib/hooks';
+import { TrendingUp, Activity, Fuel, DollarSign, Factory, Banknote, Info, ChevronRight } from 'lucide-react';
+import { useCpiFull, useHICPCoreYoY, usePPI, useBrentMM, useEURPLN, useUSDPLN, useHicpDivision, type CpiDivision } from '@/lib/hooks';
 import { plSeries, lastOf, fmtPL } from '@/lib/series';
 import { formatDecimalPL } from '@/lib/formatters';
 import { KpiCard } from '@/components/ui/KpiCard';
@@ -13,10 +13,34 @@ import { Segmented } from '@/components/ui/Segmented';
 import { CsvExport } from '@/components/ui/CsvExport';
 import { StaleBadge } from '@/components/ui/StaleBadge';
 import { DataTable, type Column } from '@/components/ui/DataTable';
+import { Drawer } from '@/components/ui/Drawer';
 
 const PALETTE = ['#2563EB', '#16A34A', '#D97706', '#7C3AED', '#E11D48', '#0891B2', '#CA8A04', '#DB2777', '#059669', '#4F46E5', '#EA580C', '#0D9488', '#64748B'];
 const monthTick = (d: string) => { const [y, m] = d.split('-'); return m ? `${m}.${y.slice(2)}` : d; };
 const colorFor = (i: number) => PALETTE[i % PALETTE.length];
+
+// Dział COICOP 2018 → kod HICP (Eurostat) dla 10-letniej historii (12→13 dzielą CP12).
+const COICOP_MAP: Record<string, string> = {
+    '01': 'CP01', '02': 'CP02', '03': 'CP03', '04': 'CP04', '05': 'CP05', '06': 'CP06',
+    '07': 'CP07', '08': 'CP08', '09': 'CP09', '10': 'CP10', '11': 'CP11', '12': 'CP12', '13': 'CP12',
+};
+
+// „Co wpływa na tę kategorię" — czynniki cenotwórcze per dział.
+const DIVISION_INFO: Record<string, string> = {
+    '01': 'Ceny żywności zależą od cen surowców rolnych (zboża, mięso, nabiał), pogody i susz, kursów walut przy imporcie, sezonowości oraz kosztów energii w produkcji i transporcie.',
+    '02': 'Napoje alkoholowe i wyroby tytoniowe — dominuje wpływ akcyzy i jej corocznych podwyżek; kategoria mało wrażliwa na koniunkturę.',
+    '03': 'Odzież i obuwie — sezonowe wyprzedaże, kursy walut (import głównie z Azji), ceny bawełny i frachtu morskiego.',
+    '04': 'Użytkowanie mieszkania i energia — taryfy prądu i gazu (decyzje URE), ceny paliw grzewczych, czynsze, woda i wywóz śmieci. Największa waga w koszyku.',
+    '05': 'Wyposażenie mieszkania — meble, AGD, artykuły domowe; kursy walut i koszty importu, siła popytu konsumpcyjnego.',
+    '06': 'Zdrowie — ceny leków i wyrobów medycznych, usługi ambulatoryjne i szpitalne, poziom refundacji.',
+    '07': 'Transport — ceny paliw (ropa Brent, kurs USD/PLN), ceny nowych i używanych samochodów, koszty usług transportu pasażerskiego.',
+    '08': 'Informacja i komunikacja — usługi telekomunikacyjne (abonamenty, internet), sprzęt elektroniczny, konkurencja operatorów.',
+    '09': 'Rekreacja, sport i kultura — turystyka zorganizowana (silna sezonowość), sprzęt i usługi rekreacyjne, wydarzenia kulturalne.',
+    '10': 'Edukacja — czesne i opłaty za naukę (sezonowość wrzesień/październik); niewielka waga w koszyku.',
+    '11': 'Restauracje i hotele — koszty pracy (płace), ceny żywności, energii i najmu lokali; popyt turystyczny.',
+    '12': 'Ubezpieczenia i usługi finansowe — składki ubezpieczeniowe (OC/AC, majątkowe, na życie), opłaty bankowe.',
+    '13': 'Higiena osobista i pozostałe — kosmetyki i usługi fryzjerskie, biżuteria, ochrona socjalna, artykuły osobiste.',
+};
 
 export function InflacjaFull() {
     const { data, isLoading } = useCpiFull();
@@ -32,8 +56,6 @@ export function InflacjaFull() {
     const spliceDate = data?.spliceDate ?? null;
     const latest = headline.length ? headline[headline.length - 1] : null;
     const prev = headline.length > 1 ? headline[headline.length - 2] : null;
-    const core = lastOf(plSeries(coreQ.data));
-    const divByCode = (c: string) => divisions.find((d) => d.code === c);
 
     // ── Struktura inflacji: CPI (ogółem) vs bazowa vs PPI (producent), r/r ──
     const coreSeries = useMemo(() => plSeries(coreQ.data), [coreQ.data]);
@@ -69,16 +91,29 @@ export function InflacjaFull() {
         [divisions],
     );
     const maxAbs = Math.max(...contrib.map((d) => Math.abs(d.contribution ?? 0)), 0.01);
+    const colorOf = (code: string) => colorFor(divisions.findIndex((d) => d.code === code));
 
     const [freq, setFreq] = useState<'yoy' | 'mom'>('yoy');
     const [selCode, setSelCode] = useState<string | null>(null);
-    const sel: (CpiDivision & { color?: string }) | undefined = (selCode ? contrib.find((d) => d.code === selCode) : undefined) ?? contrib[0];
-    const selColor = sel ? contrib.find((d) => d.code === sel.code)?.color ?? '#2563EB' : '#2563EB';
+    const [drawerOpen, setDrawerOpen] = useState(false);
+    const openDiv = (code: string) => { setSelCode(code); setDrawerOpen(true); };
 
-    const chartData = useMemo(() => headline.map((h) => ({ date: h.date, value: freq === 'yoy' ? h.yoy : h.mom })), [headline, freq]);
-    const selHistory = useMemo(() => (sel?.history ?? []).map((h) => ({ date: h.date, value: h.yoy })), [sel]);
+    const sel: CpiDivision | null = selCode ? divisions.find((d) => d.code === selCode) ?? null : null;
+    const selColor = sel ? colorOf(sel.code) : '#2563EB';
+
+    // 10-letnia historia r/r wybranego działu: szkielet HICP (Eurostat) + GUS na wierzchu (spójne z bieżącą wartością)
+    const hicpDivQ = useHicpDivision(sel ? COICOP_MAP[sel.code] : undefined);
+    const selLong = useMemo(() => {
+        const by = new Map<string, number>();
+        for (const p of plSeries(hicpDivQ.data)) by.set(p.date, p.value);
+        for (const g of sel?.history ?? []) if (g.yoy != null) by.set(g.date, g.yoy);
+        return [...by.entries()].sort((a, b) => a[0].localeCompare(b[0])).map(([date, value]) => ({ date, value }));
+    }, [hicpDivQ.data, sel]);
+
     const subs = useMemo(() => (sel?.subcategories ?? []).filter((s) => s.yoy != null).sort((a, b) => (b.yoy ?? -99) - (a.yoy ?? -99)), [sel]);
     const maxSubAbs = useMemo(() => Math.max(...subs.map((s) => Math.abs(s.yoy ?? 0)), 0.1), [subs]);
+
+    const chartData = useMemo(() => headline.map((h) => ({ date: h.date, value: freq === 'yoy' ? h.yoy : h.mom })), [headline, freq]);
     const pieData = useMemo(() => divisions.map((d, i) => ({ name: d.name, value: d.weight, color: colorFor(i), yoy: d.yoy })), [divisions]);
 
     const cols: Column<CpiDivision>[] = [
@@ -89,19 +124,16 @@ export function InflacjaFull() {
         { key: 'contribution', header: 'Wkład', align: 'right', sortable: true, sortValue: (d) => d.contribution ?? -99, render: (d) => <span className="font-semibold">{d.contribution != null ? `${d.contribution > 0 ? '+' : ''}${formatDecimalPL(d.contribution, 2)}` : '—'}</span> },
     ];
 
-    if (isLoading) return <div className="space-y-4"><div className="grid grid-cols-2 gap-4 lg:grid-cols-5">{Array.from({ length: 5 }).map((_, i) => <div key={i} className="mk-card h-28" />)}</div><div className="mk-skeleton h-[340px] w-full" /></div>;
+    if (isLoading) return <div className="space-y-4"><div className="grid grid-cols-2 gap-4">{Array.from({ length: 2 }).map((_, i) => <div key={i} className="mk-card h-28" />)}</div><div className="mk-skeleton h-[340px] w-full" /></div>;
 
     return (
         <div className="space-y-6">
-            {/* ── KPI ── */}
-            <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
+            {/* ── KPI (ujednolicone na krajowy CPI GUS) ── */}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <KpiCard label="CPI (r/r)" value={fmtPL(latest?.yoy)} unit="%" accent="amber" icon={TrendingUp}
                     delta={latest?.yoy != null && prev?.yoy != null ? { value: +(latest.yoy - prev.yoy).toFixed(1), unit: 'pp', invert: true } : undefined}
-                    footnote={dataDate ? `GUS · ${dataDate}` : 'GUS'} />
+                    footnote={dataDate ? `GUS · krajowy CPI · ${dataDate}` : 'GUS · krajowy CPI'} />
                 <KpiCard label="CPI (m/m)" value={fmtPL(latest?.mom)} unit="%" accent="blue" icon={Activity} footnote="miesiąc do miesiąca" />
-                <KpiCard label="Inflacja bazowa" value={fmtPL(core)} unit="%" accent="violet" icon={Percent} footnote="HICP core (Eurostat)" loading={coreQ.isLoading} />
-                <KpiCard label="Żywność (r/r)" value={fmtPL(divByCode('01')?.yoy)} unit="%" accent="green" icon={ShoppingCart} footnote="GUS" />
-                <KpiCard label="Mieszkanie/energia" value={fmtPL(divByCode('04')?.yoy)} unit="%" accent="rose" icon={Flame} footnote="GUS" />
             </div>
 
             {/* ── Hero: trend r/r ↔ m/m ── */}
@@ -151,70 +183,25 @@ export function InflacjaFull() {
                 </div>
             </SectionCard>
 
-            {/* ── Kontrybucje (klikalne) + drill-down ── */}
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                <SectionCard title="Kontrybucje do inflacji" subtitle="waga × dynamika = wkład (pp) · kliknij dział">
-                    <div className="space-y-1.5">
-                        {contrib.map((d) => {
-                            const c = d.contribution ?? 0;
-                            const w = (Math.abs(c) / maxAbs) * 100;
-                            const active = sel?.code === d.code;
-                            return (
-                                <button key={d.code} onClick={() => setSelCode(d.code)}
-                                    className={`flex w-full items-center gap-3 rounded-lg px-2 py-1.5 text-left transition-colors ${active ? 'bg-mk-surface-alt ring-1 ring-mk-primary' : 'hover:bg-mk-surface-alt'}`}>
-                                    <span className="w-40 shrink-0 truncate text-sm text-mk-text">{d.name}</span>
-                                    <span className="w-12 shrink-0 text-right text-xs tnum text-mk-muted">{d.yoy != null ? `${formatDecimalPL(d.yoy, 1)}%` : '—'}</span>
-                                    <span className="h-3 flex-1 rounded-full bg-mk-surface-alt"><span className="block h-3 rounded-full" style={{ width: `${w}%`, background: d.color }} /></span>
-                                    <span className="w-14 shrink-0 text-right text-sm font-semibold tnum" style={{ color: c >= 0 ? '#0F172A' : '#16A34A' }}>{c > 0 ? '+' : ''}{formatDecimalPL(c, 2)}</span>
-                                </button>
-                            );
-                        })}
-                    </div>
-                </SectionCard>
-
-                <SectionCard title={sel ? `${sel.code} · ${sel.name}` : 'Szczegóły działu'} subtitle="kliknij dział po lewej">
-                    {sel && (
-                        <>
-                            <div className="mb-4 grid grid-cols-4 gap-2">
-                                {[
-                                    { l: 'r/r', v: sel.yoy != null ? `${formatDecimalPL(sel.yoy, 1)}%` : '—' },
-                                    { l: 'm/m', v: sel.mom != null ? `${formatDecimalPL(sel.mom, 1)}%` : '—' },
-                                    { l: 'waga', v: `${formatDecimalPL(sel.weight, 1)}%` },
-                                    { l: 'wkład', v: sel.contribution != null ? `${sel.contribution > 0 ? '+' : ''}${formatDecimalPL(sel.contribution, 2)}` : '—' },
-                                ].map((x) => (
-                                    <div key={x.l} className="rounded-xl border border-mk-border p-2 text-center">
-                                        <div className="text-[11px] text-mk-muted">{x.l}</div>
-                                        <div className="mt-0.5 text-base font-bold tnum text-mk-text">{x.v}</div>
-                                    </div>
-                                ))}
-                            </div>
-                            {selHistory.length > 1 ? (
-                                <InteractiveChart data={selHistory} xKey="date" height={200} unit="%" valueFormatter={(v) => formatDecimalPL(v, 1)} xTickFormatter={monthTick}
-                                    series={[{ key: 'value', name: `${sel.name} r/r`, color: selColor, type: 'area', strokeWidth: 2.5 }]} />
-                            ) : <p className="py-8 text-center text-sm text-mk-faint">Krótka historia (dane od 2026).</p>}
-
-                            {subs.length > 0 && (
-                                <div className="mt-4 border-t border-mk-border pt-3">
-                                    <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-mk-muted">Szczegóły działu · {subs.length} kategorii (r/r)</div>
-                                    <div className="max-h-[240px] space-y-1 overflow-auto pr-1">
-                                        {subs.map((s) => {
-                                            const y = s.yoy ?? 0;
-                                            const w = (Math.abs(y) / maxSubAbs) * 100;
-                                            return (
-                                                <div key={s.code} className="flex items-center gap-2 text-xs">
-                                                    <span className="w-36 shrink-0 truncate text-mk-text-soft" title={s.name}>{s.name}</span>
-                                                    <span className="h-2.5 flex-1 rounded-full bg-mk-surface-alt"><span className="block h-2.5 rounded-full" style={{ width: `${w}%`, marginLeft: y < 0 ? 'auto' : undefined, background: y >= 0 ? selColor : '#16A34A' }} /></span>
-                                                    <span className="w-12 shrink-0 text-right font-semibold tnum" style={{ color: y >= 0 ? '#DC2626' : '#16A34A' }}>{y > 0 ? '+' : ''}{formatDecimalPL(y, 1)}%</span>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-                            )}
-                        </>
-                    )}
-                </SectionCard>
-            </div>
+            {/* ── Kontrybucje do inflacji (pełna szerokość, klik → drawer) ── */}
+            <SectionCard title="Kontrybucje do inflacji" subtitle="waga × dynamika = wkład (pp) · kliknij dział, aby zobaczyć szczegóły i 10-letni trend">
+                <div className="space-y-1">
+                    {contrib.map((d) => {
+                        const c = d.contribution ?? 0;
+                        const w = (Math.abs(c) / maxAbs) * 100;
+                        return (
+                            <button key={d.code} onClick={() => openDiv(d.code)}
+                                className="group flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-left transition-colors hover:bg-mk-surface-alt">
+                                <span className="w-[15rem] shrink-0 truncate text-sm font-medium text-mk-text" title={d.name}><span className="mr-1.5 text-xs text-mk-faint">{d.code}</span>{d.name}</span>
+                                <span className="w-14 shrink-0 text-right text-xs tnum text-mk-muted">{d.yoy != null ? `${d.yoy > 0 ? '+' : ''}${formatDecimalPL(d.yoy, 1)}%` : '—'}</span>
+                                <span className="h-3 flex-1 rounded-full bg-mk-surface-alt"><span className="block h-3 rounded-full" style={{ width: `${w}%`, background: d.color }} /></span>
+                                <span className="w-14 shrink-0 text-right text-sm font-semibold tnum" style={{ color: c >= 0 ? '#0F172A' : '#16A34A' }}>{c > 0 ? '+' : ''}{formatDecimalPL(c, 2)}</span>
+                                <ChevronRight size={16} className="shrink-0 text-mk-faint transition-transform group-hover:translate-x-0.5 group-hover:text-mk-muted" />
+                            </button>
+                        );
+                    })}
+                </div>
+            </SectionCard>
 
             {/* ── Koszyk (donut) + tabela działów ── */}
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
@@ -257,8 +244,64 @@ export function InflacjaFull() {
 
             <div className="rounded-xl bg-mk-surface-alt p-4 text-sm text-mk-text-soft">
                 <span className="font-semibold text-mk-text">Źródło: </span>GUS (DBW) — krajowy CPI (COICOP 2018 od 2026, COICOP 1999 do 2025); trend 10-letni uzupełniony szkieletem HICP (Eurostat) sprzed okresu danych krajowych.
-                Działy i podkategorie (klasy COICOP 4-cyfrowe, np. Żywność → pieczywo/mięso/nabiał) — dynamiki oficjalne z GUS; wagi koszyka przybliżone. Inflacja bazowa: HICP core (Eurostat).
+                Działy i podkategorie (klasy COICOP 4-cyfrowe, np. Żywność → pieczywo/mięso/nabiał) — dynamiki oficjalne z GUS; wagi koszyka przybliżone.
             </div>
+
+            {/* ── Drawer: szczegóły klikniętego działu ── */}
+            <Drawer open={drawerOpen && !!sel} onClose={() => setDrawerOpen(false)} accent={selColor}
+                title={sel ? `${sel.code} · ${sel.name}` : ''} subtitle={sel ? `waga ${formatDecimalPL(sel.weight, 1)}% koszyka inflacyjnego` : ''}>
+                {sel && (
+                    <div className="space-y-5">
+                        <div className="grid grid-cols-4 gap-2">
+                            {[
+                                { l: 'r/r', v: sel.yoy != null ? `${sel.yoy > 0 ? '+' : ''}${formatDecimalPL(sel.yoy, 1)}%` : '—' },
+                                { l: 'm/m', v: sel.mom != null ? `${sel.mom > 0 ? '+' : ''}${formatDecimalPL(sel.mom, 1)}%` : '—' },
+                                { l: 'waga', v: `${formatDecimalPL(sel.weight, 1)}%` },
+                                { l: 'wkład', v: sel.contribution != null ? `${sel.contribution > 0 ? '+' : ''}${formatDecimalPL(sel.contribution, 2)}` : '—' },
+                            ].map((x) => (
+                                <div key={x.l} className="rounded-xl border border-mk-border p-2 text-center">
+                                    <div className="text-[11px] text-mk-muted">{x.l}</div>
+                                    <div className="mt-0.5 text-base font-bold tnum text-mk-text">{x.v}</div>
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className="rounded-xl bg-mk-surface-alt p-3.5 text-sm leading-relaxed text-mk-text-soft">
+                            <div className="mb-1.5 flex items-center gap-1.5 font-semibold text-mk-text"><Info size={15} style={{ color: selColor }} /> Co wpływa na tę kategorię</div>
+                            {DIVISION_INFO[sel.code] ?? 'Dynamika cen w tej kategorii zależy od popytu, kosztów i czynników sezonowych.'}
+                        </div>
+
+                        <div>
+                            <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-mk-muted">Dynamika r/r — 10 lat</div>
+                            {selLong.length > 1 ? (
+                                <InteractiveChart data={selLong} xKey="date" height={220} unit="%" showRange initialRange="ALL" ranges={['1R', '3L', '5L', 'ALL']}
+                                    valueFormatter={(v) => formatDecimalPL(v, 1)} xTickFormatter={monthTick} referenceLines={[{ y: 0, color: '#CBD2DD' }]}
+                                    series={[{ key: 'value', name: `${sel.name}`, color: selColor, type: 'area', strokeWidth: 2.5 }]} />
+                            ) : <div className="mk-skeleton h-[220px] w-full" />}
+                            <p className="mt-1.5 text-[11px] text-mk-faint">Historia 10-letnia: HICP (Eurostat), najnowsze miesiące — krajowy GUS.</p>
+                        </div>
+
+                        {subs.length > 0 && (
+                            <div className="border-t border-mk-border pt-4">
+                                <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-mk-muted">Szczegóły działu · {subs.length} kategorii (r/r)</div>
+                                <div className="space-y-1">
+                                    {subs.map((s) => {
+                                        const y = s.yoy ?? 0;
+                                        const w = (Math.abs(y) / maxSubAbs) * 100;
+                                        return (
+                                            <div key={s.code} className="flex items-center gap-2 text-xs">
+                                                <span className="w-40 shrink-0 truncate text-mk-text-soft" title={s.name}>{s.name}</span>
+                                                <span className="h-2.5 flex-1 rounded-full bg-mk-surface-alt"><span className="block h-2.5 rounded-full" style={{ width: `${w}%`, marginLeft: y < 0 ? 'auto' : undefined, background: y >= 0 ? selColor : '#16A34A' }} /></span>
+                                                <span className="w-12 shrink-0 text-right font-semibold tnum" style={{ color: y >= 0 ? '#DC2626' : '#16A34A' }}>{y > 0 ? '+' : ''}{formatDecimalPL(y, 1)}%</span>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
+            </Drawer>
         </div>
     );
 }

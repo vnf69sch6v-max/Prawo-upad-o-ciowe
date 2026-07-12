@@ -288,6 +288,16 @@ export function useHICPIndex(component: 'hicp_index' | 'hicp_food' | 'hicp_fuel'
 export function useHICPFoodYoY() { return useEurostat('hicp_food_yoy', 'PL'); }
 export function useHICPCoreYoY() { return useEurostat('hicp_core_yoy', 'PL'); }
 export function usePPI() { return useEurostat('ppi', 'PL'); }
+
+/** 10-letnia historia r/r dla dywizji COICOP (HICP, Eurostat) — leniwie, gdy podany kod (np. 'CP04'). */
+export function useHicpDivision(coicop?: string, since = `${new Date().getFullYear() - 9}-01`) {
+    return useQuery<EurostatResult>({
+        queryKey: ['hicp-div-long', coicop, since],
+        queryFn: () => fetchJSON(`/api/eurostat?dataset=prc_hicp_manr&coicop=${coicop}&geo=PL&since=${since}`),
+        enabled: !!coicop,
+        staleTime: 12 * 60 * 60 * 1000,
+    });
+}
 export function useBrent() { return useStooq('cb.c', 90); } // legacy — prefer useBrentMM()
 export function useUSDPLN() { return useNBPCurrencyHistory('usd', 90); }
 export function useEURPLN() { return useNBPCurrencyHistory('eur', 90); }

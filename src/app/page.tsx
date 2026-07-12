@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react';
 import { TrendingUp, Percent, Users, BarChart3, Factory, Euro } from 'lucide-react';
 import {
-    useInflationMonthly, useUnemploymentMonthly, useGDPQuarterly,
+    useCpiFull, useUnemploymentMonthly, useGDPQuarterly,
     useNBPInterestRates, useNBPTable, useNBPCurrencyHistory,
     useIndustrialProduction, useRetailSales,
     type EurostatResult, type NBPTable,
@@ -35,14 +35,14 @@ const monthTick = (d: string) => {
 
 type Metric = 'cpi' | 'unemployment' | 'industrial';
 const METRIC_META: Record<Metric, { label: string; color: string; type: 'area' | 'line' | 'bar'; source: string }> = {
-    cpi: { label: 'Inflacja CPI (r/r)', color: '#2563EB', type: 'area', source: 'Eurostat HICP' },
+    cpi: { label: 'Inflacja CPI (r/r)', color: '#2563EB', type: 'area', source: 'GUS (krajowy CPI)' },
     unemployment: { label: 'Stopa bezrobocia', color: '#0891B2', type: 'line', source: 'Eurostat LFS' },
     industrial: { label: 'Produkcja przemysłowa (r/r)', color: '#7C3AED', type: 'line', source: 'Eurostat' },
 };
 
 export default function OverviewPage() {
     // ── live data ──
-    const cpiQ = useInflationMonthly();
+    const cpiQ = useCpiFull();
     const unempQ = useUnemploymentMonthly();
     const gdpQ = useGDPQuarterly();
     const ratesQ = useNBPInterestRates();
@@ -51,7 +51,7 @@ export default function OverviewPage() {
     const indQ = useIndustrialProduction();
     const retailQ = useRetailSales();
 
-    const cpi = useMemo(() => plSeries(cpiQ.data), [cpiQ.data]);
+    const cpi = useMemo(() => (cpiQ.data?.headline ?? []).filter((h) => h.yoy != null).map((h) => ({ date: h.date, value: h.yoy as number })), [cpiQ.data]);
     const unemp = useMemo(() => plSeries(unempQ.data), [unempQ.data]);
     const gdp = useMemo(() => plSeries(gdpQ.data), [gdpQ.data]);
     const industrial = useMemo(() => plSeries(indQ.data), [indQ.data]);
