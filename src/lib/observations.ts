@@ -1,7 +1,7 @@
 // Derived "key observations" from live series — small, reusable signal helpers.
 
 export type Tone = 'up' | 'down' | 'neutral' | 'warn';
-export type InsightKind = 'trend' | 'record' | 'target' | 'accel' | 'level';
+export type InsightKind = 'trend' | 'record' | 'target' | 'accel' | 'level' | 'anomaly';
 
 export interface Observation {
     text: string;
@@ -108,6 +108,21 @@ export function analyzeSeries(label: string, raw: (number | null | undefined)[],
         if (Math.abs(d1) > 0.1 && Math.sign(d1) === Math.sign(d0) && Math.abs(d1) > Math.abs(d0) * 1.5) {
             const risingMove = d1 > 0;
             out.push({ kind: 'accel', tone: (risingMove ? !goodDown : goodDown) ? 'up' : 'down', text: `${label}: ${risingMove ? 'przyspiesza wzrost' : 'przyspiesza spadek'} (${fmt(d1, decimals, 'pp')})` });
+        }
+    }
+
+    // 5) Anomalia — bieżący odczyt mocno odstaje od ostatniej historii (z-score). Konserwatywny
+    // próg (≥2,8), by nie mylić z normalnym trendem; trafia na czoło jako najważniejszy sygnał.
+    if (v.length >= 8) {
+        const win = v.slice(-13, -1);
+        const mean = win.reduce((s, x) => s + x, 0) / win.length;
+        const sd = Math.sqrt(win.reduce((s, x) => s + (x - mean) ** 2, 0) / win.length);
+        if (sd > 0.01) {
+            const z = (last - mean) / sd;
+            if (Math.abs(z) >= 2.8) {
+                const high = z > 0;
+                out.unshift({ kind: 'anomaly', tone: 'warn', text: `${label}: nietypowy odczyt — ${high ? 'mocno powyżej' : 'mocno poniżej'} ostatniej normy (${f(last)} vs śr. ${f(mean)})` });
+            }
         }
     }
 

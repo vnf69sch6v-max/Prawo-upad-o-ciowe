@@ -14,6 +14,7 @@ const TONE: Record<Tone, { fg: string; bg: string }> = {
 };
 
 function iconFor(kind: InsightKind | undefined, tone: Tone): LucideIcon {
+    if (kind === 'anomaly') return AlertTriangle;
     if (kind === 'target') return Target;
     if (kind === 'record') return Award;
     if (kind === 'accel') return Zap;
