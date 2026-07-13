@@ -2,8 +2,8 @@
 
 import { useState, useMemo, useCallback } from 'react';
 import { useInitialTab } from '@/lib/use-initial-tab';
-import { Factory, HardHat, ShoppingCart, Truck, Radio, Info, Grid3x3, Landmark, Wallet, Percent } from 'lucide-react';
-import { useKoniunktura, useGovDebt, useGovDeficit, useBondYield10Y } from '@/lib/hooks';
+import { Factory, HardHat, ShoppingCart, Truck, Radio, Info, Grid3x3, Landmark, Wallet, Percent, Users } from 'lucide-react';
+import { useKoniunktura, useGovDebt, useGovDeficit, useBondYield10Y, useConsumerConfidence } from '@/lib/hooks';
 import { plSeries } from '@/lib/series';
 import { formatDecimalPL } from '@/lib/formatters';
 import { Segmented } from '@/components/ui/Segmented';
@@ -48,6 +48,10 @@ interface SectorRow { key: string; name: string; latest: number | null; delta: n
 
 function KoniunkturaSection() {
     const q = useKoniunktura();
+    const ccQ = useConsumerConfidence();
+    const cc = useMemo(() => plSeries(ccQ.data), [ccQ.data]);           // koniunktura konsumencka (saldo, miesięcznie)
+    const ccLast = cc.length ? cc[cc.length - 1] : null;
+    const ccPrev = cc.length > 1 ? cc[cc.length - 2] : null;
     const trend = useMemo(() => q.data?.trend ?? [], [q.data]);
     const sectors = useMemo(() => q.data?.sectors ?? [], [q.data]);
     const latest = q.data?.latest ?? null;
@@ -136,6 +140,21 @@ function KoniunkturaSection() {
                     )}
                 </SectionCard>
             </div>
+
+            <SectionCard title="Koniunktura konsumencka" subtitle="Eurostat · nastroje gospodarstw domowych (saldo) · miesięcznie · dopełnia klimat firm"
+                actions={<div className="flex items-center gap-2"><StaleBadge date={ccLast?.date ?? null} label="do" warnAfterMonths={3} /><CsvExport filename="koniunktura-konsumencka" headers={['Miesiąc', 'Saldo']} rows={cc.map((p) => [p.date, p.value])} /></div>}>
+                <div className="mb-3 flex flex-wrap items-center gap-4">
+                    <div><span className="text-3xl font-extrabold tnum" style={{ color: (ccLast?.value ?? 0) >= 0 ? '#16A34A' : '#DC2626' }}>{ccLast ? `${ccLast.value > 0 ? '+' : ''}${formatDecimalPL(ccLast.value, 1)}` : '—'}</span> <span className="text-sm text-mk-muted">saldo · {ccLast?.date ?? ''}</span></div>
+                    {ccLast && ccPrev && <span className="text-xs text-mk-faint">m/m {ccLast.value - ccPrev.value >= 0 ? '+' : ''}{formatDecimalPL(ccLast.value - ccPrev.value, 1)} pkt</span>}
+                </div>
+                {cc.length < 2 ? <div className="mk-skeleton h-[240px] w-full" /> : (
+                    <InteractiveChart data={cc} xKey="date" height={240} unit=" pkt" showRange initialRange="5L" ranges={['1R', '3L', '5L', 'ALL']}
+                        valueFormatter={(v) => formatDecimalPL(v, 1)} xTickFormatter={monthTick}
+                        referenceLines={[{ y: 0, label: '0 = neutralnie', color: '#CBD2DD' }]}
+                        series={[{ key: 'value', name: 'Koniunktura konsumencka', color: '#0891B2', type: 'area', strokeWidth: 2.5 }]} />
+                )}
+                <p className="mt-2 flex items-center gap-1 text-[11px] text-mk-faint"><Users size={11} /> Ujemne saldo = przewaga pesymizmu (typowe). Wskaźnik wyprzedzający konsumpcję prywatną — dopełnia klimat firm (wyżej).</p>
+            </SectionCard>
 
             <div className="rounded-xl bg-mk-surface-alt p-4 text-sm text-mk-text-soft">
                 <span className="font-semibold text-mk-text">Wskaźnik ogólnego klimatu koniunktury (GUS): </span>
