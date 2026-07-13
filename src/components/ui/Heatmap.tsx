@@ -17,6 +17,7 @@ interface HeatmapProps {
     onRowClick?: (rowKey: string) => void;
     cellHeight?: number;
     maxTicks?: number;                                // ile etykiet kolumn pokazać
+    scheme?: 'heat' | 'sentiment';                    // heat: +czerwony/−niebieski (inflacja); sentiment: +zielony/−czerwony (nastroje)
 }
 
 // Wielostopniowa interpolacja RGB.
@@ -31,9 +32,17 @@ function ramp(stops: [number, number, number][], t: number): string {
 const BASE: [number, number, number] = [241, 245, 249];                                   // ~white (0)
 const POS: [number, number, number][] = [BASE, [251, 191, 36], [234, 88, 12], [153, 27, 27]]; // → amber → orange → deep red
 const NEG: [number, number, number][] = [BASE, [125, 211, 252], [37, 99, 235], [30, 58, 138]]; // → sky → blue → navy
+// sentiment (nastroje): dodatnie = zielony (optymizm), ujemne = czerwony (pesymizm)
+const SENT_POS: [number, number, number][] = [BASE, [134, 239, 172], [34, 197, 94], [21, 128, 61]];
+const SENT_NEG: [number, number, number][] = [BASE, [252, 165, 165], [239, 68, 68], [153, 27, 27]];
 
-export function Heatmap({ rows, cols, valueAt, colTickFormatter = (c) => c, valueFormatter = (v) => v.toFixed(1), unit = '', onRowClick, cellHeight = 20, maxTicks = 14 }: HeatmapProps) {
+export function Heatmap({ rows, cols, valueAt, colTickFormatter = (c) => c, valueFormatter = (v) => v.toFixed(1), unit = '', onRowClick, cellHeight = 20, maxTicks = 14, scheme = 'heat' }: HeatmapProps) {
     const [hover, setHover] = useState<{ r: string; c: string; v: number | null } | null>(null);
+    const posRamp = scheme === 'sentiment' ? SENT_POS : POS;
+    const negRamp = scheme === 'sentiment' ? SENT_NEG : NEG;
+    const posColor = scheme === 'sentiment' ? '#16A34A' : '#B91C1C';
+    const negColor = scheme === 'sentiment' ? '#DC2626' : '#1D4ED8';
+    const toRgb = (c: [number, number, number]) => `rgb(${c[0]},${c[1]},${c[2]})`;
 
     // Domeny skali: symetryczna intensywność, sqrt dla kontrastu w środku zakresu (nie „gubi" normalnych okresów obok skoku 2022).
     const { posMax, negMax } = useMemo(() => {
@@ -43,7 +52,7 @@ export function Heatmap({ rows, cols, valueAt, colTickFormatter = (c) => c, valu
     }, [rows, cols, valueAt]);
     const colorOf = (v: number | null): string => {
         if (v == null) return '#F8FAFC';
-        return v >= 0 ? ramp(POS, Math.sqrt(v / posMax)) : ramp(NEG, Math.sqrt(v / negMax));
+        return v >= 0 ? ramp(posRamp, Math.sqrt(v / posMax)) : ramp(negRamp, Math.sqrt(v / negMax));
     };
 
     // Które kolumny dostają etykietę (przerzedzenie, zawsze pierwsza i ostatnia).
@@ -60,7 +69,7 @@ export function Heatmap({ rows, cols, valueAt, colTickFormatter = (c) => c, valu
                         <span className="text-mk-faint">·</span>
                         <span className="text-mk-muted">{colTickFormatter(hover.c)}</span>
                         <span className="text-mk-faint">·</span>
-                        <span className="font-semibold tnum" style={{ color: hover.v == null ? '#94A3B8' : hover.v >= 0 ? '#B91C1C' : '#1D4ED8' }}>
+                        <span className="font-semibold tnum" style={{ color: hover.v == null ? '#94A3B8' : hover.v >= 0 ? posColor : negColor }}>
                             {hover.v == null ? 'brak danych' : `${hover.v > 0 ? '+' : ''}${valueFormatter(hover.v)}${unit}`}
                         </span>
                     </>
@@ -123,7 +132,7 @@ export function Heatmap({ rows, cols, valueAt, colTickFormatter = (c) => c, valu
             {/* Legenda skali */}
             <div className="mt-3 flex items-center justify-end gap-2 text-[10px] text-mk-faint">
                 <span>{negMax < -0.15 ? `${valueFormatter(negMax)}${unit}` : '0'}</span>
-                <span className="h-2.5 w-40 rounded-full" style={{ background: `linear-gradient(90deg, ${negMax < -0.15 ? 'rgb(30,58,138), rgb(37,99,235),' : ''} rgb(241,245,249), rgb(251,191,36), rgb(234,88,12), rgb(153,27,27))` }} />
+                <span className="h-2.5 w-40 rounded-full" style={{ background: `linear-gradient(90deg, ${negMax < -0.15 ? negRamp.slice(1).reverse().map(toRgb).join(', ') + ', ' : ''}${posRamp.map(toRgb).join(', ')})` }} />
                 <span>+{valueFormatter(posMax)}{unit}</span>
             </div>
         </div>
