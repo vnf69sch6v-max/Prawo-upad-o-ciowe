@@ -7,6 +7,7 @@ const SCHEMES: Record<string, string[]> = {
     blue: ['#EFF6FF', '#DBEAFE', '#BFDBFE', '#93C5FD', '#60A5FA', '#3B82F6', '#2563EB', '#1D4ED8'],
     teal: ['#ECFEFF', '#CFFAFE', '#A5F3FC', '#67E8F9', '#22D3EE', '#06B6D4', '#0891B2', '#0E7490'],
     violet: ['#F5F3FF', '#EDE9FE', '#DDD6FE', '#C4B5FD', '#A78BFA', '#8B5CF6', '#7C3AED', '#6D28D9'],
+    amber: ['#FFFBEB', '#FEF3C7', '#FDE68A', '#FCD34D', '#FBBF24', '#F59E0B', '#D97706', '#B45309'],
 };
 
 export interface ChoroItem { slug: string; name: string; value: number | null }
@@ -35,7 +36,7 @@ export function Choropleth({ items, format, labelFormat, scheme = 'blue', revers
     const max = vals.length ? Math.max(...vals) : 1;
     const pal = SCHEMES[scheme];
     const norm = (v: number) => {
-        let t = max > min ? (v - min) / (max - min) : 0.5;
+        const t = max > min ? (v - min) / (max - min) : 0.5;
         return reverse ? 1 - t : t;
     };
     const colorAt = (v: number | null) => (v == null ? '#E5E7EB' : pal[Math.min(pal.length - 1, Math.max(0, Math.floor(norm(v) * pal.length)))]);

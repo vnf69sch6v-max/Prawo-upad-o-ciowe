@@ -8,7 +8,7 @@ import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import {
     LayoutDashboard, Tag, Factory, Users, TrendingUp, Sparkles, Map, Search,
-    Banknote, Percent, Landmark, LineChart, Home, Wheat, HardHat, Fuel, Building2, CornerDownLeft,
+    Banknote, Percent, Landmark, LineChart, Home, Wheat, HardHat, Fuel, Building2, CornerDownLeft, Briefcase,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -43,6 +43,7 @@ const COMMANDS: Cmd[] = [
     { id: 'ind-taylor', group: 'Wskaźniki', label: 'Reguła Taylora', sub: 'Prognozy', keywords: 'taylor stopa optymalna reguła', href: '/prognozy?tab=taylor', icon: Percent },
     { id: 'ind-regpkb', group: 'Wskaźniki', label: 'PKB regionalne', sub: 'Regiony', keywords: 'województwa pkb per capita mapa', href: '/regiony?tab=pkb', icon: Map },
     { id: 'ind-demo', group: 'Wskaźniki', label: 'Demografia', sub: 'Regiony', keywords: 'ludność demografia województwa', href: '/regiony?tab=demografia', icon: Users },
+    { id: 'ind-regpraca', group: 'Wskaźniki', label: 'Bezrobocie i płace wg województw', sub: 'Regiony', keywords: 'bezrobocie regionalne województwa mapa płace wynagrodzenia', href: '/regiony?tab=praca', icon: Briefcase },
     { id: 'ind-smup', group: 'Wskaźniki', label: 'Samorząd (SMUP)', sub: 'Regiony', keywords: 'samorząd usługi publiczne smup jst', href: '/regiony?tab=samorzad', icon: Landmark },
 
     // ── Działy inflacji (COICOP) → /ceny ──
