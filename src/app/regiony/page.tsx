@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useInitialTab } from '@/lib/use-initial-tab';
 import { MapPin, TrendingUp, Users, Scale, Award } from 'lucide-react';
 import { Segmented } from '@/components/ui/Segmented';
 import { SmupExplorer } from '@/components/sections/smup-explorer';
@@ -116,6 +117,7 @@ function Demografia() {
 
 export default function RegionyPage() {
     const [tab, setTab] = useState<Tab>('pkb');
+    useInitialTab(TABS.map((t) => t.value), setTab);
     return (
         <div className="mk-fade-in space-y-6">
             <div className="flex flex-wrap items-end justify-between gap-4">

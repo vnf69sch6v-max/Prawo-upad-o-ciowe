@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
 import { AppHeader } from './AppHeader';
 import { AppFooter } from './AppFooter';
+import { CommandPalette } from './CommandPalette';
 
 /** Routes that render without the app chrome (header/nav/footer). */
 const BARE_ROUTES = ['/login'];
@@ -19,6 +20,7 @@ export function ShellFrame({ children }: { children: ReactNode }) {
             <AppHeader />
             <main className="mx-auto w-full max-w-[1440px] flex-1 px-4 py-6 md:px-6 md:py-8">{children}</main>
             <AppFooter />
+            <CommandPalette />
         </div>
     );
 }

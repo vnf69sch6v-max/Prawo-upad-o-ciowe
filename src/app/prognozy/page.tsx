@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { useInitialTab } from '@/lib/use-initial-tab';
 import { Sparkles, Scale, TrendingUp, Target, BarChart3, Gauge, Home } from 'lucide-react';
 import { useCPIBasket, useInflationMonthly, useGDPQuarterly, useNBPInterestRates, useIndustrialProduction, useRetailSales, useWibor } from '@/lib/hooks';
 import { plSeries, lastOf, fmtPL, monthTick } from '@/lib/series';
@@ -302,6 +303,7 @@ const SECTIONS: { value: Section; label: string }[] = [
 
 export default function PrognozyPage() {
     const [section, setSection] = useState<Section>('inflacja');
+    useInitialTab(SECTIONS.map((s) => s.value), setSection);
     return (
         <div className="mk-fade-in space-y-6">
             <div className="flex flex-wrap items-end justify-between gap-4">

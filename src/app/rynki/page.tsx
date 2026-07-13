@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { useInitialTab } from '@/lib/use-initial-tab';
 import { Euro, DollarSign, Coins, TrendingUp, Ship, Landmark, PoundSterling, Fuel, Flame, Gem, Factory, BarChart3 } from 'lucide-react';
 import {
     useNBPTable, useNBPCurrencyHistory, useGold, useStooq,
@@ -291,6 +292,7 @@ const SECTIONS: { value: Section; label: string }[] = [
 
 export default function RynkiPage() {
     const [section, setSection] = useState<Section>('kursy');
+    useInitialTab(SECTIONS.map((s) => s.value), setSection);
     return (
         <div className="mk-fade-in space-y-6">
             <div className="flex flex-wrap items-end justify-between gap-4">

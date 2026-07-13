@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useInitialTab } from '@/lib/use-initial-tab';
 import { Factory, Home, HardHat, Wheat } from 'lucide-react';
 import { Segmented } from '@/components/ui/Segmented';
 import { InflacjaFull } from '@/components/sections/InflacjaFull';
@@ -17,6 +18,7 @@ const TABS: { value: Tab; label: string }[] = [
 
 export default function CenyPage() {
     const [tab, setTab] = useState<Tab>('inflacja');
+    useInitialTab(TABS.map((t) => t.value), setTab);
     return (
         <div className="mk-fade-in space-y-6">
             <div className="flex flex-wrap items-end justify-between gap-4">

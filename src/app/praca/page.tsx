@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useInitialTab } from '@/lib/use-initial-tab';
 import { Briefcase, DoorOpen, Activity, Percent } from 'lucide-react';
 import { useBdlSeries } from '@/lib/hooks';
 import { formatDecimalPL } from '@/lib/formatters';
@@ -74,6 +75,7 @@ function BaelSection() {
 
 export default function RynekPracyPage() {
     const [tab, setTab] = useState<Tab>('bezrobocie');
+    useInitialTab(TABS.map((t) => t.value), setTab);
     return (
         <div className="mk-fade-in space-y-6">
             <div className="flex flex-wrap items-end justify-between gap-4">

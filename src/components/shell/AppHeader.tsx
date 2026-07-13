@@ -21,15 +21,16 @@ export function AppHeader() {
                 <TopNav className="ml-3 hidden xl:flex" />
 
                 <div className="ml-auto flex items-center gap-1.5">
-                    <div className="relative hidden md:block">
-                        <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-mk-faint" />
-                        <input
-                            className="mk-input"
-                            style={{ paddingLeft: 34, width: 200, height: 38 }}
-                            placeholder="Szukaj wskaźnika…"
-                            aria-label="Szukaj"
-                        />
-                    </div>
+                    <button
+                        onClick={() => window.dispatchEvent(new Event('mk:palette'))}
+                        className="group hidden h-[38px] items-center gap-2 rounded-lg border border-mk-border bg-mk-surface-alt px-3 text-mk-faint transition-colors hover:border-mk-primary/40 hover:text-mk-muted md:flex"
+                        style={{ width: 220 }}
+                        aria-label="Szukaj (⌘K)"
+                    >
+                        <Search size={16} className="shrink-0" />
+                        <span className="flex-1 text-left text-sm">Szukaj wskaźnika…</span>
+                        <kbd className="shrink-0 rounded border border-mk-border bg-mk-surface px-1.5 py-0.5 text-[11px] font-medium tracking-wide">⌘K</kbd>
+                    </button>
                     <button className="relative flex h-9 w-9 items-center justify-center rounded-lg text-mk-muted transition-colors hover:bg-mk-surface-alt hover:text-mk-text" aria-label="Powiadomienia">
                         <Bell size={18} />
                         <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-mk-negative ring-2 ring-white" />

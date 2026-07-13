@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useInitialTab } from '@/lib/use-initial-tab';
 import { Factory, HardHat, ShoppingCart, Truck, Radio } from 'lucide-react';
 import { useKoniunktura } from '@/lib/hooks';
 import { formatDecimalPL } from '@/lib/formatters';
@@ -70,6 +71,7 @@ function KoniunkturaSection() {
 
 export default function GospodarkaPage() {
     const [tab, setTab] = useState<Tab>('aktywnosc');
+    useInitialTab(TABS.map((t) => t.value), setTab);
     return (
         <div className="mk-fade-in space-y-6">
             <div className="flex flex-wrap items-end justify-between gap-4">
