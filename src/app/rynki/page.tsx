@@ -303,10 +303,12 @@ export default function RynkiPage() {
                 <Segmented value={section} onChange={setSection} options={SECTIONS} aria-label="Sekcja" />
             </div>
 
-            {section === 'kursy' && <KursySection />}
-            {section === 'stopy' && <StopySection />}
-            {section === 'gpw' && <GpwSection />}
-            {section === 'handel' && <HandelSection />}
+            <div key={section} className="mk-fade-in">
+                {section === 'kursy' && <KursySection />}
+                {section === 'stopy' && <StopySection />}
+                {section === 'gpw' && <GpwSection />}
+                {section === 'handel' && <HandelSection />}
+            </div>
         </div>
     );
 }

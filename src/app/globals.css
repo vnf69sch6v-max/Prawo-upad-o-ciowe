@@ -362,11 +362,11 @@ button.mk-card,
   display: inline-block;
 }
 
-/* Fade-in for content */
+/* Fade-in for content — nowoczesny „confident settle" (fast-out, slow-arrive) */
 @keyframes mk-fade-in {
   from {
     opacity: 0;
-    transform: translateY(4px);
+    transform: translateY(6px);
   }
 
   to {
@@ -376,7 +376,31 @@ button.mk-card,
 }
 
 .mk-fade-in {
-  animation: mk-fade-in .3s ease-out both;
+  animation: mk-fade-in .34s cubic-bezier(.22, 1, .36, 1) both;
+}
+
+/* Staggered entrance — bezpośrednie dzieci kaskadowo wjeżdżają (klaryfikuje układ, np. karty KPI) */
+.mk-stagger>* {
+  animation: mk-fade-in .44s cubic-bezier(.22, 1, .36, 1) both;
+}
+
+.mk-stagger>*:nth-child(1) { animation-delay: .02s; }
+.mk-stagger>*:nth-child(2) { animation-delay: .06s; }
+.mk-stagger>*:nth-child(3) { animation-delay: .10s; }
+.mk-stagger>*:nth-child(4) { animation-delay: .14s; }
+.mk-stagger>*:nth-child(5) { animation-delay: .18s; }
+.mk-stagger>*:nth-child(6) { animation-delay: .22s; }
+.mk-stagger>*:nth-child(7) { animation-delay: .26s; }
+.mk-stagger>*:nth-child(n+8) { animation-delay: .30s; }
+
+/* Dostępność: szanuj prefers-reduced-motion — treść pojawia się natychmiast */
+@media (prefers-reduced-motion: reduce) {
+
+  .mk-fade-in,
+  .mk-stagger>* {
+    animation-duration: .01ms !important;
+    animation-delay: 0ms !important;
+  }
 }
 
 /* Skeleton shimmer */

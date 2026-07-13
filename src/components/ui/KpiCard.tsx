@@ -2,6 +2,7 @@
 
 import type { LucideIcon } from 'lucide-react';
 import { DeltaChip } from './DeltaChip';
+import { AnimatedNumber } from './AnimatedNumber';
 
 export type AccentKey = 'blue' | 'green' | 'amber' | 'violet' | 'rose' | 'cyan' | 'slate';
 
@@ -57,7 +58,7 @@ export function KpiCard({ label, value, unit, delta, accent = 'blue', icon: Icon
                     )}
                 </div>
                 <div className="mt-3 flex items-baseline gap-1">
-                    <span className="mk-kpi-value">{value}</span>
+                    <span className="mk-kpi-value"><AnimatedNumber value={value} /></span>
                     {unit && <span className="text-2xl font-semibold text-mk-muted">{unit}</span>}
                 </div>
                 {delta && (

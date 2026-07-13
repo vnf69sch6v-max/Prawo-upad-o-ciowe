@@ -29,6 +29,7 @@ export default function CenyPage() {
                 <Segmented value={tab} onChange={setTab} options={TABS} aria-label="Sekcja cen" />
             </div>
 
+            <div key={tab} className="mk-fade-in">
             {tab === 'inflacja' && <InflacjaFull />}
             {tab === 'ppi' && (
                 <DbwPriceSection title="PPI — ceny produkcji sprzedanej przemysłu" subtitle="GUS · r/r (%)" csvName="ppi" refline={0}
@@ -65,6 +66,7 @@ export default function CenyPage() {
                     ]}
                     note="Dynamika cen skupu podstawowych produktów rolnych." />
             )}
+            </div>
         </div>
     );
 }

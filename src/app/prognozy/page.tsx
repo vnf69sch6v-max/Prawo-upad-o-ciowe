@@ -314,10 +314,12 @@ export default function PrognozyPage() {
                 <Segmented value={section} onChange={setSection} options={SECTIONS} aria-label="Sekcja" />
             </div>
 
-            {section === 'inflacja' && <InflacjaNowcast />}
-            {section === 'pkb' && <PkbNowcast />}
-            {section === 'taylor' && <TaylorSection />}
-            {section === 'symulatory' && <Symulatory />}
+            <div key={section} className="mk-fade-in">
+                {section === 'inflacja' && <InflacjaNowcast />}
+                {section === 'pkb' && <PkbNowcast />}
+                {section === 'taylor' && <TaylorSection />}
+                {section === 'symulatory' && <Symulatory />}
+            </div>
         </div>
     );
 }

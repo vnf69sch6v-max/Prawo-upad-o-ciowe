@@ -128,9 +128,11 @@ export default function RegionyPage() {
                 <Segmented value={tab} onChange={setTab} options={TABS} aria-label="Sekcja regionów" />
             </div>
 
-            {tab === 'pkb' && <PkbRegionalne />}
-            {tab === 'demografia' && <Demografia />}
-            {tab === 'samorzad' && <SmupExplorer />}
+            <div key={tab} className="mk-fade-in">
+                {tab === 'pkb' && <PkbRegionalne />}
+                {tab === 'demografia' && <Demografia />}
+                {tab === 'samorzad' && <SmupExplorer />}
+            </div>
         </div>
     );
 }

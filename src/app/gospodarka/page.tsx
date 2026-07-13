@@ -186,8 +186,10 @@ export default function GospodarkaPage() {
                 <Segmented value={tab} onChange={setTab} options={TABS} aria-label="Sekcja gospodarki" />
             </div>
 
-            {tab === 'aktywnosc' && <AktywnoscSection />}
-            {tab === 'koniunktura' && <KoniunkturaSection />}
+            <div key={tab} className="mk-fade-in">
+                {tab === 'aktywnosc' && <AktywnoscSection />}
+                {tab === 'koniunktura' && <KoniunkturaSection />}
+            </div>
         </div>
     );
 }

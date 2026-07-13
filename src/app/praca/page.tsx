@@ -86,9 +86,11 @@ export default function RynekPracyPage() {
                 <Segmented value={tab} onChange={setTab} options={TABS} aria-label="Sekcja rynku pracy" />
             </div>
 
-            {tab === 'bezrobocie' && <RynekPracySection />}
-            {tab === 'zatrudnienie' && <ZatrudnienieSection />}
-            {tab === 'bael' && <BaelSection />}
+            <div key={tab} className="mk-fade-in">
+                {tab === 'bezrobocie' && <RynekPracySection />}
+                {tab === 'zatrudnienie' && <ZatrudnienieSection />}
+                {tab === 'bael' && <BaelSection />}
+            </div>
         </div>
     );
 }
