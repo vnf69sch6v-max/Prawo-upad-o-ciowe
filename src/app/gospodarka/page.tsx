@@ -20,12 +20,14 @@ import { InsightBar } from '@/components/ui/InsightBar';
 import { analyzeSeries } from '@/lib/observations';
 import { AktywnoscSection } from '@/components/sections/macro-sections';
 import { RzadyGospodarka } from '@/components/sections/RzadyGospodarka';
+import { KorelacjeMakro } from '@/components/sections/KorelacjeMakro';
 
-type Tab = 'aktywnosc' | 'koniunktura' | 'finanse';
+type Tab = 'aktywnosc' | 'koniunktura' | 'finanse' | 'korelacje';
 const TABS: { value: Tab; label: string }[] = [
     { value: 'aktywnosc', label: 'PKB i aktywność' },
     { value: 'koniunktura', label: 'Koniunktura' },
     { value: 'finanse', label: 'Finanse publiczne' },
+    { value: 'korelacje', label: 'Zależności' },
 ];
 
 const monthTick = (d: string) => { const [y, m] = d.split('-'); return m ? `${m}.${y.slice(2)}` : d; };
@@ -279,6 +281,7 @@ export default function GospodarkaPage() {
                 {tab === 'aktywnosc' && <AktywnoscSection />}
                 {tab === 'koniunktura' && <KoniunkturaSection />}
                 {tab === 'finanse' && <FinansePubliczne />}
+                {tab === 'korelacje' && <KorelacjeMakro />}
             </div>
         </div>
     );
