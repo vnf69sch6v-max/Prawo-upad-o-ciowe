@@ -299,6 +299,8 @@ export function useConsumerConfidence() { return useEurostat('consumer_confidenc
 export function useBondYield10Y() { return useEurostat('bond_yield_10y', 'PL'); }
 export function useGovDebt() { return useEurostat('gov_debt', 'PL'); }
 export function useGovDeficit() { return useEurostat('gov_deficit', 'PL'); }
+export function useGDPAnnual() { return useEurostat('gdp_annual', 'PL'); }
+export function useCPIAnnual() { return useEurostat('cpi_annual', 'PL'); }
 
 // ─── CPI Forecaster Data Hooks ──────────────────────────
 

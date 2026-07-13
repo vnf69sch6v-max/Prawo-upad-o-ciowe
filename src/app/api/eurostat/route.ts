@@ -136,6 +136,16 @@ const DATASETS: Record<string, { params: Record<string, string>; label: string; 
         params: { na_item: 'B9', sector: 'S13', unit: 'PC_GDP' },
         label: 'Wynik sektora GG (% PKB)',
     },
+    // PKB realny — dynamika roczna (do widoku „rządy a gospodarka", od 1996)
+    gdp_annual: {
+        params: { na_item: 'B1GQ', unit: 'CLV_PCH_PRE' },
+        label: 'PKB realny r/r (rocznie, %)',
+    },
+    // Inflacja HICP — średnioroczna (od 1997)
+    cpi_annual: {
+        params: { coicop: 'CP00', unit: 'RCH_A_AVG' },
+        label: 'Inflacja HICP średnioroczna (%)',
+    },
 };
 
 // Eurostat dataset code mapping
@@ -166,6 +176,8 @@ const DATASET_CODES: Record<string, string> = {
     bond_yield_10y: 'irt_lt_mcby_m',
     gov_debt: 'gov_10dd_edpt1',
     gov_deficit: 'gov_10dd_edpt1',
+    gdp_annual: 'nama_10_gdp',
+    cpi_annual: 'prc_hicp_aind',
 };
 
 interface EurostatTimeSeries {

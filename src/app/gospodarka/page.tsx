@@ -19,6 +19,7 @@ import { DataTable, type Column } from '@/components/ui/DataTable';
 import { InsightBar } from '@/components/ui/InsightBar';
 import { analyzeSeries } from '@/lib/observations';
 import { AktywnoscSection } from '@/components/sections/macro-sections';
+import { RzadyGospodarka } from '@/components/sections/RzadyGospodarka';
 
 type Tab = 'aktywnosc' | 'koniunktura' | 'finanse';
 const TABS: { value: Tab; label: string }[] = [
@@ -198,6 +199,7 @@ function FinansePubliczne() {
     const debtQ = useGovDebt();
     const defQ = useGovDeficit();
     const yieldQ = useBondYield10Y();
+    const [fpView, setFpView] = useState<'wskazniki' | 'rzady'>('wskazniki');
 
     const debt = useMemo(() => plSeries(debtQ.data), [debtQ.data]);       // rocznie, % PKB
     const deficit = useMemo(() => plSeries(defQ.data), [defQ.data]);      // rocznie, % PKB (ujemne = deficyt)
@@ -212,10 +214,13 @@ function FinansePubliczne() {
         ...analyzeSeries('Rentowność 10Y', yield10.map((p) => p.value), { unit: '%', decimals: 2, goodDown: true, period: 'month' }).slice(0, 1),
     ], [debt, deficit, yield10]);
 
-    if (debtQ.isLoading || defQ.isLoading || yieldQ.isLoading) return <div className="grid gap-4 lg:grid-cols-3">{Array.from({ length: 3 }).map((_, i) => <div key={i} className="mk-card h-28" />)}</div>;
+    const toggle = <div className="flex justify-end"><Segmented value={fpView} onChange={setFpView} options={[{ value: 'wskazniki', label: 'Wskaźniki' }, { value: 'rzady', label: 'Rządy a gospodarka' }]} aria-label="Widok finansów publicznych" /></div>;
+    if (fpView === 'rzady') return <div className="space-y-6">{toggle}<RzadyGospodarka /></div>;
+    if (debtQ.isLoading || defQ.isLoading || yieldQ.isLoading) return <div className="space-y-6">{toggle}<div className="grid gap-4 lg:grid-cols-3">{Array.from({ length: 3 }).map((_, i) => <div key={i} className="mk-card h-28" />)}</div></div>;
 
     return (
         <div className="space-y-6">
+            {toggle}
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <KpiCard label="Dług publiczny" value={dL ? formatDecimalPL(dL.value, 1) : '—'} unit="% PKB" accent="rose" icon={Landmark}
                     delta={dL && dP ? { value: +(dL.value - dP.value).toFixed(1), unit: 'pp', invert: true } : undefined} footnote={dL ? `Eurostat · ${dL.date} · próg UE 60%` : 'Eurostat'} />
