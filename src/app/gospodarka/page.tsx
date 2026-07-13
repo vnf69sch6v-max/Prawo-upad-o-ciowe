@@ -2,8 +2,9 @@
 
 import { useState, useMemo, useCallback } from 'react';
 import { useInitialTab } from '@/lib/use-initial-tab';
-import { Factory, HardHat, ShoppingCart, Truck, Radio, Info, Grid3x3 } from 'lucide-react';
-import { useKoniunktura } from '@/lib/hooks';
+import { Factory, HardHat, ShoppingCart, Truck, Radio, Info, Grid3x3, Landmark, Wallet, Percent } from 'lucide-react';
+import { useKoniunktura, useGovDebt, useGovDeficit, useBondYield10Y } from '@/lib/hooks';
+import { plSeries } from '@/lib/series';
 import { formatDecimalPL } from '@/lib/formatters';
 import { Segmented } from '@/components/ui/Segmented';
 import { KpiCard, type AccentKey } from '@/components/ui/KpiCard';
@@ -19,10 +20,11 @@ import { InsightBar } from '@/components/ui/InsightBar';
 import { analyzeSeries } from '@/lib/observations';
 import { AktywnoscSection } from '@/components/sections/macro-sections';
 
-type Tab = 'aktywnosc' | 'koniunktura';
+type Tab = 'aktywnosc' | 'koniunktura' | 'finanse';
 const TABS: { value: Tab; label: string }[] = [
     { value: 'aktywnosc', label: 'PKB i aktywność' },
     { value: 'koniunktura', label: 'Koniunktura' },
+    { value: 'finanse', label: 'Finanse publiczne' },
 ];
 
 const monthTick = (d: string) => { const [y, m] = d.split('-'); return m ? `${m}.${y.slice(2)}` : d; };
@@ -173,6 +175,69 @@ function KoniunkturaSection() {
     );
 }
 
+function FinansePubliczne() {
+    const debtQ = useGovDebt();
+    const defQ = useGovDeficit();
+    const yieldQ = useBondYield10Y();
+
+    const debt = useMemo(() => plSeries(debtQ.data), [debtQ.data]);       // rocznie, % PKB
+    const deficit = useMemo(() => plSeries(defQ.data), [defQ.data]);      // rocznie, % PKB (ujemne = deficyt)
+    const yield10 = useMemo(() => plSeries(yieldQ.data), [yieldQ.data]);  // miesięcznie, %
+    const last = <T,>(a: T[]) => (a.length ? a[a.length - 1] : null);
+    const prevOf = <T,>(a: T[]) => (a.length > 1 ? a[a.length - 2] : null);
+    const dL = last(debt), dP = prevOf(debt), fL = last(deficit), fP = prevOf(deficit), yL = last(yield10), yP = prevOf(yield10);
+
+    const insights = useMemo(() => [
+        ...analyzeSeries('Dług publiczny', debt.map((p) => p.value), { unit: '% PKB', decimals: 1, goodDown: true, period: 'year', target: { value: 60, label: 'próg UE 60%' } }).slice(0, 2),
+        ...analyzeSeries('Wynik sektora GG', deficit.map((p) => p.value), { unit: '% PKB', decimals: 1, period: 'year' }).slice(0, 1),
+        ...analyzeSeries('Rentowność 10Y', yield10.map((p) => p.value), { unit: '%', decimals: 2, goodDown: true, period: 'month' }).slice(0, 1),
+    ], [debt, deficit, yield10]);
+
+    if (debtQ.isLoading || defQ.isLoading || yieldQ.isLoading) return <div className="grid gap-4 lg:grid-cols-3">{Array.from({ length: 3 }).map((_, i) => <div key={i} className="mk-card h-28" />)}</div>;
+
+    return (
+        <div className="space-y-6">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <KpiCard label="Dług publiczny" value={dL ? formatDecimalPL(dL.value, 1) : '—'} unit="% PKB" accent="rose" icon={Landmark}
+                    delta={dL && dP ? { value: +(dL.value - dP.value).toFixed(1), unit: 'pp', invert: true } : undefined} footnote={dL ? `Eurostat · ${dL.date} · próg UE 60%` : 'Eurostat'} />
+                <KpiCard label="Wynik sektora fin. publ." value={fL ? `${fL.value > 0 ? '+' : ''}${formatDecimalPL(fL.value, 1)}` : '—'} unit="% PKB" accent={fL && fL.value < -3 ? 'rose' : 'amber'} icon={Wallet}
+                    delta={fL && fP ? { value: +(fL.value - fP.value).toFixed(1), unit: 'pp' } : undefined} footnote={fL ? `${fL.value < 0 ? 'deficyt' : 'nadwyżka'} · ${fL.date} · próg −3%` : 'Eurostat'} />
+                <KpiCard label="Rentowność 10Y" value={yL ? formatDecimalPL(yL.value, 2) : '—'} unit="%" accent="violet" icon={Percent}
+                    delta={yL && yP ? { value: +(yL.value - yP.value).toFixed(2), unit: 'pp', invert: true } : undefined} footnote={yL ? `Eurostat · ${yL.date} · koszt długu` : 'Eurostat'} />
+            </div>
+
+            {insights.length > 0 && <InsightBar items={insights} />}
+
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                <SectionCard title="Dług publiczny (% PKB)" subtitle="Eurostat · sektor general government · rocznie"
+                    actions={<div className="flex items-center gap-2"><StaleBadge date={dL?.date ?? null} label="do" warnAfterMonths={18} /><CsvExport filename="dlug-publiczny" headers={['Rok', '% PKB']} rows={debt.map((p) => [p.date, p.value])} /></div>}>
+                    <InteractiveChart data={debt} xKey="date" height={280} unit="% PKB" valueFormatter={(v) => formatDecimalPL(v, 1)}
+                        referenceLines={[{ y: 60, label: 'próg UE 60%', color: '#DC2626' }]}
+                        series={[{ key: 'value', name: 'Dług', color: '#E11D48', type: 'area', strokeWidth: 2.5 }]} />
+                </SectionCard>
+                <SectionCard title="Wynik sektora finansów publ. (% PKB)" subtitle="Eurostat · ujemne = deficyt · rocznie"
+                    actions={<CsvExport filename="wynik-gg" headers={['Rok', '% PKB']} rows={deficit.map((p) => [p.date, p.value])} />}>
+                    <InteractiveChart data={deficit} xKey="date" height={280} unit="% PKB" valueFormatter={(v) => formatDecimalPL(v, 1)}
+                        referenceLines={[{ y: -3, label: 'próg UE −3%', color: '#DC2626' }, { y: 0, color: '#CBD2DD' }]}
+                        series={[{ key: 'value', name: 'Wynik GG', color: '#D97706', type: 'area', strokeWidth: 2 }]} />
+                </SectionCard>
+            </div>
+
+            <SectionCard title="Rentowność obligacji 10-letnich (%)" subtitle="Eurostat · kryterium z Maastricht · miesięcznie · rynkowy koszt obsługi długu"
+                actions={<div className="flex items-center gap-2"><StaleBadge date={yL?.date ?? null} label="do" warnAfterMonths={3} /><CsvExport filename="rentownosc-10y" headers={['Miesiąc', '%']} rows={yield10.map((p) => [p.date, p.value])} /></div>}>
+                <InteractiveChart data={yield10} xKey="date" height={280} unit="%" showRange initialRange="5L" ranges={['1R', '3L', '5L', 'ALL']}
+                    valueFormatter={(v) => formatDecimalPL(v, 2)} xTickFormatter={monthTick}
+                    series={[{ key: 'value', name: 'Rentowność 10Y', color: '#7C3AED', type: 'area', strokeWidth: 2.5 }]} />
+            </SectionCard>
+
+            <div className="rounded-xl bg-mk-surface-alt p-4 text-sm text-mk-text-soft">
+                <span className="font-semibold text-mk-text">Finanse publiczne (Eurostat / procedura nadmiernego deficytu): </span>
+                dług i wynik sektora general government względem PKB; progi z Maastricht: 60% (dług) i −3% (deficyt). Rentowność 10Y to rynkowy koszt finansowania długu.
+            </div>
+        </div>
+    );
+}
+
 export default function GospodarkaPage() {
     const [tab, setTab] = useState<Tab>('aktywnosc');
     useInitialTab(TABS.map((t) => t.value), setTab);
@@ -189,6 +254,7 @@ export default function GospodarkaPage() {
             <div key={tab} className="mk-fade-in">
                 {tab === 'aktywnosc' && <AktywnoscSection />}
                 {tab === 'koniunktura' && <KoniunkturaSection />}
+                {tab === 'finanse' && <FinansePubliczne />}
             </div>
         </div>
     );

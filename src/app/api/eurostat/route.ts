@@ -114,6 +114,28 @@ const DATASETS: Record<string, { params: Record<string, string>; label: string; 
         label: 'Current Account Balance (mln EUR)',
         since: '2024-01',
     },
+    // Koniunktura konsumencka — miesięcznie, saldo (ujemne = pesymizm)
+    consumer_confidence: {
+        params: { indic: 'BS-CSMCI', s_adj: 'SA', unit: 'BAL' },
+        label: 'Koniunktura konsumencka (saldo)',
+        since: '2018-01',
+    },
+    // Rentowność obligacji skarbowych 10Y (kryterium z Maastricht) — miesięcznie, %
+    bond_yield_10y: {
+        params: { int_rt: 'MCBY' },
+        label: 'Rentowność obligacji 10Y (%)',
+        since: '2018-01',
+    },
+    // Dług publiczny (sektor GG) — rocznie, % PKB
+    gov_debt: {
+        params: { na_item: 'GD', sector: 'S13', unit: 'PC_GDP' },
+        label: 'Dług publiczny (% PKB)',
+    },
+    // Deficyt/nadwyżka sektora finansów publicznych (net lending/borrowing) — rocznie, % PKB
+    gov_deficit: {
+        params: { na_item: 'B9', sector: 'S13', unit: 'PC_GDP' },
+        label: 'Wynik sektora GG (% PKB)',
+    },
 };
 
 // Eurostat dataset code mapping
@@ -140,6 +162,10 @@ const DATASET_CODES: Record<string, string> = {
     exports: 'bop_c6_m',
     imports: 'bop_c6_m',
     current_account: 'bop_c6_m',
+    consumer_confidence: 'ei_bsco_m',
+    bond_yield_10y: 'irt_lt_mcby_m',
+    gov_debt: 'gov_10dd_edpt1',
+    gov_deficit: 'gov_10dd_edpt1',
 };
 
 interface EurostatTimeSeries {

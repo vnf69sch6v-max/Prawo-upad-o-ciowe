@@ -294,6 +294,12 @@ export function useCurrentAccount() {
     return useEurostat('current_account', 'PL');
 }
 
+// ─── Nowe wskaźniki makro (Eurostat, dane realne PL) ─────
+export function useConsumerConfidence() { return useEurostat('consumer_confidence', 'PL'); }
+export function useBondYield10Y() { return useEurostat('bond_yield_10y', 'PL'); }
+export function useGovDebt() { return useEurostat('gov_debt', 'PL'); }
+export function useGovDeficit() { return useEurostat('gov_deficit', 'PL'); }
+
 // ─── CPI Forecaster Data Hooks ──────────────────────────
 
 export function useHICPIndex(component: 'hicp_index' | 'hicp_food' | 'hicp_fuel' | 'hicp_energy' | 'hicp_core' = 'hicp_index') {

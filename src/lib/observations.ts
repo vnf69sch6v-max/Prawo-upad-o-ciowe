@@ -23,13 +23,14 @@ export function consecutiveRun(values: number[], dir: 'down' | 'up'): number {
 
 const PL_MONTHS = ['mies.', '2 mies.', '3 mies.', '4 mies.', '5 mies.', '6 mies.', '7 mies.', '8 mies.', '9 mies.', '10 mies.', '11 mies.', '12 mies.'];
 
-export type Period = 'month' | 'day' | 'quarter';
+export type Period = 'month' | 'day' | 'quarter' | 'year';
 
-/** Human phrase for an N-period run, e.g. "od 3 mies." / "od 5 dni" / "od 2 kw.". */
+/** Human phrase for an N-period run, e.g. "od 3 mies." / "od 5 dni" / "od 2 kw." / "od 2 lat". */
 export function runPhrase(n: number, period: Period = 'month'): string {
     if (n <= 0) return '';
     if (period === 'day') return `od ${n} ${n === 1 ? 'dnia' : 'dni'}`;
     if (period === 'quarter') return `od ${n} kw.`;
+    if (period === 'year') return `od ${n} ${n === 1 ? 'roku' : 'lat'}`;
     return `od ${PL_MONTHS[Math.min(n, 12) - 1]}`;
 }
 
