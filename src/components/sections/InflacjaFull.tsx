@@ -16,6 +16,8 @@ import { DataTable, type Column } from '@/components/ui/DataTable';
 import { Drawer } from '@/components/ui/Drawer';
 import { Heatmap } from '@/components/ui/Heatmap';
 import { Sparkline } from '@/components/ui/Sparkline';
+import { InsightBar } from '@/components/ui/InsightBar';
+import { analyzeSeries } from '@/lib/observations';
 import { InflationBubbles } from '@/components/sections/InflationBubbles';
 
 const PALETTE = ['#2563EB', '#16A34A', '#D97706', '#7C3AED', '#E11D48', '#0891B2', '#CA8A04', '#DB2777', '#059669', '#4F46E5', '#EA580C', '#0D9488', '#64748B'];
@@ -93,6 +95,9 @@ export function InflacjaFull() {
     const dataDate = data?.dataDate ?? null;
     const latest = headline.length ? headline[headline.length - 1] : null;
     const prev = headline.length > 1 ? headline[headline.length - 2] : null;
+
+    // Auto-analiza (augmented analytics): sygnały z serii CPI r/r względem celu NBP.
+    const cpiInsights = useMemo(() => analyzeSeries('Inflacja', headline.map((h) => h.yoy), { goodDown: true, unit: '%', target: { value: 2.5, label: 'NBP' } }), [headline]);
 
     // ── Struktura inflacji: CPI vs bazowa (GUS, bez żywności) vs PPI — wszystko na datach headline ──
     const ppiSeries = useMemo(() => plSeries(ppiQ.data), [ppiQ.data]);
@@ -251,6 +256,8 @@ export function InflacjaFull() {
                     footnote={dataDate ? `GUS · krajowy CPI · ${dataDate}` : 'GUS · krajowy CPI'} />
                 <KpiCard label="CPI (m/m)" value={fmtPL(latest?.mom)} unit="%" accent="blue" icon={Activity} footnote="miesiąc do miesiąca" />
             </div>
+
+            {cpiInsights.length > 0 && <InsightBar items={cpiInsights} />}
 
             {/* ── Hero: trend r/r ↔ m/m ── */}
             <SectionCard title="Inflacja CPI — trend (10 lat)" subtitle={`${freq === 'yoy' ? 'rok do roku' : 'miesiąc do miesiąca'} (%) · krajowy CPI (GUS) · kwartalnie do 2025, miesięcznie od 2026`}
