@@ -2,9 +2,10 @@
 
 import { useState } from 'react';
 import { useInitialTab } from '@/lib/use-initial-tab';
-import { Factory, Home, HardHat, Wheat } from 'lucide-react';
+import { Home, HardHat, Wheat } from 'lucide-react';
 import { Segmented } from '@/components/ui/Segmented';
 import { InflacjaFull } from '@/components/sections/InflacjaFull';
+import { PpiFull } from '@/components/sections/PpiFull';
 import { DbwPriceSection } from '@/components/sections/DbwPriceSection';
 
 type Tab = 'inflacja' | 'ppi' | 'nieruchomosci' | 'budowlane' | 'rolne';
@@ -31,15 +32,7 @@ export default function CenyPage() {
 
             <div key={tab} className="mk-fade-in">
             {tab === 'inflacja' && <InflacjaFull />}
-            {tab === 'ppi' && (
-                <DbwPriceSection title="PPI — ceny produkcji sprzedanej przemysłu" subtitle="GUS · r/r (%)" csvName="ppi" refline={0}
-                    config={{ var: 314, przekroj: 657, poz: [6966261, 6971743] }}
-                    series={[
-                        { poz: 6966261, name: 'PPI ogółem', color: '#2563EB', accent: 'blue', icon: Factory },
-                        { poz: 6971743, name: 'Przetwórstwo przem.', color: '#7C3AED', accent: 'violet', icon: Factory },
-                    ]}
-                    note="PPI = ceny producenta (u bramy fabryki), zwykle wyprzedzają CPI. Ujemne = deflacja producencka." />
-            )}
+            {tab === 'ppi' && <PpiFull />}
             {tab === 'nieruchomosci' && (
                 <DbwPriceSection title="Ceny mieszkań — indeks (r/r)" subtitle="GUS · kwartalnie (%)" csvName="ceny-nieruchomosci" refline={0}
                     config={{ var: 310, przekroj: 484, poz: [4801795, 4801796], freq: 'q' }}

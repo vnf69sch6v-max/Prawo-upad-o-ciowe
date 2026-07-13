@@ -12,7 +12,7 @@ const DBW_ENDPOINTS = [
     '/api/gus-cpi-full',   // najważniejsze (flagowa inflacja) — najpierw
     '/api/gus-cpi',
     '/api/gus-koniunktura',
-    '/api/dbw-series?var=314&przekroj=657&poz=6966261&poz=6971743',
+    '/api/gus-ppi-full',   // flagowe PPI (33 pozycje PKD, 10 lat) — zastępuje starą dbw-series PPI
     '/api/dbw-series?var=310&przekroj=484&poz=4801795&poz=4801796&freq=q',
     '/api/dbw-series?var=312&przekroj=93&poz=6661787',
     '/api/dbw-series?var=324&przekroj=775&poz=7124703&poz=7124713&poz=7124724&poz=7189791&poz=7121981',

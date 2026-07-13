@@ -442,6 +442,19 @@ export function useCpiFull(year = new Date().getFullYear()) {
     });
 }
 
+// ─── GUS PPI pełny (ceny produkcji, PKD 2007) ────────────
+export interface PpiHistPoint { date: string; yoy: number | null; mom: number | null }
+export interface PpiDivision { code: string; name: string; sec: string; yoy: number | null; mom: number | null; history: PpiHistPoint[] }
+export interface PpiSection { code: string; name: string; yoy: number | null; mom: number | null; history: PpiHistPoint[]; divisions: PpiDivision[] }
+export interface PpiFullData { headline: PpiHistPoint[]; sections: PpiSection[]; dataDate: string; source: string }
+export function usePpiFull() {
+    return useQuery<PpiFullData>({
+        queryKey: ['gus-ppi-full'],
+        queryFn: () => fetchJSON('/api/gus-ppi-full'),
+        staleTime: 24 * 60 * 60 * 1000,
+    });
+}
+
 // ─── GUS krajowy CPI (oficjalny, DBW) ───────────────────
 
 interface CpiNationalData {
