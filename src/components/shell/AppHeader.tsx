@@ -31,6 +31,13 @@ export function AppHeader() {
                         <span className="flex-1 text-left text-sm">Szukaj wskaźnika…</span>
                         <kbd className="shrink-0 rounded border border-mk-border bg-mk-surface px-1.5 py-0.5 text-[11px] font-medium tracking-wide">⌘K</kbd>
                     </button>
+                    <button
+                        onClick={() => window.dispatchEvent(new Event('mk:palette'))}
+                        className="flex h-9 w-9 items-center justify-center rounded-lg text-mk-muted transition-colors hover:bg-mk-surface-alt hover:text-mk-text md:hidden"
+                        aria-label="Szukaj (paleta poleceń)"
+                    >
+                        <Search size={18} />
+                    </button>
                     <button className="relative flex h-9 w-9 items-center justify-center rounded-lg text-mk-muted transition-colors hover:bg-mk-surface-alt hover:text-mk-text" aria-label="Powiadomienia">
                         <Bell size={18} />
                         <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-mk-negative ring-2 ring-white" />
