@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from 'react';
 import { useInitialTab } from '@/lib/use-initial-tab';
+import { InsightBar } from '@/components/ui/InsightBar';
+import type { Observation } from '@/lib/observations';
 import { Euro, DollarSign, Coins, TrendingUp, Ship, Landmark, PoundSterling, Fuel, Flame, Gem, Factory, BarChart3 } from 'lucide-react';
 import {
     useNBPTable, useNBPCurrencyHistory, useGold, useStooq,
@@ -67,6 +69,27 @@ function KursySection() {
         { label: 'GBP / PLN', code: 'GBP', hist: gbpH.data as Hist, accent: 'violet', icon: PoundSterling },
     ];
 
+    // Auto-analiza kursów (dane dzienne 90 dni) — zmiana tygodniowa + pozycja w zakresie 90 dni.
+    const fxInsights = useMemo(() => {
+        const sig = (label: string, h?: Hist): Observation[] => {
+            const vals = histPoints(h).map((p) => p.value);
+            if (vals.length < 6) return [];
+            const last = vals[vals.length - 1];
+            const wkAgo = vals[vals.length - 6];
+            const chg = wkAgo ? (last / wkAgo - 1) * 100 : 0;
+            const hi = Math.max(...vals), lo = Math.min(...vals), range = hi - lo;
+            const out: Observation[] = [];
+            if (Math.abs(chg) >= 0.4) out.push({ kind: 'trend', tone: chg > 0 ? 'up' : 'down', text: `${label}: ${chg > 0 ? '+' : ''}${formatDecimalPL(chg, 1)}% w tygodniu (${formatDecimalPL(last, 3)} zł)` });
+            if (range > 0) {
+                const pos = (last - lo) / range;
+                if (pos >= 0.85) out.push({ kind: 'record', tone: 'up', text: `${label}: blisko 90-dniowego maksimum (${formatDecimalPL(last, 3)} zł)` });
+                else if (pos <= 0.15) out.push({ kind: 'record', tone: 'down', text: `${label}: blisko 90-dniowego minimum (${formatDecimalPL(last, 3)} zł)` });
+            }
+            return out;
+        };
+        return [...sig('EUR/PLN', eurH.data as Hist), ...sig('USD/PLN', usdH.data as Hist)].slice(0, 4);
+    }, [eurH.data, usdH.data]);
+
     const cols: Column<NBPRate>[] = [
         { key: 'currency', header: 'Waluta', sortable: true, sortValue: (r) => r.currency, render: (r) => <span className="capitalize">{r.currency}</span> },
         { key: 'code', header: 'Kod', render: (r) => <span className="font-semibold">{r.code}</span> },
@@ -82,6 +105,8 @@ function KursySection() {
                         footnote={table?.effectiveDate ? `NBP ${formatDate(table.effectiveDate)}` : 'NBP tab. A'} loading={tableQ.isLoading} />
                 ))}
             </div>
+
+            {fxInsights.length > 0 && <InsightBar items={fxInsights} />}
 
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
                 <SectionCard className="lg:col-span-2" title="Kursy walut — historia 90 dni" subtitle="NBP · EUR / USD / CHF / GBP"

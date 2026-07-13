@@ -23,9 +23,13 @@ export function consecutiveRun(values: number[], dir: 'down' | 'up'): number {
 
 const PL_MONTHS = ['mies.', '2 mies.', '3 mies.', '4 mies.', '5 mies.', '6 mies.', '7 mies.', '8 mies.', '9 mies.', '10 mies.', '11 mies.', '12 mies.'];
 
-/** Human phrase for an N-month run, e.g. "od 3 mies.". */
-export function runPhrase(n: number): string {
+export type Period = 'month' | 'day' | 'quarter';
+
+/** Human phrase for an N-period run, e.g. "od 3 mies." / "od 5 dni" / "od 2 kw.". */
+export function runPhrase(n: number, period: Period = 'month'): string {
     if (n <= 0) return '';
+    if (period === 'day') return `od ${n} ${n === 1 ? 'dnia' : 'dni'}`;
+    if (period === 'quarter') return `od ${n} kw.`;
     return `od ${PL_MONTHS[Math.min(n, 12) - 1]}`;
 }
 
@@ -54,6 +58,7 @@ export interface AnalyzeOpts {
     decimals?: number;
     target?: { value: number; label: string }; // np. cel NBP 2,5%
     minRun?: number;                           // ile kolejnych ruchów = trend (domyślnie 2)
+    period?: Period;                           // jednostka okresu do frazy „od N …" (miesiąc/dzień/kwartał)
 }
 
 /**
@@ -64,7 +69,7 @@ export interface AnalyzeOpts {
 export function analyzeSeries(label: string, raw: (number | null | undefined)[], opts: AnalyzeOpts = {}): Observation[] {
     const v = raw.filter((x): x is number => x != null && Number.isFinite(x));
     if (v.length < 3) return [];
-    const { goodDown = false, unit = '', decimals = 1, target, minRun = 2 } = opts;
+    const { goodDown = false, unit = '', decimals = 1, target, minRun = 2, period = 'month' } = opts;
     const f = (x: number) => fmt(x, decimals, unit);
     const last = v[v.length - 1], prev = v[v.length - 2];
     const out: Observation[] = [];
@@ -88,13 +93,13 @@ export function analyzeSeries(label: string, raw: (number | null | undefined)[],
     // 2) Rekord: ile okresów wstecz był wyższy/niższy odczyt
     let sinceHigher = 0; for (let i = v.length - 2; i >= 0; i--) { if (v[i] > last) break; sinceHigher++; }
     let sinceLower = 0; for (let i = v.length - 2; i >= 0; i--) { if (v[i] < last) break; sinceLower++; }
-    if (sinceHigher >= 5) out.push({ kind: 'record', tone: goodDown ? 'warn' : 'up', text: `${label}: najwyżej od ${runPhrase(sinceHigher).replace('od ', '')} (${f(last)})` });
-    else if (sinceLower >= 5) out.push({ kind: 'record', tone: goodDown ? 'up' : 'down', text: `${label}: najniżej od ${runPhrase(sinceLower).replace('od ', '')} (${f(last)})` });
+    if (sinceHigher >= 5) out.push({ kind: 'record', tone: goodDown ? 'warn' : 'up', text: `${label}: najwyżej ${runPhrase(sinceHigher, period)} (${f(last)})` });
+    else if (sinceLower >= 5) out.push({ kind: 'record', tone: goodDown ? 'up' : 'down', text: `${label}: najniżej ${runPhrase(sinceLower, period)} (${f(last)})` });
 
     // 3) Trend (kolejne ruchy w jedną stronę)
     const down = consecutiveRun(v, 'down'), up = consecutiveRun(v, 'up');
-    if (down >= minRun) out.push({ kind: 'trend', tone: goodDown ? 'up' : 'down', text: `${label}: spada ${runPhrase(down)} (teraz ${f(last)})` });
-    else if (up >= minRun) out.push({ kind: 'trend', tone: goodDown ? 'down' : 'up', text: `${label}: rośnie ${runPhrase(up)} (teraz ${f(last)})` });
+    if (down >= minRun) out.push({ kind: 'trend', tone: goodDown ? 'up' : 'down', text: `${label}: spada ${runPhrase(down, period)} (teraz ${f(last)})` });
+    else if (up >= minRun) out.push({ kind: 'trend', tone: goodDown ? 'down' : 'up', text: `${label}: rośnie ${runPhrase(up, period)} (teraz ${f(last)})` });
 
     // 4) Przyspieszenie/wyhamowanie ostatniej zmiany vs poprzedniej
     if (v.length >= 4 && out.length < 3) {
