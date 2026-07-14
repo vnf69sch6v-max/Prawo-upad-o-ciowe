@@ -48,12 +48,6 @@ export const formatTime = (d: string | Date): string =>
     });
 
 /**
- * Get Tailwind color class based on change direction (legacy dark theme)
- */
-export const getChangeColor = (n: number): string =>
-    n > 0 ? 'text-bb-green' : n < 0 ? 'text-bb-red' : 'text-bb-muted';
-
-/**
  * Get Tailwind color class based on change direction (light theme)
  */
 export const getChangeColorLight = (n: number): string =>

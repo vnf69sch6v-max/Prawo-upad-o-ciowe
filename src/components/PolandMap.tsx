@@ -76,30 +76,30 @@ function Tooltip({ region, avgWages, x, y }: {
     return (
         <div className="absolute z-50 pointer-events-none"
             style={{ left: x, top: y, transform: 'translate(-50%, -110%)' }}>
-            <div className="bg-gray-900/95 backdrop-blur border border-bb-border rounded-lg px-3 py-2 shadow-2xl min-w-[210px]">
-                <div className="font-semibold text-bb-accent text-sm mb-1.5">{region.name}</div>
+            <div className="min-w-[210px] rounded-lg border border-mk-border bg-mk-surface px-3 py-2 shadow-xl">
+                <div className="mb-1.5 text-sm font-semibold text-mk-text">{region.name}</div>
                 <div className="space-y-1 text-xs">
                     <div className="flex justify-between gap-4">
-                        <span className="text-bb-muted">Bezrobocie:</span>
-                        <span className="font-mono font-bold" style={{ color: getUnemploymentColor(region.unemployment) }}>
+                        <span className="text-mk-muted">Bezrobocie:</span>
+                        <span className="tabular-nums font-bold" style={{ color: getUnemploymentColor(region.unemployment) }}>
                             {region.unemployment !== null ? `${region.unemployment}%` : 'N/A'}
                             {unempChange !== null && (
-                                <span className={`ml-1 text-[10px] ${unempChange > 0 ? 'text-red-400' : 'text-green-400'}`}>
+                                <span className={`ml-1 text-[10px] ${unempChange > 0 ? 'text-red-600' : 'text-green-600'}`}>
                                     ({unempChange > 0 ? '+' : ''}{unempChange}pp)
                                 </span>
                             )}
                         </span>
                     </div>
                     <div className="flex justify-between gap-4">
-                        <span className="text-bb-muted">Wynagrodzenie:</span>
-                        <span className="font-mono text-bb-text">
+                        <span className="text-mk-muted">Wynagrodzenie:</span>
+                        <span className="tabular-nums text-mk-text">
                             {region.wages ? `${Math.round(region.wages).toLocaleString()} PLN` : 'N/A'}
                         </span>
                     </div>
                     {wageVsAvg !== null && (
                         <div className="flex justify-between gap-4">
-                            <span className="text-bb-muted">vs średnia:</span>
-                            <span className={`font-mono ${wageVsAvg >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                            <span className="text-mk-muted">vs średnia:</span>
+                            <span className={`tabular-nums ${wageVsAvg >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                                 {wageVsAvg >= 0 ? '+' : ''}{wageVsAvg}%
                             </span>
                         </div>

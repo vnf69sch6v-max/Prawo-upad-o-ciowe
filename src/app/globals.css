@@ -3,7 +3,6 @@
 /* ═══════════════════════════════════════════════════════════════
    MAKRO DATA PLATFORM — LIGHT THEME
    White surfaces, soft shadows, Inter, tabular numerals.
-   Legacy Bloomberg (bb-*) tokens kept below for un-migrated pages.
    ═══════════════════════════════════════════════════════════════ */
 
 @theme {
@@ -41,23 +40,6 @@
   --radius-mk: 14px;
   --shadow-mk: 0 1px 2px rgba(16, 24, 40, .06), 0 1px 3px rgba(16, 24, 40, .10);
   --shadow-mk-lg: 0 6px 16px rgba(16, 24, 40, .08), 0 2px 6px rgba(16, 24, 40, .05);
-
-  /* ── Legacy Bloomberg tokens (un-migrated pages) ── */
-  --color-bb-bg: #000000;
-  --color-bb-surface: #0D1117;
-  --color-bb-surface-alt: #161B22;
-  --color-bb-border: #2D333B;
-  --color-bb-border-strong: #444C56;
-  --color-bb-text: #E6EDF3;
-  --color-bb-muted: #7D8590;
-  --color-bb-accent: #FF6B00;
-  --color-bb-amber: #FFAB00;
-  --color-bb-green: #3FB950;
-  --color-bb-red: #F85149;
-  --color-bb-blue: #58A6FF;
-  --color-bb-yellow: #D29922;
-  --color-bb-header: #161B22;
-  --color-bb-keycap: #FF6B00;
 }
 
 /* ── Base ──────────────────────────────────────────────────── */
@@ -77,10 +59,6 @@ body {
 
 .font-sans {
   font-family: 'Inter', -apple-system, system-ui, sans-serif !important;
-}
-
-.font-mono {
-  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace !important;
 }
 
 /* Tabular numerals for aligned data */
@@ -429,115 +407,6 @@ button.mk-card,
   background-size: 800px 100%;
   animation: mk-shimmer 1.4s ease-in-out infinite;
   border-radius: 6px;
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   LEGACY BLOOMBERG CLASSES (un-migrated pages: fx, rates, market …)
-   Kept until each page is ported, then removed in the final phase.
-   ═══════════════════════════════════════════════════════════════ */
-
-@keyframes ticker-scroll {
-  0% {
-    transform: translateX(0);
-  }
-
-  100% {
-    transform: translateX(-50%);
-  }
-}
-
-.ticker-animate {
-  animation: ticker-scroll 50s linear infinite;
-}
-
-.ticker-animate:hover {
-  animation-play-state: paused;
-}
-
-.data-card {
-  background: var(--color-bb-surface);
-  border: 1px solid var(--color-bb-border);
-  border-radius: 2px;
-  padding: 10px 12px;
-  transition: border-color 0.15s ease;
-}
-
-.data-card:hover {
-  border-color: var(--color-bb-accent);
-}
-
-.bb-panel {
-  background: var(--color-bb-surface);
-  border: 1px solid var(--color-bb-border);
-  border-radius: 0;
-  padding: 8px 10px;
-}
-
-.bb-panel-header {
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--color-bb-accent);
-  padding-bottom: 6px;
-  border-bottom: 1px solid var(--color-bb-border);
-  margin-bottom: 6px;
-}
-
-.bb-label {
-  font-size: 10px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--color-bb-muted);
-}
-
-.bb-keycap {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 24px;
-  height: 20px;
-  padding: 0 4px;
-  font-size: 10px;
-  font-weight: 700;
-  font-family: 'JetBrains Mono', monospace;
-  border-radius: 2px;
-  background: var(--color-bb-border);
-  color: var(--color-bb-muted);
-  border: 1px solid var(--color-bb-border-strong);
-}
-
-.bb-keycap-active {
-  background: var(--color-bb-keycap);
-  color: #000;
-  border-color: var(--color-bb-keycap);
-}
-
-.bb-table tbody tr:nth-child(even) {
-  background: var(--color-bb-surface-alt);
-}
-
-.bb-table tbody tr:hover {
-  background: rgba(255, 107, 0, 0.06);
-}
-
-.bb-table th {
-  font-size: 10px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--color-bb-muted);
-  padding: 4px 8px;
-  border-bottom: 1px solid var(--color-bb-border-strong);
-  text-align: left;
-}
-
-.bb-table td {
-  font-size: 11px;
-  padding: 3px 8px;
-  border-bottom: 1px solid var(--color-bb-border);
-  font-family: 'JetBrains Mono', monospace;
 }
 
 /* ── Mobile ────────────────────────────────────────────────── */
