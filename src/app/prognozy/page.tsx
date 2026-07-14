@@ -183,12 +183,12 @@ function PkbNowcast() {
 
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                 <SectionCard title="PMI przemysłowy — historia" subtitle="S&P Global · próg 50 = neutralny"
-                    actions={<CsvExport filename="pmi" headers={['Data', 'PMI']} rows={pmiChart.map((r) => [r.date, r.pmi])} />}>
+                    actions={<div className="flex items-center gap-2"><StaleBadge date={pmiLast?.date} label="PMI" /><CsvExport filename="pmi" headers={['Data', 'PMI']} rows={pmiChart.map((r) => [r.date, r.pmi])} /></div>}>
                     <InteractiveChart data={pmiChart} xKey="date" height={280} showRange initialRange="1R"
                         valueFormatter={(v) => formatDecimalPL(v, 0)} xTickFormatter={monthTick}
                         referenceLines={[{ y: 50, label: 'neutralny', color: '#94A3B8' }]}
                         series={[{ key: 'pmi', name: 'PMI', color: '#7C3AED', type: 'area' }]} />
-                    <p className="mt-3 text-xs text-mk-faint">PMI aktualizowany ręcznie (brak darmowego API). Zostanie zastąpiony żywą koniunkturą GUS w domenie Gospodarka.</p>
+                    <p className="mt-3 text-xs text-mk-faint">PMI aktualizowany ręcznie z komunikatów S&amp;P Global (brak darmowego API; ostatnia weryfikacja VII.2026). Żywą koniunkturę GUS znajdziesz w zakładce Gospodarka.</p>
                 </SectionCard>
 
                 <SectionCard title="Scenariusze PMI → PKB" subtitle="model pomostowy (bridge equation)">
