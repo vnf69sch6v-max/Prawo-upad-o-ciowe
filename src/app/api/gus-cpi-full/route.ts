@@ -40,6 +40,7 @@ interface HistPoint { date: string; yoy: number | null; qoq?: number | null; mom
 
 export async function GET(request: NextRequest) {
     const now = parseInt(new URL(request.url).searchParams.get('year') || String(new Date().getFullYear()));
+    const force = new URL(request.url).searchParams.get('refresh') === '1'; // cron warm → wymuś refetch (pomiń cache)
 
     try {
         const result = await withCache(
@@ -141,7 +142,7 @@ export async function GET(request: NextRequest) {
                 return { headline, divisions, dataDate, weightsApprox: true, spliceDate, source: 'GUS DBW — COICOP 1999 (kwartalnie ≤2025) + COICOP 2018 (miesięcznie 2026)' };
             },
             'GUS DBW CPI full',
-            24 * 3600 * 1000,
+            force ? -1 : 48 * 3600 * 1000, // user czyta 48h cache; cron ?refresh=1 odświeża codziennie
         );
         return NextResponse.json(result);
     } catch (error) {

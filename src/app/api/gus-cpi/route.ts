@@ -54,6 +54,7 @@ function yoy(rows: DbwRow[], poz: number): number | null {
 
 export async function GET(request: NextRequest) {
     const year = parseInt(new URL(request.url).searchParams.get('year') || String(new Date().getFullYear()));
+    const force = new URL(request.url).searchParams.get('refresh') === '1'; // cron warm → wymuś refetch (pomiń cache)
     const years = [year - 1, year];
 
     try {
@@ -80,7 +81,7 @@ export async function GET(request: NextRequest) {
                 return { trend, latest, source: 'GUS (DBW) — krajowy CPI' };
             },
             'GUS DBW CPI',
-            24 * 3600 * 1000,
+            force ? -1 : 48 * 3600 * 1000, // user czyta 48h cache; cron ?refresh=1 odświeża codziennie
         );
         return NextResponse.json(result);
     } catch (error) {

@@ -29,6 +29,7 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: 'Wymagane: var, przekroj, poz' }, { status: 400 });
     }
     const year = parseInt(sp.get('year') || String(new Date().getFullYear()));
+    const force = sp.get('refresh') === '1'; // cron warm → wymuś refetch (pomiń cache)
     const prez = parseInt(sp.get('prez') || '5');
     const poz1 = parseInt(sp.get('poz1') || '33617'); // POLSKA
     const freq = sp.get('freq') === 'q' ? 'q' : 'm';
@@ -66,7 +67,7 @@ export async function GET(request: NextRequest) {
                 return { series, source: 'GUS (DBW)' };
             },
             'DBW API',
-            24 * 3600 * 1000,
+            force ? -1 : 48 * 3600 * 1000, // user czyta 48h cache; cron ?refresh=1 odświeża codziennie
         );
         return NextResponse.json(result);
     } catch (error) {

@@ -7,6 +7,18 @@
     ],
     "crons": [
         {
+            "path": "/api/cron/dbw-1",
+            "schedule": "0 3 * * *"
+        },
+        {
+            "path": "/api/cron/dbw-2",
+            "schedule": "30 3 * * *"
+        },
+        {
+            "path": "/api/cron/dbw-3",
+            "schedule": "0 4 * * *"
+        },
+        {
             "path": "/api/cron/nbp",
             "schedule": "0 13 * * 1-5"
         },
