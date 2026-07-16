@@ -13,6 +13,7 @@ const CACHE_TTL: Record<string, number> = {
     'smup': 24 * 3600 * 1000,            // 24h — public services data
     'sdp': 24 * 3600 * 1000,             // 24h — GUS SDP warehouse
     'dbw': 24 * 3600 * 1000,             // 24h — GUS thematic DBs (prices, koniunktura)
+    'news': 15 * 60 * 1000,              // 15 min — RSS newsy starzeją się szybko
 };
 
 /**

@@ -42,6 +42,8 @@ const ENDPOINTS = [
     '/api/stooq?symbol=ng.c&limit=90',
     // Samorząd
     '/api/smup?resource=areas-list',
+    // Newsy (RSS — limity niezależne od DBW)
+    '/api/news?refresh=1',
 ];
 
 export async function GET(request: NextRequest) {

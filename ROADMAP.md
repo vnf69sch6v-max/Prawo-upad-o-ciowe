@@ -26,25 +26,20 @@ _(puste — weź pierwszą pozycję z KOLEJKI, przenieś ją tutaj i rozpisz kro
 
 ## KOLEJKA (priorytet malejąco)
 
-### 1. Newsy — backend (agregator RSS)
+### 1. Newsy — zakładka `/newsy`
 
-Największa luka wobec konkurencji: Bankier i Stooq mają newsy, my zero.
-
-- Zweryfikuj realnie (np. `curl`), które polskie feedy RSS finansowe działają. Kandydaci do sprawdzenia:
-  Bankier, Money.pl, Business Insider PL, Puls Biznesu, Parkiet, Forsal, PAP Biznes, Interia Biznes.
-  **Użyj tylko tych, które faktycznie zwracają poprawny XML.** Martwe odrzuć i zapisz w komentarzu, które i dlaczego.
-- `src/app/api/news/route.ts`: pobierz → sparsuj → scal → odduplikuj → posortuj po dacie. `withCache` (TTL ~15 min).
-- Warm: dopisz do `/api/cron/refresh` (RSS ma osobny limit niż DBW — bezpiecznie).
-- **Kryterium ukończenia:** endpoint zwraca ≥3 działające źródła i ≥30 świeżych pozycji, każda z tytułem,
-  linkiem, datą i nazwą źródła; `tsc` + `build` zielone.
-
-### 2. Newsy — zakładka `/newsy`
+Backend gotowy: `GET /api/news` → `{ timestamp, sourcesOk, sourcesTotal, count, sources[], items[] }`,
+gdzie `items[] = { title, link, publishedAt (ISO UTC), description, sourceId, source, section }`,
+posortowane malejąco po dacie, limit 150. Typ `NewsItem` eksportowany z `src/app/api/news/route.ts`.
 
 - Lista: tytuł, źródło, czas względny („12 min temu"), link zewnętrzny (`target="_blank" rel="noopener noreferrer"`).
-- Filtry: po źródle + wyszukiwarka tekstowa. Dodaj pozycję do `TopNav`.
+- Filtry: po źródle (użyj `sourceId`; `sources[]` z endpointu daje gotową listę + status) + wyszukiwarka tekstowa.
+  Dodaj pozycję do `TopNav`.
+- Uwaga z weryfikacji: feed główny Bankiera („Wiadomości") miesza finanse ze światem/polityką — filtr
+  po źródle jest tu realną wartością dla użytkownika. Dopasowanie tematyczne przyjdzie z pozycją 2.
 - **Kryterium:** zakładka renderuje żywe newsy, filtry działają, układ responsywny na mobile.
 
-### 3. Newsy w kontekście danych (nasz wyróżnik)
+### 2. Newsy w kontekście danych (nasz wyróżnik)
 
 Tego nie ma ani Stooq, ani Bankier: news postawiony przy wskaźniku, którego dotyczy.
 
@@ -53,17 +48,17 @@ Tego nie ma ani Stooq, ani Bankier: news postawiony przy wskaźniku, którego do
 - Pas „Newsy powiązane" w tych sekcjach + najnowsze newsy na Przeglądzie.
 - **Kryterium:** Ceny, Gospodarka, Praca i Rynki pokazują trafnie dopasowane newsy (bez przypadkowych trafień).
 
-### 4. Rynki — więcej indeksów
+### 3. Rynki — więcej indeksów
 
 - Obok WIG20 dodaj WIG, mWIG40, sWIG80. **Zweryfikuj tickery u źródła, zanim podepniesz.**
 - **Kryterium:** indeksy z żywym kursem i zmianą %, na wspólnym wykresie porównawczym.
 
-### 5. Rynki — pojedyncze spółki
+### 4. Rynki — pojedyncze spółki
 
 - Tabela spółek WIG20: kurs, zmiana %, sortowanie. Szuflada/strona spółki z wykresem historii.
 - **Kryterium:** ≥20 spółek z żywymi danymi, sortowanie działa.
 
-### 6. Watchlista
+### 5. Watchlista
 
 - Zapis w `localStorage`; dodawanie wskaźników i spółek; pas „Obserwowane" na Przeglądzie.
 - **Kryterium:** wybór przeżywa odświeżenie strony.
@@ -79,3 +74,15 @@ Tego nie ma ani Stooq, ani Bankier: news postawiony przy wskaźniku, którego do
 - Rynki, Praca, Regiony (mapa + rynek pracy), Prognozy (koszyk CPI, nowcast PKB, Taylor, symulatory)
 - Publikacje (kalendarz), Samorząd (SMUP)
 - Responsywność mobile; sprzątanie legacy (bb-/JetBrains); rozbicie cronów DBW na 3 okna; audyt /prognozy
+- **Newsy — backend (agregator RSS)** — 2026-07-16, commit `b96c5c2`
+  `/api/news`: 8 zweryfikowanych feedów → parse → dedup → sort. Na żywo: **8/8 źródeł, 175 pozycji**,
+  0 braków w polach, 0 dat w przyszłości, ~400 ms. Pliki: `src/lib/news/{sources,parse}.ts`,
+  `src/app/api/news/route.ts`; warm w `/api/cron/refresh`; TTL 15 min (`news` w `server-cache.ts`).
+  - **Odrzucone po realnym teście** (nie przywracać bez ponownej weryfikacji — szczegóły w `sources.ts`):
+    Parkiet (404), Forsal (404), PAP Biznes (404/HTML), Bankier Gospodarka (200 ale 0 pozycji),
+    Rzeczpospolita (każde `rss/{id}` zwraca ten sam ogólny feed Polityka/Film/Wojsko — brak kanału
+    ekonomicznego). Puls Biznesu działa TYLKO pod `/rss/najnowsze.xml` (`/rss` serwuje HTML).
+  - **Bankier deklaruje błędną strefę** — pubDate stale `+0100` mimo CEST, a `lastBuildDate` to czas
+    warszawski podpisany jako „GMT". Dosłowna interpretacja dawała artykuły ~5 min w PRZYSZŁOŚCI i
+    przesuwała Bankiera o +1h na górę listy. Stąd flaga `warsawWallClock` (offset liczony przez Intl,
+    poprawnie w CET i CEST). Money.pl/BI/Interia deklarują strefę poprawnie → bez flagi.
