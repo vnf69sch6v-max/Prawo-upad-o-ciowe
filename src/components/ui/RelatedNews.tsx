@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { ExternalLink, ArrowRight } from 'lucide-react';
+import { ExternalLink, ArrowRight, Layers } from 'lucide-react';
 import { useNews, type NewsItem } from '@/lib/hooks';
 import { matchNews, type NewsTopic } from '@/lib/news/match';
 import { formatRelativeTime, formatTime } from '@/lib/formatters';
@@ -26,13 +26,22 @@ function NewsList({ items }: { items: NewsItem[] }) {
                             <div className="text-sm font-medium leading-snug text-mk-text transition-colors group-hover:text-mk-primary">
                                 {it.title}
                             </div>
-                            <div className="mt-1 flex flex-wrap items-center gap-x-2 text-xs text-mk-muted">
+                            <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-mk-muted">
                                 <span>{it.source}</span>
                                 <span className="text-mk-faint">·</span>
                                 {/* Czas względny dopiero po zamontowaniu — inaczej hydration mismatch. */}
                                 <time dateTime={it.publishedAt}>
                                     {mounted ? formatRelativeTime(it.publishedAt) : formatTime(it.publishedAt)}
                                 </time>
+                                {(it.corroboration ?? 1) >= 2 && (
+                                    <span
+                                        className="inline-flex items-center gap-1 rounded-full bg-mk-positive/10 px-1.5 py-0.5 text-[11px] font-medium text-mk-positive"
+                                        title={it.alsoIn?.length ? `Ten sam temat opisują też: ${it.alsoIn.join(', ')}` : undefined}
+                                    >
+                                        <Layers size={10} />
+                                        {it.corroboration}
+                                    </span>
+                                )}
                             </div>
                         </div>
                         <ExternalLink size={14} className="mt-0.5 shrink-0 text-mk-faint transition-colors group-hover:text-mk-primary" aria-hidden />
@@ -85,14 +94,19 @@ export function RelatedNews({
     );
 }
 
-/** Najnowsze newsy bez filtrowania tematycznego — pas na Przeglądzie. */
+/** Najważniejsze newsy bez filtrowania tematycznego — pas na Przeglądzie. */
 export function LatestNews({ limit = 5, className = '' }: { limit?: number; className?: string }) {
     const { data, isLoading } = useNews();
-    const items = useMemo(() => (data?.items ?? []).slice(0, limit), [data, limit]);
+    // Na Przeglądzie pokazujemy najważniejsze, nie po prostu najświeższe — inaczej pas zapełniłby
+    // się przypadkowym newsem sprzed minuty zamiast tematem, który opisuje pół rynku.
+    const items = useMemo(
+        () => [...(data?.items ?? [])].sort((a, b) => (b.importance ?? 0) - (a.importance ?? 0)).slice(0, limit),
+        [data, limit],
+    );
 
     if (isLoading) {
         return (
-            <SectionCard title="Najnowsze newsy" className={className}>
+            <SectionCard title="Najważniejsze newsy" className={className}>
                 <div className="space-y-3">
                     {Array.from({ length: 3 }, (_, i) => (
                         <div key={i} className="space-y-1.5">
@@ -107,7 +121,7 @@ export function LatestNews({ limit = 5, className = '' }: { limit?: number; clas
     if (items.length === 0) return null;
 
     return (
-        <SectionCard title="Najnowsze newsy" className={className} actions={<AllNewsLink />}>
+        <SectionCard title="Najważniejsze newsy" className={className} actions={<AllNewsLink />}>
             <NewsList items={items} />
         </SectionCard>
     );

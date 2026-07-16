@@ -12,11 +12,29 @@
 //   • Bankier Gospodarka — /rss/gospodarka.xml → HTTP 200, ale 0 pozycji (kanał nie istnieje).
 //   • Puls Biznesu /rss → zwraca stronę HTML, NIE XML. Działa dopiero /rss/najnowsze.xml.
 
+/**
+ * Grupa właścicielska. KLUCZOWE dla rankingu: „ten sam temat w dwóch serwisach" jest sygnałem
+ * ważności tylko wtedy, gdy serwisy są NIEZALEŻNE. Bankier.pl i Puls Biznesu należą do tej samej
+ * spółki (Bonnier Business Polska — Bonnier przejął grupę Bankier.pl w 2015), więc liczone osobno
+ * zawyżałyby ważność tematu. Klaster liczymy po właścicielach — patrz `lib/news/cluster.ts`.
+ */
+export type NewsOwner = 'bonnier' | 'wp' | 'rasp' | 'polsat' | 'ptwp';
+
+export const OWNER_NAMES: Record<NewsOwner, string> = {
+    bonnier: 'Bonnier Business Polska',
+    wp: 'Wirtualna Polska Media',
+    rasp: 'Ringier Axel Springer Polska',
+    polsat: 'Grupa Polsat Plus',
+    ptwp: 'PTWP',
+};
+
 export interface NewsSource {
     /** Stabilny identyfikator używany w filtrach UI i w kluczu cache. */
     id: string;
     /** Nazwa redakcji pokazywana użytkownikowi. */
     name: string;
+    /** Grupa właścicielska — niezależność źródeł liczymy po niej, nie po domenie. */
+    owner: NewsOwner;
     url: string;
     /** Sekcja tematyczna feedu — pomaga późniejszemu dopasowaniu newsów do wskaźników. */
     section: 'ogolne' | 'gielda' | 'waluty' | 'przemysl';
@@ -38,14 +56,36 @@ export interface NewsSource {
 // o +1h i sztucznie wypychało je na górę scalonej listy. Stąd warsawWallClock.
 // Money.pl (+0200), Business Insider i Interia (GMT) deklarują strefę POPRAWNIE → bez flagi.
 export const NEWS_SOURCES: NewsSource[] = [
-    { id: 'bankier', name: 'Bankier.pl', url: 'https://www.bankier.pl/rss/wiadomosci.xml', section: 'ogolne', warsawWallClock: true, limit: 40 },
-    { id: 'bankier-gielda', name: 'Bankier.pl — Giełda', url: 'https://www.bankier.pl/rss/gielda.xml', section: 'gielda', warsawWallClock: true, limit: 15 },
-    { id: 'bankier-waluty', name: 'Bankier.pl — Waluty', url: 'https://www.bankier.pl/rss/waluty.xml', section: 'waluty', warsawWallClock: true, limit: 15 },
-    { id: 'money', name: 'Money.pl', url: 'https://www.money.pl/rss/', section: 'ogolne', limit: 25 },
-    { id: 'businessinsider', name: 'Business Insider Polska', url: 'https://businessinsider.com.pl/.feed', section: 'ogolne', limit: 25 },
-    { id: 'interia', name: 'Interia Biznes', url: 'https://biznes.interia.pl/feed', section: 'ogolne', limit: 30 },
+    { id: 'bankier', name: 'Bankier.pl', owner: 'bonnier', url: 'https://www.bankier.pl/rss/wiadomosci.xml', section: 'ogolne', warsawWallClock: true, limit: 40 },
+    { id: 'bankier-gielda', name: 'Bankier.pl — Giełda', owner: 'bonnier', url: 'https://www.bankier.pl/rss/gielda.xml', section: 'gielda', warsawWallClock: true, limit: 15 },
+    { id: 'bankier-waluty', name: 'Bankier.pl — Waluty', owner: 'bonnier', url: 'https://www.bankier.pl/rss/waluty.xml', section: 'waluty', warsawWallClock: true, limit: 15 },
+    { id: 'money', name: 'Money.pl', owner: 'wp', url: 'https://www.money.pl/rss/', section: 'ogolne', limit: 25 },
+    { id: 'businessinsider', name: 'Business Insider Polska', owner: 'rasp', url: 'https://businessinsider.com.pl/.feed', section: 'ogolne', limit: 25 },
+    { id: 'interia', name: 'Interia Biznes', owner: 'polsat', url: 'https://biznes.interia.pl/feed', section: 'ogolne', limit: 30 },
     // pb.pl: <pubDate>2026-07-16 20:53:12</pubDate> — brak strefy, format niestandardowy.
-    { id: 'pb', name: 'Puls Biznesu', url: 'https://www.pb.pl/rss/najnowsze.xml', section: 'ogolne', warsawWallClock: true, limit: 30 },
+    { id: 'pb', name: 'Puls Biznesu', owner: 'bonnier', url: 'https://www.pb.pl/rss/najnowsze.xml', section: 'ogolne', warsawWallClock: true, limit: 30 },
     // wnp.pl: RFC822 bez offsetu ("Thu, 16 Jul 2026 21:04:00"); feed zwraca ~300 pozycji → mocny limit.
-    { id: 'wnp', name: 'wnp.pl', url: 'https://www.wnp.pl/rss/serwis_rss.xml', section: 'przemysl', warsawWallClock: true, limit: 25 },
+    { id: 'wnp', name: 'wnp.pl', owner: 'ptwp', url: 'https://www.wnp.pl/rss/serwis_rss.xml', section: 'przemysl', warsawWallClock: true, limit: 25 },
 ];
+
+/**
+ * Waga redakcyjna źródła (mnożnik siły „głosu" w klastrze).
+ *
+ * ⚠️ To jest NASZA OCENA REDAKCYJNA, nie obiektywny rating — i tak trzeba ją opisywać w UI.
+ * Sprawdzone (2026-07-16): dla polskich mediów finansowych NIE ISTNIEJE żadna publiczna ocena
+ * wiarygodności — NewsGuard nie pokrywa Polski, Media Bias/Fact Check nie ma Bankiera ani
+ * Money.pl, Reuters Digital News Report nie wymienia żadnego z naszych źródeł.
+ * (Badanie OBI „najważniejsze źródło dla inwestorów" to ankieta popularności, nie rzetelności,
+ * i kolportuje ją właściciel dwóch z tych tytułów — nie używać jako proxy wiarygodności.)
+ *
+ * Niższe wagi dla WP i RASP nie dotyczą rzetelności newsów: UOKiK postawił obu grupom zarzuty
+ * dotyczące oznaczania artykułów sponsorowanych, więc spodziewamy się u nich większej domieszki
+ * treści komercyjnej w feedzie.
+ */
+export const OWNER_WEIGHT: Record<NewsOwner, number> = {
+    ptwp: 1.2,      // wnp.pl — branżowe, rzeczowe tytuły, znikomy clickbait
+    bonnier: 1.15,  // Bankier + PB — profil stricte finansowy
+    polsat: 0.9,    // Interia Biznes — portal ogólny z sekcją biznes
+    wp: 0.8,        // Money.pl — zarzuty UOKiK o oznaczanie reklam
+    rasp: 0.8,      // Business Insider PL — j.w.
+};

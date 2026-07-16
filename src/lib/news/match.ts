@@ -150,16 +150,16 @@ export function matchesTopic(item: Pick<NewsItem, 'title' | 'description'>, topi
     return desc.some((re) => re.test(d));
 }
 
-/** Newsy dotyczące tematu, w kolejności z wejścia (API oddaje je już od najnowszych). */
-export function matchNews<T extends Pick<NewsItem, 'title' | 'description'>>(
+/**
+ * Newsy dotyczące tematu, uszeregowane wg ważności (`importance` liczone w /api/news).
+ * Fallback na kolejność wejściową, gdy rankingu nie ma — API oddaje pozycje od najnowszych.
+ */
+export function matchNews<T extends Pick<NewsItem, 'title' | 'description' | 'importance'>>(
     items: T[],
     topic: NewsTopic,
     limit = 5,
 ): T[] {
-    const out: T[] = [];
-    for (const it of items) {
-        if (matchesTopic(it, topic)) out.push(it);
-        if (out.length >= limit) break;
-    }
-    return out;
+    const hits = items.filter((it) => matchesTopic(it, topic));
+    hits.sort((a, b) => (b.importance ?? 0) - (a.importance ?? 0));
+    return hits.slice(0, limit);
 }

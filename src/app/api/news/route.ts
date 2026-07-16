@@ -5,6 +5,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { withCache } from '@/lib/server-cache';
 import { NEWS_SOURCES } from '@/lib/news/sources';
 import { parseRss, urlKey, titleKey } from '@/lib/news/parse';
+import { clusterNews } from '@/lib/news/cluster';
+import { scoreItem } from '@/lib/news/score';
 import type { NewsItem, NewsSourceStatus } from '@/lib/news/types';
 
 export const revalidate = 0;
@@ -84,8 +86,46 @@ async function buildFeed() {
         /** Ile zostało po scaleniu i deduplikacji, przed przycięciem do MAX_ITEMS. */
         countBeforeLimit: merged.length,
         sources,
-        items,
+        items: rank(items),
     };
+}
+
+/**
+ * Dokłada do pozycji ranking: klaster tematyczny (po właścicielach) + ważność + flagi jakości.
+ * Liczone raz na odświeżenie cache — deterministyczne i tanie (O(n²) na 150 pozycjach).
+ */
+function rank(items: NewsItem[]): NewsItem[] {
+    const ownerOf = new Map(NEWS_SOURCES.map((s) => [s.id, s.owner]));
+    const withOwner = items.map((it) => ({ ...it, owner: ownerOf.get(it.sourceId) ?? 'bonnier' }));
+
+    const clusters = clusterNews(withOwner);
+    const now = Date.now();
+
+    const scored = items.map((it) => ({ it, raw: 0, cluster: null as (typeof clusters)[number] | null }));
+    for (const c of clusters) {
+        for (const i of c.members) {
+            const res = scoreItem({ item: items[i], clusterWeight: c.weight, isFirst: i === c.firstIndex, now });
+            scored[i].raw = res.raw;
+            scored[i].cluster = c;
+            items[i].isAd = res.ad;
+            items[i].clickbait = res.clickbait;
+            items[i].isOpinion = res.opinion;
+        }
+    }
+
+    // Normalizacja do 0–100 względem najmocniejszej pozycji w paczce — dzięki temu skala jest
+    // czytelna niezależnie od tego, ile akurat newsów przyszło.
+    const max = Math.max(...scored.map((s) => s.raw), 1e-9);
+    for (let i = 0; i < items.length; i++) {
+        const c = scored[i].cluster;
+        items[i].importance = Math.round((scored[i].raw / max) * 100);
+        items[i].corroboration = c ? c.owners.length : 1;
+        items[i].alsoIn = c
+            ? [...new Set(c.members.filter((m) => m !== i).map((m) => items[m].source))].slice(0, 4)
+            : [];
+    }
+
+    return items;
 }
 
 export async function GET(request: NextRequest) {

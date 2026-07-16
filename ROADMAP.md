@@ -31,15 +31,39 @@ _(puste — weź pierwszą pozycję z KOLEJKI, przenieś ją tutaj i rozpisz kro
 - Obok WIG20 dodaj WIG, mWIG40, sWIG80. **Zweryfikuj tickery u źródła, zanim podepniesz.**
 - **Kryterium:** indeksy z żywym kursem i zmianą %, na wspólnym wykresie porównawczym.
 
-### 2. Rynki — pojedyncze spółki
+### 2. Spółki WIG20 — strona każdej spółki + newsy pod nią
 
-- Tabela spółek WIG20: kurs, zmiana %, sortowanie. Szuflada/strona spółki z wykresem historii.
-- **Kryterium:** ≥20 spółek z żywymi danymi, sortowanie działa.
+Zlecone przez właściciela (2026-07-16). Każda spółka z WIG20 dostaje własne miejsce, a pod nią
+dopasowane newsy.
+
+- Tabela spółek WIG20: kurs, zmiana %, sortowanie. **Zweryfikuj tickery u źródła przed podpięciem.**
+- Strona `/spolki/[ticker]`: kurs, wykres historii, kluczowe dane.
+- **Newsy per spółka:** rozszerzyć `lib/news/match.ts` o słownik spółek — nazwa + warianty odmiany
+  + ticker (np. „Orlen/Orlenu/PKN”, „KGHM”, „Żabka/Zabka”). UWAGA: tickery to ALL-CAPS, więc muszą
+  trafić na whitelistę detektora clickbaitu, inaczej ukarzą własne newsy (patrz `score.ts`).
+  Dopasowanie po nazwie spółki w tytule jest mocne; w opisie — słabsze (wzmianka mimochodem),
+  więc użyć istniejącego podziału `strong` / `titleOnly`.
+- **Kryterium:** ≥20 spółek z żywymi danymi, sortowanie działa, każda spółka ma trafne newsy
+  (bez przypadkowych trafień — sprawdzić ręcznie na żywych danych, jak przy tematach).
 
 ### 3. Watchlista
 
 - Zapis w `localStorage`; dodawanie wskaźników i spółek; pas „Obserwowane" na Przeglądzie.
 - **Kryterium:** wybór przeżywa odświeżenie strony.
+
+### 4. Spółki — sprawozdania finansowe (dalszy plan)
+
+Zlecone przez właściciela jako etap po stronach spółek. Duża pozycja — rozpisać na osobne kroki
+przy podejmowaniu.
+
+- **Najpierw zweryfikuj źródło, zanim cokolwiek zbudujesz** (zasada nadrzędna: żadnych atrap).
+  Kandydaci do sprawdzenia: raporty ESPI/EBI, sprawozdania w KRS/eKRS, Yahoo Finance
+  (`financialData`/`incomeStatementHistory`), strony relacji inwestorskich spółek.
+  Jeśli żadne darmowe źródło nie daje kompletnych danych — zapisz to w ROADMAP i NIE wstawiaj atrap.
+- Zakres docelowy: rachunek zysków i strat, bilans, przepływy pieniężne; ujęcie roczne i kwartalne.
+- Wskaźniki wyliczane z danych: C/Z, C/WK, marża, ROE, zadłużenie.
+- **Kryterium:** dla ≥5 spółek WIG20 realne, zweryfikowane u źródła dane finansowe za ≥3 okresy;
+  każda liczba ma podane źródło i datę.
 
 ---
 
@@ -77,6 +101,35 @@ _(puste — weź pierwszą pozycję z KOLEJKI, przenieś ją tutaj i rozpisz kro
     inline, tak jak robi to `Segmented.tsx`.
   - **Pułapka i18n:** polskie „ł" (U+0142) NIE rozkłada się pod NFD, więc samo usuwanie diakrytyków nie
     wystarcza — bez podmiany „ł"→„l" szukanie „zloty" nie znajdzie „złoty". Patrz `norm()` w `lib/news/match.ts`.
+- **Newsy — ranking (ważność/data/wiarygodność) + nowy wygląd** — 2026-07-16, commit `<hash>`
+  Zlecone przez właściciela. `/newsy`: lead story, sortowanie Ważne/Najnowsze, słupek ważności,
+  badge „N niezależnych redakcji", oznaczenia reklam i opinii. Przegląd pokazuje najważniejsze
+  (nie najświeższe). Pliki: `lib/news/{score,cluster}.ts`, `sources.ts` (owner + OWNER_WEIGHT),
+  ranking w `api/news/route.ts`.
+  - **Klastry liczone po WŁAŚCICIELACH, nie domenach.** Bankier.pl i Puls Biznesu to jedna spółka
+    (Bonnier) → ten sam temat u obu to JEDEN niezależny głos. 8 feedów = 5 właścicieli.
+    Bez tego ważność byłaby systematycznie zawyżona.
+  - **Brak publicznych ocen wiarygodności polskich mediów finansowych** (sprawdzone: NewsGuard nie
+    pokrywa PL, MBFC nie ma Bankiera/Money.pl, Reuters DNR nie wymienia naszych źródeł) → `OWNER_WEIGHT`
+    to NASZA ocena redakcyjna i tak jest opisana w kodzie. W UI mówimy „ważność" i „potwierdzenie
+    przez niezależne redakcje", NIE „wiarygodność" — z tytułu i opisu nie da się zmierzyć rzetelności redakcji.
+  - **Wzoru Hacker News nie da się tu użyć.** HN: głosy 1–1000 (~250× dynamiki), my: 1–5 właścicieli
+    (~5×). Przy grawitacji 1.8 news sprzed 24h potrzebowałby ~370× więcej źródeł → czas zmiażdżyłby
+    ważność i wyszłoby sortowanie po dacie. Stąd zanik wykładniczy, półokres H=10h (`score.ts`).
+  - **Fałszywy alarm złapany na żywych danych:** wzorzec „we współpracy z" oznaczał jako reklamę
+    prawdziwe newsy („Honda… we współpracy z General Motors", „GPW we współpracy z rynkiem").
+    To zwykła polszczyzna biznesowa — reklamę zdradza dopiero formuła ujawnienia („artykuł powstał
+    we współpracy z"). NIE rozluźniać tego wzorca z powrotem.
+  - „materiał partnera"/„we współpracy z partnerem" karzemy tak ostro jak „artykuł sponsorowany" —
+    UOKiK i Komisja Etyki uznały te formuły za NIEWYSTARCZAJĄCE oznaczenie reklamy (czyli reklama
+    zamaskowana). UOKiK ma zarzuty wobec RASP (Business Insider) i WP (Money.pl).
+  - **Parametry dobrane empirycznie**, nie z przeczucia: STEM=4 (przy 6 trzy newsy o tych samych
+    danych inflacyjnych z 3 redakcji się NIE łączyły), próg 0.25 → 4 klastry wielo-właścicielskie,
+    wszystkie trafne, największy klaster 4 pozycje (brak łańcuchowania).
+  - Efekt na żywo: topka ważności zdominowana przez tematy potwierdzone (100/97/95/93 — wszystkie
+    z 2 niezależnych redakcji), 0 fałszywych reklam.
+  - Whitelist skrótowców (NBP/GUS/RPP/KGHM/WIG20…) w detektorze clickbaitu jest KONIECZNA — bez niej
+    reguła ALL-CAPS karałaby najtwardsze newsy makro. Dodając spółki WIG20, dopisz ich tickery.
 - **Newsy w kontekście danych** — 2026-07-16, commit `b6b3414`
   Pas „Newsy powiązane" na Cenach, Gospodarce, Pracy i Rynkach + „Najnowsze newsy" na Przeglądzie.
   Pliki: `src/lib/news/match.ts` (silnik), `src/lib/news/types.ts` (wspólne typy), `RelatedNews.tsx`

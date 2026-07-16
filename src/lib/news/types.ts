@@ -10,6 +10,21 @@ export interface NewsItem {
     sourceId: string;
     source: string;
     section: string;
+
+    // ─── Pola rankingu (dokładane przez /api/news; patrz lib/news/{score,cluster}.ts) ───
+    /** Ważność 0–100, znormalizowana w obrębie paczki. Sortowanie „Ważne" idzie po tym. */
+    importance?: number;
+    /**
+     * Ilu NIEZALEŻNYCH właścicieli opisuje ten temat. 1 = niepotwierdzone.
+     * Bankier i Puls Biznesu to jedna grupa (Bonnier) → liczą się jako jeden.
+     */
+    corroboration?: number;
+    /** Nazwy redakcji z tego samego tematu (bez tej pozycji) — do podpisu „także w…". */
+    alsoIn?: string[];
+    /** Wykryta autopromocja/reklama — takie pozycje domyślnie chowamy. */
+    isAd?: boolean;
+    clickbait?: 'strong' | 'weak' | null;
+    isOpinion?: boolean;
 }
 
 export interface NewsSourceStatus {
