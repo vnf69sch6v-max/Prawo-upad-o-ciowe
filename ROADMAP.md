@@ -79,7 +79,7 @@ nie wystarczy (feed główny Bankiera miesza tematy) → dopasowanie po słowach
     warszawski podpisany jako „GMT". Dosłowna interpretacja dawała artykuły ~5 min w PRZYSZŁOŚCI i
     przesuwała Bankiera o +1h na górę listy. Stąd flaga `warsawWallClock` (offset liczony przez Intl,
     poprawnie w CET i CEST). Money.pl/BI/Interia deklarują strefę poprawnie → bez flagi.
-- **Newsy — zakładka `/newsy`** — 2026-07-16, commit `<uzupełniony niżej>`
+- **Newsy — zakładka `/newsy`** — 2026-07-16, commit `a36d322`
   Lista + filtr po źródle (z licznikami) + wyszukiwarka bez diakrytyków; stany: ładowanie/błąd/pusty.
   Zakładka wpięta w `TopNav` i paletę ⌘K. Zweryfikowane na żywo: 150 newsów z 8/8 źródeł, filtr i szukanie
   działają, mobile 375 px bez scrolla poziomego, konsola czysta (zero hydration mismatch).
