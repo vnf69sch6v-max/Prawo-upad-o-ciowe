@@ -7,7 +7,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import {
-    LayoutDashboard, Tag, Factory, Users, TrendingUp, Sparkles, Map, Search,
+    LayoutDashboard, Tag, Factory, Users, TrendingUp, Sparkles, Map, Search, Newspaper,
     Banknote, Percent, Landmark, LineChart, Home, Wheat, HardHat, Fuel, Building2, CornerDownLeft, Briefcase,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
@@ -22,6 +22,7 @@ const COMMANDS: Cmd[] = [
     { id: 'nav-gosp', group: 'Zakładki', label: 'Gospodarka', keywords: 'pkb aktywność', href: '/gospodarka', icon: Factory },
     { id: 'nav-praca', group: 'Zakładki', label: 'Rynek pracy', keywords: 'bezrobocie płace zatrudnienie', href: '/praca', icon: Users },
     { id: 'nav-rynki', group: 'Zakładki', label: 'Rynki', keywords: 'gpw waluty stopy złoto', href: '/rynki', icon: TrendingUp },
+    { id: 'nav-newsy', group: 'Zakładki', label: 'Newsy', keywords: 'wiadomości aktualności prasa rss bankier money puls biznesu', href: '/newsy', icon: Newspaper },
     { id: 'nav-prog', group: 'Zakładki', label: 'Prognozy', keywords: 'nowcast koszyk taylor symulator', href: '/prognozy', icon: Sparkles },
     { id: 'nav-reg', group: 'Zakładki', label: 'Regiony', keywords: 'województwa mapa samorząd demografia', href: '/regiony', icon: Map },
 

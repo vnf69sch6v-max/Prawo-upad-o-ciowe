@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Tag, Factory, Users, TrendingUp, Sparkles, Map, type LucideIcon } from 'lucide-react';
+import { LayoutDashboard, Tag, Factory, Users, TrendingUp, Sparkles, Map, Newspaper, type LucideIcon } from 'lucide-react';
 
 export interface NavItem { label: string; href: string; icon: LucideIcon }
 
@@ -12,6 +12,7 @@ export const NAV_ITEMS: NavItem[] = [
     { label: 'Gospodarka', href: '/gospodarka', icon: Factory },
     { label: 'Rynek pracy', href: '/praca', icon: Users },
     { label: 'Rynki', href: '/rynki', icon: TrendingUp },
+    { label: 'Newsy', href: '/newsy', icon: Newspaper },
     { label: 'Prognozy', href: '/prognozy', icon: Sparkles },
     { label: 'Regiony', href: '/regiony', icon: Map },
 ];

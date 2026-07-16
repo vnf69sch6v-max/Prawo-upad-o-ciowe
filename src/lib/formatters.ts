@@ -48,6 +48,38 @@ export const formatTime = (d: string | Date): string =>
     });
 
 /**
+ * Względny wiek po polsku („12 min temu", „3 godz. temu", „wczoraj").
+ * Odmiana dni jest nieregularna, więc bez Intl.RelativeTimeFormat (zwraca „2 dni temu" poprawnie,
+ * ale „1 dzień temu" zamiast naturalnego „wczoraj").
+ * UWAGA: wynik zależy od `Date.now()` → wywoływać tylko po zamontowaniu komponentu (patrz StaleBadge),
+ * inaczej render serwerowy rozjedzie się z klienckim (hydration mismatch).
+ */
+export const formatRelativeTime = (d: string | Date, now: number = Date.now()): string => {
+    const ts = new Date(d).getTime();
+    if (Number.isNaN(ts)) return '';
+    const sec = Math.round((now - ts) / 1000);
+
+    if (sec < 0) return 'przed chwilą';       // drobny rozjazd zegara klienta i wydawcy
+    if (sec < 60) return 'przed chwilą';
+
+    const min = Math.floor(sec / 60);
+    if (min < 60) return `${min} min temu`;
+
+    const hrs = Math.floor(min / 60);
+    if (hrs < 24) return `${hrs} godz. temu`;
+
+    const days = Math.floor(hrs / 24);
+    if (days === 1) return 'wczoraj';
+    if (days < 7) return `${days} dni temu`;
+
+    const weeks = Math.floor(days / 7);
+    if (weeks === 1) return 'tydzień temu';
+    if (weeks < 5) return `${weeks} tyg. temu`;
+
+    return formatDate(d);
+};
+
+/**
  * Get Tailwind color class based on change direction (light theme)
  */
 export const getChangeColorLight = (n: number): string =>

@@ -584,6 +584,48 @@ export function useYieldCurve() {
     };
 }
 
+// ─── Newsy (agregat RSS) ─────────────────────────────────
+
+export interface NewsItem {
+    title: string;
+    link: string;
+    /** ISO UTC — patrz api/news; strefy feedów są normalizowane po stronie serwera. */
+    publishedAt: string;
+    description: string;
+    sourceId: string;
+    source: string;
+    section: string;
+}
+
+export interface NewsSourceStatus {
+    id: string;
+    name: string;
+    ok: boolean;
+    count: number;
+    error?: string;
+}
+
+export interface NewsResult {
+    timestamp: string;
+    sourcesOk: number;
+    sourcesTotal: number;
+    /** Liczba faktycznie zwróconych pozycji (= items.length). */
+    count: number;
+    /** Ile było po deduplikacji, zanim serwer przyciął listę do limitu. */
+    countBeforeLimit: number;
+    sources: NewsSourceStatus[];
+    items: NewsItem[];
+}
+
+export function useNews() {
+    return useQuery<NewsResult>({
+        queryKey: ['news'],
+        queryFn: () => fetchJSON('/api/news'),
+        staleTime: 15 * 60 * 1000,      // zgodnie z TTL cache po stronie serwera
+        refetchInterval: 15 * 60 * 1000,
+    });
+}
+
 // ─── Composite Dashboard Hook ────────────────────────────
 
 export function useDashboardData() {

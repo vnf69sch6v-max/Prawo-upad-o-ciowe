@@ -10,6 +10,7 @@ export const revalidate = 0;
 
 const TTL_MS = 15 * 60 * 1000; // 15 min — newsy starzeją się szybko
 const FETCH_TIMEOUT_MS = 8000;
+const MAX_ITEMS = 150;
 // Część serwisów odrzuca żądania bez nagłówka UA (albo serwuje HTML zamiast XML).
 const UA = 'Mozilla/5.0 (compatible; MakroDataPlatform/1.0; +https://github.com/) AppleWebKit/537.36';
 
@@ -88,14 +89,19 @@ async function buildFeed() {
     }
 
     merged.sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
+    const items = merged.slice(0, MAX_ITEMS);
 
     return {
         timestamp: new Date().toISOString(),
         sourcesOk: sources.filter((s) => s.ok).length,
         sourcesTotal: sources.length,
-        count: merged.length,
+        // `count` opisuje to, co REALNIE zwracamy (po limicie) — inaczej UI podawałby liczbę
+        // pozycji, których użytkownik nie jest w stanie zobaczyć.
+        count: items.length,
+        /** Ile zostało po scaleniu i deduplikacji, przed przycięciem do MAX_ITEMS. */
+        countBeforeLimit: merged.length,
         sources,
-        items: merged.slice(0, 150),
+        items,
     };
 }
 
