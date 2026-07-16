@@ -74,7 +74,7 @@ Tego nie ma ani Stooq, ani Bankier: news postawiony przy wskaźniku, którego do
 - Rynki, Praca, Regiony (mapa + rynek pracy), Prognozy (koszyk CPI, nowcast PKB, Taylor, symulatory)
 - Publikacje (kalendarz), Samorząd (SMUP)
 - Responsywność mobile; sprzątanie legacy (bb-/JetBrains); rozbicie cronów DBW na 3 okna; audyt /prognozy
-- **Newsy — backend (agregator RSS)** — 2026-07-16, commit `b96c5c2`
+- **Newsy — backend (agregator RSS)** — 2026-07-16, commit `7316f35`
   `/api/news`: 8 zweryfikowanych feedów → parse → dedup → sort. Na żywo: **8/8 źródeł, 175 pozycji**,
   0 braków w polach, 0 dat w przyszłości, ~400 ms. Pliki: `src/lib/news/{sources,parse}.ts`,
   `src/app/api/news/route.ts`; warm w `/api/cron/refresh`; TTL 15 min (`news` w `server-cache.ts`).
