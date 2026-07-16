@@ -12,10 +12,16 @@
   --color-mk-surface-alt: #F1F3F7;
   --color-mk-border: #E7EAF0;
   --color-mk-border-strong: #D4D9E2;
+  /* Skala tekstu (slate 900/700/600/500). Każdy stopień ma na białym tle kontrast ≥4.5:1,
+     czyli spełnia WCAG AA dla małego tekstu:
+       text 17.9:1 · text-soft 10.4:1 · muted 7.0:1 · faint 4.8:1
+     Wcześniej `faint` był slate-400 (#94A3B8) = 2.31:1 — a tym kolorem pisane są daty, liczniki
+     i podpisy pod danymi, więc realnie nie dało się ich wygodnie czytać. Przesunięcie całej skali
+     o stopień w dół naprawia kontrast i ZACHOWUJE hierarchię (faint nadal jaśniejszy od muted). */
   --color-mk-text: #0F172A;
   --color-mk-text-soft: #334155;
-  --color-mk-muted: #64748B;
-  --color-mk-faint: #94A3B8;
+  --color-mk-muted: #475569;
+  --color-mk-faint: #64748B;
 
   /* ── Semantic ── */
   --color-mk-primary: #2563EB;
