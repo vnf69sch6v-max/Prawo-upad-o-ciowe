@@ -111,6 +111,26 @@ przy podejmowaniu.
     inline, tak jak robi to `Segmented.tsx`.
   - **Pułapka i18n:** polskie „ł" (U+0142) NIE rozkłada się pod NFD, więc samo usuwanie diakrytyków nie
     wystarcza — bez podmiany „ł"→„l" szukanie „zloty" nie znajdzie „złoty". Patrz `norm()` w `lib/news/match.ts`.
+- **Dopracowanie wyglądu — audyt mobile + dostępność** — 2026-07-16, commity `974aee9`, `0782390`, `f352032`
+  Zlecone przez właściciela. Audyt mierzony w DOM (nie „na oko") na 375px: `/newsy`, `/rynki`,
+  `/praca`, `/gospodarka`, `/regiony`.
+  - **Ucinane KPI:** „23 248 EUR" pokazywało się jako „23 248 EU". `.mk-kpi-value` miało
+    `clamp(2rem, 4.5vw, 3rem)`, gdzie **2rem jest PODŁOGĄ** — `4.5vw` przebija ją dopiero powyżej
+    ~711px, więc na telefonie font miał zawsze 32px i wychodził 18px poza kartę (164px),
+    a `overflow:hidden` obcinał go w połowie znaku.
+    → karta KPI to teraz **kontener zapytań** (`.mk-kpi`, `container-type: inline-size`), a font
+    skaluje się jednostkami `cqi` — do SZEROKOŚCI KARTY, nie okna (karty stoją w siatce, więc
+    viewport nie mówi nic o ich szerokości). Reguły `cqi` są w `@container`, bo **poza kontenerem
+    cqi liczy się względem viewportu** → fallback musi zostać. Desktop bez zmian (48px).
+  - **Nawigacja:** „Rynek pracy" łamał się na 2 linie (54px vs 33px) i rozpychał pasek z 41 na 72px
+    → `white-space: nowrap` w `.mk-tab`. Dodana `.mk-navrow`: schowany scrollbar + zanik po prawej
+    (wcześniej pozycje wyglądały na ucięte przez błąd).
+  - **Cele dotykowe:** stopka (16px) i „Wszystkie" w pasie newsów (20px) poniżej 24px z WCAG 2.2
+    → padding, 28px.
+  - **Kontrast:** `mk-faint` miał **2.31:1** przy wymaganych 4.5:1 (WCAG AA) — a to kolor dat,
+    liczników i podpisów. Samo pociemnienie zrównałoby go z `muted`, więc przesunięta cała skala
+    slate o stopień (muted 500→600, faint 400→500). Po zmianie: 17.85 / 10.35 / 7.58 / 4.76 — wszystko AA,
+    hierarchia zachowana. Jeden token = 94 użycia `text-mk-faint` naprawione naraz.
 - **Newsy — ranking (ważność/data/wiarygodność) + nowy wygląd** — 2026-07-16, commit `7c30a5d`
   Zlecone przez właściciela. `/newsy`: lead story, sortowanie Ważne/Najnowsze, słupek ważności,
   badge „N niezależnych redakcji", oznaczenia reklam i opinii. Przegląd pokazuje najważniejsze
