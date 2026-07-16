@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { withCache } from '@/lib/server-cache';
 import { NEWS_SOURCES } from '@/lib/news/sources';
 import { parseRss, urlKey, titleKey } from '@/lib/news/parse';
+import type { NewsItem, NewsSourceStatus } from '@/lib/news/types';
 
 export const revalidate = 0;
 
@@ -14,26 +15,8 @@ const MAX_ITEMS = 150;
 // Część serwisów odrzuca żądania bez nagłówka UA (albo serwuje HTML zamiast XML).
 const UA = 'Mozilla/5.0 (compatible; MakroDataPlatform/1.0; +https://github.com/) AppleWebKit/537.36';
 
-export interface NewsItem {
-    title: string;
-    link: string;
-    publishedAt: string;
-    description: string;
-    sourceId: string;
-    source: string;
-    section: string;
-}
-
-interface SourceStatus {
-    id: string;
-    name: string;
-    ok: boolean;
-    count: number;
-    error?: string;
-}
-
-async function fetchSource(src: (typeof NEWS_SOURCES)[number]): Promise<{ items: NewsItem[]; status: SourceStatus }> {
-    const base: SourceStatus = { id: src.id, name: src.name, ok: false, count: 0 };
+async function fetchSource(src: (typeof NEWS_SOURCES)[number]): Promise<{ items: NewsItem[]; status: NewsSourceStatus }> {
+    const base: NewsSourceStatus = { id: src.id, name: src.name, ok: false, count: 0 };
     try {
         const res = await fetch(src.url, {
             headers: { 'User-Agent': UA, Accept: 'application/rss+xml, application/xml, text/xml;q=0.9, */*;q=0.8' },

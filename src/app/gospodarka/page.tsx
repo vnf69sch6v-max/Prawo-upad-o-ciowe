@@ -21,6 +21,7 @@ import { analyzeSeries } from '@/lib/observations';
 import { AktywnoscSection } from '@/components/sections/macro-sections';
 import { RzadyGospodarka } from '@/components/sections/RzadyGospodarka';
 import { KorelacjeMakro } from '@/components/sections/KorelacjeMakro';
+import { RelatedNews } from '@/components/ui/RelatedNews';
 
 type Tab = 'aktywnosc' | 'koniunktura' | 'finanse' | 'korelacje';
 const TABS: { value: Tab; label: string }[] = [
@@ -283,6 +284,8 @@ export default function GospodarkaPage() {
                 {tab === 'finanse' && <FinansePubliczne />}
                 {tab === 'korelacje' && <KorelacjeMakro />}
             </div>
+
+            <RelatedNews topic="gospodarka" />
         </div>
     );
 }

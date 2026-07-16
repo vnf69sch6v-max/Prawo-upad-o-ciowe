@@ -7,6 +7,7 @@ import { Segmented } from '@/components/ui/Segmented';
 import { InflacjaFull } from '@/components/sections/InflacjaFull';
 import { PpiFull } from '@/components/sections/PpiFull';
 import { DbwPriceSection } from '@/components/sections/DbwPriceSection';
+import { RelatedNews } from '@/components/ui/RelatedNews';
 
 type Tab = 'inflacja' | 'ppi' | 'nieruchomosci' | 'budowlane' | 'rolne';
 const TABS: { value: Tab; label: string }[] = [
@@ -60,6 +61,8 @@ export default function CenyPage() {
                     note="Dynamika cen skupu podstawowych produktów rolnych." />
             )}
             </div>
+
+            <RelatedNews topic="ceny" />
         </div>
     );
 }

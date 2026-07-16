@@ -26,32 +26,17 @@ _(puste — weź pierwszą pozycję z KOLEJKI, przenieś ją tutaj i rozpisz kro
 
 ## KOLEJKA (priorytet malejąco)
 
-### 1. Newsy w kontekście danych (nasz wyróżnik)
-
-Tego nie ma ani Stooq, ani Bankier: news postawiony przy wskaźniku, którego dotyczy.
-
-Gotowe do użycia: hook `useNews()` (`src/lib/hooks.ts`, typy `NewsItem`/`NewsResult`), `formatRelativeTime()`
-(`src/lib/formatters.ts`) i helper `norm()` w `src/app/newsy/page.tsx` (usuwa diakrytyki + „ł" → „l");
-przy dopasowaniu po słowach kluczowych `norm()` warto przenieść do `src/lib/news/` i użyć wspólnie.
-Każdy news ma `section` z feedu (`ogolne`/`gielda`/`waluty`/`przemysl`) — sygnał pomocniczy, ale sam
-nie wystarczy (feed główny Bankiera miesza tematy) → dopasowanie po słowach kluczowych w tytule+opisie.
-
-- Dopasowanie newsów do wskaźników po słowach kluczowych: inflacja/CPI → Ceny; stopy/RPP → Rynki;
-  PKB → Gospodarka; bezrobocie/płace → Praca.
-- Pas „Newsy powiązane" w tych sekcjach + najnowsze newsy na Przeglądzie.
-- **Kryterium:** Ceny, Gospodarka, Praca i Rynki pokazują trafnie dopasowane newsy (bez przypadkowych trafień).
-
-### 2. Rynki — więcej indeksów
+### 1. Rynki — więcej indeksów
 
 - Obok WIG20 dodaj WIG, mWIG40, sWIG80. **Zweryfikuj tickery u źródła, zanim podepniesz.**
 - **Kryterium:** indeksy z żywym kursem i zmianą %, na wspólnym wykresie porównawczym.
 
-### 3. Rynki — pojedyncze spółki
+### 2. Rynki — pojedyncze spółki
 
 - Tabela spółek WIG20: kurs, zmiana %, sortowanie. Szuflada/strona spółki z wykresem historii.
 - **Kryterium:** ≥20 spółek z żywymi danymi, sortowanie działa.
 
-### 4. Watchlista
+### 3. Watchlista
 
 - Zapis w `localStorage`; dodawanie wskaźników i spółek; pas „Obserwowane" na Przeglądzie.
 - **Kryterium:** wybór przeżywa odświeżenie strony.
@@ -91,4 +76,23 @@ nie wystarczy (feed główny Bankiera miesza tematy) → dopasowanie po słowach
     utility Tailwinda** — `pl-9`/`pr-9` nie zadziała (ikona nachodzi na placeholder). Nadpisywać stylem
     inline, tak jak robi to `Segmented.tsx`.
   - **Pułapka i18n:** polskie „ł" (U+0142) NIE rozkłada się pod NFD, więc samo usuwanie diakrytyków nie
-    wystarcza — bez podmiany „ł"→„l" szukanie „zloty" nie znajdzie „złoty". Patrz `norm()` w `newsy/page.tsx`.
+    wystarcza — bez podmiany „ł"→„l" szukanie „zloty" nie znajdzie „złoty". Patrz `norm()` w `lib/news/match.ts`.
+- **Newsy w kontekście danych** — 2026-07-16, commit `<uzupełniony niżej>`
+  Pas „Newsy powiązane" na Cenach, Gospodarce, Pracy i Rynkach + „Najnowsze newsy" na Przeglądzie.
+  Pliki: `src/lib/news/match.ts` (silnik), `src/lib/news/types.ts` (wspólne typy), `RelatedNews.tsx`
+  (eksportuje `RelatedNews` i `LatestNews`). Pas ukrywa się przy 0 trafień — przy nastawieniu na precyzję
+  to normalny stan, a pusta ramka „brak" byłaby gorsza niż jej brak.
+  Zweryfikowane na żywo: Ceny 6 trafień, Rynki 23, Praca 5, Gospodarka 2 (ze 150 newsów) — wszystkie na temat.
+  - **Trafność wymusiła projekt silnika — nie upraszczać go z powrotem.** Audyt na żywych danych wykrył
+    fałszywe trafienia, każde z innej przyczyny:
+    - prefiks „zloty" łapał „setki milionów **złotych**" (kwota, nie waluta) → PAŻP i bursztyn w Rynkach;
+    - prefiks „pensj" łapał „**pensj**onariusza" → szpitalny parking w Pracy;
+    - „pracownikow" było zbyt ogólne (każdy artykuł o firmie);
+    - „stopa" samo w sobie łapie „stopę bezrobocia", czyli CUDZY temat.
+    Stąd: **prefiksy vs całe słowa** (granica z obu stron) — patrz komentarze w `match.ts`.
+  - **Główne odkrycie:** większość fałszywek brała się z OPISU, nie z tytułu — opis tylko wspomina
+    („restrukturyzował zadłużenie i **zatrudnienie**" w newsie o wynikach spółki), tytuł mówi, o czym
+    artykuł JEST. Stąd dwa poziomy pewności: `strong` (tytuł + opis) i `titleOnly` (tylko tytuł).
+    Samo dopasowanie po tytule odpadło — Gospodarka schodziła wtedy do **0** trafień na 150.
+  - Skrypty audytowe były jednorazowe (scratchpad) — przy zmianie słowników powtórzyć: wypisać trafienia
+    per temat z żywego `/api/news` i przejrzeć ręcznie.

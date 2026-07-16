@@ -17,6 +17,7 @@ import { Segmented } from '@/components/ui/Segmented';
 import { CsvExport } from '@/components/ui/CsvExport';
 import { ObservationsPanel } from '@/components/ui/ObservationsPanel';
 import { PublicationDatesPanel } from '@/components/ui/PublicationDatesPanel';
+import { LatestNews } from '@/components/ui/RelatedNews';
 
 // ── data helpers ────────────────────────────────────────────
 type Point = { date: string; value: number };
@@ -165,6 +166,8 @@ export default function OverviewPage() {
                     <PublicationDatesPanel count={5} />
                 </div>
             </div>
+
+            <LatestNews limit={6} />
         </div>
     );
 }

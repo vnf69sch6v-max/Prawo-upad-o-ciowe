@@ -11,6 +11,7 @@ import { InteractiveChart } from '@/components/ui/InteractiveChart';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { CsvExport } from '@/components/ui/CsvExport';
 import { RynekPracySection } from '@/components/sections/macro-sections';
+import { RelatedNews } from '@/components/ui/RelatedNews';
 
 type Tab = 'bezrobocie' | 'zatrudnienie' | 'bael';
 const TABS: { value: Tab; label: string }[] = [
@@ -91,6 +92,8 @@ export default function RynekPracyPage() {
                 {tab === 'zatrudnienie' && <ZatrudnienieSection />}
                 {tab === 'bael' && <BaelSection />}
             </div>
+
+            <RelatedNews topic="praca" />
         </div>
     );
 }

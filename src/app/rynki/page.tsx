@@ -19,6 +19,7 @@ import { Segmented } from '@/components/ui/Segmented';
 import { CsvExport } from '@/components/ui/CsvExport';
 import { DataTable, type Column } from '@/components/ui/DataTable';
 import { StopySection } from '@/components/sections/macro-sections';
+import { RelatedNews } from '@/components/ui/RelatedNews';
 
 type Section = 'kursy' | 'stopy' | 'gpw' | 'handel';
 type Hist = { mid?: number; effectiveDate?: string }[];
@@ -334,6 +335,8 @@ export default function RynkiPage() {
                 {section === 'gpw' && <GpwSection />}
                 {section === 'handel' && <HandelSection />}
             </div>
+
+            <RelatedNews topic="rynki" />
         </div>
     );
 }

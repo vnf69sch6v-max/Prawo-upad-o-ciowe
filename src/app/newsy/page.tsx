@@ -5,14 +5,8 @@ import { Search, ExternalLink, AlertTriangle, Newspaper, X } from 'lucide-react'
 import { useNews, type NewsItem } from '@/lib/hooks';
 import { formatRelativeTime, formatTime, formatDate } from '@/lib/formatters';
 import { SectionCard } from '@/components/ui/SectionCard';
-
-/**
- * Normalizacja pod wyszukiwarkę: bez ogonków, żeby „zabka" znajdowało „Żabkę".
- * NFD rozkłada ą/ć/ę/ń/ó/ś/ź/ż na literę + znak diakrytyczny (U+0300–U+036F), ale „ł" (U+0142)
- * NIE ma rozkładu — trzeba je podmienić ręcznie, inaczej „zloty" nie znajdzie „złoty".
- */
-const norm = (s: string) =>
-    s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\u0142/gi, 'l').toLowerCase();
+// Ta sama normalizacja (bez diakrytyków, „ł" → „l"), której używa dopasowanie newsów do tematów.
+import { norm } from '@/lib/news/match';
 
 function SourceFilter({
     sources, value, onChange,

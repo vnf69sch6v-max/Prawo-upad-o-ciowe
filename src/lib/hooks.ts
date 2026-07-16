@@ -2,6 +2,7 @@
 
 import { useQuery, useQueries } from '@tanstack/react-query';
 import { COICOP_2026, buildBasket } from '@/lib/calculations/cpi-basket';
+import type { NewsResult } from '@/lib/news/types';
 
 // ─── Types ───────────────────────────────────────────────
 
@@ -585,37 +586,9 @@ export function useYieldCurve() {
 }
 
 // ─── Newsy (agregat RSS) ─────────────────────────────────
+// Typy mieszkają w lib/news/types.ts — współdzielone z serwerem (api/news) i match.ts.
 
-export interface NewsItem {
-    title: string;
-    link: string;
-    /** ISO UTC — patrz api/news; strefy feedów są normalizowane po stronie serwera. */
-    publishedAt: string;
-    description: string;
-    sourceId: string;
-    source: string;
-    section: string;
-}
-
-export interface NewsSourceStatus {
-    id: string;
-    name: string;
-    ok: boolean;
-    count: number;
-    error?: string;
-}
-
-export interface NewsResult {
-    timestamp: string;
-    sourcesOk: number;
-    sourcesTotal: number;
-    /** Liczba faktycznie zwróconych pozycji (= items.length). */
-    count: number;
-    /** Ile było po deduplikacji, zanim serwer przyciął listę do limitu. */
-    countBeforeLimit: number;
-    sources: NewsSourceStatus[];
-    items: NewsItem[];
-}
+export type { NewsItem, NewsSourceStatus, NewsResult } from '@/lib/news/types';
 
 export function useNews() {
     return useQuery<NewsResult>({
