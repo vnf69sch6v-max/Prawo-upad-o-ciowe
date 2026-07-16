@@ -46,7 +46,7 @@ export function KpiCard({ label, value, unit, delta, accent = 'blue', icon: Icon
     }
 
     return (
-        <div className="mk-card mk-card-interactive overflow-hidden">
+        <div className="mk-kpi mk-card mk-card-interactive overflow-hidden">
             <div style={{ height: 4, background: a.bar }} />
             <div className="p-5">
                 <div className="flex items-start justify-between gap-2">
@@ -57,9 +57,10 @@ export function KpiCard({ label, value, unit, delta, accent = 'blue', icon: Icon
                         </span>
                     )}
                 </div>
+                {/* `min-w-0` na wartości pozwala jej się skurczyć zamiast wypychać jednostkę poza kartę. */}
                 <div className="mt-3 flex items-baseline gap-1">
-                    <span className="mk-kpi-value"><AnimatedNumber value={value} /></span>
-                    {unit && <span className="text-2xl font-semibold text-mk-muted">{unit}</span>}
+                    <span className="mk-kpi-value min-w-0"><AnimatedNumber value={value} /></span>
+                    {unit && <span className="mk-kpi-unit shrink-0">{unit}</span>}
                 </div>
                 {delta && (
                     <div className="mt-2.5">

@@ -32,7 +32,7 @@ function CorroborationBadge({ n, alsoIn }: { n: number; alsoIn?: string[] }) {
     if (n < 2) return null;
     return (
         <span
-            className="inline-flex items-center gap-1 rounded-full bg-mk-positive/10 px-1.5 py-0.5 text-[11px] font-medium text-mk-positive"
+            className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full bg-mk-positive/10 px-1.5 py-0.5 text-[11px] font-medium text-mk-positive"
             title={alsoIn?.length ? `Ten sam temat opisują też: ${alsoIn.join(', ')}` : undefined}
         >
             <Layers size={10} />
@@ -66,9 +66,9 @@ function LeadStory({ item, mounted }: { item: NewsItem; mounted: boolean }) {
             className="group relative block overflow-hidden rounded-2xl border border-mk-border bg-mk-surface p-5 transition-all hover:border-mk-primary/40 hover:shadow-lg sm:p-6"
         >
             <span className="absolute inset-x-0 top-0 h-1 bg-mk-primary" />
-            <div className="flex items-center gap-2">
-                <span className="inline-flex items-center gap-1 rounded-full bg-mk-primary/10 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-mk-primary">
-                    <Flame size={11} /> Najważniejsze teraz
+            <div className="flex flex-wrap items-center gap-2">
+                <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full bg-mk-primary/10 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-mk-primary">
+                    <Flame size={11} /> Najważniejsze
                 </span>
                 <CorroborationBadge n={item.corroboration ?? 1} alsoIn={item.alsoIn} />
             </div>

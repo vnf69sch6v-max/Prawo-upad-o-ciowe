@@ -112,13 +112,41 @@ button.mk-card,
 }
 
 /* KPI big number */
+/* Karta KPI jest kontenerem zapytań — dzięki temu wartość skaluje się do SZEROKOŚCI KARTY,
+   a nie do okna. Bez tego na telefonie (2 karty w rzędzie ≈ 164px) liczba i jednostka nie
+   mieściły się i `overflow: hidden` obcinał je w połowie znaku — „23 248 EUR" wyglądało
+   jak „23 248 EU". */
+.mk-kpi {
+  container-type: inline-size;
+}
+
 .mk-kpi-value {
+  /* Fallback, gdy element NIE ma przodka-kontenera: jednostki cqi przeliczyłyby się wtedy
+     względem viewportu, co dałoby absurdalny rozmiar. */
   font-size: clamp(2rem, 4.5vw, 3rem);
   font-weight: 700;
   line-height: 1;
   letter-spacing: -0.02em;
   color: var(--color-mk-text);
   font-variant-numeric: tabular-nums;
+}
+
+.mk-kpi-unit {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--color-mk-muted);
+}
+
+/* `min-width: 0` zapytania spełnia każdy kontener → reguły łapią tylko wtedy, gdy .mk-kpi
+   faktycznie istnieje nad elementem. Poza kontenerem zostaje fallback wyżej. */
+@container (min-width: 0px) {
+  .mk-kpi-value {
+    font-size: clamp(1.375rem, 15cqi, 3rem);
+  }
+
+  .mk-kpi-unit {
+    font-size: clamp(0.8125rem, 7cqi, 1.5rem);
+  }
 }
 
 /* Label (uppercase, muted) */
@@ -176,6 +204,22 @@ button.mk-card,
   font-weight: 500;
   color: var(--color-mk-muted);
   transition: color .12s ease, background .12s ease;
+  /* Bez tego „Rynek pracy" łamał się na dwie linie i rozpychał cały pasek nawigacji
+     z 45px do 72px — jedna pozycja psuła wysokość nagłówka na telefonie. */
+  white-space: nowrap;
+}
+
+/* Przewijany pasek nawigacji (telefon/tablet): chowamy surowy pasek przewijania i zaznaczamy
+   zanikiem, że po prawej jest jeszcze treść — inaczej pozycje wyglądają na ucięte przez błąd. */
+.mk-navrow {
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent 100%);
+}
+
+.mk-navrow::-webkit-scrollbar {
+  display: none;
 }
 
 .mk-tab:hover {

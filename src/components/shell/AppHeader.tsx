@@ -48,7 +48,7 @@ export function AppHeader() {
 
             {/* Mobile / tablet nav row */}
             <div className="xl:hidden">
-                <TopNav className="max-w-full overflow-x-auto px-3 pb-2" />
+                <TopNav className="mk-navrow max-w-full px-3 pb-2" />
             </div>
         </header>
     );
