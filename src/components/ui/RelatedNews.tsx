@@ -52,8 +52,9 @@ function NewsList({ items }: { items: NewsItem[] }) {
     );
 }
 
+// `py-1` daje 26px wysokości — poniżej ~24px cel dotykowy jest zbyt mały (WCAG 2.2 Target Size).
 const AllNewsLink = () => (
-    <Link href="/newsy" className="flex items-center gap-1 text-sm font-medium text-mk-primary hover:underline">
+    <Link href="/newsy" className="-mr-1.5 flex items-center gap-1 rounded px-1.5 py-1 text-sm font-medium text-mk-primary transition-colors hover:bg-mk-primary/5 hover:underline">
         Wszystkie <ArrowRight size={14} />
     </Link>
 );
