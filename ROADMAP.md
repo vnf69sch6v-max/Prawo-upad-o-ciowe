@@ -76,6 +76,16 @@ przy podejmowaniu.
 - Rynki, Praca, Regiony (mapa + rynek pracy), Prognozy (koszyk CPI, nowcast PKB, Taylor, symulatory)
 - Publikacje (kalendarz), Samorząd (SMUP)
 - Responsywność mobile; sprzątanie legacy (bb-/JetBrains); rozbicie cronów DBW na 3 okna; audyt /prognozy
+- **Naprawa: wykresy nie renderowały się na mobile** — 2026-07-16, commit `bb9ab3f`
+  Zgłoszenie właściciela: na telefonie karty wykresów pokazywały tytuł i przełączniki, ale w miejscu
+  wykresu była biała pustka (produkcja). Bez błędu w konsoli — trzeba było zmierzyć DOM.
+  - Przyczyna: **Recharts 3.7 + React 19 gubi pomiar szerokości** — jego wewnętrzny ResizeObserver
+    przegrywa wyścig przy montowaniu i zostaje na zerze. SVG miał atrybut `width="309"`, ale realną
+    szerokość 0, bo Recharts wstawiał własny `<div style="width: 0px">`.
+  - Rozwiązanie: drop-in zamiennik `ResponsiveContainer` → `src/components/ui/ChartContainer.tsx`
+    (własny pomiar: `useLayoutEffect` + ResizeObserver, wykres dostaje szerokość w pikselach).
+    Podmieniony import w 5 plikach (7 wykresów). **Nie importować ResponsiveContainer z 'recharts'.**
+  - Zweryfikowane na mobile 375px: surface 0x200 → 309x200, serie/osie/legenda widoczne.
 - **Newsy — backend (agregator RSS)** — 2026-07-16, commit `7316f35`
   `/api/news`: 8 zweryfikowanych feedów → parse → dedup → sort. Na żywo: **8/8 źródeł, 175 pozycji**,
   0 braków w polach, 0 dat w przyszłości, ~400 ms. Pliki: `src/lib/news/{sources,parse}.ts`,
@@ -101,7 +111,7 @@ przy podejmowaniu.
     inline, tak jak robi to `Segmented.tsx`.
   - **Pułapka i18n:** polskie „ł" (U+0142) NIE rozkłada się pod NFD, więc samo usuwanie diakrytyków nie
     wystarcza — bez podmiany „ł"→„l" szukanie „zloty" nie znajdzie „złoty". Patrz `norm()` w `lib/news/match.ts`.
-- **Newsy — ranking (ważność/data/wiarygodność) + nowy wygląd** — 2026-07-16, commit `<hash>`
+- **Newsy — ranking (ważność/data/wiarygodność) + nowy wygląd** — 2026-07-16, commit `7c30a5d`
   Zlecone przez właściciela. `/newsy`: lead story, sortowanie Ważne/Najnowsze, słupek ważności,
   badge „N niezależnych redakcji", oznaczenia reklam i opinii. Przegląd pokazuje najważniejsze
   (nie najświeższe). Pliki: `lib/news/{score,cluster}.ts`, `sources.ts` (owner + OWNER_WEIGHT),
