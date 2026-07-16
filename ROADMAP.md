@@ -77,7 +77,7 @@ _(puste — weź pierwszą pozycję z KOLEJKI, przenieś ją tutaj i rozpisz kro
     inline, tak jak robi to `Segmented.tsx`.
   - **Pułapka i18n:** polskie „ł" (U+0142) NIE rozkłada się pod NFD, więc samo usuwanie diakrytyków nie
     wystarcza — bez podmiany „ł"→„l" szukanie „zloty" nie znajdzie „złoty". Patrz `norm()` w `lib/news/match.ts`.
-- **Newsy w kontekście danych** — 2026-07-16, commit `<uzupełniony niżej>`
+- **Newsy w kontekście danych** — 2026-07-16, commit `b6b3414`
   Pas „Newsy powiązane" na Cenach, Gospodarce, Pracy i Rynkach + „Najnowsze newsy" na Przeglądzie.
   Pliki: `src/lib/news/match.ts` (silnik), `src/lib/news/types.ts` (wspólne typy), `RelatedNews.tsx`
   (eksportuje `RelatedNews` i `LatestNews`). Pas ukrywa się przy 0 trafień — przy nastawieniu na precyzję
