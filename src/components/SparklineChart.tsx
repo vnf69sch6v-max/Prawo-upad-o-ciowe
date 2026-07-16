@@ -1,6 +1,7 @@
 'use client';
 
-import { Area, AreaChart, ResponsiveContainer } from 'recharts';
+import { Area, AreaChart } from 'recharts';
+import { ResponsiveContainer } from '@/components/ui/ChartContainer';
 
 interface SparklineProps {
     data: number[];

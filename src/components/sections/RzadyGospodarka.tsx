@@ -4,7 +4,8 @@
 // dług, deficyt). Tło wykresu = pas w barwie ekipy rządzącej; tabela = bilans (średnie w okresie).
 // Wszystko na danych realnych (Eurostat: PKB realny, HICP, dług/deficyt EDP). Zestawienie OPISOWE.
 import { useMemo, useState } from 'react';
-import { ComposedChart, Line, XAxis, YAxis, CartesianGrid, ReferenceArea, ReferenceLine, Tooltip, ResponsiveContainer } from 'recharts';
+import { ComposedChart, Line, XAxis, YAxis, CartesianGrid, ReferenceArea, ReferenceLine, Tooltip } from 'recharts';
+import { ResponsiveContainer } from '@/components/ui/ChartContainer';
 import { useGDPAnnual, useCPIAnnual, useGovDebt, useGovDeficit } from '@/lib/hooks';
 import { plSeries } from '@/lib/series';
 import { formatDecimalPL } from '@/lib/formatters';

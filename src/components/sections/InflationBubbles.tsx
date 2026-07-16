@@ -5,7 +5,8 @@
 // rozmiar bąbla = |wkład| = waga × |r/r|. Scrubber + Play przewijają 10 lat historii GUS —
 // widać, jak działy „wjeżdżają" w strefę wysokiej inflacji 2022–23 i z niej schodzą.
 import { useEffect, useMemo, useState } from 'react';
-import { ScatterChart, Scatter, XAxis, YAxis, ZAxis, Cell, ReferenceLine, ResponsiveContainer, Tooltip } from 'recharts';
+import { ScatterChart, Scatter, XAxis, YAxis, ZAxis, Cell, ReferenceLine, Tooltip } from 'recharts';
+import { ResponsiveContainer } from '@/components/ui/ChartContainer';
 import { Play, Pause } from 'lucide-react';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { formatDecimalPL } from '@/lib/formatters';

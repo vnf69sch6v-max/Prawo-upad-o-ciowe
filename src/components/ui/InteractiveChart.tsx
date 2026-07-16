@@ -2,9 +2,10 @@
 
 import { useMemo, useState, type ReactNode } from 'react';
 import {
-    ResponsiveContainer, ComposedChart, Line, Bar, Area,
+    ComposedChart, Line, Bar, Area,
     XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine, Legend,
 } from 'recharts';
+import { ResponsiveContainer } from '@/components/ui/ChartContainer';
 
 export interface ChartSeries {
     key: string;
