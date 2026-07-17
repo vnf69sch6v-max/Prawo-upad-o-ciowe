@@ -31,6 +31,9 @@ export default function CenyPage() {
                 <Segmented value={tab} onChange={setTab} options={TABS} aria-label="Sekcja cen" />
             </div>
 
+            {/* Newsy powiązane — nad danymi, nie na dole strony (zlecenie właściciela). */}
+            <RelatedNews topic="ceny" />
+
             <div key={tab} className="mk-fade-in">
             {tab === 'inflacja' && <InflacjaFull />}
             {tab === 'ppi' && <PpiFull />}
@@ -61,8 +64,6 @@ export default function CenyPage() {
                     note="Dynamika cen skupu podstawowych produktów rolnych." />
             )}
             </div>
-
-            <RelatedNews topic="ceny" />
         </div>
     );
 }

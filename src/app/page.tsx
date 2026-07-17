@@ -1,24 +1,21 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { TrendingUp, Percent, Users, BarChart3, Factory, Euro, DollarSign, ShoppingCart, LineChart, Landmark, Gem } from 'lucide-react';
 import {
     useCpiFull, useUnemploymentMonthly, useGDPQuarterly,
     useNBPInterestRates, useNBPTable, useEURPLN, useUSDPLN,
-    useIndustrialProduction, useRetailSales, usePPI, useBondYield10Y, useGold, useStooq,
+    useIndustrialProduction, useRetailSales, useBondYield10Y, useGold, useStooq,
     type EurostatResult, type NBPTable,
 } from '@/lib/hooks';
 import { formatDecimalPL, formatNumber, formatDate, percentChange } from '@/lib/formatters';
 import { trendObservation, type Observation } from '@/lib/observations';
 import { KpiCard, type AccentKey } from '@/components/ui/KpiCard';
-import { InteractiveChart } from '@/components/ui/InteractiveChart';
 import { SectionCard } from '@/components/ui/SectionCard';
-import { Segmented } from '@/components/ui/Segmented';
 import { CsvExport } from '@/components/ui/CsvExport';
 import { ObservationsPanel } from '@/components/ui/ObservationsPanel';
 import { PublicationDatesPanel } from '@/components/ui/PublicationDatesPanel';
 import { LatestNews } from '@/components/ui/RelatedNews';
-import { AXIS_INK } from '@/lib/chart-theme';
 
 // ── data helpers ────────────────────────────────────────────
 type Point = { date: string; value: number };
@@ -29,7 +26,6 @@ function plSeries(res?: EurostatResult): Point[] {
 const lastOf = (s: Point[]) => (s.length ? s[s.length - 1].value : null);
 const prevOf = (s: Point[]) => (s.length > 1 ? s[s.length - 2].value : null);
 const fmt1 = (n: number | null | undefined) => (n == null ? '—' : formatDecimalPL(n, 1));
-const monthTick = (d: string) => { const [y, m] = d.split('-'); return m ? `${m}.${y.slice(2)}` : d; };
 const ppDelta = (s: Point[]) => (lastOf(s) != null && prevOf(s) != null ? +(lastOf(s)! - prevOf(s)!).toFixed(1) : null);
 
 // NBP currency 90d history → % zmiana vs poprzedni odczyt (kształt: tablica lub {rates:[]})
@@ -41,12 +37,10 @@ function fxDelta(data: unknown): number | null {
     return a && b ? +percentChange(a, b).toFixed(2) : null;
 }
 
-type Metric = 'cpi' | 'ppi' | 'unemployment' | 'industrial' | 'retail' | 'gdp';
 
 export default function OverviewPage() {
     // ── makro ──
     const cpiQ = useCpiFull();
-    const ppiQ = usePPI();
     const unempQ = useUnemploymentMonthly();
     const gdpQ = useGDPQuarterly();
     const ratesQ = useNBPInterestRates();
@@ -61,7 +55,6 @@ export default function OverviewPage() {
     const wig20Q = useStooq('wig20', 30);
 
     const cpi = useMemo(() => (cpiQ.data?.headline ?? []).filter((h) => h.yoy != null).map((h) => ({ date: h.date, value: h.yoy as number })), [cpiQ.data]);
-    const ppi = useMemo(() => plSeries(ppiQ.data), [ppiQ.data]);
     const unemp = useMemo(() => plSeries(unempQ.data), [unempQ.data]);
     const gdp = useMemo(() => plSeries(gdpQ.data), [gdpQ.data]);
     const industrial = useMemo(() => plSeries(indQ.data), [indQ.data]);
@@ -95,19 +88,6 @@ export default function OverviewPage() {
         { label: 'Rentowność 10Y', href: '/gospodarka?tab=finanse', value: lastOf(yield10) != null ? formatDecimalPL(lastOf(yield10)!, 2) : '—', unit: '%', accent: 'violet' as AccentKey, icon: Landmark, delta: lastOf(yield10) != null && prevOf(yield10) != null ? { value: +(lastOf(yield10)! - prevOf(yield10)!).toFixed(2), unit: 'pp' as const, invert: true } : undefined, footnote: yield10.length ? `Eurostat · ${yield10[yield10.length - 1].date}` : 'Eurostat', loading: yieldQ.isLoading },
         { label: 'Złoto (NBP)', href: '/rynki?tab=kursy', value: goldLast != null ? formatDecimalPL(goldLast, 2) : '—', unit: 'zł/g', accent: 'amber' as AccentKey, icon: Gem, delta: goldDelta != null ? { value: goldDelta, unit: 'pct' as const } : undefined, footnote: 'NBP · cena złota', loading: goldQ.isLoading },
     ];
-
-    // ── hero (przełączalny) ──
-    const [metric, setMetric] = useState<Metric>('cpi');
-    const META: Record<Metric, { label: string; color: string; type: 'area' | 'line' | 'bar'; source: string; series: Point[] }> = {
-        cpi: { label: 'Inflacja CPI (r/r)', color: '#2563EB', type: 'area', source: 'GUS (krajowy CPI)', series: cpi },
-        ppi: { label: 'Ceny producenta PPI (r/r)', color: '#E11D48', type: 'line', source: 'Eurostat', series: ppi },
-        unemployment: { label: 'Stopa bezrobocia', color: '#0891B2', type: 'line', source: 'Eurostat LFS', series: unemp },
-        industrial: { label: 'Produkcja przemysłowa (r/r)', color: '#7C3AED', type: 'line', source: 'Eurostat', series: industrial },
-        retail: { label: 'Sprzedaż detaliczna (r/r)', color: '#D97706', type: 'area', source: 'Eurostat', series: retail },
-        gdp: { label: 'PKB (r/r)', color: '#16A34A', type: 'bar', source: 'Eurostat', series: gdp },
-    };
-    const meta = META[metric];
-    const chartData = useMemo(() => meta.series.map((d) => ({ date: d.date, value: d.value })), [meta.series]);
 
     // ── obserwacje ──
     const observations = useMemo<Observation[]>(() => {
@@ -148,28 +128,16 @@ export default function OverviewPage() {
                 </div>
             </div>
 
-            {/* Najważniejsze newsy — nad głębszą analizą: po liczbach (makro + rynki), przed wykresem
-                trendu. Wcześniej pas był na samym dole strony i ginął pod wszystkim. */}
+            {/* Najważniejsze newsy — zaraz po liczbach (makro + rynki). Trend inflacji miał tu wykres
+                z przełącznikiem, ale to dublowało głębsze zakładki (Ceny/Gospodarka), a KPI są teraz
+                klikalne i prowadzą wprost do wykresów. Przegląd zostawiamy jako: liczby → newsy →
+                obserwacje + kalendarz publikacji. */}
             <LatestNews limit={6} />
 
-            {/* Hero + panele */}
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-                <SectionCard className="lg:col-span-2" title={meta.label + ' — trend'} subtitle={`Źródło: ${meta.source}`}
-                    actions={<Segmented<Metric> aria-label="Wskaźnik" value={metric} onChange={setMetric} options={[
-                        { value: 'cpi', label: 'Inflacja' }, { value: 'ppi', label: 'PPI' }, { value: 'gdp', label: 'PKB' },
-                        { value: 'unemployment', label: 'Bezrobocie' }, { value: 'industrial', label: 'Produkcja' }, { value: 'retail', label: 'Sprzedaż' },
-                    ]} />}>
-                    {meta.series.length === 0 ? <div className="mk-skeleton h-[300px] w-full" /> : (
-                        <InteractiveChart data={chartData} xKey="date" series={[{ key: 'value', name: meta.label, color: meta.color, type: meta.type }]}
-                            height={300} unit="%" valueFormatter={(v) => formatDecimalPL(v, 1)} xTickFormatter={monthTick} showRange initialRange="1R"
-                            referenceLines={metric === 'cpi' ? [{ y: 2.5, label: 'Cel NBP', color: AXIS_INK }] : metric === 'gdp' || metric === 'ppi' ? [{ y: 0, color: '#CBD2DD' }] : undefined} />
-                    )}
-                </SectionCard>
-
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-1">
-                    <ObservationsPanel items={observations} />
-                    <PublicationDatesPanel count={5} />
-                </div>
+            {/* Obserwacje + kalendarz publikacji — obok siebie, bo zwolniło się miejsce po wykresie. */}
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                <ObservationsPanel items={observations} />
+                <PublicationDatesPanel count={6} />
             </div>
         </div>
     );

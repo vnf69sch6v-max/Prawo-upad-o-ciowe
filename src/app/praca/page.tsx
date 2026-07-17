@@ -98,13 +98,14 @@ export default function RynekPracyPage() {
                 <Segmented value={tab} onChange={setTab} options={TABS} aria-label="Sekcja rynku pracy" />
             </div>
 
+            {/* Newsy powiązane — nad danymi, nie na dole strony (zlecenie właściciela). */}
+            <RelatedNews topic="praca" />
+
             <div key={tab} className="mk-fade-in">
                 {tab === 'bezrobocie' && <RynekPracySection />}
                 {tab === 'zatrudnienie' && <ZatrudnienieSection />}
                 {tab === 'bael' && <BaelSection />}
             </div>
-
-            <RelatedNews topic="praca" />
         </div>
     );
 }

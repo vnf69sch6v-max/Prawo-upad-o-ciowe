@@ -1,4 +1,4 @@
-import { PublicationDatesPanel } from '@/components/ui/PublicationDatesPanel';
+import { PublicationCalendar } from '@/components/ui/PublicationCalendar';
 import { SectionCard } from '@/components/ui/SectionCard';
 
 const SOURCES = [
@@ -15,8 +15,8 @@ export default function PublikacjePage() {
                 <h1 className="text-3xl font-extrabold tracking-tight text-mk-text">Publikacje</h1>
                 <p className="mt-1 text-sm text-mk-muted">Kalendarz publikacji danych i źródła statystyk</p>
             </div>
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                <PublicationDatesPanel count={8} title="Najbliższe publikacje" />
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+                <PublicationCalendar className="lg:col-span-2" />
                 <SectionCard title="Źródła i częstotliwość">
                     <ul className="divide-y divide-mk-border">
                         {SOURCES.map((s) => (

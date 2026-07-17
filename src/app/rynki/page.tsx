@@ -329,14 +329,15 @@ export default function RynkiPage() {
                 <Segmented value={section} onChange={setSection} options={SECTIONS} aria-label="Sekcja" />
             </div>
 
+            {/* Newsy powiązane — nad danymi, nie na dole strony (zlecenie właściciela). */}
+            <RelatedNews topic="rynki" />
+
             <div key={section} className="mk-fade-in">
                 {section === 'kursy' && <KursySection />}
                 {section === 'stopy' && <StopySection />}
                 {section === 'gpw' && <GpwSection />}
                 {section === 'handel' && <HandelSection />}
             </div>
-
-            <RelatedNews topic="rynki" />
         </div>
     );
 }

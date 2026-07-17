@@ -278,14 +278,15 @@ export default function GospodarkaPage() {
                 <Segmented value={tab} onChange={setTab} options={TABS} aria-label="Sekcja gospodarki" />
             </div>
 
+            {/* Newsy powiązane — nad danymi, nie na dole strony (zlecenie właściciela). */}
+            <RelatedNews topic="gospodarka" />
+
             <div key={tab} className="mk-fade-in">
                 {tab === 'aktywnosc' && <AktywnoscSection />}
                 {tab === 'koniunktura' && <KoniunkturaSection />}
                 {tab === 'finanse' && <FinansePubliczne />}
                 {tab === 'korelacje' && <KorelacjeMakro />}
             </div>
-
-            <RelatedNews topic="gospodarka" />
         </div>
     );
 }
