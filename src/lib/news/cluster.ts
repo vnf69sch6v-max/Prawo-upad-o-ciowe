@@ -128,6 +128,24 @@ function descTokens(text: string): Set<string> {
 }
 
 /**
+ * Marker AGENCYJNY (wire) — atrybucja do agencji prasowej, czyli sygnał, że dwie redakcje
+ * mają to samo ŹRÓDŁO PIERWOTNE (jedną depeszę), nawet gdy przeredagowały opis poniżej progu
+ * podobieństwa. To drugi sygnał przedruku, obok podobieństwa opisów.
+ *
+ * WYŁĄCZNIE agencje — NIE instytucje danych (GUS/NBP/Eurostat). Cytowanie danych GUS przez
+ * dwie redakcje to NORMALNE niezależne relacjonowanie tego samego wskaźnika, nie przedruk.
+ * Zmierzone 2026-07-16: markery agencyjne są rzadkie (2/150 newsów, 0 w klastrach wielo-
+ * -właścicielskich), więc to zabezpieczenie na breaking-newsy (wtedy wiele serwisów niesie
+ * „(PAP)"), a nie zmiana widoczna na typowej migawce.
+ */
+const WIRE_MARKER = /(?<![\p{L}])(pap|reuters|bloomberg|afp|isbnews)(?![\p{L}])|poinformowa\p{L}* agencj|poda\p{L}* agencj|informuje agencj/u;
+
+function agencyMarker(text: string): string | null {
+    const m = norm(text).match(WIRE_MARKER);
+    return m ? (m[1] ?? 'agencja') : null;
+}
+
+/**
  * Single-linkage przez union-find, O(n²).
  *
  * Ryzyko single-linkage: łańcuchowanie (A~B, B~C ⇒ A~C, choć A i C są niepodobne). Przy 150
@@ -203,11 +221,13 @@ function independentReports(
 
     // Najdłuższy opis reprezentuje właściciela — skróty bywają ucięte w różnych miejscach.
     const repr = new Map<NewsOwner, Set<string>>();
+    const marker = new Map<NewsOwner, string | null>();
     for (const o of owners) {
         const best = members
             .filter((i) => items[i].owner === o)
             .reduce((a, b) => (items[a].description.length >= items[b].description.length ? a : b));
         repr.set(o, descTokens(items[best].description));
+        marker.set(o, agencyMarker(`${items[best].title} ${items[best].description}`));
     }
 
     const parent = new Map<NewsOwner, NewsOwner>(owners.map((o) => [o, o]));
@@ -224,7 +244,11 @@ function independentReports(
             let inter = 0;
             for (const t of a) if (b.has(t)) inter++;
             const jaccard = inter / (a.size + b.size - inter);
-            if (jaccard >= WIRE_SIM) {
+            // Krawędź scalająca = albo opisy praktycznie identyczne (przedruk dosłowny),
+            // albo ten sam marker agencyjny (to samo źródło pierwotne mimo przeredagowania).
+            const mi = marker.get(owners[i]), mj = marker.get(owners[j]);
+            const sameWire = mi != null && mi === mj;
+            if (jaccard >= WIRE_SIM || sameWire) {
                 const ra = find(owners[i]), rb = find(owners[j]);
                 if (ra !== rb) { parent.set(rb, ra); wire = true; }
             }

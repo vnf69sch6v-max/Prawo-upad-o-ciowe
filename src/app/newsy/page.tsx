@@ -15,8 +15,10 @@ function ImportanceMark({ value }: { value: number }) {
     const level = value >= 70 ? 3 : value >= 45 ? 2 : value >= 22 ? 1 : 0;
     const label = ['niska', 'średnia', 'wysoka', 'najwyższa'][level];
     const color = ['#CBD2DD', AXIS_INK, '#2563EB', '#DC2626'][level];
+    // „wg naszego rankingu" — żeby ocena nie była czytana jako obiektywna prawda tylko dlatego,
+    // że nadał ją algorytm (machine heuristic, Sundar 2008 — dowód słaby, mitygacja tania).
     return (
-        <span className="flex shrink-0 items-end gap-[2px]" title={`Ważność: ${label}`} aria-label={`Ważność: ${label}`}>
+        <span className="flex shrink-0 items-end gap-[2px]" title={`Ważność wg naszego rankingu: ${label}`} aria-label={`Ważność wg naszego rankingu: ${label}`}>
             {[0, 1, 2, 3].map((i) => (
                 <span key={i} className="w-[3px] rounded-sm" style={{ height: 4 + i * 3, background: i <= level ? color : '#EDF0F5' }} />
             ))}
@@ -342,7 +344,7 @@ export default function NewsyPage() {
                         Pokazano {filtered.length} z {data?.count ?? 0} pozycji
                         {zwinietych > 0 && ` (${zwinietych} zwinięto — ten sam temat z kilku redakcji zajmuje jeden wiersz)`}.{' '}
                         {sort === 'waznosc'
-                            ? `Ważność łączy liczbę niezależnych relacji o temacie (${clusters} potwierdzonych przez ≥2 redakcje), świeżość i konkretność — materiały promocyjne i clickbait są obniżane.`
+                            ? `Ważność łączy liczbę niezależnych relacji o temacie (${clusters} opisanych niezależnie przez ≥2 grupy redakcyjne), świeżość i konkretność — materiały promocyjne i clickbait są obniżane.`
                             : 'Sortowanie od najnowszych.'}
                     </p>
                     <p>

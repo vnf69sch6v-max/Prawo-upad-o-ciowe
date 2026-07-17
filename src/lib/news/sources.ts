@@ -73,10 +73,14 @@ export const NEWS_SOURCES: NewsSource[] = [
  *
  * ⚠️ To jest NASZA OCENA REDAKCYJNA, nie obiektywny rating — i tak trzeba ją opisywać w UI.
  * Sprawdzone (2026-07-16): dla polskich mediów finansowych NIE ISTNIEJE żadna publiczna ocena
- * wiarygodności — NewsGuard nie pokrywa Polski, Media Bias/Fact Check nie ma Bankiera ani
- * Money.pl, Reuters Digital News Report nie wymienia żadnego z naszych źródeł.
+ * WIARYGODNOŚCI — NewsGuard nie pokrywa Polski, Media Bias/Fact Check nie ma Bankiera ani Money.pl,
+ * a Reuters Digital News Report nie OCENIA wiarygodności żadnego z naszych źródeł (wymienia rynek
+ * i właścicieli, m.in. PTWP — właściciela wnp.pl — ale to nie jest rating rzetelności).
  * (Badanie OBI „najważniejsze źródło dla inwestorów" to ankieta popularności, nie rzetelności,
  * i kolportuje ją właściciel dwóch z tych tytułów — nie używać jako proxy wiarygodności.)
+ *
+ * Mapa własności zweryfikowana 2026-07-16. Gdyby dodać kolejne źródło: Rzeczpospolita i parkiet.com
+ * należą do Gremi Media, przejętego przez PTWP (XII 2025) → mapować na `owner: 'ptwp'`, nie osobno.
  *
  * Niższe wagi dla WP i RASP nie dotyczą rzetelności newsów: UOKiK postawił obu grupom zarzuty
  * dotyczące oznaczania artykułów sponsorowanych, więc spodziewamy się u nich większej domieszki
