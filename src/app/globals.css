@@ -121,9 +121,70 @@ button.mk-card,
 /* Karta KPI jest kontenerem zapytań — dzięki temu wartość skaluje się do SZEROKOŚCI KARTY,
    a nie do okna. Bez tego na telefonie (2 karty w rzędzie ≈ 164px) liczba i jednostka nie
    mieściły się i `overflow: hidden` obcinał je w połowie znaku — „23 248 EUR" wyglądało
-   jak „23 248 EU". */
+   jak „23 248 EU".
+   ⚠ PADDING NIGDY TUTAJ — cqi liczy się od content-boxa, więc padding na tym elemencie
+   skurczyłby liczbę. Padding mieszka na .mk-kpi-body. */
 .mk-kpi {
   container-type: inline-size;
+  display: flex;
+  flex-direction: column;
+}
+
+.mk-kpi-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+}
+
+/* Etykieta ma stałą minimalną wysokość, żeby liczby w sąsiadujących kaflach stały na jednej
+   linii bazowej także wtedy, gdy jedna etykieta łamie się na dwie linie. Tego wyrównania
+   nie robi żaden szablon — i właśnie ono sprawia, że rząd kafli wygląda na zaprojektowany. */
+.mk-kpi-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  min-height: 30px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.35;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-mk-muted);
+}
+
+/* Ikona: inline, cienka, wyciszona. Zastąpiła pastelowe kółko 38px, które było czystą ozdobą. */
+.mk-kpi-icon {
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: var(--color-mk-faint);
+}
+
+.mk-kpi-figure {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  margin-top: 14px;
+}
+
+.mk-kpi-delta {
+  margin-top: 10px;
+}
+
+/* `margin-top: auto` dosuwa metryczkę źródła do dołu — dzięki temu podpisy w całym rzędzie
+   leżą na jednej linii niezależnie od tego, które kafle mają deltę. */
+.mk-kpi-foot {
+  margin-top: auto;
+  padding-top: 12px;
+  font-size: 11px;
+  color: var(--color-mk-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 767px) {
+  .mk-kpi-body {
+    padding: 16px;
+  }
 }
 
 .mk-kpi-value {

@@ -4,17 +4,12 @@ import type { LucideIcon } from 'lucide-react';
 import { DeltaChip } from './DeltaChip';
 import { AnimatedNumber } from './AnimatedNumber';
 
+/**
+ * @deprecated Kolor akcentu nie jest już rysowany — patrz komentarz przy `KpiCard`.
+ * Typ i prop zostają, żeby 73 wywołania w 15 plikach kompilowały się bez zmian; wartość jest
+ * ignorowana. Do usunięcia osobnym codemodem, gdy nie będzie już nic innego do zrobienia.
+ */
 export type AccentKey = 'blue' | 'green' | 'amber' | 'violet' | 'rose' | 'cyan' | 'slate';
-
-const ACCENT: Record<AccentKey, { bar: string; iconBg: string; iconFg: string }> = {
-    blue: { bar: '#2563EB', iconBg: '#EFF4FF', iconFg: '#2563EB' },
-    green: { bar: '#16A34A', iconBg: '#E7F6EC', iconFg: '#16A34A' },
-    amber: { bar: '#D97706', iconBg: '#FDF3E7', iconFg: '#D97706' },
-    violet: { bar: '#7C3AED', iconBg: '#F1EBFE', iconFg: '#7C3AED' },
-    rose: { bar: '#E11D48', iconBg: '#FCE7EC', iconFg: '#E11D48' },
-    cyan: { bar: '#0891B2', iconBg: '#E5F6FB', iconFg: '#0891B2' },
-    slate: { bar: '#475569', iconBg: '#F1F3F7', iconFg: '#475569' },
-};
 
 interface KpiCardProps {
     label: string;
@@ -22,6 +17,7 @@ interface KpiCardProps {
     value: string;
     unit?: string;
     delta?: { value: number; unit?: 'pp' | 'pct' | 'none'; note?: string; invert?: boolean };
+    /** @deprecated ignorowany — kolor kafla nie jest już dekoracją. */
     accent?: AccentKey;
     icon?: LucideIcon;
     /** Small line under the value, e.g. "Cel NBP: 2,5%" or "maj 2026" */
@@ -29,17 +25,36 @@ interface KpiCardProps {
     loading?: boolean;
 }
 
-export function KpiCard({ label, value, unit, delta, accent = 'blue', icon: Icon, footnote, loading }: KpiCardProps) {
-    const a = ACCENT[accent] ?? ACCENT.blue;
-
+/**
+ * Kafel KPI — liczba JEST treścią, więc kolor nie ma tu nic do roboty.
+ *
+ * ─── Dlaczego zniknął kolorowy pasek i kółko pod ikoną ───
+ * Kafel miał 7 wariantów akcentu (blue/green/amber/violet/rose/cyan/slate) rysujących 4px pasek
+ * przez całą szerokość karty i pastelowe kółko 38px. Pomiar pokazał, że ten kolor NIC nie kodował:
+ *   • ten sam wskaźnik miał różne kolory na różnych stronach („Bezrobocie rej. — kraj" bursztynowe,
+ *     „Bezrobocie rejestrowane" niebieskie) → nie niósł tożsamości;
+ *   • bursztyn dzieliły CPI, Import, Ropa Brent i „najbiedniejsze woj." → nie niósł znaczenia;
+ *   • zielony i czerwony są u nas kolorami STATUSU (DeltaChip, StaleBadge), więc zielony pasek nad
+ *     kaflem z czerwonym chipem spadku dawał sprzeczny sygnał.
+ * To trzy antywzorce z kanonu dataviz naraz: „status color used for a non-status series",
+ * „categorical hues when the story is one number" i „thick saturated blocks".
+ *
+ * Kolor wraca wyłącznie tam, gdzie coś znaczy: kierunek zmiany (DeltaChip) i ostrzeżenia
+ * (StaleBadge). Hierarchię niesie typografia i rytm, nie pigment.
+ *
+ * ⚠ NIE dodawać paddingu na `.mk-kpi` — to kontener zapytań, a `cqi` liczy się od content-boxa,
+ * więc padding skurczyłby liczbę. Padding mieszka na `.mk-kpi-body`.
+ */
+export function KpiCard({ label, value, unit, delta, icon: Icon, footnote, loading }: KpiCardProps) {
     if (loading) {
+        // Skeleton ma tę samą strukturę co kafel z danymi — inaczej rząd skacze, gdy każde
+        // z kilku zapytań kończy się w innym momencie.
         return (
-            <div className="mk-card overflow-hidden">
-                <div style={{ height: 4, background: a.bar, opacity: 0.4 }} />
-                <div className="space-y-3 p-5">
-                    <div className="mk-skeleton h-3 w-24" />
-                    <div className="mk-skeleton h-10 w-32" />
-                    <div className="mk-skeleton h-5 w-28" />
+            <div className="mk-kpi mk-card overflow-hidden">
+                <div className="mk-kpi-body">
+                    <div className="mk-kpi-label"><span className="mk-skeleton h-3 w-24 rounded" /></div>
+                    <div className="mk-kpi-figure"><span className="mk-skeleton h-8 w-28 rounded" /></div>
+                    <div className="mk-kpi-foot"><span className="mk-skeleton h-2.5 w-20 rounded" /></div>
                 </div>
             </div>
         );
@@ -47,27 +62,18 @@ export function KpiCard({ label, value, unit, delta, accent = 'blue', icon: Icon
 
     return (
         <div className="mk-kpi mk-card mk-card-interactive overflow-hidden">
-            <div style={{ height: 4, background: a.bar }} />
-            <div className="p-5">
-                <div className="flex items-start justify-between gap-2">
-                    <span className="mk-label pt-1">{label}</span>
-                    {Icon && (
-                        <span className="flex shrink-0 items-center justify-center rounded-full" style={{ width: 38, height: 38, background: a.iconBg, color: a.iconFg }}>
-                            <Icon size={20} strokeWidth={2} />
-                        </span>
-                    )}
+            <div className="mk-kpi-body">
+                <div className="mk-kpi-label">
+                    {Icon && <Icon className="mk-kpi-icon" size={14} strokeWidth={1.75} aria-hidden />}
+                    <span>{label}</span>
                 </div>
                 {/* `min-w-0` na wartości pozwala jej się skurczyć zamiast wypychać jednostkę poza kartę. */}
-                <div className="mt-3 flex items-baseline gap-1">
+                <div className="mk-kpi-figure">
                     <span className="mk-kpi-value min-w-0"><AnimatedNumber value={value} /></span>
                     {unit && <span className="mk-kpi-unit shrink-0">{unit}</span>}
                 </div>
-                {delta && (
-                    <div className="mt-2.5">
-                        <DeltaChip value={delta.value} unit={delta.unit} note={delta.note} invert={delta.invert} />
-                    </div>
-                )}
-                {footnote && <div className="mt-2 text-xs text-mk-faint">{footnote}</div>}
+                {delta && <div className="mk-kpi-delta"><DeltaChip value={delta.value} unit={delta.unit} note={delta.note} invert={delta.invert} /></div>}
+                {footnote && <div className="mk-kpi-foot">{footnote}</div>}
             </div>
         </div>
     );
