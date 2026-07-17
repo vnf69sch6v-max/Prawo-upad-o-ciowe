@@ -20,43 +20,7 @@ nowcasty, mapy regionalne, SMUP. Stooq i Bankier nie mają nic w tym stylu.
 
 ## W TOKU
 
-### Newsy — dopracowanie oparte na psychologii odbioru
-
-Zlecone przez właściciela (2026-07-16): „newsy muszą być serio dopracowane, zróbmy poważny
-psychologiczny research na ten temat, i wdróżmy to".
-
-**Metoda:** research z twardym progiem dowodowym — psychologia ma kryzys replikacji, więc
-efekty chwiejne (nieodtworzone, oparte na jednym badaniu, z popularyzacji) ODRZUCAMY.
-Wdrażamy tylko to, co ma poparcie w replikacjach/metaanalizach I daje się przełożyć na
-konkretny element UI.
-
-**Nasze ryzyko do zbadania w pierwszej kolejności:** badge „N niezależnych redakcji" może
-wzmacniać *illusory truth effect* (powtórzenie → wzrost wiary). 3 redakcje przedrukowujące
-jedną depeszę PAP to NIE są 3 potwierdzenia — a nasz UI mówi, że są.
-
-**Kryterium ukończenia:** wdrożone zmiany mają oparcie w zweryfikowanych badaniach (nie
-w popularyzacji), są widoczne w UI i zweryfikowane na żywo; `tsc` + `build` zielone.
-
-**ZROBIONE w tej pozycji — przedruk depeszy** (commit `eec983d`), na podstawie POMIARU naszych
-danych, niezależnie od literatury:
-- Badge „N niezależnych redakcji" kłamał na **40% trafień**: 4 z 10 tematów wielo-redakcyjnych
-  to były przedruki tej samej depeszy (opisy identyczne w 78–100%, jedna para w 100%).
-- Sygnał jest policzalny: przedruki 78–100% podobieństwa Jaccarda opisów, niezależne opisanie
-  tematu ≤46%. Szeroka przerwa → próg `WIRE_SIM = 0.6`. **Przy zmianie przeliczyć na świeżych
-  danych, nie zgadywać.**
-- Drugi poziom odsiewu (pierwszy = właściciel): union-find po właścicielach, krawędź = opisy
-  praktycznie identyczne. `corroboration` = liczba niezależnych RELACJI, nie właścicieli — także
-  w wadze klastra, więc przedruk nie podbija ważności.
-- Znacznik przedruku pokazujemy TYLKO gdy przedruk zjadł całe potwierdzenie (`corroboration<2`);
-  gdy obok przedruku jest niezależna relacja, ważniejsza jest ta druga.
-
-**NASTĘPNY KROK:** research psychologiczny (`wf_b2f54a37-8ca`) padł za pierwszym razem na limicie
-użycia (87 ze 104 agentów), został wznowiony. Gdy się skończy — przejrzeć plan wdrożenia i wybrać
-z niego to, co ma poparcie w replikacjach. **Uwaga: w pierwszym przebiegu „przetrwało 5" było
-mylące — te 87 pozycji nie zostało odrzuconych, tylko nigdy nie zweryfikowanych (błąd ≠ odrzucenie).**
-Do rozstrzygnięcia z researchu: efekt implied truth (oznaczamy tylko część newsów → nieoznaczone
-mogą wyglądać na zweryfikowane), półokres 10h dla danych makro (odczyt CPI jest ważny tygodniami),
-czy 129 wierszy na liście to nie za dużo.
+_(puste — weź pierwszą pozycję z KOLEJKI, przenieś ją tutaj i rozpisz kroki)_
 
 ---
 
@@ -147,6 +111,31 @@ przy podejmowaniu.
     inline, tak jak robi to `Segmented.tsx`.
   - **Pułapka i18n:** polskie „ł" (U+0142) NIE rozkłada się pod NFD, więc samo usuwanie diakrytyków nie
     wystarcza — bez podmiany „ł"→„l" szukanie „zloty" nie znajdzie „złoty". Patrz `norm()` w `lib/news/match.ts`.
+- **Newsy — dopracowanie oparte na psychologii odbioru** — 2026-07-17, commity `eec983d`, `f35e5ac`
+  Research: 6 badaczy × osobny kąt → sito adwersaryjne z PROGIEM REPLIKACJI (każde twierdzenie
+  sprawdzane pod kątem: czy źródło istnieje, czy efekt się replikuje, czy implikacja wynika z badania).
+  **33 z 67 werdyktów przetrwało.** Sito wyłapało dziesiątki „frankensteinowych cytowań" (sklejone
+  referencje), złych nazw czasopism i twierdzeń odwracających własne źródło — dokładnie taki rygor
+  był celem. (Workflow dwukrotnie padł na limicie użycia; agent-plan nie dobiegł → syntezę zrobiłem
+  ręcznie z dziennika, wybierając tylko ustalenia z werdyktem „przetrwało + źródło istnieje".)
+  - **Przedruk depeszy przestał udawać potwierdzenie** (`eec983d`) — opisane wyżej; zbieżne z badaniem
+    o iluzji konsensusu (Yousif, Aboody & Keil 2019, Psych. Science): ludzie NIE dyskontują
+    „wiele przekazów, jedno źródło". Nasz badge robił dokładnie ten błąd na 40% trafień.
+  - **Zabezpieczenie przed implied truth effect** (`f35e5ac`) — Pennycook, Bear, Collins & Rand 2020,
+    Management Science: oznaczanie tylko części treści uwiarygodnia resztę. Mitygacja przetestowana
+    w tym samym badaniu = powiedzieć wprost, że etykiety nie są wyczerpujące. Stopka `/newsy` mówi
+    teraz, że oznaczenia nadaje automat i brak etykiety ≠ weryfikacja.
+  - **ŚWIADOMIE NIE ROBIMY (wynik sita — „trzymaj linię", udokumentować by następny przebieg nie dodał):**
+    - Kara za negatywność w rankingu — BRAK POPARCIA. „Negatywne newsy → gorsze decyzje inwestycyjne"
+      obalone: Garcia Campos & Lempert 2025 (preregistracja + Bayes, wynik zerowy). W makro zła
+      wiadomość bywa najważniejsza — kara = cenzura sygnału.
+    - Paginacja z obawy o przeciążenie — choice overload w metaanalizie (Scheibehenne i in. 2010, JCR)
+      ma efekt ~zerowy. 140 wierszy to nie problem.
+    - Obawa o backfire effect — nie istnieje jako zjawisko masowe (Wood & Porter 2019, 10 tys. osób).
+  - **Do dokończenia po resecie limitu (19:40):** ~42 sit + agent-plan nie dobiegły. Warte domknięcia:
+    czy czas względny + półokres 10h buduje FOMO (dla danych makro odczyt jest ważny tygodniami),
+    framing nagłówków (headline effect — sprostowanie w continued-influence dobrze replikuje).
+    Skrypt: `wf_b2f54a37-8ca`, wznowić `resumeFromRunId`.
 - **Wygląd: kafel KPI bez dekoracyjnego koloru** — 2026-07-16, commit `a29cfd7`
   Panel sędziowski: 3 niezależne kierunki × 3 obiektywy. Wygrał „Kolor jako wyjątek" (7,7/10).
   - **Diagnoza była POMIAREM, nie gustem:** ten sam wskaźnik miał różne kolory na różnych stronach
