@@ -95,10 +95,36 @@ export interface Cluster {
     members: number[];
     /** Niezależni właściciele opisujący temat (Bankier+PB liczą się raz). */
     owners: NewsOwner[];
-    /** Suma wag właścicieli — „siła głosu" tematu. */
+    /**
+     * Liczba NIEZALEŻNYCH RELACJI — nie to samo, co liczba właścicieli.
+     * Dwie redakcje przedrukowujące tę samą depeszę to JEDNA relacja, choć dwóch właścicieli.
+     */
+    independentReports: number;
+    /** Czy w klastrze wykryto przedruk tej samej depeszy przez różnych właścicieli. */
+    wire: boolean;
+    /** Suma wag właścicieli — „siła głosu" tematu (po zdyskontowaniu przedruków). */
     weight: number;
     /** Indeks najstarszej pozycji — proxy „kto zgłosił temat pierwszy". */
     firstIndex: number;
+}
+
+/**
+ * Próg, powyżej którego uznajemy dwa opisy za TĘ SAMĄ depeszę.
+ *
+ * Zmierzone na żywych danych (2026-07-16, 10 klastrów wielo-redakcyjnych): przedruki mają
+ * podobieństwo Jaccarda opisów 78–100% (jeden dosłownie 100%), a niezależne opisanie tego
+ * samego tematu — najwyżej 46%. Między grupami jest szeroka przerwa, więc próg 0,6 leży
+ * bezpiecznie pośrodku. Przy zmianie: przelicz na świeżych danych, nie zgaduj.
+ */
+const WIRE_SIM = 0.6;
+
+/** Zbiór znaczących słów opisu — do wykrywania przedruku (bez rdzeniowania: szukamy IDENTYCZNOŚCI). */
+function descTokens(text: string): Set<string> {
+    const out = new Set<string>();
+    for (const w of norm(text).split(/[^a-z0-9]+/)) {
+        if (w.length > 2 && !STOP.has(w)) out.add(w);
+    }
+    return out;
 }
 
 /**
@@ -139,10 +165,77 @@ export function clusterNews(items: (NewsItem & { owner: NewsOwner })[]): Cluster
     }
 
     return [...groups.values()].map((members) => {
-        // Unikalni właściciele — tu odbywa się cała robota z niezależnością źródeł.
+        // Unikalni właściciele — pierwszy poziom niezależności (Bankier+PB = jeden Bonnier).
         const owners = [...new Set(members.map((i) => items[i].owner))];
-        const weight = owners.reduce((sum, o) => sum + (OWNER_WEIGHT[o] ?? 1), 0);
         const firstIndex = members.reduce((best, i) => (feats[i].ts < feats[best].ts ? i : best), members[0]);
-        return { members, owners, weight, firstIndex };
+        const { units, wire } = independentReports(members, items);
+
+        // Waga liczona po NIEZALEŻNYCH RELACJACH, nie po właścicielach: dwie redakcje
+        // przedrukowujące tę samą depeszę wnoszą jeden głos, nie dwa. Z każdej relacji bierzemy
+        // najwyższą wagę właściciela w niej — relacja jest tyle warta, ile jej najmocniejszy nosiciel.
+        const weight = units.reduce(
+            (sum, unit) => sum + Math.max(...unit.map((o) => OWNER_WEIGHT[o] ?? 1)),
+            0,
+        );
+
+        return { members, owners, independentReports: units.length, wire, weight, firstIndex };
     });
+}
+
+/**
+ * Rozdziela właścicieli klastra na NIEZALEŻNE RELACJE.
+ *
+ * Problem, który to rozwiązuje (zmierzony na żywych danych 2026-07-16): 4 z 10 klastrów
+ * wielo-redakcyjnych to były PRZEDRUKI tej samej depeszy — np. Business Insider „144 godziny
+ * pracy bez przerwy" i Bankier „Lekarz na dyżurze przez 144 godziny" miały 91% identyczne opisy,
+ * a jedna para była identyczna w 100%. Badge mówił o nich „2 niezależne redakcje", czyli
+ * ZAWYŻAŁ potwierdzenie na 40% trafień naszego jedynego obiektywnego sygnału jakości.
+ *
+ * Dwie redakcje przepisujące ten sam tekst to jedna relacja, nawet jeśli właściciele są różni.
+ * Union-find po WŁAŚCICIELACH, gdzie krawędź = „opisy praktycznie identyczne".
+ */
+function independentReports(
+    members: number[],
+    items: (NewsItem & { owner: NewsOwner })[],
+): { units: NewsOwner[][]; wire: boolean } {
+    const owners = [...new Set(members.map((i) => items[i].owner))];
+    if (owners.length < 2) return { units: [owners], wire: false };
+
+    // Najdłuższy opis reprezentuje właściciela — skróty bywają ucięte w różnych miejscach.
+    const repr = new Map<NewsOwner, Set<string>>();
+    for (const o of owners) {
+        const best = members
+            .filter((i) => items[i].owner === o)
+            .reduce((a, b) => (items[a].description.length >= items[b].description.length ? a : b));
+        repr.set(o, descTokens(items[best].description));
+    }
+
+    const parent = new Map<NewsOwner, NewsOwner>(owners.map((o) => [o, o]));
+    const find = (x: NewsOwner): NewsOwner => {
+        while (parent.get(x) !== x) { parent.set(x, parent.get(parent.get(x)!)!); x = parent.get(x)!; }
+        return x;
+    };
+
+    let wire = false;
+    for (let i = 0; i < owners.length; i++) {
+        for (let j = i + 1; j < owners.length; j++) {
+            const a = repr.get(owners[i])!, b = repr.get(owners[j])!;
+            if (a.size === 0 || b.size === 0) continue;
+            let inter = 0;
+            for (const t of a) if (b.has(t)) inter++;
+            const jaccard = inter / (a.size + b.size - inter);
+            if (jaccard >= WIRE_SIM) {
+                const ra = find(owners[i]), rb = find(owners[j]);
+                if (ra !== rb) { parent.set(rb, ra); wire = true; }
+            }
+        }
+    }
+
+    const byRoot = new Map<NewsOwner, NewsOwner[]>();
+    for (const o of owners) {
+        const r = find(o);
+        const g = byRoot.get(r);
+        if (g) g.push(o); else byRoot.set(r, [o]);
+    }
+    return { units: [...byRoot.values()], wire };
 }

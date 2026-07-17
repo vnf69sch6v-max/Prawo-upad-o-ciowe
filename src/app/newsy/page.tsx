@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Search, ExternalLink, AlertTriangle, Newspaper, X, Layers, Flame, Clock, Megaphone } from 'lucide-react';
+import { Search, ExternalLink, AlertTriangle, Newspaper, X, Layers, Flame, Clock, Megaphone, Copy } from 'lucide-react';
 import { useNews, type NewsItem } from '@/lib/hooks';
 import { formatRelativeTime, formatTime, formatDate } from '@/lib/formatters';
 // Ta sama normalizacja (bez diakrytyków, „ł" → „l"), której używa dopasowanie newsów do tematów.
@@ -25,19 +25,40 @@ function ImportanceMark({ value }: { value: number }) {
 }
 
 /**
- * Znacznik potwierdzenia — jedyny obiektywny sygnał jakości, jaki mamy.
- * Liczony po WŁAŚCICIELACH: Bankier i Puls Biznesu to jedna grupa, więc nie potwierdzają się
- * nawzajem (patrz lib/news/cluster.ts).
+ * Znacznik potwierdzenia — jedyny obiektywny sygnał jakości, jaki mamy, więc nie wolno mu kłamać.
+ *
+ * Dwa poziomy odsiewania pozornego potwierdzenia (patrz lib/news/cluster.ts):
+ *  1. właściciel — Bankier i Puls Biznesu to jedna grupa (Bonnier), nie potwierdzają się nawzajem;
+ *  2. przedruk — pomiar na żywych danych pokazał, że 4 z 10 tematów wielo-redakcyjnych to były
+ *     PRZEDRUKI tej samej depeszy (opisy identyczne w 78–100%). Badge mówił o nich „2 niezależne
+ *     redakcje", czyli zawyżał potwierdzenie na 40% trafień. Teraz przedruk dostaje inny,
+ *     neutralny komunikat — bo powtórzenie tego samego tekstu nie jest dowodem na nic.
  */
-function CorroborationBadge({ n, alsoIn }: { n: number; alsoIn?: string[] }) {
+function CorroborationBadge({ n, wire, alsoIn }: { n: number; wire?: boolean; alsoIn?: string[] }) {
+    const tytul = alsoIn?.length ? `Ten sam temat: ${alsoIn.join(', ')}` : undefined;
+
+    // Znacznik przedruku pokazujemy TYLKO wtedy, gdy przedruk zjadł całe potwierdzenie (n===1).
+    // Gdy w klastrze są i przedruk, i niezależna relacja (n≥2), ważniejsza jest ta druga —
+    // inaczej ukrywalibyśmy realne potwierdzenie i myliliby w drugą stronę.
+    if (wire && n < 2) {
+        return (
+            <span
+                className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full bg-mk-surface-alt px-1.5 py-0.5 text-[11px] font-medium text-mk-muted"
+                title={tytul ? `${tytul} — opisy niemal identyczne, to ta sama depesza w kilku serwisach` : undefined}
+            >
+                <Copy size={10} />
+                ta sama depesza
+            </span>
+        );
+    }
     if (n < 2) return null;
     return (
         <span
             className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full bg-mk-positive/10 px-1.5 py-0.5 text-[11px] font-medium text-mk-positive"
-            title={alsoIn?.length ? `Ten sam temat opisują też: ${alsoIn.join(', ')}` : undefined}
+            title={tytul}
         >
             <Layers size={10} />
-            {n} niezależne redakcje
+            {n === 2 ? '2 niezależne relacje' : `${n} niezależne relacje`}
         </span>
     );
 }
@@ -71,7 +92,7 @@ function LeadStory({ item, mounted }: { item: NewsItem; mounted: boolean }) {
                 <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full bg-mk-primary/10 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-mk-primary">
                     <Flame size={11} /> Najważniejsze
                 </span>
-                <CorroborationBadge n={item.corroboration ?? 1} alsoIn={item.alsoIn} />
+                <CorroborationBadge n={item.corroboration ?? 1} wire={item.wire} alsoIn={item.alsoIn} />
             </div>
             <h2 className="mt-3 text-xl font-bold leading-tight tracking-tight text-mk-text transition-colors group-hover:text-mk-primary sm:text-2xl">
                 {item.title}
@@ -125,7 +146,7 @@ function NewsRow({ item, mounted }: { item: NewsItem; mounted: boolean }) {
                         >
                             {mounted ? formatRelativeTime(item.publishedAt) : formatTime(item.publishedAt)}
                         </time>
-                        <CorroborationBadge n={item.corroboration ?? 1} alsoIn={item.alsoIn} />
+                        <CorroborationBadge n={item.corroboration ?? 1} wire={item.wire} alsoIn={item.alsoIn} />
                         <Flags item={item} />
                     </div>
                 </div>

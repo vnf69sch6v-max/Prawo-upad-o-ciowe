@@ -15,10 +15,15 @@ export interface NewsItem {
     /** Ważność 0–100, znormalizowana w obrębie paczki. Sortowanie „Ważne" idzie po tym. */
     importance?: number;
     /**
-     * Ilu NIEZALEŻNYCH właścicieli opisuje ten temat. 1 = niepotwierdzone.
-     * Bankier i Puls Biznesu to jedna grupa (Bonnier) → liczą się jako jeden.
+     * Liczba NIEZALEŻNYCH RELACJI o tym temacie. 1 = niepotwierdzone.
+     * Dwa poziomy odsiewania pozornego potwierdzenia:
+     *  1. właściciel — Bankier i Puls Biznesu to jedna grupa (Bonnier) → liczą się raz;
+     *  2. przedruk — dwie redakcje przepisujące tę samą depeszę to jedna relacja, choć dwóch
+     *     właścicieli (wykrywane po niemal identycznych opisach — patrz cluster.ts).
      */
     corroboration?: number;
+    /** Czy temat jest przedrukiem tej samej depeszy przez różne serwisy (a nie niezależnymi relacjami). */
+    wire?: boolean;
     /** Nazwy redakcji z tego samego tematu (bez tej pozycji) — do podpisu „także w…". */
     alsoIn?: string[];
     /**

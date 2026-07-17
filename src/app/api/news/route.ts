@@ -120,7 +120,10 @@ function rank(items: NewsItem[]): NewsItem[] {
     for (let i = 0; i < items.length; i++) {
         const c = scored[i].cluster;
         items[i].importance = Math.round((scored[i].raw / max) * 100);
-        items[i].corroboration = c ? c.owners.length : 1;
+        // Liczba NIEZALEŻNYCH RELACJI, nie właścicieli: dwie redakcje przedrukowujące tę samą
+        // depeszę to jedno potwierdzenie. Patrz `independentReports` w lib/news/cluster.ts.
+        items[i].corroboration = c ? c.independentReports : 1;
+        items[i].wire = c ? c.wire : false;
         items[i].alsoIn = c
             ? [...new Set(c.members.filter((m) => m !== i).map((m) => items[m].source))].slice(0, 4)
             : [];

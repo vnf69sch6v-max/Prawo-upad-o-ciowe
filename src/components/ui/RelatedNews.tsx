@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { ExternalLink, ArrowRight, Layers } from 'lucide-react';
+import { ExternalLink, ArrowRight, Layers, Copy } from 'lucide-react';
 import { useNews, type NewsItem } from '@/lib/hooks';
 import { matchNews, collapseClusters, type NewsTopic } from '@/lib/news/match';
 import { formatRelativeTime, formatTime } from '@/lib/formatters';
@@ -33,10 +33,18 @@ function NewsList({ items }: { items: NewsItem[] }) {
                                 <time dateTime={it.publishedAt}>
                                     {mounted ? formatRelativeTime(it.publishedAt) : formatTime(it.publishedAt)}
                                 </time>
-                                {(it.corroboration ?? 1) >= 2 && (
+                                {/* Przedruk tej samej depeszy NIE jest potwierdzeniem — patrz cluster.ts. */}
+                                {it.wire && (it.corroboration ?? 1) < 2 ? (
+                                    <span
+                                        className="inline-flex items-center gap-1 rounded-full bg-mk-surface-alt px-1.5 py-0.5 text-[11px] font-medium text-mk-muted"
+                                        title={it.alsoIn?.length ? `Ta sama depesza: ${it.alsoIn.join(', ')}` : undefined}
+                                    >
+                                        <Copy size={10} /> depesza
+                                    </span>
+                                ) : (it.corroboration ?? 1) >= 2 && (
                                     <span
                                         className="inline-flex items-center gap-1 rounded-full bg-mk-positive/10 px-1.5 py-0.5 text-[11px] font-medium text-mk-positive"
-                                        title={it.alsoIn?.length ? `Ten sam temat opisują też: ${it.alsoIn.join(', ')}` : undefined}
+                                        title={it.alsoIn?.length ? `Niezależne relacje: ${it.alsoIn.join(', ')}` : undefined}
                                     >
                                         <Layers size={10} />
                                         {it.corroboration}

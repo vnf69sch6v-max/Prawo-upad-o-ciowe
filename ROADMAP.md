@@ -20,7 +20,22 @@ nowcasty, mapy regionalne, SMUP. Stooq i Bankier nie mają nic w tym stylu.
 
 ## W TOKU
 
-_(puste — weź pierwszą pozycję z KOLEJKI, przenieś ją tutaj i rozpisz kroki)_
+### Newsy — dopracowanie oparte na psychologii odbioru
+
+Zlecone przez właściciela (2026-07-16): „newsy muszą być serio dopracowane, zróbmy poważny
+psychologiczny research na ten temat, i wdróżmy to".
+
+**Metoda:** research z twardym progiem dowodowym — psychologia ma kryzys replikacji, więc
+efekty chwiejne (nieodtworzone, oparte na jednym badaniu, z popularyzacji) ODRZUCAMY.
+Wdrażamy tylko to, co ma poparcie w replikacjach/metaanalizach I daje się przełożyć na
+konkretny element UI.
+
+**Nasze ryzyko do zbadania w pierwszej kolejności:** badge „N niezależnych redakcji" może
+wzmacniać *illusory truth effect* (powtórzenie → wzrost wiary). 3 redakcje przedrukowujące
+jedną depeszę PAP to NIE są 3 potwierdzenia — a nasz UI mówi, że są.
+
+**Kryterium ukończenia:** wdrożone zmiany mają oparcie w zweryfikowanych badaniach (nie
+w popularyzacji), są widoczne w UI i zweryfikowane na żywo; `tsc` + `build` zielone.
 
 ---
 
