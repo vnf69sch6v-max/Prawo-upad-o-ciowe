@@ -148,6 +148,10 @@ export default function OverviewPage() {
                 </div>
             </div>
 
+            {/* Najważniejsze newsy — nad głębszą analizą: po liczbach (makro + rynki), przed wykresem
+                trendu. Wcześniej pas był na samym dole strony i ginął pod wszystkim. */}
+            <LatestNews limit={6} />
+
             {/* Hero + panele */}
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
                 <SectionCard className="lg:col-span-2" title={meta.label + ' — trend'} subtitle={`Źródło: ${meta.source}`}
@@ -167,8 +171,6 @@ export default function OverviewPage() {
                     <PublicationDatesPanel count={5} />
                 </div>
             </div>
-
-            <LatestNews limit={6} />
         </div>
     );
 }
