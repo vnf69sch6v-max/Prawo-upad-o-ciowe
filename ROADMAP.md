@@ -111,6 +111,40 @@ przy podejmowaniu.
     inline, tak jak robi to `Segmented.tsx`.
   - **Pułapka i18n:** polskie „ł" (U+0142) NIE rozkłada się pod NFD, więc samo usuwanie diakrytyków nie
     wystarcza — bez podmiany „ł"→„l" szukanie „zloty" nie znajdzie „złoty". Patrz `norm()` w `lib/news/match.ts`.
+- **Audyt wielowymiarowy: dane + wygląd + dostępność** — 2026-07-16, commity `125764d`, `7f261b6`, `dbb78b3`
+  Workflow: 6 recenzentów × osobny obiektyw, każde znalezisko weryfikowane adwersaryjnie
+  (36 zgłoszonych → 29 potwierdzonych → 12 pozycji). **Najważniejsze okazały się nie kwestie
+  wyglądu, tylko UCZCIWOŚCI DANYCH.**
+  - **BŁĄD DANYCH — BAEL pokazywał odczyt sprzed roku jako bieżący.** `praca/page.tsx` brało
+    `series[0]`, zakładając „count=1 → jeden wynik". Ale `count` w `/api/bdl-series` to liczba
+    kolejnych **ID zmiennych**, a endpoint zawsze pobiera lata `[rok-1, rok]` → seria ma DWA wpisy,
+    więc `series[0]` to zeszły rok. Udowodnione na żywych danych: 58,2 (2025) zamiast 58,7 (2026)
+    i 56,2 zamiast 56,8. Podpis brzmiał tylko „BAEL · GUS", bez daty → nie do wykrycia.
+    Poprawka: `series.at(-1)` + rok w podpisie. **Uwaga na przyszłość: `count` ≠ liczba wyników.**
+  - **Nowcast CPI potrafił pokazać wyprodukowaną liczbę.** `headlineNowcast` sumuje wkłady tylko
+    dostępnych dywizji — padnięcie żywności (~26% wagi) zaniżało wynik, nieodróżnialnie od poprawnego.
+    Teraz warunkowany pokryciem: <100% → akcent bursztynowy + lista brakujących; <80% → „—".
+  - **Zwijanie klastrów newsów:** jedna historia z 3 redakcji zajmowała 3 z 6 miejsc na Przeglądzie.
+    `clusterId` + `collapseClusters()` → jeden wiersz + „także w…". Na żywo: 150 → 129 (21 zwiniętych).
+    Przy filtrze po źródle NIE zwijamy (użytkownik chce wtedy wszystko z danej redakcji).
+  - **Kontrast osi wykresów 2.31:1.** Poprawka tokenów CSS nie objęła wykresów — Recharts dostaje
+    kolory propsami i miał `#94A3B8` na sztywno w 22 miejscach. Nowy `lib/chart-theme.ts` (AXIS_INK
+    = 4.76:1). **Nie wpisywać kolorów wykresów na sztywno — używać chart-theme.**
+  - Wykres bez danych rysował pełną ramę z osiami → czytało się jako „zjawiska nie ma". Jawny komunikat.
+  - **Dzwonek powiadomień był atrapą** (czerwona kropka bez stanu i bez onClick) → zastąpiony realnym
+    skrótem do kalendarza publikacji.
+  - `prefers-reduced-motion` wyciszał tylko animacje jednorazowe (~0,4s), a pomijał obie `infinite`
+    (kropka „na żywo", shimmer skeletonów) — czyli działał odwrotnie do intencji.
+  - **Świadomie odrzucone** (weryfikacja obaliła lub nakład > zysk): tooltip Choropletha na dotyku
+    (działa — `onMouseEnter` odpala się z emulowanych zdarzeń, a Ranking obok podaje te same dane
+    tekstem), sprzątanie 143 hexów akcentów (część technicznie wymaga literału → ryzyko regresji
+    za dług czysto wewnętrzny), `note` w DeltaChip (grozi cofnięciem naprawy ucinania KPI).
+  - **Zostało z audytu do zrobienia** (poz. 3, 4, 8, 9, 10, 11 z syntezy): DataTable overflow-x +
+    sortowanie z klawiatury (`gospodarka` rozpycha dokument na ≤430px), pasek rankingu `/regiony`
+    ma 0px poniżej 378px (`w-40`→`w-24 sm:w-40`), pakiet WCAG A (label w Sliderze `prognozy`,
+    `role="alert"` w `login`/`newsy`), uczciwy trójstan ładowanie/błąd/pusto zamiast `length===0`
+    (~16 miejsc), `analyzeSeries` na Przeglądzie zamiast `trendObservation`, pułapka fokusu
+    w `Drawer` + ESC w palecie.
 - **Dopracowanie wyglądu — audyt mobile + dostępność** — 2026-07-16, commity `974aee9`, `0782390`, `f352032`
   Zlecone przez właściciela. Audyt mierzony w DOM (nie „na oko") na 375px: `/newsy`, `/rynki`,
   `/praca`, `/gospodarka`, `/regiony`.
