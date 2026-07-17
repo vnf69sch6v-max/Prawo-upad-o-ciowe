@@ -17,6 +17,7 @@ import { SectionCard } from '@/components/ui/SectionCard';
 import { Segmented } from '@/components/ui/Segmented';
 import { CsvExport } from '@/components/ui/CsvExport';
 import { StaleBadge } from '@/components/ui/StaleBadge';
+import { AXIS_INK } from '@/lib/chart-theme';
 
 type Section = 'inflacja' | 'pkb' | 'taylor' | 'symulatory';
 
@@ -186,7 +187,7 @@ function PkbNowcast() {
                     actions={<div className="flex items-center gap-2"><StaleBadge date={pmiLast?.date} label="PMI" /><CsvExport filename="pmi" headers={['Data', 'PMI']} rows={pmiChart.map((r) => [r.date, r.pmi])} /></div>}>
                     <InteractiveChart data={pmiChart} xKey="date" height={280} showRange initialRange="1R"
                         valueFormatter={(v) => formatDecimalPL(v, 0)} xTickFormatter={monthTick}
-                        referenceLines={[{ y: 50, label: 'neutralny', color: '#94A3B8' }]}
+                        referenceLines={[{ y: 50, label: 'neutralny', color: AXIS_INK }]}
                         series={[{ key: 'pmi', name: 'PMI', color: '#7C3AED', type: 'area' }]} />
                     <p className="mt-3 text-xs text-mk-faint">PMI aktualizowany ręcznie z komunikatów S&amp;P Global (brak darmowego API; ostatnia weryfikacja VII.2026). Żywą koniunkturę GUS znajdziesz w zakładce Gospodarka.</p>
                 </SectionCard>

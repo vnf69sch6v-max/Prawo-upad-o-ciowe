@@ -431,13 +431,26 @@ button.mk-card,
 .mk-stagger>*:nth-child(7) { animation-delay: .26s; }
 .mk-stagger>*:nth-child(n+8) { animation-delay: .30s; }
 
-/* Dostępność: szanuj prefers-reduced-motion — treść pojawia się natychmiast */
+/* Dostępność: szanuj prefers-reduced-motion — treść pojawia się natychmiast.
+   UWAGA: samo wyciszenie mk-fade-in/mk-stagger niczego nie załatwiało — to animacje jednorazowe,
+   które i tak kończą się po ~0,4s. Realny problem to animacje `infinite`: kropka „na żywo"
+   w stopce pulsowała bez końca, a shimmer skeletonów migotał przez cały czas ładowania.
+   Właśnie one męczą przy nadwrażliwości przedsionkowej i deficytach uwagi. */
 @media (prefers-reduced-motion: reduce) {
 
   .mk-fade-in,
   .mk-stagger>* {
     animation-duration: .01ms !important;
     animation-delay: 0ms !important;
+  }
+
+  .live-dot {
+    animation: none;
+    opacity: 1;
+  }
+
+  .mk-skeleton {
+    animation: none;
   }
 }
 

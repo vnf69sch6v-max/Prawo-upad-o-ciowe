@@ -18,6 +18,7 @@ import { DataTable, type Column } from '@/components/ui/DataTable';
 import { StaleBadge } from '@/components/ui/StaleBadge';
 import { Drawer } from '@/components/ui/Drawer';
 import PolandMap from '@/components/PolandMap';
+import { AXIS_INK } from '@/lib/chart-theme';
 
 const byDate = (pts: Point[]) => new Map(pts.map((p) => [p.date, p.value]));
 
@@ -65,7 +66,7 @@ export function InflacjaSection() {
                     <InteractiveChart
                         data={chart} xKey="date" height={320} unit="%" legend showRange initialRange="1R"
                         valueFormatter={(v) => formatDecimalPL(v, 1)} xTickFormatter={monthTick}
-                        referenceLines={[{ y: 2.5, label: 'Cel NBP', color: '#94A3B8' }]}
+                        referenceLines={[{ y: 2.5, label: 'Cel NBP', color: AXIS_INK }]}
                         series={[
                             { key: 'cpi', name: 'CPI ogółem', color: '#2563EB', type: 'line', strokeWidth: 3 },
                             { key: 'food', name: 'Żywność', color: '#16A34A', type: 'line' },

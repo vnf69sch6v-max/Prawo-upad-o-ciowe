@@ -18,6 +18,7 @@ import { CsvExport } from '@/components/ui/CsvExport';
 import { ObservationsPanel } from '@/components/ui/ObservationsPanel';
 import { PublicationDatesPanel } from '@/components/ui/PublicationDatesPanel';
 import { LatestNews } from '@/components/ui/RelatedNews';
+import { AXIS_INK } from '@/lib/chart-theme';
 
 // ── data helpers ────────────────────────────────────────────
 type Point = { date: string; value: number };
@@ -157,7 +158,7 @@ export default function OverviewPage() {
                     {meta.series.length === 0 ? <div className="mk-skeleton h-[300px] w-full" /> : (
                         <InteractiveChart data={chartData} xKey="date" series={[{ key: 'value', name: meta.label, color: meta.color, type: meta.type }]}
                             height={300} unit="%" valueFormatter={(v) => formatDecimalPL(v, 1)} xTickFormatter={monthTick} showRange initialRange="1R"
-                            referenceLines={metric === 'cpi' ? [{ y: 2.5, label: 'Cel NBP', color: '#94A3B8' }] : metric === 'gdp' || metric === 'ppi' ? [{ y: 0, color: '#CBD2DD' }] : undefined} />
+                            referenceLines={metric === 'cpi' ? [{ y: 2.5, label: 'Cel NBP', color: AXIS_INK }] : metric === 'gdp' || metric === 'ppi' ? [{ y: 0, color: '#CBD2DD' }] : undefined} />
                     )}
                 </SectionCard>
 

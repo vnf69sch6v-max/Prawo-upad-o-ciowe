@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Search, Bell, BarChart3 } from 'lucide-react';
+import { Search, CalendarClock, BarChart3 } from 'lucide-react';
 import { TopNav } from './TopNav';
 import { UserMenu } from './UserMenu';
 
@@ -38,10 +38,18 @@ export function AppHeader() {
                     >
                         <Search size={18} />
                     </button>
-                    <button className="relative flex h-9 w-9 items-center justify-center rounded-lg text-mk-muted transition-colors hover:bg-mk-surface-alt hover:text-mk-text" aria-label="Powiadomienia">
-                        <Bell size={18} />
-                        <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-mk-negative ring-2 ring-white" />
-                    </button>
+                    {/* Był tu dzwonek „powiadomień" z zahardkodowaną czerwoną kropką „masz nieprzeczytane" —
+                        bez onClick, bez stanu, bez sposobu zgaszenia. Element obiecywał funkcję, której nie ma;
+                        na platformie, której obietnicą jest wiarygodność danych, to najgorszy możliwy detal.
+                        Zastąpiony realnym skrótem do kalendarza publikacji (dane, które faktycznie mamy). */}
+                    <Link
+                        href="/publikacje"
+                        className="flex h-9 w-9 items-center justify-center rounded-lg text-mk-muted transition-colors hover:bg-mk-surface-alt hover:text-mk-text"
+                        aria-label="Kalendarz publikacji danych"
+                        title="Kalendarz publikacji danych"
+                    >
+                        <CalendarClock size={18} />
+                    </Link>
                     <UserMenu />
                 </div>
             </div>

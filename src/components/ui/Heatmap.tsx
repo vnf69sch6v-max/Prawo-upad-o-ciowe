@@ -4,6 +4,7 @@
 // Interakcje: podświetlenie wiersza/kolumny (crosshair) + „inspektor" wartości nad siatką
 // (bez pływającego tooltipa — brak problemów z pozycjonowaniem pod transformem), klik wiersza.
 import { useMemo, useState } from 'react';
+import { AXIS_INK } from '@/lib/chart-theme';
 
 export interface HeatmapRow { key: string; label: string }
 
@@ -69,7 +70,7 @@ export function Heatmap({ rows, cols, valueAt, colTickFormatter = (c) => c, valu
                         <span className="text-mk-faint">·</span>
                         <span className="text-mk-muted">{colTickFormatter(hover.c)}</span>
                         <span className="text-mk-faint">·</span>
-                        <span className="font-semibold tnum" style={{ color: hover.v == null ? '#94A3B8' : hover.v >= 0 ? posColor : negColor }}>
+                        <span className="font-semibold tnum" style={{ color: hover.v == null ? AXIS_INK : hover.v >= 0 ? posColor : negColor }}>
                             {hover.v == null ? 'brak danych' : `${hover.v > 0 ? '+' : ''}${valueFormatter(hover.v)}${unit}`}
                         </span>
                     </>

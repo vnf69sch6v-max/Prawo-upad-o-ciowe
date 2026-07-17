@@ -6,6 +6,7 @@ import { useNews, type NewsItem } from '@/lib/hooks';
 import { formatRelativeTime, formatTime, formatDate } from '@/lib/formatters';
 // Ta sama normalizacja (bez diakrytyków, „ł" → „l"), której używa dopasowanie newsów do tematów.
 import { norm, collapseClusters } from '@/lib/news/match';
+import { AXIS_INK } from '@/lib/chart-theme';
 
 type Sort = 'waznosc' | 'data';
 
@@ -13,7 +14,7 @@ type Sort = 'waznosc' | 'data';
 function ImportanceMark({ value }: { value: number }) {
     const level = value >= 70 ? 3 : value >= 45 ? 2 : value >= 22 ? 1 : 0;
     const label = ['niska', 'średnia', 'wysoka', 'najwyższa'][level];
-    const color = ['#CBD2DD', '#94A3B8', '#2563EB', '#DC2626'][level];
+    const color = ['#CBD2DD', AXIS_INK, '#2563EB', '#DC2626'][level];
     return (
         <span className="flex shrink-0 items-end gap-[2px]" title={`Ważność: ${label}`} aria-label={`Ważność: ${label}`}>
             {[0, 1, 2, 3].map((i) => (

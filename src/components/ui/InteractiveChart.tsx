@@ -6,6 +6,7 @@ import {
     XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine, Legend,
 } from 'recharts';
 import { ResponsiveContainer } from '@/components/ui/ChartContainer';
+import { AXIS_INK } from '@/lib/chart-theme';
 
 export interface ChartSeries {
     key: string;
@@ -77,6 +78,11 @@ export function InteractiveChart({
         return n ? data.slice(-n) : data;
     }, [data, range, showRange]);
 
+    // Bez tej osłony wykres po awarii źródła rysował kompletną ramę z osiami i legendą, tylko bez
+    // linii — a to czyta się jako „zjawiska nie ma", nie jako „danych nie dostaliśmy". Przy zasadzie
+    // „tylko prawdziwe dane" brak danych trzeba powiedzieć wprost.
+    const hasData = view.some((row) => series.some((s) => row[s.key] != null));
+
     const hasRight = series.some((s) => s.yAxis === 'right');
     const hasBar = series.some((s) => s.type === 'bar');
     // Bars need a 0 baseline; line/area charts look better tightly fitted to the data.
@@ -98,6 +104,17 @@ export function InteractiveChart({
                     )}
                 </div>
             )}
+            {!hasData ? (
+                <div
+                    className="flex flex-col items-center justify-center gap-1.5 rounded-xl bg-mk-surface-alt text-center"
+                    style={{ height }}
+                >
+                    <span className="text-sm font-medium text-mk-text">Brak danych do wyświetlenia</span>
+                    <span className="max-w-[38ch] text-xs text-mk-muted">
+                        Źródło nie zwróciło wartości dla tego zakresu. To nie znaczy, że wskaźnik wynosi zero.
+                    </span>
+                </div>
+            ) : (
             <ResponsiveContainer width="100%" height={height}>
                 <ComposedChart data={view} margin={{ top: 6, right: hasRight ? 6 : 12, left: -6, bottom: 0 }}>
                     <defs>
@@ -109,15 +126,15 @@ export function InteractiveChart({
                         ))}
                     </defs>
                     <CartesianGrid stroke="#EDF0F5" vertical={false} />
-                    <XAxis dataKey={xKey} tick={{ fill: '#94A3B8', fontSize: 12 }} tickFormatter={xTickFormatter} axisLine={{ stroke: '#E7EAF0' }} tickLine={false} minTickGap={24} />
-                    <YAxis yAxisId="left" domain={yDomain} tick={{ fill: '#94A3B8', fontSize: 12 }} axisLine={false} tickLine={false} width={44} tickFormatter={valueFormatter} />
-                    {hasRight && <YAxis yAxisId="right" orientation="right" domain={['auto', 'auto']} tick={{ fill: '#94A3B8', fontSize: 12 }} axisLine={false} tickLine={false} width={44} />}
+                    <XAxis dataKey={xKey} tick={{ fill: AXIS_INK, fontSize: 12 }} tickFormatter={xTickFormatter} axisLine={{ stroke: '#E7EAF0' }} tickLine={false} minTickGap={24} />
+                    <YAxis yAxisId="left" domain={yDomain} tick={{ fill: AXIS_INK, fontSize: 12 }} axisLine={false} tickLine={false} width={44} tickFormatter={valueFormatter} />
+                    {hasRight && <YAxis yAxisId="right" orientation="right" domain={['auto', 'auto']} tick={{ fill: AXIS_INK, fontSize: 12 }} axisLine={false} tickLine={false} width={44} />}
                     <Tooltip content={<LightTooltip valueFormatter={valueFormatter} unit={unit} />} cursor={{ stroke: '#CBD2DD', strokeWidth: 1, strokeDasharray: '3 3' }} />
                     {legend && <Legend wrapperStyle={{ fontSize: 12, paddingTop: 8 }} iconType="circle" iconSize={8} />}
 
                     {referenceLines?.map((r, i) => (
-                        <ReferenceLine key={i} yAxisId={r.axis ?? 'left'} y={r.y} stroke={r.color ?? '#94A3B8'} strokeDasharray="4 4"
-                            label={r.label ? { value: r.label, position: 'insideTopRight', fill: r.color ?? '#94A3B8', fontSize: 11 } : undefined} />
+                        <ReferenceLine key={i} yAxisId={r.axis ?? 'left'} y={r.y} stroke={r.color ?? AXIS_INK} strokeDasharray="4 4"
+                            label={r.label ? { value: r.label, position: 'insideTopRight', fill: r.color ?? AXIS_INK, fontSize: 11 } : undefined} />
                     ))}
 
                     {series.map((s) => {
@@ -132,6 +149,7 @@ export function InteractiveChart({
                     })}
                 </ComposedChart>
             </ResponsiveContainer>
+            )}
         </div>
     );
 }

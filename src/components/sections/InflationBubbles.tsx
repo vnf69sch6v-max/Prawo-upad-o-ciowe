@@ -11,6 +11,7 @@ import { Play, Pause } from 'lucide-react';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { formatDecimalPL } from '@/lib/formatters';
 import type { CpiDivision } from '@/lib/hooks';
+import { AXIS_INK } from '@/lib/chart-theme';
 
 const monthTick = (d: string) => { const [y, m] = d.split('-'); return m ? `${m}.${y.slice(2)}` : d; };
 const STEP_MS = 750;
@@ -63,13 +64,13 @@ export function InflationBubbles({ divisions, colorFor, onSelect }: Props) {
             </div>}>
             <ResponsiveContainer width="100%" height={380}>
                 <ScatterChart margin={{ top: 10, right: 24, bottom: 34, left: 6 }}>
-                    <XAxis type="number" dataKey="x" domain={[0, xMax]} name="waga" unit="%" tick={{ fill: '#94A3B8', fontSize: 12 }} axisLine={{ stroke: '#E7EAF0' }} tickLine={false}
-                        label={{ value: 'waga w koszyku (%)', position: 'bottom', offset: 16, fill: '#94A3B8', fontSize: 12 }} />
-                    <YAxis type="number" dataKey="y" domain={[yMin, yMax]} name="r/r" unit="%" tick={{ fill: '#94A3B8', fontSize: 12 }} axisLine={false} tickLine={false} width={44}
-                        label={{ value: 'dynamika r/r (%)', angle: -90, position: 'insideLeft', offset: 16, fill: '#94A3B8', fontSize: 12, style: { textAnchor: 'middle' } }} />
+                    <XAxis type="number" dataKey="x" domain={[0, xMax]} name="waga" unit="%" tick={{ fill: AXIS_INK, fontSize: 12 }} axisLine={{ stroke: '#E7EAF0' }} tickLine={false}
+                        label={{ value: 'waga w koszyku (%)', position: 'bottom', offset: 16, fill: AXIS_INK, fontSize: 12 }} />
+                    <YAxis type="number" dataKey="y" domain={[yMin, yMax]} name="r/r" unit="%" tick={{ fill: AXIS_INK, fontSize: 12 }} axisLine={false} tickLine={false} width={44}
+                        label={{ value: 'dynamika r/r (%)', angle: -90, position: 'insideLeft', offset: 16, fill: AXIS_INK, fontSize: 12, style: { textAnchor: 'middle' } }} />
                     <ZAxis type="number" dataKey="z" domain={[0, zMax]} range={[80, 1400]} />
                     <ReferenceLine y={0} stroke="#CBD5E1" />
-                    <ReferenceLine y={2.5} stroke="#94A3B8" strokeDasharray="4 4" label={{ value: 'Cel NBP', position: 'right', fill: '#94A3B8', fontSize: 11 }} />
+                    <ReferenceLine y={2.5} stroke={AXIS_INK} strokeDasharray="4 4" label={{ value: 'Cel NBP', position: 'right', fill: AXIS_INK, fontSize: 11 }} />
                     <Tooltip cursor={{ strokeDasharray: '3 3' }} content={({ active, payload }) => {
                         if (!active || !payload?.length) return null;
                         const p = payload[0].payload as { code: string; name: string; x: number; y: number; contribution: number };

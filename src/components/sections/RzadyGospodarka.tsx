@@ -13,6 +13,7 @@ import { SectionCard } from '@/components/ui/SectionCard';
 import { Segmented } from '@/components/ui/Segmented';
 import { CsvExport } from '@/components/ui/CsvExport';
 import { PL_GOVERNMENTS, govForYear } from '@/lib/pl-governments';
+import { AXIS_INK } from '@/lib/chart-theme';
 
 type Metric = 'gdp' | 'cpi' | 'debt' | 'deficit';
 const METRICS: { value: Metric; label: string; color: string }[] = [
@@ -59,8 +60,8 @@ export function RzadyGospodarka() {
                             <ReferenceArea key={i} x1={Math.max(g.from, minY) - 0.5} x2={Math.min(g.to, maxY) + 0.5} fill={g.color} fillOpacity={0.1} stroke="none" ifOverflow="hidden" />
                         ))}
                         <ReferenceLine y={0} stroke="#CBD5E1" />
-                        <XAxis dataKey="year" type="number" domain={[minY - 0.5, maxY + 0.5]} tick={{ fill: '#94A3B8', fontSize: 11 }} axisLine={{ stroke: '#E7EAF0' }} tickLine={false} tickCount={8} allowDecimals={false} />
-                        <YAxis tick={{ fill: '#94A3B8', fontSize: 12 }} axisLine={false} tickLine={false} width={42} tickFormatter={(v) => formatDecimalPL(v, 0)} unit="%" />
+                        <XAxis dataKey="year" type="number" domain={[minY - 0.5, maxY + 0.5]} tick={{ fill: AXIS_INK, fontSize: 11 }} axisLine={{ stroke: '#E7EAF0' }} tickLine={false} tickCount={8} allowDecimals={false} />
+                        <YAxis tick={{ fill: AXIS_INK, fontSize: 12 }} axisLine={false} tickLine={false} width={42} tickFormatter={(v) => formatDecimalPL(v, 0)} unit="%" />
                         <Tooltip content={({ active, payload, label }) => {
                             if (!active || !payload?.length) return null;
                             const g = govForYear(Number(label));

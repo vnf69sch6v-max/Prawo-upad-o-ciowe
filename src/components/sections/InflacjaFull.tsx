@@ -20,6 +20,7 @@ import { Sparkline } from '@/components/ui/Sparkline';
 import { InsightBar } from '@/components/ui/InsightBar';
 import { analyzeSeries } from '@/lib/observations';
 import { InflationBubbles } from '@/components/sections/InflationBubbles';
+import { AXIS_INK } from '@/lib/chart-theme';
 
 const PALETTE = ['#2563EB', '#16A34A', '#D97706', '#7C3AED', '#E11D48', '#0891B2', '#CA8A04', '#DB2777', '#059669', '#4F46E5', '#EA580C', '#0D9488', '#64748B'];
 const monthTick = (d: string) => { const [y, m] = d.split('-'); return m ? `${m}.${y.slice(2)}` : d; };
@@ -269,7 +270,7 @@ export function InflacjaFull() {
                 </div>}>
                 <InteractiveChart data={chartData} xKey="date" height={320} unit="%" showRange initialRange="5L" ranges={['1R', '3L', '5L', 'ALL']}
                     valueFormatter={(v) => formatDecimalPL(v, 1)} xTickFormatter={monthTick}
-                    referenceLines={freq === 'yoy' ? [{ y: 2.5, label: 'Cel NBP', color: '#94A3B8' }] : [{ y: 0, color: '#CBD2DD' }]}
+                    referenceLines={freq === 'yoy' ? [{ y: 2.5, label: 'Cel NBP', color: AXIS_INK }] : [{ y: 0, color: '#CBD2DD' }]}
                     series={[{ key: 'value', name: freq === 'yoy' ? 'CPI r/r' : 'CPI m/m', color: '#D97706', type: 'area', strokeWidth: 2.5 }]} />
             </SectionCard>
 
@@ -277,7 +278,7 @@ export function InflacjaFull() {
             <SectionCard title="Struktura inflacji" subtitle="CPI ogółem · CPI bez żywności (bazowa) · PPI (ceny producenta) — r/r (%)">
                 <InteractiveChart data={structureData} xKey="date" height={300} unit="%" showRange initialRange="5L" ranges={['1R', '3L', '5L', 'ALL']} legend
                     valueFormatter={(v) => formatDecimalPL(v, 1)} xTickFormatter={monthTick}
-                    referenceLines={[{ y: 2.5, label: 'Cel NBP', color: '#94A3B8' }]}
+                    referenceLines={[{ y: 2.5, label: 'Cel NBP', color: AXIS_INK }]}
                     series={[
                         { key: 'cpi', name: 'CPI ogółem', color: '#D97706', type: 'line', strokeWidth: 2.5 },
                         { key: 'core', name: 'CPI bez żywności', color: '#7C3AED', type: 'line', strokeWidth: 2 },
@@ -333,7 +334,7 @@ export function InflacjaFull() {
                     <ResponsiveContainer width="100%" height={Math.max(300, waterfall.length * 28)}>
                         <BarChart data={waterfall} layout="vertical" margin={{ top: 4, right: 44, left: 6, bottom: 4 }} barCategoryGap={5}>
                             <CartesianGrid stroke="#EDF0F5" horizontal={false} />
-                            <XAxis type="number" tick={{ fill: '#94A3B8', fontSize: 12 }} axisLine={false} tickLine={false} tickFormatter={(v) => formatDecimalPL(v, 1)} />
+                            <XAxis type="number" tick={{ fill: AXIS_INK, fontSize: 12 }} axisLine={false} tickLine={false} tickFormatter={(v) => formatDecimalPL(v, 1)} />
                             <YAxis type="category" dataKey="name" width={140} tick={{ fill: '#475569', fontSize: 11 }} axisLine={false} tickLine={false} />
                             <Tooltip cursor={{ fill: 'rgba(0,0,0,0.03)' }} content={({ active, payload }) => {
                                 if (!active || !payload?.length) return null;
@@ -378,8 +379,8 @@ export function InflacjaFull() {
                     <ResponsiveContainer width="100%" height={340}>
                         <AreaChart data={contribTime} margin={{ top: 6, right: 12, left: -6, bottom: 0 }}>
                             <CartesianGrid stroke="#EDF0F5" vertical={false} />
-                            <XAxis dataKey="date" tick={{ fill: '#94A3B8', fontSize: 11 }} tickFormatter={monthTick} axisLine={{ stroke: '#E7EAF0' }} tickLine={false} minTickGap={28} />
-                            <YAxis tick={{ fill: '#94A3B8', fontSize: 12 }} axisLine={false} tickLine={false} width={40} tickFormatter={(v) => formatDecimalPL(v, 0)} />
+                            <XAxis dataKey="date" tick={{ fill: AXIS_INK, fontSize: 11 }} tickFormatter={monthTick} axisLine={{ stroke: '#E7EAF0' }} tickLine={false} minTickGap={28} />
+                            <YAxis tick={{ fill: AXIS_INK, fontSize: 12 }} axisLine={false} tickLine={false} width={40} tickFormatter={(v) => formatDecimalPL(v, 0)} />
                             <Tooltip content={({ active, payload, label }) => {
                                 if (!active || !payload?.length) return null;
                                 const nums = payload.filter((p) => typeof p.value === 'number') as { value: number; color?: string; name?: string }[];

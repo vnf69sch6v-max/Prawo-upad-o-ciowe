@@ -57,14 +57,25 @@ function ZatrudnienieSection() {
 function BaelSection() {
     const aktQ = useBdlSeries(1615281, 1);
     const zatrQ = useBdlSeries(1615457, 1);
-    const akt = aktQ.data?.series?.[0]?.value ?? null;
-    const zatr = zatrQ.data?.series?.[0]?.value ?? null;
+
+    // UWAGA: `count` w /api/bdl-series to liczba kolejnych ID zmiennych, NIE liczba wyników.
+    // Endpoint zawsze pobiera lata [rok-1, rok], więc przy count=1 seria ma DWA wpisy:
+    // zeszłoroczny i tegoroczny. Brany wcześniej `series[0]` to był odczyt SPRZED ROKU
+    // (58,2 zamiast 58,7) — podany jako bieżący i bez daty, więc nie do wykrycia przez użytkownika.
+    const aktLast = aktQ.data?.series?.at(-1) ?? null;
+    const zatrLast = zatrQ.data?.series?.at(-1) ?? null;
+    const akt = aktLast?.value ?? null;
+    const zatr = zatrLast?.value ?? null;
+    // BAEL jest roczny — etykieta „2026-01" z API to artefakt składania serii, liczy się sam rok.
+    const rok = (d?: string) => (d ? d.slice(0, 4) : null);
 
     return (
         <div className="space-y-6">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <KpiCard label="Współczynnik aktywności zawodowej" value={akt != null ? formatDecimalPL(akt, 1) : '—'} unit="%" accent="blue" icon={Activity} footnote="BAEL · GUS" loading={aktQ.isLoading} />
-                <KpiCard label="Wskaźnik zatrudnienia" value={zatr != null ? formatDecimalPL(zatr, 1) : '—'} unit="%" accent="green" icon={Percent} footnote="BAEL · GUS" loading={zatrQ.isLoading} />
+                <KpiCard label="Współczynnik aktywności zawodowej" value={akt != null ? formatDecimalPL(akt, 1) : '—'} unit="%" accent="blue" icon={Activity}
+                    footnote={`BAEL · GUS${rok(aktLast?.date) ? ` · ${rok(aktLast?.date)}` : ''}`} loading={aktQ.isLoading} />
+                <KpiCard label="Wskaźnik zatrudnienia" value={zatr != null ? formatDecimalPL(zatr, 1) : '—'} unit="%" accent="green" icon={Percent}
+                    footnote={`BAEL · GUS${rok(zatrLast?.date) ? ` · ${rok(zatrLast?.date)}` : ''}`} loading={zatrQ.isLoading} />
             </div>
             <div className="rounded-xl bg-mk-surface-alt p-4 text-sm text-mk-text-soft">
                 <span className="font-semibold text-mk-text">BAEL </span>(Badanie Aktywności Ekonomicznej Ludności) — kwartalne badanie GUS wg standardu Eurostat/ILO.
