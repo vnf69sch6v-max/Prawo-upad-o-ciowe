@@ -37,6 +37,27 @@ jedną depeszę PAP to NIE są 3 potwierdzenia — a nasz UI mówi, że są.
 **Kryterium ukończenia:** wdrożone zmiany mają oparcie w zweryfikowanych badaniach (nie
 w popularyzacji), są widoczne w UI i zweryfikowane na żywo; `tsc` + `build` zielone.
 
+**ZROBIONE w tej pozycji — przedruk depeszy** (commit `eec983d`), na podstawie POMIARU naszych
+danych, niezależnie od literatury:
+- Badge „N niezależnych redakcji" kłamał na **40% trafień**: 4 z 10 tematów wielo-redakcyjnych
+  to były przedruki tej samej depeszy (opisy identyczne w 78–100%, jedna para w 100%).
+- Sygnał jest policzalny: przedruki 78–100% podobieństwa Jaccarda opisów, niezależne opisanie
+  tematu ≤46%. Szeroka przerwa → próg `WIRE_SIM = 0.6`. **Przy zmianie przeliczyć na świeżych
+  danych, nie zgadywać.**
+- Drugi poziom odsiewu (pierwszy = właściciel): union-find po właścicielach, krawędź = opisy
+  praktycznie identyczne. `corroboration` = liczba niezależnych RELACJI, nie właścicieli — także
+  w wadze klastra, więc przedruk nie podbija ważności.
+- Znacznik przedruku pokazujemy TYLKO gdy przedruk zjadł całe potwierdzenie (`corroboration<2`);
+  gdy obok przedruku jest niezależna relacja, ważniejsza jest ta druga.
+
+**NASTĘPNY KROK:** research psychologiczny (`wf_b2f54a37-8ca`) padł za pierwszym razem na limicie
+użycia (87 ze 104 agentów), został wznowiony. Gdy się skończy — przejrzeć plan wdrożenia i wybrać
+z niego to, co ma poparcie w replikacjach. **Uwaga: w pierwszym przebiegu „przetrwało 5" było
+mylące — te 87 pozycji nie zostało odrzuconych, tylko nigdy nie zweryfikowanych (błąd ≠ odrzucenie).**
+Do rozstrzygnięcia z researchu: efekt implied truth (oznaczamy tylko część newsów → nieoznaczone
+mogą wyglądać na zweryfikowane), półokres 10h dla danych makro (odczyt CPI jest ważny tygodniami),
+czy 129 wierszy na liście to nie za dużo.
+
 ---
 
 ## KOLEJKA (priorytet malejąco)
