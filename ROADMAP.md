@@ -132,10 +132,19 @@ przy podejmowaniu.
     - Paginacja z obawy o przeciążenie — choice overload w metaanalizie (Scheibehenne i in. 2010, JCR)
       ma efekt ~zerowy. 140 wierszy to nie problem.
     - Obawa o backfire effect — nie istnieje jako zjawisko masowe (Wood & Porter 2019, 10 tys. osób).
-  - **Do dokończenia po resecie limitu (19:40):** ~42 sit + agent-plan nie dobiegły. Warte domknięcia:
-    czy czas względny + półokres 10h buduje FOMO (dla danych makro odczyt jest ważny tygodniami),
-    framing nagłówków (headline effect — sprostowanie w continued-influence dobrze replikuje).
-    Skrypt: `wf_b2f54a37-8ca`, wznowić `resumeFromRunId`.
+  - **Research DOMKNIĘTY** (2026-07-17, commit `bb47960`): 104/104 agentów, 0 błędów, agent-plan dobiegł.
+    Plan zaczął od trafnej uwagi: kod był już DALEJ NIŻ BRIEF (przedruki + implied truth zrobione).
+    Wdrożone residua: P1 „potwierdzonych"→„opisanych niezależnie" (nie zawyżać: mierzymy syndykację,
+    nie weryfikację); P2 sprostowanie komentarza o Reuters DNR + reguła Rzeczpospolita/Parkiet→PTWP;
+    P5 marker agencyjny (PAP/Reuters) jako drugi sygnał przedruku — TYLKO agencje, nie GUS/NBP;
+    P6 „Ważność wg naszego rankingu" (machine heuristic).
+  - **P3 (cięższy ogon zaniku) — ZMIERZONE I ODRZUCONE.** Plan proponował zamianę wykładniczej na
+    rozciągniętą, bo `2^(-t/10)` po tygodniu ≈ 8,7·10⁻⁶ zabija stary odczyt CPI. Ale POMIAR żywych
+    danych: najstarszy news w feedzie ma **13,6h**, 0 pozycji >24h (limit 150 przy ~150 newsach/dobę).
+    Krzywe rozjeżdżają się dopiero od ~48h → cięższy ogon nie ma na czym zadziałać, a jedyny realny
+    efekt (okno 0–14h, gdzie karałby świeże mocniej) to zmiana nie do uzasadnienia. Problem tygodniowy
+    NIE ZACHODZI w naszych danych. Gdyby kiedyś podnieść retencję/limit — wrócić do P3.
+  - **P4 (półokres per kategoria) — odrzucone:** plan sam gatuje na własnej telemetrii, której nie mamy.
 - **Wygląd: kafel KPI bez dekoracyjnego koloru** — 2026-07-16, commit `a29cfd7`
   Panel sędziowski: 3 niezależne kierunki × 3 obiektywy. Wygrał „Kolor jako wyjątek" (7,7/10).
   - **Diagnoza była POMIAREM, nie gustem:** ten sam wskaźnik miał różne kolory na różnych stronach
