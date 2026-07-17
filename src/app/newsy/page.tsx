@@ -342,12 +342,23 @@ export default function NewsyPage() {
                         Pokazano {filtered.length} z {data?.count ?? 0} pozycji
                         {zwinietych > 0 && ` (${zwinietych} zwinięto — ten sam temat z kilku redakcji zajmuje jeden wiersz)`}.{' '}
                         {sort === 'waznosc'
-                            ? `Ważność łączy liczbę niezależnych redakcji opisujących temat (${clusters} tematów potwierdzonych), świeżość i konkretność — materiały promocyjne i clickbait są obniżane.`
+                            ? `Ważność łączy liczbę niezależnych relacji o temacie (${clusters} potwierdzonych przez ≥2 redakcje), świeżość i konkretność — materiały promocyjne i clickbait są obniżane.`
                             : 'Sortowanie od najnowszych.'}
                     </p>
                     <p>
-                        Redakcje z jednej grupy właścicielskiej (np. Bankier.pl i Puls Biznesu) liczymy jako jedno źródło —
-                        nie potwierdzają się nawzajem.
+                        Redakcje z jednej grupy właścicielskiej (np. Bankier.pl i Puls Biznesu) liczymy jako jedno źródło,
+                        a przedruk tej samej depeszy — jako jedną relację, nie kilka.
+                    </p>
+                    {/*
+                      Zabezpieczenie przed „implied truth effect": oznaczanie TYLKO części treści sprawia,
+                      że nieoznaczona reszta wygląda na zweryfikowaną (Pennycook, Bear, Collins & Rand 2020,
+                      Management Science — efekt mały, ale realny; przetestowana mitygacja = domknąć taksonomię
+                      albo powiedzieć wprost, że etykiety nie są wyczerpujące). Robimy to drugie, bo jest uczciwe:
+                      klasyfikator regułowy łapie typowe przypadki, nie wszystkie.
+                    */}
+                    <p>
+                        Oznaczenia „materiał promocyjny" i „opinia" nadaje automat po słowach kluczowych — wyłapuje
+                        typowe przypadki, nie wszystkie. Brak etykiety nie oznacza, że treść została zweryfikowana.
                     </p>
                 </div>
             )}
