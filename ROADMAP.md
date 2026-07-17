@@ -111,6 +111,30 @@ przy podejmowaniu.
     inline, tak jak robi to `Segmented.tsx`.
   - **Pułapka i18n:** polskie „ł" (U+0142) NIE rozkłada się pod NFD, więc samo usuwanie diakrytyków nie
     wystarcza — bez podmiany „ł"→„l" szukanie „zloty" nie znajdzie „złoty". Patrz `norm()` w `lib/news/match.ts`.
+- **Wygląd: kafel KPI bez dekoracyjnego koloru** — 2026-07-16, commit `a29cfd7`
+  Panel sędziowski: 3 niezależne kierunki × 3 obiektywy. Wygrał „Kolor jako wyjątek" (7,7/10).
+  - **Diagnoza była POMIAREM, nie gustem:** ten sam wskaźnik miał różne kolory na różnych stronach
+    („Bezrobocie rej. — kraj" bursztynowe vs „Bezrobocie rejestrowane" niebieskie), a bursztyn
+    dzieliły CPI, Import, Ropa Brent i „najbiedniejsze woj." → kolor nie kodował tożsamości,
+    statusu ani wielkości. Trzy antywzorce dataviz naraz.
+  - Kolor zostaje TYLKO tam, gdzie pracuje: DeltaChip (kierunek) i StaleBadge (ostrzeżenie).
+  - `accent` = `@deprecated` no-op → 73 propy w 15 plikach kompilują się bez zmian; zmiana = 2 pliki.
+  - **Paleta serii wykresów jest ZWALIDOWANA** (`node scripts/validate_palette.js`, skill dataviz):
+    przechodzi pasmo jasności, próg chromy, ΔE 16.2 przy daltonizmie (próg 12), kontrast.
+    **Nie zmieniać jej wartości** — jest policzona, nie zgadnięta.
+  - **Brak wykresów z podwójną osią Y** (antywzorzec nr 1) — sprawdzone, czysto.
+  - ⚠ `.mk-kpi` to kontener zapytań — **padding NIGDY na nim**, tylko na `.mk-kpi-body`
+    (cqi liczy się od content-boxa → padding skurczyłby liczbę).
+  - **Synteza panelu MYLIŁA SIĘ w swoim „znalezisku krytycznym"**: twierdziła, że kafel CPI na
+    Przeglądzie kłamie o źródle (rzekomo HICP podpisany jako GUS). Sprawdzone: Przegląd używa
+    `useCpiFull()` → `/api/gus-cpi-full` = krajowy CPI GUS, więc podpis „GUS · cel NBP 2,5%" jest
+    PRAWDZIWY. Agent pomylił to z `useInflationMonthly` (to faktycznie HICP, ale w macro-sections).
+    **Wniosek: weryfikować znaleziska agentów w kodzie przed wdrożeniem.**
+  - Do rozważenia z panelu (nie wdrożone): rejestr odniesień `lib/kpi-state.ts` (kolor kafla tylko
+    gdy wartość wypada poza progiem ustalonym przez instytucję — cel NBP, TFUE 60%/3%, PMI 50);
+    `polarity: 'none'` dla wskaźników bez obiektywnego „dobrze/źle" (EUR/PLN, Brent, 10Y, PPI —
+    obie strony transakcji są w publiczności); `invertKpi=true` w `DbwPriceSection` sprawia, że
+    spadek cen skupu świeci na zielono na stronie czytanej przez rolników.
 - **Audyt wielowymiarowy: dane + wygląd + dostępność** — 2026-07-16, commity `125764d`, `7f261b6`, `dbb78b3`
   Workflow: 6 recenzentów × osobny obiektyw, każde znalezisko weryfikowane adwersaryjnie
   (36 zgłoszonych → 29 potwierdzonych → 12 pozycji). **Najważniejsze okazały się nie kwestie
