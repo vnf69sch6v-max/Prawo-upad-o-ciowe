@@ -41,15 +41,31 @@ function InflacjaNowcast() {
     const { basket, isLoading } = useCPIBasket();
     const maxAbs = Math.max(...basket.items.map((i) => Math.abs(i.contribution ?? 0)), 0.01);
 
+    // `headlineNowcast` to suma wkładów TYLKO tych dywizji, które mają dane. Gdy któreś zapytanie
+    // padnie (np. żywność, ~27% wagi), liczba jest zaniżona — a wyglądała identycznie jak poprawna
+    // i stała obok oficjalnego CPI. To jest wstawianie atrapy, więc warunkujemy ją pokryciem:
+    //  • <100% → mówimy wprost, czego brakuje,
+    //  • <80%  → nie pokazujemy liczby wcale. Lepszy brak wyniku niż wynik zmyślony.
+    const brakujace = basket.items.filter((i) => i.contribution == null).map((i) => i.name);
+    const pelnePokrycie = basket.coverage >= 99.5;
+    const zaMaloDanych = basket.coverage < 80;
+
+    const nowcastFootnote = pelnePokrycie
+        ? `Σ wkładów · wagi ${BASKET_WEIGHTS_YEAR}`
+        : zaMaloDanych
+            ? `za mało danych: pokrycie ${fmtPL(basket.coverage, 0)}% koszyka`
+            : `NIEPEŁNE: ${fmtPL(basket.coverage, 0)}% koszyka · brak: ${brakujace.slice(0, 3).join(', ')}${brakujace.length > 3 ? ` +${brakujace.length - 3}` : ''}`;
+
     return (
         <div className="space-y-6">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                <KpiCard label="Nowcast CPI (z koszyka)" value={fmtPL(basket.headlineNowcast)} unit="%" accent="blue" icon={Sparkles}
-                    footnote={`Σ wkładów · wagi ${BASKET_WEIGHTS_YEAR}`} loading={isLoading} />
+                <KpiCard label="Nowcast CPI (z koszyka)" value={zaMaloDanych ? '—' : fmtPL(basket.headlineNowcast)} unit={zaMaloDanych ? '' : '%'}
+                    accent={pelnePokrycie ? 'blue' : 'amber'} icon={Sparkles}
+                    footnote={nowcastFootnote} loading={isLoading} />
                 <KpiCard label="Oficjalny CPI (CP00)" value={fmtPL(basket.official)} unit="%" accent="amber" icon={Target}
                     footnote={basket.dataDate ? `Eurostat · ${basket.dataDate}` : 'Eurostat'} loading={isLoading} />
-                <KpiCard label="Pokrycie koszyka" value={fmtPL(basket.coverage, 0)} unit="%" accent="green" icon={Scale}
-                    footnote="udział dywizji z danymi" loading={isLoading} />
+                <KpiCard label="Pokrycie koszyka" value={fmtPL(basket.coverage, 0)} unit="%" accent={pelnePokrycie ? 'green' : 'amber'} icon={Scale}
+                    footnote={pelnePokrycie ? 'wszystkie dywizje z danymi' : `brak ${brakujace.length} z ${basket.items.length} dywizji`} loading={isLoading} />
             </div>
 
             <SectionCard
