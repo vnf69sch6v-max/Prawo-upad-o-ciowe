@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { ExternalLink, ArrowRight, Layers } from 'lucide-react';
 import { useNews, type NewsItem } from '@/lib/hooks';
-import { matchNews, type NewsTopic } from '@/lib/news/match';
+import { matchNews, collapseClusters, type NewsTopic } from '@/lib/news/match';
 import { formatRelativeTime, formatTime } from '@/lib/formatters';
 import { SectionCard } from '@/components/ui/SectionCard';
 
@@ -100,8 +100,11 @@ export function LatestNews({ limit = 5, className = '' }: { limit?: number; clas
     const { data, isLoading } = useNews();
     // Na Przeglądzie pokazujemy najważniejsze, nie po prostu najświeższe — inaczej pas zapełniłby
     // się przypadkowym newsem sprzed minuty zamiast tematem, który opisuje pół rynku.
+    // `collapseClusters` pilnuje, by jedna historia z 3 redakcji nie zjadła 3 z 6 miejsc.
     const items = useMemo(
-        () => [...(data?.items ?? [])].sort((a, b) => (b.importance ?? 0) - (a.importance ?? 0)).slice(0, limit),
+        () => collapseClusters([...(data?.items ?? [])])
+            .sort((a, b) => (b.importance ?? 0) - (a.importance ?? 0))
+            .slice(0, limit),
         [data, limit],
     );
 

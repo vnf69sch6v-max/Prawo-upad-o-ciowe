@@ -151,15 +151,39 @@ export function matchesTopic(item: Pick<NewsItem, 'title' | 'description'>, topi
 }
 
 /**
- * Newsy dotyczące tematu, uszeregowane wg ważności (`importance` liczone w /api/news).
+ * Zwija klastry do jednego reprezentanta na temat.
+ *
+ * Ten sam news z 3 redakcji ma 3 osobne pozycje — bez zwijania jedna historia zajmowała 3 z 6
+ * miejsc na Przeglądzie („Susza zagraża rolnictwu" / „Alarm dla polskiego rolnictwa" /
+ * „Susza zabija rolnictwo"). Zostaje najmocniejsza pozycja; pozostałe redakcje widać w `alsoIn`.
+ * Pozycje bez `clusterId` (np. gdy API nie policzyło rankingu) przechodzą bez zmian.
+ */
+export function collapseClusters<T extends Pick<NewsItem, 'clusterId' | 'importance'>>(items: T[]): T[] {
+    const best = new Map<number, T>();
+    const out: T[] = [];
+    for (const it of items) {
+        if (it.clusterId == null) { out.push(it); continue; }
+        const cur = best.get(it.clusterId);
+        if (!cur) { best.set(it.clusterId, it); out.push(it); continue; }
+        if ((it.importance ?? 0) > (cur.importance ?? 0)) {
+            out[out.indexOf(cur)] = it;
+            best.set(it.clusterId, it);
+        }
+    }
+    return out;
+}
+
+/**
+ * Newsy dotyczące tematu, uszeregowane wg ważności (`importance` liczone w /api/news),
+ * po jednej pozycji na temat.
  * Fallback na kolejność wejściową, gdy rankingu nie ma — API oddaje pozycje od najnowszych.
  */
-export function matchNews<T extends Pick<NewsItem, 'title' | 'description' | 'importance'>>(
+export function matchNews<T extends Pick<NewsItem, 'title' | 'description' | 'importance' | 'clusterId'>>(
     items: T[],
     topic: NewsTopic,
     limit = 5,
 ): T[] {
-    const hits = items.filter((it) => matchesTopic(it, topic));
+    const hits = collapseClusters(items.filter((it) => matchesTopic(it, topic)));
     hits.sort((a, b) => (b.importance ?? 0) - (a.importance ?? 0));
     return hits.slice(0, limit);
 }

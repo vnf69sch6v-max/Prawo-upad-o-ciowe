@@ -102,11 +102,12 @@ function rank(items: NewsItem[]): NewsItem[] {
     const now = Date.now();
 
     const scored = items.map((it) => ({ it, raw: 0, cluster: null as (typeof clusters)[number] | null }));
-    for (const c of clusters) {
+    for (const [ci, c] of clusters.entries()) {
         for (const i of c.members) {
             const res = scoreItem({ item: items[i], clusterWeight: c.weight, isFirst: i === c.firstIndex, now });
             scored[i].raw = res.raw;
             scored[i].cluster = c;
+            items[i].clusterId = ci;
             items[i].isAd = res.ad;
             items[i].clickbait = res.clickbait;
             items[i].isOpinion = res.opinion;

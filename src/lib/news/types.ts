@@ -21,6 +21,12 @@ export interface NewsItem {
     corroboration?: number;
     /** Nazwy redakcji z tego samego tematu (bez tej pozycji) — do podpisu „także w…". */
     alsoIn?: string[];
+    /**
+     * Identyfikator tematu. Pozycje z tym samym `clusterId` to ten sam news z różnych redakcji —
+     * UI pokazuje JEDNĄ z nich (reprezentanta), resztę zwija do podpisu „także w…".
+     * Bez tego jedna historia potrafiła zająć 3 z 6 miejsc na Przeglądzie.
+     */
+    clusterId?: number;
     /** Wykryta autopromocja/reklama — takie pozycje domyślnie chowamy. */
     isAd?: boolean;
     clickbait?: 'strong' | 'weak' | null;

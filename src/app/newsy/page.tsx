@@ -5,7 +5,7 @@ import { Search, ExternalLink, AlertTriangle, Newspaper, X, Layers, Flame, Clock
 import { useNews, type NewsItem } from '@/lib/hooks';
 import { formatRelativeTime, formatTime, formatDate } from '@/lib/formatters';
 // Ta sama normalizacja (bez diakrytyków, „ł" → „l"), której używa dopasowanie newsów do tematów.
-import { norm } from '@/lib/news/match';
+import { norm, collapseClusters } from '@/lib/news/match';
 
 type Sort = 'waznosc' | 'data';
 
@@ -160,10 +160,24 @@ export default function NewsyPage() {
             if (!needle) return true;
             return norm(it.title).includes(needle) || norm(it.description).includes(needle);
         });
+        // Jedna historia z kilku redakcji = jeden wiersz (pozostałe widać w podpisie „także w…").
+        // Przy filtrze po źródle zwijanie nie ma sensu — użytkownik chce wtedy wszystko z tej redakcji.
+        const base = source === 'all' ? collapseClusters(out) : out;
         return sort === 'data'
-            ? [...out].sort((a, b) => b.publishedAt.localeCompare(a.publishedAt))
-            : [...out].sort((a, b) => (b.importance ?? 0) - (a.importance ?? 0));
+            ? [...base].sort((a, b) => b.publishedAt.localeCompare(a.publishedAt))
+            : [...base].sort((a, b) => (b.importance ?? 0) - (a.importance ?? 0));
     }, [data, source, q, sort]);
+
+    /** Ile pozycji schowaliśmy przez zwijanie — mówimy o tym wprost, nic nie znika po cichu. */
+    const zwinietych = useMemo(() => {
+        if (source !== 'all') return 0;
+        const needle = norm(q.trim());
+        const przedZwinieciem = (data?.items ?? []).filter((it) => {
+            if (!needle) return true;
+            return norm(it.title).includes(needle) || norm(it.description).includes(needle);
+        }).length;
+        return przedZwinieciem - filtered.length;
+    }, [data, q, source, filtered.length]);
 
     // Lead tylko przy sortowaniu wg ważności i bez zawężeń — inaczej „najważniejsze teraz"
     // kłamałoby (byłoby najważniejsze *w ramach filtra*).
@@ -303,7 +317,8 @@ export default function NewsyPage() {
             {filtered.length > 0 && (
                 <div className="space-y-1.5 px-1 text-xs text-mk-faint">
                     <p>
-                        Pokazano {filtered.length} z {data?.count ?? 0} pozycji.{' '}
+                        Pokazano {filtered.length} z {data?.count ?? 0} pozycji
+                        {zwinietych > 0 && ` (${zwinietych} zwinięto — ten sam temat z kilku redakcji zajmuje jeden wiersz)`}.{' '}
                         {sort === 'waznosc'
                             ? `Ważność łączy liczbę niezależnych redakcji opisujących temat (${clusters} tematów potwierdzonych), świeżość i konkretność — materiały promocyjne i clickbait są obniżane.`
                             : 'Sortowanie od najnowszych.'}
