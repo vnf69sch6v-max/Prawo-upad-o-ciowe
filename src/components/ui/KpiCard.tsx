@@ -1,6 +1,7 @@
 'use client';
 
-import type { LucideIcon } from 'lucide-react';
+import Link from 'next/link';
+import { ArrowUpRight, type LucideIcon } from 'lucide-react';
 import { DeltaChip } from './DeltaChip';
 import { AnimatedNumber } from './AnimatedNumber';
 
@@ -23,6 +24,8 @@ interface KpiCardProps {
     /** Small line under the value, e.g. "Cel NBP: 2,5%" or "maj 2026" */
     footnote?: string;
     loading?: boolean;
+    /** Gdy podany, cały kafel jest linkiem do właściwej zakładki (deep-link, np. `/gospodarka?tab=aktywnosc`). */
+    href?: string;
 }
 
 /**
@@ -45,7 +48,7 @@ interface KpiCardProps {
  * ⚠ NIE dodawać paddingu na `.mk-kpi` — to kontener zapytań, a `cqi` liczy się od content-boxa,
  * więc padding skurczyłby liczbę. Padding mieszka na `.mk-kpi-body`.
  */
-export function KpiCard({ label, value, unit, delta, icon: Icon, footnote, loading }: KpiCardProps) {
+export function KpiCard({ label, value, unit, delta, icon: Icon, footnote, loading, href }: KpiCardProps) {
     if (loading) {
         // Skeleton ma tę samą strukturę co kafel z danymi — inaczej rząd skacze, gdy każde
         // z kilku zapytań kończy się w innym momencie.
@@ -60,21 +63,39 @@ export function KpiCard({ label, value, unit, delta, icon: Icon, footnote, loadi
         );
     }
 
+    const body = (
+        <div className="mk-kpi-body">
+            <div className="mk-kpi-label">
+                {Icon && <Icon className="mk-kpi-icon" size={14} strokeWidth={1.75} aria-hidden />}
+                <span>{label}</span>
+                {/* Strzałka „wejdź głębiej" — tylko dla kafli z linkiem; pojawia się przy najechaniu. */}
+                {href && <ArrowUpRight size={14} className="ml-auto shrink-0 text-mk-faint opacity-0 transition-opacity group-hover:opacity-100" aria-hidden />}
+            </div>
+            {/* `min-w-0` na wartości pozwala jej się skurczyć zamiast wypychać jednostkę poza kartę. */}
+            <div className="mk-kpi-figure">
+                <span className="mk-kpi-value min-w-0"><AnimatedNumber value={value} /></span>
+                {unit && <span className="mk-kpi-unit shrink-0">{unit}</span>}
+            </div>
+            {delta && <div className="mk-kpi-delta"><DeltaChip value={delta.value} unit={delta.unit} note={delta.note} invert={delta.invert} /></div>}
+            {footnote && <div className="mk-kpi-foot">{footnote}</div>}
+        </div>
+    );
+
+    if (href) {
+        return (
+            <Link
+                href={href}
+                className="mk-kpi mk-card mk-card-interactive group block overflow-hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-mk-primary/50"
+                aria-label={`${label} — przejdź do szczegółów`}
+            >
+                {body}
+            </Link>
+        );
+    }
+
     return (
         <div className="mk-kpi mk-card mk-card-interactive overflow-hidden">
-            <div className="mk-kpi-body">
-                <div className="mk-kpi-label">
-                    {Icon && <Icon className="mk-kpi-icon" size={14} strokeWidth={1.75} aria-hidden />}
-                    <span>{label}</span>
-                </div>
-                {/* `min-w-0` na wartości pozwala jej się skurczyć zamiast wypychać jednostkę poza kartę. */}
-                <div className="mk-kpi-figure">
-                    <span className="mk-kpi-value min-w-0"><AnimatedNumber value={value} /></span>
-                    {unit && <span className="mk-kpi-unit shrink-0">{unit}</span>}
-                </div>
-                {delta && <div className="mk-kpi-delta"><DeltaChip value={delta.value} unit={delta.unit} note={delta.note} invert={delta.invert} /></div>}
-                {footnote && <div className="mk-kpi-foot">{footnote}</div>}
-            </div>
+            {body}
         </div>
     );
 }
