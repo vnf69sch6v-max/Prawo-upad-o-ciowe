@@ -22,7 +22,7 @@ nowcasty, mapy regionalne, SMUP. Stooq i Bankier nie mają nic w tym stylu.
 
 ### Spółki WIG20 — strona każdej spółki + newsy pod nią
 
-**ZROBIONE w tym przebiegu** (commit `<hash>`): tabela 21 spółek z żywym kursem, zmianą % i
+**ZROBIONE w tym przebiegu** (commit `e95c401`): tabela 21 spółek z żywym kursem, zmianą % i
 sortowaniem, na `/rynki?tab=gpw`. Pliki: `lib/wig20.ts` (skład + aliasy), `api/wig20/route.ts`
 (zbiorcze pobranie + cache 2h), `useWig20()` w `hooks.ts`, tabela w `GpwSection`.
 
