@@ -20,26 +20,7 @@ nowcasty, mapy regionalne, SMUP. Stooq i Bankier nie mają nic w tym stylu.
 
 ## W TOKU
 
-### Spółki WIG20 — strona każdej spółki + newsy pod nią
-
-**ZROBIONE w tym przebiegu** (commit `e95c401`): tabela 21 spółek z żywym kursem, zmianą % i
-sortowaniem, na `/rynki?tab=gpw`. Pliki: `lib/wig20.ts` (skład + aliasy), `api/wig20/route.ts`
-(zbiorcze pobranie + cache 2h), `useWig20()` w `hooks.ts`, tabela w `GpwSection`.
-
-**Weryfikacja u źródła (2026-07-17):** inaczej niż INDEKSY, pojedyncze spółki GPW MAJĄ na Yahoo
-pełną historię dzienną — 21 z 22 tickerów zwróciło po 125 punktów i kurs w PLN.
-**Santander Bank Polska (SPL) ODRZUCONY** — `SPL.WA`/`SPL1.WA` błąd, `BZW.WA` brak. `SAN.WA` to
-Banco Santander S.A. (hiszpańska matka), `STP.WA` to Stalprodukt — podstawienie ich byłoby fałszem.
-Lepiej 21 prawdziwych niż 22 z jedną zmyśloną. Tickery WIG20 dopisane do `CAPS_WHITELIST`
-w `score.ts` (inaczej ALL-CAPS karałby newsy o KGHM/PKN jako clickbait).
-
-**NASTĘPNY KROK:** (1) newsy per spółka — użyć `aliases` z `lib/wig20.ts` w `lib/news/match.ts`
-(dopasowanie po nazwie w TYTULE mocne, w opisie słabe — wykorzystać istniejący podział
-`strong`/`titleOnly`); sprawdzić trafność ręcznie na żywych danych, jak przy tematach.
-(2) strona `/spolki/[ticker]` z wykresem historii (dane: `/api/stooq?symbol=<TICKER>.WA` wymaga
-dodania obsługi sufiksu `.WA` w route albo osobnego endpointu).
-
-**Kryterium ukończenia:** ≥20 spółek z żywymi danymi ✅, sortowanie ✅, newsy per spółka ⬜.
+_(puste — weź pierwszą pozycję z KOLEJKI, przenieś ją tutaj i rozpisz kroki)_
 
 ---
 
@@ -60,12 +41,12 @@ dopasowane newsy.
 - **Kryterium:** ≥20 spółek z żywymi danymi, sortowanie działa, każda spółka ma trafne newsy
   (bez przypadkowych trafień — sprawdzić ręcznie na żywych danych, jak przy tematach).
 
-### 2. Watchlista
+### 1. Watchlista
 
 - Zapis w `localStorage`; dodawanie wskaźników i spółek; pas „Obserwowane" na Przeglądzie.
 - **Kryterium:** wybór przeżywa odświeżenie strony.
 
-### 3. Spółki — sprawozdania finansowe (dalszy plan)
+### 2. Spółki — sprawozdania finansowe (dalszy plan)
 
 Zlecone przez właściciela jako etap po stronach spółek. Duża pozycja — rozpisać na osobne kroki
 przy podejmowaniu.
@@ -159,6 +140,21 @@ przy podejmowaniu.
     efekt (okno 0–14h, gdzie karałby świeże mocniej) to zmiana nie do uzasadnienia. Problem tygodniowy
     NIE ZACHODZI w naszych danych. Gdyby kiedyś podnieść retencję/limit — wrócić do P3.
   - **P4 (półokres per kategoria) — odrzucone:** plan sam gatuje na własnej telemetrii, której nie mamy.
+- **Spółki WIG20 — tabela, strony spółek i newsy per spółka** — 2026-07-17, commity `e95c401`, `<hash>`
+  21 spółek z żywym kursem, zmianą % i sortowaniem (`/rynki?tab=gpw`); klik w wiersz → `/spolki/[ticker]`
+  z kursem, wykresem 120 sesji i wiadomościami o spółce. Pliki: `lib/wig20.ts`, `api/wig20/route.ts`,
+  `matchCompanyNews()` w `lib/news/match.ts`, `app/spolki/[ticker]/page.tsx`.
+  - **Weryfikacja u źródła:** pojedyncze spółki GPW MAJĄ na Yahoo pełną historię dzienną (125 pkt) —
+    odwrotnie niż same indeksy, gdzie trzeba ETF-ów. Route obsługuje sufiks `.WA`.
+  - **Santander (SPL) odrzucony** — brak działającego tickera; `SAN.WA` to hiszpańska matka,
+    `STP.WA` to Stalprodukt. 21 prawdziwych > 22 z jedną zmyśloną. Powód w `lib/wig20.ts`.
+  - **Dopasowanie newsów zaudytowane na żywo:** 16 trafień/150 newsów, wszystkie poprawne
+    (Polsat—spór o imperium Solorza, Żabka—przejęcie, KGHM, Orlen, Budimex). Zasada jak przy
+    tematach: tytuł liczy się zawsze, opis tylko dla aliasów ≥7 znaków.
+  - ⚠️ **Ryzykowne aliasy NIESPRAWDZONE:** „kruk" (ptak), „dino", „orange", „kety" nie dały ani
+    jednego trafienia w tej paczce — przy zmianie progu `DESC_MIN_ALIAS` lub dodaniu spółek
+    POWTÓRZYĆ audyt na świeżych danych.
+  - Tickery WIG20 dopisane do `CAPS_WHITELIST` w `score.ts` (inaczej ALL-CAPS karałby własne newsy).
 - **Rynki — więcej indeksów** — 2026-07-17, commit `b0b91bd`
   mWIG40 i sWIG80 obok WIG20: żywy poziom + zmiana % + wspólny wykres porównawczy
   **rebazowany do 100** (WIG20 ≈3,8 tys. vs sWIG80 ≈30 tys. — na jednej osi w wartościach

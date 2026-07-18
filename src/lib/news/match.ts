@@ -151,6 +151,51 @@ export function matchesTopic(item: Pick<NewsItem, 'title' | 'description'>, topi
 }
 
 /**
+ * Dopasowanie newsów do KONKRETNEJ SPÓŁKI (aliasy z `lib/wig20.ts`).
+ *
+ * Ta sama zasada co przy tematach: tytuł mówi, o czym news JEST; opis często tylko coś wspomina.
+ * Dlatego trafienie w TYTULE liczy się zawsze, a w OPISIE — tylko dla aliasów dostatecznie
+ * odróżniających (≥6 znaków). Bez tego „kruk" (ptak), „dino", „żabka" (też: pływanie żabką)
+ * czy „orange" (kolor) wciągałyby przypadkowe newsy z samych opisów.
+ *
+ * Aliasy wpisujemy jako RDZENIE bez diakrytyków (porównanie po `norm()`), bo polski odmienia:
+ * „orlen" łapie „Orlenu/Orlenem", „zabk" łapie „Żabka/Żabki/Żabkę".
+ */
+// Próg 7 (nie 6) celowo: „orange" ma dokładnie 6 znaków i jako jedyny alias-zwykłe-słowo
+// przeszedłby niżej ustawiony próg. W audycie 2026-07-17 (16 trafień/150 newsów) ryzykowne
+// aliasy — kruk, dino, orange, kety — nie dały ANI JEDNEGO trafienia, więc pozostają
+// NIESPRAWDZONE: przy zmianie progu powtórzyć audyt na świeżej paczce.
+const DESC_MIN_ALIAS = 7;
+
+function aliasRegex(aliases: string[]): RegExp {
+    const alts = aliases.map((a) => a.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
+    return new RegExp(`(?<!\\p{L})(?:${alts})`, 'u');
+}
+
+export function matchesCompany(
+    item: Pick<NewsItem, 'title' | 'description'>,
+    aliases: string[],
+): boolean {
+    if (aliases.length === 0) return false;
+    if (aliasRegex(aliases).test(norm(item.title))) return true;
+
+    const distinctive = aliases.filter((a) => a.length >= DESC_MIN_ALIAS);
+    if (distinctive.length === 0 || !item.description) return false;
+    return aliasRegex(distinctive).test(norm(item.description));
+}
+
+/** Newsy o danej spółce — po jednym na temat, najważniejsze pierwsze. */
+export function matchCompanyNews<T extends Pick<NewsItem, 'title' | 'description' | 'importance' | 'clusterId'>>(
+    items: T[],
+    aliases: string[],
+    limit = 5,
+): T[] {
+    const hits = collapseClusters(items.filter((it) => matchesCompany(it, aliases)));
+    hits.sort((a, b) => (b.importance ?? 0) - (a.importance ?? 0));
+    return hits.slice(0, limit);
+}
+
+/**
  * Zwija klastry do jednego reprezentanta na temat.
  *
  * Ten sam news z 3 redakcji ma 3 osobne pozycje — bez zwijania jedna historia zajmowała 3 z 6

@@ -38,7 +38,7 @@ export const WIG20: Wig20Company[] = [
     { ticker: 'PKN', name: 'Orlen', aliases: ['orlen', 'pkn orlen'] },
     { ticker: 'PKO', name: 'PKO BP', aliases: ['pko bp', 'pko bank'] },
     { ticker: 'PZU', name: 'PZU', aliases: ['pzu'] },
-    { ticker: 'ZAB', name: 'Żabka', aliases: ['zabka'] },
+    { ticker: 'ZAB', name: 'Żabka', aliases: ['zabk'] },
     { ticker: 'TPE', name: 'Tauron', aliases: ['tauron'] },
 ];
 

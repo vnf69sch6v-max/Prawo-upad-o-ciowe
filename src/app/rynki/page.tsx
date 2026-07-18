@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useInitialTab } from '@/lib/use-initial-tab';
 import { InsightBar } from '@/components/ui/InsightBar';
 import type { Observation } from '@/lib/observations';
@@ -169,6 +170,7 @@ function GpwSection() {
     const wig20Chart = useMemo(() => barsOf(wig20).map((b) => ({ date: b.date, value: b.close })), [wig20.data]);
 
     // Spółki WIG20 — jedno zbiorcze żądanie (/api/wig20), tickery zweryfikowane u źródła (lib/wig20.ts).
+    const router = useRouter();
     const spolki = useWig20();
     const spolkiCols: Column<Wig20Quote>[] = [
         { key: 'ticker', header: 'Ticker', sortable: true, sortValue: (r) => r.ticker, render: (r) => <span className="font-semibold text-mk-text">{r.ticker}</span> },
@@ -274,7 +276,7 @@ function GpwSection() {
             <SectionCard title="Spółki WIG20" subtitle={`kurs i zmiana dzienna · Yahoo Finance (GPW)${spolki.data ? ` · ${spolki.data.ok}/${spolki.data.count} spółek` : ''}`}
                 actions={<CsvExport filename="spolki-wig20" headers={['Ticker', 'Spółka', 'Kurs', 'Zmiana %']} rows={(spolki.data?.items ?? []).map((s) => [s.ticker, s.name, s.price, s.changePct])} />}>
                 {spolki.isLoading ? <div className="mk-skeleton h-[420px] w-full" /> : (
-                    <DataTable columns={spolkiCols} rows={spolki.data?.items ?? []} initialSort="changePct" rowKey={(r) => r.ticker} maxHeight={420} />
+                    <DataTable columns={spolkiCols} rows={spolki.data?.items ?? []} initialSort="changePct" rowKey={(r) => r.ticker} maxHeight={420} onRowClick={(r) => router.push(`/spolki/${r.ticker}`)} />
                 )}
             </SectionCard>
 

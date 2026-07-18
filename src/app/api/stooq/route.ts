@@ -96,6 +96,11 @@ async function fetchQuote(symbol: string, interval: string, limit: number): Prom
     if (proxy) {
         try { return await fetchYahooProxy(symbol, proxy, limit); } catch { /* spróbuj Stooq poniżej */ }
     }
+    // Ticker GPW (np. PKN.WA) — prosto do Yahoo. Pojedyncze spółki mają tam pełną historię
+    // dzienną (inaczej niż same indeksy), zweryfikowane 2026-07-17 na całym składzie WIG20.
+    if (key.endsWith('.wa')) {
+        try { return await fetchYahoo(symbol.toUpperCase(), symbol, limit); } catch { /* niżej */ }
+    }
     const y = YAHOO_MAP[key];
     if (y) {
         try { return await fetchYahoo(y, symbol, limit); } catch { /* spróbuj Stooq poniżej */ }
