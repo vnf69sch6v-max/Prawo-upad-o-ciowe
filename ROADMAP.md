@@ -140,7 +140,7 @@ przy podejmowaniu.
     efekt (okno 0–14h, gdzie karałby świeże mocniej) to zmiana nie do uzasadnienia. Problem tygodniowy
     NIE ZACHODZI w naszych danych. Gdyby kiedyś podnieść retencję/limit — wrócić do P3.
   - **P4 (półokres per kategoria) — odrzucone:** plan sam gatuje na własnej telemetrii, której nie mamy.
-- **Spółki WIG20 — tabela, strony spółek i newsy per spółka** — 2026-07-17, commity `e95c401`, `<hash>`
+- **Spółki WIG20 — tabela, strony spółek i newsy per spółka** — 2026-07-17, commity `e95c401`, `de05682`
   21 spółek z żywym kursem, zmianą % i sortowaniem (`/rynki?tab=gpw`); klik w wiersz → `/spolki/[ticker]`
   z kursem, wykresem 120 sesji i wiadomościami o spółce. Pliki: `lib/wig20.ts`, `api/wig20/route.ts`,
   `matchCompanyNews()` w `lib/news/match.ts`, `app/spolki/[ticker]/page.tsx`.
