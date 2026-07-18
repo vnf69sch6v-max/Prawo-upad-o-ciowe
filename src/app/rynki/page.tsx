@@ -7,8 +7,8 @@ import type { Observation } from '@/lib/observations';
 import { Euro, DollarSign, Coins, TrendingUp, Ship, Landmark, PoundSterling, Fuel, Flame, Gem, Factory, BarChart3 } from 'lucide-react';
 import {
     useNBPTable, useNBPCurrencyHistory, useGold, useStooq,
-    useTradeData, useCurrentAccount,
-    type NBPTable, type NBPRate,
+    useTradeData, useCurrentAccount, useWig20,
+    type NBPTable, type NBPRate, type Wig20Quote,
 } from '@/lib/hooks';
 import { plSeries, lastOf, prevOf, deltaOf, monthTick, fmtPL, type Point } from '@/lib/series';
 import { formatDecimalPL, formatNumber, formatDate, percentChange } from '@/lib/formatters';
@@ -168,6 +168,22 @@ function GpwSection() {
 
     const wig20Chart = useMemo(() => barsOf(wig20).map((b) => ({ date: b.date, value: b.close })), [wig20.data]);
 
+    // Spółki WIG20 — jedno zbiorcze żądanie (/api/wig20), tickery zweryfikowane u źródła (lib/wig20.ts).
+    const spolki = useWig20();
+    const spolkiCols: Column<Wig20Quote>[] = [
+        { key: 'ticker', header: 'Ticker', sortable: true, sortValue: (r) => r.ticker, render: (r) => <span className="font-semibold text-mk-text">{r.ticker}</span> },
+        { key: 'name', header: 'Spółka', sortable: true, sortValue: (r) => r.name, render: (r) => <span className="text-mk-text">{r.name}</span> },
+        { key: 'price', header: 'Kurs (zł)', align: 'right', sortable: true, sortValue: (r) => r.price ?? -1, render: (r) => r.price != null ? formatDecimalPL(r.price, 2) : '—' },
+        {
+            key: 'changePct', header: 'Zmiana', align: 'right', sortable: true, sortValue: (r) => r.changePct ?? -999,
+            render: (r) => r.changePct == null ? '—' : (
+                <span style={{ color: r.changePct >= 0 ? '#15803D' : '#B91C1C', fontWeight: 600 }}>
+                    {r.changePct > 0 ? '+' : ''}{formatDecimalPL(r.changePct, 2)}%
+                </span>
+            ),
+        },
+    ];
+
     // Porównanie indeksów — REBAZOWANE DO 100. WIG20 ≈ 3,8 tys., mWIG40 ≈ 9,9 tys., sWIG80 ≈ 30 tys.,
     // więc na wspólnej osi w wartościach bezwzględnych WIG20 byłby płaską linią przy zerze. Rebazowanie
     // do 100 na starcie okna to jedyny poprawny sposób porównania ich dynamiki na JEDNEJ osi
@@ -252,6 +268,13 @@ function GpwSection() {
                             { key: 'mwig40', name: 'mWIG40', color: '#7C3AED', type: 'line' },
                             { key: 'swig80', name: 'sWIG80', color: '#0891B2', type: 'line' },
                         ]} />
+                )}
+            </SectionCard>
+
+            <SectionCard title="Spółki WIG20" subtitle={`kurs i zmiana dzienna · Yahoo Finance (GPW)${spolki.data ? ` · ${spolki.data.ok}/${spolki.data.count} spółek` : ''}`}
+                actions={<CsvExport filename="spolki-wig20" headers={['Ticker', 'Spółka', 'Kurs', 'Zmiana %']} rows={(spolki.data?.items ?? []).map((s) => [s.ticker, s.name, s.price, s.changePct])} />}>
+                {spolki.isLoading ? <div className="mk-skeleton h-[420px] w-full" /> : (
+                    <DataTable columns={spolkiCols} rows={spolki.data?.items ?? []} initialSort="changePct" rowKey={(r) => r.ticker} maxHeight={420} />
                 )}
             </SectionCard>
 

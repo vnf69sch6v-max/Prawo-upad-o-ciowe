@@ -20,7 +20,26 @@ nowcasty, mapy regionalne, SMUP. Stooq i Bankier nie mają nic w tym stylu.
 
 ## W TOKU
 
-_(puste — weź pierwszą pozycję z KOLEJKI, przenieś ją tutaj i rozpisz kroki)_
+### Spółki WIG20 — strona każdej spółki + newsy pod nią
+
+**ZROBIONE w tym przebiegu** (commit `<hash>`): tabela 21 spółek z żywym kursem, zmianą % i
+sortowaniem, na `/rynki?tab=gpw`. Pliki: `lib/wig20.ts` (skład + aliasy), `api/wig20/route.ts`
+(zbiorcze pobranie + cache 2h), `useWig20()` w `hooks.ts`, tabela w `GpwSection`.
+
+**Weryfikacja u źródła (2026-07-17):** inaczej niż INDEKSY, pojedyncze spółki GPW MAJĄ na Yahoo
+pełną historię dzienną — 21 z 22 tickerów zwróciło po 125 punktów i kurs w PLN.
+**Santander Bank Polska (SPL) ODRZUCONY** — `SPL.WA`/`SPL1.WA` błąd, `BZW.WA` brak. `SAN.WA` to
+Banco Santander S.A. (hiszpańska matka), `STP.WA` to Stalprodukt — podstawienie ich byłoby fałszem.
+Lepiej 21 prawdziwych niż 22 z jedną zmyśloną. Tickery WIG20 dopisane do `CAPS_WHITELIST`
+w `score.ts` (inaczej ALL-CAPS karałby newsy o KGHM/PKN jako clickbait).
+
+**NASTĘPNY KROK:** (1) newsy per spółka — użyć `aliases` z `lib/wig20.ts` w `lib/news/match.ts`
+(dopasowanie po nazwie w TYTULE mocne, w opisie słabe — wykorzystać istniejący podział
+`strong`/`titleOnly`); sprawdzić trafność ręcznie na żywych danych, jak przy tematach.
+(2) strona `/spolki/[ticker]` z wykresem historii (dane: `/api/stooq?symbol=<TICKER>.WA` wymaga
+dodania obsługi sufiksu `.WA` w route albo osobnego endpointu).
+
+**Kryterium ukończenia:** ≥20 spółek z żywymi danymi ✅, sortowanie ✅, newsy per spółka ⬜.
 
 ---
 

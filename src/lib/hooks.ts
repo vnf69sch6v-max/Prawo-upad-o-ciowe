@@ -599,6 +599,25 @@ export function useNews() {
     });
 }
 
+// ─── Spółki WIG20 (notowania zbiorczo) ───────────────────
+
+export interface Wig20Quote {
+    ticker: string;
+    name: string;
+    price: number | null;
+    changePct: number | null;
+    date: string | null;
+}
+export interface Wig20Result { timestamp: string; count: number; ok: number; items: Wig20Quote[] }
+
+export function useWig20() {
+    return useQuery<Wig20Result>({
+        queryKey: ['wig20-spolki'],
+        queryFn: () => fetchJSON('/api/wig20'),
+        staleTime: 2 * 60 * 60 * 1000,
+    });
+}
+
 // ─── Composite Dashboard Hook ────────────────────────────
 
 export function useDashboardData() {

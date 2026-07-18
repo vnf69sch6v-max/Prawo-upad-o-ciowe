@@ -71,6 +71,8 @@ const CAPS_WHITELIST = new Set([
     'NBP', 'GUS', 'RPP', 'CPI', 'PPI', 'PKB', 'EBC', 'FED', 'MFW', 'UE', 'USA', 'UOKIK', 'KNF', 'ZUS', 'PIT', 'CIT', 'VAT',
     'GPW', 'WIG', 'WIG20', 'MWIG40', 'SWIG80', 'PLN', 'EUR', 'USD', 'CHF', 'GBP', 'PMI', 'HICP', 'WIBOR', 'ESPI', 'IPO',
     'PKN', 'KGHM', 'PKO', 'PZU', 'JSW', 'PGE', 'CDR', 'LPP', 'PGZ', 'PIP', 'MF', 'AI', 'IT', 'ES', 'PB', 'BI',
+    // Tickery WIG20 — bez tego reguła ALL-CAPS karałaby newsy o spółkach jako „krzyczące".
+    'ALE', 'ALR', 'BDX', 'CPS', 'DNP', 'KGH', 'KRU', 'KTY', 'MBK', 'OPL', 'PCO', 'PEO', 'ZAB', 'TPE',
 ]);
 
 const CLICKBAIT_STRONG_WORDS = [
