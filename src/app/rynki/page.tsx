@@ -152,11 +152,13 @@ const lastCloseOf = (q: { data?: { latest: QBar | null } }): number | null => q.
 const pctDelta = (bars: QBar[]): number | null => (bars.length > 1 ? +percentChange(bars[bars.length - 1].close, bars[bars.length - 2].close).toFixed(2) : null);
 
 function GpwSection() {
-    // Indeksy GPW — WIG20 ma historię (seria z ETF WIG20TR skalowana do indeksu); reszta = wartość bieżąca (Yahoo)
+    // Indeksy GPW. WIG20/mWIG40/sWIG80 mają historię — seria z ETF-a replikującego (WIG20TR/
+    // mWIG40TR/sWIG80TR) skalowana do poziomu indeksu. WIG (szeroki) zostaje z 1 punktem: Yahoo nie
+    // ma dla niego serii, a ETF na szeroki WIG nie istnieje — patrz komentarz w api/stooq/route.ts.
     const wig20 = useStooq('wig20', 60);
     const wig = useStooq('wig', 2);
-    const mwig = useStooq('mwig40', 2);
-    const swig = useStooq('swig80', 2);
+    const mwig = useStooq('mwig40', 60);
+    const swig = useStooq('swig80', 60);
     // Surowce — pełna historia (Yahoo Finance)
     const brent = useStooq('cb.c', 90);
     const wti = useStooq('cl.c', 90);
@@ -165,6 +167,25 @@ function GpwSection() {
     const gas = useStooq('ng.c', 90);
 
     const wig20Chart = useMemo(() => barsOf(wig20).map((b) => ({ date: b.date, value: b.close })), [wig20.data]);
+
+    // Porównanie indeksów — REBAZOWANE DO 100. WIG20 ≈ 3,8 tys., mWIG40 ≈ 9,9 tys., sWIG80 ≈ 30 tys.,
+    // więc na wspólnej osi w wartościach bezwzględnych WIG20 byłby płaską linią przy zerze. Rebazowanie
+    // do 100 na starcie okna to jedyny poprawny sposób porównania ich dynamiki na JEDNEJ osi
+    // (druga oś Y byłaby antywzorcem — dwie skale sugerują korelację, której nie ma).
+    const indexChart = useMemo(() => {
+        const src = [{ key: 'wig20', q: wig20 }, { key: 'mwig40', q: mwig }, { key: 'swig80', q: swig }];
+        const maps = src.map((s) => {
+            const bars = barsOf(s.q);
+            const base = bars.length ? bars[0].close : null;
+            return { key: s.key, m: new Map(bars.map((b) => [b.date, base ? +((b.close / base) * 100).toFixed(1) : null])) };
+        });
+        const dates = Array.from(new Set(maps.flatMap((x) => [...x.m.keys()]))).sort();
+        return dates.map((date) => {
+            const row: Record<string, string | number | null> = { date };
+            maps.forEach((x) => { row[x.key] = x.m.get(date) ?? null; });
+            return row;
+        });
+    }, [wig20.data, mwig.data, swig.data]);
 
     const indices = [
         { label: 'WIG20', q: wig20, accent: 'blue' as AccentKey },
@@ -217,6 +238,20 @@ function GpwSection() {
                     <InteractiveChart data={wig20Chart} xKey="date" height={280} showRange initialRange="ALL"
                         valueFormatter={(v) => formatNumber(Math.round(v))} xTickFormatter={monthTick}
                         series={[{ key: 'value', name: 'WIG20', color: '#2563EB', type: 'area', strokeWidth: 2.5 }]} />
+                )}
+            </SectionCard>
+
+            <SectionCard title="Indeksy GPW — dynamika (rebazowane do 100)"
+                subtitle="porównanie zmian %: WIG20, mWIG40, sWIG80 · serie z ETF-ów replikujących (Yahoo)"
+                actions={<CsvExport filename="indeksy-gpw" headers={['Data', 'WIG20', 'mWIG40', 'sWIG80']} rows={indexChart.map((r) => [r.date, r.wig20, r.mwig40, r.swig80])} />}>
+                {indexChart.length < 2 ? <div className="mk-skeleton h-[320px] w-full" /> : (
+                    <InteractiveChart data={indexChart} xKey="date" height={320} legend showRange initialRange="3M"
+                        valueFormatter={(v) => formatDecimalPL(v, 0)} xTickFormatter={monthTick} referenceLines={[{ y: 100, color: '#CBD2DD' }]}
+                        series={[
+                            { key: 'wig20', name: 'WIG20', color: '#2563EB', type: 'line' },
+                            { key: 'mwig40', name: 'mWIG40', color: '#7C3AED', type: 'line' },
+                            { key: 'swig80', name: 'sWIG80', color: '#0891B2', type: 'line' },
+                        ]} />
                 )}
             </SectionCard>
 

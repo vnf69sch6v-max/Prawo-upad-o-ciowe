@@ -26,12 +26,7 @@ _(puste — weź pierwszą pozycję z KOLEJKI, przenieś ją tutaj i rozpisz kro
 
 ## KOLEJKA (priorytet malejąco)
 
-### 1. Rynki — więcej indeksów
-
-- Obok WIG20 dodaj WIG, mWIG40, sWIG80. **Zweryfikuj tickery u źródła, zanim podepniesz.**
-- **Kryterium:** indeksy z żywym kursem i zmianą %, na wspólnym wykresie porównawczym.
-
-### 2. Spółki WIG20 — strona każdej spółki + newsy pod nią
+### 1. Spółki WIG20 — strona każdej spółki + newsy pod nią
 
 Zlecone przez właściciela (2026-07-16). Każda spółka z WIG20 dostaje własne miejsce, a pod nią
 dopasowane newsy.
@@ -46,12 +41,12 @@ dopasowane newsy.
 - **Kryterium:** ≥20 spółek z żywymi danymi, sortowanie działa, każda spółka ma trafne newsy
   (bez przypadkowych trafień — sprawdzić ręcznie na żywych danych, jak przy tematach).
 
-### 3. Watchlista
+### 2. Watchlista
 
 - Zapis w `localStorage`; dodawanie wskaźników i spółek; pas „Obserwowane" na Przeglądzie.
 - **Kryterium:** wybór przeżywa odświeżenie strony.
 
-### 4. Spółki — sprawozdania finansowe (dalszy plan)
+### 3. Spółki — sprawozdania finansowe (dalszy plan)
 
 Zlecone przez właściciela jako etap po stronach spółek. Duża pozycja — rozpisać na osobne kroki
 przy podejmowaniu.
@@ -145,6 +140,22 @@ przy podejmowaniu.
     efekt (okno 0–14h, gdzie karałby świeże mocniej) to zmiana nie do uzasadnienia. Problem tygodniowy
     NIE ZACHODZI w naszych danych. Gdyby kiedyś podnieść retencję/limit — wrócić do P3.
   - **P4 (półokres per kategoria) — odrzucone:** plan sam gatuje na własnej telemetrii, której nie mamy.
+- **Rynki — więcej indeksów** — 2026-07-17, commit `<hash>`
+  mWIG40 i sWIG80 obok WIG20: żywy poziom + zmiana % + wspólny wykres porównawczy
+  **rebazowany do 100** (WIG20 ≈3,8 tys. vs sWIG80 ≈30 tys. — na jednej osi w wartościach
+  bezwzględnych WIG20 byłby płaską linią; druga oś Y to antywzorzec). Warm w `/api/cron/refresh`.
+  - **Weryfikacja u źródła (2026-07-17) — kluczowe ustalenie:** indeksy GPW NIE mają na Yahoo
+    historii dziennej. `WIG.WA`/`MWIG40.WA`/`SWIG80.WA`/`WIG20.WA` zwracają po **1 punkcie**
+    (bieżący poziom). Ratują to ETF-y replikujące (po 126 punktów): `ETFBM40TR.WA` (mWIG40TR),
+    `ETFBS80TR.WA` (sWIG80TR) — ta sama sztuczka co dla WIG20 (`ETFBW20TR.WA`): seria z ETF-a
+    skalowana do poziomu indeksu.
+  - **Stooq odrzucony jako źródło serwerowe:** na żądanie serwera zwraca HTML, 0 wierszy danych
+    (potwierdza komentarz w `api/stooq/route.ts`). Nie próbować ponownie bez zmiany podejścia.
+  - **WIG (szeroki) ŚWIADOMIE POMINIĘTY** na wykresie i w zmianie % — nie istnieje dla niego żadne
+    źródło serii: `^WIG` → brak danych, `ETFBWIGTR.WA` → HTTP Not Found, `WIG.WA` → 1 punkt.
+    Zostaje jako kafel z samym poziomem i podpisem „GPW · poziom bieżący". Zamiast atrapy — prawda.
+  - Zweryfikowane na żywo: WIG20 3766,41 (−0,76%), mWIG40 9874,99 (−0,90%), sWIG80 30421,33
+    (−0,48%), po 60 punktów; wykres rysuje 3 linie z legendą.
 - **Wygląd: kafel KPI bez dekoracyjnego koloru** — 2026-07-16, commit `a29cfd7`
   Panel sędziowski: 3 niezależne kierunki × 3 obiektywy. Wygrał „Kolor jako wyjątek" (7,7/10).
   - **Diagnoza była POMIAREM, nie gustem:** ten sam wskaźnik miał różne kolory na różnych stronach

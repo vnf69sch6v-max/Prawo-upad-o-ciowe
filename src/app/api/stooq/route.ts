@@ -9,7 +9,9 @@ interface StooqResult { symbol: string; data: Bar[]; latest: Bar | null }
 
 // Mapa symbol-appki → symbol Yahoo. Yahoo używamy jako podstawowego dla tych, bo Stooq blokuje serwer.
 const YAHOO_MAP: Record<string, string> = {
-    wig: 'WIG.WA', mwig40: 'MWIG40.WA', swig80: 'SWIG80.WA',
+    // UWAGA: `wig` daje TYLKO bieżący poziom (1 punkt), bez serii dziennej — patrz komentarz przy
+    // YAHOO_PROXY. Zostawiony, bo poziom bywa użyteczny, ale NIE nadaje się na wykres ani zmianę %.
+    wig: 'WIG.WA',
     'cb.c': 'BZ=F', 'cl.c': 'CL=F', // Brent / WTI (dodatkowy fallback obok EIA)
     'gc.c': 'GC=F', 'hg.c': 'HG=F', 'ng.c': 'NG=F', // złoto / miedź / gaz ziemny
 };
@@ -18,8 +20,19 @@ const YAHOO_MAP: Record<string, string> = {
 // ale ETF replikujący ma pełną serię dzienną. Bierzemy serię z ETF-a i skalujemy ją tak, by ostatni
 // punkt równał się żywemu poziomowi indeksu — dostajemy poprawny poziom + realny trend/deltę.
 const YAHOO_PROXY: Record<string, { level: string; series: string }> = {
-    wig20: { level: 'WIG20.WA', series: 'ETFBW20TR.WA' }, // Beta ETF WIG20TR
+    wig20: { level: 'WIG20.WA', series: 'ETFBW20TR.WA' },   // Beta ETF WIG20TR
+    mwig40: { level: 'MWIG40.WA', series: 'ETFBM40TR.WA' }, // Beta ETF mWIG40TR
+    swig80: { level: 'SWIG80.WA', series: 'ETFBS80TR.WA' }, // Beta ETF sWIG80TR
 };
+
+// ─── Dlaczego WIG (szeroki) NIE ma tu wpisu — zweryfikowane u źródła 2026-07-17 ───
+// Indeksy GPW nie mają na Yahoo historii dziennej: WIG.WA / MWIG40.WA / SWIG80.WA / WIG20.WA
+// zwracają po JEDNYM punkcie (bieżący poziom). Dla WIG20/mWIG40/sWIG80 ratują to ETF-y replikujące
+// (po 126 punktów w teście), ale dla szerokiego WIG-u TAKI ETF NIE ISTNIEJE:
+//   • `^WIG` → brak danych,  • `ETFBWIGTR.WA` → HTTP Not Found,  • `WIG.WA` → 1 punkt.
+// Stooq odpada jako źródło serwerowe — na żądanie serwera zwraca HTML, 0 wierszy danych.
+// Dlatego WIG jest ŚWIADOMIE pominięty na wykresie porównawczym i w kaflach ze zmianą % —
+// bez serii nie da się policzyć ani zmiany, ani trendu. Nie wstawiamy atrapy.
 
 async function fetchYahoo(ySymbol: string, appSymbol: string, limit: number): Promise<StooqResult> {
     // dobierz zakres tak, by pokryć `limit` sesji dziennych

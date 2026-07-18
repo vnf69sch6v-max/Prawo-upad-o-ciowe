@@ -35,6 +35,8 @@ const ENDPOINTS = [
     '/api/nbp?gold=true&last=90',
     // Rynki: indeks GPW + surowce (Yahoo Finance)
     '/api/stooq?symbol=wig20&limit=60',
+    '/api/stooq?symbol=mwig40&limit=60',
+    '/api/stooq?symbol=swig80&limit=60',
     '/api/stooq?symbol=cb.c&limit=90',
     '/api/stooq?symbol=cl.c&limit=90',
     '/api/stooq?symbol=gc.c&limit=90',
