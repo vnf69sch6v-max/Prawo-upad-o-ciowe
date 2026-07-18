@@ -140,7 +140,7 @@ przy podejmowaniu.
     efekt (okno 0–14h, gdzie karałby świeże mocniej) to zmiana nie do uzasadnienia. Problem tygodniowy
     NIE ZACHODZI w naszych danych. Gdyby kiedyś podnieść retencję/limit — wrócić do P3.
   - **P4 (półokres per kategoria) — odrzucone:** plan sam gatuje na własnej telemetrii, której nie mamy.
-- **Rynki — więcej indeksów** — 2026-07-17, commit `<hash>`
+- **Rynki — więcej indeksów** — 2026-07-17, commit `b0b91bd`
   mWIG40 i sWIG80 obok WIG20: żywy poziom + zmiana % + wspólny wykres porównawczy
   **rebazowany do 100** (WIG20 ≈3,8 tys. vs sWIG80 ≈30 tys. — na jednej osi w wartościach
   bezwzględnych WIG20 byłby płaską linią; druga oś Y to antywzorzec). Warm w `/api/cron/refresh`.
