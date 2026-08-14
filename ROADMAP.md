@@ -20,31 +20,27 @@ nowcasty, mapy regionalne, SMUP. Stooq i Bankier nie mają nic w tym stylu.
 
 ## W TOKU
 
-_(puste — weź pierwszą pozycję z KOLEJKI, przenieś ją tutaj i rozpisz kroki)_
+### Watchlista
+
+Zapis w `localStorage`; dodawanie wskaźników i spółek; pas „Obserwowane" na Przeglądzie.
+**Kryterium ukończenia:** wybór przeżywa odświeżenie strony (zweryfikowane na żywo, nie „powinno działać”).
+
+Stan zastany (poprzedni przebieg zaczął, ale NIE odnotował w ROADMAP — stąd niezacommitowane pliki):
+`src/lib/watchlist.ts` (hook + localStorage + event) oraz gwiazdka wprost w `KpiCard`.
+
+Plan:
+1. Wydzielić gwiazdkę do `components/ui/WatchStar.tsx` — inaczej `useWatchlist()` wisi w KAŻDYM kaflu
+   KPI (dziesiątki instancji, 2 listenery + parse JSON na toggle każda), choć gwiazdki tam nie ma.
+2. `KpiCard`: prop `watch?: {kind, id}` zamiast `watchId` (spółki to inny `kind` niż wskaźniki).
+3. Pas „Obserwowane" na Przeglądzie — renderowany z TYCH SAMYCH tablic `macro`/`markets`, które
+   Przegląd już ma w pamięci (zero dublowania żądań), + spółki z `/api/wig20`.
+4. Gwiazdki: KPI Przeglądu, tabela spółek `/rynki?tab=gpw` (kolumna ★, `stopPropagation` — wiersz
+   jest klikalny), strona `/spolki/[ticker]`.
+5. Weryfikacja na żywo (3002): dodaj → odśwież → pozycje wciąż są; konsola bez hydration mismatch.
 
 ---
 
 ## KOLEJKA (priorytet malejąco)
-
-### 1. Spółki WIG20 — strona każdej spółki + newsy pod nią
-
-Zlecone przez właściciela (2026-07-16). Każda spółka z WIG20 dostaje własne miejsce, a pod nią
-dopasowane newsy.
-
-- Tabela spółek WIG20: kurs, zmiana %, sortowanie. **Zweryfikuj tickery u źródła przed podpięciem.**
-- Strona `/spolki/[ticker]`: kurs, wykres historii, kluczowe dane.
-- **Newsy per spółka:** rozszerzyć `lib/news/match.ts` o słownik spółek — nazwa + warianty odmiany
-  + ticker (np. „Orlen/Orlenu/PKN”, „KGHM”, „Żabka/Zabka”). UWAGA: tickery to ALL-CAPS, więc muszą
-  trafić na whitelistę detektora clickbaitu, inaczej ukarzą własne newsy (patrz `score.ts`).
-  Dopasowanie po nazwie spółki w tytule jest mocne; w opisie — słabsze (wzmianka mimochodem),
-  więc użyć istniejącego podziału `strong` / `titleOnly`.
-- **Kryterium:** ≥20 spółek z żywymi danymi, sortowanie działa, każda spółka ma trafne newsy
-  (bez przypadkowych trafień — sprawdzić ręcznie na żywych danych, jak przy tematach).
-
-### 1. Watchlista
-
-- Zapis w `localStorage`; dodawanie wskaźników i spółek; pas „Obserwowane" na Przeglądzie.
-- **Kryterium:** wybór przeżywa odświeżenie strony.
 
 ### 2. Spółki — sprawozdania finansowe (dalszy plan)
 

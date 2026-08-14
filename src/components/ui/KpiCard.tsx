@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowUpRight, type LucideIcon } from 'lucide-react';
+import { ArrowUpRight, Star, type LucideIcon } from 'lucide-react';
+import { useWatchlist } from '@/lib/watchlist';
 import { DeltaChip } from './DeltaChip';
 import { AnimatedNumber } from './AnimatedNumber';
 
@@ -26,6 +27,8 @@ interface KpiCardProps {
     loading?: boolean;
     /** Gdy podany, cały kafel jest linkiem do właściwej zakładki (deep-link, np. `/gospodarka?tab=aktywnosc`). */
     href?: string;
+    /** Gdy podany, kafel dostaje gwiazdkę „obserwuj" (watchlista w localStorage). */
+    watchId?: string;
 }
 
 /**
@@ -48,7 +51,8 @@ interface KpiCardProps {
  * ⚠ NIE dodawać paddingu na `.mk-kpi` — to kontener zapytań, a `cqi` liczy się od content-boxa,
  * więc padding skurczyłby liczbę. Padding mieszka na `.mk-kpi-body`.
  */
-export function KpiCard({ label, value, unit, delta, icon: Icon, footnote, loading, href }: KpiCardProps) {
+export function KpiCard({ label, value, unit, delta, icon: Icon, footnote, loading, href, watchId }: KpiCardProps) {
+    const watch = useWatchlist();
     if (loading) {
         // Skeleton ma tę samą strukturę co kafel z danymi — inaczej rząd skacze, gdy każde
         // z kilku zapytań kończy się w innym momencie.
@@ -69,7 +73,7 @@ export function KpiCard({ label, value, unit, delta, icon: Icon, footnote, loadi
                 {Icon && <Icon className="mk-kpi-icon" size={14} strokeWidth={1.75} aria-hidden />}
                 <span>{label}</span>
                 {/* Strzałka „wejdź głębiej" — tylko dla kafli z linkiem; pojawia się przy najechaniu. */}
-                {href && <ArrowUpRight size={14} className="ml-auto shrink-0 text-mk-faint opacity-0 transition-opacity group-hover:opacity-100" aria-hidden />}
+                {href && !watchId && <ArrowUpRight size={14} className="ml-auto shrink-0 text-mk-faint opacity-0 transition-opacity group-hover:opacity-100" aria-hidden />}
             </div>
             {/* `min-w-0` na wartości pozwala jej się skurczyć zamiast wypychać jednostkę poza kartę. */}
             <div className="mk-kpi-figure">
@@ -81,21 +85,42 @@ export function KpiCard({ label, value, unit, delta, icon: Icon, footnote, loadi
         </div>
     );
 
+    const star = watchId ? (
+        <button
+            type="button"
+            onClick={() => watch.toggle('wskaznik', watchId)}
+            aria-pressed={watch.ready && watch.has('wskaznik', watchId)}
+            aria-label={watch.has('wskaznik', watchId) ? `${label} — przestań obserwować` : `${label} — obserwuj`}
+            title={watch.has('wskaznik', watchId) ? 'Przestań obserwować' : 'Obserwuj'}
+            className="absolute right-2 top-2 z-10 flex h-7 w-7 items-center justify-center rounded-lg text-mk-faint transition-colors hover:bg-mk-surface-alt hover:text-mk-text"
+        >
+            {/* `watch.ready` chroni przed hydration mismatch — na serwerze nie znamy localStorage. */}
+            <Star size={14} className={watch.ready && watch.has('wskaznik', watchId) ? 'fill-mk-primary text-mk-primary' : ''} />
+        </button>
+    ) : null;
+
     if (href) {
-        return (
+        const link = (
             <Link
                 href={href}
-                className="mk-kpi mk-card mk-card-interactive group block overflow-hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-mk-primary/50"
+                className="mk-card mk-card-interactive group block h-full overflow-hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-mk-primary/50"
                 aria-label={`${label} — przejdź do szczegółów`}
             >
                 {body}
             </Link>
         );
+        // Gwiazdka MUSI być rodzeństwem linku, nie dzieckiem — <button> w <a> to nieprawidłowy HTML.
+        return star ? (
+            <div className="mk-kpi relative">{link}{star}</div>
+        ) : (
+            <div className="mk-kpi">{link}</div>
+        );
     }
 
     return (
-        <div className="mk-kpi mk-card mk-card-interactive overflow-hidden">
+        <div className="mk-kpi mk-card mk-card-interactive relative overflow-hidden">
             {body}
+            {star}
         </div>
     );
 }
