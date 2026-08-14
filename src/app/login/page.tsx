@@ -40,7 +40,7 @@ export default function LoginPage() {
                     <span className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-mk-primary text-white shadow-md">
                         <BarChart3 size={26} strokeWidth={2.4} />
                     </span>
-                    <h1 className="text-2xl font-extrabold tracking-tight text-mk-text">Makro Data Platform</h1>
+                    <h1 className="text-2xl font-extrabold tracking-tight text-mk-text">Savori</h1>
                     <p className="mt-1 text-sm text-mk-muted">Zaloguj się, aby przejść do platformy</p>
                 </div>
 
@@ -77,7 +77,7 @@ export default function LoginPage() {
                 </form>
 
                 <p className="mt-5 text-center text-xs text-mk-faint">
-                    Dostęp przyznaje administrator. © 2026 Makro Data Platform
+                    Dostęp przyznaje administrator. © 2026 Savori
                 </p>
             </div>
         </div>

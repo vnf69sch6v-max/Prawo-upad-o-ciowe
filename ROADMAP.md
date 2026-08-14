@@ -1,4 +1,4 @@
-# ROADMAP — Makro Data Platform
+# ROADMAP — Savori
 
 **Cel produktowy:** w pełni funkcjonalna platforma danych **makro + rynkowych + newsowych** z Polski,
 wyraźnie lepsza niż stooq.pl i bankier.pl.

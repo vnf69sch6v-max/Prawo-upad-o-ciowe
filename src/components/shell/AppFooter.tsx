@@ -12,7 +12,7 @@ export function AppFooter() {
                     <Link href="/ustawienia" className="rounded px-2 py-1.5 transition-colors hover:bg-mk-surface-alt hover:text-mk-primary">Ustawienia</Link>
                     <span className="flex items-center gap-1.5 px-2"><span className="live-dot" /> Auto-odświeżanie</span>
                 </div>
-                <div>© 2026 Makro Data Platform</div>
+                <div>© 2026 Savori</div>
             </div>
         </footer>
     );

@@ -13,8 +13,8 @@ export function AppHeader() {
                     <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-mk-primary text-white shadow-sm">
                         <BarChart3 size={20} strokeWidth={2.4} />
                     </span>
-                    <span className="hidden text-[17px] font-bold tracking-tight text-mk-text sm:block">
-                        Makro Data <span className="text-mk-primary">Platform</span>
+                    <span className="hidden text-[19px] font-extrabold tracking-tight text-mk-text sm:block">
+                        Savori
                     </span>
                 </Link>
 
