@@ -309,6 +309,7 @@ export async function GET(request: NextRequest) {
     const dataset = searchParams.get('dataset');     // raw dataset code
     const geo = searchParams.get('geo') || 'PL';
     const since = searchParams.get('since');
+    const force = searchParams.get('refresh') === '1'; // cron warm → wymuś refetch (pomiń cache)
 
     try {
         // If predefined indicator
@@ -323,7 +324,7 @@ export async function GET(request: NextRequest) {
                 `${indicator}_${geo}_${sinceFilter}`,
                 () => fetchEurostat(datasetCode, config.params, geoList, sinceFilter),
                 'Eurostat API',
-                12 * 3600 * 1000 // 12h cache
+                force ? -1 : 12 * 3600 * 1000 // 12h cache; cron ?refresh=1 wymusza odświeżenie
             );
 
             return NextResponse.json({
@@ -337,7 +338,8 @@ export async function GET(request: NextRequest) {
         if (dataset) {
             const rawParams: Record<string, string> = {};
             searchParams.forEach((val, key) => {
-                if (!['dataset', 'format', 'geo', 'since'].includes(key)) {
+                // `refresh` to nasz parametr sterujący cache'em — nie wolno go przekazać do Eurostatu.
+                if (!['dataset', 'format', 'geo', 'since', 'refresh'].includes(key)) {
                     rawParams[key] = val;
                 }
             });
@@ -350,7 +352,7 @@ export async function GET(request: NextRequest) {
                 cacheKey.replace(/[^a-zA-Z0-9_]/g, '_').slice(0, 100),
                 () => fetchEurostat(dataset, rawParams, geoList, since || undefined),
                 'Eurostat API',
-                12 * 3600 * 1000
+                force ? -1 : 12 * 3600 * 1000
             );
 
             return NextResponse.json(result);

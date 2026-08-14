@@ -1,50 +1,30 @@
-// Cron job: Fetch & cache Stooq data (indices, stocks, rates)
-// Schedule: Mon-Fri 17:30 CET (after GPW closes)
-import { NextResponse } from 'next/server';
+// Cron: odświeżenie danych rynkowych (indeksy GPW, spółki WIG20, surowce).
+// Harmonogram: pn–pt 17:30 CET (po zamknięciu sesji GPW).
+//
+// UWAGA — poprzednia wersja pobierała CSV bezpośrednio ze stooq.pl i JE WYRZUCAŁA
+// (nigdy nie zapisywała do cache'u), w dodatku ze źródła, którego aplikacja już nie używa:
+// `/api/stooq` i `/api/wig20` biorą dane z Yahoo, bo stooq.pl na żądanie serwera zwraca HTML.
+// Cron był więc podwójnie bezużyteczny. Teraz uderza we własne endpointy z `?refresh=1`.
+import { NextRequest } from 'next/server';
+import { warmEndpoints } from '@/lib/cron-warm';
 
-const STOOQ_BASE = 'https://stooq.pl/q/d/l';
+export const maxDuration = 120;
 
-const SYMBOLS = {
-    indices: ['wig20', 'wig', 'mwig40', 'swig80'],
-    stocks: ['pko', 'pzu', 'kgh', 'pkn', 'peo', 'cdr', 'ale', 'dnp', 'lpp', 'mbk', 'alr', 'jsw', 'pge', 'opl', 'cps', 'kru', 'kty', 'spl'],
-    rates: ['ploprate3m.b', 'ploprate6m.b'],
-    bonds: ['2ypl.b', '5ypl.b', '10ypl.b'],
-    currencies: ['usdpln', 'eurpln', 'gbppln', 'chfpln'],
-};
+const ENDPOINTS = [
+    // Indeksy GPW
+    '/api/stooq?symbol=wig20&limit=60&refresh=1',
+    '/api/stooq?symbol=mwig40&limit=60&refresh=1',
+    '/api/stooq?symbol=swig80&limit=60&refresh=1',
+    // Spółki WIG20 (jedno zbiorcze żądanie)
+    '/api/wig20?refresh=1',
+    // Surowce
+    '/api/stooq?symbol=cb.c&limit=90&refresh=1',   // Brent
+    '/api/stooq?symbol=cl.c&limit=90&refresh=1',   // WTI
+    '/api/stooq?symbol=gc.c&limit=90&refresh=1',   // złoto
+    '/api/stooq?symbol=hg.c&limit=90&refresh=1',   // miedź
+    '/api/stooq?symbol=ng.c&limit=90&refresh=1',   // gaz
+];
 
-async function fetchStooq(symbol: string): Promise<string | null> {
-    try {
-        const res = await fetch(`${STOOQ_BASE}/?s=${symbol}&i=d`, {
-            headers: { 'User-Agent': 'Mozilla/5.0 (compatible; EcoDashboard/1.0)' },
-        });
-        if (res.ok) return res.text();
-    } catch { /* skip */ }
-    return null;
-}
-
-export async function GET() {
-    const results: Record<string, string> = {};
-    const allSymbols = [
-        ...SYMBOLS.indices,
-        ...SYMBOLS.stocks,
-        ...SYMBOLS.rates,
-        ...SYMBOLS.bonds,
-        ...SYMBOLS.currencies,
-    ];
-
-    // Fetch with delay between requests to avoid rate limiting
-    for (const symbol of allSymbols) {
-        const csv = await fetchStooq(symbol);
-        results[symbol] = csv ? 'ok' : 'failed';
-        // Small delay to avoid throttling
-        await new Promise(r => setTimeout(r, 200));
-    }
-
-    return NextResponse.json({
-        status: 'success',
-        timestamp: new Date().toISOString(),
-        fetched: Object.values(results).filter(v => v === 'ok').length,
-        total: allSymbols.length,
-        results,
-    });
+export async function GET(request: NextRequest) {
+    return warmEndpoints(request, ENDPOINTS, 'rynki', 400);
 }

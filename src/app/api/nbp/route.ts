@@ -21,6 +21,7 @@ export async function GET(request: NextRequest) {
     const code = sp.get('code');
     const last = sp.get('last');
     const gold = sp.get('gold');
+    const force = sp.get('refresh') === '1'; // cron warm → wymuś refetch (pomiń cache)
 
     let endpoint: string;
     let fallback: string | undefined;
@@ -66,7 +67,7 @@ export async function GET(request: NextRequest) {
                 return raw; // table → [{ rates, ... }]; gold → [{ data, cena }]; raw → as-is
             },
             'NBP API',
-            6 * 3600 * 1000
+            force ? -1 : 6 * 3600 * 1000
         );
         return NextResponse.json(data);
     } catch (error) {

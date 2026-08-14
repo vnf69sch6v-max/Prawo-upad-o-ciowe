@@ -14,34 +14,37 @@ const ENDPOINTS = [
     '/api/bdl-series?start=1615457&count=1',
     '/api/gus-regional',
     '/api/gus-monthly',
-    // Eurostat
-    '/api/eurostat?indicator=cpi&geo=PL',
-    '/api/eurostat?indicator=unemployment&geo=PL',
-    '/api/eurostat?indicator=gdp_yoy&geo=PL',
-    '/api/eurostat?indicator=gdp_qoq&geo=PL',
-    '/api/eurostat?indicator=gdp_consumption&geo=PL',
-    '/api/eurostat?indicator=gdp_investment&geo=PL',
-    '/api/eurostat?indicator=gdp_exports&geo=PL',
-    '/api/eurostat?indicator=gdp_imports&geo=PL',
-    '/api/eurostat?indicator=industrial&geo=PL',
-    '/api/eurostat?indicator=retail&geo=PL',
-    '/api/eurostat?indicator=ppi&geo=PL',            // struktura inflacji (CPI vs PPI)
-    '/api/eurostat?indicator=hicp_core_yoy&geo=PL',  // inflacja bazowa
+    // Eurostat — `refresh=1` WYMUSZA pobranie u źródła. Bez tego warm tylko czytał cache
+    // i, gdy wpis wyglądał na świeży, nie odświeżał niczego (produkcja potrafiła stać
+    // tygodniami na starych danych mimo „zielonego" crona).
+    '/api/eurostat?indicator=cpi&geo=PL&refresh=1',
+    '/api/eurostat?indicator=unemployment&geo=PL&refresh=1',
+    '/api/eurostat?indicator=gdp_yoy&geo=PL&refresh=1',
+    '/api/eurostat?indicator=gdp_qoq&geo=PL&refresh=1',
+    '/api/eurostat?indicator=gdp_consumption&geo=PL&refresh=1',
+    '/api/eurostat?indicator=gdp_investment&geo=PL&refresh=1',
+    '/api/eurostat?indicator=gdp_exports&geo=PL&refresh=1',
+    '/api/eurostat?indicator=gdp_imports&geo=PL&refresh=1',
+    '/api/eurostat?indicator=industrial&geo=PL&refresh=1',
+    '/api/eurostat?indicator=retail&geo=PL&refresh=1',
+    '/api/eurostat?indicator=ppi&geo=PL&refresh=1',            // struktura inflacji (CPI vs PPI)
+    '/api/eurostat?indicator=hicp_core_yoy&geo=PL&refresh=1',  // inflacja bazowa
     '/api/regional-eu',                              // PKB regionalne + demografia (NUTS-2)
-    // NBP + rynki
-    '/api/nbp?table=a',
+    // NBP + rynki — dublują crony nbp/stooq (pn–pt); tu codziennie, więc dane nie stoją w weekend
+    '/api/nbp?table=a&refresh=1',
     '/api/nbp-rates',
     '/api/wibor',
-    '/api/nbp?gold=true&last=90',
-    // Rynki: indeks GPW + surowce (Yahoo Finance)
-    '/api/stooq?symbol=wig20&limit=60',
-    '/api/stooq?symbol=mwig40&limit=60',
-    '/api/stooq?symbol=swig80&limit=60',
-    '/api/stooq?symbol=cb.c&limit=90',
-    '/api/stooq?symbol=cl.c&limit=90',
-    '/api/stooq?symbol=gc.c&limit=90',
-    '/api/stooq?symbol=hg.c&limit=90',
-    '/api/stooq?symbol=ng.c&limit=90',
+    '/api/nbp?gold=true&last=90&refresh=1',
+    // Rynki: indeksy GPW + spółki + surowce (Yahoo Finance)
+    '/api/stooq?symbol=wig20&limit=60&refresh=1',
+    '/api/stooq?symbol=mwig40&limit=60&refresh=1',
+    '/api/stooq?symbol=swig80&limit=60&refresh=1',
+    '/api/wig20?refresh=1',
+    '/api/stooq?symbol=cb.c&limit=90&refresh=1',
+    '/api/stooq?symbol=cl.c&limit=90&refresh=1',
+    '/api/stooq?symbol=gc.c&limit=90&refresh=1',
+    '/api/stooq?symbol=hg.c&limit=90&refresh=1',
+    '/api/stooq?symbol=ng.c&limit=90&refresh=1',
     // Samorząd
     '/api/smup?resource=areas-list',
     // Newsy (RSS — limity niezależne od DBW)

@@ -113,12 +113,13 @@ export async function GET(request: NextRequest) {
     const symbol = searchParams.get('symbol') || 'wig20';
     const interval = searchParams.get('interval') || 'd';
     const limit = parseInt(searchParams.get('limit') || '90');
+    const force = searchParams.get('refresh') === '1'; // cron warm → wymuś refetch (pomiń cache)
 
     try {
         const data = await withCache<StooqResult>(
             'market_data', `stooq_${symbol}_${limit}`,
             () => fetchQuote(symbol, interval, limit),
-            'Rynki (Yahoo/Stooq)', 2 * 3600 * 1000,
+            'Rynki (Yahoo/Stooq)', force ? -1 : 2 * 3600 * 1000,
         );
         return NextResponse.json(data);
     } catch (error) {

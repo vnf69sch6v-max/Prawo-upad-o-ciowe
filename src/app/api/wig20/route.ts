@@ -4,7 +4,7 @@
 // Dlaczego Yahoo, a nie Stooq: stooq.pl na żądanie SERWERA zwraca HTML, zero wierszy danych
 // (sprawdzone 2026-07-17 — patrz komentarz w api/stooq/route.ts). Yahoo ma dla pojedynczych
 // spółek GPW pełną historię dzienną (125 punktów w teście), inaczej niż dla samych indeksów.
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { withCache } from '@/lib/server-cache';
 import { WIG20 } from '@/lib/wig20';
 
@@ -55,7 +55,8 @@ async function fetchOne(c: (typeof WIG20)[number]): Promise<Wig20Quote> {
     }
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+    const force = new URL(request.url).searchParams.get('refresh') === '1'; // cron warm → wymuś refetch
     try {
         const result = await withCache(
             'market_data',
@@ -70,7 +71,7 @@ export async function GET() {
                 };
             },
             'Yahoo Finance (GPW)',
-            TTL_MS,
+            force ? -1 : TTL_MS,
         );
         return NextResponse.json(result);
     } catch (error) {
