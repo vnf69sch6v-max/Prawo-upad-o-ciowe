@@ -60,6 +60,19 @@ przy podejmowaniu.
 
 ## ZROBIONE
 
+- **Naprawa: dane rynkowe stały miesiąc mimo „zielonych" cronów** — 2026-08-17, commit `58bb135`
+  Produkcja serwowała tabelę NBP z 16.07 (u źródła 14.08), WIG20 z 13.07, Eurostat z 16.07.
+  CPI/PPI/newsy były świeże, bo mają crony z `?refresh=1`.
+  - Przyczyna: `cron/nbp` pobierał dane i **je wyrzucał** (`const tableA = await fetch…` nigdzie
+    nie trafiało, `setServerCache` nie wołane ani razu); `cron/stooq` tak samo, w dodatku ze
+    stooq.pl, którego route'y już nie używają (przeszły na Yahoo). Oba raportowały „ok".
+    `cron/refresh` wołał endpointy bez `?refresh=1`, więc trafiał w cache i nic nie odświeżał.
+  - **ZASADA NA PRZYSZŁOŚĆ — nie usuwać:** cron warmujący MUSI wołać endpoint z `?refresh=1`,
+    inaczej tylko czyta własny cache i jest bezużyteczny. Dotyczy `/api/nbp`, `/api/stooq`,
+    `/api/eurostat`, `/api/wig20` oraz endpointów DBW. Cron, który pobiera dane do nieużywanej
+    zmiennej, nie odświeża niczego — status „ok" nic nie znaczy bez sprawdzenia daty danych.
+  - Zweryfikowane po wdrożeniu: NBP 157/A z 14.08, WIG20 z 14.08, spółki 21/21 z 17.08.
+
 - Jasny design system `mk-`, powłoka aplikacji, nawigacja, paleta ⌘K
 - Przegląd (KPI makro + pas rynków)
 - Ceny: CPI (pełny audyt danych) + PPI (33 pozycje PKD, 10 lat)
