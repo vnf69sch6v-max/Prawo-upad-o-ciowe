@@ -6,11 +6,11 @@
 // spółek GPW pełną historię dzienną (125 punktów w teście), inaczej niż dla samych indeksów.
 import { NextRequest, NextResponse } from 'next/server';
 import { withCache } from '@/lib/server-cache';
+import { marketCacheTtlMs } from '@/lib/market-hours';
 import { WIG20 } from '@/lib/wig20';
 
 export const revalidate = 0;
 
-const TTL_MS = 2 * 3600 * 1000; // 2h — jak inne dane rynkowe
 const FETCH_TIMEOUT_MS = 8000;
 
 export interface Wig20Quote {
@@ -71,7 +71,7 @@ export async function GET(request: NextRequest) {
                 };
             },
             'Yahoo Finance (GPW)',
-            force ? -1 : TTL_MS,
+            force ? -1 : marketCacheTtlMs(),
         );
         return NextResponse.json(result);
     } catch (error) {

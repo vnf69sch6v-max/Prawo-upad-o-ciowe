@@ -1,6 +1,6 @@
 // Dane regionalne z Eurostatu (NUTS-2): PKB per mieszkańca + ludność wg województw.
 // Mazowieckie = PL91 (Warszawski stołeczny) + PL92 (Mazowiecki regionalny) — łączymy totale.
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { withCache } from '@/lib/server-cache';
 import { fetchEurostat } from '../eurostat/route';
 
@@ -24,7 +24,8 @@ const last = (arr?: { date: string; value: number | null }[]) => {
 
 export interface RegionalEURow { slug: string; name: string; gdpTotal: number | null; population: number | null; gdpPerCapita: number | null }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+    const force = new URL(request.url).searchParams.get('refresh') === '1';
     try {
         const data = await withCache(
             'macro_data',
@@ -62,7 +63,7 @@ export async function GET() {
                 };
             },
             'Eurostat regional',
-            7 * 24 * 3600 * 1000,
+            force ? -1 : 7 * 24 * 3600 * 1000,
         );
         return NextResponse.json(data);
     } catch (error) {

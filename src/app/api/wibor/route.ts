@@ -1,7 +1,7 @@
 // WIBOR rates API — combines NBP reference rate with known WIBOR spreads
 // GPW Benchmark blocks server-side fetches, so this uses a calculated approach
 // WIBOR tenors track closely to the NBP reference rate with known spreads
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { withCache } from '@/lib/server-cache';
 
 interface WiborRate {
@@ -51,7 +51,8 @@ async function getCurrentRefRate(): Promise<number> {
     return VERIFIED_RATES.nbpRefRate;
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+    const force = new URL(request.url).searchParams.get('refresh') === '1';
     try {
         const result = await withCache(
             'wibor',
@@ -90,7 +91,7 @@ export async function GET() {
                 };
             },
             'GPW Benchmark / NBP',
-            6 * 3600 * 1000
+            force ? -1 : 6 * 3600 * 1000
         );
 
         return NextResponse.json(result);

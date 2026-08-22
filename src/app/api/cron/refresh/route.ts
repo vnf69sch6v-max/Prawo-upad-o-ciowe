@@ -29,11 +29,22 @@ const ENDPOINTS = [
     '/api/eurostat?indicator=retail&geo=PL&refresh=1',
     '/api/eurostat?indicator=ppi&geo=PL&refresh=1',            // struktura inflacji (CPI vs PPI)
     '/api/eurostat?indicator=hicp_core_yoy&geo=PL&refresh=1',  // inflacja bazowa
-    '/api/regional-eu',                              // PKB regionalne + demografia (NUTS-2)
+    '/api/eurostat?indicator=construction&geo=PL&refresh=1',
+    '/api/eurostat?indicator=exports&geo=PL&refresh=1',
+    '/api/eurostat?indicator=imports&geo=PL&refresh=1',
+    '/api/eurostat?indicator=current_account&geo=PL&refresh=1',
+    '/api/eurostat?indicator=consumer_confidence&geo=PL&refresh=1',
+    '/api/eurostat?indicator=bond_yield_10y&geo=PL&refresh=1',
+    '/api/eurostat?indicator=gov_debt&geo=PL&refresh=1',
+    '/api/eurostat?indicator=gov_deficit&geo=PL&refresh=1',
+    '/api/eurostat?indicator=gdp_annual&geo=PL&refresh=1',
+    '/api/eurostat?indicator=cpi_annual&geo=PL&refresh=1',
+    '/api/eurostat?indicator=hicp_food_yoy&geo=PL&refresh=1',
+    '/api/regional-eu?refresh=1',                              // PKB regionalne + demografia (NUTS-2)
     // NBP + rynki — dublują crony nbp/stooq (pn–pt); tu codziennie, więc dane nie stoją w weekend
     '/api/nbp?table=a&refresh=1',
     '/api/nbp-rates',
-    '/api/wibor',
+    '/api/wibor?refresh=1',
     '/api/nbp?gold=true&last=90&refresh=1',
     // Rynki: indeksy GPW + spółki + surowce (Yahoo Finance)
     '/api/stooq?symbol=wig20&limit=60&refresh=1',

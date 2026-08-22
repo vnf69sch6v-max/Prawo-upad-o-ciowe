@@ -13,6 +13,7 @@ export function Providers({ children }: { children: ReactNode }) {
                         staleTime: 5 * 60 * 1000,     // 5 min stale
                         gcTime: 30 * 60 * 1000,        // 30 min garbage collection
                         refetchOnWindowFocus: false,
+                        refetchOnReconnect: true,
                         retry: 1,
                     },
                 },

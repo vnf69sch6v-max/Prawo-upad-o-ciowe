@@ -3,6 +3,7 @@
 // który działa serwerowo i zwraca czysty JSON. Kształt odpowiedzi identyczny — UI bez zmian.
 import { NextRequest, NextResponse } from 'next/server';
 import { withCache } from '@/lib/server-cache';
+import { marketCacheTtlMs } from '@/lib/market-hours';
 
 interface Bar { date: string; open: number; high: number; low: number; close: number; volume: number }
 interface StooqResult { symbol: string; data: Bar[]; latest: Bar | null }
@@ -119,7 +120,7 @@ export async function GET(request: NextRequest) {
         const data = await withCache<StooqResult>(
             'market_data', `stooq_${symbol}_${limit}`,
             () => fetchQuote(symbol, interval, limit),
-            'Rynki (Yahoo/Stooq)', force ? -1 : 2 * 3600 * 1000,
+            'Rynki (Yahoo/Stooq)', force ? -1 : marketCacheTtlMs(),
         );
         return NextResponse.json(data);
     } catch (error) {

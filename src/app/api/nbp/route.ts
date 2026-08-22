@@ -1,6 +1,7 @@
 // NBP API Proxy — tables, single-currency history, gold. Weekend/holiday fallback + Firestore cache.
 import { NextRequest, NextResponse } from 'next/server';
 import { withCache } from '@/lib/server-cache';
+import { nbpCacheTtlMs } from '@/lib/market-hours';
 
 const NBP_BASE = 'https://api.nbp.pl/api';
 
@@ -67,7 +68,7 @@ export async function GET(request: NextRequest) {
                 return raw; // table → [{ rates, ... }]; gold → [{ data, cena }]; raw → as-is
             },
             'NBP API',
-            force ? -1 : 6 * 3600 * 1000
+            force ? -1 : nbpCacheTtlMs()
         );
         return NextResponse.json(data);
     } catch (error) {

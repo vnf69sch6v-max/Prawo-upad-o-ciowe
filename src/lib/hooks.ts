@@ -1,8 +1,9 @@
 'use client';
 
-import { useQuery, useQueries } from '@tanstack/react-query';
+import { useQuery, useQueries, type UseQueryResult } from '@tanstack/react-query';
 import { COICOP_2026, buildBasket } from '@/lib/calculations/cpi-basket';
 import type { NewsResult } from '@/lib/news/types';
+import { refreshOptions } from '@/lib/query-refresh';
 
 // ─── Types ───────────────────────────────────────────────
 
@@ -68,8 +69,7 @@ export function useNBPTable(table: 'a' | 'b' | 'c' = 'a') {
     return useQuery<NBPTable>({
         queryKey: ['nbp', 'table', table],
         queryFn: () => fetchJSON(`/api/nbp?table=${table}`),
-        staleTime: 60 * 60 * 1000,     // 1 hour (NBP updates once daily ~12:15)
-        refetchInterval: 60 * 60 * 1000,
+        ...refreshOptions('nbpDaily'),
     });
 }
 
@@ -77,7 +77,7 @@ export function useNBPCurrencyHistory(code: string, days = 30) {
     return useQuery<NBPRate[]>({
         queryKey: ['nbp', 'history', code, days],
         queryFn: () => fetchJSON(`/api/nbp?table=a&code=${code}&last=${days}`),
-        staleTime: 60 * 60 * 1000,
+        ...refreshOptions('nbpDaily'),
         enabled: !!code,
     });
 }
@@ -88,7 +88,7 @@ export function useGold(days = 30) {
     return useQuery<GoldPrice[]>({
         queryKey: ['nbp', 'gold', days],
         queryFn: () => fetchJSON(`/api/nbp?gold=true&last=${days}`),
-        staleTime: 60 * 60 * 1000,
+        ...refreshOptions('nbpDaily'),
     });
 }
 
@@ -98,7 +98,7 @@ export function useNBPInterestRates() {
     return useQuery<{ rates: NBPInterestRate[]; publishDate: string }>({
         queryKey: ['nbp', 'interest-rates'],
         queryFn: () => fetchJSON('/api/nbp-rates'),
-        staleTime: 24 * 60 * 60 * 1000, // 24h — changes only when RPP decides
+        ...refreshOptions('nbpInterest'),
     });
 }
 
@@ -108,17 +108,18 @@ export function useWibor() {
     return useQuery<{ rates: WiborRate[]; nbpRefRate: number }>({
         queryKey: ['wibor'],
         queryFn: () => fetchJSON('/api/wibor'),
-        staleTime: 60 * 60 * 1000, // 1h — changes once daily
+        ...refreshOptions('wibor'),
     });
 }
 
 // ─── Stooq (Stocks, Indices) ─────────────────────────────
 
 export function useStooq(symbol: string, limit = 30) {
+    const policy = ['cb.c', 'cl.c', 'gc.c', 'hg.c', 'ng.c'].includes(symbol.toLowerCase()) ? 'commodity' : 'market';
     return useQuery<StooqData>({
         queryKey: ['stooq', symbol, limit],
         queryFn: () => fetchJSON(`/api/stooq?symbol=${symbol}&limit=${limit}`),
-        staleTime: 30 * 60 * 1000, // 30 min during market hours
+        ...refreshOptions(policy),
         enabled: !!symbol,
     });
 }
@@ -138,7 +139,7 @@ export function useMultiStooq(symbols: string[], limit = 30) {
             );
             return results;
         },
-        staleTime: 30 * 60 * 1000,
+        ...refreshOptions('market'),
     });
 }
 
@@ -148,7 +149,7 @@ export function useGUSData(indicator: string = 'all', years = 3) {
     return useQuery<Record<string, GUSIndicator>>({
         queryKey: ['gus', indicator, years],
         queryFn: () => fetchJSON(`/api/gus?indicator=${indicator}&years=${years}`),
-        staleTime: 24 * 60 * 60 * 1000, // 24h — annual data
+        ...refreshOptions('gusMonthly'),
     });
 }
 
@@ -166,7 +167,7 @@ export function useGUSWages(years = 5) {
             const yoy = prev.val && latest.val ? +((latest.val / prev.val - 1) * 100).toFixed(1) : null;
             return { latest: latest.val, prevYear: prev.val, yoy, source: 'GUS BDL var:196229' };
         },
-        staleTime: 24 * 60 * 60 * 1000,
+        ...refreshOptions('gusMonthly'),
     });
 }
 
@@ -200,7 +201,7 @@ export function useRegionalEU() {
     return useQuery<RegionalEUData>({
         queryKey: ['regional-eu'],
         queryFn: () => fetchJSON('/api/regional-eu'),
-        staleTime: 7 * 24 * 60 * 60 * 1000,
+        ...refreshOptions('regionalEu'),
     });
 }
 
@@ -208,7 +209,7 @@ export function useGusRegional() {
     return useQuery<GusRegionalData>({
         queryKey: ['gus-regional'],
         queryFn: () => fetchJSON('/api/gus-regional'),
-        staleTime: 24 * 60 * 60 * 1000, // 24h — monthly data
+        ...refreshOptions('gusMonthly'),
     });
 }
 
@@ -224,7 +225,7 @@ export function useGusMonthly() {
     return useQuery<GusMonthlyData>({
         queryKey: ['gus-monthly'],
         queryFn: () => fetchJSON('/api/gus-monthly'),
-        staleTime: 24 * 60 * 60 * 1000,
+        ...refreshOptions('gusMonthly'),
     });
 }
 
@@ -246,11 +247,11 @@ interface EurostatResult {
     indicatorLabel?: string;
 }
 
-export function useEurostat(indicator: string, geo = 'PL') {
+export function useEurostat(indicator: string, geo = 'PL'): UseQueryResult<EurostatResult> {
     return useQuery<EurostatResult>({
         queryKey: ['eurostat', indicator, geo],
-        queryFn: () => fetchJSON(`/api/eurostat?indicator=${indicator}&geo=${geo}`),
-        staleTime: 12 * 60 * 60 * 1000, // 12h — Eurostat updates monthly
+        queryFn: (): Promise<EurostatResult> => fetchJSON(`/api/eurostat?indicator=${indicator}&geo=${geo}`),
+        ...refreshOptions('eurostat'),
     });
 }
 
@@ -320,7 +321,7 @@ export function useHicpDivision(coicop?: string, since = `${new Date().getFullYe
         queryKey: ['hicp-div-idx', coicop, since],
         queryFn: () => fetchJSON(`/api/eurostat?dataset=prc_hicp_midx&coicop=${coicop}&unit=I15&geo=PL&since=${since}`),
         enabled: !!coicop,
-        staleTime: 12 * 60 * 60 * 1000,
+        ...refreshOptions('eurostat'),
     });
 }
 export function useBrent() { return useStooq('cb.c', 90); } // legacy — prefer useBrentMM()
@@ -356,7 +357,7 @@ export function useBrentMM(): { data: BrentMMResult | undefined; isLoading: bool
     const eia = useQuery<EIABrentResponse>({
         queryKey: ['eia-brent'],
         queryFn: () => fetchJSON('/api/eia?limit=90'),
-        staleTime: 2 * 60 * 60 * 1000, // 2h
+        ...refreshOptions('commodity'),
         enabled: !stooq.data || (stooq.data?.data?.length ?? 0) < 10, // only fetch if Stooq fails
     });
 
@@ -441,7 +442,7 @@ export function useCpiFull(year = new Date().getFullYear()) {
     return useQuery<CpiFullData>({
         queryKey: ['gus-cpi-full', year],
         queryFn: () => fetchJSON(`/api/gus-cpi-full?year=${year}`),
-        staleTime: 24 * 60 * 60 * 1000,
+        ...refreshOptions('gusDbw'),
     });
 }
 
@@ -454,7 +455,7 @@ export function usePpiFull() {
     return useQuery<PpiFullData>({
         queryKey: ['gus-ppi-full'],
         queryFn: () => fetchJSON('/api/gus-ppi-full'),
-        staleTime: 24 * 60 * 60 * 1000,
+        ...refreshOptions('gusDbw'),
     });
 }
 
@@ -470,7 +471,7 @@ export function useCpiNational(year = new Date().getFullYear()) {
     return useQuery<CpiNationalData>({
         queryKey: ['gus-cpi', year],
         queryFn: () => fetchJSON(`/api/gus-cpi?year=${year}`),
-        staleTime: 24 * 60 * 60 * 1000,
+        ...refreshOptions('gusDbw'),
     });
 }
 
@@ -480,7 +481,7 @@ export function useBdlSeries(start: number, count = 12, year = new Date().getFul
     return useQuery<{ series: { date: string; value: number }[]; source: string }>({
         queryKey: ['bdl-series', start, count, year, freq],
         queryFn: () => fetchJSON(`/api/bdl-series?start=${start}&count=${count}&year=${year}&freq=${freq}`),
-        staleTime: 24 * 60 * 60 * 1000,
+        ...refreshOptions('gusMonthly'),
     });
 }
 
@@ -498,7 +499,7 @@ export function useDbwSeries(config: DbwSeriesConfig) {
     return useQuery<{ series: Record<string, number | string>[]; source: string }>({
         queryKey: ['dbw-series', v, przekroj, poz.join('-'), year, freq, prez, sub100],
         queryFn: () => fetchJSON(`/api/dbw-series?${qs}`),
-        staleTime: 24 * 60 * 60 * 1000,
+        ...refreshOptions('gusDbw'),
     });
 }
 
@@ -515,7 +516,7 @@ export function useKoniunktura(year = new Date().getFullYear()) {
     return useQuery<KoniunkturaData>({
         queryKey: ['gus-koniunktura', year],
         queryFn: () => fetchJSON(`/api/gus-koniunktura?year=${year}`),
-        staleTime: 24 * 60 * 60 * 1000,
+        ...refreshOptions('gusDbw'),
     });
 }
 
@@ -524,11 +525,11 @@ export function useKoniunktura(year = new Date().getFullYear()) {
 export function useCPIBasket() {
     const results = useQueries({
         queries: [
-            { queryKey: ['hicp-div', 'CP00'], queryFn: () => fetchJSON<EurostatResult>('/api/eurostat?dataset=prc_hicp_manr&coicop=CP00&geo=PL&since=2023-01'), staleTime: 12 * 60 * 60 * 1000 },
+            { queryKey: ['hicp-div', 'CP00'], queryFn: () => fetchJSON<EurostatResult>('/api/eurostat?dataset=prc_hicp_manr&coicop=CP00&geo=PL&since=2023-01'), ...refreshOptions('eurostat') },
             ...COICOP_2026.map((d) => ({
                 queryKey: ['hicp-div', d.coicop],
                 queryFn: () => fetchJSON<EurostatResult>(`/api/eurostat?dataset=prc_hicp_manr&coicop=${d.coicop}&geo=PL&since=2023-01`),
-                staleTime: 12 * 60 * 60 * 1000,
+                ...refreshOptions('eurostat'),
             })),
         ],
     });
@@ -555,16 +556,16 @@ export interface SmupIndicator { id: number; 'nazwa-wskaznika': string; 'id-up'?
 export interface SmupDataRow { id: number; 'id-daty': number; 'id-teryt': number; 'id-flaga': number; wartosc: number; precyzja: number }
 
 export function useSmupAreas() {
-    return useQuery<SmupArea[]>({ queryKey: ['smup', 'areas'], queryFn: () => fetchJSON('/api/smup?resource=areas-list'), staleTime: 7 * 24 * 60 * 60 * 1000 });
+    return useQuery<SmupArea[]>({ queryKey: ['smup', 'areas'], queryFn: () => fetchJSON('/api/smup?resource=areas-list'), ...refreshOptions('smupCatalog') });
 }
 export function useSmupServices(areaId?: number) {
-    return useQuery<SmupService[]>({ queryKey: ['smup', 'services', areaId], queryFn: () => fetchJSON(`/api/smup?resource=public-services&id=${areaId}`), enabled: !!areaId, staleTime: 7 * 24 * 60 * 60 * 1000 });
+    return useQuery<SmupService[]>({ queryKey: ['smup', 'services', areaId], queryFn: () => fetchJSON(`/api/smup?resource=public-services&id=${areaId}`), enabled: !!areaId, ...refreshOptions('smupCatalog') });
 }
 export function useSmupIndicators(serviceId?: number) {
-    return useQuery<SmupIndicator[]>({ queryKey: ['smup', 'indicators', serviceId], queryFn: () => fetchJSON(`/api/smup?resource=indicators-list&id=${serviceId}`), enabled: !!serviceId, staleTime: 7 * 24 * 60 * 60 * 1000 });
+    return useQuery<SmupIndicator[]>({ queryKey: ['smup', 'indicators', serviceId], queryFn: () => fetchJSON(`/api/smup?resource=indicators-list&id=${serviceId}`), enabled: !!serviceId, ...refreshOptions('smupCatalog') });
 }
 export function useSmupData(indicatorId?: number) {
-    return useQuery<{ data: SmupDataRow[] } | SmupDataRow[]>({ queryKey: ['smup', 'data', indicatorId], queryFn: () => fetchJSON(`/api/smup?resource=indicator-date-data&id=${indicatorId}&page-size=2000`), enabled: !!indicatorId, staleTime: 24 * 60 * 60 * 1000 });
+    return useQuery<{ data: SmupDataRow[] } | SmupDataRow[]>({ queryKey: ['smup', 'data', indicatorId], queryFn: () => fetchJSON(`/api/smup?resource=indicator-date-data&id=${indicatorId}&page-size=2000`), enabled: !!indicatorId, ...refreshOptions('smupData') });
 }
 
 // ─── Bond Yield Curve (Stooq Live) ──────────────────────
@@ -594,8 +595,7 @@ export function useNews() {
     return useQuery<NewsResult>({
         queryKey: ['news'],
         queryFn: () => fetchJSON('/api/news'),
-        staleTime: 15 * 60 * 1000,      // zgodnie z TTL cache po stronie serwera
-        refetchInterval: 15 * 60 * 1000,
+        ...refreshOptions('news'),
     });
 }
 
@@ -610,11 +610,16 @@ export interface Wig20Quote {
 }
 export interface Wig20Result { timestamp: string; count: number; ok: number; items: Wig20Quote[] }
 
-export function useWig20() {
+/**
+ * @param enabled Przegląd potrzebuje notowań spółek TYLKO wtedy, gdy użytkownik ma jakąś
+ * w watchliście — bez tego każde wejście na stronę główną ciągnęłoby 21 spółek na zapas.
+ */
+export function useWig20(enabled = true) {
     return useQuery<Wig20Result>({
         queryKey: ['wig20-spolki'],
         queryFn: () => fetchJSON('/api/wig20'),
-        staleTime: 2 * 60 * 60 * 1000,
+        ...refreshOptions('market'),
+        enabled,
     });
 }
 
