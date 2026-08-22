@@ -1,5 +1,4 @@
 // Polityki odświeżania React Query dopasowane do częstotliwości publikacji u źródła.
-import type { Query } from '@tanstack/react-query';
 import { isGpwSession, isNbpPublishWindow } from '@/lib/market-hours';
 
 const MIN = 60 * 1000;
@@ -20,18 +19,18 @@ export type RefreshPolicy =
     | 'smupData'
     | 'regionalEu';
 
-/** Plain shape — bez UseQueryOptions, żeby spread nie psuł inferencji generyków. */
+/** Plain shape — bez UseQueryOptions / Query, żeby spread nie psuł inferencji generyków. */
 export type RefreshPartial = {
     staleTime: number;
-    refetchInterval?: number | false | ((query: Query) => number | false | undefined);
+    refetchInterval?: number | false | (() => number | false | undefined);
     refetchOnWindowFocus?: boolean;
 };
 
-function nbpInterval(_query: Query): number {
+function nbpInterval(): number {
     return isNbpPublishWindow() ? 10 * MIN : HOUR;
 }
 
-function marketInterval(_query: Query): number {
+function marketInterval(): number {
     return isGpwSession() ? 5 * MIN : 30 * MIN;
 }
 
