@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react';
 import { useInitialTab } from '@/lib/use-initial-tab';
 import { Sparkles, Scale, TrendingUp, Target, BarChart3, Gauge, Home } from 'lucide-react';
-import { useCPIBasket, useInflationMonthly, useGDPQuarterly, useNBPInterestRates, useIndustrialProduction, useRetailSales, useWibor } from '@/lib/hooks';
+import { useCPIBasket, useCpiFull, useGusGdpAnnual, useGusIndustrialProduction, useGusRetailSales, useNBPInterestRates, useWibor } from '@/lib/hooks';
 import { plSeries, lastOf, fmtPL, monthTick } from '@/lib/series';
 import { formatDecimalPL, formatPLN, formatNumber } from '@/lib/formatters';
 import { taylorRule, DEFAULT_TAYLOR } from '@/lib/calculations/taylor';
@@ -63,8 +63,8 @@ function InflacjaNowcast() {
                 <KpiCard label="Nowcast CPI (z koszyka)" value={zaMaloDanych ? '—' : fmtPL(basket.headlineNowcast)} unit={zaMaloDanych ? '' : '%'}
                     accent={pelnePokrycie ? 'blue' : 'amber'} icon={Sparkles}
                     footnote={nowcastFootnote} loading={isLoading} />
-                <KpiCard label="Oficjalny CPI (CP00)" value={fmtPL(basket.official)} unit="%" accent="amber" icon={Target}
-                    footnote={basket.dataDate ? `Eurostat · ${basket.dataDate}` : 'Eurostat'} loading={isLoading} watchId="cpi" />
+                <KpiCard label="Oficjalny CPI" value={fmtPL(basket.official)} unit="%" accent="amber" icon={Target}
+                    footnote={basket.dataDate ? `GUS · ${basket.dataDate}` : 'GUS · krajowy CPI'} loading={isLoading} watchId="cpi" />
                 <KpiCard label="Pokrycie koszyka" value={fmtPL(basket.coverage, 0)} unit="%" accent={pelnePokrycie ? 'green' : 'amber'} icon={Scale}
                     footnote={pelnePokrycie ? 'wszystkie dywizje z danymi' : `brak ${brakujace.length} z ${basket.items.length} dywizji`} loading={isLoading} />
             </div>
@@ -72,7 +72,7 @@ function InflacjaNowcast() {
             <SectionCard editorial titleVariant="label"
                 title="Dekompozycja inflacji wg koszyka (COICOP)"
                 subtitle="Wkład każdej dywizji do headline CPI: waga × dynamika roczna"
-                actions={<div className="flex items-center gap-2"><StaleBadge date={basket.dataDate} label="HICP do" /><CsvExport filename="cpi-koszyk" headers={['Dywizja', 'Waga %', 'YoY %', 'Wkład pp']} rows={basket.items.map((i) => [i.name, i.weight, i.yoy, i.contribution])} /></div>}
+                actions={<div className="flex items-center gap-2"><StaleBadge date={basket.dataDate} label="CPI do" /><CsvExport filename="cpi-koszyk" headers={['Dywizja', 'Waga %', 'YoY %', 'Wkład pp']} rows={basket.items.map((i) => [i.name, i.weight, i.yoy, i.contribution])} /></div>}
             >
                 {isLoading ? <div className="mk-skeleton h-[420px] w-full" /> : (
                     <div className="overflow-x-auto">
@@ -113,7 +113,7 @@ function InflacjaNowcast() {
                 <div className="mt-4 rounded-xl bg-mk-surface-alt p-4 text-sm text-mk-text-soft">
                     <div className="mb-1 font-semibold text-mk-text">Metoda</div>
                     Nowcast rekonstruuje inflację „od dołu": headline = Σ (waga dywizji × jej dynamika roczna). Wagi koszyka GUS ({BASKET_WEIGHTS_YEAR}, COICOP 2018;
-                    aktualizowane co luty na podstawie struktury wydatków gospodarstw domowych). Dynamiki komponentów pobierane na żywo z Eurostat HICP.
+                    aktualizowane co luty na podstawie struktury wydatków gospodarstw domowych). Dynamiki komponentów z krajowego CPI GUS (DBW COICOP).
                     Największe wkłady = główne motory inflacji.
                 </div>
             </SectionCard>
@@ -123,11 +123,12 @@ function InflacjaNowcast() {
 
 // ═══ Reguła Taylora ═══
 function TaylorSection() {
-    const cpiQ = useInflationMonthly();
-    const gdpQ = useGDPQuarterly();
+    const cpiQ = useCpiFull();
+    const gdpQ = useGusGdpAnnual();
     const ratesQ = useNBPInterestRates();
 
-    const cpi = lastOf(plSeries(cpiQ.data));
+    const headline = cpiQ.data?.headline ?? [];
+    const cpi = headline.length ? (headline[headline.length - 1].yoy ?? null) : null;
     const gdp = lastOf(plSeries(gdpQ.data));
     const ref = useMemo(() => ratesQ.data?.rates?.find((r) => /referen/i.test(r.name) || /referen/i.test(r.nameEn))?.value ?? null, [ratesQ.data]);
 
@@ -147,13 +148,13 @@ function TaylorSection() {
                     footnote="NBP − Taylor" loading={loading} />
             </div>
 
-            <SectionCard editorial titleVariant="label" title="Reguła Taylora — dekompozycja" subtitle={`Parametry: r*=${DEFAULT_TAYLOR.rStar}% · π*=${DEFAULT_TAYLOR.piTarget}% · y*=${DEFAULT_TAYLOR.potentialGDP}%`}>
+            <SectionCard editorial titleVariant="label" title="Reguła Taylora — dekompozycja" subtitle={`Parametry: r*=${DEFAULT_TAYLOR.rStar}% · π*=${DEFAULT_TAYLOR.piTarget}% · y*=${DEFAULT_TAYLOR.potentialGDP}% · PKB = GUS rocznie`}>
                 {t == null ? <div className="mk-skeleton h-[160px] w-full" /> : (
                     <div className="space-y-4">
                         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
                             {[
                                 { l: 'Inflacja (π)', v: `${formatDecimalPL(cpi ?? 0, 1)}%` },
-                                { l: 'PKB (y)', v: `${formatDecimalPL(gdp ?? 0, 1)}%` },
+                                { l: 'PKB (y, rocznie)', v: `${formatDecimalPL(gdp ?? 0, 1)}%` },
                                 { l: 'Luka inflacyjna', v: `${t.inflationGap >= 0 ? '+' : ''}${formatDecimalPL(t.inflationGap, 1)} pp` },
                                 { l: 'Luka popytowa', v: `${t.outputGap >= 0 ? '+' : ''}${formatDecimalPL(t.outputGap, 1)} pp` },
                             ].map((x) => (
@@ -176,9 +177,8 @@ function TaylorSection() {
 
 // ═══ Nowcast PKB / PMI ═══
 function PkbNowcast() {
-    const indQ = useIndustrialProduction();
-    const retQ = useRetailSales();
-    const gdpQ = useGDPQuarterly();
+    const indQ = useGusIndustrialProduction();
+    const retQ = useGusRetailSales();
     const ip = lastOf(plSeries(indQ.data));
     const retail = lastOf(plSeries(retQ.data));
     const pmiLast = PMI_DATA_PL[PMI_DATA_PL.length - 1];
@@ -195,7 +195,7 @@ function PkbNowcast() {
                 <KpiCard label="PMI przemysłowy" value={pmi != null ? formatDecimalPL(pmi, 1) : '—'} accent={pmi != null && pmi >= 50 ? 'green' : 'rose'} icon={Gauge}
                     footnote={pmiLast ? `S&P Global · ${pmiLast.date}` : 'S&P Global'} />
                 <KpiCard label="Nowcast PKB — PMI bridge" value={bridge != null ? fmtPL(bridge, 1) : '—'} unit="%" accent="blue" icon={TrendingUp} footnote="model: 1 wskaźnik" />
-                <KpiCard label="Nowcast PKB — 3-czynnikowy" value={multi != null ? fmtPL(multi, 1) : '—'} unit="%" accent="violet" icon={BarChart3} footnote="PMI + produkcja + sprzedaż" />
+                <KpiCard label="Nowcast PKB — 3-czynnikowy" value={multi != null ? fmtPL(multi, 1) : '—'} unit="%" accent="violet" icon={BarChart3} footnote="PMI + produkcja + sprzedaż (GUS)" />
                 <KpiCard label="Konsensus NBP 2026" value={fmtPL(NBP_GDP_PROJECTION.year2026, 1)} unit="%" accent="amber" icon={Target} footnote={NBP_GDP_PROJECTION.source} />
             </div>
 

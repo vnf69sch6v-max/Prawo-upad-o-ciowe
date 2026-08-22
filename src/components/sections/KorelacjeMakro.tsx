@@ -1,11 +1,12 @@
 'use client';
 
-// Macierz korelacji makro — „co z czym się porusza". Liczy współczynnik Pearsona między
-// miesięcznymi seriami (Eurostat), na wspólnych miesiącach każdej pary. Matryca-heatmapa
-// (niebieski = dodatnia, czerwony = ujemna) + lista najsilniejszych zależności z interpretacją.
+// Macierz korelacji makro — współczynnik Pearsona na wspólnych miesiącach (dane GUS).
 import { useMemo, useState } from 'react';
 import { Link2 } from 'lucide-react';
-import { useInflationMonthly, usePPI, useUnemploymentMonthly, useIndustrialProduction, useRetailSales, useBondYield10Y, useConsumerConfidence } from '@/lib/hooks';
+import {
+    useGusCpiHeadline, useGusPpiHeadline, useGusUnemploymentNational,
+    useGusIndustrialProduction, useGusRetailSales,
+} from '@/lib/hooks';
 import { plSeries } from '@/lib/series';
 import { formatDecimalPL } from '@/lib/formatters';
 import { SectionCard } from '@/components/ui/SectionCard';
@@ -14,7 +15,7 @@ interface Ind { key: string; short: string; label: string; data: ReturnType<type
 
 function pearson(pairs: [number, number][]): number | null {
     const n = pairs.length;
-    if (n < 8) return null;                       // za mało wspólnych punktów → nie licz
+    if (n < 8) return null;
     let sx = 0, sy = 0, sxy = 0, sxx = 0, syy = 0;
     for (const [x, y] of pairs) { sx += x; sy += y; sxy += x * y; sxx += x * x; syy += y * y; }
     const cov = n * sxy - sx * sy;
@@ -22,36 +23,35 @@ function pearson(pairs: [number, number][]): number | null {
     return dx === 0 || dy === 0 ? null : cov / (dx * dy);
 }
 
-// Kolor komórki: diwergentny wokół 0 (niebieski = +, czerwony = −), intensywność = |r|
 function corrColor(r: number | null): string {
     if (r == null) return '#F1F5F9';
     const t = Math.min(1, Math.abs(r));
     const lerp = (a: number, b: number) => Math.round(a + (b - a) * t);
     return r >= 0
-        ? `rgb(${lerp(241, 29)},${lerp(245, 78)},${lerp(249, 216)})`   // white → blue (#1D4ED8)
-        : `rgb(${lerp(241, 185)},${lerp(245, 28)},${lerp(249, 28)})`;  // white → red (#B91C1C)
+        ? `rgb(${lerp(241, 29)},${lerp(245, 78)},${lerp(249, 216)})`
+        : `rgb(${lerp(241, 185)},${lerp(245, 28)},${lerp(249, 28)})`;
 }
 const strength = (r: number) => { const a = Math.abs(r); return a >= 0.7 ? 'silna' : a >= 0.4 ? 'umiarkowana' : a >= 0.2 ? 'słaba' : 'znikoma'; };
 
 export function KorelacjeMakro() {
-    const cpiQ = useInflationMonthly(), ppiQ = usePPI(), unempQ = useUnemploymentMonthly(), indQ = useIndustrialProduction(), retQ = useRetailSales(), yieldQ = useBondYield10Y(), confQ = useConsumerConfidence();
+    const cpiQ = useGusCpiHeadline();
+    const ppiQ = useGusPpiHeadline();
+    const unempQ = useGusUnemploymentNational();
+    const indQ = useGusIndustrialProduction();
+    const retQ = useGusRetailSales();
     const cpi = useMemo(() => plSeries(cpiQ.data), [cpiQ.data]);
     const ppi = useMemo(() => plSeries(ppiQ.data), [ppiQ.data]);
     const unemp = useMemo(() => plSeries(unempQ.data), [unempQ.data]);
     const ind = useMemo(() => plSeries(indQ.data), [indQ.data]);
     const ret = useMemo(() => plSeries(retQ.data), [retQ.data]);
-    const yield10 = useMemo(() => plSeries(yieldQ.data), [yieldQ.data]);
-    const conf = useMemo(() => plSeries(confQ.data), [confQ.data]);
 
     const inds: Ind[] = useMemo(() => [
         { key: 'cpi', short: 'CPI', label: 'Inflacja CPI (r/r)', data: cpi },
         { key: 'ppi', short: 'PPI', label: 'Ceny producenta (r/r)', data: ppi },
         { key: 'ind', short: 'Prod.', label: 'Produkcja przemysłowa (r/r)', data: ind },
         { key: 'ret', short: 'Detal', label: 'Sprzedaż detaliczna (r/r)', data: ret },
-        { key: 'unemp', short: 'Bezr.', label: 'Bezrobocie (poziom)', data: unemp },
-        { key: 'yield', short: '10Y', label: 'Rentowność obligacji 10Y', data: yield10 },
-        { key: 'conf', short: 'Nastr.', label: 'Koniunktura konsumencka', data: conf },
-    ], [cpi, ppi, ind, ret, unemp, yield10, conf]);
+        { key: 'unemp', short: 'Bezr.', label: 'Bezrobocie rejestrowane', data: unemp },
+    ], [cpi, ppi, ind, ret, unemp]);
 
     const [hover, setHover] = useState<{ i: number; j: number } | null>(null);
 
@@ -78,7 +78,7 @@ export function KorelacjeMakro() {
 
     return (
         <div className="space-y-6">
-            <SectionCard editorial titleVariant="label" title="Macierz korelacji makro" subtitle="jak mocno wskaźniki poruszają się razem · współczynnik Pearsona na wspólnych miesiącach · Eurostat">
+            <SectionCard editorial titleVariant="label" title="Macierz korelacji makro" subtitle="współczynnik Pearsona na wspólnych miesiącach · GUS (BDL/DBW)">
                 {!ready ? <div className="mk-skeleton h-[360px] w-full" /> : (
                     <div className="overflow-x-auto">
                         <table className="border-separate" style={{ borderSpacing: 3 }}>
@@ -129,7 +129,7 @@ export function KorelacjeMakro() {
                         </div>
                     ))}
                 </div>
-                <p className="mt-3 text-[11px] text-mk-faint">Korelacja ≠ przyczynowość — pokazuje współruch, nie kierunek wpływu. Liczona na wspólnych miesiącach (Eurostat, ~od 2018/2022). PPI↔CPI i ropa/produkcja→ceny to znane kanały; wysoka inflacja zwykle idzie z wyższą rentownością 10Y.</p>
+                <p className="mt-3 text-[11px] text-mk-faint">Korelacja ≠ przyczynowość. Źródła: CPI/PPI (GUS DBW), produkcja i budownictwo (GUS DBW var 312), sprzedaż detaliczna (GUS BDL P3860), bezrobocie rejestrowane (GUS BDL P3559). Wskaźniki bez odpowiednika w GUS (rentowność 10Y, koniunktura konsumencka Eurostat) zostały usunięte.</p>
             </SectionCard>
         </div>
     );

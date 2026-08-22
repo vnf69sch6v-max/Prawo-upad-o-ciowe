@@ -14,7 +14,6 @@ type Point = { date: string; value: number };
 interface OverviewHeroProps {
     cpi: Point[];
     retail: Point[];
-    industrial: Point[];
     cpiLoading?: boolean;
     retailLoading?: boolean;
 }
@@ -51,17 +50,15 @@ function cpiSignal(cpi: Point[]) {
     };
 }
 
-/** Drugi sygnał: sprzedaż detaliczna, a gdy brak — produkcja przemysłowa. */
-function activitySignal(retail: Point[], industrial: Point[]) {
-    const series = retail.length >= 2 ? retail : industrial.length >= 2 ? industrial : retail.length ? retail : industrial;
-    const isRetail = series === retail && retail.length >= 2;
-    const label = isRetail ? 'Sprzedaż detaliczna' : 'Produkcja przemysłowa';
-    const last = lastOf(series);
-    const delta = ppDelta(series);
-    const values = series.map((d) => d.value);
+/** Drugi sygnał: sprzedaż detaliczna (GUS BDL P3860). */
+function retailSignal(retail: Point[]) {
+    const label = 'Sprzedaż detaliczna';
+    const last = lastOf(retail);
+    const delta = ppDelta(retail);
+    const values = retail.map((d) => d.value);
 
     if (last == null) {
-        return { headline: label, value: '—', delta: null as number | null, text: 'Oczekiwanie na dane Eurostat…', footnote: 'Eurostat' };
+        return { headline: label, value: '—', delta: null as number | null, text: 'Oczekiwanie na dane GUS…', footnote: 'GUS BDL' };
     }
 
     const upRun = consecutiveRun(values, 'up');
@@ -76,21 +73,21 @@ function activitySignal(retail: Point[], industrial: Point[]) {
         ? `Zmiana r/r: ${delta >= 0 ? '+' : ''}${formatDecimalPL(delta, 1)} p.p. względem poprzedniego odczytu.`
         : `Ostatni odczyt r/r: ${formatDecimalPL(last, 1)}%.`;
 
-    const date = series.length ? series[series.length - 1].date : '';
+    const date = retail.length ? retail[retail.length - 1].date : '';
     return {
         headline,
         value: `${formatDecimalPL(last, 1)}%`,
         delta,
         text,
-        footnote: date ? `EUROSTAT · ${date}` : 'Eurostat',
+        footnote: date ? `GUS · ${date}` : 'GUS BDL',
     };
 }
 
-export function OverviewHero({ cpi, retail, industrial, cpiLoading, retailLoading }: OverviewHeroProps) {
+export function OverviewHero({ cpi, retail, cpiLoading, retailLoading }: OverviewHeroProps) {
     const { data: newsData, isLoading: newsLoading } = useNews();
 
     const cpiSig = useMemo(() => cpiSignal(cpi), [cpi]);
-    const actSig = useMemo(() => activitySignal(retail, industrial), [retail, industrial]);
+    const actSig = useMemo(() => retailSignal(retail), [retail]);
 
     const topNews = useMemo(() => {
         const items = collapseClusters([...(newsData?.items ?? [])])
@@ -126,7 +123,7 @@ export function OverviewHero({ cpi, retail, industrial, cpiLoading, retailLoadin
                     )}
                 </div>
 
-                {/* Sygnał 2 — aktywność */}
+                {/* Sygnał 2 — sprzedaż detaliczna */}
                 <div className="p-5 sm:p-6 lg:col-span-3">
                     {loading ? (
                         <div className="space-y-3">

@@ -4,7 +4,7 @@ import { useMemo, useState, useCallback } from 'react';
 import { Cell, Tooltip, BarChart, Bar, XAxis, YAxis, AreaChart, Area, CartesianGrid } from 'recharts';
 import { ResponsiveContainer } from '@/components/ui/ChartContainer';
 import { TrendingUp, Activity, Fuel, DollarSign, Factory, Banknote, Info, ChevronRight, Grid3x3 } from 'lucide-react';
-import { useCpiFull, usePPI, useBrentMM, useEURPLN, useUSDPLN, type CpiDivision, type CpiHistPoint } from '@/lib/hooks';
+import { useCpiFull, useGusPpiHeadline, useBrentMM, useEURPLN, useUSDPLN, type CpiDivision, type CpiHistPoint } from '@/lib/hooks';
 import { plSeries, lastOf, fmtPL } from '@/lib/series';
 import { formatDecimalPL, formatDataPeriodLabel } from '@/lib/formatters';
 import { KpiCard } from '@/components/ui/KpiCard';
@@ -85,7 +85,7 @@ const subFallback = (name: string): string =>
 
 export function InflacjaFull() {
     const { data, isLoading, isFetching, refreshFromSource } = useCpiFull();
-    const ppiQ = usePPI();
+    const ppiQ = useGusPpiHeadline();
     const brentQ = useBrentMM();
     const eurQ = useEURPLN();
     const usdQ = useUSDPLN();
@@ -114,7 +114,7 @@ export function InflacjaFull() {
         }
         return map;
     }, [divisions]);
-    // PPI (Eurostat, dane GUS) dopasowany do dat headline: miesięcznie wprost + kwartalna średnia dla „YYYY-QN"
+    // PPI (GUS DBW) dopasowany do dat headline: miesięcznie wprost + kwartalna średnia dla „YYYY-QN"
     const ppiByDate = useMemo(() => {
         const map = new Map<string, number>();
         ppiSeries.forEach((p) => map.set(p.date, p.value));
@@ -291,7 +291,7 @@ export function InflacjaFull() {
                     ]} />
                 <p className="mt-2 text-xs text-mk-faint">
                     <span className="font-medium text-mk-muted">PPI</span> (ceny producenta) zwykle wyprzedza CPI — presja u producentów przekłada się na ceny konsumenckie z opóźnieniem.
-                    <span className="font-medium text-mk-muted"> CPI bez żywności</span> (przybliżenie bazowej) liczony z działów GUS — pokazuje trwałość presji poza najbardziej zmienną żywnością. PPI: Eurostat (dane GUS).
+                    <span className="font-medium text-mk-muted"> CPI bez żywności</span> (przybliżenie bazowej) liczony z działów GUS — pokazuje trwałość presji poza najbardziej zmienną żywnością. PPI: GUS DBW.
                 </p>
             </SectionCard>
 
