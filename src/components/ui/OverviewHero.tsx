@@ -3,9 +3,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useNews } from '@/lib/hooks';
-import { formatDecimalPL, formatPP, formatRelativeTime, formatTime } from '@/lib/formatters';
+import { formatDecimalPL, formatRelativeTime, formatTime } from '@/lib/formatters';
 import { collapseClusters } from '@/lib/news/match';
 import { consecutiveRun } from '@/lib/observations';
+import { HeroMetricCard } from '@/components/ui/HeroMetricCard';
 
 const NBP_TARGET = 2.5;
 
@@ -50,7 +51,6 @@ function cpiSignal(cpi: Point[]) {
     };
 }
 
-/** Drugi sygnał: sprzedaż detaliczna (GUS BDL P3860). */
 function retailSignal(retail: Point[]) {
     const label = 'Sprzedaż detaliczna';
     const last = lastOf(retail);
@@ -85,86 +85,44 @@ function retailSignal(retail: Point[]) {
 
 export function OverviewHero({ cpi, retail, cpiLoading, retailLoading }: OverviewHeroProps) {
     const { data: newsData, isLoading: newsLoading } = useNews();
-
     const cpiSig = useMemo(() => cpiSignal(cpi), [cpi]);
     const actSig = useMemo(() => retailSignal(retail), [retail]);
-
     const topNews = useMemo(() => {
         const items = collapseClusters([...(newsData?.items ?? [])])
             .sort((a, b) => (b.importance ?? 0) - (a.importance ?? 0));
         return items[0] ?? null;
     }, [newsData]);
-
     const loading = cpiLoading || retailLoading;
 
     return (
         <section className="mk-hero-band overflow-hidden" aria-label="Główne sygnały makro">
             <div className="grid grid-cols-1 divide-y divide-white/15 lg:grid-cols-12 lg:divide-x lg:divide-y-0">
-                {/* Sygnał 1 — CPI */}
-                <div className="p-5 sm:p-6 lg:col-span-5">
-                    {loading ? (
-                        <div className="space-y-3">
-                            <div className="h-4 w-48 rounded bg-white/20" />
-                            <div className="h-12 w-32 rounded bg-white/20" />
-                            <div className="h-3 w-full rounded bg-white/15" />
-                        </div>
-                    ) : (
-                        <>
-                            <p className="text-xs font-semibold uppercase tracking-wide text-white/80">{cpiSig.headline}</p>
-                            <div className="mt-3 flex flex-wrap items-baseline gap-3">
-                                <span className="tnum text-4xl font-extrabold tracking-tight sm:text-5xl">{cpiSig.value}</span>
-                                {cpiSig.delta != null && (
-                                    <span className="mk-hero-chip">{formatPP(cpiSig.delta)}</span>
-                                )}
-                            </div>
-                            <p className="mk-hero-muted mt-3 max-w-md text-sm leading-relaxed">{cpiSig.text}</p>
-                            <p className="mk-hero-muted mt-4 text-[11px] font-semibold uppercase tracking-wide">{cpiSig.footnote}</p>
-                        </>
-                    )}
-                </div>
-
-                {/* Sygnał 2 — sprzedaż detaliczna */}
-                <div className="p-5 sm:p-6 lg:col-span-3">
-                    {loading ? (
-                        <div className="space-y-3">
-                            <div className="h-4 w-40 rounded bg-white/20" />
-                            <div className="h-10 w-24 rounded bg-white/20" />
-                        </div>
-                    ) : (
-                        <>
-                            <p className="text-xs font-semibold uppercase tracking-wide text-white/80">{actSig.headline}</p>
-                            <div className="mt-3 flex flex-wrap items-baseline gap-3">
-                                <span className="tnum text-3xl font-extrabold tracking-tight">{actSig.value}</span>
-                                {actSig.delta != null && (
-                                    <span className="mk-hero-chip">{formatPP(actSig.delta)}</span>
-                                )}
-                            </div>
-                            <p className="mk-hero-muted mt-3 text-sm leading-relaxed">{actSig.text}</p>
-                            <p className="mk-hero-muted mt-4 text-[11px] font-semibold uppercase tracking-wide">{actSig.footnote}</p>
-                        </>
-                    )}
-                </div>
-
-                {/* Sygnał 3 — top news */}
-                <div className="p-5 sm:p-6 lg:col-span-4">
-                    {newsLoading ? (
-                        <div className="space-y-3">
-                            <div className="h-4 w-24 rounded bg-white/20" />
-                            <div className="h-5 w-full rounded bg-white/20" />
-                            <div className="h-3 w-32 rounded bg-white/15" />
-                        </div>
-                    ) : topNews ? (
-                        <a
-                            href={topNews.link}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="group block focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 rounded-lg -m-1 p-1"
-                        >
-                            <p className="text-xs font-semibold uppercase tracking-wide text-white/80">Najważniejszy news</p>
-                            <h2 className="mt-2 text-base font-bold leading-snug transition-opacity group-hover:opacity-90 sm:text-lg">
-                                {topNews.title}
-                            </h2>
-                            <div className="mk-hero-muted mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] font-semibold uppercase tracking-wide">
+                <HeroMetricCard
+                    className="lg:col-span-5"
+                    headline={cpiSig.headline}
+                    value={cpiSig.value}
+                    delta={cpiSig.delta}
+                    invertDelta
+                    text={cpiSig.text}
+                    footnote={cpiSig.footnote}
+                    loading={loading}
+                    emphasis="primary"
+                />
+                <HeroMetricCard
+                    className="lg:col-span-3"
+                    headline={actSig.headline}
+                    value={actSig.value}
+                    delta={actSig.delta}
+                    text={actSig.text}
+                    footnote={actSig.footnote}
+                    loading={loading}
+                    emphasis="secondary"
+                />
+                <HeroMetricCard className="lg:col-span-4" headline="Najważniejszy news" loading={newsLoading}>
+                    {topNews ? (
+                        <a href={topNews.link} target="_blank" rel="noopener noreferrer" className="group block rounded-lg -m-1 p-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50">
+                            <h2 className="text-sm font-bold leading-snug transition-opacity group-hover:opacity-90 sm:text-base">{topNews.title}</h2>
+                            <div className="mk-hero-muted mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] font-semibold uppercase tracking-wide">
                                 <span>{topNews.source}</span>
                                 <span className="text-white/40">·</span>
                                 <HeroNewsTime publishedAt={topNews.publishedAt} />
@@ -172,26 +130,18 @@ export function OverviewHero({ cpi, retail, cpiLoading, retailLoading }: Overvie
                         </a>
                     ) : (
                         <div>
-                            <p className="text-xs font-semibold uppercase tracking-wide text-white/80">Najważniejszy news</p>
-                            <p className="mk-hero-muted mt-2 text-sm">Brak newsów do wyświetlenia.</p>
-                            <Link href="/newsy" className="mt-3 inline-block text-sm font-semibold underline underline-offset-2 hover:opacity-90">
-                                Przejdź do newsów
-                            </Link>
+                            <p className="mk-hero-muted text-xs sm:text-sm">Brak newsów do wyświetlenia.</p>
+                            <Link href="/newsy" className="mt-2 inline-block text-xs font-semibold underline underline-offset-2 hover:opacity-90 sm:text-sm">Przejdź do newsów</Link>
                         </div>
                     )}
-                </div>
+                </HeroMetricCard>
             </div>
         </section>
     );
 }
 
-/** Czas względny dopiero po mount — hydration-safe. */
 function HeroNewsTime({ publishedAt }: { publishedAt: string }) {
     const [mounted, setMounted] = useState(false);
     useEffect(() => setMounted(true), []);
-    return (
-        <time dateTime={publishedAt}>
-            {mounted ? formatRelativeTime(publishedAt) : formatTime(publishedAt)}
-        </time>
-    );
+    return <time dateTime={publishedAt}>{mounted ? formatRelativeTime(publishedAt) : formatTime(publishedAt)}</time>;
 }

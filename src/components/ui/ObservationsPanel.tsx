@@ -6,32 +6,35 @@ export function ObservationsPanel({
     items,
     title = 'Kluczowe obserwacje',
     variant = 'default',
+    compact = false,
 }: {
     items: Observation[];
     title?: string;
     variant?: 'default' | 'overview';
+    compact?: boolean;
 }) {
     const heading = variant === 'overview' ? 'Kluczowe obserwacje' : title;
+    const padClass = compact ? 'mk-card-pad-compact' : 'mk-card-pad';
 
     return (
-        <div className="mk-card mk-card-editorial mk-card-pad h-full">
+        <div className={`mk-card mk-card-editorial ${padClass} h-full`}>
             {variant === 'overview' ? (
-                <h3 className="mk-section-label mb-4">{heading}</h3>
+                <h3 className={`mk-section-label ${compact ? 'mb-2' : 'mb-4'}`}>{heading}</h3>
             ) : (
-                <h3 className="mk-section-title mb-4">{heading}</h3>
+                <h3 className={`mk-section-title ${compact ? 'mb-2' : 'mb-4'}`}>{heading}</h3>
             )}
             {items.length === 0 ? (
                 <p className="text-sm text-mk-faint">Brak sygnałów do wyświetlenia.</p>
             ) : (
                 <ul className="divide-y divide-mk-border">
                     {items.map((o, i) => (
-                        <li key={i} className="flex gap-4 py-3.5 text-sm text-mk-text-soft first:pt-0 last:pb-0">
+                        <li key={i} className={`flex text-sm text-mk-text-soft first:pt-0 last:pb-0 ${compact ? 'gap-2.5 py-2' : 'gap-4 py-3.5'}`}>
                             {variant === 'overview' ? (
                                 <span className="mk-obs-num shrink-0">{String(i + 1).padStart(2, '0')}</span>
                             ) : (
                                 <ObservationDot tone={o.tone ?? 'neutral'} />
                             )}
-                            <span className="leading-snug">{o.text}</span>
+                            <span className={`leading-snug ${compact ? 'text-[13px]' : ''}`}>{o.text}</span>
                         </li>
                     ))}
                 </ul>

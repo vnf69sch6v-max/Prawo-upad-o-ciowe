@@ -11,7 +11,8 @@ import {
 import { plSeries, lastOf, prevOf } from '@/lib/series';
 import { formatDecimalPL, formatNumber, formatDate, percentChange, formatDataPeriodLabel } from '@/lib/formatters';
 import { trendObservation, type Observation } from '@/lib/observations';
-import { KpiCard, type AccentKey } from '@/components/ui/KpiCard';
+import type { AccentKey } from '@/components/ui/KpiCard';
+import { CompactKpiGrid } from '@/components/ui/CompactKpiGrid';
 import { CsvExport } from '@/components/ui/CsvExport';
 import { ObservationsPanel } from '@/components/ui/ObservationsPanel';
 import { PublicationDatesPanel } from '@/components/ui/PublicationDatesPanel';
@@ -108,8 +109,9 @@ export default function OverviewPage() {
     const csvRows = [...macro, ...markets].map((k) => [k.label, `${k.value}${k.unit ? ' ' + k.unit : ''}`]);
 
     return (
-        <div className="mk-fade-in space-y-8">
+        <div className="mk-fade-in mk-overview">
             <PageHeader
+                compact
                 eyebrow={<PageEyebrow section="Dane makro" />}
                 title="Przegląd"
                 subtitle={
@@ -121,35 +123,21 @@ export default function OverviewPage() {
                 actions={<CsvExport filename="przeglad-makro" headers={['Wskaźnik', 'Wartość']} rows={csvRows} />}
             />
 
-            <OverviewHero
-                cpi={cpi}
-                retail={retail}
-                cpiLoading={cpiQ.isLoading}
-                retailLoading={retailQ.isLoading}
-            />
+            <OverviewHero cpi={cpi} retail={retail} cpiLoading={cpiQ.isLoading} retailLoading={retailQ.isLoading} />
 
-            <WatchlistStrip items={watchlistItems} />
+            <WatchlistStrip items={watchlistItems} compact />
 
-            <section>
-                <h2 className="mk-section-label mb-3">Wskaźniki makro</h2>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-                    {macro.map((k) => <KpiCard key={k.watchId} {...k} watchId={k.watchId} />)}
-                </div>
-            </section>
-
-            <section>
-                <h2 className="mk-section-label mb-3">Rynki finansowe</h2>
-                <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
-                    {markets.map((k) => <KpiCard key={k.watchId} {...k} watchId={k.watchId} />)}
-                </div>
-            </section>
+            <div className="space-y-2">
+                <CompactKpiGrid label="Wskaźniki makro" columns={5} dense items={macro.map((k) => ({ key: k.watchId, ...k, watchId: k.watchId }))} />
+                <CompactKpiGrid label="Rynki finansowe" columns={5} dense items={markets.map((k) => ({ key: k.watchId, ...k, watchId: k.watchId }))} />
+            </div>
 
             <LatestNews limit={6} variant="overview" />
 
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                <ObservationsPanel items={observations.slice(0, 4)} variant="overview" />
-                <PublicationDatesPanel count={6} variant="overview" />
-            </div>
+            <section aria-label="Obserwacje i kalendarz" className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+                <ObservationsPanel items={observations.slice(0, 3)} variant="overview" compact />
+                <PublicationDatesPanel count={4} variant="overview" compact />
+            </section>
         </div>
     );
 }

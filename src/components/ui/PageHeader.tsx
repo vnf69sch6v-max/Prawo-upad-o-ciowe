@@ -15,16 +15,17 @@ interface PageHeaderProps {
     title: string;
     subtitle?: ReactNode;
     actions?: ReactNode;
+    compact?: boolean;
 }
 
 /** Wspólny nagłówek strony w stylu mockupu — breadcrumb, tytuł, podtytuł, akcje po prawej. */
-export function PageHeader({ eyebrow, title, subtitle, actions }: PageHeaderProps) {
+export function PageHeader({ eyebrow, title, subtitle, actions, compact }: PageHeaderProps) {
     return (
-        <header className="flex flex-wrap items-end justify-between gap-4">
+        <header className="flex flex-wrap items-end justify-between gap-3">
             <div>
                 {eyebrow && <p className="mk-page-eyebrow">{eyebrow}</p>}
-                <h1 className="mt-1 text-3xl font-extrabold tracking-tight text-mk-text sm:text-4xl">{title}</h1>
-                {subtitle && <p className="mt-1.5 text-sm text-mk-muted">{subtitle}</p>}
+                <h1 className={`font-extrabold tracking-tight text-mk-text ${compact ? 'mt-0.5 text-2xl sm:text-3xl' : 'mt-1 text-3xl sm:text-4xl'}`}>{title}</h1>
+                {subtitle && <p className={`text-sm text-mk-muted ${compact ? 'mt-1' : 'mt-1.5'}`}>{subtitle}</p>}
             </div>
             {actions}
         </header>
