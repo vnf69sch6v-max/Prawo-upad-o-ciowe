@@ -23,10 +23,13 @@
   --color-mk-muted: #475569;
   --color-mk-faint: #64748B;
 
-  /* ── Semantic ── */
-  --color-mk-primary: #2563EB;
-  --color-mk-primary-strong: #1D4ED8;
-  --color-mk-primary-soft: #EFF4FF;
+  /* ── Semantic ──
+     Akcent podstawowy = marka Savori (czerwony). Wcześniej był niebieski (#2563EB); przełączony na
+     czerwień marki, żeby całe UI (przyciski, linki, ikony, focus, aktywne stany) miało spójny
+     „czerwony akcent" — tak jak logo, aktywna zakładka i hero, które już używały `--color-mk-brand`. */
+  --color-mk-primary: #DC2626;
+  --color-mk-primary-strong: #B91C1C;
+  --color-mk-primary-soft: #FEF2F2;
   --color-mk-positive: #16A34A;
   --color-mk-positive-soft: #E7F6EC;
   --color-mk-negative: #DC2626;
