@@ -1,4 +1,4 @@
-import { PublicationCalendar } from '@/components/ui/PublicationCalendar';
+import { PublicationCalendar, UpcomingEventsInline } from '@/components/ui/PublicationCalendar';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { PageHeader, PageEyebrow } from '@/components/ui/PageHeader';
 
@@ -15,43 +15,47 @@ const SOURCES = [
 
 export default function PublikacjePage() {
     return (
-        <div className="mk-fade-in space-y-6">
+        <div className="mk-fade-in space-y-4">
             <PageHeader
                 eyebrow={<PageEyebrow section="Publikacje" />}
                 title="Publikacje"
                 subtitle={
                     <>
                         Kalendarz publikacji danych i źródła statystyk
-                        <span className="mt-1 block text-xs text-mk-faint">
-                            Daty w kalendarzu = dzień publikacji. Nazwa wydarzenia wskazuje okres referencyjny danych (np. „dane za lipiec").
+                        <span className="mt-0.5 block text-xs text-mk-faint">
+                            Daty w kalendarzu = dzień publikacji. Nazwa wydarzenia wskazuje okres referencyjny danych.
                         </span>
                     </>
                 }
             />
 
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-                <PublicationCalendar className="lg:col-span-2" />
-                <SectionCard title="Źródła i częstotliwość" titleVariant="label" editorial>
-                    <ul className="divide-y divide-mk-border">
-                        {SOURCES.map((s) => (
-                            <li key={s.name} className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0">
-                                <div>
-                                    <div className="text-sm font-medium text-mk-text">{s.name}</div>
-                                    <div className="text-xs text-mk-muted">{s.note}</div>
-                                </div>
-                                <a
-                                    href={s.url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="shrink-0 text-sm font-medium text-mk-brand transition-colors hover:underline"
-                                >
-                                    źródło
-                                </a>
-                            </li>
-                        ))}
-                    </ul>
-                </SectionCard>
+            <div className="mk-card mk-card-editorial mk-card-pad-compact">
+                <div className="grid grid-cols-1 gap-4 lg:grid-cols-12 lg:items-start">
+                    <PublicationCalendar compact showMonthList={false} className="lg:col-span-5" />
+                    <UpcomingEventsInline count={6} className="lg:col-span-7" />
+                </div>
             </div>
+
+            <SectionCard title="Źródła i częstotliwość" titleVariant="label" editorial padded={false} className="mk-card-pad-compact [&_header]:mb-2">
+                <ul className="divide-y divide-mk-border">
+                    {SOURCES.map((s) => (
+                        <li key={s.name} className="flex items-center justify-between gap-3 py-2 first:pt-0 last:pb-0">
+                            <div className="min-w-0">
+                                <div className="text-sm font-medium text-mk-text">{s.name}</div>
+                                <div className="text-[11px] text-mk-muted">{s.note}</div>
+                            </div>
+                            <a
+                                href={s.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="shrink-0 text-xs font-semibold text-mk-brand transition-colors hover:underline"
+                            >
+                                źródło
+                            </a>
+                        </li>
+                    ))}
+                </ul>
+            </SectionCard>
         </div>
     );
 }
