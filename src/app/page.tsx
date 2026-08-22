@@ -3,7 +3,7 @@
 import { useMemo } from 'react';
 import { TrendingUp, Percent, Users, BarChart3, Factory, Euro, DollarSign, ShoppingCart, LineChart, Landmark, Gem } from 'lucide-react';
 import {
-    useCpiFull, useUnemploymentMonthly, useGDPQuarterly,
+    useCpiFull, useGusRegisteredUnemployment, useGDPQuarterly,
     useNBPInterestRates, useNBPTable, useEURPLN, useUSDPLN,
     useIndustrialProduction, useRetailSales, useBondYield10Y, useGold, useStooq,
     type EurostatResult, type NBPTable,
@@ -42,7 +42,7 @@ function fxDelta(data: unknown): number | null {
 export default function OverviewPage() {
     // ── makro ──
     const cpiQ = useCpiFull();
-    const unempQ = useUnemploymentMonthly();
+    const unempQ = useGusRegisteredUnemployment(24);
     const gdpQ = useGDPQuarterly();
     const ratesQ = useNBPInterestRates();
     const indQ = useIndustrialProduction();
@@ -56,7 +56,7 @@ export default function OverviewPage() {
     const wig20Q = useStooq('wig20', 30);
 
     const cpi = useMemo(() => (cpiQ.data?.headline ?? []).filter((h) => h.yoy != null).map((h) => ({ date: h.date, value: h.yoy as number })), [cpiQ.data]);
-    const unemp = useMemo(() => plSeries(unempQ.data), [unempQ.data]);
+    const unemp = useMemo(() => (unempQ.data?.series ?? []).map((d) => ({ date: d.date, value: d.value })), [unempQ.data]);
     const gdp = useMemo(() => plSeries(gdpQ.data), [gdpQ.data]);
     const industrial = useMemo(() => plSeries(indQ.data), [indQ.data]);
     const retail = useMemo(() => plSeries(retailQ.data), [retailQ.data]);
@@ -75,7 +75,7 @@ export default function OverviewPage() {
     const macro = [
         { watchId: 'cpi', label: 'Inflacja CPI (r/r)', href: '/ceny?tab=inflacja', value: fmt1(lastOf(cpi)), unit: '%', accent: 'amber' as AccentKey, icon: TrendingUp, delta: ppDelta(cpi) != null ? { value: ppDelta(cpi)!, unit: 'pp' as const, invert: true } : undefined, footnote: 'GUS · cel NBP 2,5%', loading: cpiQ.isLoading },
         { watchId: 'gdp', label: 'PKB (r/r)', href: '/gospodarka?tab=aktywnosc', value: fmt1(lastOf(gdp)), unit: '%', accent: 'green' as AccentKey, icon: BarChart3, delta: ppDelta(gdp) != null ? { value: ppDelta(gdp)!, unit: 'pp' as const } : undefined, footnote: gdp.length ? `Eurostat · ${gdp[gdp.length - 1].date}` : 'Eurostat', loading: gdpQ.isLoading },
-        { watchId: 'unemployment', label: 'Stopa bezrobocia', href: '/praca?tab=bezrobocie', value: fmt1(lastOf(unemp)), unit: '%', accent: 'blue' as AccentKey, icon: Users, delta: ppDelta(unemp) != null ? { value: ppDelta(unemp)!, unit: 'pp' as const, invert: true } : undefined, footnote: 'Eurostat LFS', loading: unempQ.isLoading },
+        { watchId: 'unemployment', label: 'Stopa bezrobocia', href: '/praca?tab=bezrobocie', value: fmt1(lastOf(unemp)), unit: '%', accent: 'blue' as AccentKey, icon: Users, delta: ppDelta(unemp) != null ? { value: ppDelta(unemp)!, unit: 'pp' as const, invert: true } : undefined, footnote: unemp.length ? `GUS · rejestrowane · ${unemp[unemp.length - 1].date}` : 'GUS · rejestrowane', loading: unempQ.isLoading },
         { watchId: 'ref-rate', label: 'Stopa referencyjna NBP', href: '/rynki?tab=stopy', value: refRate ? formatDecimalPL(refRate.value, 2) : '—', unit: '%', accent: 'violet' as AccentKey, icon: Percent, footnote: refRate ? `NBP · od ${formatDate(refRate.validFrom)}` : 'NBP', loading: ratesQ.isLoading },
         { watchId: 'industrial', label: 'Produkcja przemysłowa (r/r)', href: '/gospodarka?tab=aktywnosc', value: fmt1(lastOf(industrial)), unit: '%', accent: 'rose' as AccentKey, icon: Factory, delta: ppDelta(industrial) != null ? { value: ppDelta(industrial)!, unit: 'pp' as const } : undefined, footnote: industrial.length ? `Eurostat · ${industrial[industrial.length - 1].date}` : 'Eurostat', loading: indQ.isLoading },
         { watchId: 'retail', label: 'Sprzedaż detaliczna (r/r)', href: '/gospodarka?tab=aktywnosc', value: fmt1(lastOf(retail)), unit: '%', accent: 'cyan' as AccentKey, icon: ShoppingCart, delta: ppDelta(retail) != null ? { value: ppDelta(retail)!, unit: 'pp' as const } : undefined, footnote: retail.length ? `Eurostat · ${retail[retail.length - 1].date}` : 'Eurostat', loading: retailQ.isLoading },

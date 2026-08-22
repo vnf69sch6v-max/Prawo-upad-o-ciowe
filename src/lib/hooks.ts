@@ -196,14 +196,28 @@ interface GusRegionalData {
     timestamp: string;
 }
 
-export interface RegionalEURow { slug: string; name: string; gdpTotal: number | null; population: number | null; gdpPerCapita: number | null }
-interface RegionalEUData { regions: RegionalEURow[]; gdpYear: string; popYear: string; national: { population: number | null; gdpPerCapita: number | null } }
-export function useRegionalEU() {
-    return useQuery<RegionalEUData>({
-        queryKey: ['regional-eu'],
-        queryFn: () => fetchJSON('/api/regional-eu'),
-        ...refreshOptions('regionalEu'),
+export interface RegionalGusRow { slug: string; name: string; gdpTotal: number | null; population: number | null; gdpPerCapita: number | null }
+interface RegionalGusData {
+    regions: RegionalGusRow[];
+    gdpYear: string;
+    popYear: string;
+    national: { population: number | null; gdpPerCapita: number | null; gdpTotal?: number | null };
+    source?: string;
+}
+/** @deprecated alias — dane z GUS BDL, nie Eurostat */
+export type RegionalEURow = RegionalGusRow;
+
+export function useRegionalGus() {
+    return useQuery<RegionalGusData>({
+        queryKey: ['regional-gus'],
+        queryFn: () => fetchJSON('/api/regional-gus'),
+        ...refreshOptions('regionalGus'),
     });
+}
+
+/** @deprecated Użyj useRegionalGus — źródło zmienione z Eurostat na GUS BDL */
+export function useRegionalEU() {
+    return useRegionalGus();
 }
 
 export function useGusRegional() {
@@ -231,6 +245,29 @@ export function useGusMonthly() {
 }
 
 // ─── Eurostat (Monthly/Quarterly Data) ───────────────────
+// AUDIT 2026-08-22 — Eurostat vs GUS dla PL (macro → GUS; rynek → NBP/GPW/Stooq):
+//
+// | Hook                      | Strony / komponenty                          | GUS?                    | Akcja                          |
+// |---------------------------|----------------------------------------------|-------------------------|--------------------------------|
+// | useInflationMonthly       | macro-sections, prognozy, KorelacjeMakro, page| useCpiFull ✓            | Migrować do useCpiFull         |
+// | useHICPFoodYoY/CoreYoY    | macro-sections                               | useCpiFull (działy) ✓   | Migrować do useCpiFull         |
+// | useUnemploymentMonthly    | page, KorelacjeMakro                         | useGusRegional ✓ (rej.) | Migrować (LFS≠rejestr.)        |
+// | useGDPQuarterly/QoQ       | macro-sections, prognozy, page               | brak kwartalnego GUS    | Nowy /api/gus-gdp              |
+// | useIndustrialProduction   | macro-sections, prognozy, page, Korelacje    | GUS BDL produkcja       | Nowy hook BDL/DBW              |
+// | useRetailSales            | macro-sections, prognozy, page, Korelacje    | useGusMonthly ✓         | Migrować do useGusMonthly      |
+// | useConstruction           | macro-sections                               | GUS DBW budowlane       | useDbwSeries / nowy hook       |
+// | useGDPConsumption/Inv/Exp/Imp | macro-sections                           | GUS PKB składowe        | Nowy /api/gus-gdp-components   |
+// | useTradeData              | (usunięte z /rynki)                          | GUS DBHZ obroty         | Nowy /api/gus-trade            |
+// | useCurrentAccount         | (usunięte z /rynki)                          | NBP rachunek bieżący    | Nowy /api/nbp-bop              |
+// | useConsumerConfidence     | gospodarka, KorelacjeMakro                   | useKoniunktura ✓        | Migrować do useKoniunktura     |
+// | useBondYield10Y           | gospodarka, page, KorelacjeMakro             | Stooq 10ypl.b ✓ (rynek) | Migrować do useStooq           |
+// | useGovDebt/Deficit        | gospodarka, RzadyGospodarka                  | MF/GUS rocznie          | Nowy hook GUS/MF               |
+// | useGDPAnnual/CPIAnnual    | RzadyGospodarka                              | useGUSData ✓ (roczne)   | Migrować do useGUSData         |
+// | usePPI                    | InflacjaFull, KorelacjeMakro                 | usePpiFull ✓            | Migrować do usePpiFull         |
+// | useHICPIndex/Division     | useCPIBasket, prognozy                       | useCpiFull (krajowy)    | Koszyk: GUS; HICP tylko EU      |
+// | usePLvsEU                 | (porównania PL/EU)                           | celowo Eurostat         | Zostaje (benchmark UE)         |
+// | useDashboardData          | (composite)                                  | częściowo GUS           | Po migracji powyższych         |
+//
 
 interface EurostatTimeSeries {
     date: string;
@@ -265,6 +302,11 @@ export function useUnemploymentMonthly(geo = 'PL') {
     return useEurostat('unemployment', geo);
 }
 
+/** Stopa bezrobocia rejestrowanego (GUS BDL P3559) — miesięczna, krajowa */
+export function useGusRegisteredUnemployment(months = 12) {
+    return useBdlSeries(461680, months);
+}
+
 export function useGDPQuarterly(geo = 'PL') {
     return useEurostat('gdp_yoy', geo);
 }
@@ -290,16 +332,21 @@ export function useConstruction(geo = 'PL') {
 }
 
 export function useTradeData(flow: 'exports' | 'imports') {
+    // TODO: migrate → /api/gus-trade (GUS DBHZ obroty towarowe). UI usunięte z /rynki (brak hooka GUS).
     return useEurostat(flow, 'PL');
 }
 
 export function useCurrentAccount() {
+    // TODO: migrate → /api/nbp-bop (NBP rachunek bieżący). UI usunięte z /rynki (brak hooka GUS/NBP).
     return useEurostat('current_account', 'PL');
 }
 
 // ─── Nowe wskaźniki makro (Eurostat, dane realne PL) ─────
 export function useConsumerConfidence() { return useEurostat('consumer_confidence', 'PL'); }
-export function useBondYield10Y() { return useEurostat('bond_yield_10y', 'PL'); }
+export function useBondYield10Y() {
+    // TODO: migrate → useStooq('10ypl.b') — dane rynkowe GPW/Stooq, nie Eurostat Maastricht.
+    return useEurostat('bond_yield_10y', 'PL');
+}
 export function useGovDebt() { return useEurostat('gov_debt', 'PL'); }
 export function useGovDeficit() { return useEurostat('gov_deficit', 'PL'); }
 export function useGDPAnnual() { return useEurostat('gdp_annual', 'PL'); }

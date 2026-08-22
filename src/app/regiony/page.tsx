@@ -5,7 +5,7 @@ import { useInitialTab } from '@/lib/use-initial-tab';
 import { MapPin, TrendingUp, Users, Scale, Award, Briefcase, Banknote, TrendingDown } from 'lucide-react';
 import { Segmented } from '@/components/ui/Segmented';
 import { SmupExplorer } from '@/components/sections/smup-explorer';
-import { useRegionalEU, useGusRegional } from '@/lib/hooks';
+import { useRegionalGus, useGusRegional } from '@/lib/hooks';
 import { Choropleth, type ChoroItem } from '@/components/ui/Choropleth';
 import { Heatmap } from '@/components/ui/Heatmap';
 import { KpiCard } from '@/components/ui/KpiCard';
@@ -23,8 +23,8 @@ const TABS: { value: Tab; label: string }[] = [
     { value: 'samorzad', label: 'Samorząd (SMUP)' },
 ];
 
-const eur = (v: number) => `${formatNumber(v, 0)} EUR`;
-const kEur = (v: number) => `${Math.round(v / 1000)}k`;
+const pln = (v: number) => `${formatNumber(v, 0)} zł`;
+const kPln = (v: number) => `${Math.round(v / 1000)}k`;
 const mln = (v: number) => `${(v / 1e6).toFixed(2)} mln`;
 const mln1 = (v: number) => `${(v / 1e6).toFixed(1)}`;
 
@@ -62,7 +62,7 @@ function Ranking<T extends { slug: string; name: string }>({ rows, valueOf, form
 }
 
 function PkbRegionalne() {
-    const { data, isLoading } = useRegionalEU();
+    const { data, isLoading } = useRegionalGus();
     const [sel, setSel] = useState<string | null>(null);
     const regions = data?.regions ?? [];
     const nat = data?.national;
@@ -76,18 +76,18 @@ function PkbRegionalne() {
     return (
         <div className="space-y-6">
             <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-                <KpiCard label="PKB / mieszkańca (kraj)" value={nat?.gdpPerCapita != null ? formatNumber(nat.gdpPerCapita, 0) : '—'} unit=" EUR" accent="blue" icon={MapPin} footnote={data ? `Eurostat · ${data.gdpYear}` : 'Eurostat'} />
-                <KpiCard label="Najbogatsze woj." value={top?.gdpPerCapita != null ? formatNumber(top.gdpPerCapita, 0) : '—'} unit=" EUR" accent="green" icon={Award} footnote={top?.name} />
-                <KpiCard label="Najbiedniejsze woj." value={bottom?.gdpPerCapita != null ? formatNumber(bottom.gdpPerCapita, 0) : '—'} unit=" EUR" accent="amber" icon={TrendingUp} footnote={bottom?.name} />
+                <KpiCard label="PKB / mieszkańca (kraj)" value={nat?.gdpPerCapita != null ? formatNumber(nat.gdpPerCapita, 0) : '—'} unit=" zł" accent="blue" icon={MapPin} footnote={data ? `GUS BDL · ${data.gdpYear}` : 'GUS BDL'} />
+                <KpiCard label="Najbogatsze woj." value={top?.gdpPerCapita != null ? formatNumber(top.gdpPerCapita, 0) : '—'} unit=" zł" accent="green" icon={Award} footnote={top?.name} />
+                <KpiCard label="Najbiedniejsze woj." value={bottom?.gdpPerCapita != null ? formatNumber(bottom.gdpPerCapita, 0) : '—'} unit=" zł" accent="amber" icon={TrendingUp} footnote={bottom?.name} />
                 <KpiCard label="Rozpiętość (max/min)" value={ratio ?? '—'} unit="×" accent="violet" icon={Scale} footnote="najbogatsze / najbiedniejsze" />
             </div>
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                <SectionCard editorial titleVariant="label" title="PKB na mieszkańca — mapa" subtitle="Eurostat · ceny bieżące · EUR/mieszkańca · najedź lub kliknij">
-                    <Choropleth items={items} scheme="blue" format={eur} labelFormat={kEur} selected={sel} onSelect={setSel} />
+                <SectionCard editorial titleVariant="label" title="PKB na mieszkańca — mapa" subtitle="GUS BDL · ceny bieżące · zł/mieszkańca · najedź lub kliknij">
+                    <Choropleth items={items} scheme="blue" format={pln} labelFormat={kPln} selected={sel} onSelect={setSel} />
                 </SectionCard>
-                <SectionCard editorial titleVariant="label" title="Ranking województw" subtitle="PKB na mieszkańca (EUR)"
-                    actions={<CsvExport filename="pkb-regionalne" headers={['Województwo', 'PKB/mieszk EUR', 'PKB mln EUR', 'Ludność']} rows={regions.map((r) => [r.name, r.gdpPerCapita, r.gdpTotal, r.population])} />}>
-                    <Ranking rows={regions} valueOf={(r) => r.gdpPerCapita} format={eur} colors={BLUE} />
+                <SectionCard editorial titleVariant="label" title="Ranking województw" subtitle="PKB na mieszkańca (zł)"
+                    actions={<CsvExport filename="pkb-regionalne" headers={['Województwo', 'PKB/mieszk zł', 'PKB mln zł', 'Ludność']} rows={regions.map((r) => [r.name, r.gdpPerCapita, r.gdpTotal, r.population])} />}>
+                    <Ranking rows={regions} valueOf={(r) => r.gdpPerCapita} format={pln} colors={BLUE} />
                 </SectionCard>
             </div>
         </div>
@@ -95,7 +95,7 @@ function PkbRegionalne() {
 }
 
 function Demografia() {
-    const { data, isLoading } = useRegionalEU();
+    const { data, isLoading } = useRegionalGus();
     const [sel, setSel] = useState<string | null>(null);
     const regions = [...(data?.regions ?? [])].sort((a, b) => (b.population ?? 0) - (a.population ?? 0));
     const nat = data?.national;
@@ -107,12 +107,12 @@ function Demografia() {
     return (
         <div className="space-y-6">
             <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
-                <KpiCard label="Ludność Polski" value={nat?.population != null ? mln(nat.population) : '—'} accent="violet" icon={Users} footnote={data ? `Eurostat · ${data.popYear}` : 'Eurostat'} />
+                <KpiCard label="Ludność Polski" value={nat?.population != null ? mln(nat.population) : '—'} accent="violet" icon={Users} footnote={data ? `GUS BDL · ${data.popYear}` : 'GUS BDL'} />
                 <KpiCard label="Najludniejsze woj." value={top?.population != null ? mln(top.population) : '—'} accent="blue" icon={Award} footnote={top?.name} />
-                <KpiCard label="Województw" value={String(regions.length)} accent="slate" icon={MapPin} footnote="NUTS-2 (Mazowieckie łączone)" />
+                <KpiCard label="Województw" value={String(regions.length)} accent="slate" icon={MapPin} footnote="GUS BDL · Mazowieckie łączone (PKB)" />
             </div>
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                <SectionCard editorial titleVariant="label" title="Ludność — mapa województw" subtitle="Eurostat · liczba ludności (mln) · najedź lub kliknij">
+                <SectionCard editorial titleVariant="label" title="Ludność — mapa województw" subtitle="GUS BDL · liczba ludności (mln) · najedź lub kliknij">
                     <Choropleth items={items} scheme="violet" format={(v) => `${formatNumber(v, 0)} os.`} labelFormat={mln1} selected={sel} onSelect={setSel} />
                 </SectionCard>
                 <SectionCard editorial titleVariant="label" title="Ranking województw" subtitle="Liczba ludności"
