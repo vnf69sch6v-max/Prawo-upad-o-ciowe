@@ -10,9 +10,8 @@ z oficjalnych źródeł i odświeżają się automatycznie — bez danych wpisan
 | **Przegląd** | Kluczowe wskaźniki makro + pas rynków i newsów |
 | **Ceny** | CPI (13 działów COICOP + podkategorie, 10 lat) i PPI (33 pozycje PKD, 10 lat) |
 | **Gospodarka** | Aktywność, koniunktura, finanse publiczne, widok partii rządzących, korelacje |
-| **Rynki** | WIG20 / mWIG40 / sWIG80, spółki WIG20, kursy NBP, WIBOR, surowce, obligacje |
+| **Rynki** | Spółki WIG20 (kurs, opis, dopasowane newsy, nastroje rynku), indeksy WIG20 / mWIG40 / sWIG80, kursy NBP, WIBOR, surowce, obligacje, handel zagraniczny |
 | **Praca / Regiony** | Rynek pracy, mapa województw, płace, bezrobocie |
-| **Prognozy** | Nowcast CPI z koszyka, nowcast PKB, reguła Taylora, symulator kredytu |
 | **Newsy** | Agregat polskich feedów finansowych, zwijanie przedruków, dopasowanie do wskaźników |
 | **Publikacje / Samorząd** | Kalendarz publikacji GUS/NBP, dane usług publicznych (SMUP) |
 
@@ -61,7 +60,7 @@ działa w trybie demo (logowanie wyłączone), a cache serwerowy się nie zapisu
 src/
 ├── app/
 │   ├── page.tsx              # Przegląd
-│   ├── ceny|gospodarka|rynki|praca|regiony|prognozy|newsy|publikacje|samorzad/
+│   ├── ceny|gospodarka|rynki|praca|regiony|newsy|publikacje|samorzad/
 │   ├── spolki/[ticker]/      # Strona spółki
 │   └── api/                  # Proxy do źródeł + crony (cache-through)
 ├── components/
@@ -77,7 +76,7 @@ src/
 ```
 
 Trasy `/macro`, `/rates`, `/fx`, `/market`, `/trade`, `/labor`, `/nowcast`, `/dane`, `/tools`
-to przekierowania na nową strukturę (zachowane dla starych linków).
+oraz wycofane `/prognozy` to przekierowania na nową strukturę (zachowane dla starych linków).
 
 ## Plan rozwoju
 
