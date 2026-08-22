@@ -7,7 +7,6 @@ import { Segmented } from '@/components/ui/Segmented';
 import { InflacjaFull } from '@/components/sections/InflacjaFull';
 import { PpiFull } from '@/components/sections/PpiFull';
 import { DbwPriceSection } from '@/components/sections/DbwPriceSection';
-import { RelatedNews } from '@/components/ui/RelatedNews';
 import { PageHeader, PageEyebrow } from '@/components/ui/PageHeader';
 
 type Tab = 'inflacja' | 'ppi' | 'nieruchomosci' | 'budowlane' | 'rolne';
@@ -23,16 +22,13 @@ export default function CenyPage() {
     const [tab, setTab] = useState<Tab>('inflacja');
     useInitialTab(TABS.map((t) => t.value), setTab);
     return (
-        <div className="mk-fade-in space-y-8">
+        <div className="mk-fade-in space-y-5">
             <PageHeader
                 eyebrow={<PageEyebrow section="Ceny" />}
                 title="Ceny"
                 subtitle="Inflacja konsumencka, ceny producenta, nieruchomości, budownictwo i rolnictwo"
                 actions={<Segmented value={tab} onChange={setTab} options={TABS} aria-label="Sekcja cen" />}
             />
-
-            {/* Newsy powiązane — nad danymi, nie na dole strony (zlecenie właściciela). */}
-            <RelatedNews topic="ceny" />
 
             <div key={tab} className="mk-fade-in">
             {tab === 'inflacja' && <InflacjaFull />}

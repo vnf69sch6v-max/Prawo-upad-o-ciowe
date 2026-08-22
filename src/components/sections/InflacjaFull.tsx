@@ -3,11 +3,13 @@
 import { useMemo, useState, useCallback } from 'react';
 import { Cell, Tooltip, BarChart, Bar, XAxis, YAxis, AreaChart, Area, CartesianGrid } from 'recharts';
 import { ResponsiveContainer } from '@/components/ui/ChartContainer';
-import { TrendingUp, Activity, Fuel, DollarSign, Factory, Banknote, Info, ChevronRight, Grid3x3 } from 'lucide-react';
-import { useCpiFull, useGusPpiHeadline, useBrentMM, useEURPLN, useUSDPLN, type CpiDivision, type CpiHistPoint } from '@/lib/hooks';
-import { plSeries, lastOf, fmtPL } from '@/lib/series';
+import { Activity, Factory, Info, ChevronRight, Home, Wheat, Car, Scale } from 'lucide-react';
+import { useCpiFull, useGusPpiHeadline, usePpiFull, type CpiDivision, type CpiHistPoint } from '@/lib/hooks';
+import { plSeries, fmtPL } from '@/lib/series';
 import { formatDecimalPL, formatDataPeriodLabel } from '@/lib/formatters';
-import { KpiCard } from '@/components/ui/KpiCard';
+import { DenseHero } from '@/components/ui/DenseDashboard';
+import { CompactKpiGrid, type CompactKpiItem } from '@/components/ui/CompactKpiGrid';
+import { DensePageLayout, DenseTwoCol } from '@/components/ui/DensePageLayout';
 import { InteractiveChart } from '@/components/ui/InteractiveChart';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { Segmented } from '@/components/ui/Segmented';
@@ -16,8 +18,9 @@ import { StaleBadge } from '@/components/ui/StaleBadge';
 import { RefreshButton } from '@/components/ui/RefreshButton';
 import { Drawer } from '@/components/ui/Drawer';
 import { Heatmap } from '@/components/ui/Heatmap';
-import { InsightBar } from '@/components/ui/InsightBar';
-import { analyzeSeries } from '@/lib/observations';
+import { RelatedNews } from '@/components/ui/RelatedNews';
+import { ObservationsPanel } from '@/components/ui/ObservationsPanel';
+import { analyzeSeries, type Observation } from '@/lib/observations';
 import { AXIS_INK } from '@/lib/chart-theme';
 
 const PALETTE = ['#2563EB', '#16A34A', '#D97706', '#7C3AED', '#E11D48', '#0891B2', '#CA8A04', '#DB2777', '#059669', '#4F46E5', '#EA580C', '#0D9488', '#64748B'];
@@ -85,10 +88,8 @@ const subFallback = (name: string): string =>
 
 export function InflacjaFull() {
     const { data, isLoading, isFetching, refreshFromSource } = useCpiFull();
-    const ppiQ = useGusPpiHeadline();
-    const brentQ = useBrentMM();
-    const eurQ = useEURPLN();
-    const usdQ = useUSDPLN();
+    const ppiHeadQ = useGusPpiHeadline();
+    const ppiFullQ = usePpiFull();
 
     const headline = useMemo(() => data?.headline ?? [], [data]);
     const divisions = useMemo(() => data?.divisions ?? [], [data]);
@@ -100,7 +101,10 @@ export function InflacjaFull() {
     const cpiInsights = useMemo(() => analyzeSeries('Inflacja', headline.map((h) => h.yoy), { goodDown: true, unit: '%', target: { value: 2.5, label: 'NBP' } }), [headline]);
 
     // ── Struktura inflacji: CPI vs bazowa (GUS, bez żywności) vs PPI — wszystko na datach headline ──
-    const ppiSeries = useMemo(() => plSeries(ppiQ.data), [ppiQ.data]);
+    const ppiSeries = useMemo(() => plSeries(ppiHeadQ.data), [ppiHeadQ.data]);
+    const ppiHeadline = useMemo(() => ppiFullQ.data?.headline ?? [], [ppiFullQ.data]);
+    const ppiLatest = ppiHeadline.length ? ppiHeadline[ppiHeadline.length - 1] : null;
+    const ppiPrevPt = ppiHeadline.length > 1 ? ppiHeadline[ppiHeadline.length - 2] : null;
     // Bazowa GUS ≈ CPI bez żywności: ważona średnia r/r działów poza „01" (dane GUS), po datach headline
     const exFood = useMemo(() => {
         const nonFood = divisions.filter((d) => d.code !== '01');
@@ -114,6 +118,7 @@ export function InflacjaFull() {
         }
         return map;
     }, [divisions]);
+    const coreLatest = latest?.date ? exFood.get(latest.date) ?? null : null;
     // PPI (GUS DBW) dopasowany do dat headline: miesięcznie wprost + kwartalna średnia dla „YYYY-QN"
     const ppiByDate = useMemo(() => {
         const map = new Map<string, number>();
@@ -125,19 +130,6 @@ export function InflacjaFull() {
     }, [ppiSeries]);
     const structureData = useMemo(() => headline.map((h) => ({ date: h.date, cpi: h.yoy, core: exFood.get(h.date) ?? null, ppi: ppiByDate.get(h.date) ?? null })), [headline, exFood, ppiByDate]);
 
-    // ── Czynniki cenotwórcze (drivers): ropa, kursy, PPI ──
-    const brent = brentQ.data;
-    const fxCard = (arr: { mid?: number }[] | undefined) => {
-        const s = (arr ?? []).filter((r) => r.mid != null);
-        const last = s.length ? s[s.length - 1].mid! : null;
-        const ref = s.length > 22 ? s[s.length - 23].mid! : (s[0]?.mid ?? null);
-        const chg = last != null && ref != null && ref !== 0 ? +((last / ref - 1) * 100).toFixed(1) : null;
-        return { last, chg };
-    };
-    const eur = fxCard(eurQ.data);
-    const usd = fxCard(usdQ.data);
-    const ppiLast = lastOf(ppiSeries);
-    const ppiPrev = ppiSeries.length > 1 ? ppiSeries[ppiSeries.length - 2].value : null;
 
     const contrib = useMemo(
         () => divisions.map((d, i) => ({ ...d, color: colorFor(i) })).filter((d) => d.contribution != null).sort((a, b) => (b.contribution ?? 0) - (a.contribution ?? 0)),
@@ -227,204 +219,215 @@ export function InflacjaFull() {
 
     const chartData = useMemo(() => headline.map((h) => ({ date: h.date, value: freq === 'yoy' ? h.yoy : h.mom })), [headline, freq]);
 
-    if (isLoading) return <div className="space-y-4"><div className="grid grid-cols-2 gap-4">{Array.from({ length: 2 }).map((_, i) => <div key={i} className="mk-card h-28" />)}</div><div className="mk-skeleton h-[340px] w-full" /></div>;
+    const divOf = (code: string) => divisions.find((d) => d.code === code);
+    const topContrib = contrib[0];
+
+    const compactKpis: CompactKpiItem[] = [
+        { key: 'cpi-mm', label: 'CPI m/m', value: fmtPL(latest?.mom), unit: '%', icon: Activity, footnote: 'miesiąc do miesiąca', loading: isLoading },
+        { key: 'ppi-mm', label: 'PPI m/m', value: ppiLatest?.mom != null ? formatDecimalPL(ppiLatest.mom, 1) : '—', unit: '%', icon: Factory,
+          delta: ppiLatest?.mom != null && ppiPrevPt?.mom != null ? { value: +(ppiLatest.mom - ppiPrevPt.mom).toFixed(1), unit: 'pp', invert: true } : undefined,
+          footnote: 'GUS · producent', loading: ppiFullQ.isLoading },
+        { key: 'food', label: 'Żywność (01)', value: divOf('01')?.yoy != null ? formatDecimalPL(divOf('01')!.yoy!, 1) : '—', unit: '%', icon: Wheat, footnote: 'COICOP · r/r', loading: isLoading },
+        { key: 'housing', label: 'Mieszkanie (04)', value: divOf('04')?.yoy != null ? formatDecimalPL(divOf('04')!.yoy!, 1) : '—', unit: '%', icon: Home, footnote: 'energia, czynsze', loading: isLoading },
+        { key: 'transport', label: 'Transport (07)', value: divOf('07')?.yoy != null ? formatDecimalPL(divOf('07')!.yoy!, 1) : '—', unit: '%', icon: Car, footnote: 'paliwa, auta', loading: isLoading },
+        { key: 'contrib', label: 'Największy wkład', value: topContrib?.contribution != null ? `${topContrib.contribution > 0 ? '+' : ''}${formatDecimalPL(topContrib.contribution, 2)}` : '—', unit: 'pp', icon: Scale,
+          footnote: topContrib ? `${topContrib.code} · ${topContrib.name.slice(0, 18)}…` : 'wkład do CPI', loading: isLoading },
+    ];
+
+    const observations = useMemo<Observation[]>(() => {
+        const out: Observation[] = [...cpiInsights.slice(0, 3)];
+        if (topContrib?.contribution != null) {
+            out.push({ kind: 'record', tone: topContrib.contribution > 0 ? 'warn' : 'neutral',
+                text: `Największy wkład: ${topContrib.name} (${topContrib.contribution > 0 ? '+' : ''}${formatDecimalPL(topContrib.contribution, 2)} pp)` });
+        }
+        if (coreLatest != null && latest?.yoy != null) {
+            const diff = +(latest.yoy - coreLatest).toFixed(1);
+            if (Math.abs(diff) > 0.3) {
+                out.push({ kind: 'trend', tone: 'neutral',
+                    text: `CPI bez żywności (${formatDecimalPL(coreLatest, 1)}%) ${diff > 0 ? 'niższe' : 'wyższe'} od CPI ogółem o ${formatDecimalPL(Math.abs(diff), 1)} pp.` });
+            }
+        }
+        return out.slice(0, 4);
+    }, [cpiInsights, topContrib, coreLatest, latest]);
+
+    if (isLoading) return <div className="space-y-3"><div className="mk-skeleton h-24 w-full" /><div className="grid grid-cols-3 gap-2">{Array.from({ length: 6 }).map((_, i) => <div key={i} className="mk-card h-16" />)}</div><div className="mk-skeleton h-[280px] w-full" /></div>;
 
     return (
-        <div className="space-y-6">
-            {/* ── Źródło + ręczna aktualizacja ── */}
-            <div className="mk-card mk-card-editorial mk-card-pad flex flex-wrap items-center justify-between gap-3">
-                <div className="min-w-0 text-sm text-mk-text-soft">
-                    <span className="font-semibold text-mk-text">Źródło: </span>
-                    {data?.source ?? 'GUS DBW (api-dbw.stat.gov.pl)'}
-                    {dataDate && (
-                        <span className="text-mk-faint">
-                            {' · '}
-                            <span className="font-medium text-mk-muted">{formatDataPeriodLabel(dataDate)}</span>
-                            {' '}
-                            <span className="text-mk-faint">(GUS publikuje z ~1-mies. opóźnieniem)</span>
-                        </span>
-                    )}
-                </div>
-                <RefreshButton
-                    onClick={() => { void refreshFromSource(); }}
-                    loading={isFetching && !isLoading}
-                />
-            </div>
+        <DensePageLayout>
+            <DenseHero
+                ariaLabel="Inflacja CPI — kluczowe wskaźniki GUS"
+                slots={[
+                    {
+                        label: 'CPI ogółem (r/r)',
+                        value: latest?.yoy != null ? `${fmtPL(latest.yoy)}%` : '—',
+                        delta: latest?.yoy != null && prev?.yoy != null ? +(latest.yoy - prev.yoy).toFixed(1) : null,
+                        text: 'Krajowy wskaźnik cen konsumenckich — GUS DBW.',
+                        footnote: dataDate ? `GUS · ${formatDataPeriodLabel(dataDate)}` : 'GUS DBW',
+                        loading: isLoading,
+                    },
+                    {
+                        label: 'PPI ogółem (r/r)',
+                        value: ppiLatest?.yoy != null ? `${formatDecimalPL(ppiLatest.yoy, 1)}%` : '—',
+                        delta: ppiLatest?.yoy != null && ppiPrevPt?.yoy != null ? +(ppiLatest.yoy - ppiPrevPt.yoy).toFixed(1) : null,
+                        text: 'Ceny produkcji sprzedanej przemysłu — wyprzedzają CPI.',
+                        footnote: ppiFullQ.data?.dataDate ? `GUS · ${formatDataPeriodLabel(ppiFullQ.data.dataDate)}` : 'GUS DBW',
+                        loading: ppiHeadQ.isLoading,
+                    },
+                    {
+                        label: 'CPI bez żywności',
+                        value: coreLatest != null ? `${formatDecimalPL(coreLatest, 1)}%` : '—',
+                        text: 'Ważona średnia r/r działów COICOP poza żywnością (GUS).',
+                        footnote: 'GUS · inflacja bazowa',
+                        loading: isLoading,
+                    },
+                ]}
+            />
 
-            {/* ── KPI (ujednolicone na krajowy CPI GUS) ── */}
-            <section>
-                <h2 className="mk-section-label mb-3">Wskaźniki CPI</h2>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <KpiCard label="CPI (r/r)" value={fmtPL(latest?.yoy)} unit="%" accent="amber" icon={TrendingUp}
-                    delta={latest?.yoy != null && prev?.yoy != null ? { value: +(latest.yoy - prev.yoy).toFixed(1), unit: 'pp', invert: true } : undefined}
-                    footnote={dataDate ? `GUS · CPI · ${formatDataPeriodLabel(dataDate)}` : 'GUS · krajowy CPI'} />
-                <KpiCard label="CPI (m/m)" value={fmtPL(latest?.mom)} unit="%" accent="blue" icon={Activity} footnote="miesiąc do miesiąca" />
-                </div>
-            </section>
+            <CompactKpiGrid items={compactKpis} label="Wskaźniki uzupełniające" dense />
 
-            {cpiInsights.length > 0 && <InsightBar items={cpiInsights} />}
+            <DenseTwoCol
+                left={<RelatedNews topic="ceny" limit={5} title="Newsy — ceny i inflacja" />}
+                right={
+                    <SectionCard editorial titleVariant="label" title="Inflacja CPI — trend (10 lat)" subtitle={`${freq === 'yoy' ? 'rok do roku' : 'miesiąc do miesiąca'} (%) · GUS`}
+                        actions={<div className="flex flex-wrap items-center gap-2">
+                            <Segmented value={freq} onChange={setFreq} options={[{ value: 'yoy', label: 'r/r' }, { value: 'mom', label: 'm/m' }]} />
+                            <RefreshButton onClick={() => { void refreshFromSource(); }} loading={isFetching && !isLoading} />
+                            {dataDate && <span className="text-[11px] font-medium text-mk-muted">{formatDataPeriodLabel(dataDate)}</span>}
+                            <StaleBadge date={dataDate} label="dane za" warnAfterMonths={4} />
+                            <CsvExport filename="cpi-10lat" headers={['Miesiąc', 'r/r', 'm/m']} rows={headline.map((h) => [h.date, h.yoy, h.mom])} />
+                        </div>}>
+                        <InteractiveChart data={chartData} xKey="date" height={280} unit="%" showRange initialRange="5L" ranges={['1R', '3L', '5L', 'ALL']}
+                            valueFormatter={(v) => formatDecimalPL(v, 1)} xTickFormatter={monthTick}
+                            referenceLines={freq === 'yoy' ? [{ y: 2.5, label: 'Cel NBP', color: AXIS_INK }] : [{ y: 0, color: '#CBD2DD' }]}
+                            series={[{ key: 'value', name: freq === 'yoy' ? 'CPI r/r' : 'CPI m/m', color: '#D97706', type: 'area', strokeWidth: 2.5 }]} />
+                    </SectionCard>
+                }
+            />
 
-            {/* ── Hero: trend r/r ↔ m/m ── */}
-            <SectionCard editorial titleVariant="label" title="Inflacja CPI — trend (10 lat)" subtitle={`${freq === 'yoy' ? 'rok do roku' : 'miesiąc do miesiąca'} (%) · krajowy CPI (GUS) · kwartalnie do 2025, miesięcznie od 2026`}
-                actions={<div className="flex flex-wrap items-center gap-2">
-                    <Segmented value={freq} onChange={setFreq} options={[{ value: 'yoy', label: 'r/r' }, { value: 'mom', label: 'm/m' }]} />
-                    <RefreshButton onClick={() => { void refreshFromSource(); }} loading={isFetching && !isLoading} />
-                    {dataDate && <span className="text-[11px] font-medium text-mk-muted">{formatDataPeriodLabel(dataDate)}</span>}
-                    <StaleBadge date={dataDate} label="dane za" warnAfterMonths={4} />
-                    <CsvExport filename="cpi-10lat" headers={['Miesiąc', 'r/r', 'm/m']} rows={headline.map((h) => [h.date, h.yoy, h.mom])} />
-                </div>}>
-                <InteractiveChart data={chartData} xKey="date" height={320} unit="%" showRange initialRange="5L" ranges={['1R', '3L', '5L', 'ALL']}
-                    valueFormatter={(v) => formatDecimalPL(v, 1)} xTickFormatter={monthTick}
-                    referenceLines={freq === 'yoy' ? [{ y: 2.5, label: 'Cel NBP', color: AXIS_INK }] : [{ y: 0, color: '#CBD2DD' }]}
-                    series={[{ key: 'value', name: freq === 'yoy' ? 'CPI r/r' : 'CPI m/m', color: '#D97706', type: 'area', strokeWidth: 2.5 }]} />
-            </SectionCard>
+            <DenseTwoCol
+                left={
+                    <SectionCard editorial titleVariant="label" title="Struktura inflacji" subtitle="CPI · CPI bez żywności · PPI — r/r (%)">
+                        <InteractiveChart data={structureData} xKey="date" height={220} unit="%" showRange initialRange="5L" ranges={['1R', '3L', '5L', 'ALL']} legend
+                            valueFormatter={(v) => formatDecimalPL(v, 1)} xTickFormatter={monthTick}
+                            referenceLines={[{ y: 2.5, label: 'Cel NBP', color: AXIS_INK }]}
+                            series={[
+                                { key: 'cpi', name: 'CPI ogółem', color: '#D97706', type: 'line', strokeWidth: 2.5 },
+                                { key: 'core', name: 'CPI bez żywności', color: '#7C3AED', type: 'line', strokeWidth: 2 },
+                                { key: 'ppi', name: 'PPI (producent)', color: '#0891B2', type: 'line', strokeWidth: 2, dashed: true },
+                            ]} />
+                    </SectionCard>
+                }
+                right={
+                    <SectionCard editorial titleVariant="label" title="Kontrybucje do inflacji" subtitle="waga × dynamika = wkład (pp) · kliknij dział">
+                        <div className="max-h-[240px] space-y-0.5 overflow-y-auto">
+                            {contrib.map((d) => {
+                                const c = d.contribution ?? 0;
+                                const w = (Math.abs(c) / maxAbs) * 100;
+                                return (
+                                    <button key={d.code} onClick={() => openDiv(d.code)}
+                                        className="group flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-mk-surface-alt">
+                                        <span className="w-[9rem] shrink-0 truncate text-xs font-medium text-mk-text" title={d.name}><span className="mr-1 text-mk-faint">{d.code}</span>{d.name}</span>
+                                        <span className="h-2.5 flex-1 rounded-full bg-mk-surface-alt"><span className="block h-2.5 rounded-full" style={{ width: `${w}%`, background: d.color }} /></span>
+                                        <span className="w-12 shrink-0 text-right text-xs font-semibold tnum" style={{ color: c >= 0 ? '#0F172A' : '#16A34A' }}>{c > 0 ? '+' : ''}{formatDecimalPL(c, 2)}</span>
+                                        <ChevronRight size={14} className="shrink-0 text-mk-faint opacity-0 group-hover:opacity-100" />
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </SectionCard>
+                }
+            />
 
-            {/* ── Struktura inflacji: CPI vs bazowa vs PPI ── */}
-            <SectionCard editorial titleVariant="label" title="Struktura inflacji" subtitle="CPI ogółem · CPI bez żywności (bazowa) · PPI (ceny producenta) — r/r (%)">
-                <InteractiveChart data={structureData} xKey="date" height={300} unit="%" showRange initialRange="5L" ranges={['1R', '3L', '5L', 'ALL']} legend
-                    valueFormatter={(v) => formatDecimalPL(v, 1)} xTickFormatter={monthTick}
-                    referenceLines={[{ y: 2.5, label: 'Cel NBP', color: AXIS_INK }]}
-                    series={[
-                        { key: 'cpi', name: 'CPI ogółem', color: '#D97706', type: 'line', strokeWidth: 2.5 },
-                        { key: 'core', name: 'CPI bez żywności', color: '#7C3AED', type: 'line', strokeWidth: 2 },
-                        { key: 'ppi', name: 'PPI (producent)', color: '#0891B2', type: 'line', strokeWidth: 2, dashed: true },
-                    ]} />
-                <p className="mt-2 text-xs text-mk-faint">
-                    <span className="font-medium text-mk-muted">PPI</span> (ceny producenta) zwykle wyprzedza CPI — presja u producentów przekłada się na ceny konsumenckie z opóźnieniem.
-                    <span className="font-medium text-mk-muted"> CPI bez żywności</span> (przybliżenie bazowej) liczony z działów GUS — pokazuje trwałość presji poza najbardziej zmienną żywnością. PPI: GUS DBW.
-                </p>
-            </SectionCard>
-
-            {/* ── Czynniki cenotwórcze (drivers) ── */}
-            <SectionCard editorial titleVariant="label" title="Czynniki cenotwórcze" subtitle="zewnętrzne presje na ceny — ropa, kursy walut, ceny producenta">
-                <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-                    <KpiCard label="Ropa Brent" value={fmtPL(brent?.latest, 1)} unit=" USD" accent="amber" icon={Fuel}
-                        delta={brent?.changeMM != null ? { value: brent.changeMM, unit: 'pct', invert: true } : undefined}
-                        footnote="napędza paliwa i transport" loading={brentQ.isLoading} />
-                    <KpiCard label="EUR/PLN" value={fmtPL(eur.last, 3)} accent="blue" icon={Banknote}
-                        delta={eur.chg != null ? { value: eur.chg, unit: 'pct', invert: true } : undefined}
-                        footnote="import, żywność (30 dni)" loading={eurQ.isLoading} />
-                    <KpiCard label="USD/PLN" value={fmtPL(usd.last, 3)} accent="violet" icon={DollarSign}
-                        delta={usd.chg != null ? { value: usd.chg, unit: 'pct', invert: true } : undefined}
-                        footnote="ropa w USD, surowce (30 dni)" loading={usdQ.isLoading} />
-                    <KpiCard label="PPI (r/r)" value={fmtPL(ppiLast)} unit="%" accent="rose" icon={Factory}
-                        delta={ppiLast != null && ppiPrev != null ? { value: +(ppiLast - ppiPrev).toFixed(1), unit: 'pp', invert: true } : undefined}
-                        footnote="ceny producenta — wyprzedza CPI" loading={ppiQ.isLoading} />
-                </div>
-            </SectionCard>
-
-            {/* ── Kontrybucje do inflacji (pełna szerokość, klik → drawer) ── */}
-            <SectionCard editorial titleVariant="label" title="Kontrybucje do inflacji" subtitle="waga × dynamika = wkład (pp) · kliknij dział, aby zobaczyć szczegóły i 10-letni trend">
-                <div className="space-y-1">
-                    {contrib.map((d) => {
-                        const c = d.contribution ?? 0;
-                        const w = (Math.abs(c) / maxAbs) * 100;
-                        return (
-                            <button key={d.code} onClick={() => openDiv(d.code)}
-                                className="group flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-left transition-colors hover:bg-mk-surface-alt">
-                                <span className="w-[15rem] shrink-0 truncate text-sm font-medium text-mk-text" title={d.name}><span className="mr-1.5 text-xs text-mk-faint">{d.code}</span>{d.name}</span>
-                                <span className="w-14 shrink-0 text-right text-xs tnum text-mk-muted">{d.yoy != null ? `${d.yoy > 0 ? '+' : ''}${formatDecimalPL(d.yoy, 1)}%` : '—'}</span>
-                                <span className="h-3 flex-1 rounded-full bg-mk-surface-alt"><span className="block h-3 rounded-full" style={{ width: `${w}%`, background: d.color }} /></span>
-                                <span className="w-14 shrink-0 text-right text-sm font-semibold tnum" style={{ color: c >= 0 ? '#0F172A' : '#16A34A' }}>{c > 0 ? '+' : ''}{formatDecimalPL(c, 2)}</span>
-                                <ChevronRight size={16} className="shrink-0 text-mk-faint transition-transform group-hover:translate-x-0.5 group-hover:text-mk-muted" />
-                            </button>
-                        );
-                    })}
-                </div>
-            </SectionCard>
-
-            {/* ── Dekompozycja (wodospad) + Top movers ── */}
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                <SectionCard editorial titleVariant="label" title="Dekompozycja CPI — wkłady działów" subtitle={`z czego składa się inflacja${dataDate ? ` (${formatDataPeriodLabel(dataDate)})` : ''} · słupki budują wskaźnik ogółem (pp)`}>
-                    <ResponsiveContainer width="100%" height={Math.max(300, waterfall.length * 28)}>
-                        <BarChart data={waterfall} layout="vertical" margin={{ top: 4, right: 44, left: 6, bottom: 4 }} barCategoryGap={5}>
-                            <CartesianGrid stroke="#EDF0F5" horizontal={false} />
-                            <XAxis type="number" tick={{ fill: AXIS_INK, fontSize: 12 }} axisLine={false} tickLine={false} tickFormatter={(v) => formatDecimalPL(v, 1)} />
-                            <YAxis type="category" dataKey="name" width={140} tick={{ fill: '#475569', fontSize: 11 }} axisLine={false} tickLine={false} />
-                            <Tooltip cursor={{ fill: 'rgba(0,0,0,0.03)' }} content={({ active, payload }) => {
-                                if (!active || !payload?.length) return null;
-                                const p = payload[0].payload as { name: string; c: number };
-                                return <div style={{ background: '#fff', border: '1px solid #E7EAF0', borderRadius: 10, padding: '6px 10px', fontSize: 13, boxShadow: '0 6px 16px rgba(16,24,40,.12)' }}>
-                                    <div style={{ fontWeight: 600, color: '#0F172A' }}>{p.name}</div><div style={{ color: '#64748B' }}>wkład {p.c > 0 ? '+' : ''}{formatDecimalPL(p.c, 2)} pp</div>
-                                </div>;
-                            }} />
-                            <Bar dataKey="base" stackId="a" fill="transparent" />
-                            <Bar dataKey="value" stackId="a" radius={[0, 3, 3, 0]}>
-                                {waterfall.map((r, i) => <Cell key={i} fill={r.total ? '#0F172A' : r.up ? '#DC2626' : '#16A34A'} />)}
-                            </Bar>
-                        </BarChart>
-                    </ResponsiveContainer>
-                    <p className="mt-1 text-[11px] text-mk-faint">Czerwone podbijają inflację, zielone obniżają; ciemny słupek &bdquo;CPI ogółem&rdquo; = suma wkładów.</p>
-                </SectionCard>
-
-                <SectionCard editorial titleVariant="label" title="Największe ruchy cen" subtitle="podkategorie (klasy COICOP) — co najbardziej zdrożało i staniało"
-                    actions={<Segmented value={moverMetric} onChange={setMoverMetric} options={[{ value: 'yoy', label: 'r/r' }, { value: 'mom', label: 'm/m' }]} />}>
-                    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-                        {[{ t: 'Najbardziej zdrożało', arr: movers.risers, up: true }, { t: 'Najbardziej staniało', arr: movers.fallers, up: false }].map((col) => (
-                            <div key={col.t}>
-                                <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide" style={{ color: col.up ? '#DC2626' : '#16A34A' }}>{col.up ? '▲' : '▼'} {col.t}</div>
-                                <div className="space-y-1.5">
-                                    {col.arr.map((m, i) => (
-                                        <div key={i} className="flex items-center gap-2 text-xs">
-                                            <span className="w-32 shrink-0 truncate text-mk-text-soft" title={`${m.name} · ${m.div}`}>{m.name}</span>
-                                            <span className="h-2.5 flex-1 rounded-full bg-mk-surface-alt"><span className="block h-2.5 rounded-full" style={{ width: `${(Math.abs(m.v) / movers.maxV) * 100}%`, marginLeft: m.v < 0 ? 'auto' : undefined, background: m.v >= 0 ? '#DC2626' : '#16A34A' }} /></span>
-                                            <span className="w-12 shrink-0 text-right font-semibold tnum" style={{ color: m.v >= 0 ? '#DC2626' : '#16A34A' }}>{m.v > 0 ? '+' : ''}{formatDecimalPL(m.v, 1)}%</span>
-                                        </div>
-                                    ))}
+            <DenseTwoCol
+                left={
+                    <SectionCard editorial titleVariant="label" title="Dekompozycja CPI" subtitle={`wkłady działów (pp)${dataDate ? ` · ${formatDataPeriodLabel(dataDate)}` : ''}`}>
+                        <ResponsiveContainer width="100%" height={Math.min(280, Math.max(200, waterfall.length * 24))}>
+                            <BarChart data={waterfall} layout="vertical" margin={{ top: 4, right: 36, left: 4, bottom: 4 }} barCategoryGap={4}>
+                                <CartesianGrid stroke="#EDF0F5" horizontal={false} />
+                                <XAxis type="number" tick={{ fill: AXIS_INK, fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => formatDecimalPL(v, 1)} />
+                                <YAxis type="category" dataKey="name" width={120} tick={{ fill: '#475569', fontSize: 10 }} axisLine={false} tickLine={false} />
+                                <Tooltip cursor={{ fill: 'rgba(0,0,0,0.03)' }} content={({ active, payload }) => {
+                                    if (!active || !payload?.length) return null;
+                                    const p = payload[0].payload as { name: string; c: number };
+                                    return <div style={{ background: '#fff', border: '1px solid #E7EAF0', borderRadius: 10, padding: '6px 10px', fontSize: 12, boxShadow: '0 6px 16px rgba(16,24,40,.12)' }}>
+                                        <div style={{ fontWeight: 600, color: '#0F172A' }}>{p.name}</div><div style={{ color: '#64748B' }}>wkład {p.c > 0 ? '+' : ''}{formatDecimalPL(p.c, 2)} pp</div>
+                                    </div>;
+                                }} />
+                                <Bar dataKey="base" stackId="a" fill="transparent" />
+                                <Bar dataKey="value" stackId="a" radius={[0, 3, 3, 0]}>
+                                    {waterfall.map((r, i) => <Cell key={i} fill={r.total ? '#0F172A' : r.up ? '#DC2626' : '#16A34A'} />)}
+                                </Bar>
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </SectionCard>
+                }
+                right={
+                    <SectionCard editorial titleVariant="label" title="Największe ruchy cen" subtitle="podkategorie COICOP"
+                        actions={<Segmented value={moverMetric} onChange={setMoverMetric} options={[{ value: 'yoy', label: 'r/r' }, { value: 'mom', label: 'm/m' }]} />}>
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            {[{ t: 'Zdrożało', arr: movers.risers, up: true }, { t: 'Staniało', arr: movers.fallers, up: false }].map((col) => (
+                                <div key={col.t}>
+                                    <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide" style={{ color: col.up ? '#DC2626' : '#16A34A' }}>{col.up ? '▲' : '▼'} {col.t}</div>
+                                    <div className="space-y-1">
+                                        {col.arr.slice(0, 6).map((m, i) => (
+                                            <div key={i} className="flex items-center gap-1.5 text-[11px]">
+                                                <span className="w-24 shrink-0 truncate text-mk-text-soft" title={`${m.name} · ${m.div}`}>{m.name}</span>
+                                                <span className="h-2 flex-1 rounded-full bg-mk-surface-alt"><span className="block h-2 rounded-full" style={{ width: `${(Math.abs(m.v) / movers.maxV) * 100}%`, marginLeft: m.v < 0 ? 'auto' : undefined, background: m.v >= 0 ? '#DC2626' : '#16A34A' }} /></span>
+                                                <span className="w-10 shrink-0 text-right font-semibold tnum" style={{ color: m.v >= 0 ? '#DC2626' : '#16A34A' }}>{m.v > 0 ? '+' : ''}{formatDecimalPL(m.v, 1)}</span>
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
-                    </div>
-                </SectionCard>
-            </div>
+                            ))}
+                        </div>
+                    </SectionCard>
+                }
+            />
 
-            {/* ── Wkłady do inflacji w czasie (stacked area) ── */}
-            <SectionCard editorial titleVariant="label" title="Wkłady do inflacji w czasie" subtitle="wkład każdego działu (waga × r/r) — co napędzało CPI · kwartalnie do 2025, miesięcznie 2026 (pp)">
-                {contribTime.length < 2 ? <div className="mk-skeleton h-[320px] w-full" /> : (
-                    <ResponsiveContainer width="100%" height={340}>
-                        <AreaChart data={contribTime} margin={{ top: 6, right: 12, left: -6, bottom: 0 }}>
-                            <CartesianGrid stroke="#EDF0F5" vertical={false} />
-                            <XAxis dataKey="date" tick={{ fill: AXIS_INK, fontSize: 11 }} tickFormatter={monthTick} axisLine={{ stroke: '#E7EAF0' }} tickLine={false} minTickGap={28} />
-                            <YAxis tick={{ fill: AXIS_INK, fontSize: 12 }} axisLine={false} tickLine={false} width={40} tickFormatter={(v) => formatDecimalPL(v, 0)} />
-                            <Tooltip content={({ active, payload, label }) => {
-                                if (!active || !payload?.length) return null;
-                                const nums = payload.filter((p) => typeof p.value === 'number') as { value: number; color?: string; name?: string }[];
-                                const total = nums.reduce((s, p) => s + p.value, 0);
-                                const top = [...nums].filter((p) => Math.abs(p.value) > 0.01).sort((a, b) => Math.abs(b.value) - Math.abs(a.value)).slice(0, 5);
-                                return <div style={{ background: '#fff', border: '1px solid #E7EAF0', borderRadius: 10, padding: '8px 12px', fontSize: 12, boxShadow: '0 6px 16px rgba(16,24,40,.12)', minWidth: 190 }}>
-                                    <div style={{ fontWeight: 600, color: '#0F172A', marginBottom: 4 }}>{monthTick(String(label))} · CPI ≈ {formatDecimalPL(total, 1)} pp</div>
-                                    {top.map((p, i) => <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#64748B', marginTop: 2 }}><span style={{ width: 8, height: 8, borderRadius: 2, background: p.color, flexShrink: 0 }} /><span style={{ flex: 1 }}>{p.name}</span><span style={{ fontWeight: 600, color: '#0F172A', fontVariantNumeric: 'tabular-nums' }}>{formatDecimalPL(p.value, 2)}</span></div>)}
-                                </div>;
-                            }} />
-                            {divisions.map((d, i) => <Area key={d.code} type="monotone" dataKey={d.code} name={d.name} stackId="1" stroke="none" fill={colorFor(i)} fillOpacity={0.88} />)}
-                        </AreaChart>
-                    </ResponsiveContainer>
-                )}
-                <p className="mt-1 text-[11px] text-mk-faint">Suma warstw ≈ CPI ogółem. Wagi koszyka bieżące (2026) zastosowane do całej historii — przybliżenie dla starszych lat.</p>
-            </SectionCard>
+            <DenseTwoCol
+                left={
+                    <SectionCard editorial titleVariant="label" title="Wkłady w czasie" subtitle="waga × r/r każdego działu (pp)">
+                        {contribTime.length < 2 ? <div className="mk-skeleton h-[220px] w-full" /> : (
+                            <ResponsiveContainer width="100%" height={220}>
+                                <AreaChart data={contribTime} margin={{ top: 4, right: 8, left: -8, bottom: 0 }}>
+                                    <CartesianGrid stroke="#EDF0F5" vertical={false} />
+                                    <XAxis dataKey="date" tick={{ fill: AXIS_INK, fontSize: 10 }} tickFormatter={monthTick} axisLine={{ stroke: '#E7EAF0' }} tickLine={false} minTickGap={32} />
+                                    <YAxis tick={{ fill: AXIS_INK, fontSize: 10 }} axisLine={false} tickLine={false} width={36} tickFormatter={(v) => formatDecimalPL(v, 0)} />
+                                    <Tooltip content={({ active, payload, label }) => {
+                                        if (!active || !payload?.length) return null;
+                                        const nums = payload.filter((p) => typeof p.value === 'number') as { value: number; color?: string; name?: string }[];
+                                        const total = nums.reduce((s, p) => s + p.value, 0);
+                                        const top = [...nums].filter((p) => Math.abs(p.value) > 0.01).sort((a, b) => Math.abs(b.value) - Math.abs(a.value)).slice(0, 4);
+                                        return <div style={{ background: '#fff', border: '1px solid #E7EAF0', borderRadius: 10, padding: '6px 10px', fontSize: 11, boxShadow: '0 6px 16px rgba(16,24,40,.12)', minWidth: 170 }}>
+                                            <div style={{ fontWeight: 600, color: '#0F172A', marginBottom: 4 }}>{monthTick(String(label))} · ≈ {formatDecimalPL(total, 1)} pp</div>
+                                            {top.map((p, i) => <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#64748B', marginTop: 2 }}><span style={{ width: 7, height: 7, borderRadius: 2, background: p.color, flexShrink: 0 }} /><span style={{ flex: 1 }}>{p.name}</span><span style={{ fontWeight: 600, color: '#0F172A' }}>{formatDecimalPL(p.value, 2)}</span></div>)}
+                                        </div>;
+                                    }} />
+                                    {divisions.map((d, i) => <Area key={d.code} type="monotone" dataKey={d.code} name={d.name} stackId="1" stroke="none" fill={colorFor(i)} fillOpacity={0.88} />)}
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        )}
+                    </SectionCard>
+                }
+                right={
+                    <SectionCard editorial titleVariant="label" title="Mapa ciepła" subtitle={heatMetric === 'yoy' ? 'r/r · 10 lat' : 'm/m · 2026'}
+                        actions={<Segmented value={heatMetric} onChange={setHeatMetric} options={[{ value: 'yoy', label: 'r/r' }, { value: 'mom', label: 'm/m' }]} />}>
+                        {heatCols.length < 2 ? <div className="flex h-[220px] items-center justify-center text-sm text-mk-faint">Brak danych.</div> : (
+                            <Heatmap rows={heatRows} cols={heatCols} valueAt={heatValue} unit="%" colTickFormatter={monthTick} valueFormatter={(v) => formatDecimalPL(v, 1)} onRowClick={openDiv} cellHeight={heatMetric === 'yoy' ? 16 : 20} />
+                        )}
+                    </SectionCard>
+                }
+            />
 
-            {/* ── Mapa ciepła inflacji (dział × czas) ── */}
-            <SectionCard editorial titleVariant="label" title="Mapa ciepła inflacji" subtitle={heatMetric === 'yoy' ? 'dynamika r/r każdego działu w czasie — 10 lat · kliknij wiersz, aby otworzyć szczegóły' : 'dynamika m/m każdego działu — miesięcznie 2026 · kliknij wiersz, aby otworzyć szczegóły'}
-                actions={<div className="flex items-center gap-2"><Grid3x3 size={15} className="text-mk-faint" /><Segmented value={heatMetric} onChange={setHeatMetric} options={[{ value: 'yoy', label: 'r/r (10 lat)' }, { value: 'mom', label: 'm/m (2026)' }]} /></div>}>
-                {heatCols.length < 2 ? <div className="flex h-[280px] items-center justify-center text-sm text-mk-faint">Brak danych dla wybranej metryki.</div> : (
-                    <Heatmap rows={heatRows} cols={heatCols} valueAt={heatValue} unit="%"
-                        colTickFormatter={monthTick} valueFormatter={(v) => formatDecimalPL(v, 1)} onRowClick={openDiv} cellHeight={heatMetric === 'yoy' ? 20 : 26} />
-                )}
-                <p className="mt-2 text-[11px] text-mk-faint">Kolor = dynamika cen: <span className="font-medium" style={{ color: '#B91C1C' }}>czerwony</span> silny wzrost, biały ≈ 0, <span className="font-medium" style={{ color: '#1D4ED8' }}>niebieski</span> spadek. Skala nieliniowa (√) — żeby spokojne okresy nie zlewały się obok skoku 2022–23.</p>
-            </SectionCard>
+            <ObservationsPanel items={observations} variant="overview" />
 
-            <div className="mk-card mk-card-editorial mk-card-pad text-sm text-mk-text-soft">
-                <span className="font-semibold text-mk-text">API: </span>
-                <code className="text-xs text-mk-muted">/api/gus-cpi-full</code>
-                {' → '}
-                <code className="text-xs text-mk-muted">api-dbw.stat.gov.pl</code>
-                {' · '}
-                GUS (DBW) — krajowy CPI w 100%: COICOP 1999 kwartalnie (do 2025) + COICOP 2018 miesięcznie (od 2026).
-                Daty na wykresach to <span className="font-medium text-mk-text">okres referencyjny</span> (np. „lipiec 2026" = inflacja <em>za</em> lipiec, publikowana przez GUS zwykle w sierpniu).
-                Działy z historią ~10-letnią; podkategorie (klasy COICOP 4-cyfrowe) — miesięcznie od 2026. Wagi koszyka przybliżone.
-                Przycisk „Aktualizuj” pomija cache serwera i pobiera świeże dane bezpośrednio z GUS DBW.
-            </div>
+            {dataDate && (
+                <p className="text-center text-[11px] text-mk-faint">
+                    Okres referencyjny: {formatDataPeriodLabel(dataDate)} · wyłącznie źródła GUS (DBW)
+                </p>
+            )}
 
+            {/* ── Drawer: szczegóły klikniętego działu ── */}
             {/* ── Drawer: szczegóły klikniętego działu ── */}
             <Drawer open={drawerOpen && !!sel} onClose={() => setDrawerOpen(false)} accent={selColor}
                 title={sel ? `${sel.code} · ${sel.name}` : ''} subtitle={sel ? `waga ${formatDecimalPL(sel.weight, 1)}% koszyka inflacyjnego` : ''}>
@@ -500,6 +503,6 @@ export function InflacjaFull() {
                     </div>
                 )}
             </Drawer>
-        </div>
+        </DensePageLayout>
     );
 }

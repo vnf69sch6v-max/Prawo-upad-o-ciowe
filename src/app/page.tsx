@@ -10,9 +10,12 @@ import {
 } from '@/lib/hooks';
 import { plSeries, lastOf, prevOf } from '@/lib/series';
 import { formatDecimalPL, formatNumber, formatDate, percentChange, formatDataPeriodLabel } from '@/lib/formatters';
+import { trendObservation, type Observation } from '@/lib/observations';
 import type { AccentKey } from '@/components/ui/KpiCard';
 import { CompactKpiGrid } from '@/components/ui/CompactKpiGrid';
 import { CsvExport } from '@/components/ui/CsvExport';
+import { ObservationsPanel } from '@/components/ui/ObservationsPanel';
+import { PublicationDatesPanel } from '@/components/ui/PublicationDatesPanel';
 import { LatestNews } from '@/components/ui/RelatedNews';
 import { OverviewHero } from '@/components/ui/OverviewHero';
 import { PageHeader, PageEyebrow } from '@/components/ui/PageHeader';
@@ -90,6 +93,18 @@ export default function OverviewPage() {
 
     const watchlistItems: WatchableKpi[] = useMemo(() => [...macro, ...markets], [macro, markets]);
 
+    const observations = useMemo<Observation[]>(() => {
+        const out: Observation[] = [];
+        const push = (o: Observation | null) => { if (o) out.push(o); };
+        push(trendObservation('Inflacja CPI', cpi.map((d) => d.value), true));
+        push(trendObservation('Bezrobocie', unemp.map((d) => d.value), true));
+        push(trendObservation('Sprzedaż detaliczna', retail.map((d) => d.value), false));
+        const lc = lastOf(cpi);
+        if (lc != null) out.push({ text: `Inflacja CPI ${fmt1(lc)}% wobec celu NBP 2,5% (${lc > 2.5 ? 'powyżej' : 'poniżej'} celu)`, tone: lc > 3.5 ? 'warn' : 'neutral' });
+        if (refRate) out.push({ text: `Stopa referencyjna NBP na poziomie ${formatDecimalPL(refRate.value, 2)}%`, tone: 'neutral' });
+        return out.slice(0, 6);
+    }, [cpi, unemp, retail, refRate]);
+
     const dataDate = [unemp, industrial, retail, cpi].map((s) => (s.length ? s[s.length - 1].date : '')).filter(Boolean).sort().pop() ?? '';
     const csvRows = [...macro, ...markets].map((k) => [k.label, `${k.value}${k.unit ? ' ' + k.unit : ''}`]);
 
@@ -118,6 +133,11 @@ export default function OverviewPage() {
             </div>
 
             <LatestNews limit={6} variant="overview" />
+
+            <section aria-label="Obserwacje i kalendarz" className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+                <ObservationsPanel items={observations.slice(0, 3)} variant="overview" compact />
+                <PublicationDatesPanel count={4} variant="overview" compact />
+            </section>
         </div>
     );
 }
