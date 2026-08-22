@@ -2,7 +2,6 @@
 
 import { useCallback, useMemo } from 'react';
 import { useQuery, useQueries, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
-import { COICOP_2026, buildBasket } from '@/lib/calculations/cpi-basket';
 import type { NewsResult } from '@/lib/news/types';
 import { refreshOptions } from '@/lib/query-refresh';
 
@@ -753,24 +752,6 @@ export function useGusCpiHeadline(): UseQueryResult<EurostatResult> {
         };
     }, [q.data]);
     return { ...q, data } as unknown as UseQueryResult<EurostatResult>;
-}
-
-// ─── CPI z koszyka (COICOP 2026) — dywizje z krajowego CPI GUS (DBW) ───
-
-export function useCPIBasket() {
-    const cpiQ = useCpiFull();
-    const yoyByCode: Record<string, number | null> = {};
-    for (const div of cpiQ.data?.divisions ?? []) {
-        yoyByCode[`CP${div.code.padStart(2, '0')}`] = div.yoy;
-    }
-    const headline = cpiQ.data?.headline ?? [];
-    const latest = headline.length ? headline[headline.length - 1] : null;
-    const official = latest?.yoy ?? null;
-    const dataDate = cpiQ.data?.dataDate ?? latest?.date ?? null;
-    return {
-        basket: buildBasket(COICOP_2026, yoyByCode, official, dataDate),
-        isLoading: cpiQ.isLoading,
-    };
 }
 
 // ─── SMUP (System Monitorowania Usług Publicznych) ──────
