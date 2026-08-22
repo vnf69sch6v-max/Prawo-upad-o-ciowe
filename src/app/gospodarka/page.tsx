@@ -17,10 +17,9 @@ import { Drawer } from '@/components/ui/Drawer';
 import { DataTable, type Column } from '@/components/ui/DataTable';
 import { InsightBar } from '@/components/ui/InsightBar';
 import { analyzeSeries } from '@/lib/observations';
-import { AktywnoscSection } from '@/components/sections/macro-sections';
+import { GospodarkaAktywnosc } from '@/components/sections/GospodarkaAktywnosc';
 import { RzadyGospodarka } from '@/components/sections/RzadyGospodarka';
 import { KorelacjeMakro } from '@/components/sections/KorelacjeMakro';
-import { RelatedNews } from '@/components/ui/RelatedNews';
 import { PageHeader, PageEyebrow } from '@/components/ui/PageHeader';
 
 type Tab = 'aktywnosc' | 'koniunktura' | 'finanse' | 'korelacje';
@@ -190,7 +189,7 @@ export default function GospodarkaPage() {
     const [tab, setTab] = useState<Tab>('aktywnosc');
     useInitialTab(TABS.map((t) => t.value), setTab);
     return (
-        <div className="mk-fade-in space-y-8">
+        <div className="mk-fade-in space-y-5">
             <PageHeader
                 eyebrow={<PageEyebrow section="Gospodarka" />}
                 title="Gospodarka"
@@ -198,11 +197,8 @@ export default function GospodarkaPage() {
                 actions={<Segmented value={tab} onChange={setTab} options={TABS} aria-label="Sekcja gospodarki" />}
             />
 
-            {/* Newsy powiązane — nad danymi, nie na dole strony (zlecenie właściciela). */}
-            <RelatedNews topic="gospodarka" />
-
             <div key={tab} className="mk-fade-in">
-                {tab === 'aktywnosc' && <AktywnoscSection />}
+                {tab === 'aktywnosc' && <GospodarkaAktywnosc />}
                 {tab === 'koniunktura' && <KoniunkturaSection />}
                 {tab === 'finanse' && <FinansePubliczne />}
                 {tab === 'korelacje' && <KorelacjeMakro />}
