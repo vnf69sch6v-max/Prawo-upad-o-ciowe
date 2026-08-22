@@ -17,7 +17,7 @@ export type RefreshPolicy =
     | 'gusDbw'
     | 'smupCatalog'
     | 'smupData'
-    | 'regionalEu';
+    | 'regionalGus';
 
 /** Plain shape — bez UseQueryOptions / Query, żeby spread nie psuł inferencji generyków. */
 export type RefreshPartial = {
@@ -84,7 +84,7 @@ const POLICIES: Record<RefreshPolicy, RefreshPartial> = {
         staleTime: DAY,
         refetchInterval: DAY,
     },
-    regionalEu: {
+    regionalGus: {
         staleTime: 7 * DAY,
         refetchInterval: 7 * DAY,
     },

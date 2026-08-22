@@ -41,7 +41,6 @@ const COMMANDS: Cmd[] = [
     { id: 'ind-stopy', group: 'Wskaźniki', label: 'Stopy procentowe i WIBOR', sub: 'Rynki', keywords: 'stopa referencyjna nbp rpp wibor', href: '/rynki?tab=stopy', icon: Percent },
     { id: 'ind-spolki', group: 'Wskaźniki', label: 'Spółki WIG20', sub: 'Rynki', keywords: 'spółki akcje wig20 orlen pko kghm pzu allegro dino cd projekt notowania kurs', href: '/rynki?tab=spolki', icon: LineChart },
     { id: 'ind-gpw', group: 'Wskaźniki', label: 'Indeksy GPW / surowce', sub: 'Rynki', keywords: 'giełda wig20 wig mwig40 swig80 indeks złoto surowce brent miedź', href: '/rynki?tab=gpw', icon: LineChart },
-    { id: 'ind-handel', group: 'Wskaźniki', label: 'Handel zagraniczny', sub: 'Rynki', keywords: 'eksport import bilans handel', href: '/rynki?tab=handel', icon: TrendingUp },
     { id: 'ind-regpkb', group: 'Wskaźniki', label: 'PKB regionalne', sub: 'Regiony', keywords: 'województwa pkb per capita mapa', href: '/regiony?tab=pkb', icon: Map },
     { id: 'ind-demo', group: 'Wskaźniki', label: 'Demografia', sub: 'Regiony', keywords: 'ludność demografia województwa', href: '/regiony?tab=demografia', icon: Users },
     { id: 'ind-regpraca', group: 'Wskaźniki', label: 'Bezrobocie i płace wg województw', sub: 'Regiony', keywords: 'bezrobocie regionalne województwa mapa płace wynagrodzenia', href: '/regiony?tab=praca', icon: Briefcase },

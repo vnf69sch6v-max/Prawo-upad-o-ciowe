@@ -26,7 +26,9 @@ export function DbwPriceSection({ title, subtitle, config, series, unit = '%', r
 
     return (
         <div className="space-y-6">
-            <div className={`grid grid-cols-1 gap-4 sm:grid-cols-2 ${series.length >= 3 ? 'lg:grid-cols-4' : 'lg:grid-cols-2'}`}>
+            <section>
+                <h2 className="mk-section-label mb-3">Ostatnie odczyty</h2>
+                <div className={`grid grid-cols-1 gap-4 sm:grid-cols-2 ${series.length >= 3 ? 'lg:grid-cols-4' : 'lg:grid-cols-2'}`}>
                 {series.map((s) => {
                     // Ostatnia DOSTĘPNA wartość tej serii (serie mogą kończyć się w różnych okresach —
                     // np. GUS publikuje „bydło" później niż pszenicę → nie pokazuj „—", tylko ostatni odczyt z jego datą).
@@ -43,8 +45,9 @@ export function DbwPriceSection({ title, subtitle, config, series, unit = '%', r
                             footnote={last ? `GUS · ${last.date}` : 'GUS'} loading={q.isLoading} />
                     );
                 })}
-            </div>
-            <SectionCard title={title} subtitle={subtitle}
+                </div>
+            </section>
+            <SectionCard editorial titleVariant="label" title={title} subtitle={subtitle}
                 actions={<CsvExport filename={csvName} headers={['Okres', ...series.map((s) => s.name)]} rows={data.map((r) => [r.date as string, ...series.map((s) => r[String(s.poz)] as number)])} />}>
                 {q.isLoading ? <div className="mk-skeleton h-[300px] w-full" /> : data.length === 0 ? (
                     <p className="py-10 text-center text-sm text-mk-faint">Brak danych dla wybranego okresu.</p>
@@ -55,7 +58,7 @@ export function DbwPriceSection({ title, subtitle, config, series, unit = '%', r
                         series={series.map((s) => ({ key: String(s.poz), name: s.name, color: s.color, type: series.length > 1 ? ('line' as const) : ('area' as const) }))} />
                 )}
             </SectionCard>
-            {note && <div className="rounded-xl bg-mk-surface-alt p-4 text-sm text-mk-text-soft">{note}</div>}
+            {note && <div className="mk-card mk-card-editorial mk-card-pad text-sm text-mk-text-soft">{note}</div>}
         </div>
     );
 }

@@ -1,7 +1,7 @@
 // CPI z koszyka inflacyjnego GUS — rekonstrukcja headline CPI z 12 dywizji COICOP.
 // Nowcast = Σ (waga_i × YoY_i). Wagi aktualizowane przez GUS co luty (struktura
 // wydatków gosp. domowych z roku poprzedniego). Poniżej przybliżenie 2026 (COICOP 2018).
-// Wartości YoY komponentów pobierane na żywo z Eurostat HICP (prc_hicp_manr, per COICOP).
+// Wartości YoY komponentów pobierane z krajowego CPI GUS (useCpiFull / DBW COICOP).
 
 export interface BasketDivision {
     code: string;      // CP01..CP12
