@@ -16,7 +16,7 @@ import { ObservationsPanel } from '@/components/ui/ObservationsPanel';
 import { PublicationDatesPanel } from '@/components/ui/PublicationDatesPanel';
 import { LatestNews } from '@/components/ui/RelatedNews';
 import { OverviewHero } from '@/components/ui/OverviewHero';
-import { PageHeader } from '@/components/ui/PageHeader';
+import { PageHeader, PageEyebrow } from '@/components/ui/PageHeader';
 import { WatchlistStrip, type WatchableKpi } from '@/components/ui/WatchlistStrip';
 
 // ── data helpers ────────────────────────────────────────────
@@ -111,11 +111,7 @@ export default function OverviewPage() {
     return (
         <div className="mk-fade-in space-y-8">
             <PageHeader
-                eyebrow={
-                    <>
-                        Polska <span className="mx-1.5 text-mk-border-strong">•</span> Dane makro
-                    </>
-                }
+                eyebrow={<PageEyebrow section="Dane makro" />}
                 title="Przegląd"
                 subtitle={
                     <>

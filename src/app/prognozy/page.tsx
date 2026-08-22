@@ -18,6 +18,7 @@ import { Segmented } from '@/components/ui/Segmented';
 import { CsvExport } from '@/components/ui/CsvExport';
 import { StaleBadge } from '@/components/ui/StaleBadge';
 import { AXIS_INK } from '@/lib/chart-theme';
+import { PageHeader, PageEyebrow } from '@/components/ui/PageHeader';
 
 type Section = 'inflacja' | 'pkb' | 'taylor' | 'symulatory';
 
@@ -63,12 +64,12 @@ function InflacjaNowcast() {
                     accent={pelnePokrycie ? 'blue' : 'amber'} icon={Sparkles}
                     footnote={nowcastFootnote} loading={isLoading} />
                 <KpiCard label="Oficjalny CPI (CP00)" value={fmtPL(basket.official)} unit="%" accent="amber" icon={Target}
-                    footnote={basket.dataDate ? `Eurostat · ${basket.dataDate}` : 'Eurostat'} loading={isLoading} />
+                    footnote={basket.dataDate ? `Eurostat · ${basket.dataDate}` : 'Eurostat'} loading={isLoading} watchId="cpi" />
                 <KpiCard label="Pokrycie koszyka" value={fmtPL(basket.coverage, 0)} unit="%" accent={pelnePokrycie ? 'green' : 'amber'} icon={Scale}
                     footnote={pelnePokrycie ? 'wszystkie dywizje z danymi' : `brak ${brakujace.length} z ${basket.items.length} dywizji`} loading={isLoading} />
             </div>
 
-            <SectionCard
+            <SectionCard editorial titleVariant="label"
                 title="Dekompozycja inflacji wg koszyka (COICOP)"
                 subtitle="Wkład każdej dywizji do headline CPI: waga × dynamika roczna"
                 actions={<div className="flex items-center gap-2"><StaleBadge date={basket.dataDate} label="HICP do" /><CsvExport filename="cpi-koszyk" headers={['Dywizja', 'Waga %', 'YoY %', 'Wkład pp']} rows={basket.items.map((i) => [i.name, i.weight, i.yoy, i.contribution])} /></div>}
@@ -141,12 +142,12 @@ function TaylorSection() {
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <KpiCard label="Stopa wg reguły Taylora" value={t ? fmtPL(t.optimalRate, 2) : '—'} unit="%" accent="violet" icon={Scale}
                     footnote="i = π + r* + α(π−π*) + β(y−y*)" loading={loading} />
-                <KpiCard label="Stopa referencyjna NBP" value={fmtPL(ref, 2)} unit="%" accent="blue" icon={Target} footnote="stan bieżący" loading={loading} />
+                <KpiCard label="Stopa referencyjna NBP" value={fmtPL(ref, 2)} unit="%" accent="blue" icon={Target} footnote="stan bieżący" loading={loading} watchId="ref-rate" />
                 <KpiCard label="Luka polityki pieniężnej" value={gap != null ? `${gap > 0 ? '+' : ''}${formatDecimalPL(gap, 2)}` : '—'} unit="pp" accent={gap != null && gap >= 0 ? 'green' : 'rose'} icon={TrendingUp}
                     footnote="NBP − Taylor" loading={loading} />
             </div>
 
-            <SectionCard title="Reguła Taylora — dekompozycja" subtitle={`Parametry: r*=${DEFAULT_TAYLOR.rStar}% · π*=${DEFAULT_TAYLOR.piTarget}% · y*=${DEFAULT_TAYLOR.potentialGDP}%`}>
+            <SectionCard editorial titleVariant="label" title="Reguła Taylora — dekompozycja" subtitle={`Parametry: r*=${DEFAULT_TAYLOR.rStar}% · π*=${DEFAULT_TAYLOR.piTarget}% · y*=${DEFAULT_TAYLOR.potentialGDP}%`}>
                 {t == null ? <div className="mk-skeleton h-[160px] w-full" /> : (
                     <div className="space-y-4">
                         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
@@ -199,7 +200,7 @@ function PkbNowcast() {
             </div>
 
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                <SectionCard title="PMI przemysłowy — historia" subtitle="S&P Global · próg 50 = neutralny"
+                <SectionCard editorial titleVariant="label" title="PMI przemysłowy — historia" subtitle="S&P Global · próg 50 = neutralny"
                     actions={<div className="flex items-center gap-2"><StaleBadge date={pmiLast?.date} label="PMI" /><CsvExport filename="pmi" headers={['Data', 'PMI']} rows={pmiChart.map((r) => [r.date, r.pmi])} /></div>}>
                     <InteractiveChart data={pmiChart} xKey="date" height={280} showRange initialRange="1R"
                         valueFormatter={(v) => formatDecimalPL(v, 0)} xTickFormatter={monthTick}
@@ -208,7 +209,7 @@ function PkbNowcast() {
                     <p className="mt-3 text-xs text-mk-faint">PMI aktualizowany ręcznie z komunikatów S&amp;P Global (brak darmowego API; ostatnia weryfikacja VII.2026). Żywą koniunkturę GUS znajdziesz w zakładce Gospodarka.</p>
                 </SectionCard>
 
-                <SectionCard title="Scenariusze PMI → PKB" subtitle="model pomostowy (bridge equation)">
+                <SectionCard editorial titleVariant="label" title="Scenariusze PMI → PKB" subtitle="model pomostowy (bridge equation)">
                     <table className="mk-table">
                         <thead><tr><th>PMI</th><th className="text-right">Szac. PKB</th><th style={{ width: '55%' }}>Skala</th></tr></thead>
                         <tbody>
@@ -261,7 +262,7 @@ function Symulatory() {
 
     return (
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-            <SectionCard title="Symulator raty kredytu" subtitle="żywy WIBOR z NBP + marża banku">
+            <SectionCard editorial titleVariant="label" title="Symulator raty kredytu" subtitle="żywy WIBOR z NBP + marża banku">
                 <div className="space-y-5">
                     <Slider label="Kwota kredytu" value={principal} min={100000} max={1500000} step={10000} onChange={setPrincipal} display={formatPLN(principal)} />
                     <Slider label="Okres" value={years} min={5} max={35} step={1} onChange={setYears} display={`${years} lat`} />
@@ -273,7 +274,7 @@ function Symulatory() {
                 </div>
             </SectionCard>
 
-            <SectionCard title="Wynik">
+            <SectionCard editorial titleVariant="label" title="Wynik">
                 <div className="rounded-xl bg-mk-primary-soft p-5 text-center">
                     <div className="mk-label">Rata miesięczna</div>
                     <div className="mt-1 text-4xl font-extrabold tnum text-mk-primary">{payment != null ? formatPLN(payment) : '—'}</div>
@@ -322,14 +323,13 @@ export default function PrognozyPage() {
     const [section, setSection] = useState<Section>('inflacja');
     useInitialTab(SECTIONS.map((s) => s.value), setSection);
     return (
-        <div className="mk-fade-in space-y-6">
-            <div className="flex flex-wrap items-end justify-between gap-4">
-                <div>
-                    <h1 className="text-3xl font-extrabold tracking-tight text-mk-text">Prognozy</h1>
-                    <p className="mt-1 text-sm text-mk-muted">Nowcast inflacji z koszyka oraz modele polityki pieniężnej</p>
-                </div>
-                <Segmented value={section} onChange={setSection} options={SECTIONS} aria-label="Sekcja" />
-            </div>
+        <div className="mk-fade-in space-y-8">
+            <PageHeader
+                eyebrow={<PageEyebrow section="Prognozy" />}
+                title="Prognozy"
+                subtitle="Nowcast inflacji z koszyka oraz modele polityki pieniężnej"
+                actions={<Segmented value={section} onChange={setSection} options={SECTIONS} aria-label="Sekcja" />}
+            />
 
             <div key={section} className="mk-fade-in">
                 {section === 'inflacja' && <InflacjaNowcast />}

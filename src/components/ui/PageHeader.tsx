@@ -1,5 +1,14 @@
 import type { ReactNode } from 'react';
 
+/** Breadcrumb „Polska • {sekcja}" — uppercase przez `.mk-page-eyebrow`. */
+export function PageEyebrow({ section }: { section: string }) {
+    return (
+        <>
+            Polska <span className="mx-1.5 text-mk-border-strong">•</span> {section}
+        </>
+    );
+}
+
 interface PageHeaderProps {
     /** Breadcrumb / eyebrow nad tytułem, np. „Polska • Dane makro". */
     eyebrow?: ReactNode;

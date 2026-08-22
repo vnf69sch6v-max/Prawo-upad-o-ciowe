@@ -19,8 +19,9 @@ import { SectionCard } from '@/components/ui/SectionCard';
 import { Segmented } from '@/components/ui/Segmented';
 import { CsvExport } from '@/components/ui/CsvExport';
 import { DataTable, type Column } from '@/components/ui/DataTable';
-import { StopySection } from '@/components/sections/macro-sections';
+import { RynkiStopySection } from '@/components/sections/RynkiStopySection';
 import { RelatedNews } from '@/components/ui/RelatedNews';
+import { PageHeader, PageEyebrow } from '@/components/ui/PageHeader';
 
 type Section = 'kursy' | 'stopy' | 'gpw' | 'handel';
 type Hist = { mid?: number; effectiveDate?: string }[];
@@ -64,9 +65,9 @@ function KursySection() {
     const goldLast = gold.length ? gold[gold.length - 1].value : null;
     const goldDelta = gold.length > 1 ? +percentChange(gold[gold.length - 1].value, gold[gold.length - 2].value).toFixed(2) : null;
 
-    const kpis: { label: string; code: string; hist: Hist | undefined; accent: AccentKey; icon: typeof Euro }[] = [
-        { label: 'EUR / PLN', code: 'EUR', hist: eurH.data as Hist, accent: 'blue', icon: Euro },
-        { label: 'USD / PLN', code: 'USD', hist: usdH.data as Hist, accent: 'green', icon: DollarSign },
+    const kpis: { label: string; code: string; hist: Hist | undefined; accent: AccentKey; icon: typeof Euro; watchId?: string }[] = [
+        { label: 'EUR / PLN', code: 'EUR', hist: eurH.data as Hist, accent: 'blue', icon: Euro, watchId: 'eur-pln' },
+        { label: 'USD / PLN', code: 'USD', hist: usdH.data as Hist, accent: 'green', icon: DollarSign, watchId: 'usd-pln' },
         { label: 'CHF / PLN', code: 'CHF', hist: chfH.data as Hist, accent: 'rose', icon: Coins },
         { label: 'GBP / PLN', code: 'GBP', hist: gbpH.data as Hist, accent: 'violet', icon: PoundSterling },
     ];
@@ -104,14 +105,14 @@ function KursySection() {
                 {kpis.map((k) => (
                     <KpiCard key={k.code} label={k.label} value={mid(k.code) != null ? formatDecimalPL(mid(k.code)!, 3) : '—'} unit="zł" accent={k.accent} icon={k.icon}
                         delta={histDelta(k.hist) != null ? { value: histDelta(k.hist)!, unit: 'pct', invert: true } : undefined}
-                        footnote={table?.effectiveDate ? `NBP ${formatDate(table.effectiveDate)}` : 'NBP tab. A'} loading={tableQ.isLoading} />
+                        footnote={table?.effectiveDate ? `NBP ${formatDate(table.effectiveDate)}` : 'NBP tab. A'} loading={tableQ.isLoading} watchId={k.watchId} />
                 ))}
             </div>
 
             {fxInsights.length > 0 && <InsightBar items={fxInsights} />}
 
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-                <SectionCard className="lg:col-span-2" title="Kursy walut — historia 90 dni" subtitle="NBP · EUR / USD / CHF / GBP"
+                <SectionCard editorial titleVariant="label" className="lg:col-span-2" title="Kursy walut — historia 90 dni" subtitle="NBP · EUR / USD / CHF / GBP"
                     actions={<CsvExport filename="kursy-walut" headers={['Data', 'EUR', 'USD', 'CHF', 'GBP']} rows={chart.map((r) => [r.date, r.EUR, r.USD, r.CHF, r.GBP])} />}>
                     {chart.length === 0 ? <div className="mk-skeleton h-[320px] w-full" /> : (
                         <InteractiveChart data={chart} xKey="date" height={320} unit=" zł" legend showRange initialRange="3M"
@@ -124,7 +125,7 @@ function KursySection() {
                             ]} />
                     )}
                 </SectionCard>
-                <SectionCard title="Złoto (NBP)" subtitle="cena 1 g w PLN">
+                <SectionCard editorial titleVariant="label" title="Złoto (NBP)" subtitle="cena 1 g w PLN">
                     <div className="mb-3">
                         <div className="mk-kpi-value" style={{ fontSize: '2rem' }}>{goldLast != null ? formatDecimalPL(goldLast, 2) : '—'}<span className="ml-1 text-lg text-mk-muted">zł/g</span></div>
                         {goldDelta != null && <div className="mt-1 text-sm text-mk-muted">dzień: {goldDelta > 0 ? '+' : ''}{formatDecimalPL(goldDelta, 2)}%</div>}
@@ -136,7 +137,7 @@ function KursySection() {
                 </SectionCard>
             </div>
 
-            <SectionCard title="Tabela kursów NBP (tab. A)" subtitle={table?.effectiveDate ? `stan na ${formatDate(table.effectiveDate)}` : 'NBP'}
+            <SectionCard editorial titleVariant="label" title="Tabela kursów NBP (tab. A)" subtitle={table?.effectiveDate ? `stan na ${formatDate(table.effectiveDate)}` : 'NBP'}
                 actions={<CsvExport filename="tabela-kursow" headers={['Waluta', 'Kod', 'Kurs PLN']} rows={rates.map((r) => [r.currency, r.code, r.mid])} />}>
                 <div className="max-h-[360px] overflow-auto">
                     <DataTable columns={cols} rows={rates} initialSort="code" initialDir="asc" rowKey={(r) => r.code} />
@@ -245,12 +246,13 @@ function GpwSection() {
                     return (
                         <KpiCard key={ix.label} label={ix.label} value={last != null ? formatNumber(Math.round(last)) : '—'} unit="pkt" accent={ix.accent} icon={BarChart3}
                             delta={pctDelta(bars) != null ? { value: pctDelta(bars)!, unit: 'pct' } : undefined}
-                            footnote={bars.length > 2 ? 'GPW · notowania' : 'GPW · poziom bieżący'} loading={ix.q.isLoading} />
+                            footnote={bars.length > 2 ? 'GPW · notowania' : 'GPW · poziom bieżący'} loading={ix.q.isLoading}
+                            watchId={ix.label === 'WIG20' ? 'wig20' : undefined} />
                     );
                 })}
             </div>
 
-            <SectionCard title="WIG20 — 60 sesji" subtitle="poziom indeksu · seria z ETF WIG20TR skalowana do poziomu indeksu (Yahoo)"
+            <SectionCard editorial titleVariant="label" title="WIG20 — 60 sesji" subtitle="poziom indeksu · seria z ETF WIG20TR skalowana do poziomu indeksu (Yahoo)"
                 actions={<CsvExport filename="wig20" headers={['Data', 'Zamknięcie']} rows={wig20Chart.map((r) => [r.date, r.value])} />}>
                 {wig20Chart.length < 2 ? <div className="mk-skeleton h-[280px] w-full" /> : (
                     <InteractiveChart data={wig20Chart} xKey="date" height={280} showRange initialRange="ALL"
@@ -259,7 +261,7 @@ function GpwSection() {
                 )}
             </SectionCard>
 
-            <SectionCard title="Indeksy GPW — dynamika (rebazowane do 100)"
+            <SectionCard editorial titleVariant="label" title="Indeksy GPW — dynamika (rebazowane do 100)"
                 subtitle="porównanie zmian %: WIG20, mWIG40, sWIG80 · serie z ETF-ów replikujących (Yahoo)"
                 actions={<CsvExport filename="indeksy-gpw" headers={['Data', 'WIG20', 'mWIG40', 'sWIG80']} rows={indexChart.map((r) => [r.date, r.wig20, r.mwig40, r.swig80])} />}>
                 {indexChart.length < 2 ? <div className="mk-skeleton h-[320px] w-full" /> : (
@@ -273,7 +275,7 @@ function GpwSection() {
                 )}
             </SectionCard>
 
-            <SectionCard title="Spółki WIG20" subtitle={`kurs i zmiana dzienna · Yahoo Finance (GPW)${spolki.data ? ` · ${spolki.data.ok}/${spolki.data.count} spółek` : ''}`}
+            <SectionCard editorial titleVariant="label" title="Spółki WIG20" subtitle={`kurs i zmiana dzienna · Yahoo Finance (GPW)${spolki.data ? ` · ${spolki.data.ok}/${spolki.data.count} spółek` : ''}`}
                 actions={<CsvExport filename="spolki-wig20" headers={['Ticker', 'Spółka', 'Kurs', 'Zmiana %']} rows={(spolki.data?.items ?? []).map((s) => [s.ticker, s.name, s.price, s.changePct])} />}>
                 {spolki.isLoading ? <div className="mk-skeleton h-[420px] w-full" /> : (
                     <DataTable columns={spolkiCols} rows={spolki.data?.items ?? []} initialSort="changePct" rowKey={(r) => r.ticker} maxHeight={420} onRowClick={(r) => router.push(`/spolki/${r.ticker}`)} />
@@ -282,7 +284,8 @@ function GpwSection() {
 
             {/* Surowce */}
             <div>
-                <h3 className="mk-section-title mb-3">Surowce <span className="text-sm font-normal text-mk-muted">— notowania światowe, także czynniki inflacji (Yahoo Finance)</span></h3>
+                <h3 className="mk-section-label mb-3">Surowce</h3>
+                <p className="-mt-2 mb-3 text-sm text-mk-muted">Notowania światowe, także czynniki inflacji (Yahoo Finance)</p>
                 <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
                     {commods.map((c) => {
                         const bars = barsOf(c.q);
@@ -296,7 +299,7 @@ function GpwSection() {
                 </div>
             </div>
 
-            <SectionCard title="Surowce — dynamika (rebazowane do 100)" subtitle="porównanie zmian %: ropa Brent/WTI, złoto, miedź, gaz ziemny"
+            <SectionCard editorial titleVariant="label" title="Surowce — dynamika (rebazowane do 100)" subtitle="porównanie zmian %: ropa Brent/WTI, złoto, miedź, gaz ziemny"
                 actions={<CsvExport filename="surowce" headers={['Data', 'Brent', 'WTI', 'Złoto', 'Miedź', 'Gaz']} rows={commodChart.map((r) => [r.date, r.brent, r.wti, r.gold, r.copper, r.gas])} />}>
                 {commodChart.length < 2 ? <div className="mk-skeleton h-[320px] w-full" /> : (
                     <InteractiveChart data={commodChart} xKey="date" height={320} legend showRange initialRange="3M"
@@ -345,7 +348,7 @@ function HandelSection() {
             </div>
 
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                <SectionCard title="Eksport vs import" subtitle="Eurostat BoP · mln EUR"
+                <SectionCard editorial titleVariant="label" title="Eksport vs import" subtitle="Eurostat BoP · mln EUR"
                     actions={<CsvExport filename="handel" headers={['Data', 'Eksport', 'Import', 'Saldo']} rows={trade.map((r) => [r.date, r.eksport, r.import, r.saldo])} />}>
                     {trade.length === 0 ? <div className="mk-skeleton h-[280px] w-full" /> : (
                         <InteractiveChart data={trade} xKey="date" height={280} unit=" mln €" legend showRange initialRange="1R"
@@ -356,7 +359,7 @@ function HandelSection() {
                             ]} />
                     )}
                 </SectionCard>
-                <SectionCard title="Saldo handlowe" subtitle="eksport − import · mln EUR">
+                <SectionCard editorial titleVariant="label" title="Saldo handlowe" subtitle="eksport − import · mln EUR">
                     {trade.length === 0 ? <div className="mk-skeleton h-[280px] w-full" /> : (
                         <InteractiveChart data={trade.filter((r) => r.saldo != null)} xKey="date" height={280} unit=" mln €" showRange initialRange="1R"
                             valueFormatter={(v) => formatNumber(v, 0)} xTickFormatter={monthTick}
@@ -380,21 +383,20 @@ export default function RynkiPage() {
     const [section, setSection] = useState<Section>('kursy');
     useInitialTab(SECTIONS.map((s) => s.value), setSection);
     return (
-        <div className="mk-fade-in space-y-6">
-            <div className="flex flex-wrap items-end justify-between gap-4">
-                <div>
-                    <h1 className="text-3xl font-extrabold tracking-tight text-mk-text">Rynki</h1>
-                    <p className="mt-1 text-sm text-mk-muted">Kursy walut, złoto, GPW i handel zagraniczny</p>
-                </div>
-                <Segmented value={section} onChange={setSection} options={SECTIONS} aria-label="Sekcja" />
-            </div>
+        <div className="mk-fade-in space-y-8">
+            <PageHeader
+                eyebrow={<PageEyebrow section="Rynki" />}
+                title="Rynki"
+                subtitle="Kursy walut, złoto, GPW i handel zagraniczny"
+                actions={<Segmented value={section} onChange={setSection} options={SECTIONS} aria-label="Sekcja" />}
+            />
 
             {/* Newsy powiązane — nad danymi, nie na dole strony (zlecenie właściciela). */}
             <RelatedNews topic="rynki" />
 
             <div key={section} className="mk-fade-in">
                 {section === 'kursy' && <KursySection />}
-                {section === 'stopy' && <StopySection />}
+                {section === 'stopy' && <RynkiStopySection />}
                 {section === 'gpw' && <GpwSection />}
                 {section === 'handel' && <HandelSection />}
             </div>
