@@ -35,6 +35,8 @@ export default function CenyPage() {
             {tab === 'ppi' && <PpiFull />}
             {tab === 'nieruchomosci' && (
                 <DbwPriceSection title="Ceny mieszkań — indeks (r/r)" subtitle="GUS · kwartalnie (%)" csvName="ceny-nieruchomosci" refline={0}
+                    heroTitle="Ceny mieszkań" heroPoz={4801796}
+                    heroText="Wskaźnik cen nieruchomości mieszkaniowych GUS — dynamika r/r dla rynku pierwotnego i wtórnego."
                     config={{ var: 310, przekroj: 484, poz: [4801795, 4801796], freq: 'q' }}
                     series={[
                         { poz: 4801795, name: 'Rynek pierwotny', color: '#16A34A', accent: 'green', icon: Home },
@@ -44,11 +46,15 @@ export default function CenyPage() {
             )}
             {tab === 'budowlane' && (
                 <DbwPriceSection title="Ceny robót budowlano-montażowych" subtitle="GUS · r/r (%)" csvName="ceny-budowlane" refline={0}
+                    heroTitle="Ceny robót budowlano-montażowych" heroPoz={6661787}
+                    heroText="Dynamika cen robót budowlano-montażowych publikowana przez GUS (r/r)."
                     config={{ var: 312, przekroj: 93, poz: [6661787] }}
                     series={[{ poz: 6661787, name: 'Budownictwo (r/r)', color: '#0891B2', accent: 'cyan', icon: HardHat }]} />
             )}
             {tab === 'rolne' && (
                 <DbwPriceSection title="Ceny skupu produktów rolnych (r/r)" subtitle="GUS · r/r (%)" csvName="ceny-rolne" refline={0}
+                    heroTitle="Ceny skupu produktów rolnych" heroPoz={7124724}
+                    heroText="Dynamika cen skupu podstawowych produktów rolnych (GUS, r/r) — żywiec i zboża."
                     config={{ var: 324, przekroj: 775, poz: [7124703, 7124713, 7124724, 7189791, 7121981] }}
                     series={[
                         { poz: 7124703, name: 'Pszenica', color: '#D97706', accent: 'amber', icon: Wheat },

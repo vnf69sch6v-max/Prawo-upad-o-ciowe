@@ -5,7 +5,6 @@ import { Factory, Activity, ChevronRight, Info, Pickaxe, Zap, Droplets, Percent 
 import { usePpiFull, useCpiFull, useGusPpiHeadline, type PpiSection, type PpiHistPoint } from '@/lib/hooks';
 import { analyzeSeries, type Observation } from '@/lib/observations';
 import { formatDecimalPL, formatDataPeriodLabel } from '@/lib/formatters';
-import { DenseHero } from '@/components/ui/DenseDashboard';
 import { CompactKpiGrid, type CompactKpiItem } from '@/components/ui/CompactKpiGrid';
 import { DensePageLayout, DenseTwoCol } from '@/components/ui/DensePageLayout';
 import { InteractiveChart } from '@/components/ui/InteractiveChart';
@@ -139,8 +138,17 @@ export function PpiFull() {
 
     const cpiHeadline = useMemo(() => cpiQ.data?.headline ?? [], [cpiQ.data]);
     const cpiLatest = cpiHeadline.length ? cpiHeadline[cpiHeadline.length - 1] : null;
-    const cpiPrev = cpiHeadline.length > 1 ? cpiHeadline[cpiHeadline.length - 2] : null;
     const hotSec = useMemo(() => [...sections].filter((s) => s.yoy != null).sort((a, b) => (b.yoy ?? 0) - (a.yoy ?? 0))[0] ?? null, [sections]);
+
+    // ── Hero „redakcyjny" (styl makiety v3) — WYŁĄCZNIE realne dane GUS ──
+    const ppiYoY = latest?.yoy ?? null;
+    const ppiDelta = ppiYoY != null && prev?.yoy != null ? +(ppiYoY - prev.yoy).toFixed(1) : null;
+    const ppiHeadline = ppiYoY == null ? 'Ceny producenta (PPI)'
+        : ppiYoY > 0.1 ? 'Ceny producenta rosną r/r'
+        : ppiYoY < -0.1 ? 'Ceny producenta w deflacji'
+        : 'Ceny producenta blisko zera';
+    const ppiPeriod = dataDate ? formatDataPeriodLabel(dataDate).replace(/^dane za\s+/, '') : null;
+    const ppiCpiSpread = ppiYoY != null && cpiLatest?.yoy != null ? +(ppiYoY - cpiLatest.yoy).toFixed(1) : null;
 
     const compactKpis: CompactKpiItem[] = [
         { key: 'ppi-mm', label: 'PPI m/m', value: latest?.mom != null ? formatDecimalPL(latest.mom, 1) : '—', unit: '%', icon: Activity, footnote: 'miesiąc do miesiąca', loading: isLoading },
@@ -166,34 +174,38 @@ export function PpiFull() {
 
     return (
         <DensePageLayout>
-            <DenseHero
-                ariaLabel="PPI — kluczowe wskaźniki GUS"
-                slots={[
-                    {
-                        label: 'PPI ogółem (r/r)',
-                        value: latest?.yoy != null ? `${formatDecimalPL(latest.yoy, 1)}%` : '—',
-                        delta: latest?.yoy != null && prev?.yoy != null ? +(latest.yoy - prev.yoy).toFixed(1) : null,
-                        text: 'Ceny produkcji sprzedanej przemysłu — GUS DBW.',
-                        footnote: dataDate ? `GUS · ${formatDataPeriodLabel(dataDate)}` : 'GUS DBW',
-                        loading: isLoading,
-                    },
-                    {
-                        label: 'CPI ogółem (r/r)',
-                        value: cpiLatest?.yoy != null ? `${formatDecimalPL(cpiLatest.yoy, 1)}%` : '—',
-                        delta: cpiLatest?.yoy != null && cpiPrev?.yoy != null ? +(cpiLatest.yoy - cpiPrev.yoy).toFixed(1) : null,
-                        text: 'Ceny konsumenckie — zestawienie PPI → CPI (GUS).',
-                        footnote: cpiQ.data?.dataDate ? `GUS · ${formatDataPeriodLabel(cpiQ.data.dataDate)}` : 'GUS DBW',
-                        loading: cpiQ.isLoading,
-                    },
-                    {
-                        label: hotSec ? `Najszybciej: ${hotSec.code}` : 'Sekcja PKD',
-                        value: hotSec?.yoy != null ? `${formatDecimalPL(hotSec.yoy, 1)}%` : '—',
-                        text: hotSec ? hotSec.name : 'Najszybciej rosnąca sekcja przemysłu.',
-                        footnote: 'PPI · sekcja PKD',
-                        loading: isLoading,
-                    },
-                ]}
-            />
+            <section className="overflow-hidden rounded-[14px] bg-mk-brand p-6 text-white" aria-label="PPI — najważniejszy odczyt">
+                <div className="grid gap-6 md:grid-cols-[1.6fr_1fr]">
+                    <div>
+                        <div className="flex flex-wrap items-center gap-2">
+                            {ppiPeriod && <span className="inline-flex items-center rounded-full bg-white px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-mk-brand-strong tnum">{ppiPeriod}</span>}
+                            <span className="text-xs font-semibold text-white/70">GUS · ceny producenta</span>
+                        </div>
+                        <h2 className="mt-3.5 max-w-[24ch] text-[26px] font-extrabold leading-tight tracking-tight">{ppiHeadline}</h2>
+                        <p className="mt-2 max-w-[56ch] text-[15px] leading-relaxed text-white/90">
+                            PPI wynosi {ppiYoY != null ? formatDecimalPL(ppiYoY, 1) : '—'}% r/r. Ceny u producenta wyprzedzają CPI o około dwa kwartały.
+                            {hotSec?.yoy != null && ` Najszybciej drożeje ${hotSec.name.toLowerCase()} (${hotSec.yoy > 0 ? '+' : ''}${formatDecimalPL(hotSec.yoy, 1)}%).`}
+                        </p>
+                        <div className="mt-5 flex items-baseline gap-4">
+                            <span className="text-[56px] font-extrabold leading-none tracking-tight tnum">{ppiYoY != null ? formatDecimalPL(ppiYoY, 1) : '—'}<span className="ml-1 text-2xl font-semibold text-white/70">%</span></span>
+                            {ppiDelta != null && (
+                                <span className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-[13px] font-bold text-mk-brand-strong tnum">
+                                    {ppiDelta > 0 ? '↑ +' : ppiDelta < 0 ? '↓ ' : '→ '}{formatDecimalPL(ppiDelta, 1)} p.p.
+                                </span>
+                            )}
+                        </div>
+                    </div>
+                    <div className="md:border-l md:border-white/25 md:pl-6">
+                        <div className="text-[11px] font-bold uppercase tracking-wide text-white/70">PPI kontra CPI</div>
+                        <div className="mt-4 space-y-2 text-[13px] tnum">
+                            <div className="flex justify-between gap-2"><span className="text-white/80">PPI r/r</span><strong>{ppiYoY != null ? `${ppiYoY > 0 ? '+' : ''}${formatDecimalPL(ppiYoY, 1)}%` : '—'}</strong></div>
+                            <div className="flex justify-between gap-2"><span className="text-white/80">CPI r/r</span><strong>{cpiLatest?.yoy != null ? `${cpiLatest.yoy > 0 ? '+' : ''}${formatDecimalPL(cpiLatest.yoy, 1)}%` : '—'}</strong></div>
+                            <div className="flex justify-between gap-2 border-t border-white/25 pt-2"><span className="text-white/80">Rozstęp PPI − CPI</span><strong>{ppiCpiSpread != null ? `${ppiCpiSpread > 0 ? '+' : ''}${formatDecimalPL(ppiCpiSpread, 1)} p.p.` : '—'}</strong></div>
+                            <div className="flex justify-between gap-2"><span className="text-white/80">PPI m/m</span><strong>{latest?.mom != null ? `${latest.mom > 0 ? '+' : ''}${formatDecimalPL(latest.mom, 1)}%` : '—'}</strong></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
 
             <CompactKpiGrid items={compactKpis} label="Wskaźniki uzupełniające" dense />
 
