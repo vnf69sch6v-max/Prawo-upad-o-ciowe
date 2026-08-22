@@ -117,6 +117,11 @@ body {
   padding: 20px;
 }
 
+/* Wariant gęsty — mniej paddingu na listach i filtrach */
+.mk-card-pad-compact {
+  padding: 12px 14px;
+}
+
 a.mk-card,
 button.mk-card,
 .mk-card-interactive {
@@ -227,6 +232,59 @@ button.mk-card,
   }
 }
 
+/* Gęstszy kafel KPI — siatka Przeglądu (CompactKpi) */
+.mk-kpi-compact .mk-kpi-body {
+  padding: 12px 14px;
+}
+
+.mk-kpi-compact .mk-kpi-label {
+  min-height: 22px;
+  gap: 4px;
+  font-size: 10px;
+  line-height: 1.25;
+}
+
+.mk-kpi-compact .mk-kpi-figure {
+  margin-top: 8px;
+}
+
+.mk-kpi-compact .mk-kpi-delta {
+  margin-top: 6px;
+}
+
+.mk-kpi-compact .mk-kpi-delta .mk-chip {
+  padding: 2px 6px;
+  font-size: 11px;
+}
+
+.mk-kpi-compact .mk-kpi-foot {
+  padding-top: 8px;
+  font-size: 10px;
+}
+
+@container (min-width: 0px) {
+  .mk-kpi-compact .mk-kpi-value {
+    font-size: clamp(1.125rem, 13cqi, 1.625rem);
+  }
+
+  .mk-kpi-compact .mk-kpi-unit {
+    font-size: clamp(0.6875rem, 6cqi, 0.875rem);
+  }
+}
+
+/* Przegląd — ciaśniejszy rytm pionowy */
+.mk-overview {
+  --mk-overview-gap: 1rem;
+}
+
+.mk-overview > * + * {
+  margin-top: var(--mk-overview-gap);
+}
+
+.mk-card-pad-compact {
+  padding: 14px 16px;
+}
+
 /* Label (uppercase, muted) */
 .mk-label {
   font-size: 11px;
@@ -254,6 +312,16 @@ button.mk-card,
   color: var(--color-mk-faint);
 }
 
+.mk-dense-page > * + * {
+  margin-top: 1.25rem;
+}
+
+@media (max-width: 767px) {
+  .mk-dense-page > * + * {
+    margin-top: 1rem;
+  }
+}
+
 /* Czerwony pas hero na Przeglądzie */
 .mk-hero-band {
   background: var(--color-mk-brand);
@@ -268,13 +336,41 @@ button.mk-card,
 .mk-hero-band .mk-hero-chip {
   display: inline-flex;
   align-items: center;
-  padding: 4px 10px;
+  padding: 3px 8px;
   border-radius: 999px;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   background: #fff;
   color: var(--color-mk-brand-strong);
+}
+
+/* Kompaktowa siatka KPI — mniejszy padding i ciaśniejsza typografia */
+.mk-kpi-compact .mk-kpi-body {
+  padding: 14px;
+}
+
+.mk-kpi-compact .mk-kpi-label {
+  min-height: 26px;
+  font-size: 10px;
+}
+
+.mk-kpi-compact .mk-kpi-figure {
+  margin-top: 10px;
+}
+
+.mk-kpi-compact .mk-kpi-delta {
+  margin-top: 6px;
+}
+
+.mk-kpi-compact .mk-kpi-foot {
+  padding-top: 8px;
+}
+
+@media (max-width: 767px) {
+  .mk-kpi-compact .mk-kpi-body {
+    padding: 12px;
+  }
 }
 
 /* Tag kategorii newsów — czerwony obrys */
@@ -643,6 +739,10 @@ button.mk-card,
 @media (max-width: 767px) {
   .mk-card-pad {
     padding: 16px;
+  }
+
+  .mk-card-pad-compact {
+    padding: 10px 12px;
   }
 
   .recharts-wrapper {

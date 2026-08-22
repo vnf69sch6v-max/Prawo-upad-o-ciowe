@@ -1,5 +1,6 @@
 'use client';
 
+import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { ArrowUpRight, Star, type LucideIcon } from 'lucide-react';
 import { useWatchlist } from '@/lib/watchlist';
@@ -13,7 +14,7 @@ import { AnimatedNumber } from './AnimatedNumber';
  */
 export type AccentKey = 'blue' | 'green' | 'amber' | 'violet' | 'rose' | 'cyan' | 'slate';
 
-interface KpiCardProps {
+export interface KpiCardProps {
     label: string;
     /** Pre-formatted value string, e.g. "4,2" */
     value: string;
@@ -29,6 +30,8 @@ interface KpiCardProps {
     href?: string;
     /** Gdy podany, kafel dostaje gwiazdkę „obserwuj" (watchlista w localStorage). */
     watchId?: string;
+    /** Gęstszy wariant — mniejszy padding (siatka 6 KPI). */
+    compact?: boolean;
 }
 
 /**
@@ -51,19 +54,22 @@ interface KpiCardProps {
  * ⚠ NIE dodawać paddingu na `.mk-kpi` — to kontener zapytań, a `cqi` liczy się od content-boxa,
  * więc padding skurczyłby liczbę. Padding mieszka na `.mk-kpi-body`.
  */
-export function KpiCard({ label, value, unit, delta, icon: Icon, footnote, loading, href, watchId }: KpiCardProps) {
+export function KpiCard({ label, value, unit, delta, icon: Icon, footnote, loading, href, watchId, compact }: KpiCardProps) {
     const watch = useWatchlist();
+    const wrap = (node: ReactNode, extra = '') => (
+        <div className={`mk-kpi${compact ? ' mk-kpi-compact' : ''} ${extra}`.trim()}>{node}</div>
+    );
     if (loading) {
         // Skeleton ma tę samą strukturę co kafel z danymi — inaczej rząd skacze, gdy każde
         // z kilku zapytań kończy się w innym momencie.
-        return (
-            <div className="mk-kpi mk-card overflow-hidden">
+        return wrap(
+            <div className="mk-card overflow-hidden">
                 <div className="mk-kpi-body">
                     <div className="mk-kpi-label"><span className="mk-skeleton h-3 w-24 rounded" /></div>
                     <div className="mk-kpi-figure"><span className="mk-skeleton h-8 w-28 rounded" /></div>
                     <div className="mk-kpi-foot"><span className="mk-skeleton h-2.5 w-20 rounded" /></div>
                 </div>
-            </div>
+            </div>,
         );
     }
 
@@ -110,17 +116,16 @@ export function KpiCard({ label, value, unit, delta, icon: Icon, footnote, loadi
             </Link>
         );
         // Gwiazdka MUSI być rodzeństwem linku, nie dzieckiem — <button> w <a> to nieprawidłowy HTML.
-        return star ? (
-            <div className="mk-kpi relative">{link}{star}</div>
-        ) : (
-            <div className="mk-kpi">{link}</div>
-        );
+        return star ? wrap(<>{link}{star}</>, 'relative') : wrap(link);
     }
 
-    return (
-        <div className="mk-kpi mk-card mk-card-interactive relative overflow-hidden">
-            {body}
-            {star}
-        </div>
+    return wrap(
+        <>
+            <div className="mk-card mk-card-interactive relative overflow-hidden">
+                {body}
+                {star}
+            </div>
+        </>,
+        'relative',
     );
 }

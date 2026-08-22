@@ -19,6 +19,8 @@ import { CsvExport } from '@/components/ui/CsvExport';
 import { StaleBadge } from '@/components/ui/StaleBadge';
 import { AXIS_INK } from '@/lib/chart-theme';
 import { PageHeader, PageEyebrow } from '@/components/ui/PageHeader';
+import { PrognozyDashboard } from '@/components/sections/PrognozyDashboard';
+import { DensePageLayout } from '@/components/ui/DensePageLayout';
 
 type Section = 'inflacja' | 'pkb' | 'taylor' | 'symulatory';
 
@@ -323,7 +325,7 @@ export default function PrognozyPage() {
     const [section, setSection] = useState<Section>('inflacja');
     useInitialTab(SECTIONS.map((s) => s.value), setSection);
     return (
-        <div className="mk-fade-in space-y-8">
+        <DensePageLayout>
             <PageHeader
                 eyebrow={<PageEyebrow section="Prognozy" />}
                 title="Prognozy"
@@ -331,12 +333,14 @@ export default function PrognozyPage() {
                 actions={<Segmented value={section} onChange={setSection} options={SECTIONS} aria-label="Sekcja" />}
             />
 
+            <PrognozyDashboard />
+
             <div key={section} className="mk-fade-in">
                 {section === 'inflacja' && <InflacjaNowcast />}
                 {section === 'pkb' && <PkbNowcast />}
                 {section === 'taylor' && <TaylorSection />}
                 {section === 'symulatory' && <Symulatory />}
             </div>
-        </div>
+        </DensePageLayout>
     );
 }

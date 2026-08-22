@@ -19,7 +19,8 @@ import { Segmented } from '@/components/ui/Segmented';
 import { CsvExport } from '@/components/ui/CsvExport';
 import { DataTable, type Column } from '@/components/ui/DataTable';
 import { RynkiStopySection } from '@/components/sections/RynkiStopySection';
-import { RelatedNews } from '@/components/ui/RelatedNews';
+import { RynkiDashboard } from '@/components/sections/RynkiDashboard';
+import { DensePageLayout } from '@/components/ui/DensePageLayout';
 import { PageHeader, PageEyebrow } from '@/components/ui/PageHeader';
 
 type Section = 'kursy' | 'stopy' | 'gpw';
@@ -326,7 +327,7 @@ export default function RynkiPage() {
     const [section, setSection] = useState<Section>('kursy');
     useInitialTab(SECTIONS.map((s) => s.value), setSection);
     return (
-        <div className="mk-fade-in space-y-8">
+        <DensePageLayout>
             <PageHeader
                 eyebrow={<PageEyebrow section="Rynki" />}
                 title="Rynki"
@@ -334,14 +335,13 @@ export default function RynkiPage() {
                 actions={<Segmented value={section} onChange={setSection} options={SECTIONS} aria-label="Sekcja" />}
             />
 
-            {/* Newsy powiązane — nad danymi, nie na dole strony (zlecenie właściciela). */}
-            <RelatedNews topic="rynki" />
+            <RynkiDashboard />
 
             <div key={section} className="mk-fade-in">
                 {section === 'kursy' && <KursySection />}
                 {section === 'stopy' && <RynkiStopySection />}
                 {section === 'gpw' && <GpwSection />}
             </div>
-        </div>
+        </DensePageLayout>
     );
 }
