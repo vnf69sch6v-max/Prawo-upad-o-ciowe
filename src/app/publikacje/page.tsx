@@ -7,8 +7,10 @@ const SOURCES = [
     { name: 'GUS — CPI flash (szybki szacunek)', note: 'ostatni dzień roboczy miesiąca M · dane za M', url: 'https://stat.gov.pl/kalendarium/' },
     { name: 'GUS — PKB (szybki szacunek)', note: 'kwartalnie · ~13–14. dnia po kwartale', url: 'https://stat.gov.pl/kalendarz-roczny/' },
     { name: 'GUS — rynek pracy, produkcja, sprzedaż', note: 'harmonogram miesięczny GUS', url: 'https://stat.gov.pl/dla-mediow/harmonogramy-publikacji-danych/' },
+    { name: 'GUS — obroty handlu zagranicznego', note: 'miesięcznie · ok. 9. dnia M+1 · DBHZ', url: 'https://stat.gov.pl/obszary-tematyczne/ceny-handel/handel/' },
     { name: 'NBP — Decyzje RPP (stopy)', note: 'wg kalendarza posiedzeń RPP', url: 'https://nbp.pl/polityka-pieniezna/decyzje-rpp/' },
-    { name: 'Eurostat — HICP, produkcja, PKB', note: 'miesięcznie · opóźnienie vs GUS', url: 'https://ec.europa.eu/eurostat' },
+    { name: 'NBP — rachunek bieżący', note: 'kwartalnie · saldo transakcji z zagranicą', url: 'https://nbp.pl/home/statystyka/rachunek-biezacy/rachunek-biezacy.html' },
+    { name: 'Eurostat — HICP (porównania UE)', note: 'miesięcznie · opóźnienie vs GUS · tylko benchmark UE', url: 'https://ec.europa.eu/eurostat' },
 ];
 
 export default function PublikacjePage() {

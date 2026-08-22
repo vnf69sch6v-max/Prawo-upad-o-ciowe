@@ -41,7 +41,6 @@ const COMMANDS: Cmd[] = [
     { id: 'ind-kursy', group: 'Wskaźniki', label: 'Kursy walut', sub: 'Rynki', keywords: 'eur usd chf gbp pln kurs waluty nbp', href: '/rynki?tab=kursy', icon: Banknote },
     { id: 'ind-stopy', group: 'Wskaźniki', label: 'Stopy procentowe i WIBOR', sub: 'Rynki', keywords: 'stopa referencyjna nbp rpp wibor', href: '/rynki?tab=stopy', icon: Percent },
     { id: 'ind-gpw', group: 'Wskaźniki', label: 'GPW / WIG20', sub: 'Rynki', keywords: 'giełda wig20 wig akcje indeks złoto surowce brent', href: '/rynki?tab=gpw', icon: LineChart },
-    { id: 'ind-handel', group: 'Wskaźniki', label: 'Handel zagraniczny', sub: 'Rynki', keywords: 'eksport import bilans handel', href: '/rynki?tab=handel', icon: TrendingUp },
     { id: 'ind-nowcast', group: 'Wskaźniki', label: 'Prognoza CPI (koszyk)', sub: 'Prognozy', keywords: 'nowcast prognoza inflacja koszyk', href: '/prognozy?tab=inflacja', icon: Sparkles },
     { id: 'ind-taylor', group: 'Wskaźniki', label: 'Reguła Taylora', sub: 'Prognozy', keywords: 'taylor stopa optymalna reguła', href: '/prognozy?tab=taylor', icon: Percent },
     { id: 'ind-regpkb', group: 'Wskaźniki', label: 'PKB regionalne', sub: 'Regiony', keywords: 'województwa pkb per capita mapa', href: '/regiony?tab=pkb', icon: Map },

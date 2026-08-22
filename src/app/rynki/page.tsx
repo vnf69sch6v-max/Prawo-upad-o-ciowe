@@ -5,13 +5,12 @@ import { useRouter } from 'next/navigation';
 import { useInitialTab } from '@/lib/use-initial-tab';
 import { InsightBar } from '@/components/ui/InsightBar';
 import type { Observation } from '@/lib/observations';
-import { Euro, DollarSign, Coins, TrendingUp, Ship, Landmark, PoundSterling, Fuel, Flame, Gem, Factory, BarChart3 } from 'lucide-react';
+import { Euro, DollarSign, Coins, PoundSterling, Fuel, Flame, Gem, Factory, BarChart3 } from 'lucide-react';
 import {
-    useNBPTable, useNBPCurrencyHistory, useGold, useStooq,
-    useTradeData, useCurrentAccount, useWig20,
+    useNBPTable, useNBPCurrencyHistory, useGold, useStooq, useWig20,
     type NBPTable, type NBPRate, type Wig20Quote,
 } from '@/lib/hooks';
-import { plSeries, lastOf, prevOf, deltaOf, monthTick, fmtPL, type Point } from '@/lib/series';
+import { lastOf, prevOf, monthTick, type Point } from '@/lib/series';
 import { formatDecimalPL, formatNumber, formatDate, percentChange } from '@/lib/formatters';
 import { KpiCard, type AccentKey } from '@/components/ui/KpiCard';
 import { InteractiveChart } from '@/components/ui/InteractiveChart';
@@ -23,7 +22,7 @@ import { RynkiStopySection } from '@/components/sections/RynkiStopySection';
 import { RelatedNews } from '@/components/ui/RelatedNews';
 import { PageHeader, PageEyebrow } from '@/components/ui/PageHeader';
 
-type Section = 'kursy' | 'stopy' | 'gpw' | 'handel';
+type Section = 'kursy' | 'stopy' | 'gpw';
 type Hist = { mid?: number; effectiveDate?: string }[];
 
 const histPoints = (h?: Hist): Point[] =>
@@ -317,66 +316,10 @@ function GpwSection() {
     );
 }
 
-// ═══ HANDEL ═══
-function HandelSection() {
-    const expQ = useTradeData('exports');
-    const impQ = useTradeData('imports');
-    const caQ = useCurrentAccount();
-    const exp = useMemo(() => plSeries(expQ.data), [expQ.data]);
-    const imp = useMemo(() => plSeries(impQ.data), [impQ.data]);
-    const ca = useMemo(() => plSeries(caQ.data), [caQ.data]);
-
-    const trade = useMemo(() => {
-        const im = new Map(imp.map((p) => [p.date, p.value]));
-        return exp.map((p) => {
-            const i = im.get(p.date) ?? null;
-            return { date: p.date, eksport: p.value, import: i, saldo: i != null ? +(p.value - i).toFixed(0) : null };
-        });
-    }, [exp, imp]);
-
-    const lastExp = lastOf(exp), lastImp = lastOf(imp);
-    const saldo = lastExp != null && lastImp != null ? lastExp - lastImp : null;
-    const bn = (v: number | null) => (v == null ? '—' : formatNumber(v / 1000, 1)); // mln → mld EUR
-
-    return (
-        <div className="space-y-6">
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <KpiCard label="Eksport towarów" value={bn(lastExp)} unit="mld €" accent="green" icon={Ship} footnote={exp.length ? exp[exp.length - 1].date : 'Eurostat'} loading={expQ.isLoading} />
-                <KpiCard label="Import towarów" value={bn(lastImp)} unit="mld €" accent="amber" icon={Ship} footnote={imp.length ? imp[imp.length - 1].date : 'Eurostat'} loading={impQ.isLoading} />
-                <KpiCard label="Saldo handlowe" value={bn(saldo)} unit="mld €" accent={saldo != null && saldo >= 0 ? 'blue' : 'rose'} icon={TrendingUp} footnote="eksport − import" loading={expQ.isLoading || impQ.isLoading} />
-                <KpiCard label="Rachunek bieżący" value={bn(lastOf(ca))} unit="mld €" accent="violet" icon={Landmark} footnote={ca.length ? ca[ca.length - 1].date : 'Eurostat'} loading={caQ.isLoading} />
-            </div>
-
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                <SectionCard editorial titleVariant="label" title="Eksport vs import" subtitle="Eurostat BoP · mln EUR"
-                    actions={<CsvExport filename="handel" headers={['Data', 'Eksport', 'Import', 'Saldo']} rows={trade.map((r) => [r.date, r.eksport, r.import, r.saldo])} />}>
-                    {trade.length === 0 ? <div className="mk-skeleton h-[280px] w-full" /> : (
-                        <InteractiveChart data={trade} xKey="date" height={280} unit=" mln €" legend showRange initialRange="1R"
-                            valueFormatter={(v) => formatNumber(v, 0)} xTickFormatter={monthTick}
-                            series={[
-                                { key: 'eksport', name: 'Eksport', color: '#16A34A', type: 'line' },
-                                { key: 'import', name: 'Import', color: '#D97706', type: 'line' },
-                            ]} />
-                    )}
-                </SectionCard>
-                <SectionCard editorial titleVariant="label" title="Saldo handlowe" subtitle="eksport − import · mln EUR">
-                    {trade.length === 0 ? <div className="mk-skeleton h-[280px] w-full" /> : (
-                        <InteractiveChart data={trade.filter((r) => r.saldo != null)} xKey="date" height={280} unit=" mln €" showRange initialRange="1R"
-                            valueFormatter={(v) => formatNumber(v, 0)} xTickFormatter={monthTick}
-                            referenceLines={[{ y: 0, color: '#CBD2DD' }]}
-                            series={[{ key: 'saldo', name: 'Saldo', color: '#2563EB', type: 'area' }]} />
-                    )}
-                </SectionCard>
-            </div>
-        </div>
-    );
-}
-
 const SECTIONS: { value: Section; label: string }[] = [
     { value: 'kursy', label: 'Kursy walut' },
     { value: 'stopy', label: 'Stopy i WIBOR' },
     { value: 'gpw', label: 'GPW' },
-    { value: 'handel', label: 'Handel zagraniczny' },
 ];
 
 export default function RynkiPage() {
@@ -387,7 +330,7 @@ export default function RynkiPage() {
             <PageHeader
                 eyebrow={<PageEyebrow section="Rynki" />}
                 title="Rynki"
-                subtitle="Kursy walut, złoto, GPW i handel zagraniczny"
+                subtitle="Kursy walut, złoto, GPW i stopy procentowe"
                 actions={<Segmented value={section} onChange={setSection} options={SECTIONS} aria-label="Sekcja" />}
             />
 
@@ -398,7 +341,6 @@ export default function RynkiPage() {
                 {section === 'kursy' && <KursySection />}
                 {section === 'stopy' && <RynkiStopySection />}
                 {section === 'gpw' && <GpwSection />}
-                {section === 'handel' && <HandelSection />}
             </div>
         </div>
     );
