@@ -5,6 +5,7 @@ import { useDbwSeries, type DbwSeriesConfig } from '@/lib/hooks';
 import { fmtPL } from '@/lib/series';
 import { formatDecimalPL, formatDataPeriod } from '@/lib/formatters';
 import { KpiCard, type AccentKey } from '@/components/ui/KpiCard';
+import { EditorialHero } from '@/components/ui/EditorialHero';
 import { InteractiveChart } from '@/components/ui/InteractiveChart';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { CsvExport } from '@/components/ui/CsvExport';
@@ -43,41 +44,22 @@ export function DbwPriceSection({ title, subtitle, config, series, unit = '%', r
     return (
         <div className="space-y-6">
             {primary && (
-                <section className="overflow-hidden rounded-[14px] bg-mk-brand p-6 text-white" aria-label={`${heroTitle ?? title} — najważniejszy odczyt`}>
-                    <div className="grid gap-6 md:grid-cols-[1.6fr_1fr]">
-                        <div>
-                            <div className="flex flex-wrap items-center gap-2">
-                                {heroPeriod && <span className="inline-flex items-center rounded-full bg-white px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-mk-brand-strong tnum">{heroPeriod}</span>}
-                                <span className="text-xs font-semibold text-white/70">GUS · dane</span>
-                            </div>
-                            <h2 className="mt-3.5 max-w-[26ch] text-[26px] font-extrabold leading-tight tracking-tight">{heroTitle ?? title}</h2>
-                            {(heroText ?? note) && <p className="mt-2 max-w-[56ch] text-[15px] leading-relaxed text-white/90">{heroText ?? note}</p>}
-                            <div className="mt-5 flex items-baseline gap-4">
-                                <span className="text-[56px] font-extrabold leading-none tracking-tight tnum">{heroPrimary.v != null ? `${heroPrimary.v > 0 ? '+' : ''}${formatDecimalPL(heroPrimary.v, 1)}` : '—'}<span className="ml-1 text-2xl font-semibold text-white/70">{unit}</span></span>
-                                {heroPrimary.d != null && (
-                                    <span className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-[13px] font-bold text-mk-brand-strong tnum">
-                                        {heroPrimary.d > 0 ? '↑ +' : heroPrimary.d < 0 ? '↓ ' : '→ '}{formatDecimalPL(heroPrimary.d, 1)} p.p.
-                                    </span>
-                                )}
-                            </div>
-                            {primary && <div className="mt-2 text-xs font-semibold text-white/70">{primary.name}</div>}
-                        </div>
-                        <div className="md:border-l md:border-white/25 md:pl-6">
-                            <div className="text-[11px] font-bold uppercase tracking-wide text-white/70">Ostatnie odczyty</div>
-                            <div className="mt-4 space-y-2 text-[13px] tnum">
-                                {series.map((s) => {
-                                    const l = latestOf(s.poz);
-                                    return (
-                                        <div key={s.poz} className="flex justify-between gap-2">
-                                            <span className="truncate text-white/80">{s.name}</span>
-                                            <strong>{l.v != null ? `${l.v > 0 ? '+' : ''}${formatDecimalPL(l.v, 1)}${unit}` : '—'}</strong>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    </div>
-                </section>
+                <EditorialHero
+                    ariaLabel={`${heroTitle ?? title} — najważniejszy odczyt`}
+                    period={heroPeriod}
+                    source="GUS · dane"
+                    headline={heroTitle ?? title}
+                    description={heroText ?? note}
+                    value={heroPrimary.v != null ? `${heroPrimary.v > 0 ? '+' : ''}${formatDecimalPL(heroPrimary.v, 1)}` : '—'}
+                    unit={unit}
+                    delta={heroPrimary.d}
+                    valueCaption={primary.name}
+                    panelTitle="Ostatnie odczyty"
+                    rows={series.map((s) => {
+                        const l = latestOf(s.poz);
+                        return { label: s.name, value: l.v != null ? `${l.v > 0 ? '+' : ''}${formatDecimalPL(l.v, 1)}${unit}` : '—' };
+                    })}
+                />
             )}
 
             <section>

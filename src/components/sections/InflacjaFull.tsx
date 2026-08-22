@@ -8,6 +8,7 @@ import { useCpiFull, useGusPpiHeadline, usePpiFull, type CpiDivision, type CpiHi
 import { plSeries, fmtPL } from '@/lib/series';
 import { formatDecimalPL, formatDataPeriodLabel } from '@/lib/formatters';
 import { CompactKpiGrid, type CompactKpiItem } from '@/components/ui/CompactKpiGrid';
+import { EditorialHero } from '@/components/ui/EditorialHero';
 import { DensePageLayout, DenseTwoCol } from '@/components/ui/DensePageLayout';
 import { InteractiveChart } from '@/components/ui/InteractiveChart';
 import { SectionCard } from '@/components/ui/SectionCard';
@@ -266,43 +267,28 @@ export function InflacjaFull() {
 
     return (
         <DensePageLayout>
-            <section className="overflow-hidden rounded-[14px] bg-mk-brand p-6 text-white" aria-label="Inflacja CPI — najważniejszy odczyt">
-                <div className="grid gap-6 md:grid-cols-[1.6fr_1fr]">
-                    <div>
-                        <div className="flex flex-wrap items-center gap-2">
-                            {heroPeriod && <span className="inline-flex items-center rounded-full bg-white px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-mk-brand-strong tnum">{heroPeriod}</span>}
-                            <span className="text-xs font-semibold text-white/70">GUS · odczyt CPI</span>
-                        </div>
-                        <h2 className="mt-3.5 max-w-[24ch] text-[26px] font-extrabold leading-tight tracking-tight">{heroHeadline}</h2>
-                        <p className="mt-2 max-w-[56ch] text-[15px] leading-relaxed text-white/90">
-                            CPI wynosi {heroYoY != null ? fmtPL(heroYoY) : '—'}% r/r wobec celu NBP 2,5%.
-                            {topContrib?.contribution != null && ` Największy wkład dokłada ${topContrib.name.toLowerCase()} (${topContrib.contribution > 0 ? '+' : ''}${formatDecimalPL(topContrib.contribution, 2)} pp).`}
-                        </p>
-                        <div className="mt-5 flex items-baseline gap-4">
-                            <span className="text-[56px] font-extrabold leading-none tracking-tight tnum">{heroYoY != null ? fmtPL(heroYoY) : '—'}<span className="ml-1 text-2xl font-semibold text-white/70">%</span></span>
-                            {heroYoYDelta != null && (
-                                <span className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-[13px] font-bold text-mk-brand-strong tnum">
-                                    {heroYoYDelta > 0 ? '↑ +' : heroYoYDelta < 0 ? '↓ ' : '→ '}{formatDecimalPL(heroYoYDelta, 1)} p.p.
-                                </span>
-                            )}
-                        </div>
-                    </div>
-                    <div className="md:border-l md:border-white/25 md:pl-6">
-                        <div className="text-[11px] font-bold uppercase tracking-wide text-white/70">Wobec celu NBP</div>
-                        <div className="relative mt-4 h-[34px]">
-                            <div className="absolute inset-x-0 top-[14px] h-1.5 rounded-full bg-white/25" />
-                            <div className="absolute bottom-1 left-1/2 top-1 w-0.5 bg-white/80" />
-                            <div className="absolute top-2 h-[18px] w-[18px] -translate-x-1/2 rounded-full bg-white shadow" style={{ left: `${heroGaugePct}%` }} aria-hidden />
-                        </div>
-                        <div className="flex justify-between text-[11px] font-semibold text-white/70 tnum"><span>1,5%</span><span>cel 2,5%</span><span>3,5%</span></div>
-                        <div className="mt-4 space-y-2 text-[13px] tnum">
-                            <div className="flex justify-between gap-2"><span className="text-white/80">Odchylenie od celu</span><strong>{heroDev != null ? `${heroDev > 0 ? '+' : ''}${formatDecimalPL(heroDev, 1)} p.p.` : '—'}</strong></div>
-                            <div className="flex justify-between gap-2"><span className="text-white/80">CPI m/m</span><strong>{latest?.mom != null ? `${latest.mom > 0 ? '+' : ''}${formatDecimalPL(latest.mom, 1)}%` : '—'}</strong></div>
-                            <div className="flex justify-between gap-2 border-t border-white/25 pt-2"><span className="text-white/80">CPI bez żywności</span><strong>{coreLatest != null ? `${formatDecimalPL(coreLatest, 1)}%` : '—'}</strong></div>
-                        </div>
-                    </div>
-                </div>
-            </section>
+            <EditorialHero
+                ariaLabel="Inflacja CPI — najważniejszy odczyt"
+                period={heroPeriod}
+                source="GUS · odczyt CPI"
+                headline={heroHeadline}
+                description={
+                    <>
+                        CPI wynosi {heroYoY != null ? fmtPL(heroYoY) : '—'}% r/r wobec celu NBP 2,5%.
+                        {topContrib?.contribution != null && ` Największy wkład dokłada ${topContrib.name.toLowerCase()} (${topContrib.contribution > 0 ? '+' : ''}${formatDecimalPL(topContrib.contribution, 2)} pp).`}
+                    </>
+                }
+                value={heroYoY != null ? fmtPL(heroYoY) : '—'}
+                unit="%"
+                delta={heroYoYDelta}
+                panelTitle="Wobec celu NBP"
+                gauge={heroYoY != null ? { pct: heroGaugePct, labels: ['1,5%', 'cel 2,5%', '3,5%'] } : null}
+                rows={[
+                    { label: 'Odchylenie od celu', value: heroDev != null ? `${heroDev > 0 ? '+' : ''}${formatDecimalPL(heroDev, 1)} p.p.` : '—' },
+                    { label: 'CPI m/m', value: latest?.mom != null ? `${latest.mom > 0 ? '+' : ''}${formatDecimalPL(latest.mom, 1)}%` : '—' },
+                    { label: 'CPI bez żywności', value: coreLatest != null ? `${formatDecimalPL(coreLatest, 1)}%` : '—', divider: true },
+                ]}
+            />
 
             <CompactKpiGrid items={compactKpis} label="Wskaźniki uzupełniające" dense />
 
