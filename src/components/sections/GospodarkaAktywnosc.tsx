@@ -12,9 +12,9 @@ import {
     useKoniunktura,
 } from '@/lib/hooks';
 import { plSeries, lastOf, deltaOf, fmtPL, type Point } from '@/lib/series';
-import { formatDecimalPL, formatDataPeriodLabel } from '@/lib/formatters';
+import { formatDecimalPL, formatDataPeriod, formatDataPeriodLabel } from '@/lib/formatters';
 import { analyzeSeries, trendObservation, type Observation } from '@/lib/observations';
-import { HeroMetricCard, HeroMetricRow } from '@/components/ui/HeroMetricCard';
+import { EditorialHero } from '@/components/ui/EditorialHero';
 import { CompactKpiGrid, type CompactKpiItem } from '@/components/ui/CompactKpiGrid';
 import { DensePageLayout, DenseThreeCol } from '@/components/ui/DensePageLayout';
 import { InteractiveChart } from '@/components/ui/InteractiveChart';
@@ -103,6 +103,18 @@ export function GospodarkaAktywnosc() {
     const dataDate = [ind, ret, cpi, unemp].map((s) => (s.length ? s[s.length - 1].date : '')).filter(Boolean).sort().pop() ?? '';
     const gdpLast = gdp.length ? gdp[gdp.length - 1] : null;
 
+    // ── Hero „redakcyjny" — WYŁĄCZNIE realne dane GUS. Metryka wiodąca: PKB r/r, a gdy brak → produkcja przemysłowa r/r. ──
+    const heroHasGdp = gdpLast != null;
+    const heroPrimaryVal = heroHasGdp ? gdpLast!.value : lastOf(ind);
+    const heroPrimaryDelta = heroHasGdp ? ppDeltaAnnual(gdp) : deltaOf(ind);
+    const heroPeriod = heroHasGdp
+        ? (gdpLast ? String(gdpLast.date) : null)
+        : (ind.length ? formatDataPeriod(ind[ind.length - 1].date) : null);
+    const heroHeadline = heroPrimaryVal == null ? 'Aktywność gospodarcza'
+        : heroPrimaryVal > 0 ? (heroHasGdp ? 'Gospodarka rośnie' : 'Produkcja rośnie')
+        : heroPrimaryVal < 0 ? (heroHasGdp ? 'Gospodarka się kurczy' : 'Produkcja spada')
+        : (heroHasGdp ? 'Dynamika PKB' : 'Produkcja przemysłowa');
+
     const compactKpis = useMemo((): CompactKpiItem[] => {
         const items: CompactKpiItem[] = [
             {
@@ -184,35 +196,29 @@ export function GospodarkaAktywnosc() {
 
     return (
         <DensePageLayout>
-            <HeroMetricRow>
-                <HeroMetricCard
-                    variant="card"
-                    icon={TrendingUp}
-                    headline="PKB (r/r)"
-                    value={gdpLast ? `${fmtPL(gdpLast.value)}%` : '—'}
-                    delta={ppDeltaAnnual(gdp)}
-                    footnote={gdpLast ? `GUS · ${gdpLast.date}` : 'GUS BDL'}
-                    loading={gdpQ.isLoading}
-                />
-                <HeroMetricCard
-                    variant="card"
-                    icon={Factory}
-                    headline="Produkcja przemysłowa"
-                    value={lastOf(ind) != null ? `${fmtPL(lastOf(ind))}%` : '—'}
-                    delta={deltaOf(ind)}
-                    footnote={ind.length ? `GUS DBW · ${ind[ind.length - 1].date}` : 'GUS DBW'}
-                    loading={indQ.isLoading}
-                />
-                <HeroMetricCard
-                    variant="card"
-                    icon={ShoppingCart}
-                    headline="Sprzedaż detaliczna"
-                    value={lastOf(ret) != null ? `${fmtPL(lastOf(ret))}%` : '—'}
-                    delta={deltaOf(ret)}
-                    footnote={ret.length ? `GUS · ${ret[ret.length - 1].date}` : 'GUS BDL'}
-                    loading={retQ.isLoading}
-                />
-            </HeroMetricRow>
+            <EditorialHero
+                ariaLabel="Gospodarka — najważniejszy odczyt"
+                period={heroPeriod}
+                source="GUS · aktywność gospodarcza"
+                headline={heroHeadline}
+                description={
+                    <>
+                        Dynamika {heroHasGdp ? 'PKB' : 'produkcji przemysłowej'} wynosi {heroPrimaryVal != null ? fmtPL(heroPrimaryVal) : '—'}% {heroHasGdp ? 'rocznie' : 'r/r'} wg GUS.
+                        {heroHasGdp && lastOf(ind) != null && ` Produkcja przemysłowa: ${fmtPL(lastOf(ind))}% r/r.`}
+                    </>
+                }
+                value={heroPrimaryVal != null ? fmtPL(heroPrimaryVal) : '—'}
+                unit="%"
+                delta={heroPrimaryDelta}
+                valueCaption={heroHasGdp ? 'PKB · dynamika roczna (r/r)' : 'Produkcja przemysłowa · r/r'}
+                panelTitle="Aktywność — skrót"
+                rows={[
+                    { label: 'PKB r/r', value: lastOf(gdp) != null ? `${lastOf(gdp)! > 0 ? '+' : ''}${fmtPL(lastOf(gdp))}%` : '—' },
+                    { label: 'Produkcja przemysłowa', value: lastOf(ind) != null ? `${lastOf(ind)! > 0 ? '+' : ''}${fmtPL(lastOf(ind))}%` : '—' },
+                    { label: 'Sprzedaż detaliczna', value: lastOf(ret) != null ? `${lastOf(ret)! > 0 ? '+' : ''}${fmtPL(lastOf(ret))}%` : '—' },
+                    { label: 'Budownictwo', value: lastOf(con) != null ? `${lastOf(con)! > 0 ? '+' : ''}${fmtPL(lastOf(con))}%` : '—', divider: true },
+                ]}
+            />
 
             <CompactKpiGrid items={compactKpis} label="Wskaźniki aktywności" />
 

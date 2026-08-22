@@ -15,6 +15,7 @@ import { matchCompanyNews } from '@/lib/news/match';
 import { lastOf, prevOf, monthTick, type Point } from '@/lib/series';
 import { formatDecimalPL, formatNumber, formatDate, formatRelativeTime, formatTime, percentChange } from '@/lib/formatters';
 import { KpiCard, type AccentKey } from '@/components/ui/KpiCard';
+import { EditorialHero } from '@/components/ui/EditorialHero';
 import { InteractiveChart } from '@/components/ui/InteractiveChart';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { Segmented } from '@/components/ui/Segmented';
@@ -274,6 +275,13 @@ function SpolkiSection() {
 
     const wigLast = lastCloseOf(wigIndex);
     const wigDelta = pctDelta(barsOf(wigIndex));
+    const wigDate = barsOf(wigIndex).at(-1)?.date ?? null;
+
+    // ── Hero „redakcyjny" — WYŁĄCZNIE żywe notowania (WIG20 + szerokość rynku), bez zmyślonych liczb ──
+    const heroHeadline = wigLast == null ? 'WIG20'
+        : wigDelta != null && wigDelta > 0 ? 'WIG20 rośnie'
+        : wigDelta != null && wigDelta < 0 ? 'WIG20 spada'
+        : 'WIG20';
 
     const moodInsights = useMemo<Observation[]>(() => {
         const out: Observation[] = [];
@@ -306,6 +314,30 @@ function SpolkiSection() {
 
     return (
         <div className="space-y-6">
+            <EditorialHero
+                ariaLabel="WIG20 — najważniejszy odczyt"
+                period={wigDate ? formatDate(wigDate) : null}
+                source="GPW · Stooq/Yahoo"
+                headline={heroHeadline}
+                description={
+                    <>
+                        Indeks 20 największych spółek Giełdy Papierów Wartościowych.
+                        {summary.n ? ` Na ostatniej sesji na plusie ${summary.up} z ${summary.n} spółek.` : ''}
+                    </>
+                }
+                value={wigLast != null ? formatNumber(Math.round(wigLast)) : '—'}
+                unit="pkt"
+                delta={wigDelta}
+                deltaUnit="%"
+                valueCaption="Indeks blue chip · GPW"
+                panelTitle="Szerokość rynku"
+                rows={[
+                    { label: 'Spółki na plusie', value: summary.n ? `${summary.up} z ${summary.n}` : '—' },
+                    { label: 'Spółki na minusie', value: summary.n ? `${summary.down} z ${summary.n}` : '—' },
+                    { label: 'Średnia zmiana', value: summary.avg != null ? fmtPct(summary.avg) : '—', divider: true },
+                ]}
+            />
+
             {/* Nastroje rynku — szerokość + poziom indeksu z żywych danych */}
             <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
                 <KpiCard label="WIG20" value={wigLast != null ? formatNumber(Math.round(wigLast)) : '—'} unit="pkt" icon={BarChart3}

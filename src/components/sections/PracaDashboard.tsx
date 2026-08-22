@@ -9,9 +9,9 @@ import {
     useBdlSeries,
 } from '@/lib/hooks';
 import { lastOf, deltaOf, monthTick, fmtPL } from '@/lib/series';
-import { formatDecimalPL, formatNumber, formatDataPeriodLabel } from '@/lib/formatters';
+import { formatDecimalPL, formatNumber, formatDataPeriod, formatDataPeriodLabel } from '@/lib/formatters';
 import { trendObservation, analyzeSeries, type Observation } from '@/lib/observations';
-import { DenseHero } from '@/components/ui/DenseDashboard';
+import { EditorialHero } from '@/components/ui/EditorialHero';
 import { CompactKpiGrid, type CompactKpiItem } from '@/components/ui/CompactKpiGrid';
 import { DensePageLayout, DenseThreeCol } from '@/components/ui/DensePageLayout';
 import { SectionCard } from '@/components/ui/SectionCard';
@@ -59,6 +59,15 @@ export function PracaDashboard() {
         : null;
 
     const dataDate = unemp.length ? unemp[unemp.length - 1].date : '';
+
+    // ── Hero „redakcyjny" — WYŁĄCZNIE realne dane GUS (bezrobocie rejestrowane) ──
+    const heroU = lastOf(unemp);
+    const heroUDelta = deltaOf(unemp);
+    const heroPeriod = dataDate ? formatDataPeriod(dataDate) : null;
+    const heroHeadline = heroU == null ? 'Rynek pracy'
+        : heroUDelta != null && heroUDelta > 0.05 ? 'Bezrobocie rośnie'
+        : heroUDelta != null && heroUDelta < -0.05 ? 'Bezrobocie spada'
+        : 'Bezrobocie rejestrowane';
 
     const hiUnemp = hi?.unemployment ?? null;
     const hiName = hi?.name ?? '';
@@ -142,33 +151,26 @@ export function PracaDashboard() {
 
     return (
         <DensePageLayout>
-            <DenseHero
-                ariaLabel="Rynek pracy — kluczowe wskaźniki"
-                slots={[
-                    {
-                        label: 'Bezrobocie rejestrowane',
-                        value: lastOf(unemp) != null ? `${fmtPL(lastOf(unemp))}%` : '—',
-                        delta: deltaOf(unemp),
-                        text: 'Stopa bezrobocia rejestrowanego w urzędach pracy (GUS BDL).',
-                        footnote: unemp.length ? `GUS BDL · ${unemp[unemp.length - 1].date}` : 'GUS BDL',
-                        loading: unempQ.isLoading,
-                    },
-                    {
-                        label: 'Przeciętne wynagrodzenie',
-                        value: lastWage ? `${formatNumber(lastWage.raw, 0)} zł` : '—',
-                        delta: lastWage?.value ?? null,
-                        deltaUnit: 'pct',
-                        text: 'Sektor przedsiębiorstw — brutto, dynamika r/r.',
-                        footnote: lastWage ? `GUS · ${lastWage.date}` : 'GUS',
-                        loading: monthlyQ.isLoading,
-                    },
-                    {
-                        label: 'Przeciętne zatrudnienie',
-                        value: zLast ? `${formatDecimalPL(zLast.value / 1e6, 2)} mln` : '—',
-                        text: 'Etaty w sektorze przedsiębiorstw (GUS BDL).',
-                        footnote: zLast ? `GUS BDL · ${zLast.date}` : 'GUS BDL',
-                        loading: zatrQ.isLoading,
-                    },
+            <EditorialHero
+                ariaLabel="Rynek pracy — najważniejszy odczyt"
+                period={heroPeriod}
+                source="GUS · rynek pracy"
+                headline={heroHeadline}
+                description={
+                    <>
+                        Stopa bezrobocia rejestrowanego w urzędach pracy wynosi {heroU != null ? fmtPL(heroU) : '—'}% (GUS BDL).
+                        {lastWage != null && ` Przeciętne wynagrodzenie brutto rośnie o ${formatDecimalPL(lastWage.value, 1)}% r/r.`}
+                    </>
+                }
+                value={heroU != null ? fmtPL(heroU) : '—'}
+                unit="%"
+                delta={heroUDelta}
+                panelTitle="Rynek pracy — skrót"
+                rows={[
+                    { label: 'Przeciętne wynagrodzenie', value: lastWage ? `${formatNumber(lastWage.raw, 0)} zł` : '—' },
+                    { label: 'Płace r/r', value: lastWage ? `${lastWage.value > 0 ? '+' : ''}${formatDecimalPL(lastWage.value, 1)}%` : '—' },
+                    { label: 'Przeciętne zatrudnienie', value: zLast ? `${formatDecimalPL(zLast.value / 1e6, 2)} mln` : '—' },
+                    { label: 'Wakaty', value: wLast ? `${formatDecimalPL(wLast.value, 1)} tys.` : '—', divider: true },
                 ]}
             />
 

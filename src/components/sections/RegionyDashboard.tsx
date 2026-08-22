@@ -6,7 +6,7 @@ import { useRegionalGus } from '@/lib/hooks';
 import { formatNumber } from '@/lib/formatters';
 import { type Observation } from '@/lib/observations';
 import { Segmented } from '@/components/ui/Segmented';
-import { DenseHero } from '@/components/ui/DenseDashboard';
+import { EditorialHero } from '@/components/ui/EditorialHero';
 import { CompactKpiGrid, type CompactKpiItem } from '@/components/ui/CompactKpiGrid';
 import { DensePageLayout, DenseThreeCol } from '@/components/ui/DensePageLayout';
 import { SectionCard } from '@/components/ui/SectionCard';
@@ -137,30 +137,21 @@ export function RegionyDashboard() {
 
     return (
         <DensePageLayout>
-            <DenseHero
-                ariaLabel="Regiony — kluczowe wskaźniki"
-                slots={[
-                    {
-                        label: 'PKB na mieszkańca — kraj',
-                        value: nat?.gdpPerCapita != null ? pln(nat.gdpPerCapita) : '—',
-                        text: 'Produkt krajowy brutto na mieszkańca, ceny bieżące.',
-                        footnote: data ? `GUS BDL · ${data.gdpYear}` : 'GUS BDL',
-                        loading: isLoading,
-                    },
-                    {
-                        label: 'Ludność Polski',
-                        value: nat?.population != null ? mln(nat.population) : '—',
-                        text: 'Stan ludności według GUS BDL.',
-                        footnote: data ? `GUS BDL · ${data.popYear}` : 'GUS BDL',
-                        loading: isLoading,
-                    },
-                    {
-                        label: 'Rozpiętość PKB (max/min)',
-                        value: gdpRatio ?? '—',
-                        text: topGdp && botGdp ? `${woj(topGdp.name)} vs ${woj(botGdp.name)}` : 'Najbogatsze / najbiedniejsze województwo.',
-                        footnote: 'PKB na mieszkańca · stosunek',
-                        loading: isLoading,
-                    },
+            <EditorialHero
+                ariaLabel="Regiony — najważniejszy wskaźnik"
+                period={data?.gdpYear != null ? String(data.gdpYear) : null}
+                source="GUS BDL · regiony"
+                headline={nat?.gdpPerCapita != null ? 'PKB na mieszkańca — Polska' : 'Regiony'}
+                description="Produkt krajowy brutto na mieszkańca (ceny bieżące) oraz zróżnicowanie regionalne wg województw."
+                value={nat?.gdpPerCapita != null ? formatNumber(nat.gdpPerCapita, 0) : '—'}
+                unit="zł"
+                valueCaption={data ? `GUS BDL · PKB ${data.gdpYear} · ludność ${data.popYear}` : undefined}
+                panelTitle="Skrajne województwa"
+                rows={[
+                    { label: topGdp ? `Najwyższe · ${woj(topGdp.name)}` : 'Najwyższe', value: topGdp?.gdpPerCapita != null ? pln(topGdp.gdpPerCapita) : '—' },
+                    { label: botGdp ? `Najniższe · ${woj(botGdp.name)}` : 'Najniższe', value: botGdp?.gdpPerCapita != null ? pln(botGdp.gdpPerCapita) : '—' },
+                    { label: 'Rozpiętość (max/min)', value: gdpRatio ? `${gdpRatio}×` : '—', divider: true },
+                    { label: 'Ludność Polski', value: nat?.population != null ? mln(nat.population) : '—' },
                 ]}
             />
 
