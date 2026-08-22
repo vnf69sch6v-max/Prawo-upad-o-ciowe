@@ -19,6 +19,7 @@ import { SectionCard } from '@/components/ui/SectionCard';
 import { Segmented } from '@/components/ui/Segmented';
 import { CsvExport } from '@/components/ui/CsvExport';
 import { DataTable, type Column } from '@/components/ui/DataTable';
+import { WatchStar } from '@/components/ui/WatchStar';
 import { StopySection } from '@/components/sections/macro-sections';
 import { RelatedNews } from '@/components/ui/RelatedNews';
 
@@ -173,6 +174,9 @@ function GpwSection() {
     const router = useRouter();
     const spolki = useWig20();
     const spolkiCols: Column<Wig20Quote>[] = [
+        // Gwiazdka NIE jest sortowalna: kolejność wierszy ma być stabilna, a „obserwowane na górze"
+        // zmieniałoby układ pod palcem w chwili kliknięcia. Pas „Obserwowane" jest na Przeglądzie.
+        { key: 'watch', header: '★', width: 44, render: (r) => <WatchStar kind="spolka" id={r.ticker} label={r.name} variant="inline" /> },
         { key: 'ticker', header: 'Ticker', sortable: true, sortValue: (r) => r.ticker, render: (r) => <span className="font-semibold text-mk-text">{r.ticker}</span> },
         { key: 'name', header: 'Spółka', sortable: true, sortValue: (r) => r.name, render: (r) => <span className="text-mk-text">{r.name}</span> },
         { key: 'price', header: 'Kurs (zł)', align: 'right', sortable: true, sortValue: (r) => r.price ?? -1, render: (r) => r.price != null ? formatDecimalPL(r.price, 2) : '—' },

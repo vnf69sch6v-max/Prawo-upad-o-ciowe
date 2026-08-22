@@ -13,6 +13,7 @@ import { KpiCard } from '@/components/ui/KpiCard';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { InteractiveChart } from '@/components/ui/InteractiveChart';
 import { CsvExport } from '@/components/ui/CsvExport';
+import { WatchStar } from '@/components/ui/WatchStar';
 
 export default function SpolkaPage() {
     const params = useParams<{ ticker: string }>();
@@ -57,7 +58,10 @@ export default function SpolkaPage() {
                 <Link href="/rynki?tab=gpw" className="inline-flex items-center gap-1.5 text-sm font-medium text-mk-primary hover:underline">
                     <ArrowLeft size={15} /> Spółki WIG20
                 </Link>
-                <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-mk-text">{company.name}</h1>
+                <div className="mt-2 flex items-center gap-2">
+                    <h1 className="text-3xl font-extrabold tracking-tight text-mk-text">{company.name}</h1>
+                    <WatchStar kind="spolka" id={ticker} label={company.name} variant="inline" size={18} />
+                </div>
                 <p className="mt-1 text-sm text-mk-muted">{ticker} · GPW · notowania i wiadomości</p>
             </div>
 
