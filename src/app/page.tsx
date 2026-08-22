@@ -16,6 +16,7 @@ import { ObservationsPanel } from '@/components/ui/ObservationsPanel';
 import { PublicationDatesPanel } from '@/components/ui/PublicationDatesPanel';
 import { LatestNews } from '@/components/ui/RelatedNews';
 import { OverviewHero } from '@/components/ui/OverviewHero';
+import { PageHeader } from '@/components/ui/PageHeader';
 import { WatchlistStrip, type WatchableKpi } from '@/components/ui/WatchlistStrip';
 
 // ── data helpers ────────────────────────────────────────────
@@ -109,20 +110,21 @@ export default function OverviewPage() {
 
     return (
         <div className="mk-fade-in space-y-8">
-            {/* Nagłówek strony */}
-            <header className="flex flex-wrap items-end justify-between gap-4">
-                <div>
-                    <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-mk-faint">
+            <PageHeader
+                eyebrow={
+                    <>
                         Polska <span className="mx-1.5 text-mk-border-strong">•</span> Dane makro
-                    </p>
-                    <h1 className="mt-1 text-3xl font-extrabold tracking-tight text-mk-text sm:text-4xl">Przegląd</h1>
-                    <p className="mt-1.5 text-sm text-mk-muted">
+                    </>
+                }
+                title="Przegląd"
+                subtitle={
+                    <>
                         Kluczowe wskaźniki makroekonomiczne dla Polski
                         {dataDate ? ` · ${formatDataPeriodLabel(dataDate)}` : ''}
-                    </p>
-                </div>
-                <CsvExport filename="przeglad-makro" headers={['Wskaźnik', 'Wartość']} rows={csvRows} />
-            </header>
+                    </>
+                }
+                actions={<CsvExport filename="przeglad-makro" headers={['Wskaźnik', 'Wartość']} rows={csvRows} />}
+            />
 
             {/* Czerwony pas hero — sygnały z danych */}
             <OverviewHero

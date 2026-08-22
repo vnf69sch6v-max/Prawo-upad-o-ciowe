@@ -104,7 +104,7 @@ export function OverviewHero({ cpi, retail, industrial, cpiLoading, retailLoadin
         <section className="mk-hero-band overflow-hidden" aria-label="Główne sygnały makro">
             <div className="grid grid-cols-1 divide-y divide-white/15 lg:grid-cols-12 lg:divide-x lg:divide-y-0">
                 {/* Sygnał 1 — CPI */}
-                <div className="p-5 sm:p-6 lg:col-span-5 xl:col-span-5">
+                <div className="p-5 sm:p-6 lg:col-span-5">
                     {loading ? (
                         <div className="space-y-3">
                             <div className="h-4 w-48 rounded bg-white/20" />
@@ -127,7 +127,7 @@ export function OverviewHero({ cpi, retail, industrial, cpiLoading, retailLoadin
                 </div>
 
                 {/* Sygnał 2 — aktywność */}
-                <div className="p-5 sm:p-6 lg:col-span-3 xl:col-span-3">
+                <div className="p-5 sm:p-6 lg:col-span-3">
                     {loading ? (
                         <div className="space-y-3">
                             <div className="h-4 w-40 rounded bg-white/20" />
@@ -149,7 +149,7 @@ export function OverviewHero({ cpi, retail, industrial, cpiLoading, retailLoadin
                 </div>
 
                 {/* Sygnał 3 — top news */}
-                <div className="p-5 sm:p-6 lg:col-span-4 xl:col-span-4">
+                <div className="p-5 sm:p-6 lg:col-span-4">
                     {newsLoading ? (
                         <div className="space-y-3">
                             <div className="h-4 w-24 rounded bg-white/20" />

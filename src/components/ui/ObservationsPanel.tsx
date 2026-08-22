@@ -14,7 +14,7 @@ export function ObservationsPanel({
     const heading = variant === 'overview' ? 'Kluczowe obserwacje' : title;
 
     return (
-        <div className="mk-card mk-card-pad h-full">
+        <div className="mk-card mk-card-editorial mk-card-pad h-full">
             {variant === 'overview' ? (
                 <h3 className="mk-section-label mb-4">{heading}</h3>
             ) : (
@@ -23,9 +23,9 @@ export function ObservationsPanel({
             {items.length === 0 ? (
                 <p className="text-sm text-mk-faint">Brak sygnałów do wyświetlenia.</p>
             ) : (
-                <ul className="space-y-4">
+                <ul className="divide-y divide-mk-border">
                     {items.map((o, i) => (
-                        <li key={i} className="flex gap-4 text-sm text-mk-text-soft">
+                        <li key={i} className="flex gap-4 py-3.5 text-sm text-mk-text-soft first:pt-0 last:pb-0">
                             {variant === 'overview' ? (
                                 <span className="mk-obs-num shrink-0">{String(i + 1).padStart(2, '0')}</span>
                             ) : (

@@ -19,8 +19,22 @@ function newsTopics(item: Pick<NewsItem, 'title' | 'description'>) {
     return TOPIC_LINKS.filter((t) => matchesTopic(item, t.topic));
 }
 
+const SECTION_LABELS: Record<string, string> = {
+    ogolne: 'MAKRO',
+    gielda: 'GIEŁDA',
+    waluty: 'WALUTY',
+    przemysl: 'PRZEMYSŁ',
+};
+
+function sectionLabel(section: string): string {
+    const key = section.trim().toLowerCase();
+    if (SECTION_LABELS[key]) return SECTION_LABELS[key];
+    const trimmed = section.trim();
+    return trimmed ? trimmed.toUpperCase() : 'MAKRO';
+}
+
 function CategoryTag({ section, filled = false }: { section: string; filled?: boolean }) {
-    const label = section.trim().toUpperCase() || 'MAKRO';
+    const label = sectionLabel(section);
     if (filled) return <span className="mk-tag-brand-fill">{label}</span>;
     return <span className="mk-tag-brand">{label}</span>;
 }
@@ -261,7 +275,7 @@ function OverviewNewsLayout({ items }: { items: NewsItem[] }) {
             </div>
 
             <aside className="lg:col-span-4">
-                <div className="rounded-xl border border-mk-border bg-mk-surface-alt p-5">
+                <div className="rounded-xl border border-mk-border bg-mk-surface-alt p-5 lg:sticky lg:top-24">
                     <h4 className="text-[11px] font-bold uppercase tracking-wide text-mk-brand">Dlaczego to ważne</h4>
                     <p className="mt-3 text-sm leading-relaxed text-mk-text-soft">
                         {lead.description
@@ -371,7 +385,7 @@ export function LatestNews({
                     <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
                         <h2 className="mk-section-label">Najważniejsze newsy</h2>
                     </div>
-                    <div className="mk-card mk-card-pad">
+                    <div className="mk-card mk-card-editorial mk-card-pad">
                         <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
                             <div className="space-y-3 lg:col-span-8">
                                 <div className="mk-skeleton h-5 w-24 rounded" />
@@ -408,7 +422,7 @@ export function LatestNews({
                     <h2 className="mk-section-label">Najważniejsze newsy</h2>
                     <AllNewsLink brand />
                 </div>
-                <div className="mk-card mk-card-pad">
+                <div className="mk-card mk-card-editorial mk-card-pad">
                     <OverviewNewsLayout items={items} />
                 </div>
             </section>

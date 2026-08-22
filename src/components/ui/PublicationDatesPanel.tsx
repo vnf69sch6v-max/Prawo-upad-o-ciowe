@@ -17,15 +17,15 @@ export function PublicationDatesPanel({
     const heading = variant === 'overview' ? 'Daty publikacji' : title;
 
     return (
-        <div className="mk-card mk-card-pad h-full">
+        <div className="mk-card mk-card-editorial mk-card-pad h-full">
             {variant === 'overview' ? (
                 <h3 className="mk-section-label mb-4">{heading}</h3>
             ) : (
                 <h3 className="mk-section-title mb-4">{heading}</h3>
             )}
-            <ul className="space-y-3.5">
+            <ul className="divide-y divide-mk-border">
                 {events.map((e, i) => (
-                    <li key={i} className="flex items-start gap-3">
+                    <li key={i} className="flex items-start gap-3 py-3.5 first:pt-0 last:pb-0">
                         {variant === 'overview' ? (
                             <span className="mt-0.5 shrink-0 text-xs font-semibold tabular-nums text-mk-faint">
                                 {formatDate(e.date)}
