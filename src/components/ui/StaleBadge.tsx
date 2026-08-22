@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { AlertTriangle } from 'lucide-react';
+import { formatDataPeriod } from '@/lib/formatters';
 
 /** Months between a data period (YYYY-MM / YYYY-Qn / YYYY-MM-DD / YYYY) and now. */
 function monthsAgo(dateStr: string): number | null {
@@ -27,7 +28,7 @@ export function StaleBadge({ date, warnAfterMonths = 2, label = 'dane' }: { date
 
     return (
         <span className="inline-flex items-center gap-1 rounded-full bg-mk-warn-soft px-2 py-0.5 text-[11px] font-semibold text-mk-warn">
-            <AlertTriangle size={12} /> nieaktualne · {label} {date}
+            <AlertTriangle size={12} /> nieaktualne · {label} {formatDataPeriod(date)}
         </span>
     );
 }

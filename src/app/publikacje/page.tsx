@@ -2,10 +2,12 @@ import { PublicationCalendar } from '@/components/ui/PublicationCalendar';
 import { SectionCard } from '@/components/ui/SectionCard';
 
 const SOURCES = [
-    { name: 'GUS — Wskaźniki cen (CPI)', note: 'ok. 15. dnia miesiąca', url: 'https://stat.gov.pl' },
-    { name: 'GUS — PKB (szybki szacunek)', note: 'kwartalnie', url: 'https://stat.gov.pl' },
-    { name: 'NBP — Decyzje RPP (stopy)', note: 'wg kalendarza posiedzeń', url: 'https://nbp.pl' },
-    { name: 'Eurostat — HICP, produkcja, PKB', note: 'miesięcznie', url: 'https://ec.europa.eu/eurostat' },
+    { name: 'GUS — CPI wstępne', note: 'ok. 13–15. dnia M+1 · dane za miesiąc M · 09:30', url: 'https://stat.gov.pl/kalendarz-roczny/' },
+    { name: 'GUS — CPI flash (szybki szacunek)', note: 'ostatni dzień roboczy miesiąca M · dane za M', url: 'https://stat.gov.pl/kalendarium/' },
+    { name: 'GUS — PKB (szybki szacunek)', note: 'kwartalnie · ~13–14. dnia po kwartale', url: 'https://stat.gov.pl/kalendarz-roczny/' },
+    { name: 'GUS — rynek pracy, produkcja, sprzedaż', note: 'harmonogram miesięczny GUS', url: 'https://stat.gov.pl/dla-mediow/harmonogramy-publikacji-danych/' },
+    { name: 'NBP — Decyzje RPP (stopy)', note: 'wg kalendarza posiedzeń RPP', url: 'https://nbp.pl/polityka-pieniezna/decyzje-rpp/' },
+    { name: 'Eurostat — HICP, produkcja, PKB', note: 'miesięcznie · opóźnienie vs GUS', url: 'https://ec.europa.eu/eurostat' },
 ];
 
 export default function PublikacjePage() {
@@ -14,6 +16,7 @@ export default function PublikacjePage() {
             <div>
                 <h1 className="text-3xl font-extrabold tracking-tight text-mk-text">Publikacje</h1>
                 <p className="mt-1 text-sm text-mk-muted">Kalendarz publikacji danych i źródła statystyk</p>
+                <p className="mt-1 text-xs text-mk-faint">Daty w kalendarzu = dzień publikacji. Nazwa wydarzenia wskazuje okres referencyjny danych (np. „dane za lipiec").</p>
             </div>
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
                 <PublicationCalendar className="lg:col-span-2" />

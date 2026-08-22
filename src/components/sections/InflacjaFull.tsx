@@ -6,13 +6,14 @@ import { ResponsiveContainer } from '@/components/ui/ChartContainer';
 import { TrendingUp, Activity, Fuel, DollarSign, Factory, Banknote, Info, ChevronRight, Grid3x3, SlidersHorizontal, RotateCcw, Target } from 'lucide-react';
 import { useCpiFull, usePPI, useBrentMM, useEURPLN, useUSDPLN, type CpiDivision, type CpiHistPoint } from '@/lib/hooks';
 import { plSeries, lastOf, fmtPL } from '@/lib/series';
-import { formatDecimalPL } from '@/lib/formatters';
+import { formatDecimalPL, formatDataPeriod, formatDataPeriodLabel } from '@/lib/formatters';
 import { KpiCard } from '@/components/ui/KpiCard';
 import { InteractiveChart } from '@/components/ui/InteractiveChart';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { Segmented } from '@/components/ui/Segmented';
 import { CsvExport } from '@/components/ui/CsvExport';
 import { StaleBadge } from '@/components/ui/StaleBadge';
+import { RefreshButton } from '@/components/ui/RefreshButton';
 import { DataTable, type Column } from '@/components/ui/DataTable';
 import { Drawer } from '@/components/ui/Drawer';
 import { Heatmap } from '@/components/ui/Heatmap';
@@ -86,7 +87,7 @@ const subFallback = (name: string): string =>
     /pozostał|gdzie indziej|niesklasyfikowan/i.test(name) ? 'Kategoria zbiorcza — obejmuje pozycje nieujęte w pozostałych klasach tego działu.' : '';
 
 export function InflacjaFull() {
-    const { data, isLoading } = useCpiFull();
+    const { data, isLoading, isFetching, refreshFromSource } = useCpiFull();
     const ppiQ = usePPI();
     const brentQ = useBrentMM();
     const eurQ = useEURPLN();
@@ -251,11 +252,31 @@ export function InflacjaFull() {
 
     return (
         <div className="space-y-6">
+            {/* ── Źródło + ręczna aktualizacja ── */}
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-mk-border bg-mk-surface-alt px-4 py-3">
+                <div className="min-w-0 text-sm text-mk-text-soft">
+                    <span className="font-semibold text-mk-text">Źródło: </span>
+                    {data?.source ?? 'GUS DBW (api-dbw.stat.gov.pl)'}
+                    {dataDate && (
+                        <span className="text-mk-faint">
+                            {' · '}
+                            <span className="font-medium text-mk-muted">{formatDataPeriodLabel(dataDate)}</span>
+                            {' '}
+                            <span className="text-mk-faint">(GUS publikuje z ~1-mies. opóźnieniem)</span>
+                        </span>
+                    )}
+                </div>
+                <RefreshButton
+                    onClick={() => { void refreshFromSource(); }}
+                    loading={isFetching && !isLoading}
+                />
+            </div>
+
             {/* ── KPI (ujednolicone na krajowy CPI GUS) ── */}
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <KpiCard label="CPI (r/r)" value={fmtPL(latest?.yoy)} unit="%" accent="amber" icon={TrendingUp}
                     delta={latest?.yoy != null && prev?.yoy != null ? { value: +(latest.yoy - prev.yoy).toFixed(1), unit: 'pp', invert: true } : undefined}
-                    footnote={dataDate ? `GUS · krajowy CPI · ${dataDate}` : 'GUS · krajowy CPI'} />
+                    footnote={dataDate ? `GUS · CPI · ${formatDataPeriodLabel(dataDate)}` : 'GUS · krajowy CPI'} />
                 <KpiCard label="CPI (m/m)" value={fmtPL(latest?.mom)} unit="%" accent="blue" icon={Activity} footnote="miesiąc do miesiąca" />
             </div>
 
@@ -265,7 +286,9 @@ export function InflacjaFull() {
             <SectionCard title="Inflacja CPI — trend (10 lat)" subtitle={`${freq === 'yoy' ? 'rok do roku' : 'miesiąc do miesiąca'} (%) · krajowy CPI (GUS) · kwartalnie do 2025, miesięcznie od 2026`}
                 actions={<div className="flex flex-wrap items-center gap-2">
                     <Segmented value={freq} onChange={setFreq} options={[{ value: 'yoy', label: 'r/r' }, { value: 'mom', label: 'm/m' }]} />
-                    <StaleBadge date={dataDate} label="GUS do" warnAfterMonths={4} />
+                    <RefreshButton onClick={() => { void refreshFromSource(); }} loading={isFetching && !isLoading} />
+                    {dataDate && <span className="text-[11px] font-medium text-mk-muted">{formatDataPeriodLabel(dataDate)}</span>}
+                    <StaleBadge date={dataDate} label="dane za" warnAfterMonths={4} />
                     <CsvExport filename="cpi-10lat" headers={['Miesiąc', 'r/r', 'm/m']} rows={headline.map((h) => [h.date, h.yoy, h.mom])} />
                 </div>}>
                 <InteractiveChart data={chartData} xKey="date" height={320} unit="%" showRange initialRange="5L" ranges={['1R', '3L', '5L', 'ALL']}
@@ -330,7 +353,7 @@ export function InflacjaFull() {
 
             {/* ── Dekompozycja (wodospad) + Top movers ── */}
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                <SectionCard title="Dekompozycja CPI — wkłady działów" subtitle={`z czego składa się inflacja${dataDate ? ` (${dataDate})` : ''} · słupki budują wskaźnik ogółem (pp)`}>
+                <SectionCard title="Dekompozycja CPI — wkłady działów" subtitle={`z czego składa się inflacja${dataDate ? ` (${formatDataPeriodLabel(dataDate)})` : ''} · słupki budują wskaźnik ogółem (pp)`}>
                     <ResponsiveContainer width="100%" height={Math.max(300, waterfall.length * 28)}>
                         <BarChart data={waterfall} layout="vertical" margin={{ top: 4, right: 44, left: 6, bottom: 4 }} barCategoryGap={5}>
                             <CartesianGrid stroke="#EDF0F5" horizontal={false} />
@@ -495,8 +518,15 @@ export function InflacjaFull() {
             </div>
 
             <div className="rounded-xl bg-mk-surface-alt p-4 text-sm text-mk-text-soft">
-                <span className="font-semibold text-mk-text">Źródło: </span>GUS (DBW) — krajowy CPI w 100%: COICOP 1999 kwartalnie (do 2025) + COICOP 2018 miesięcznie (od 2026).
-                Działy z historią ~10-letnią; podkategorie (klasy COICOP 4-cyfrowe, np. Żywność → pieczywo/mięso) — miesięcznie od 2026. Wagi koszyka przybliżone.
+                <span className="font-semibold text-mk-text">API: </span>
+                <code className="text-xs text-mk-muted">/api/gus-cpi-full</code>
+                {' → '}
+                <code className="text-xs text-mk-muted">api-dbw.stat.gov.pl</code>
+                {' · '}
+                GUS (DBW) — krajowy CPI w 100%: COICOP 1999 kwartalnie (do 2025) + COICOP 2018 miesięcznie (od 2026).
+                Daty na wykresach to <span className="font-medium text-mk-text">okres referencyjny</span> (np. „lipiec 2026" = inflacja <em>za</em> lipiec, publikowana przez GUS zwykle w sierpniu).
+                Działy z historią ~10-letnią; podkategorie (klasy COICOP 4-cyfrowe) — miesięcznie od 2026. Wagi koszyka przybliżone.
+                Przycisk „Aktualizuj” pomija cache serwera i pobiera świeże dane bezpośrednio z GUS DBW.
             </div>
 
             {/* ── Drawer: szczegóły klikniętego działu ── */}

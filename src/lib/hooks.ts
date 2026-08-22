@@ -1,6 +1,7 @@
 'use client';
 
-import { useQuery, useQueries, type UseQueryResult } from '@tanstack/react-query';
+import { useCallback } from 'react';
+import { useQuery, useQueries, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
 import { COICOP_2026, buildBasket } from '@/lib/calculations/cpi-basket';
 import type { NewsResult } from '@/lib/news/types';
 import { refreshOptions } from '@/lib/query-refresh';
@@ -439,11 +440,21 @@ interface CpiFullData {
 }
 
 export function useCpiFull(year = new Date().getFullYear()) {
-    return useQuery<CpiFullData>({
-        queryKey: ['gus-cpi-full', year],
+    const queryClient = useQueryClient();
+    const queryKey = ['gus-cpi-full', year] as const;
+    const query = useQuery<CpiFullData>({
+        queryKey,
         queryFn: () => fetchJSON(`/api/gus-cpi-full?year=${year}`),
         ...refreshOptions('gusDbw'),
     });
+    const refreshFromSource = useCallback(
+        () => queryClient.fetchQuery({
+            queryKey,
+            queryFn: () => fetchJSON<CpiFullData>(`/api/gus-cpi-full?year=${year}&refresh=1`),
+        }),
+        [queryClient, year],
+    );
+    return { ...query, refreshFromSource };
 }
 
 // ─── GUS PPI pełny (ceny produkcji, PKD 2007) ────────────
@@ -452,11 +463,21 @@ export interface PpiDivision { code: string; name: string; sec: string; yoy: num
 export interface PpiSection { code: string; name: string; yoy: number | null; mom: number | null; history: PpiHistPoint[]; divisions: PpiDivision[] }
 export interface PpiFullData { headline: PpiHistPoint[]; sections: PpiSection[]; dataDate: string; source: string }
 export function usePpiFull() {
-    return useQuery<PpiFullData>({
-        queryKey: ['gus-ppi-full'],
+    const queryClient = useQueryClient();
+    const queryKey = ['gus-ppi-full'] as const;
+    const query = useQuery<PpiFullData>({
+        queryKey,
         queryFn: () => fetchJSON('/api/gus-ppi-full'),
         ...refreshOptions('gusDbw'),
     });
+    const refreshFromSource = useCallback(
+        () => queryClient.fetchQuery({
+            queryKey,
+            queryFn: () => fetchJSON<PpiFullData>('/api/gus-ppi-full?refresh=1'),
+        }),
+        [queryClient],
+    );
+    return { ...query, refreshFromSource };
 }
 
 // ─── GUS krajowy CPI (oficjalny, DBW) ───────────────────

@@ -4,13 +4,14 @@ import { useMemo, useState, useCallback } from 'react';
 import { Factory, Fuel, Activity, ChevronRight, Info, ArrowRight, Pickaxe, Zap, Droplets, ShoppingCart } from 'lucide-react';
 import { usePpiFull, useCpiFull, type PpiSection, type PpiHistPoint } from '@/lib/hooks';
 import { analyzeSeries, type Observation } from '@/lib/observations';
-import { formatDecimalPL } from '@/lib/formatters';
+import { formatDecimalPL, formatDataPeriodLabel } from '@/lib/formatters';
 import { KpiCard } from '@/components/ui/KpiCard';
 import { InteractiveChart } from '@/components/ui/InteractiveChart';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { Segmented } from '@/components/ui/Segmented';
 import { CsvExport } from '@/components/ui/CsvExport';
 import { StaleBadge } from '@/components/ui/StaleBadge';
+import { RefreshButton } from '@/components/ui/RefreshButton';
 import { DataTable, type Column } from '@/components/ui/DataTable';
 import { Drawer } from '@/components/ui/Drawer';
 import { Heatmap } from '@/components/ui/Heatmap';
@@ -68,7 +69,7 @@ const PIPELINE = [
 ];
 
 export function PpiFull() {
-    const { data, isLoading } = usePpiFull();
+    const { data, isLoading, isFetching, refreshFromSource } = usePpiFull();
     const cpiQ = useCpiFull();              // GUS CPI (10 lat) do zestawienia PPI→CPI — wszystko GUS
 
     const headline = useMemo(() => data?.headline ?? [], [data]);
@@ -154,7 +155,7 @@ export function PpiFull() {
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <KpiCard label="PPI ogółem (r/r)" value={latest?.yoy != null ? formatDecimalPL(latest.yoy, 1) : '—'} unit="%" accent="rose" icon={Factory}
                     delta={latest?.yoy != null && prev?.yoy != null ? { value: +(latest.yoy - prev.yoy).toFixed(1), unit: 'pp', invert: true } : undefined}
-                    footnote={dataDate ? `GUS · ceny producenta · ${dataDate}` : 'GUS'} />
+                    footnote={dataDate ? `GUS · PPI · ${formatDataPeriodLabel(dataDate)}` : 'GUS · DBW API'} />
                 <KpiCard label="PPI ogółem (m/m)" value={latest?.mom != null ? formatDecimalPL(latest.mom, 1) : '—'} unit="%" accent="amber" icon={Activity} footnote="miesiąc do miesiąca" />
             </div>
 
@@ -195,7 +196,7 @@ export function PpiFull() {
 
             {/* Hero PPI trend */}
             <SectionCard title="PPI — trend" subtitle={`ceny produkcji sprzedanej przemysłu · ${freq === 'yoy' ? 'rok do roku' : 'miesiąc do miesiąca'} (%) · GUS`}
-                actions={<div className="flex flex-wrap items-center gap-2"><Segmented value={freq} onChange={setFreq} options={[{ value: 'yoy', label: 'r/r' }, { value: 'mom', label: 'm/m' }]} /><StaleBadge date={dataDate} label="GUS do" warnAfterMonths={3} /><CsvExport filename="ppi-ogolem" headers={['Miesiąc', 'r/r', 'm/m']} rows={headline.map((h) => [h.date, h.yoy, h.mom])} /></div>}>
+                actions={<div className="flex flex-wrap items-center gap-2"><Segmented value={freq} onChange={setFreq} options={[{ value: 'yoy', label: 'r/r' }, { value: 'mom', label: 'm/m' }]} /><RefreshButton onClick={() => { void refreshFromSource(); }} loading={isFetching && !isLoading} />{dataDate && <span className="text-[11px] font-medium text-mk-muted">{formatDataPeriodLabel(dataDate)}</span>}<StaleBadge date={dataDate} label="dane za" warnAfterMonths={3} /><CsvExport filename="ppi-ogolem" headers={['Miesiąc', 'r/r', 'm/m']} rows={headline.map((h) => [h.date, h.yoy, h.mom])} /></div>}>
                 <InteractiveChart data={chartData} xKey="date" height={300} unit="%" showRange initialRange="ALL" ranges={['1R', '3L', 'ALL']}
                     valueFormatter={(v) => formatDecimalPL(v, 1)} xTickFormatter={monthTick} referenceLines={[{ y: 0, color: '#CBD2DD' }]}
                     series={[{ key: 'value', name: freq === 'yoy' ? 'PPI r/r' : 'PPI m/m', color: '#E11D48', type: 'area', strokeWidth: 2.5 }]} />

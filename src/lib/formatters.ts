@@ -110,6 +110,29 @@ export const formatDecimalPL = (n: number, decimals = 1): string =>
     n.toFixed(decimals).replace('.', ',');
 
 /**
+ * Okres referencyjny danych makro (GUS/Eurostat): YYYY-MM → „lipiec 2026", YYYY-Qn → „III kwartał 2025".
+ * To NIE jest data publikacji — CPI za lipiec GUS podaje zwykle w połowie sierpnia.
+ */
+const MONTHS_PL = ['styczeń', 'luty', 'marzec', 'kwiecień', 'maj', 'czerwiec', 'lipiec', 'sierpień', 'wrzesień', 'październik', 'listopad', 'grudzień'] as const;
+const QUARTERS_ROMAN = ['I', 'II', 'III', 'IV'] as const;
+
+export function formatDataPeriod(period: string): string {
+    const q = period.match(/^(\d{4})-Q([1-4])$/);
+    if (q) return `${QUARTERS_ROMAN[+q[2] - 1]} kwartał ${q[1]}`;
+    const m = period.match(/^(\d{4})-(\d{2})$/);
+    if (m) {
+        const monthIdx = +m[2] - 1;
+        if (monthIdx >= 0 && monthIdx < 12) return `${MONTHS_PL[monthIdx]} ${m[1]}`;
+    }
+    return period;
+}
+
+/** Etykieta UI: „dane za lipiec 2026". */
+export function formatDataPeriodLabel(period: string): string {
+    return `dane za ${formatDataPeriod(period)}`;
+}
+
+/**
  * Calculate percent change between two values
  */
 export const percentChange = (current: number, previous: number): number => {

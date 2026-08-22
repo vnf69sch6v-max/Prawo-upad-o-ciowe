@@ -10,10 +10,10 @@ const MONTHS = ['styczeń', 'luty', 'marzec', 'kwiecień', 'maj', 'czerwiec', 'l
 const TYPE_LABEL: Record<MacroEvent['type'], string> = {
     rpp: 'RPP (stopy)',
     cpi: 'Inflacja CPI',
-    gdp: 'PKB',
-    employment: 'Rynek pracy',
-    retail: 'Sprzedaż',
-    industrial: 'Produkcja',
+    gdp: 'PKB flash',
+    employment: 'Bezrobocie (GUS)',
+    retail: 'Sprzedaż detaliczna',
+    industrial: 'Produkcja przemysłowa',
 };
 
 type Cell = { day: number; iso: string } | null;
@@ -75,7 +75,7 @@ export function PublicationCalendar({ className = '' }: { className?: string }) 
         <SectionCard
             className={className}
             title="Kalendarz publikacji"
-            subtitle="Najbliższe odczyty danych makro — dni z publikacją są oznaczone"
+            subtitle="Dzień publikacji u GUS/NBP — nazwa wydarzenia podaje okres danych"
             actions={
                 view && (
                     <div className="flex items-center gap-1">
