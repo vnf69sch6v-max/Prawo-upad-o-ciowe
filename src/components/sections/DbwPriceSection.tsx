@@ -3,8 +3,9 @@
 import type { LucideIcon } from 'lucide-react';
 import { useDbwSeries, type DbwSeriesConfig } from '@/lib/hooks';
 import { fmtPL } from '@/lib/series';
-import { formatDecimalPL } from '@/lib/formatters';
+import { formatDecimalPL, formatDataPeriod } from '@/lib/formatters';
 import { KpiCard, type AccentKey } from '@/components/ui/KpiCard';
+import { EditorialHero } from '@/components/ui/EditorialHero';
 import { InteractiveChart } from '@/components/ui/InteractiveChart';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { CsvExport } from '@/components/ui/CsvExport';
@@ -18,15 +19,52 @@ const tick = (d: string) => {
 };
 
 /** Reusable price/index section backed by the generic DBW series route. */
-export function DbwPriceSection({ title, subtitle, config, series, unit = '%', refline, csvName, note, invertKpi = true }: {
+export function DbwPriceSection({ title, subtitle, config, series, unit = '%', refline, csvName, note, invertKpi = true, heroTitle, heroText, heroPoz }: {
     title: string; subtitle: string; config: DbwSeriesConfig; series: PriceSeries[]; unit?: string; refline?: number; csvName: string; note?: string; invertKpi?: boolean;
+    heroTitle?: string; heroText?: string; heroPoz?: number;
 }) {
     const q = useDbwSeries(config);
     const data = q.data?.series ?? [];
 
+    // Ostatni dostępny odczyt danej serii (serie mogą kończyć się w różnych okresach) — realne dane GUS.
+    const latestOf = (poz: number) => {
+        const key = String(poz);
+        const pts = data.filter((r) => typeof r[key] === 'number');
+        const last = pts.length ? pts[pts.length - 1] : null;
+        const prevPt = pts.length > 1 ? pts[pts.length - 2] : null;
+        const v = last ? (last[key] as number) : null;
+        const pv = prevPt ? (prevPt[key] as number) : null;
+        const d = v != null && pv != null ? +(v - pv).toFixed(1) : null;
+        return { v, d, date: last ? (last.date as string) : null };
+    };
+    const primary = series.find((s) => s.poz === heroPoz) ?? series[0];
+    const heroPrimary = primary ? latestOf(primary.poz) : { v: null, d: null, date: null };
+    const heroPeriod = heroPrimary.date ? formatDataPeriod(heroPrimary.date) : null;
+
     return (
         <div className="space-y-6">
-            <div className={`grid grid-cols-1 gap-4 sm:grid-cols-2 ${series.length >= 3 ? 'lg:grid-cols-4' : 'lg:grid-cols-2'}`}>
+            {primary && (
+                <EditorialHero
+                    ariaLabel={`${heroTitle ?? title} — najważniejszy odczyt`}
+                    period={heroPeriod}
+                    source="GUS · dane"
+                    headline={heroTitle ?? title}
+                    description={heroText ?? note}
+                    value={heroPrimary.v != null ? `${heroPrimary.v > 0 ? '+' : ''}${formatDecimalPL(heroPrimary.v, 1)}` : '—'}
+                    unit={unit}
+                    delta={heroPrimary.d}
+                    valueCaption={primary.name}
+                    panelTitle="Ostatnie odczyty"
+                    rows={series.map((s) => {
+                        const l = latestOf(s.poz);
+                        return { label: s.name, value: l.v != null ? `${l.v > 0 ? '+' : ''}${formatDecimalPL(l.v, 1)}${unit}` : '—' };
+                    })}
+                />
+            )}
+
+            <section>
+                <h2 className="mk-section-label mb-3">Ostatnie odczyty</h2>
+                <div className={`grid grid-cols-1 gap-4 sm:grid-cols-2 ${series.length >= 3 ? 'lg:grid-cols-4' : 'lg:grid-cols-2'}`}>
                 {series.map((s) => {
                     // Ostatnia DOSTĘPNA wartość tej serii (serie mogą kończyć się w różnych okresach —
                     // np. GUS publikuje „bydło" później niż pszenicę → nie pokazuj „—", tylko ostatni odczyt z jego datą).
@@ -43,8 +81,9 @@ export function DbwPriceSection({ title, subtitle, config, series, unit = '%', r
                             footnote={last ? `GUS · ${last.date}` : 'GUS'} loading={q.isLoading} />
                     );
                 })}
-            </div>
-            <SectionCard title={title} subtitle={subtitle}
+                </div>
+            </section>
+            <SectionCard editorial titleVariant="label" title={title} subtitle={subtitle}
                 actions={<CsvExport filename={csvName} headers={['Okres', ...series.map((s) => s.name)]} rows={data.map((r) => [r.date as string, ...series.map((s) => r[String(s.poz)] as number)])} />}>
                 {q.isLoading ? <div className="mk-skeleton h-[300px] w-full" /> : data.length === 0 ? (
                     <p className="py-10 text-center text-sm text-mk-faint">Brak danych dla wybranego okresu.</p>
@@ -55,7 +94,7 @@ export function DbwPriceSection({ title, subtitle, config, series, unit = '%', r
                         series={series.map((s) => ({ key: String(s.poz), name: s.name, color: s.color, type: series.length > 1 ? ('line' as const) : ('area' as const) }))} />
                 )}
             </SectionCard>
-            {note && <div className="rounded-xl bg-mk-surface-alt p-4 text-sm text-mk-text-soft">{note}</div>}
+            {note && <div className="mk-card mk-card-editorial mk-card-pad text-sm text-mk-text-soft">{note}</div>}
         </div>
     );
 }

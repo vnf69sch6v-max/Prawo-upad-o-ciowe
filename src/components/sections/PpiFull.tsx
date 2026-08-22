@@ -1,21 +1,23 @@
 'use client';
 
 import { useMemo, useState, useCallback } from 'react';
-import { Factory, Fuel, Activity, ChevronRight, Info, ArrowRight, Pickaxe, Zap, Droplets, ShoppingCart } from 'lucide-react';
-import { usePpiFull, useCpiFull, type PpiSection, type PpiHistPoint } from '@/lib/hooks';
+import { Factory, Activity, ChevronRight, Info, Pickaxe, Zap, Droplets, Percent } from 'lucide-react';
+import { usePpiFull, useCpiFull, useGusPpiHeadline, type PpiSection, type PpiHistPoint } from '@/lib/hooks';
 import { analyzeSeries, type Observation } from '@/lib/observations';
 import { formatDecimalPL, formatDataPeriodLabel } from '@/lib/formatters';
-import { KpiCard } from '@/components/ui/KpiCard';
+import { CompactKpiGrid, type CompactKpiItem } from '@/components/ui/CompactKpiGrid';
+import { EditorialHero } from '@/components/ui/EditorialHero';
+import { DensePageLayout, DenseTwoCol } from '@/components/ui/DensePageLayout';
 import { InteractiveChart } from '@/components/ui/InteractiveChart';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { Segmented } from '@/components/ui/Segmented';
 import { CsvExport } from '@/components/ui/CsvExport';
 import { StaleBadge } from '@/components/ui/StaleBadge';
 import { RefreshButton } from '@/components/ui/RefreshButton';
-import { DataTable, type Column } from '@/components/ui/DataTable';
 import { Drawer } from '@/components/ui/Drawer';
 import { Heatmap } from '@/components/ui/Heatmap';
-import { InsightBar } from '@/components/ui/InsightBar';
+import { RelatedNews } from '@/components/ui/RelatedNews';
+import { ObservationsPanel } from '@/components/ui/ObservationsPanel';
 
 const monthTick = (d: string) => { const [y, m] = d.split('-'); return m ? `${m}.${y.slice(2)}` : d; };
 const seriesFor = (hist: PpiHistPoint[] | undefined, metric: 'yoy' | 'mom') =>
@@ -60,17 +62,12 @@ const DIV_INFO: Record<string, string> = {
 };
 const divFallback = (secName: string) => `Dział sekcji „${secName}". Ceny producenta zależą od kosztów surowców, energii i pracy w tej branży.`;
 
-// Ogniwa łańcucha cenowego (edukacyjny pasek „co wynika z czego")
-const PIPELINE = [
-    { icon: Fuel, label: 'Surowce i energia', note: 'ropa, gaz, prąd, metale', color: '#B45309' },
-    { icon: Pickaxe, label: 'Górnictwo (PPI B)', note: 'wydobycie surowców', color: '#B45309' },
-    { icon: Factory, label: 'Przetwórstwo (PPI C)', note: 'wyroby gotowe', color: '#2563EB' },
-    { icon: ShoppingCart, label: 'CPI — konsument', note: 'ceny w sklepie', color: '#16A34A' },
-];
+const PIPELINE_NOTE = 'PPI (ceny u producenta) wyprzedza CPI — presja surowców i energii najpierw podnosi górnictwo (B), potem przetwórstwo (C), a z opóźnieniem trafia do koszyka konsumenta.';
 
 export function PpiFull() {
     const { data, isLoading, isFetching, refreshFromSource } = usePpiFull();
-    const cpiQ = useCpiFull();              // GUS CPI (10 lat) do zestawienia PPI→CPI — wszystko GUS
+    const cpiQ = useCpiFull();
+    useGusPpiHeadline();
 
     const headline = useMemo(() => data?.headline ?? [], [data]);
     const sections = useMemo(() => data?.sections ?? [], [data]);
@@ -140,134 +137,164 @@ export function PpiFull() {
 
     const chartData = useMemo(() => headline.map((h) => ({ date: h.date, value: freq === 'yoy' ? h.yoy : h.mom })), [headline, freq]);
 
-    const cols: Column<typeof allDivs[number]>[] = [
-        { key: 'code', header: 'Dział', sortable: true, sortValue: (d) => d.code, render: (d) => <span><span className="text-mk-faint">{d.code}</span> {d.name}</span> },
-        { key: 'sec', header: 'Sekcja', align: 'center', sortable: true, sortValue: (d) => d.sec, render: (d) => <span className="rounded px-1.5 py-0.5 text-xs font-semibold" style={{ background: `${SEC_META[d.sec]?.color ?? '#64748B'}18`, color: SEC_META[d.sec]?.color ?? '#64748B' }}>{d.sec}</span> },
-        { key: 'yoy', header: 'r/r', align: 'right', sortable: true, sortValue: (d) => d.yoy ?? -999, render: (d) => <span style={{ color: (d.yoy ?? 0) >= 0 ? '#DC2626' : '#16A34A', fontWeight: 600 }}>{d.yoy != null ? `${d.yoy > 0 ? '+' : ''}${formatDecimalPL(d.yoy, 1)}%` : '—'}</span> },
-        { key: 'mom', header: 'm/m', align: 'right', sortable: true, sortValue: (d) => d.mom ?? -999, render: (d) => d.mom != null ? `${d.mom > 0 ? '+' : ''}${formatDecimalPL(d.mom, 1)}%` : '—' },
-    ];
+    const cpiHeadline = useMemo(() => cpiQ.data?.headline ?? [], [cpiQ.data]);
+    const cpiLatest = cpiHeadline.length ? cpiHeadline[cpiHeadline.length - 1] : null;
+    const hotSec = useMemo(() => [...sections].filter((s) => s.yoy != null).sort((a, b) => (b.yoy ?? 0) - (a.yoy ?? 0))[0] ?? null, [sections]);
 
-    if (isLoading) return <div className="space-y-4"><div className="grid grid-cols-2 gap-4">{Array.from({ length: 2 }).map((_, i) => <div key={i} className="mk-card h-28" />)}</div><div className="mk-skeleton h-[340px] w-full" /></div>;
+    // ── Hero „redakcyjny" (styl makiety v3) — WYŁĄCZNIE realne dane GUS ──
+    const ppiYoY = latest?.yoy ?? null;
+    const ppiDelta = ppiYoY != null && prev?.yoy != null ? +(ppiYoY - prev.yoy).toFixed(1) : null;
+    const ppiHeadline = ppiYoY == null ? 'Ceny producenta (PPI)'
+        : ppiYoY > 0.1 ? 'Ceny producenta rosną r/r'
+        : ppiYoY < -0.1 ? 'Ceny producenta w deflacji'
+        : 'Ceny producenta blisko zera';
+    const ppiPeriod = dataDate ? formatDataPeriodLabel(dataDate).replace(/^dane za\s+/, '') : null;
+    const ppiCpiSpread = ppiYoY != null && cpiLatest?.yoy != null ? +(ppiYoY - cpiLatest.yoy).toFixed(1) : null;
+
+    const compactKpis: CompactKpiItem[] = [
+        { key: 'ppi-mm', label: 'PPI m/m', value: latest?.mom != null ? formatDecimalPL(latest.mom, 1) : '—', unit: '%', icon: Activity, footnote: 'miesiąc do miesiąca', loading: isLoading },
+        { key: 'cpi-mm', label: 'CPI m/m', value: cpiLatest?.mom != null ? formatDecimalPL(cpiLatest.mom, 1) : '—', unit: '%', icon: Percent, footnote: 'GUS · konsument', loading: cpiQ.isLoading },
+        ...sections.slice(0, 4).map((s) => ({
+            key: `sec-${s.code}`,
+            label: `Sekcja ${s.code}`,
+            value: s.yoy != null ? formatDecimalPL(s.yoy, 1) : '—',
+            unit: '%' as const,
+            icon: (SEC_META[s.code]?.icon ?? Factory),
+            footnote: s.name.slice(0, 22),
+            loading: isLoading,
+        })),
+    ].slice(0, 6);
+
+    const observations = useMemo<Observation[]>(() => {
+        const out: Observation[] = [...insights.slice(0, 3)];
+        out.push({ tone: 'neutral', text: PIPELINE_NOTE });
+        return out.slice(0, 4);
+    }, [insights]);
+
+    if (isLoading) return <div className="space-y-3"><div className="mk-skeleton h-24 w-full" /><div className="grid grid-cols-3 gap-2">{Array.from({ length: 6 }).map((_, i) => <div key={i} className="mk-card h-16" />)}</div><div className="mk-skeleton h-[280px] w-full" /></div>;
 
     return (
-        <div className="space-y-6">
-            {/* KPI */}
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <KpiCard label="PPI ogółem (r/r)" value={latest?.yoy != null ? formatDecimalPL(latest.yoy, 1) : '—'} unit="%" accent="rose" icon={Factory}
-                    delta={latest?.yoy != null && prev?.yoy != null ? { value: +(latest.yoy - prev.yoy).toFixed(1), unit: 'pp', invert: true } : undefined}
-                    footnote={dataDate ? `GUS · PPI · ${formatDataPeriodLabel(dataDate)}` : 'GUS · DBW API'} />
-                <KpiCard label="PPI ogółem (m/m)" value={latest?.mom != null ? formatDecimalPL(latest.mom, 1) : '—'} unit="%" accent="amber" icon={Activity} footnote="miesiąc do miesiąca" />
-            </div>
+        <DensePageLayout>
+            <EditorialHero
+                ariaLabel="PPI — najważniejszy odczyt"
+                period={ppiPeriod}
+                source="GUS · ceny producenta"
+                headline={ppiHeadline}
+                description={
+                    <>
+                        PPI wynosi {ppiYoY != null ? formatDecimalPL(ppiYoY, 1) : '—'}% r/r. Ceny u producenta wyprzedzają CPI o około dwa kwartały.
+                        {hotSec?.yoy != null && ` Najszybciej drożeje ${hotSec.name.toLowerCase()} (${hotSec.yoy > 0 ? '+' : ''}${formatDecimalPL(hotSec.yoy, 1)}%).`}
+                    </>
+                }
+                value={ppiYoY != null ? formatDecimalPL(ppiYoY, 1) : '—'}
+                unit="%"
+                delta={ppiDelta}
+                panelTitle="PPI kontra CPI"
+                rows={[
+                    { label: 'PPI r/r', value: ppiYoY != null ? `${ppiYoY > 0 ? '+' : ''}${formatDecimalPL(ppiYoY, 1)}%` : '—' },
+                    { label: 'CPI r/r', value: cpiLatest?.yoy != null ? `${cpiLatest.yoy > 0 ? '+' : ''}${formatDecimalPL(cpiLatest.yoy, 1)}%` : '—' },
+                    { label: 'Rozstęp PPI − CPI', value: ppiCpiSpread != null ? `${ppiCpiSpread > 0 ? '+' : ''}${formatDecimalPL(ppiCpiSpread, 1)} p.p.` : '—', divider: true },
+                    { label: 'PPI m/m', value: latest?.mom != null ? `${latest.mom > 0 ? '+' : ''}${formatDecimalPL(latest.mom, 1)}%` : '—' },
+                ]}
+            />
 
-            {insights.length > 0 && <InsightBar items={insights} />}
+            <CompactKpiGrid items={compactKpis} label="Wskaźniki uzupełniające" dense />
 
-            {/* Łańcuch przyczynowy — co wynika z czego */}
-            <SectionCard title="Skąd biorą się ceny — łańcuch cenowy" subtitle="PPI to ceny u producenta („u bramy fabryki”) — wyprzedzają ceny konsumenta (CPI)">
-                <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
-                    {PIPELINE.map((step, i) => {
-                        const Icon = step.icon;
-                        return (
-                            <div key={step.label} className="flex items-center gap-2 sm:flex-1">
-                                <div className="flex flex-1 items-center gap-3 rounded-xl border border-mk-border p-3">
-                                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg" style={{ background: `${step.color}18`, color: step.color }}><Icon size={18} /></span>
-                                    <div className="min-w-0">
-                                        <div className="truncate text-sm font-semibold text-mk-text">{step.label}</div>
-                                        <div className="truncate text-[11px] text-mk-faint">{step.note}</div>
-                                    </div>
-                                </div>
-                                {i < PIPELINE.length - 1 && <ArrowRight size={18} className="mx-auto shrink-0 rotate-90 text-mk-faint sm:rotate-0" />}
-                            </div>
-                        );
-                    })}
-                </div>
-                <p className="mt-3 text-xs text-mk-faint">Wzrost cen surowców/energii najpierw podnosi PPI w <span className="font-medium" style={{ color: '#B45309' }}>górnictwie</span>, potem w <span className="font-medium" style={{ color: '#2563EB' }}>przetwórstwie</span>, a z opóźnieniem (kilka miesięcy) przekłada się na <span className="font-medium" style={{ color: '#16A34A' }}>CPI</span>. Dlatego PPI to „system wczesnego ostrzegania” dla inflacji konsumenckiej.</p>
-            </SectionCard>
+            <DenseTwoCol
+                left={<RelatedNews topic="ceny" limit={5} title="Newsy — ceny i inflacja" />}
+                right={
+                    <SectionCard editorial titleVariant="label" title="PPI — trend" subtitle={`${freq === 'yoy' ? 'rok do roku' : 'miesiąc do miesiąca'} (%) · GUS`}
+                        actions={<div className="flex flex-wrap items-center gap-2">
+                            <Segmented value={freq} onChange={setFreq} options={[{ value: 'yoy', label: 'r/r' }, { value: 'mom', label: 'm/m' }]} />
+                            <RefreshButton onClick={() => { void refreshFromSource(); }} loading={isFetching && !isLoading} />
+                            {dataDate && <span className="text-[11px] font-medium text-mk-muted">{formatDataPeriodLabel(dataDate)}</span>}
+                            <StaleBadge date={dataDate} label="dane za" warnAfterMonths={3} />
+                            <CsvExport filename="ppi-ogolem" headers={['Miesiąc', 'r/r', 'm/m']} rows={headline.map((h) => [h.date, h.yoy, h.mom])} />
+                        </div>}>
+                        <InteractiveChart data={chartData} xKey="date" height={280} unit="%" showRange initialRange="ALL" ranges={['1R', '3L', 'ALL']}
+                            valueFormatter={(v) => formatDecimalPL(v, 1)} xTickFormatter={monthTick} referenceLines={[{ y: 0, color: '#CBD2DD' }]}
+                            series={[{ key: 'value', name: freq === 'yoy' ? 'PPI r/r' : 'PPI m/m', color: '#E11D48', type: 'area', strokeWidth: 2.5 }]} />
+                    </SectionCard>
+                }
+            />
 
-            {/* PPI → CPI */}
-            <SectionCard title="PPI wyprzedza CPI" subtitle="ceny producenta (PPI) vs konsumenta (CPI) — r/r (%) · GUS · 10 lat">
-                <InteractiveChart data={ppiCpi} xKey="date" height={300} unit="%" showRange initialRange="5L" ranges={['3L', '5L', 'ALL']} legend
-                    valueFormatter={(v) => formatDecimalPL(v, 1)} xTickFormatter={monthTick} referenceLines={[{ y: 0, color: '#CBD2DD' }]}
-                    series={[
-                        { key: 'ppi', name: 'PPI (producent)', color: '#E11D48', type: 'line', strokeWidth: 2.5 },
-                        { key: 'cpi', name: 'CPI (konsument)', color: '#2563EB', type: 'line', strokeWidth: 2 },
-                    ]} />
-                <p className="mt-2 text-xs text-mk-faint">Widać wyprzedzanie: skok PPI w 2021–22 (energia, surowce) poprzedził szczyt CPI o kilka miesięcy. Gdy PPI spada poniżej zera (deflacja producencka), presja na CPI słabnie.</p>
-            </SectionCard>
-
-            {/* Hero PPI trend */}
-            <SectionCard title="PPI — trend" subtitle={`ceny produkcji sprzedanej przemysłu · ${freq === 'yoy' ? 'rok do roku' : 'miesiąc do miesiąca'} (%) · GUS`}
-                actions={<div className="flex flex-wrap items-center gap-2"><Segmented value={freq} onChange={setFreq} options={[{ value: 'yoy', label: 'r/r' }, { value: 'mom', label: 'm/m' }]} /><RefreshButton onClick={() => { void refreshFromSource(); }} loading={isFetching && !isLoading} />{dataDate && <span className="text-[11px] font-medium text-mk-muted">{formatDataPeriodLabel(dataDate)}</span>}<StaleBadge date={dataDate} label="dane za" warnAfterMonths={3} /><CsvExport filename="ppi-ogolem" headers={['Miesiąc', 'r/r', 'm/m']} rows={headline.map((h) => [h.date, h.yoy, h.mom])} /></div>}>
-                <InteractiveChart data={chartData} xKey="date" height={300} unit="%" showRange initialRange="ALL" ranges={['1R', '3L', 'ALL']}
-                    valueFormatter={(v) => formatDecimalPL(v, 1)} xTickFormatter={monthTick} referenceLines={[{ y: 0, color: '#CBD2DD' }]}
-                    series={[{ key: 'value', name: freq === 'yoy' ? 'PPI r/r' : 'PPI m/m', color: '#E11D48', type: 'area', strokeWidth: 2.5 }]} />
-            </SectionCard>
-
-            {/* Sekcje (kategorie) */}
-            <SectionCard title="Sekcje przemysłu" subtitle="4 kategorie PKD · kliknij, aby zobaczyć działy, trend i co napędza ceny">
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                    {sections.map((s) => {
-                        const meta = SEC_META[s.code] ?? { color: '#64748B', icon: Factory };
-                        const Icon = meta.icon;
-                        return (
-                            <button key={s.code} onClick={() => openSec(s.code)} className="group flex items-start gap-3 rounded-xl border border-mk-border p-4 text-left transition-colors hover:bg-mk-surface-alt">
-                                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg" style={{ background: `${meta.color}18`, color: meta.color }}><Icon size={20} /></span>
-                                <div className="min-w-0 flex-1">
-                                    <div className="flex items-center justify-between gap-2">
-                                        <span className="truncate text-sm font-semibold text-mk-text"><span className="text-mk-faint">{s.code}</span> {s.name}</span>
-                                        <span className="shrink-0 text-base font-bold tnum" style={{ color: (s.yoy ?? 0) >= 0 ? '#DC2626' : '#16A34A' }}>{s.yoy != null ? `${s.yoy > 0 ? '+' : ''}${formatDecimalPL(s.yoy, 1)}%` : '—'}</span>
-                                    </div>
-                                    <p className="mt-1 line-clamp-2 text-xs text-mk-faint">{SEC_INFO[s.code]}</p>
-                                    <div className="mt-1.5 flex items-center gap-1 text-[11px] font-medium text-mk-muted">{s.divisions.length} działów <ChevronRight size={13} className="transition-transform group-hover:translate-x-0.5" /></div>
-                                </div>
-                            </button>
-                        );
-                    })}
-                </div>
-            </SectionCard>
-
-            {/* Mapa ciepła + Top movers */}
-            <SectionCard title="Mapa ciepła — działy przemysłu w czasie" subtitle="dynamika cen producenta · dział PKD × miesiąc · kliknij wiersz"
-                actions={<Segmented value={heatMetric} onChange={setHeatMetric} options={[{ value: 'yoy', label: 'r/r' }, { value: 'mom', label: 'm/m' }]} />}>
-                {heat.dates.length < 2 ? <div className="flex h-[300px] items-center justify-center text-sm text-mk-faint">Brak danych.</div> : (
-                    <Heatmap rows={heatRows} cols={heat.dates} valueAt={heatValue} unit="%" colTickFormatter={monthTick} valueFormatter={(v) => formatDecimalPL(v, 1)} cellHeight={16}
-                        onRowClick={(code) => { const d = allDivs.find((x) => x.code === code); if (d) openSec(d.sec); }} />
-                )}
-                <p className="mt-2 text-[11px] text-mk-faint">Czerwony = ceny producenta rosną, niebieski = spadają. Widać, jak drożyzna „wchodzi” po branżach (najpierw energia i surowce).</p>
-            </SectionCard>
-
-            <SectionCard title="Największe ruchy cen producenta" subtitle="działy PKD — co najbardziej zdrożało i staniało u producenta"
-                actions={<Segmented value={moverMetric} onChange={setMoverMetric} options={[{ value: 'yoy', label: 'r/r' }, { value: 'mom', label: 'm/m' }]} />}>
-                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-                    {[{ t: 'Najbardziej zdrożało', arr: movers.risers, up: true }, { t: 'Najbardziej staniało', arr: movers.fallers, up: false }].map((col) => (
-                        <div key={col.t}>
-                            <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide" style={{ color: col.up ? '#DC2626' : '#16A34A' }}>{col.up ? '▲' : '▼'} {col.t}</div>
-                            <div className="space-y-1.5">
-                                {col.arr.map((m) => (
-                                    <div key={m.code} className="flex items-center gap-2 text-xs">
-                                        <span className="w-36 shrink-0 truncate text-mk-text-soft" title={m.name}><span className="text-mk-faint">{m.code}</span> {m.name}</span>
-                                        <span className="h-2.5 flex-1 rounded-full bg-mk-surface-alt"><span className="block h-2.5 rounded-full" style={{ width: `${(Math.abs(m.v) / movers.maxV) * 100}%`, marginLeft: m.v < 0 ? 'auto' : undefined, background: m.v >= 0 ? '#DC2626' : '#16A34A' }} /></span>
-                                        <span className="w-14 shrink-0 text-right font-semibold tnum" style={{ color: m.v >= 0 ? '#DC2626' : '#16A34A' }}>{m.v > 0 ? '+' : ''}{formatDecimalPL(m.v, 1)}%</span>
-                                    </div>
-                                ))}
-                            </div>
+            <DenseTwoCol
+                left={
+                    <SectionCard editorial titleVariant="label" title="PPI wyprzedza CPI" subtitle="producent vs konsument — r/r (%) · GUS">
+                        <InteractiveChart data={ppiCpi} xKey="date" height={220} unit="%" showRange initialRange="5L" ranges={['3L', '5L', 'ALL']} legend
+                            valueFormatter={(v) => formatDecimalPL(v, 1)} xTickFormatter={monthTick} referenceLines={[{ y: 0, color: '#CBD2DD' }]}
+                            series={[
+                                { key: 'ppi', name: 'PPI (producent)', color: '#E11D48', type: 'line', strokeWidth: 2.5 },
+                                { key: 'cpi', name: 'CPI (konsument)', color: '#2563EB', type: 'line', strokeWidth: 2 },
+                            ]} />
+                    </SectionCard>
+                }
+                right={
+                    <SectionCard editorial titleVariant="label" title="Sekcje przemysłu" subtitle="4 kategorie PKD · kliknij">
+                        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                            {sections.map((s) => {
+                                const meta = SEC_META[s.code] ?? { color: '#64748B', icon: Factory };
+                                const Icon = meta.icon;
+                                return (
+                                    <button key={s.code} onClick={() => openSec(s.code)} className="group flex items-center gap-2 rounded-lg border border-mk-border p-2.5 text-left transition-colors hover:bg-mk-surface-alt">
+                                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg" style={{ background: `${meta.color}18`, color: meta.color }}><Icon size={16} /></span>
+                                        <div className="min-w-0 flex-1">
+                                            <div className="flex items-center justify-between gap-1">
+                                                <span className="truncate text-xs font-semibold text-mk-text"><span className="text-mk-faint">{s.code}</span> {s.name}</span>
+                                                <span className="shrink-0 text-sm font-bold tnum" style={{ color: (s.yoy ?? 0) >= 0 ? '#DC2626' : '#16A34A' }}>{s.yoy != null ? `${s.yoy > 0 ? '+' : ''}${formatDecimalPL(s.yoy, 1)}%` : '—'}</span>
+                                            </div>
+                                            <div className="text-[10px] text-mk-faint">{s.divisions.length} działów · kliknij</div>
+                                        </div>
+                                    </button>
+                                );
+                            })}
                         </div>
-                    ))}
-                </div>
-            </SectionCard>
+                    </SectionCard>
+                }
+            />
 
-            {/* Tabela wszystkich działów */}
-            <SectionCard title="Wszystkie działy PKD" subtitle={`${allDivs.length} działów + 4 sekcje · kliknij nagłówek, aby sortować`}
-                actions={<CsvExport filename="ppi-dzialy" headers={['Kod', 'Dział', 'Sekcja', 'r/r', 'm/m']} rows={allDivs.map((d) => [d.code, d.name, d.sec, d.yoy, d.mom])} />}>
-                <div className="max-h-[360px] overflow-auto">
-                    <DataTable columns={cols} rows={allDivs} initialSort="yoy" initialDir="desc" rowKey={(d) => d.code} onRowClick={(d) => openSec(d.sec)} />
-                </div>
-            </SectionCard>
+            <DenseTwoCol
+                left={
+                    <SectionCard editorial titleVariant="label" title="Mapa ciepła — działy PKD" subtitle="dynamika cen producenta"
+                        actions={<Segmented value={heatMetric} onChange={setHeatMetric} options={[{ value: 'yoy', label: 'r/r' }, { value: 'mom', label: 'm/m' }]} />}>
+                        {heat.dates.length < 2 ? <div className="flex h-[220px] items-center justify-center text-sm text-mk-faint">Brak danych.</div> : (
+                            <Heatmap rows={heatRows} cols={heat.dates} valueAt={heatValue} unit="%" colTickFormatter={monthTick} valueFormatter={(v) => formatDecimalPL(v, 1)} cellHeight={14}
+                                onRowClick={(code) => { const d = allDivs.find((x) => x.code === code); if (d) openSec(d.sec); }} />
+                        )}
+                    </SectionCard>
+                }
+                right={
+                    <SectionCard editorial titleVariant="label" title="Największe ruchy cen" subtitle="działy PKD u producenta"
+                        actions={<Segmented value={moverMetric} onChange={setMoverMetric} options={[{ value: 'yoy', label: 'r/r' }, { value: 'mom', label: 'm/m' }]} />}>
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            {[{ t: 'Zdrożało', arr: movers.risers, up: true }, { t: 'Staniało', arr: movers.fallers, up: false }].map((col) => (
+                                <div key={col.t}>
+                                    <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide" style={{ color: col.up ? '#DC2626' : '#16A34A' }}>{col.up ? '▲' : '▼'} {col.t}</div>
+                                    <div className="space-y-1">
+                                        {col.arr.slice(0, 6).map((m) => (
+                                            <div key={m.code} className="flex items-center gap-1.5 text-[11px]">
+                                                <span className="w-24 shrink-0 truncate text-mk-text-soft" title={m.name}><span className="text-mk-faint">{m.code}</span> {m.name}</span>
+                                                <span className="h-2 flex-1 rounded-full bg-mk-surface-alt"><span className="block h-2 rounded-full" style={{ width: `${(Math.abs(m.v) / movers.maxV) * 100}%`, marginLeft: m.v < 0 ? 'auto' : undefined, background: m.v >= 0 ? '#DC2626' : '#16A34A' }} /></span>
+                                                <span className="w-10 shrink-0 text-right font-semibold tnum" style={{ color: m.v >= 0 ? '#DC2626' : '#16A34A' }}>{m.v > 0 ? '+' : ''}{formatDecimalPL(m.v, 1)}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </SectionCard>
+                }
+            />
 
-            <div className="rounded-xl bg-mk-surface-alt p-4 text-sm text-mk-text-soft">
-                <span className="font-semibold text-mk-text">PPI — ceny produkcji sprzedanej przemysłu (GUS): </span>
-                ceny, po jakich producenci sprzedają swoje wyroby (bez VAT i handlu). Kategorie = 4 sekcje PKD, subkategorie = 28 działów. PPI wyprzedza CPI, bo koszty producentów z opóźnieniem trafiają do cen konsumenckich. Dane miesięczne, ostatnie ~3,5 roku.
-            </div>
+            <ObservationsPanel items={observations} variant="overview" />
 
+            {dataDate && (
+                <p className="text-center text-[11px] text-mk-faint">
+                    Okres referencyjny: {formatDataPeriodLabel(dataDate)} · wyłącznie źródła GUS (DBW)
+                </p>
+            )}
+
+            {/* Drawer sekcji */}
             {/* Drawer sekcji */}
             <Drawer open={open && !!sel} onClose={() => setOpen(false)} accent={selColor}
                 title={sel ? `${sel.code} · ${sel.name}` : ''} subtitle="sekcja PKD · ceny produkcji przemysłu">
@@ -328,6 +355,6 @@ export function PpiFull() {
                     </div>
                 )}
             </Drawer>
-        </div>
+        </DensePageLayout>
     );
 }

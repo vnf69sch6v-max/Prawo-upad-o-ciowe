@@ -7,7 +7,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import {
-    LayoutDashboard, Tag, Factory, Users, TrendingUp, Sparkles, Map, Search, Newspaper,
+    LayoutDashboard, Tag, Factory, Users, TrendingUp, Map, Search, Newspaper,
     Banknote, Percent, Landmark, LineChart, Home, Wheat, HardHat, Fuel, Building2, CornerDownLeft, Briefcase,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
@@ -23,7 +23,6 @@ const COMMANDS: Cmd[] = [
     { id: 'nav-praca', group: 'Zakładki', label: 'Rynek pracy', keywords: 'bezrobocie płace zatrudnienie', href: '/praca', icon: Users },
     { id: 'nav-rynki', group: 'Zakładki', label: 'Rynki', keywords: 'gpw waluty stopy złoto', href: '/rynki', icon: TrendingUp },
     { id: 'nav-newsy', group: 'Zakładki', label: 'Newsy', keywords: 'wiadomości aktualności prasa rss bankier money puls biznesu', href: '/newsy', icon: Newspaper },
-    { id: 'nav-prog', group: 'Zakładki', label: 'Prognozy', keywords: 'nowcast koszyk taylor symulator', href: '/prognozy', icon: Sparkles },
     { id: 'nav-reg', group: 'Zakładki', label: 'Regiony', keywords: 'województwa mapa samorząd demografia', href: '/regiony', icon: Map },
 
     // ── Wskaźniki / widoki (deep-link do pod-zakładek) ──
@@ -40,10 +39,8 @@ const COMMANDS: Cmd[] = [
     { id: 'ind-zatr', group: 'Wskaźniki', label: 'Zatrudnienie i wakaty', sub: 'Rynek pracy', keywords: 'zatrudnienie wakaty etaty', href: '/praca?tab=zatrudnienie', icon: Users },
     { id: 'ind-kursy', group: 'Wskaźniki', label: 'Kursy walut', sub: 'Rynki', keywords: 'eur usd chf gbp pln kurs waluty nbp', href: '/rynki?tab=kursy', icon: Banknote },
     { id: 'ind-stopy', group: 'Wskaźniki', label: 'Stopy procentowe i WIBOR', sub: 'Rynki', keywords: 'stopa referencyjna nbp rpp wibor', href: '/rynki?tab=stopy', icon: Percent },
-    { id: 'ind-gpw', group: 'Wskaźniki', label: 'GPW / WIG20', sub: 'Rynki', keywords: 'giełda wig20 wig akcje indeks złoto surowce brent', href: '/rynki?tab=gpw', icon: LineChart },
-    { id: 'ind-handel', group: 'Wskaźniki', label: 'Handel zagraniczny', sub: 'Rynki', keywords: 'eksport import bilans handel', href: '/rynki?tab=handel', icon: TrendingUp },
-    { id: 'ind-nowcast', group: 'Wskaźniki', label: 'Prognoza CPI (koszyk)', sub: 'Prognozy', keywords: 'nowcast prognoza inflacja koszyk', href: '/prognozy?tab=inflacja', icon: Sparkles },
-    { id: 'ind-taylor', group: 'Wskaźniki', label: 'Reguła Taylora', sub: 'Prognozy', keywords: 'taylor stopa optymalna reguła', href: '/prognozy?tab=taylor', icon: Percent },
+    { id: 'ind-spolki', group: 'Wskaźniki', label: 'Spółki WIG20', sub: 'Rynki', keywords: 'spółki akcje wig20 orlen pko kghm pzu allegro dino cd projekt notowania kurs', href: '/rynki?tab=spolki', icon: LineChart },
+    { id: 'ind-gpw', group: 'Wskaźniki', label: 'Indeksy GPW / surowce', sub: 'Rynki', keywords: 'giełda wig20 wig mwig40 swig80 indeks złoto surowce brent miedź', href: '/rynki?tab=gpw', icon: LineChart },
     { id: 'ind-regpkb', group: 'Wskaźniki', label: 'PKB regionalne', sub: 'Regiony', keywords: 'województwa pkb per capita mapa', href: '/regiony?tab=pkb', icon: Map },
     { id: 'ind-demo', group: 'Wskaźniki', label: 'Demografia', sub: 'Regiony', keywords: 'ludność demografia województwa', href: '/regiony?tab=demografia', icon: Users },
     { id: 'ind-regpraca', group: 'Wskaźniki', label: 'Bezrobocie i płace wg województw', sub: 'Regiony', keywords: 'bezrobocie regionalne województwa mapa płace wynagrodzenia', href: '/regiony?tab=praca', icon: Briefcase },

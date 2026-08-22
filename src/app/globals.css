@@ -23,16 +23,25 @@
   --color-mk-muted: #475569;
   --color-mk-faint: #64748B;
 
-  /* ── Semantic ── */
-  --color-mk-primary: #2563EB;
-  --color-mk-primary-strong: #1D4ED8;
-  --color-mk-primary-soft: #EFF4FF;
+  /* ── Semantic ──
+     Akcent podstawowy = marka Savori (czerwony). Wcześniej był niebieski (#2563EB); przełączony na
+     czerwień marki, żeby całe UI (przyciski, linki, ikony, focus, aktywne stany) miało spójny
+     „czerwony akcent" — tak jak logo, aktywna zakładka i hero, które już używały `--color-mk-brand`. */
+  --color-mk-primary: #DC2626;
+  --color-mk-primary-strong: #B91C1C;
+  --color-mk-primary-soft: #FEF2F2;
   --color-mk-positive: #16A34A;
   --color-mk-positive-soft: #E7F6EC;
   --color-mk-negative: #DC2626;
   --color-mk-negative-soft: #FCECEC;
   --color-mk-warn: #D97706;
   --color-mk-warn-soft: #FDF3E7;
+
+  /* ── Savori brand red (hero, akcenty Przeglądu) ── */
+  --color-mk-brand: #DC2626;
+  --color-mk-brand-strong: #B91C1C;
+  --color-mk-brand-soft: #FEF2F2;
+  --color-mk-brand-muted: rgba(255, 255, 255, 0.72);
 
   /* ── KPI accent palette ── */
   --color-mk-blue: #2563EB;
@@ -102,8 +111,18 @@ body {
   box-shadow: var(--shadow-mk);
 }
 
+/* Wariant editorial — cienka ramka bez cienia (mockup Przeglądu) */
+.mk-card-editorial {
+  box-shadow: none;
+}
+
 .mk-card-pad {
   padding: 20px;
+}
+
+/* Wariant gęsty — mniej paddingu na listach i filtrach */
+.mk-card-pad-compact {
+  padding: 12px 14px;
 }
 
 a.mk-card,
@@ -216,6 +235,59 @@ button.mk-card,
   }
 }
 
+/* Gęstszy kafel KPI — siatka Przeglądu (CompactKpi) */
+.mk-kpi-compact .mk-kpi-body {
+  padding: 12px 14px;
+}
+
+.mk-kpi-compact .mk-kpi-label {
+  min-height: 22px;
+  gap: 4px;
+  font-size: 10px;
+  line-height: 1.25;
+}
+
+.mk-kpi-compact .mk-kpi-figure {
+  margin-top: 8px;
+}
+
+.mk-kpi-compact .mk-kpi-delta {
+  margin-top: 6px;
+}
+
+.mk-kpi-compact .mk-kpi-delta .mk-chip {
+  padding: 2px 6px;
+  font-size: 11px;
+}
+
+.mk-kpi-compact .mk-kpi-foot {
+  padding-top: 8px;
+  font-size: 10px;
+}
+
+@container (min-width: 0px) {
+  .mk-kpi-compact .mk-kpi-value {
+    font-size: clamp(1.125rem, 13cqi, 1.625rem);
+  }
+
+  .mk-kpi-compact .mk-kpi-unit {
+    font-size: clamp(0.6875rem, 6cqi, 0.875rem);
+  }
+}
+
+/* Przegląd — ciaśniejszy rytm pionowy */
+.mk-overview {
+  --mk-overview-gap: 1rem;
+}
+
+.mk-overview > * + * {
+  margin-top: var(--mk-overview-gap);
+}
+
+.mk-card-pad-compact {
+  padding: 14px 16px;
+}
+
 /* Label (uppercase, muted) */
 .mk-label {
   font-size: 11px;
@@ -223,6 +295,123 @@ button.mk-card,
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--color-mk-muted);
+}
+
+/* Sekcja Przeglądu — etykieta w stylu mockupu (uppercase, tracking) */
+.mk-section-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-mk-muted);
+}
+
+/* Breadcrumb nad tytułem strony */
+.mk-page-eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-mk-faint);
+}
+
+.mk-dense-page > * + * {
+  margin-top: 1.25rem;
+}
+
+@media (max-width: 767px) {
+  .mk-dense-page > * + * {
+    margin-top: 1rem;
+  }
+}
+
+/* Czerwony pas hero na Przeglądzie */
+.mk-hero-band {
+  background: var(--color-mk-brand);
+  color: #fff;
+  border-radius: var(--radius-mk);
+}
+
+.mk-hero-band .mk-hero-muted {
+  color: var(--color-mk-brand-muted);
+}
+
+.mk-hero-band .mk-hero-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  background: #fff;
+  color: var(--color-mk-brand-strong);
+}
+
+/* Kompaktowa siatka KPI — mniejszy padding i ciaśniejsza typografia */
+.mk-kpi-compact .mk-kpi-body {
+  padding: 14px;
+}
+
+.mk-kpi-compact .mk-kpi-label {
+  min-height: 26px;
+  font-size: 10px;
+}
+
+.mk-kpi-compact .mk-kpi-figure {
+  margin-top: 10px;
+}
+
+.mk-kpi-compact .mk-kpi-delta {
+  margin-top: 6px;
+}
+
+.mk-kpi-compact .mk-kpi-foot {
+  padding-top: 8px;
+}
+
+@media (max-width: 767px) {
+  .mk-kpi-compact .mk-kpi-body {
+    padding: 12px;
+  }
+}
+
+/* Tag kategorii newsów — czerwony obrys */
+.mk-tag-brand {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--color-mk-brand);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-mk-brand);
+  line-height: 1.4;
+}
+
+.mk-tag-brand-fill {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: var(--color-mk-brand);
+  color: #fff;
+  line-height: 1.4;
+}
+
+/* Numer obserwacji (01, 02…) */
+.mk-obs-num {
+  font-size: 13px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-mk-brand);
+  letter-spacing: -0.02em;
 }
 
 .mk-eyebrow {
@@ -262,6 +451,7 @@ button.mk-card,
 
 /* Nav tabs */
 .mk-tab {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -295,9 +485,20 @@ button.mk-card,
 }
 
 .mk-tab-active {
-  color: var(--color-mk-primary);
-  background: var(--color-mk-primary-soft);
+  color: var(--color-mk-brand);
+  background: transparent;
   font-weight: 600;
+}
+
+.mk-tab-active::after {
+  content: '';
+  position: absolute;
+  bottom: 2px;
+  left: 10px;
+  right: 10px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--color-mk-brand);
 }
 
 /* Buttons */
@@ -541,6 +742,10 @@ button.mk-card,
 @media (max-width: 767px) {
   .mk-card-pad {
     padding: 16px;
+  }
+
+  .mk-card-pad-compact {
+    padding: 10px 12px;
   }
 
   .recharts-wrapper {

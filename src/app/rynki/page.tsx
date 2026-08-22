@@ -1,29 +1,32 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useInitialTab } from '@/lib/use-initial-tab';
 import { InsightBar } from '@/components/ui/InsightBar';
 import type { Observation } from '@/lib/observations';
-import { Euro, DollarSign, Coins, TrendingUp, Ship, Landmark, PoundSterling, Fuel, Flame, Gem, Factory, BarChart3 } from 'lucide-react';
+import { Euro, DollarSign, Coins, PoundSterling, Fuel, Flame, Gem, Factory, BarChart3, TrendingUp, TrendingDown, Search, ExternalLink, Newspaper, ArrowUpRight } from 'lucide-react';
 import {
-    useNBPTable, useNBPCurrencyHistory, useGold, useStooq,
-    useTradeData, useCurrentAccount, useWig20,
-    type NBPTable, type NBPRate, type Wig20Quote,
+    useNBPTable, useNBPCurrencyHistory, useGold, useStooq, useWig20, useNews,
+    type NBPTable, type NBPRate, type Wig20Quote, type NewsItem,
 } from '@/lib/hooks';
-import { plSeries, lastOf, prevOf, deltaOf, monthTick, fmtPL, type Point } from '@/lib/series';
-import { formatDecimalPL, formatNumber, formatDate, percentChange } from '@/lib/formatters';
+import { WIG20, type Wig20Company } from '@/lib/wig20';
+import { matchCompanyNews } from '@/lib/news/match';
+import { lastOf, prevOf, monthTick, type Point } from '@/lib/series';
+import { formatDecimalPL, formatNumber, formatDate, formatRelativeTime, formatTime, percentChange } from '@/lib/formatters';
 import { KpiCard, type AccentKey } from '@/components/ui/KpiCard';
+import { EditorialHero } from '@/components/ui/EditorialHero';
 import { InteractiveChart } from '@/components/ui/InteractiveChart';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { Segmented } from '@/components/ui/Segmented';
 import { CsvExport } from '@/components/ui/CsvExport';
 import { DataTable, type Column } from '@/components/ui/DataTable';
-import { WatchStar } from '@/components/ui/WatchStar';
-import { StopySection } from '@/components/sections/macro-sections';
-import { RelatedNews } from '@/components/ui/RelatedNews';
+import { RynkiStopySection } from '@/components/sections/RynkiStopySection';
+import { RynkiDashboard } from '@/components/sections/RynkiDashboard';
+import { DensePageLayout } from '@/components/ui/DensePageLayout';
+import { PageHeader, PageEyebrow } from '@/components/ui/PageHeader';
 
-type Section = 'kursy' | 'stopy' | 'gpw' | 'handel';
+type Section = 'spolki' | 'kursy' | 'stopy' | 'gpw';
 type Hist = { mid?: number; effectiveDate?: string }[];
 
 const histPoints = (h?: Hist): Point[] =>
@@ -65,9 +68,9 @@ function KursySection() {
     const goldLast = gold.length ? gold[gold.length - 1].value : null;
     const goldDelta = gold.length > 1 ? +percentChange(gold[gold.length - 1].value, gold[gold.length - 2].value).toFixed(2) : null;
 
-    const kpis: { label: string; code: string; hist: Hist | undefined; accent: AccentKey; icon: typeof Euro }[] = [
-        { label: 'EUR / PLN', code: 'EUR', hist: eurH.data as Hist, accent: 'blue', icon: Euro },
-        { label: 'USD / PLN', code: 'USD', hist: usdH.data as Hist, accent: 'green', icon: DollarSign },
+    const kpis: { label: string; code: string; hist: Hist | undefined; accent: AccentKey; icon: typeof Euro; watchId?: string }[] = [
+        { label: 'EUR / PLN', code: 'EUR', hist: eurH.data as Hist, accent: 'blue', icon: Euro, watchId: 'eur-pln' },
+        { label: 'USD / PLN', code: 'USD', hist: usdH.data as Hist, accent: 'green', icon: DollarSign, watchId: 'usd-pln' },
         { label: 'CHF / PLN', code: 'CHF', hist: chfH.data as Hist, accent: 'rose', icon: Coins },
         { label: 'GBP / PLN', code: 'GBP', hist: gbpH.data as Hist, accent: 'violet', icon: PoundSterling },
     ];
@@ -105,14 +108,14 @@ function KursySection() {
                 {kpis.map((k) => (
                     <KpiCard key={k.code} label={k.label} value={mid(k.code) != null ? formatDecimalPL(mid(k.code)!, 3) : '—'} unit="zł" accent={k.accent} icon={k.icon}
                         delta={histDelta(k.hist) != null ? { value: histDelta(k.hist)!, unit: 'pct', invert: true } : undefined}
-                        footnote={table?.effectiveDate ? `NBP ${formatDate(table.effectiveDate)}` : 'NBP tab. A'} loading={tableQ.isLoading} />
+                        footnote={table?.effectiveDate ? `NBP ${formatDate(table.effectiveDate)}` : 'NBP tab. A'} loading={tableQ.isLoading} watchId={k.watchId} />
                 ))}
             </div>
 
             {fxInsights.length > 0 && <InsightBar items={fxInsights} />}
 
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-                <SectionCard className="lg:col-span-2" title="Kursy walut — historia 90 dni" subtitle="NBP · EUR / USD / CHF / GBP"
+                <SectionCard editorial titleVariant="label" className="lg:col-span-2" title="Kursy walut — historia 90 dni" subtitle="NBP · EUR / USD / CHF / GBP"
                     actions={<CsvExport filename="kursy-walut" headers={['Data', 'EUR', 'USD', 'CHF', 'GBP']} rows={chart.map((r) => [r.date, r.EUR, r.USD, r.CHF, r.GBP])} />}>
                     {chart.length === 0 ? <div className="mk-skeleton h-[320px] w-full" /> : (
                         <InteractiveChart data={chart} xKey="date" height={320} unit=" zł" legend showRange initialRange="3M"
@@ -125,7 +128,7 @@ function KursySection() {
                             ]} />
                     )}
                 </SectionCard>
-                <SectionCard title="Złoto (NBP)" subtitle="cena 1 g w PLN">
+                <SectionCard editorial titleVariant="label" title="Złoto (NBP)" subtitle="cena 1 g w PLN">
                     <div className="mb-3">
                         <div className="mk-kpi-value" style={{ fontSize: '2rem' }}>{goldLast != null ? formatDecimalPL(goldLast, 2) : '—'}<span className="ml-1 text-lg text-mk-muted">zł/g</span></div>
                         {goldDelta != null && <div className="mt-1 text-sm text-mk-muted">dzień: {goldDelta > 0 ? '+' : ''}{formatDecimalPL(goldDelta, 2)}%</div>}
@@ -137,7 +140,7 @@ function KursySection() {
                 </SectionCard>
             </div>
 
-            <SectionCard title="Tabela kursów NBP (tab. A)" subtitle={table?.effectiveDate ? `stan na ${formatDate(table.effectiveDate)}` : 'NBP'}
+            <SectionCard editorial titleVariant="label" title="Tabela kursów NBP (tab. A)" subtitle={table?.effectiveDate ? `stan na ${formatDate(table.effectiveDate)}` : 'NBP'}
                 actions={<CsvExport filename="tabela-kursow" headers={['Waluta', 'Kod', 'Kurs PLN']} rows={rates.map((r) => [r.currency, r.code, r.mid])} />}>
                 <div className="max-h-[360px] overflow-auto">
                     <DataTable columns={cols} rows={rates} initialSort="code" initialDir="asc" rowKey={(r) => r.code} />
@@ -152,6 +155,247 @@ type QBar = { date: string; close: number };
 const barsOf = (q: { data?: { data: QBar[] } }): QBar[] => q.data?.data ?? [];
 const lastCloseOf = (q: { data?: { latest: QBar | null } }): number | null => q.data?.latest?.close ?? null;
 const pctDelta = (bars: QBar[]): number | null => (bars.length > 1 ? +percentChange(bars[bars.length - 1].close, bars[bars.length - 2].close).toFixed(2) : null);
+
+// ═══ SPÓŁKI WIG20 ═══
+// Widok dla inwestora detalicznego: wszystkie spółki WIG20 w jednym miejscu — żywy kurs, zmiana
+// dzienna, krótki opis działalności oraz dopasowane newsy (aliasy z lib/wig20.ts). U góry „nastroje
+// rynku" liczone z realnych notowań. Filtr po branży, szukajka i sortowanie. Klik → strona spółki.
+type SortKey = 'zmiana' | 'nazwa' | 'kurs';
+
+const CHANGE_UP = '#15803D';
+const CHANGE_DOWN = '#B91C1C';
+
+function changeColor(v: number | null | undefined): string {
+    if (v == null) return '#64748B';
+    return v >= 0 ? CHANGE_UP : CHANGE_DOWN;
+}
+function fmtPct(v: number | null | undefined): string {
+    if (v == null) return '—';
+    return `${v > 0 ? '+' : ''}${formatDecimalPL(v, 2)}%`;
+}
+
+function CompanyNewsList({ items }: { items: NewsItem[] }) {
+    if (items.length === 0) {
+        return <p className="text-xs text-mk-faint">Brak świeżych newsów o spółce w bieżącej paczce.</p>;
+    }
+    return (
+        <ul className="space-y-2">
+            {items.map((n) => (
+                <li key={n.link}>
+                    <a href={n.link} target="_blank" rel="noopener noreferrer" className="group block">
+                        <span className="line-clamp-2 text-xs font-medium leading-snug text-mk-text transition-colors group-hover:text-mk-primary">{n.title}</span>
+                        <span className="mt-0.5 flex items-center gap-1.5 text-[11px] text-mk-muted">
+                            <span>{n.source}</span>
+                            <span className="text-mk-faint">·</span>
+                            <time dateTime={n.publishedAt}>{formatRelativeTime(n.publishedAt) || formatTime(n.publishedAt)}</time>
+                            <ExternalLink size={11} className="shrink-0 text-mk-faint transition-colors group-hover:text-mk-primary" aria-hidden />
+                        </span>
+                    </a>
+                </li>
+            ))}
+        </ul>
+    );
+}
+
+function CompanyCard({ company, quote, news }: { company: Wig20Company; quote: Wig20Quote | null; news: NewsItem[] }) {
+    const change = quote?.changePct ?? null;
+    return (
+        <div className="mk-card mk-card-editorial mk-card-pad relative flex flex-col">
+            <div className="flex items-start gap-2">
+                <span className="mt-0.5 inline-flex shrink-0 items-center rounded-md bg-mk-surface-alt px-1.5 py-0.5 text-xs font-bold text-mk-text">{company.ticker}</span>
+                <div className="min-w-0">
+                    <Link href={`/spolki/${company.ticker}`} className="block truncate text-base font-bold leading-tight text-mk-text transition-colors hover:text-mk-primary">
+                        {company.name}
+                    </Link>
+                    <span className="mt-0.5 inline-block rounded-full bg-mk-surface-alt px-2 py-0.5 text-[11px] font-medium text-mk-muted">{company.sector}</span>
+                </div>
+            </div>
+
+            <div className="mt-3 flex items-baseline justify-between gap-2">
+                <span className="text-2xl font-extrabold tnum text-mk-text">
+                    {quote?.price != null ? formatDecimalPL(quote.price, 2) : '—'}
+                    <span className="ml-1 text-sm font-semibold text-mk-muted">zł</span>
+                </span>
+                <span className="text-sm font-bold tnum" style={{ color: changeColor(change) }}>{fmtPct(change)}</span>
+            </div>
+
+            <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-mk-text-soft">{company.description}</p>
+
+            <div className="mt-3 flex-1 border-t border-mk-border pt-3">
+                <div className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-mk-muted">
+                    <Newspaper size={13} aria-hidden />
+                    <span>Newsy o spółce</span>
+                    {news.length > 0 && <span className="rounded-full bg-mk-primary/10 px-1.5 text-[11px] font-bold text-mk-primary">{news.length}</span>}
+                </div>
+                <CompanyNewsList items={news} />
+            </div>
+
+            <Link href={`/spolki/${company.ticker}`} className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-mk-primary transition-colors hover:underline">
+                Szczegóły i wykres <ArrowUpRight size={14} aria-hidden />
+            </Link>
+        </div>
+    );
+}
+
+function SpolkiSection() {
+    const spolki = useWig20();
+    const wigIndex = useStooq('wig20', 30);
+    const news = useNews();
+
+    const [query, setQuery] = useState('');
+    const [sector, setSector] = useState<string>('all');
+    const [sort, setSort] = useState<SortKey>('zmiana');
+
+    const quoteByTicker = useMemo(() => {
+        const m = new Map<string, Wig20Quote>();
+        (spolki.data?.items ?? []).forEach((q) => m.set(q.ticker, q));
+        return m;
+    }, [spolki.data]);
+
+    // Dopasowanie newsów po aliasach spółki (lib/news/match.ts) — tytuł liczy się zawsze, opis tylko
+    // dla jednoznacznych nazw. Liczone raz z jednej paczki /api/news dla wszystkich spółek.
+    const newsByTicker = useMemo(() => {
+        const items = news.data?.items ?? [];
+        const m = new Map<string, NewsItem[]>();
+        for (const c of WIG20) m.set(c.ticker, matchCompanyNews(items, c.aliases, 2));
+        return m;
+    }, [news.data]);
+
+    const sectors = useMemo(() => Array.from(new Set(WIG20.map((c) => c.sector))).sort((a, b) => a.localeCompare(b, 'pl')), []);
+
+    // Nastroje rynku — WYŁĄCZNIE z żywych notowań (bez zmyślonych liczb): szerokość rynku i liderzy.
+    const summary = useMemo(() => {
+        const valid = (spolki.data?.items ?? []).filter((q): q is Wig20Quote & { changePct: number } => q.changePct != null);
+        const up = valid.filter((q) => q.changePct > 0).length;
+        const down = valid.filter((q) => q.changePct < 0).length;
+        const sorted = [...valid].sort((a, b) => b.changePct - a.changePct);
+        const avg = valid.length ? valid.reduce((s, q) => s + q.changePct, 0) / valid.length : null;
+        return { up, down, n: valid.length, top: sorted[0] ?? null, bottom: sorted[sorted.length - 1] ?? null, avg };
+    }, [spolki.data]);
+
+    const wigLast = lastCloseOf(wigIndex);
+    const wigDelta = pctDelta(barsOf(wigIndex));
+    const wigDate = barsOf(wigIndex).at(-1)?.date ?? null;
+
+    // ── Hero „redakcyjny" — WYŁĄCZNIE żywe notowania (WIG20 + szerokość rynku), bez zmyślonych liczb ──
+    const heroHeadline = wigLast == null ? 'WIG20'
+        : wigDelta != null && wigDelta > 0 ? 'WIG20 rośnie'
+        : wigDelta != null && wigDelta < 0 ? 'WIG20 spada'
+        : 'WIG20';
+
+    const moodInsights = useMemo<Observation[]>(() => {
+        const out: Observation[] = [];
+        if (summary.top && summary.top.changePct > 0) {
+            const c = WIG20.find((x) => x.ticker === summary.top!.ticker);
+            out.push({ kind: 'trend', tone: 'up', text: `Najmocniej rośnie ${c?.name ?? summary.top.ticker} (${summary.top.ticker}): ${fmtPct(summary.top.changePct)} dziś` });
+        }
+        if (summary.bottom && summary.bottom.changePct < 0) {
+            const c = WIG20.find((x) => x.ticker === summary.bottom!.ticker);
+            out.push({ kind: 'trend', tone: 'down', text: `Najmocniej spada ${c?.name ?? summary.bottom.ticker} (${summary.bottom.ticker}): ${fmtPct(summary.bottom.changePct)} dziś` });
+        }
+        return out;
+    }, [summary]);
+
+    const cards = useMemo(() => {
+        const q = query.trim().toLowerCase();
+        let list = WIG20.map((c) => ({ company: c, quote: quoteByTicker.get(c.ticker) ?? null, news: newsByTicker.get(c.ticker) ?? [] }));
+        if (sector !== 'all') list = list.filter((x) => x.company.sector === sector);
+        if (q) list = list.filter((x) => x.company.name.toLowerCase().includes(q) || x.company.ticker.toLowerCase().includes(q) || x.company.sector.toLowerCase().includes(q));
+        list = [...list].sort((a, b) => {
+            if (sort === 'nazwa') return a.company.name.localeCompare(b.company.name, 'pl');
+            if (sort === 'kurs') return (b.quote?.price ?? -1) - (a.quote?.price ?? -1);
+            return (b.quote?.changePct ?? -999) - (a.quote?.changePct ?? -999);
+        });
+        return list;
+    }, [query, sector, sort, quoteByTicker, newsByTicker]);
+
+    const pill = (active: boolean) =>
+        `rounded-full border px-3 py-1 text-xs font-medium transition-colors ${active ? 'border-mk-primary bg-mk-primary text-white' : 'border-mk-border bg-mk-surface text-mk-muted hover:border-mk-primary/40 hover:text-mk-text'}`;
+
+    return (
+        <div className="space-y-6">
+            <EditorialHero
+                ariaLabel="WIG20 — najważniejszy odczyt"
+                period={wigDate ? formatDate(wigDate) : null}
+                source="GPW · Stooq/Yahoo"
+                headline={heroHeadline}
+                description={
+                    <>
+                        Indeks 20 największych spółek Giełdy Papierów Wartościowych.
+                        {summary.n ? ` Na ostatniej sesji na plusie ${summary.up} z ${summary.n} spółek.` : ''}
+                    </>
+                }
+                value={wigLast != null ? formatNumber(Math.round(wigLast)) : '—'}
+                unit="pkt"
+                delta={wigDelta}
+                deltaUnit="%"
+                valueCaption="Indeks blue chip · GPW"
+                panelTitle="Szerokość rynku"
+                rows={[
+                    { label: 'Spółki na plusie', value: summary.n ? `${summary.up} z ${summary.n}` : '—' },
+                    { label: 'Spółki na minusie', value: summary.n ? `${summary.down} z ${summary.n}` : '—' },
+                    { label: 'Średnia zmiana', value: summary.avg != null ? fmtPct(summary.avg) : '—', divider: true },
+                ]}
+            />
+
+            {/* Nastroje rynku — szerokość + poziom indeksu z żywych danych */}
+            <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+                <KpiCard label="WIG20" value={wigLast != null ? formatNumber(Math.round(wigLast)) : '—'} unit="pkt" icon={BarChart3}
+                    delta={wigDelta != null ? { value: wigDelta, unit: 'pct' } : undefined} footnote="indeks 20 największych spółek" loading={wigIndex.isLoading} watchId="wig20" />
+                <KpiCard label="Spółki na plusie" value={summary.n ? String(summary.up) : '—'} unit={summary.n ? `z ${summary.n}` : ''} icon={TrendingUp}
+                    footnote="rosną na ostatniej sesji" loading={spolki.isLoading} />
+                <KpiCard label="Spółki na minusie" value={summary.n ? String(summary.down) : '—'} unit={summary.n ? `z ${summary.n}` : ''} icon={TrendingDown}
+                    footnote="spadają na ostatniej sesji" loading={spolki.isLoading} />
+                <KpiCard label="Średnia zmiana" value={summary.avg != null ? fmtPct(summary.avg) : '—'} icon={TrendingUp}
+                    footnote="średnia z notowań WIG20" loading={spolki.isLoading} />
+            </div>
+
+            {moodInsights.length > 0 && <InsightBar items={moodInsights} />}
+
+            {/* Pasek narzędzi — szukajka, sortowanie, filtr branż */}
+            <div className="space-y-3">
+                <div className="flex flex-wrap items-center gap-3">
+                    <div className="relative flex-1 min-w-[220px]">
+                        <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-mk-faint" aria-hidden />
+                        <input
+                            value={query}
+                            onChange={(e) => setQuery(e.target.value)}
+                            placeholder="Szukaj spółki (nazwa, ticker, branża)…"
+                            aria-label="Szukaj spółki"
+                            className="h-10 w-full rounded-xl border border-mk-border bg-mk-surface pl-9 pr-3 text-sm text-mk-text outline-none transition-colors placeholder:text-mk-faint focus:border-mk-primary/60"
+                        />
+                    </div>
+                    <Segmented value={sort} onChange={setSort} aria-label="Sortowanie"
+                        options={[{ value: 'zmiana', label: 'Zmiana %' }, { value: 'nazwa', label: 'A–Z' }, { value: 'kurs', label: 'Kurs' }]} />
+                </div>
+                <div className="flex flex-wrap gap-2">
+                    <button type="button" className={pill(sector === 'all')} onClick={() => setSector('all')}>Wszystkie</button>
+                    {sectors.map((s) => (
+                        <button key={s} type="button" className={pill(sector === s)} onClick={() => setSector(s)}>{s}</button>
+                    ))}
+                </div>
+            </div>
+
+            {/* Karty spółek */}
+            {spolki.isLoading ? (
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {Array.from({ length: 6 }, (_, i) => <div key={i} className="mk-skeleton h-64 w-full rounded-2xl" />)}
+                </div>
+            ) : cards.length === 0 ? (
+                <SectionCard editorial titleVariant="label"><p className="py-8 text-center text-sm text-mk-muted">Brak spółek dla wybranego filtra.</p></SectionCard>
+            ) : (
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {cards.map((c) => <CompanyCard key={c.company.ticker} company={c.company} quote={c.quote} news={c.news} />)}
+                </div>
+            )}
+
+            <p className="text-xs text-mk-faint">
+                Kursy i zmiana dzienna: Yahoo Finance (GPW){spolki.data ? ` · ${spolki.data.ok}/${spolki.data.count} spółek z notowaniem` : ''}. Newsy: agregator RSS
+                dopasowany po nazwie spółki. Opisy branż mają charakter informacyjny — to nie rekomendacja inwestycyjna.
+            </p>
+        </div>
+    );
+}
 
 function GpwSection() {
     // Indeksy GPW. WIG20/mWIG40/sWIG80 mają historię — seria z ETF-a replikującego (WIG20TR/
@@ -169,26 +413,6 @@ function GpwSection() {
     const gas = useStooq('ng.c', 90);
 
     const wig20Chart = useMemo(() => barsOf(wig20).map((b) => ({ date: b.date, value: b.close })), [wig20.data]);
-
-    // Spółki WIG20 — jedno zbiorcze żądanie (/api/wig20), tickery zweryfikowane u źródła (lib/wig20.ts).
-    const router = useRouter();
-    const spolki = useWig20();
-    const spolkiCols: Column<Wig20Quote>[] = [
-        // Gwiazdka NIE jest sortowalna: kolejność wierszy ma być stabilna, a „obserwowane na górze"
-        // zmieniałoby układ pod palcem w chwili kliknięcia. Pas „Obserwowane" jest na Przeglądzie.
-        { key: 'watch', header: '★', width: 44, render: (r) => <WatchStar kind="spolka" id={r.ticker} label={r.name} variant="inline" /> },
-        { key: 'ticker', header: 'Ticker', sortable: true, sortValue: (r) => r.ticker, render: (r) => <span className="font-semibold text-mk-text">{r.ticker}</span> },
-        { key: 'name', header: 'Spółka', sortable: true, sortValue: (r) => r.name, render: (r) => <span className="text-mk-text">{r.name}</span> },
-        { key: 'price', header: 'Kurs (zł)', align: 'right', sortable: true, sortValue: (r) => r.price ?? -1, render: (r) => r.price != null ? formatDecimalPL(r.price, 2) : '—' },
-        {
-            key: 'changePct', header: 'Zmiana', align: 'right', sortable: true, sortValue: (r) => r.changePct ?? -999,
-            render: (r) => r.changePct == null ? '—' : (
-                <span style={{ color: r.changePct >= 0 ? '#15803D' : '#B91C1C', fontWeight: 600 }}>
-                    {r.changePct > 0 ? '+' : ''}{formatDecimalPL(r.changePct, 2)}%
-                </span>
-            ),
-        },
-    ];
 
     // Porównanie indeksów — REBAZOWANE DO 100. WIG20 ≈ 3,8 tys., mWIG40 ≈ 9,9 tys., sWIG80 ≈ 30 tys.,
     // więc na wspólnej osi w wartościach bezwzględnych WIG20 byłby płaską linią przy zerze. Rebazowanie
@@ -249,12 +473,13 @@ function GpwSection() {
                     return (
                         <KpiCard key={ix.label} label={ix.label} value={last != null ? formatNumber(Math.round(last)) : '—'} unit="pkt" accent={ix.accent} icon={BarChart3}
                             delta={pctDelta(bars) != null ? { value: pctDelta(bars)!, unit: 'pct' } : undefined}
-                            footnote={bars.length > 2 ? 'GPW · notowania' : 'GPW · poziom bieżący'} loading={ix.q.isLoading} />
+                            footnote={bars.length > 2 ? 'GPW · notowania' : 'GPW · poziom bieżący'} loading={ix.q.isLoading}
+                            watchId={ix.label === 'WIG20' ? 'wig20' : undefined} />
                     );
                 })}
             </div>
 
-            <SectionCard title="WIG20 — 60 sesji" subtitle="poziom indeksu · seria z ETF WIG20TR skalowana do poziomu indeksu (Yahoo)"
+            <SectionCard editorial titleVariant="label" title="WIG20 — 60 sesji" subtitle="poziom indeksu · seria z ETF WIG20TR skalowana do poziomu indeksu (Yahoo)"
                 actions={<CsvExport filename="wig20" headers={['Data', 'Zamknięcie']} rows={wig20Chart.map((r) => [r.date, r.value])} />}>
                 {wig20Chart.length < 2 ? <div className="mk-skeleton h-[280px] w-full" /> : (
                     <InteractiveChart data={wig20Chart} xKey="date" height={280} showRange initialRange="ALL"
@@ -263,7 +488,7 @@ function GpwSection() {
                 )}
             </SectionCard>
 
-            <SectionCard title="Indeksy GPW — dynamika (rebazowane do 100)"
+            <SectionCard editorial titleVariant="label" title="Indeksy GPW — dynamika (rebazowane do 100)"
                 subtitle="porównanie zmian %: WIG20, mWIG40, sWIG80 · serie z ETF-ów replikujących (Yahoo)"
                 actions={<CsvExport filename="indeksy-gpw" headers={['Data', 'WIG20', 'mWIG40', 'sWIG80']} rows={indexChart.map((r) => [r.date, r.wig20, r.mwig40, r.swig80])} />}>
                 {indexChart.length < 2 ? <div className="mk-skeleton h-[320px] w-full" /> : (
@@ -277,16 +502,15 @@ function GpwSection() {
                 )}
             </SectionCard>
 
-            <SectionCard title="Spółki WIG20" subtitle={`kurs i zmiana dzienna · Yahoo Finance (GPW)${spolki.data ? ` · ${spolki.data.ok}/${spolki.data.count} spółek` : ''}`}
-                actions={<CsvExport filename="spolki-wig20" headers={['Ticker', 'Spółka', 'Kurs', 'Zmiana %']} rows={(spolki.data?.items ?? []).map((s) => [s.ticker, s.name, s.price, s.changePct])} />}>
-                {spolki.isLoading ? <div className="mk-skeleton h-[420px] w-full" /> : (
-                    <DataTable columns={spolkiCols} rows={spolki.data?.items ?? []} initialSort="changePct" rowKey={(r) => r.ticker} maxHeight={420} onRowClick={(r) => router.push(`/spolki/${r.ticker}`)} />
-                )}
-            </SectionCard>
+            <div className="mk-card mk-card-editorial mk-card-pad text-sm text-mk-text-soft">
+                Szukasz pojedynczych spółek? Wszystkie 20 firm z WIG20 — z kursem, opisem i dopasowanymi
+                newsami — znajdziesz w zakładce <Link href="/rynki?tab=spolki" className="font-medium text-mk-primary hover:underline">Spółki</Link>.
+            </div>
 
             {/* Surowce */}
             <div>
-                <h3 className="mk-section-title mb-3">Surowce <span className="text-sm font-normal text-mk-muted">— notowania światowe, także czynniki inflacji (Yahoo Finance)</span></h3>
+                <h3 className="mk-section-label mb-3">Surowce</h3>
+                <p className="-mt-2 mb-3 text-sm text-mk-muted">Notowania światowe, także czynniki inflacji (Yahoo Finance)</p>
                 <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
                     {commods.map((c) => {
                         const bars = barsOf(c.q);
@@ -300,7 +524,7 @@ function GpwSection() {
                 </div>
             </div>
 
-            <SectionCard title="Surowce — dynamika (rebazowane do 100)" subtitle="porównanie zmian %: ropa Brent/WTI, złoto, miedź, gaz ziemny"
+            <SectionCard editorial titleVariant="label" title="Surowce — dynamika (rebazowane do 100)" subtitle="porównanie zmian %: ropa Brent/WTI, złoto, miedź, gaz ziemny"
                 actions={<CsvExport filename="surowce" headers={['Data', 'Brent', 'WTI', 'Złoto', 'Miedź', 'Gaz']} rows={commodChart.map((r) => [r.date, r.brent, r.wti, r.gold, r.copper, r.gas])} />}>
                 {commodChart.length < 2 ? <div className="mk-skeleton h-[320px] w-full" /> : (
                     <InteractiveChart data={commodChart} xKey="date" height={320} legend showRange initialRange="3M"
@@ -318,90 +542,33 @@ function GpwSection() {
     );
 }
 
-// ═══ HANDEL ═══
-function HandelSection() {
-    const expQ = useTradeData('exports');
-    const impQ = useTradeData('imports');
-    const caQ = useCurrentAccount();
-    const exp = useMemo(() => plSeries(expQ.data), [expQ.data]);
-    const imp = useMemo(() => plSeries(impQ.data), [impQ.data]);
-    const ca = useMemo(() => plSeries(caQ.data), [caQ.data]);
-
-    const trade = useMemo(() => {
-        const im = new Map(imp.map((p) => [p.date, p.value]));
-        return exp.map((p) => {
-            const i = im.get(p.date) ?? null;
-            return { date: p.date, eksport: p.value, import: i, saldo: i != null ? +(p.value - i).toFixed(0) : null };
-        });
-    }, [exp, imp]);
-
-    const lastExp = lastOf(exp), lastImp = lastOf(imp);
-    const saldo = lastExp != null && lastImp != null ? lastExp - lastImp : null;
-    const bn = (v: number | null) => (v == null ? '—' : formatNumber(v / 1000, 1)); // mln → mld EUR
-
-    return (
-        <div className="space-y-6">
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <KpiCard label="Eksport towarów" value={bn(lastExp)} unit="mld €" accent="green" icon={Ship} footnote={exp.length ? exp[exp.length - 1].date : 'Eurostat'} loading={expQ.isLoading} />
-                <KpiCard label="Import towarów" value={bn(lastImp)} unit="mld €" accent="amber" icon={Ship} footnote={imp.length ? imp[imp.length - 1].date : 'Eurostat'} loading={impQ.isLoading} />
-                <KpiCard label="Saldo handlowe" value={bn(saldo)} unit="mld €" accent={saldo != null && saldo >= 0 ? 'blue' : 'rose'} icon={TrendingUp} footnote="eksport − import" loading={expQ.isLoading || impQ.isLoading} />
-                <KpiCard label="Rachunek bieżący" value={bn(lastOf(ca))} unit="mld €" accent="violet" icon={Landmark} footnote={ca.length ? ca[ca.length - 1].date : 'Eurostat'} loading={caQ.isLoading} />
-            </div>
-
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                <SectionCard title="Eksport vs import" subtitle="Eurostat BoP · mln EUR"
-                    actions={<CsvExport filename="handel" headers={['Data', 'Eksport', 'Import', 'Saldo']} rows={trade.map((r) => [r.date, r.eksport, r.import, r.saldo])} />}>
-                    {trade.length === 0 ? <div className="mk-skeleton h-[280px] w-full" /> : (
-                        <InteractiveChart data={trade} xKey="date" height={280} unit=" mln €" legend showRange initialRange="1R"
-                            valueFormatter={(v) => formatNumber(v, 0)} xTickFormatter={monthTick}
-                            series={[
-                                { key: 'eksport', name: 'Eksport', color: '#16A34A', type: 'line' },
-                                { key: 'import', name: 'Import', color: '#D97706', type: 'line' },
-                            ]} />
-                    )}
-                </SectionCard>
-                <SectionCard title="Saldo handlowe" subtitle="eksport − import · mln EUR">
-                    {trade.length === 0 ? <div className="mk-skeleton h-[280px] w-full" /> : (
-                        <InteractiveChart data={trade.filter((r) => r.saldo != null)} xKey="date" height={280} unit=" mln €" showRange initialRange="1R"
-                            valueFormatter={(v) => formatNumber(v, 0)} xTickFormatter={monthTick}
-                            referenceLines={[{ y: 0, color: '#CBD2DD' }]}
-                            series={[{ key: 'saldo', name: 'Saldo', color: '#2563EB', type: 'area' }]} />
-                    )}
-                </SectionCard>
-            </div>
-        </div>
-    );
-}
-
 const SECTIONS: { value: Section; label: string }[] = [
+    { value: 'spolki', label: 'Spółki' },
+    { value: 'gpw', label: 'Indeksy GPW' },
     { value: 'kursy', label: 'Kursy walut' },
     { value: 'stopy', label: 'Stopy i WIBOR' },
-    { value: 'gpw', label: 'GPW' },
-    { value: 'handel', label: 'Handel zagraniczny' },
 ];
 
 export default function RynkiPage() {
-    const [section, setSection] = useState<Section>('kursy');
+    const [section, setSection] = useState<Section>('spolki');
     useInitialTab(SECTIONS.map((s) => s.value), setSection);
     return (
-        <div className="mk-fade-in space-y-6">
-            <div className="flex flex-wrap items-end justify-between gap-4">
-                <div>
-                    <h1 className="text-3xl font-extrabold tracking-tight text-mk-text">Rynki</h1>
-                    <p className="mt-1 text-sm text-mk-muted">Kursy walut, złoto, GPW i handel zagraniczny</p>
-                </div>
-                <Segmented value={section} onChange={setSection} options={SECTIONS} aria-label="Sekcja" />
-            </div>
+        <DensePageLayout>
+            <PageHeader
+                eyebrow={<PageEyebrow section="Rynki" />}
+                title="Rynki"
+                subtitle="Spółki WIG20, indeksy GPW, kursy walut i stopy procentowe"
+                actions={<Segmented value={section} onChange={setSection} options={SECTIONS} aria-label="Sekcja" />}
+            />
 
-            {/* Newsy powiązane — nad danymi, nie na dole strony (zlecenie właściciela). */}
-            <RelatedNews topic="rynki" />
+            <RynkiDashboard />
 
             <div key={section} className="mk-fade-in">
-                {section === 'kursy' && <KursySection />}
-                {section === 'stopy' && <StopySection />}
+                {section === 'spolki' && <SpolkiSection />}
                 {section === 'gpw' && <GpwSection />}
-                {section === 'handel' && <HandelSection />}
+                {section === 'kursy' && <KursySection />}
+                {section === 'stopy' && <RynkiStopySection />}
             </div>
-        </div>
+        </DensePageLayout>
     );
 }

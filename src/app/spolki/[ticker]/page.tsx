@@ -39,13 +39,13 @@ export default function SpolkaPage() {
     if (!company) {
         return (
             <div className="mk-fade-in space-y-4">
-                <Link href="/rynki?tab=gpw" className="inline-flex items-center gap-1.5 text-sm font-medium text-mk-primary hover:underline">
+                <Link href="/rynki?tab=spolki" className="inline-flex items-center gap-1.5 text-sm font-medium text-mk-primary hover:underline">
                     <ArrowLeft size={15} /> Wróć do spółek
                 </Link>
                 <SectionCard title="Nie znamy tej spółki">
                     <p className="text-sm text-mk-muted">
                         Ticker „{ticker}" nie należy do składu WIG20, który obsługujemy. Lista spółek jest
-                        w zakładce Rynki → GPW.
+                        w zakładce Rynki → Spółki.
                     </p>
                 </SectionCard>
             </div>
@@ -55,14 +55,16 @@ export default function SpolkaPage() {
     return (
         <div className="mk-fade-in space-y-6">
             <div>
-                <Link href="/rynki?tab=gpw" className="inline-flex items-center gap-1.5 text-sm font-medium text-mk-primary hover:underline">
+                <Link href="/rynki?tab=spolki" className="inline-flex items-center gap-1.5 text-sm font-medium text-mk-primary hover:underline">
                     <ArrowLeft size={15} /> Spółki WIG20
                 </Link>
-                <div className="mt-2 flex items-center gap-2">
+                <div className="mt-2 flex flex-wrap items-center gap-2">
                     <h1 className="text-3xl font-extrabold tracking-tight text-mk-text">{company.name}</h1>
+                    <span className="rounded-full bg-mk-surface-alt px-2.5 py-0.5 text-xs font-medium text-mk-muted">{company.sector}</span>
                     <WatchStar kind="spolka" id={ticker} label={company.name} variant="inline" size={18} />
                 </div>
                 <p className="mt-1 text-sm text-mk-muted">{ticker} · GPW · notowania i wiadomości</p>
+                <p className="mt-2 max-w-2xl text-sm leading-relaxed text-mk-text-soft">{company.description}</p>
             </div>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">

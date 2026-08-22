@@ -1,8 +1,7 @@
 'use client';
 
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useQuery, useQueries, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
-import { COICOP_2026, buildBasket } from '@/lib/calculations/cpi-basket';
 import type { NewsResult } from '@/lib/news/types';
 import { refreshOptions } from '@/lib/query-refresh';
 
@@ -196,14 +195,28 @@ interface GusRegionalData {
     timestamp: string;
 }
 
-export interface RegionalEURow { slug: string; name: string; gdpTotal: number | null; population: number | null; gdpPerCapita: number | null }
-interface RegionalEUData { regions: RegionalEURow[]; gdpYear: string; popYear: string; national: { population: number | null; gdpPerCapita: number | null } }
-export function useRegionalEU() {
-    return useQuery<RegionalEUData>({
-        queryKey: ['regional-eu'],
-        queryFn: () => fetchJSON('/api/regional-eu'),
-        ...refreshOptions('regionalEu'),
+export interface RegionalGusRow { slug: string; name: string; gdpTotal: number | null; population: number | null; gdpPerCapita: number | null }
+interface RegionalGusData {
+    regions: RegionalGusRow[];
+    gdpYear: string;
+    popYear: string;
+    national: { population: number | null; gdpPerCapita: number | null; gdpTotal?: number | null };
+    source?: string;
+}
+/** @deprecated alias — dane z GUS BDL, nie Eurostat */
+export type RegionalEURow = RegionalGusRow;
+
+export function useRegionalGus() {
+    return useQuery<RegionalGusData>({
+        queryKey: ['regional-gus'],
+        queryFn: () => fetchJSON('/api/regional-gus'),
+        ...refreshOptions('regionalGus'),
     });
+}
+
+/** @deprecated Użyj useRegionalGus — źródło zmienione z Eurostat na GUS BDL */
+export function useRegionalEU() {
+    return useRegionalGus();
 }
 
 export function useGusRegional() {
@@ -219,6 +232,7 @@ export function useGusRegional() {
 interface GusMonthlyData {
     retail: { date: string; value: number; raw: number }[];
     wages: { date: string; value: number; raw: number }[];
+    source: string;
     timestamp: string;
 }
 
@@ -230,7 +244,35 @@ export function useGusMonthly() {
     });
 }
 
+/** Rentowność obligacji skarbowych 10Y (rynek GPW/Stooq — nie Eurostat Maastricht) */
+export function useBondYield10YPl(limit = 30) {
+    return useStooq('10ypl.b', limit);
+}
+
 // ─── Eurostat (Monthly/Quarterly Data) ───────────────────
+// AUDIT 2026-08-22 — Eurostat vs GUS dla PL (macro → GUS; rynek → NBP/GPW/Stooq):
+//
+// | Hook                      | Strony / komponenty                          | GUS?                    | Akcja                          |
+// |---------------------------|----------------------------------------------|-------------------------|--------------------------------|
+// | useInflationMonthly       | macro-sections, prognozy, KorelacjeMakro, page| useCpiFull ✓            | Migrować do useCpiFull         |
+// | useHICPFoodYoY/CoreYoY    | macro-sections                               | useCpiFull (działy) ✓   | Migrować do useCpiFull         |
+// | useUnemploymentMonthly    | page, KorelacjeMakro                         | useGusRegional ✓ (rej.) | Migrować (LFS≠rejestr.)        |
+// | useGDPQuarterly/QoQ       | macro-sections, prognozy, page               | brak kwartalnego GUS    | Nowy /api/gus-gdp              |
+// | useIndustrialProduction   | macro-sections, prognozy, page, Korelacje    | GUS BDL produkcja       | Nowy hook BDL/DBW              |
+// | useRetailSales            | macro-sections, prognozy, page, Korelacje    | useGusMonthly ✓         | Migrować do useGusMonthly      |
+// | useConstruction           | macro-sections                               | GUS DBW budowlane       | useDbwSeries / nowy hook       |
+// | useGDPConsumption/Inv/Exp/Imp | macro-sections                           | GUS PKB składowe        | Nowy /api/gus-gdp-components   |
+// | useTradeData              | (usunięte z /rynki)                          | GUS DBHZ obroty         | Nowy /api/gus-trade            |
+// | useCurrentAccount         | (usunięte z /rynki)                          | NBP rachunek bieżący    | Nowy /api/nbp-bop              |
+// | useConsumerConfidence     | gospodarka, KorelacjeMakro                   | useKoniunktura ✓        | Migrować do useKoniunktura     |
+// | useBondYield10Y           | gospodarka, page, KorelacjeMakro             | Stooq 10ypl.b ✓ (rynek) | Migrować do useStooq           |
+// | useGovDebt/Deficit        | gospodarka, RzadyGospodarka                  | MF/GUS rocznie          | Nowy hook GUS/MF               |
+// | useGDPAnnual/CPIAnnual    | RzadyGospodarka                              | useGUSData ✓ (roczne)   | Migrować do useGUSData         |
+// | usePPI                    | InflacjaFull, KorelacjeMakro                 | usePpiFull ✓            | Migrować do usePpiFull         |
+// | useHICPIndex/Division     | useCPIBasket, prognozy                       | useCpiFull (krajowy)    | Koszyk: GUS; HICP tylko EU      |
+// | usePLvsEU                 | (porównania PL/EU)                           | celowo Eurostat         | Zostaje (benchmark UE)         |
+// | useDashboardData          | (composite)                                  | częściowo GUS           | Po migracji powyższych         |
+//
 
 interface EurostatTimeSeries {
     date: string;
@@ -265,6 +307,11 @@ export function useUnemploymentMonthly(geo = 'PL') {
     return useEurostat('unemployment', geo);
 }
 
+/** Stopa bezrobocia rejestrowanego (GUS BDL P3559) — miesięczna, krajowa */
+export function useGusRegisteredUnemployment(months = 12) {
+    return useBdlSeries(461680, months);
+}
+
 export function useGDPQuarterly(geo = 'PL') {
     return useEurostat('gdp_yoy', geo);
 }
@@ -290,16 +337,21 @@ export function useConstruction(geo = 'PL') {
 }
 
 export function useTradeData(flow: 'exports' | 'imports') {
+    // TODO: migrate → /api/gus-trade (GUS DBHZ obroty towarowe). UI usunięte z /rynki (brak hooka GUS).
     return useEurostat(flow, 'PL');
 }
 
 export function useCurrentAccount() {
+    // TODO: migrate → /api/nbp-bop (NBP rachunek bieżący). UI usunięte z /rynki (brak hooka GUS/NBP).
     return useEurostat('current_account', 'PL');
 }
 
 // ─── Nowe wskaźniki makro (Eurostat, dane realne PL) ─────
 export function useConsumerConfidence() { return useEurostat('consumer_confidence', 'PL'); }
-export function useBondYield10Y() { return useEurostat('bond_yield_10y', 'PL'); }
+export function useBondYield10Y() {
+    // TODO: migrate → useStooq('10ypl.b') — dane rynkowe GPW/Stooq, nie Eurostat Maastricht.
+    return useEurostat('bond_yield_10y', 'PL');
+}
 export function useGovDebt() { return useEurostat('gov_debt', 'PL'); }
 export function useGovDeficit() { return useEurostat('gov_deficit', 'PL'); }
 export function useGDPAnnual() { return useEurostat('gdp_annual', 'PL'); }
@@ -541,32 +593,165 @@ export function useKoniunktura(year = new Date().getFullYear()) {
     });
 }
 
-// ─── CPI z koszyka (COICOP 2026) — 12 dywizji HICP na żywo ───
+// ─── GUS aktywność gospodarcza (miesięcznie r/r) — Ceny/Gospodarka ───
 
-export function useCPIBasket() {
-    const results = useQueries({
-        queries: [
-            { queryKey: ['hicp-div', 'CP00'], queryFn: () => fetchJSON<EurostatResult>('/api/eurostat?dataset=prc_hicp_manr&coicop=CP00&geo=PL&since=2023-01'), ...refreshOptions('eurostat') },
-            ...COICOP_2026.map((d) => ({
-                queryKey: ['hicp-div', d.coicop],
-                queryFn: () => fetchJSON<EurostatResult>(`/api/eurostat?dataset=prc_hicp_manr&coicop=${d.coicop}&geo=PL&since=2023-01`),
-                ...refreshOptions('eurostat'),
-            })),
-        ],
+interface GusBdlVariableResponse {
+    results?: Array<{ values: Array<{ year: number | string; val: number | null }> }>;
+}
+
+/** DBW short-term stats: var 312 / przekrój 93 — poz 6661771 = produkcja przemysłowa ogółem (r/r). */
+const GUS_INDUSTRIAL_POZ = 6661771;
+/** DBW short-term stats: var 312 / przekrój 93 — poz 6661787 = produkcja budowlano-montażowa (r/r). */
+const GUS_CONSTRUCTION_POZ = 6661787;
+
+function dbwSeriesToEurostat(
+    q: UseQueryResult<{ series: Record<string, number | string>[]; source: string }>,
+    poz: number,
+    label: string,
+): UseQueryResult<EurostatResult> {
+    const data = useMemo((): EurostatResult | undefined => {
+        if (!q.data?.series?.length) return undefined;
+        const key = String(poz);
+        const PL = q.data.series
+            .map((row) => {
+                const v = row[key];
+                return typeof v === 'number' ? { date: String(row.date), value: v } : null;
+            })
+            .filter((p): p is EurostatTimeSeries & { value: number } => p != null);
+        return { dataset: 'gus-dbw', label, geo: ['PL'], updated: '', data: { PL }, source: q.data.source };
+    }, [q.data, poz, label]);
+    return { ...q, data } as unknown as UseQueryResult<EurostatResult>;
+}
+
+function bdlPrevYearToEurostat(
+    q: UseQueryResult<GusBdlVariableResponse>,
+    label: string,
+    source: string,
+): UseQueryResult<EurostatResult> {
+    const data = useMemo((): EurostatResult | undefined => {
+        const vals = q.data?.results?.[0]?.values?.filter((v) => v.val != null) ?? [];
+        if (!vals.length) return undefined;
+        const PL = vals
+            .sort((a, b) => Number(a.year) - Number(b.year))
+            .map((v) => ({ date: String(v.year), value: +((v.val as number) - 100).toFixed(1) }));
+        return { dataset: 'gus-bdl', label, geo: ['PL'], updated: '', data: { PL }, source };
+    }, [q.data, label, source]);
+    return { ...q, data } as unknown as UseQueryResult<EurostatResult>;
+}
+
+/** Sprzedaż detaliczna (r/r) — GUS BDL P3860, ogółem. */
+export function useGusRetailSales(): UseQueryResult<EurostatResult> {
+    const q = useGusMonthly();
+    const data = useMemo((): EurostatResult | undefined => {
+        if (!q.data?.retail?.length) return undefined;
+        const PL = q.data.retail.map((r) => ({ date: r.date, value: r.value }));
+        return {
+            dataset: 'gus-bdl',
+            label: 'Sprzedaż detaliczna (r/r)',
+            geo: ['PL'],
+            updated: q.data.timestamp,
+            data: { PL },
+            source: q.data.source,
+        };
+    }, [q.data]);
+    return { ...q, data } as unknown as UseQueryResult<EurostatResult>;
+}
+
+/** Produkcja przemysłowa (r/r) — GUS DBW var 312. */
+export function useGusIndustrialProduction(): UseQueryResult<EurostatResult> {
+    const q = useDbwSeries({ var: 312, przekroj: 93, poz: [GUS_INDUSTRIAL_POZ] });
+    return dbwSeriesToEurostat(q, GUS_INDUSTRIAL_POZ, 'Produkcja przemysłowa (r/r)');
+}
+
+/** Produkcja budowlano-montażowa (r/r) — GUS DBW var 312. */
+export function useGusConstructionOutput(): UseQueryResult<EurostatResult> {
+    const q = useDbwSeries({ var: 312, przekroj: 93, poz: [GUS_CONSTRUCTION_POZ] });
+    return dbwSeriesToEurostat(q, GUS_CONSTRUCTION_POZ, 'Produkcja budowlano-montażowa (r/r)');
+}
+
+/** PKB (r/r) rocznie — GUS BDL var 458272 (rok poprzedni = 100). */
+export function useGusGdpAnnual(): UseQueryResult<EurostatResult> {
+    const q = useQuery<GusBdlVariableResponse>({
+        queryKey: ['gus-bdl', 'gdp_growth'],
+        queryFn: () => fetchJSON('/api/gus?indicator=gdp_growth&years=20'),
+        ...refreshOptions('gusMonthly'),
     });
+    return bdlPrevYearToEurostat(q, 'PKB (r/r)', 'GUS BDL var:458272');
+}
 
-    const isLoading = results.some((r) => r.isLoading);
-    const headSeries = results[0]?.data?.data?.PL ?? [];
-    const official = headSeries.length ? (headSeries[headSeries.length - 1].value ?? null) : null;
-    const dataDate = headSeries.length ? headSeries[headSeries.length - 1].date : null;
-
-    const yoyByCode: Record<string, number | null> = {};
-    COICOP_2026.forEach((d, i) => {
-        const s = results[i + 1]?.data?.data?.PL ?? [];
-        yoyByCode[d.code] = s.length ? (s[s.length - 1].value ?? null) : null;
+/** Inflacja roczna — GUS BDL var 217230 (rok poprzedni = 100). */
+export function useGusCpiAnnual(): UseQueryResult<EurostatResult> {
+    const q = useQuery<GusBdlVariableResponse>({
+        queryKey: ['gus-bdl', 'cpi_annual'],
+        queryFn: () => fetchJSON('/api/gus?indicator=cpi&years=20'),
+        ...refreshOptions('gusMonthly'),
     });
+    return bdlPrevYearToEurostat(q, 'Inflacja (r/r)', 'GUS BDL var:217230');
+}
 
-    return { basket: buildBasket(COICOP_2026, yoyByCode, official, dataDate), isLoading };
+/** Bezrobocie rejestrowane — średnia województw, GUS BDL P3559 (miesięcznie, poziom). */
+export function useGusUnemploymentNational(): UseQueryResult<EurostatResult> {
+    const q = useGusRegional();
+    const data = useMemo((): EurostatResult | undefined => {
+        if (!q.data?.timeline?.length) return undefined;
+        const PL = q.data.timeline.map((t) => {
+            const vals = Object.values(t.rates);
+            if (!vals.length) return null;
+            const avg = vals.reduce((s, v) => s + v, 0) / vals.length;
+            return { date: t.month, value: +avg.toFixed(1) };
+        }).filter((p): p is EurostatTimeSeries & { value: number } => p != null);
+        return {
+            dataset: 'gus-bdl',
+            label: 'Bezrobocie rejestrowane',
+            geo: ['PL'],
+            updated: q.data.timestamp,
+            data: { PL },
+            source: 'GUS BDL P3559',
+        };
+    }, [q.data]);
+    return { ...q, data } as unknown as UseQueryResult<EurostatResult>;
+}
+
+/** PPI ogółem (r/r) — alias na GUS DBW pełny PPI (zastępuje Eurostat w sekcjach Ceny/Gospodarka). */
+export function useGusPpiHeadline(): UseQueryResult<EurostatResult> {
+    const q = usePpiFull();
+    const data = useMemo((): EurostatResult | undefined => {
+        const headline = q.data?.headline ?? [];
+        if (!headline.length) return undefined;
+        const PL = headline
+            .filter((h) => h.yoy != null)
+            .map((h) => ({ date: h.date, value: h.yoy as number }));
+        return {
+            dataset: 'gus-dbw',
+            label: 'PPI (r/r)',
+            geo: ['PL'],
+            updated: q.data?.dataDate ?? '',
+            data: { PL },
+            source: q.data?.source ?? 'GUS DBW',
+        };
+    }, [q.data]);
+    return { ...q, data } as unknown as UseQueryResult<EurostatResult>;
+}
+
+/** CPI ogółem (r/r) — alias na krajowy CPI GUS DBW (zastępuje Eurostat HICP w korelacjach). */
+export function useGusCpiHeadline(): UseQueryResult<EurostatResult> {
+    const q = useCpiFull();
+    const data = useMemo((): EurostatResult | undefined => {
+        const headline = q.data?.headline ?? [];
+        if (!headline.length) return undefined;
+        const PL = headline
+            .filter((h) => h.yoy != null)
+            .map((h) => ({ date: h.date, value: h.yoy as number }));
+        return {
+            dataset: 'gus-dbw',
+            label: 'CPI (r/r)',
+            geo: ['PL'],
+            updated: q.data?.dataDate ?? '',
+            data: { PL },
+            source: q.data?.source ?? 'GUS DBW',
+        };
+    }, [q.data]);
+    return { ...q, data } as unknown as UseQueryResult<EurostatResult>;
 }
 
 // ─── SMUP (System Monitorowania Usług Publicznych) ──────

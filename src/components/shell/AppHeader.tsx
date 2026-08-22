@@ -10,7 +10,7 @@ export function AppHeader() {
         <header className="sticky top-0 z-40 border-b border-mk-border bg-mk-surface">
             <div className="mx-auto flex h-16 max-w-[1440px] items-center gap-3 px-4 md:px-6">
                 <Link href="/" className="flex shrink-0 items-center gap-2.5">
-                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-mk-primary text-white shadow-sm">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-mk-brand text-white shadow-sm">
                         <BarChart3 size={20} strokeWidth={2.4} />
                     </span>
                     <span className="hidden text-[19px] font-extrabold tracking-tight text-mk-text sm:block">
