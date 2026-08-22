@@ -1,25 +1,36 @@
 'use client';
 
-import type { Observation, Tone } from '@/lib/observations';
+import type { Observation } from '@/lib/observations';
 
-const DOT: Record<Tone, string> = {
-    up: '#16A34A',
-    down: '#DC2626',
-    neutral: '#2563EB',
-    warn: '#D97706',
-};
+export function ObservationsPanel({
+    items,
+    title = 'Kluczowe obserwacje',
+    variant = 'default',
+}: {
+    items: Observation[];
+    title?: string;
+    variant?: 'default' | 'overview';
+}) {
+    const heading = variant === 'overview' ? 'Kluczowe obserwacje' : title;
 
-export function ObservationsPanel({ items, title = 'Kluczowe obserwacje' }: { items: Observation[]; title?: string }) {
     return (
         <div className="mk-card mk-card-pad h-full">
-            <h3 className="mk-section-title mb-4">{title}</h3>
+            {variant === 'overview' ? (
+                <h3 className="mk-section-label mb-4">{heading}</h3>
+            ) : (
+                <h3 className="mk-section-title mb-4">{heading}</h3>
+            )}
             {items.length === 0 ? (
                 <p className="text-sm text-mk-faint">Brak sygnałów do wyświetlenia.</p>
             ) : (
-                <ul className="space-y-3.5">
+                <ul className="space-y-4">
                     {items.map((o, i) => (
-                        <li key={i} className="flex gap-3 text-sm text-mk-text-soft">
-                            <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full" style={{ background: DOT[o.tone ?? 'neutral'] }} />
+                        <li key={i} className="flex gap-4 text-sm text-mk-text-soft">
+                            {variant === 'overview' ? (
+                                <span className="mk-obs-num shrink-0">{String(i + 1).padStart(2, '0')}</span>
+                            ) : (
+                                <ObservationDot tone={o.tone ?? 'neutral'} />
+                            )}
                             <span className="leading-snug">{o.text}</span>
                         </li>
                     ))}
@@ -27,4 +38,14 @@ export function ObservationsPanel({ items, title = 'Kluczowe obserwacje' }: { it
             )}
         </div>
     );
+}
+
+function ObservationDot({ tone }: { tone: string }) {
+    const colors: Record<string, string> = {
+        up: '#16A34A',
+        down: '#DC2626',
+        neutral: '#2563EB',
+        warn: '#D97706',
+    };
+    return <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full" style={{ background: colors[tone] ?? colors.neutral }} />;
 }

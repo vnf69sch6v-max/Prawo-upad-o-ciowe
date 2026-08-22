@@ -34,6 +34,12 @@
   --color-mk-warn: #D97706;
   --color-mk-warn-soft: #FDF3E7;
 
+  /* ── Savori brand red (hero, akcenty Przeglądu) ── */
+  --color-mk-brand: #DC2626;
+  --color-mk-brand-strong: #B91C1C;
+  --color-mk-brand-soft: #FEF2F2;
+  --color-mk-brand-muted: rgba(255, 255, 255, 0.72);
+
   /* ── KPI accent palette ── */
   --color-mk-blue: #2563EB;
   --color-mk-violet: #7C3AED;
@@ -223,6 +229,76 @@ button.mk-card,
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--color-mk-muted);
+}
+
+/* Sekcja Przeglądu — etykieta w stylu mockupu (uppercase, tracking) */
+.mk-section-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-mk-muted);
+}
+
+/* Czerwony pas hero na Przeglądzie */
+.mk-hero-band {
+  background: var(--color-mk-brand);
+  color: #fff;
+  border-radius: var(--radius-mk);
+}
+
+.mk-hero-band .mk-hero-muted {
+  color: var(--color-mk-brand-muted);
+}
+
+.mk-hero-band .mk-hero-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+}
+
+/* Tag kategorii newsów — czerwony obrys */
+.mk-tag-brand {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--color-mk-brand);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-mk-brand);
+  line-height: 1.4;
+}
+
+.mk-tag-brand-fill {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: var(--color-mk-brand);
+  color: #fff;
+  line-height: 1.4;
+}
+
+/* Numer obserwacji (01, 02…) */
+.mk-obs-num {
+  font-size: 13px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-mk-brand);
+  letter-spacing: -0.02em;
 }
 
 .mk-eyebrow {

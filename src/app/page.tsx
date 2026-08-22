@@ -8,14 +8,15 @@ import {
     useIndustrialProduction, useRetailSales, useBondYield10Y, useGold, useStooq,
     type EurostatResult, type NBPTable,
 } from '@/lib/hooks';
-import { formatDecimalPL, formatNumber, formatDate, percentChange } from '@/lib/formatters';
+import { formatDecimalPL, formatNumber, formatDate, percentChange, formatDataPeriodLabel } from '@/lib/formatters';
 import { trendObservation, type Observation } from '@/lib/observations';
 import { KpiCard, type AccentKey } from '@/components/ui/KpiCard';
-import { SectionCard } from '@/components/ui/SectionCard';
 import { CsvExport } from '@/components/ui/CsvExport';
 import { ObservationsPanel } from '@/components/ui/ObservationsPanel';
 import { PublicationDatesPanel } from '@/components/ui/PublicationDatesPanel';
 import { LatestNews } from '@/components/ui/RelatedNews';
+import { OverviewHero } from '@/components/ui/OverviewHero';
+import { WatchlistStrip, type WatchableKpi } from '@/components/ui/WatchlistStrip';
 
 // ── data helpers ────────────────────────────────────────────
 type Point = { date: string; value: number };
@@ -28,7 +29,6 @@ const prevOf = (s: Point[]) => (s.length > 1 ? s[s.length - 2].value : null);
 const fmt1 = (n: number | null | undefined) => (n == null ? '—' : formatDecimalPL(n, 1));
 const ppDelta = (s: Point[]) => (lastOf(s) != null && prevOf(s) != null ? +(lastOf(s)! - prevOf(s)!).toFixed(1) : null);
 
-// NBP currency 90d history → % zmiana vs poprzedni odczyt (kształt: tablica lub {rates:[]})
 function fxDelta(data: unknown): number | null {
     const raw = data as { rates?: { mid?: number }[] } | { mid?: number }[] | undefined;
     const arr = Array.isArray(raw) ? raw : raw?.rates;
@@ -72,22 +72,24 @@ export default function OverviewPage() {
 
     // ── KPI makro ──
     const macro = [
-        { label: 'Inflacja CPI (r/r)', href: '/ceny?tab=inflacja', value: fmt1(lastOf(cpi)), unit: '%', accent: 'amber' as AccentKey, icon: TrendingUp, delta: ppDelta(cpi) != null ? { value: ppDelta(cpi)!, unit: 'pp' as const, invert: true } : undefined, footnote: 'GUS · cel NBP 2,5%', loading: cpiQ.isLoading },
-        { label: 'PKB (r/r)', href: '/gospodarka?tab=aktywnosc', value: fmt1(lastOf(gdp)), unit: '%', accent: 'green' as AccentKey, icon: BarChart3, delta: ppDelta(gdp) != null ? { value: ppDelta(gdp)!, unit: 'pp' as const } : undefined, footnote: gdp.length ? `Eurostat · ${gdp[gdp.length - 1].date}` : 'Eurostat', loading: gdpQ.isLoading },
-        { label: 'Stopa bezrobocia', href: '/praca?tab=bezrobocie', value: fmt1(lastOf(unemp)), unit: '%', accent: 'blue' as AccentKey, icon: Users, delta: ppDelta(unemp) != null ? { value: ppDelta(unemp)!, unit: 'pp' as const, invert: true } : undefined, footnote: 'Eurostat LFS', loading: unempQ.isLoading },
-        { label: 'Stopa referencyjna NBP', href: '/rynki?tab=stopy', value: refRate ? formatDecimalPL(refRate.value, 2) : '—', unit: '%', accent: 'violet' as AccentKey, icon: Percent, footnote: refRate ? `NBP · od ${formatDate(refRate.validFrom)}` : 'NBP', loading: ratesQ.isLoading },
-        { label: 'Produkcja przemysłowa (r/r)', href: '/gospodarka?tab=aktywnosc', value: fmt1(lastOf(industrial)), unit: '%', accent: 'rose' as AccentKey, icon: Factory, delta: ppDelta(industrial) != null ? { value: ppDelta(industrial)!, unit: 'pp' as const } : undefined, footnote: industrial.length ? `Eurostat · ${industrial[industrial.length - 1].date}` : 'Eurostat', loading: indQ.isLoading },
-        { label: 'Sprzedaż detaliczna (r/r)', href: '/gospodarka?tab=aktywnosc', value: fmt1(lastOf(retail)), unit: '%', accent: 'cyan' as AccentKey, icon: ShoppingCart, delta: ppDelta(retail) != null ? { value: ppDelta(retail)!, unit: 'pp' as const } : undefined, footnote: retail.length ? `Eurostat · ${retail[retail.length - 1].date}` : 'Eurostat', loading: retailQ.isLoading },
+        { watchId: 'cpi', label: 'Inflacja CPI (r/r)', href: '/ceny?tab=inflacja', value: fmt1(lastOf(cpi)), unit: '%', accent: 'amber' as AccentKey, icon: TrendingUp, delta: ppDelta(cpi) != null ? { value: ppDelta(cpi)!, unit: 'pp' as const, invert: true } : undefined, footnote: 'GUS · cel NBP 2,5%', loading: cpiQ.isLoading },
+        { watchId: 'gdp', label: 'PKB (r/r)', href: '/gospodarka?tab=aktywnosc', value: fmt1(lastOf(gdp)), unit: '%', accent: 'green' as AccentKey, icon: BarChart3, delta: ppDelta(gdp) != null ? { value: ppDelta(gdp)!, unit: 'pp' as const } : undefined, footnote: gdp.length ? `Eurostat · ${gdp[gdp.length - 1].date}` : 'Eurostat', loading: gdpQ.isLoading },
+        { watchId: 'unemployment', label: 'Stopa bezrobocia', href: '/praca?tab=bezrobocie', value: fmt1(lastOf(unemp)), unit: '%', accent: 'blue' as AccentKey, icon: Users, delta: ppDelta(unemp) != null ? { value: ppDelta(unemp)!, unit: 'pp' as const, invert: true } : undefined, footnote: 'Eurostat LFS', loading: unempQ.isLoading },
+        { watchId: 'ref-rate', label: 'Stopa referencyjna NBP', href: '/rynki?tab=stopy', value: refRate ? formatDecimalPL(refRate.value, 2) : '—', unit: '%', accent: 'violet' as AccentKey, icon: Percent, footnote: refRate ? `NBP · od ${formatDate(refRate.validFrom)}` : 'NBP', loading: ratesQ.isLoading },
+        { watchId: 'industrial', label: 'Produkcja przemysłowa (r/r)', href: '/gospodarka?tab=aktywnosc', value: fmt1(lastOf(industrial)), unit: '%', accent: 'rose' as AccentKey, icon: Factory, delta: ppDelta(industrial) != null ? { value: ppDelta(industrial)!, unit: 'pp' as const } : undefined, footnote: industrial.length ? `Eurostat · ${industrial[industrial.length - 1].date}` : 'Eurostat', loading: indQ.isLoading },
+        { watchId: 'retail', label: 'Sprzedaż detaliczna (r/r)', href: '/gospodarka?tab=aktywnosc', value: fmt1(lastOf(retail)), unit: '%', accent: 'cyan' as AccentKey, icon: ShoppingCart, delta: ppDelta(retail) != null ? { value: ppDelta(retail)!, unit: 'pp' as const } : undefined, footnote: retail.length ? `Eurostat · ${retail[retail.length - 1].date}` : 'Eurostat', loading: retailQ.isLoading },
     ];
 
     // ── KPI rynki ──
     const markets = [
-        { label: 'WIG20', href: '/rynki?tab=gpw', value: wigLast != null ? formatNumber(wigLast, 0) : '—', unit: 'pkt', accent: 'blue' as AccentKey, icon: LineChart, delta: wigDelta != null ? { value: wigDelta, unit: 'pct' as const } : undefined, footnote: 'GPW · Stooq/Yahoo', loading: wig20Q.isLoading },
-        { label: 'EUR / PLN', href: '/rynki?tab=kursy', value: mid('EUR') != null ? formatDecimalPL(mid('EUR')!, 3) : '—', unit: 'zł', accent: 'cyan' as AccentKey, icon: Euro, delta: fxDelta(eurHQ.data) != null ? { value: fxDelta(eurHQ.data)!, unit: 'pct' as const, invert: true } : undefined, footnote: fxTable?.effectiveDate ? `NBP ${formatDate(fxTable.effectiveDate)}` : 'NBP', loading: fxQ.isLoading },
-        { label: 'USD / PLN', href: '/rynki?tab=kursy', value: mid('USD') != null ? formatDecimalPL(mid('USD')!, 3) : '—', unit: 'zł', accent: 'green' as AccentKey, icon: DollarSign, delta: fxDelta(usdHQ.data) != null ? { value: fxDelta(usdHQ.data)!, unit: 'pct' as const, invert: true } : undefined, footnote: fxTable?.effectiveDate ? `NBP ${formatDate(fxTable.effectiveDate)}` : 'NBP', loading: fxQ.isLoading },
-        { label: 'Rentowność 10Y', href: '/gospodarka?tab=finanse', value: lastOf(yield10) != null ? formatDecimalPL(lastOf(yield10)!, 2) : '—', unit: '%', accent: 'violet' as AccentKey, icon: Landmark, delta: lastOf(yield10) != null && prevOf(yield10) != null ? { value: +(lastOf(yield10)! - prevOf(yield10)!).toFixed(2), unit: 'pp' as const, invert: true } : undefined, footnote: yield10.length ? `Eurostat · ${yield10[yield10.length - 1].date}` : 'Eurostat', loading: yieldQ.isLoading },
-        { label: 'Złoto (NBP)', href: '/rynki?tab=kursy', value: goldLast != null ? formatDecimalPL(goldLast, 2) : '—', unit: 'zł/g', accent: 'amber' as AccentKey, icon: Gem, delta: goldDelta != null ? { value: goldDelta, unit: 'pct' as const } : undefined, footnote: 'NBP · cena złota', loading: goldQ.isLoading },
+        { watchId: 'wig20', label: 'WIG20', href: '/rynki?tab=gpw', value: wigLast != null ? formatNumber(wigLast, 0) : '—', unit: 'pkt', accent: 'blue' as AccentKey, icon: LineChart, delta: wigDelta != null ? { value: wigDelta, unit: 'pct' as const } : undefined, footnote: 'GPW · Stooq/Yahoo', loading: wig20Q.isLoading },
+        { watchId: 'eur-pln', label: 'EUR / PLN', href: '/rynki?tab=kursy', value: mid('EUR') != null ? formatDecimalPL(mid('EUR')!, 3) : '—', unit: 'zł', accent: 'cyan' as AccentKey, icon: Euro, delta: fxDelta(eurHQ.data) != null ? { value: fxDelta(eurHQ.data)!, unit: 'pct' as const, invert: true } : undefined, footnote: fxTable?.effectiveDate ? `NBP ${formatDate(fxTable.effectiveDate)}` : 'NBP', loading: fxQ.isLoading },
+        { watchId: 'usd-pln', label: 'USD / PLN', href: '/rynki?tab=kursy', value: mid('USD') != null ? formatDecimalPL(mid('USD')!, 3) : '—', unit: 'zł', accent: 'green' as AccentKey, icon: DollarSign, delta: fxDelta(usdHQ.data) != null ? { value: fxDelta(usdHQ.data)!, unit: 'pct' as const, invert: true } : undefined, footnote: fxTable?.effectiveDate ? `NBP ${formatDate(fxTable.effectiveDate)}` : 'NBP', loading: fxQ.isLoading },
+        { watchId: 'yield-10y', label: 'Rentowność 10Y', href: '/gospodarka?tab=finanse', value: lastOf(yield10) != null ? formatDecimalPL(lastOf(yield10)!, 2) : '—', unit: '%', accent: 'violet' as AccentKey, icon: Landmark, delta: lastOf(yield10) != null && prevOf(yield10) != null ? { value: +(lastOf(yield10)! - prevOf(yield10)!).toFixed(2), unit: 'pp' as const, invert: true } : undefined, footnote: yield10.length ? `Eurostat · ${yield10[yield10.length - 1].date}` : 'Eurostat', loading: yieldQ.isLoading },
+        { watchId: 'gold', label: 'Złoto (NBP)', href: '/rynki?tab=kursy', value: goldLast != null ? formatDecimalPL(goldLast, 2) : '—', unit: 'zł/g', accent: 'amber' as AccentKey, icon: Gem, delta: goldDelta != null ? { value: goldDelta, unit: 'pct' as const } : undefined, footnote: 'NBP · cena złota', loading: goldQ.isLoading },
     ];
+
+    const watchlistItems: WatchableKpi[] = useMemo(() => [...macro, ...markets], [macro, markets]);
 
     // ── obserwacje ──
     const observations = useMemo<Observation[]>(() => {
@@ -106,38 +108,57 @@ export default function OverviewPage() {
     const csvRows = [...macro, ...markets].map((k) => [k.label, `${k.value}${k.unit ? ' ' + k.unit : ''}`]);
 
     return (
-        <div className="mk-fade-in space-y-6">
-            <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="mk-fade-in space-y-8">
+            {/* Nagłówek strony */}
+            <header className="flex flex-wrap items-end justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-extrabold tracking-tight text-mk-text">Przegląd</h1>
-                    <p className="mt-1 text-sm text-mk-muted">Kluczowe wskaźniki makroekonomiczne dla Polski{dataDate ? ` · najświeższe dane: ${dataDate}` : ''}</p>
+                    <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-mk-faint">
+                        Polska <span className="mx-1.5 text-mk-border-strong">•</span> Dane makro
+                    </p>
+                    <h1 className="mt-1 text-3xl font-extrabold tracking-tight text-mk-text sm:text-4xl">Przegląd</h1>
+                    <p className="mt-1.5 text-sm text-mk-muted">
+                        Kluczowe wskaźniki makroekonomiczne dla Polski
+                        {dataDate ? ` · ${formatDataPeriodLabel(dataDate)}` : ''}
+                    </p>
                 </div>
                 <CsvExport filename="przeglad-makro" headers={['Wskaźnik', 'Wartość']} rows={csvRows} />
-            </div>
+            </header>
 
-            {/* Makro */}
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-                {macro.map((k) => <KpiCard key={k.label} {...k} />)}
-            </div>
+            {/* Czerwony pas hero — sygnały z danych */}
+            <OverviewHero
+                cpi={cpi}
+                retail={retail}
+                industrial={industrial}
+                cpiLoading={cpiQ.isLoading}
+                retailLoading={retailQ.isLoading && indQ.isLoading}
+            />
+
+            {/* Obserwowane (watchlista) — tylko gdy użytkownik ma zapisane wskaźniki */}
+            <WatchlistStrip items={watchlistItems} />
+
+            {/* Wskaźniki makro */}
+            <section>
+                <h2 className="mk-section-label mb-3">Wskaźniki makro</h2>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+                    {macro.map((k) => <KpiCard key={k.watchId} {...k} watchId={k.watchId} />)}
+                </div>
+            </section>
 
             {/* Rynki finansowe */}
-            <div>
-                <h2 className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-mk-faint">Rynki finansowe</h2>
+            <section>
+                <h2 className="mk-section-label mb-3">Rynki finansowe</h2>
                 <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
-                    {markets.map((k) => <KpiCard key={k.label} {...k} />)}
+                    {markets.map((k) => <KpiCard key={k.watchId} {...k} watchId={k.watchId} />)}
                 </div>
-            </div>
+            </section>
 
-            {/* Najważniejsze newsy — zaraz po liczbach (makro + rynki). Trend inflacji miał tu wykres
-                z przełącznikiem, ale to dublowało głębsze zakładki (Ceny/Gospodarka), a KPI są teraz
-                klikalne i prowadzą wprost do wykresów. Przegląd zostawiamy jako: liczby → newsy →
-                obserwacje + kalendarz publikacji. */}
-            <LatestNews limit={6} />
+            {/* Najważniejsze newsy — układ z sidebar */}
+            <LatestNews limit={6} variant="overview" />
 
-            {/* Obserwacje + kalendarz publikacji — obok siebie, bo zwolniło się miejsce po wykresie. */}
+            {/* Obserwacje + kalendarz publikacji */}
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                <ObservationsPanel items={observations} />
-                <PublicationDatesPanel count={6} />
+                <ObservationsPanel items={observations.slice(0, 4)} variant="overview" />
+                <PublicationDatesPanel count={6} variant="overview" />
             </div>
         </div>
     );
