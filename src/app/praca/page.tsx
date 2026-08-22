@@ -9,6 +9,7 @@ import { Segmented } from '@/components/ui/Segmented';
 import { KpiCard } from '@/components/ui/KpiCard';
 import { InteractiveChart } from '@/components/ui/InteractiveChart';
 import { SectionCard } from '@/components/ui/SectionCard';
+import { PageHeader, PageEyebrow } from '@/components/ui/PageHeader';
 import { CsvExport } from '@/components/ui/CsvExport';
 import { RynekPracySection } from '@/components/sections/macro-sections';
 import { RelatedNews } from '@/components/ui/RelatedNews';
@@ -39,7 +40,7 @@ function ZatrudnienieSection() {
                     footnote="GUS · wakaty (kw.)" loading={wakQ.isLoading} />
             </div>
 
-            <SectionCard title="Przeciętne zatrudnienie w przedsiębiorstwach" subtitle="GUS · mln etatów"
+            <SectionCard editorial titleVariant="label" title="Przeciętne zatrudnienie w przedsiębiorstwach" subtitle="GUS · mln etatów"
                 actions={<CsvExport filename="zatrudnienie" headers={['Miesiąc', 'Etaty']} rows={zatr.map((p) => [p.date, p.value])} />}>
                 {zatrQ.isLoading ? <div className="mk-skeleton h-[300px] w-full" /> : (
                     <InteractiveChart data={zatr} xKey="date" height={300} unit=" mln" showRange initialRange="ALL"
@@ -47,7 +48,7 @@ function ZatrudnienieSection() {
                         series={[{ key: 'value', name: 'Zatrudnienie', color: '#2563EB', type: 'area' }]} />
                 )}
             </SectionCard>
-            <div className="rounded-xl bg-mk-surface-alt p-4 text-sm text-mk-text-soft">
+            <div className="mk-card mk-card-editorial mk-card-pad text-sm text-mk-text-soft">
                 Przeciętne zatrudnienie w sektorze przedsiębiorstw (miesięcznie). Bezrobocie rejestrowane (stopa i mapa) w zakładce „Bezrobocie i płace".
             </div>
         </div>
@@ -77,7 +78,7 @@ function BaelSection() {
                 <KpiCard label="Wskaźnik zatrudnienia" value={zatr != null ? formatDecimalPL(zatr, 1) : '—'} unit="%" accent="green" icon={Percent}
                     footnote={`BAEL · GUS${rok(zatrLast?.date) ? ` · ${rok(zatrLast?.date)}` : ''}`} loading={zatrQ.isLoading} />
             </div>
-            <div className="rounded-xl bg-mk-surface-alt p-4 text-sm text-mk-text-soft">
+            <div className="mk-card mk-card-editorial mk-card-pad text-sm text-mk-text-soft">
                 <span className="font-semibold text-mk-text">BAEL </span>(Badanie Aktywności Ekonomicznej Ludności) — kwartalne badanie GUS wg standardu Eurostat/ILO.
                 Współczynnik aktywności = udział aktywnych zawodowo w ludności 15+; wskaźnik zatrudnienia = udział pracujących.
             </div>
@@ -89,14 +90,13 @@ export default function RynekPracyPage() {
     const [tab, setTab] = useState<Tab>('bezrobocie');
     useInitialTab(TABS.map((t) => t.value), setTab);
     return (
-        <div className="mk-fade-in space-y-6">
-            <div className="flex flex-wrap items-end justify-between gap-4">
-                <div>
-                    <h1 className="text-3xl font-extrabold tracking-tight text-mk-text">Rynek pracy</h1>
-                    <p className="mt-1 text-sm text-mk-muted">Bezrobocie, zatrudnienie, wynagrodzenia i aktywność zawodowa</p>
-                </div>
-                <Segmented value={tab} onChange={setTab} options={TABS} aria-label="Sekcja rynku pracy" />
-            </div>
+        <div className="mk-fade-in space-y-8">
+            <PageHeader
+                eyebrow={<PageEyebrow section="Rynek pracy" />}
+                title="Rynek pracy"
+                subtitle="Bezrobocie, zatrudnienie, wynagrodzenia i aktywność zawodowa"
+                actions={<Segmented value={tab} onChange={setTab} options={TABS} aria-label="Sekcja rynku pracy" />}
+            />
 
             {/* Newsy powiązane — nad danymi, nie na dole strony (zlecenie właściciela). */}
             <RelatedNews topic="praca" />

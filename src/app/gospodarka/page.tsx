@@ -22,6 +22,7 @@ import { AktywnoscSection } from '@/components/sections/macro-sections';
 import { RzadyGospodarka } from '@/components/sections/RzadyGospodarka';
 import { KorelacjeMakro } from '@/components/sections/KorelacjeMakro';
 import { RelatedNews } from '@/components/ui/RelatedNews';
+import { PageHeader, PageEyebrow } from '@/components/ui/PageHeader';
 
 type Tab = 'aktywnosc' | 'koniunktura' | 'finanse' | 'korelacje';
 const TABS: { value: Tab; label: string }[] = [
@@ -101,7 +102,9 @@ function KoniunkturaSection() {
 
     return (
         <div className="space-y-6">
-            <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
+            <section>
+                <h2 className="mk-section-label mb-3">Nastroje sektorów</h2>
+                <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
                 {sectors.map((s) => {
                     const v = latest?.sectors.find((x) => x.name === s.name)?.value ?? null;
                     const pv = prev?.[s.key];
@@ -114,12 +117,13 @@ function KoniunkturaSection() {
                             footnote={latest ? `GUS · ${latest.date}` : 'GUS'} loading={q.isLoading} />
                     );
                 })}
-            </div>
+                </div>
+            </section>
 
             {insights.length > 0 && <InsightBar items={insights} />}
 
             {/* Mapa ciepła nastrojów (sektor × miesiąc) — klik wiersza → drawer */}
-            <SectionCard title="Mapa ciepła nastrojów" subtitle="saldo koniunktury · sektor × miesiąc · zielony = optymizm, czerwony = pesymizm · kliknij wiersz"
+            <SectionCard editorial titleVariant="label" title="Mapa ciepła nastrojów" subtitle="saldo koniunktury · sektor × miesiąc · zielony = optymizm, czerwony = pesymizm · kliknij wiersz"
                 actions={<Grid3x3 size={15} className="text-mk-faint" />}>
                 {heatCols.length < 2 ? <div className="mk-skeleton h-[200px] w-full" /> : (
                     <Heatmap rows={heatRows} cols={heatCols} valueAt={heatValue} scheme="sentiment" cellHeight={28}
@@ -128,7 +132,7 @@ function KoniunkturaSection() {
             </SectionCard>
 
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                <SectionCard title="Koniunktura — trend" subtitle="wskaźnik ogólnego klimatu (saldo)"
+                <SectionCard editorial titleVariant="label" title="Koniunktura — trend" subtitle="wskaźnik ogólnego klimatu (saldo)"
                     actions={<div className="flex items-center gap-2"><StaleBadge date={dataDate} label="GUS do" warnAfterMonths={3} /><CsvExport filename="koniunktura" headers={['Miesiąc', ...sectors.map((s) => s.name)]} rows={trend.map((t) => [t.date as string, ...sectors.map((s) => t[s.key] as number)])} /></div>}>
                     {q.isLoading ? <div className="mk-skeleton h-[300px] w-full" /> : (
                         <InteractiveChart data={trend} xKey="date" height={300} unit=" pkt" legend showRange initialRange="ALL"
@@ -138,14 +142,14 @@ function KoniunkturaSection() {
                     )}
                 </SectionCard>
 
-                <SectionCard title="Sektory" subtitle="kliknij sektor, aby zobaczyć trend i opis">
+                <SectionCard editorial titleVariant="label" title="Sektory" subtitle="kliknij sektor, aby zobaczyć trend i opis">
                     {q.isLoading ? <div className="mk-skeleton h-[300px] w-full" /> : (
                         <DataTable columns={cols} rows={rows} initialSort="latest" initialDir="desc" rowKey={(r) => r.key} onRowClick={(r) => openSector(r.key)} />
                     )}
                 </SectionCard>
             </div>
 
-            <SectionCard title="Koniunktura konsumencka" subtitle="Eurostat · nastroje gospodarstw domowych (saldo) · miesięcznie · dopełnia klimat firm"
+            <SectionCard editorial titleVariant="label" title="Koniunktura konsumencka" subtitle="Eurostat · nastroje gospodarstw domowych (saldo) · miesięcznie · dopełnia klimat firm"
                 actions={<div className="flex items-center gap-2"><StaleBadge date={ccLast?.date ?? null} label="do" warnAfterMonths={3} /><CsvExport filename="koniunktura-konsumencka" headers={['Miesiąc', 'Saldo']} rows={cc.map((p) => [p.date, p.value])} /></div>}>
                 <div className="mb-3 flex flex-wrap items-center gap-4">
                     <div><span className="text-3xl font-extrabold tnum" style={{ color: (ccLast?.value ?? 0) >= 0 ? '#16A34A' : '#DC2626' }}>{ccLast ? `${ccLast.value > 0 ? '+' : ''}${formatDecimalPL(ccLast.value, 1)}` : '—'}</span> <span className="text-sm text-mk-muted">saldo · {ccLast?.date ?? ''}</span></div>
@@ -160,7 +164,7 @@ function KoniunkturaSection() {
                 <p className="mt-2 flex items-center gap-1 text-[11px] text-mk-faint"><Users size={11} /> Ujemne saldo = przewaga pesymizmu (typowe). Wskaźnik wyprzedzający konsumpcję prywatną — dopełnia klimat firm (wyżej).</p>
             </SectionCard>
 
-            <div className="rounded-xl bg-mk-surface-alt p-4 text-sm text-mk-text-soft">
+            <div className="mk-card mk-card-editorial mk-card-pad text-sm text-mk-text-soft">
                 <span className="font-semibold text-mk-text">Wskaźnik ogólnego klimatu koniunktury (GUS): </span>
                 saldo ocen przedsiębiorców (dodatnie = przewaga optymizmu). Darmowy, terminowy wskaźnik wyprzedzający — odpowiednik PMI, ale z podziałem na sektory.
             </div>
@@ -224,25 +228,28 @@ function FinansePubliczne() {
     return (
         <div className="space-y-6">
             {toggle}
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <section>
+                <h2 className="mk-section-label mb-3">Finanse publiczne</h2>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <KpiCard label="Dług publiczny" value={dL ? formatDecimalPL(dL.value, 1) : '—'} unit="% PKB" accent="rose" icon={Landmark}
                     delta={dL && dP ? { value: +(dL.value - dP.value).toFixed(1), unit: 'pp', invert: true } : undefined} footnote={dL ? `Eurostat · ${dL.date} · próg UE 60%` : 'Eurostat'} />
                 <KpiCard label="Wynik sektora fin. publ." value={fL ? `${fL.value > 0 ? '+' : ''}${formatDecimalPL(fL.value, 1)}` : '—'} unit="% PKB" accent={fL && fL.value < -3 ? 'rose' : 'amber'} icon={Wallet}
                     delta={fL && fP ? { value: +(fL.value - fP.value).toFixed(1), unit: 'pp' } : undefined} footnote={fL ? `${fL.value < 0 ? 'deficyt' : 'nadwyżka'} · ${fL.date} · próg −3%` : 'Eurostat'} />
                 <KpiCard label="Rentowność 10Y" value={yL ? formatDecimalPL(yL.value, 2) : '—'} unit="%" accent="violet" icon={Percent}
                     delta={yL && yP ? { value: +(yL.value - yP.value).toFixed(2), unit: 'pp', invert: true } : undefined} footnote={yL ? `Eurostat · ${yL.date} · koszt długu` : 'Eurostat'} />
-            </div>
+                </div>
+            </section>
 
             {insights.length > 0 && <InsightBar items={insights} />}
 
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                <SectionCard title="Dług publiczny (% PKB)" subtitle="Eurostat · sektor general government · rocznie"
+                <SectionCard editorial titleVariant="label" title="Dług publiczny (% PKB)" subtitle="Eurostat · sektor general government · rocznie"
                     actions={<div className="flex items-center gap-2"><StaleBadge date={dL?.date ?? null} label="do" warnAfterMonths={18} /><CsvExport filename="dlug-publiczny" headers={['Rok', '% PKB']} rows={debt.map((p) => [p.date, p.value])} /></div>}>
                     <InteractiveChart data={debt} xKey="date" height={280} unit="% PKB" valueFormatter={(v) => formatDecimalPL(v, 1)}
                         referenceLines={[{ y: 60, label: 'próg UE 60%', color: '#DC2626' }]}
                         series={[{ key: 'value', name: 'Dług', color: '#E11D48', type: 'area', strokeWidth: 2.5 }]} />
                 </SectionCard>
-                <SectionCard title="Wynik sektora finansów publ. (% PKB)" subtitle="Eurostat · ujemne = deficyt · rocznie"
+                <SectionCard editorial titleVariant="label" title="Wynik sektora finansów publ. (% PKB)" subtitle="Eurostat · ujemne = deficyt · rocznie"
                     actions={<CsvExport filename="wynik-gg" headers={['Rok', '% PKB']} rows={deficit.map((p) => [p.date, p.value])} />}>
                     <InteractiveChart data={deficit} xKey="date" height={280} unit="% PKB" valueFormatter={(v) => formatDecimalPL(v, 1)}
                         referenceLines={[{ y: -3, label: 'próg UE −3%', color: '#DC2626' }, { y: 0, color: '#CBD2DD' }]}
@@ -250,14 +257,14 @@ function FinansePubliczne() {
                 </SectionCard>
             </div>
 
-            <SectionCard title="Rentowność obligacji 10-letnich (%)" subtitle="Eurostat · kryterium z Maastricht · miesięcznie · rynkowy koszt obsługi długu"
+            <SectionCard editorial titleVariant="label" title="Rentowność obligacji 10-letnich (%)" subtitle="Eurostat · kryterium z Maastricht · miesięcznie · rynkowy koszt obsługi długu"
                 actions={<div className="flex items-center gap-2"><StaleBadge date={yL?.date ?? null} label="do" warnAfterMonths={3} /><CsvExport filename="rentownosc-10y" headers={['Miesiąc', '%']} rows={yield10.map((p) => [p.date, p.value])} /></div>}>
                 <InteractiveChart data={yield10} xKey="date" height={280} unit="%" showRange initialRange="5L" ranges={['1R', '3L', '5L', 'ALL']}
                     valueFormatter={(v) => formatDecimalPL(v, 2)} xTickFormatter={monthTick}
                     series={[{ key: 'value', name: 'Rentowność 10Y', color: '#7C3AED', type: 'area', strokeWidth: 2.5 }]} />
             </SectionCard>
 
-            <div className="rounded-xl bg-mk-surface-alt p-4 text-sm text-mk-text-soft">
+            <div className="mk-card mk-card-editorial mk-card-pad text-sm text-mk-text-soft">
                 <span className="font-semibold text-mk-text">Finanse publiczne (Eurostat / procedura nadmiernego deficytu): </span>
                 dług i wynik sektora general government względem PKB; progi z Maastricht: 60% (dług) i −3% (deficyt). Rentowność 10Y to rynkowy koszt finansowania długu.
             </div>
@@ -269,14 +276,13 @@ export default function GospodarkaPage() {
     const [tab, setTab] = useState<Tab>('aktywnosc');
     useInitialTab(TABS.map((t) => t.value), setTab);
     return (
-        <div className="mk-fade-in space-y-6">
-            <div className="flex flex-wrap items-end justify-between gap-4">
-                <div>
-                    <h1 className="text-3xl font-extrabold tracking-tight text-mk-text">Gospodarka</h1>
-                    <p className="mt-1 text-sm text-mk-muted">PKB, produkcja, sprzedaż i koniunktura gospodarcza</p>
-                </div>
-                <Segmented value={tab} onChange={setTab} options={TABS} aria-label="Sekcja gospodarki" />
-            </div>
+        <div className="mk-fade-in space-y-8">
+            <PageHeader
+                eyebrow={<PageEyebrow section="Gospodarka" />}
+                title="Gospodarka"
+                subtitle="PKB, produkcja, sprzedaż i koniunktura gospodarcza"
+                actions={<Segmented value={tab} onChange={setTab} options={TABS} aria-label="Sekcja gospodarki" />}
+            />
 
             {/* Newsy powiązane — nad danymi, nie na dole strony (zlecenie właściciela). */}
             <RelatedNews topic="gospodarka" />

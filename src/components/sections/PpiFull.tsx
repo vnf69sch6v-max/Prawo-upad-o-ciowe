@@ -152,17 +152,20 @@ export function PpiFull() {
     return (
         <div className="space-y-6">
             {/* KPI */}
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <section>
+                <h2 className="mk-section-label mb-3">Wskaźniki PPI</h2>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <KpiCard label="PPI ogółem (r/r)" value={latest?.yoy != null ? formatDecimalPL(latest.yoy, 1) : '—'} unit="%" accent="rose" icon={Factory}
                     delta={latest?.yoy != null && prev?.yoy != null ? { value: +(latest.yoy - prev.yoy).toFixed(1), unit: 'pp', invert: true } : undefined}
                     footnote={dataDate ? `GUS · PPI · ${formatDataPeriodLabel(dataDate)}` : 'GUS · DBW API'} />
                 <KpiCard label="PPI ogółem (m/m)" value={latest?.mom != null ? formatDecimalPL(latest.mom, 1) : '—'} unit="%" accent="amber" icon={Activity} footnote="miesiąc do miesiąca" />
-            </div>
+                </div>
+            </section>
 
             {insights.length > 0 && <InsightBar items={insights} />}
 
             {/* Łańcuch przyczynowy — co wynika z czego */}
-            <SectionCard title="Skąd biorą się ceny — łańcuch cenowy" subtitle="PPI to ceny u producenta („u bramy fabryki”) — wyprzedzają ceny konsumenta (CPI)">
+            <SectionCard editorial titleVariant="label" title="Skąd biorą się ceny — łańcuch cenowy" subtitle="PPI to ceny u producenta („u bramy fabryki”) — wyprzedzają ceny konsumenta (CPI)">
                 <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
                     {PIPELINE.map((step, i) => {
                         const Icon = step.icon;
@@ -184,7 +187,7 @@ export function PpiFull() {
             </SectionCard>
 
             {/* PPI → CPI */}
-            <SectionCard title="PPI wyprzedza CPI" subtitle="ceny producenta (PPI) vs konsumenta (CPI) — r/r (%) · GUS · 10 lat">
+            <SectionCard editorial titleVariant="label" title="PPI wyprzedza CPI" subtitle="ceny producenta (PPI) vs konsumenta (CPI) — r/r (%) · GUS · 10 lat">
                 <InteractiveChart data={ppiCpi} xKey="date" height={300} unit="%" showRange initialRange="5L" ranges={['3L', '5L', 'ALL']} legend
                     valueFormatter={(v) => formatDecimalPL(v, 1)} xTickFormatter={monthTick} referenceLines={[{ y: 0, color: '#CBD2DD' }]}
                     series={[
@@ -195,7 +198,7 @@ export function PpiFull() {
             </SectionCard>
 
             {/* Hero PPI trend */}
-            <SectionCard title="PPI — trend" subtitle={`ceny produkcji sprzedanej przemysłu · ${freq === 'yoy' ? 'rok do roku' : 'miesiąc do miesiąca'} (%) · GUS`}
+            <SectionCard editorial titleVariant="label" title="PPI — trend" subtitle={`ceny produkcji sprzedanej przemysłu · ${freq === 'yoy' ? 'rok do roku' : 'miesiąc do miesiąca'} (%) · GUS`}
                 actions={<div className="flex flex-wrap items-center gap-2"><Segmented value={freq} onChange={setFreq} options={[{ value: 'yoy', label: 'r/r' }, { value: 'mom', label: 'm/m' }]} /><RefreshButton onClick={() => { void refreshFromSource(); }} loading={isFetching && !isLoading} />{dataDate && <span className="text-[11px] font-medium text-mk-muted">{formatDataPeriodLabel(dataDate)}</span>}<StaleBadge date={dataDate} label="dane za" warnAfterMonths={3} /><CsvExport filename="ppi-ogolem" headers={['Miesiąc', 'r/r', 'm/m']} rows={headline.map((h) => [h.date, h.yoy, h.mom])} /></div>}>
                 <InteractiveChart data={chartData} xKey="date" height={300} unit="%" showRange initialRange="ALL" ranges={['1R', '3L', 'ALL']}
                     valueFormatter={(v) => formatDecimalPL(v, 1)} xTickFormatter={monthTick} referenceLines={[{ y: 0, color: '#CBD2DD' }]}
@@ -203,7 +206,7 @@ export function PpiFull() {
             </SectionCard>
 
             {/* Sekcje (kategorie) */}
-            <SectionCard title="Sekcje przemysłu" subtitle="4 kategorie PKD · kliknij, aby zobaczyć działy, trend i co napędza ceny">
+            <SectionCard editorial titleVariant="label" title="Sekcje przemysłu" subtitle="4 kategorie PKD · kliknij, aby zobaczyć działy, trend i co napędza ceny">
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     {sections.map((s) => {
                         const meta = SEC_META[s.code] ?? { color: '#64748B', icon: Factory };
@@ -226,7 +229,7 @@ export function PpiFull() {
             </SectionCard>
 
             {/* Mapa ciepła + Top movers */}
-            <SectionCard title="Mapa ciepła — działy przemysłu w czasie" subtitle="dynamika cen producenta · dział PKD × miesiąc · kliknij wiersz"
+            <SectionCard editorial titleVariant="label" title="Mapa ciepła — działy przemysłu w czasie" subtitle="dynamika cen producenta · dział PKD × miesiąc · kliknij wiersz"
                 actions={<Segmented value={heatMetric} onChange={setHeatMetric} options={[{ value: 'yoy', label: 'r/r' }, { value: 'mom', label: 'm/m' }]} />}>
                 {heat.dates.length < 2 ? <div className="flex h-[300px] items-center justify-center text-sm text-mk-faint">Brak danych.</div> : (
                     <Heatmap rows={heatRows} cols={heat.dates} valueAt={heatValue} unit="%" colTickFormatter={monthTick} valueFormatter={(v) => formatDecimalPL(v, 1)} cellHeight={16}
@@ -235,7 +238,7 @@ export function PpiFull() {
                 <p className="mt-2 text-[11px] text-mk-faint">Czerwony = ceny producenta rosną, niebieski = spadają. Widać, jak drożyzna „wchodzi” po branżach (najpierw energia i surowce).</p>
             </SectionCard>
 
-            <SectionCard title="Największe ruchy cen producenta" subtitle="działy PKD — co najbardziej zdrożało i staniało u producenta"
+            <SectionCard editorial titleVariant="label" title="Największe ruchy cen producenta" subtitle="działy PKD — co najbardziej zdrożało i staniało u producenta"
                 actions={<Segmented value={moverMetric} onChange={setMoverMetric} options={[{ value: 'yoy', label: 'r/r' }, { value: 'mom', label: 'm/m' }]} />}>
                 <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                     {[{ t: 'Najbardziej zdrożało', arr: movers.risers, up: true }, { t: 'Najbardziej staniało', arr: movers.fallers, up: false }].map((col) => (
@@ -256,14 +259,14 @@ export function PpiFull() {
             </SectionCard>
 
             {/* Tabela wszystkich działów */}
-            <SectionCard title="Wszystkie działy PKD" subtitle={`${allDivs.length} działów + 4 sekcje · kliknij nagłówek, aby sortować`}
+            <SectionCard editorial titleVariant="label" title="Wszystkie działy PKD" subtitle={`${allDivs.length} działów + 4 sekcje · kliknij nagłówek, aby sortować`}
                 actions={<CsvExport filename="ppi-dzialy" headers={['Kod', 'Dział', 'Sekcja', 'r/r', 'm/m']} rows={allDivs.map((d) => [d.code, d.name, d.sec, d.yoy, d.mom])} />}>
                 <div className="max-h-[360px] overflow-auto">
                     <DataTable columns={cols} rows={allDivs} initialSort="yoy" initialDir="desc" rowKey={(d) => d.code} onRowClick={(d) => openSec(d.sec)} />
                 </div>
             </SectionCard>
 
-            <div className="rounded-xl bg-mk-surface-alt p-4 text-sm text-mk-text-soft">
+            <div className="mk-card mk-card-editorial mk-card-pad text-sm text-mk-text-soft">
                 <span className="font-semibold text-mk-text">PPI — ceny produkcji sprzedanej przemysłu (GUS): </span>
                 ceny, po jakich producenci sprzedają swoje wyroby (bez VAT i handlu). Kategorie = 4 sekcje PKD, subkategorie = 28 działów. PPI wyprzedza CPI, bo koszty producentów z opóźnieniem trafiają do cen konsumenckich. Dane miesięczne, ostatnie ~3,5 roku.
             </div>

@@ -57,7 +57,7 @@ export function InflacjaSection() {
                 <Kpi label="CPI bazowa (r/r)" series={core} accent="violet" icon={Percent} invert />
             </div>
 
-            <SectionCard
+            <SectionCard editorial titleVariant="label"
                 title="Inflacja CPI — ogółem, żywność, bazowa"
                 subtitle="Źródło: Eurostat HICP (r/r, %)"
                 actions={<div className="flex items-center gap-2"><StaleBadge date={dataDate} label="HICP do" /><CsvExport filename="inflacja-cpi" headers={['Data', 'CPI', 'Żywność', 'Bazowa']} rows={chart.map((r) => [r.date, r.cpi, r.food, r.core])} /></div>}
@@ -125,15 +125,18 @@ export function AktywnoscSection() {
 
     return (
         <div className="space-y-6">
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <section>
+                <h2 className="mk-section-label mb-3">Aktywność gospodarcza</h2>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <Kpi label="PKB (r/r)" series={gdpS} accent="green" icon={TrendingUp} footnote="Eurostat · kwartalnie" />
                 <Kpi label="Produkcja przemysłowa (r/r)" series={ind} accent="violet" icon={Factory} />
                 <Kpi label="Sprzedaż detaliczna (r/r)" series={ret} accent="amber" icon={ShoppingCart} />
                 <Kpi label="Budownictwo (r/r)" series={con} accent="cyan" icon={HardHat} />
-            </div>
+                </div>
+            </section>
 
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                <SectionCard title="PKB — dynamika r/r i kw/kw" subtitle="Eurostat · kwartalnie (%)"
+                <SectionCard editorial titleVariant="label" title="PKB — dynamika r/r i kw/kw" subtitle="Eurostat · kwartalnie (%)"
                     actions={<CsvExport filename="pkb" headers={['Kwartał', 'r/r', 'kw/kw']} rows={gdpChart.map((p) => [p.date, p.yoy, p.qoq])} />}>
                     {gdpChart.length === 0 ? <div className="mk-skeleton h-[260px] w-full" /> : (
                         <InteractiveChart data={gdpChart} xKey="date" height={260} unit="%" legend
@@ -144,7 +147,7 @@ export function AktywnoscSection() {
                             ]} />
                     )}
                 </SectionCard>
-                <SectionCard title="Produkcja, sprzedaż, budownictwo" subtitle="Eurostat · miesięcznie (r/r)"
+                <SectionCard editorial titleVariant="label" title="Produkcja, sprzedaż, budownictwo" subtitle="Eurostat · miesięcznie (r/r)"
                     actions={<CsvExport filename="aktywnosc" headers={['Data', 'Produkcja', 'Sprzedaż', 'Budownictwo']} rows={activity.map((r) => [r.date, r.ind, r.ret, r.con])} />}>
                     {activity.length === 0 ? <div className="mk-skeleton h-[260px] w-full" /> : (
                         <InteractiveChart data={activity} xKey="date" height={260} unit="%" legend showRange initialRange="1R"
@@ -158,7 +161,7 @@ export function AktywnoscSection() {
                 </SectionCard>
             </div>
 
-            <SectionCard title="Składowe PKB — wydatkowe (r/r)" subtitle="Eurostat · kwartalnie · ceny stałe · co napędza wzrost"
+            <SectionCard editorial titleVariant="label" title="Składowe PKB — wydatkowe (r/r)" subtitle="Eurostat · kwartalnie · ceny stałe · co napędza wzrost"
                 actions={<CsvExport filename="pkb-skladowe" headers={['Kwartał', 'Spożycie', 'Inwestycje', 'Eksport', 'Import']} rows={comp.map((r) => [r.date, r.cons, r.inv, r.exp, r.imp])} />}>
                 <div className="mb-4 grid grid-cols-2 gap-4 lg:grid-cols-4">
                     <Kpi label="Spożycie" series={cons} accent="green" icon={ShoppingCart} />
@@ -232,14 +235,14 @@ export function RynekPracySection() {
             </div>
 
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-                <SectionCard className="lg:col-span-2" title="Bezrobocie rejestrowane — mapa województw" subtitle="GUS · kliknij region, aby zobaczyć 10-letnią historię"
+                <SectionCard editorial titleVariant="label" className="lg:col-span-2" title="Bezrobocie rejestrowane — mapa województw" subtitle="GUS · kliknij region, aby zobaczyć 10-letnią historię"
                     actions={<CsvExport filename="bezrobocie-regiony" headers={['Województwo', 'Bezrobocie %', 'Płace PLN']} rows={regions.map((r) => [r.name, r.unemployment, r.wages])} />}>
                     {regQ.isLoading ? <div className="mk-skeleton h-[360px] w-full" /> : (
                         <PolandMap regions={regions} national={national} selectedRegion={selected} onRegionSelect={openRegion} />
                     )}
                 </SectionCard>
                 <div className="space-y-4">
-                    <SectionCard title={selectedRegion ? selectedRegion.name : 'Wybierz województwo'} padded>
+                    <SectionCard editorial titleVariant="label" title={selectedRegion ? selectedRegion.name : 'Wybierz województwo'} padded>
                         {selectedRegion ? (
                             <>
                                 <dl className="space-y-3 text-sm">
@@ -251,7 +254,7 @@ export function RynekPracySection() {
                             </>
                         ) : <p className="text-sm text-mk-faint">Kliknij region na mapie, aby zobaczyć szczegóły i 10-letnią historię.</p>}
                     </SectionCard>
-                    <SectionCard title="Ranking" padded>
+                    <SectionCard editorial titleVariant="label" title="Ranking" padded>
                         <div className="max-h-[240px] overflow-auto">
                             <DataTable columns={cols} rows={regions} initialSort="unemp" initialDir="desc" rowKey={(r) => r.slug} />
                         </div>
@@ -260,7 +263,7 @@ export function RynekPracySection() {
             </div>
 
             {/* Płace realne — siła nabywcza (płace nominalne − CPI) */}
-            <SectionCard title="Płace realne — siła nabywcza" subtitle="wzrost płac nominalnych minus inflacja CPI (r/r, %) · dodatnie = rosnąca siła nabywcza"
+            <SectionCard editorial titleVariant="label" title="Płace realne — siła nabywcza" subtitle="wzrost płac nominalnych minus inflacja CPI (r/r, %) · dodatnie = rosnąca siła nabywcza"
                 actions={<div className="flex items-center gap-2"><StaleBadge date={lastReal?.date ?? null} label="do" warnAfterMonths={4} /><CsvExport filename="place-realne" headers={['Miesiąc', 'Nominalne', 'CPI', 'Realne']} rows={realWages.map((r) => [r.date, r.nominal, r.cpi, r.real])} /></div>}>
                 <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
                     <KpiCard label="Płace nominalne (r/r)" value={fmtPL(lastReal?.nominal)} unit="%" accent="green" icon={Wallet} footnote={lastReal ? `GUS · ${lastReal.date}` : 'GUS'} loading={monthlyQ.isLoading} />
@@ -339,14 +342,14 @@ export function StopySection() {
             </div>
 
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                <SectionCard title="WIBOR — terminy" subtitle="Szacowane z ref. NBP + spread"
+                <SectionCard editorial titleVariant="label" title="WIBOR — terminy" subtitle="Szacowane z ref. NBP + spread"
                     actions={<CsvExport filename="wibor" headers={['Termin', 'WIBOR', 'WIBID']} rows={wibor.map((w) => [w.tenor, w.wibor, w.wibid])} />}>
                     {wibor.length === 0 ? <div className="mk-skeleton h-[220px] w-full" /> : (
                         <InteractiveChart data={wibor.map((w) => ({ tenor: w.tenor, wibor: w.wibor }))} xKey="tenor" height={220} unit="%"
                             valueFormatter={(v) => formatDecimalPL(v, 2)} series={[{ key: 'wibor', name: 'WIBOR', color: '#2563EB', type: 'bar' }]} />
                     )}
                 </SectionCard>
-                <SectionCard title="Krzywa rentowności obligacji" subtitle="Stooq · 2Y / 5Y / 10Y">
+                <SectionCard editorial titleVariant="label" title="Krzywa rentowności obligacji" subtitle="Stooq · 2Y / 5Y / 10Y">
                     {curve.length === 0 ? (
                         <div className="flex h-[220px] flex-col items-center justify-center text-center text-sm text-mk-faint">
                             <p>Brak danych — źródło Stooq jest chwilowo niedostępne.</p>

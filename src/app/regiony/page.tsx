@@ -10,6 +10,7 @@ import { Choropleth, type ChoroItem } from '@/components/ui/Choropleth';
 import { Heatmap } from '@/components/ui/Heatmap';
 import { KpiCard } from '@/components/ui/KpiCard';
 import { SectionCard } from '@/components/ui/SectionCard';
+import { PageHeader, PageEyebrow } from '@/components/ui/PageHeader';
 import { CsvExport } from '@/components/ui/CsvExport';
 import { StaleBadge } from '@/components/ui/StaleBadge';
 import { formatNumber, formatDecimalPL } from '@/lib/formatters';
@@ -81,10 +82,10 @@ function PkbRegionalne() {
                 <KpiCard label="Rozpiętość (max/min)" value={ratio ?? '—'} unit="×" accent="violet" icon={Scale} footnote="najbogatsze / najbiedniejsze" />
             </div>
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                <SectionCard title="PKB na mieszkańca — mapa" subtitle="Eurostat · ceny bieżące · EUR/mieszkańca · najedź lub kliknij">
+                <SectionCard editorial titleVariant="label" title="PKB na mieszkańca — mapa" subtitle="Eurostat · ceny bieżące · EUR/mieszkańca · najedź lub kliknij">
                     <Choropleth items={items} scheme="blue" format={eur} labelFormat={kEur} selected={sel} onSelect={setSel} />
                 </SectionCard>
-                <SectionCard title="Ranking województw" subtitle="PKB na mieszkańca (EUR)"
+                <SectionCard editorial titleVariant="label" title="Ranking województw" subtitle="PKB na mieszkańca (EUR)"
                     actions={<CsvExport filename="pkb-regionalne" headers={['Województwo', 'PKB/mieszk EUR', 'PKB mln EUR', 'Ludność']} rows={regions.map((r) => [r.name, r.gdpPerCapita, r.gdpTotal, r.population])} />}>
                     <Ranking rows={regions} valueOf={(r) => r.gdpPerCapita} format={eur} colors={BLUE} />
                 </SectionCard>
@@ -111,10 +112,10 @@ function Demografia() {
                 <KpiCard label="Województw" value={String(regions.length)} accent="slate" icon={MapPin} footnote="NUTS-2 (Mazowieckie łączone)" />
             </div>
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                <SectionCard title="Ludność — mapa województw" subtitle="Eurostat · liczba ludności (mln) · najedź lub kliknij">
+                <SectionCard editorial titleVariant="label" title="Ludność — mapa województw" subtitle="Eurostat · liczba ludności (mln) · najedź lub kliknij">
                     <Choropleth items={items} scheme="violet" format={(v) => `${formatNumber(v, 0)} os.`} labelFormat={mln1} selected={sel} onSelect={setSel} />
                 </SectionCard>
-                <SectionCard title="Ranking województw" subtitle="Liczba ludności"
+                <SectionCard editorial titleVariant="label" title="Ranking województw" subtitle="Liczba ludności"
                     actions={<CsvExport filename="demografia" headers={['Województwo', 'Ludność']} rows={regions.map((r) => [r.name, r.population])} />}>
                     <Ranking rows={regions} valueOf={(r) => r.population} format={mln} colors={VIOLET} />
                 </SectionCard>
@@ -181,13 +182,13 @@ function RynekPracyRegionalny() {
             </div>
 
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                <SectionCard title={isU ? 'Stopa bezrobocia — mapa' : 'Przeciętne wynagrodzenie — mapa'}
+                <SectionCard editorial titleVariant="label" title={isU ? 'Stopa bezrobocia — mapa' : 'Przeciętne wynagrodzenie — mapa'}
                     subtitle={isU ? `GUS BDL · rejestrowane · ${latest?.month ?? ''} · najedź lub kliknij` : `GUS BDL · sektor przedsiębiorstw · ${wageYear} · najedź lub kliknij`}>
                     <Choropleth items={isU ? unempItems : wageItems} scheme={isU ? 'amber' : 'teal'}
                         format={isU ? (v) => `${formatDecimalPL(v, 1)}%` : (v) => `${formatNumber(v, 0)} zł`}
                         labelFormat={isU ? (v) => formatDecimalPL(v, 1) : (v) => `${Math.round(v / 1000)}k`} selected={sel} onSelect={setSel} />
                 </SectionCard>
-                <SectionCard title="Ranking województw" subtitle={isU ? 'Stopa bezrobocia rejestrowanego (%, mniej = lepiej)' : `Przeciętne wynagrodzenie (zł, ${wageYear})`}
+                <SectionCard editorial titleVariant="label" title="Ranking województw" subtitle={isU ? 'Stopa bezrobocia rejestrowanego (%, mniej = lepiej)' : `Przeciętne wynagrodzenie (zł, ${wageYear})`}
                     actions={<CsvExport filename={isU ? 'bezrobocie-woj' : 'place-woj'} headers={isU ? ['Województwo', 'Bezrobocie %'] : ['Województwo', 'Wynagrodzenie zł']} rows={(isU ? withVal.map((i) => [i.name, i.value]) : regions.map((r) => [r.name, r.wages]))} />}>
                     {isU
                         ? <Ranking rows={withVal.map((i) => ({ slug: i.slug, name: i.name, value: i.value! }))} valueOf={(r) => r.value} format={(v) => `${formatDecimalPL(v, 1)}%`} colors={AMBER} asc />
@@ -196,13 +197,13 @@ function RynekPracyRegionalny() {
             </div>
 
             {isU && heatCols.length > 1 && (
-                <SectionCard title="Bezrobocie wg województw w czasie" subtitle="mapa ciepła województwo × miesiąc · stopa rejestrowana (%) · kliknij wiersz">
+                <SectionCard editorial titleVariant="label" title="Bezrobocie wg województw w czasie" subtitle="mapa ciepła województwo × miesiąc · stopa rejestrowana (%) · kliknij wiersz">
                     <Heatmap rows={heatRows} cols={heatCols} valueAt={rateAt} unit="%" colTickFormatter={monthPL} valueFormatter={(v) => formatDecimalPL(v, 1)} cellHeight={18} onRowClick={(s) => setSel(geoSlug(s))} />
                     <p className="mt-2 text-[11px] text-mk-faint">Ciemniejszy = wyższe bezrobocie. Widać stały gradient: najniżej Wielkopolskie/Śląskie/Mazowieckie, najwyżej Warmińsko-Mazurskie, Podkarpackie, Świętokrzyskie.</p>
                 </SectionCard>
             )}
 
-            <div className="rounded-xl bg-mk-surface-alt p-4 text-sm text-mk-text-soft">
+            <div className="mk-card mk-card-editorial mk-card-pad text-sm text-mk-text-soft">
                 <span className="font-semibold text-mk-text">Bezrobocie rejestrowane (GUS BDL)</span> — udział zarejestrowanych bezrobotnych; wyższe niż stopa BAEL (LFS, ~3% w /praca), bo liczy inaczej. Płace: sektor przedsiębiorstw, dane roczne.
             </div>
         </div>
@@ -213,14 +214,13 @@ export default function RegionyPage() {
     const [tab, setTab] = useState<Tab>('pkb');
     useInitialTab(TABS.map((t) => t.value), setTab);
     return (
-        <div className="mk-fade-in space-y-6">
-            <div className="flex flex-wrap items-end justify-between gap-4">
-                <div>
-                    <h1 className="text-3xl font-extrabold tracking-tight text-mk-text">Regiony</h1>
-                    <p className="mt-1 text-sm text-mk-muted">PKB regionalne, demografia i usługi publiczne wg województw</p>
-                </div>
-                <Segmented value={tab} onChange={setTab} options={TABS} aria-label="Sekcja regionów" />
-            </div>
+        <div className="mk-fade-in space-y-8">
+            <PageHeader
+                eyebrow={<PageEyebrow section="Regiony" />}
+                title="Regiony"
+                subtitle="PKB regionalne, demografia i usługi publiczne wg województw"
+                actions={<Segmented value={tab} onChange={setTab} options={TABS} aria-label="Sekcja regionów" />}
+            />
 
             <div key={tab} className="mk-fade-in">
                 {tab === 'pkb' && <PkbRegionalne />}

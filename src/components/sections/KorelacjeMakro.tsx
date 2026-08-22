@@ -78,7 +78,7 @@ export function KorelacjeMakro() {
 
     return (
         <div className="space-y-6">
-            <SectionCard title="Macierz korelacji makro" subtitle="jak mocno wskaźniki poruszają się razem · współczynnik Pearsona na wspólnych miesiącach · Eurostat">
+            <SectionCard editorial titleVariant="label" title="Macierz korelacji makro" subtitle="jak mocno wskaźniki poruszają się razem · współczynnik Pearsona na wspólnych miesiącach · Eurostat">
                 {!ready ? <div className="mk-skeleton h-[360px] w-full" /> : (
                     <div className="overflow-x-auto">
                         <table className="border-separate" style={{ borderSpacing: 3 }}>
@@ -118,7 +118,7 @@ export function KorelacjeMakro() {
                 </div>
             </SectionCard>
 
-            <SectionCard title="Najsilniejsze zależności" subtitle="co porusza się razem — dodatnia: rosną/spadają zgodnie; ujemna: przeciwnie">
+            <SectionCard editorial titleVariant="label" title="Najsilniejsze zależności" subtitle="co porusza się razem — dodatnia: rosną/spadają zgodnie; ujemna: przeciwnie">
                 <div className="space-y-1.5">
                     {pairs.slice(0, 8).map((p, k) => (
                         <div key={k} className="flex items-center gap-3 text-sm">

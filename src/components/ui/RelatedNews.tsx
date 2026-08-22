@@ -33,7 +33,7 @@ function sectionLabel(section: string): string {
     return trimmed ? trimmed.toUpperCase() : 'MAKRO';
 }
 
-function CategoryTag({ section, filled = false }: { section: string; filled?: boolean }) {
+export function CategoryTag({ section, filled = false }: { section: string; filled?: boolean }) {
     const label = sectionLabel(section);
     if (filled) return <span className="mk-tag-brand-fill">{label}</span>;
     return <span className="mk-tag-brand">{label}</span>;
@@ -130,7 +130,9 @@ export function RelatedNews({
             title={title}
             subtitle="Wiadomości dotyczące wskaźników z tej sekcji"
             className={className}
-            actions={<AllNewsLink />}
+            editorial
+            titleVariant="label"
+            actions={<AllNewsLink brand />}
         >
             <NewsList items={items} />
         </SectionCard>

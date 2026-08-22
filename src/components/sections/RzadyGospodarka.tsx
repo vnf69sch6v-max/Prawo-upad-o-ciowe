@@ -51,7 +51,7 @@ export function RzadyGospodarka() {
 
     return (
         <div className="space-y-6">
-            <SectionCard title="Rządy a gospodarka" subtitle="wybierz wskaźnik — tło pokazuje, która ekipa rządziła w danym okresie · dane realne (Eurostat)"
+            <SectionCard editorial titleVariant="label" title="Rządy a gospodarka" subtitle="wybierz wskaźnik — tło pokazuje, która ekipa rządziła w danym okresie · dane realne (Eurostat)"
                 actions={<div className="flex flex-wrap items-center gap-2"><Segmented value={metric} onChange={setMetric} options={METRICS.map((m) => ({ value: m.value, label: m.label }))} /><CsvExport filename="rzady-gospodarka" headers={['Rok', 'PKB %', 'Inflacja %', 'Dług %PKB', 'Wynik %PKB']} rows={merged.map((r) => [r.year, r.gdp, r.cpi, r.debt, r.deficit])} /></div>}>
                 <ResponsiveContainer width="100%" height={340}>
                     <ComposedChart data={merged} margin={{ top: 8, right: 14, left: -6, bottom: 4 }}>
@@ -82,7 +82,7 @@ export function RzadyGospodarka() {
                 </div>
             </SectionCard>
 
-            <SectionCard title="Bilans gospodarczy rządów" subtitle="średnie w okresie rządzenia · dług: początek → koniec kadencji">
+            <SectionCard editorial titleVariant="label" title="Bilans gospodarczy rządów" subtitle="średnie w okresie rządzenia · dług: początek → koniec kadencji">
                 <div className="overflow-x-auto">
                     <table className="w-full min-w-[560px] text-sm">
                         <thead>

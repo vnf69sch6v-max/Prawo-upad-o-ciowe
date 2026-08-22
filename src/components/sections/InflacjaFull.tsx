@@ -232,7 +232,7 @@ export function InflacjaFull() {
     return (
         <div className="space-y-6">
             {/* ── Źródło + ręczna aktualizacja ── */}
-            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-mk-border bg-mk-surface-alt px-4 py-3">
+            <div className="mk-card mk-card-editorial mk-card-pad flex flex-wrap items-center justify-between gap-3">
                 <div className="min-w-0 text-sm text-mk-text-soft">
                     <span className="font-semibold text-mk-text">Źródło: </span>
                     {data?.source ?? 'GUS DBW (api-dbw.stat.gov.pl)'}
@@ -252,17 +252,20 @@ export function InflacjaFull() {
             </div>
 
             {/* ── KPI (ujednolicone na krajowy CPI GUS) ── */}
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <section>
+                <h2 className="mk-section-label mb-3">Wskaźniki CPI</h2>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <KpiCard label="CPI (r/r)" value={fmtPL(latest?.yoy)} unit="%" accent="amber" icon={TrendingUp}
                     delta={latest?.yoy != null && prev?.yoy != null ? { value: +(latest.yoy - prev.yoy).toFixed(1), unit: 'pp', invert: true } : undefined}
                     footnote={dataDate ? `GUS · CPI · ${formatDataPeriodLabel(dataDate)}` : 'GUS · krajowy CPI'} />
                 <KpiCard label="CPI (m/m)" value={fmtPL(latest?.mom)} unit="%" accent="blue" icon={Activity} footnote="miesiąc do miesiąca" />
-            </div>
+                </div>
+            </section>
 
             {cpiInsights.length > 0 && <InsightBar items={cpiInsights} />}
 
             {/* ── Hero: trend r/r ↔ m/m ── */}
-            <SectionCard title="Inflacja CPI — trend (10 lat)" subtitle={`${freq === 'yoy' ? 'rok do roku' : 'miesiąc do miesiąca'} (%) · krajowy CPI (GUS) · kwartalnie do 2025, miesięcznie od 2026`}
+            <SectionCard editorial titleVariant="label" title="Inflacja CPI — trend (10 lat)" subtitle={`${freq === 'yoy' ? 'rok do roku' : 'miesiąc do miesiąca'} (%) · krajowy CPI (GUS) · kwartalnie do 2025, miesięcznie od 2026`}
                 actions={<div className="flex flex-wrap items-center gap-2">
                     <Segmented value={freq} onChange={setFreq} options={[{ value: 'yoy', label: 'r/r' }, { value: 'mom', label: 'm/m' }]} />
                     <RefreshButton onClick={() => { void refreshFromSource(); }} loading={isFetching && !isLoading} />
@@ -277,7 +280,7 @@ export function InflacjaFull() {
             </SectionCard>
 
             {/* ── Struktura inflacji: CPI vs bazowa vs PPI ── */}
-            <SectionCard title="Struktura inflacji" subtitle="CPI ogółem · CPI bez żywności (bazowa) · PPI (ceny producenta) — r/r (%)">
+            <SectionCard editorial titleVariant="label" title="Struktura inflacji" subtitle="CPI ogółem · CPI bez żywności (bazowa) · PPI (ceny producenta) — r/r (%)">
                 <InteractiveChart data={structureData} xKey="date" height={300} unit="%" showRange initialRange="5L" ranges={['1R', '3L', '5L', 'ALL']} legend
                     valueFormatter={(v) => formatDecimalPL(v, 1)} xTickFormatter={monthTick}
                     referenceLines={[{ y: 2.5, label: 'Cel NBP', color: AXIS_INK }]}
@@ -293,7 +296,7 @@ export function InflacjaFull() {
             </SectionCard>
 
             {/* ── Czynniki cenotwórcze (drivers) ── */}
-            <SectionCard title="Czynniki cenotwórcze" subtitle="zewnętrzne presje na ceny — ropa, kursy walut, ceny producenta">
+            <SectionCard editorial titleVariant="label" title="Czynniki cenotwórcze" subtitle="zewnętrzne presje na ceny — ropa, kursy walut, ceny producenta">
                 <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
                     <KpiCard label="Ropa Brent" value={fmtPL(brent?.latest, 1)} unit=" USD" accent="amber" icon={Fuel}
                         delta={brent?.changeMM != null ? { value: brent.changeMM, unit: 'pct', invert: true } : undefined}
@@ -311,7 +314,7 @@ export function InflacjaFull() {
             </SectionCard>
 
             {/* ── Kontrybucje do inflacji (pełna szerokość, klik → drawer) ── */}
-            <SectionCard title="Kontrybucje do inflacji" subtitle="waga × dynamika = wkład (pp) · kliknij dział, aby zobaczyć szczegóły i 10-letni trend">
+            <SectionCard editorial titleVariant="label" title="Kontrybucje do inflacji" subtitle="waga × dynamika = wkład (pp) · kliknij dział, aby zobaczyć szczegóły i 10-letni trend">
                 <div className="space-y-1">
                     {contrib.map((d) => {
                         const c = d.contribution ?? 0;
@@ -332,7 +335,7 @@ export function InflacjaFull() {
 
             {/* ── Dekompozycja (wodospad) + Top movers ── */}
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                <SectionCard title="Dekompozycja CPI — wkłady działów" subtitle={`z czego składa się inflacja${dataDate ? ` (${formatDataPeriodLabel(dataDate)})` : ''} · słupki budują wskaźnik ogółem (pp)`}>
+                <SectionCard editorial titleVariant="label" title="Dekompozycja CPI — wkłady działów" subtitle={`z czego składa się inflacja${dataDate ? ` (${formatDataPeriodLabel(dataDate)})` : ''} · słupki budują wskaźnik ogółem (pp)`}>
                     <ResponsiveContainer width="100%" height={Math.max(300, waterfall.length * 28)}>
                         <BarChart data={waterfall} layout="vertical" margin={{ top: 4, right: 44, left: 6, bottom: 4 }} barCategoryGap={5}>
                             <CartesianGrid stroke="#EDF0F5" horizontal={false} />
@@ -354,7 +357,7 @@ export function InflacjaFull() {
                     <p className="mt-1 text-[11px] text-mk-faint">Czerwone podbijają inflację, zielone obniżają; ciemny słupek &bdquo;CPI ogółem&rdquo; = suma wkładów.</p>
                 </SectionCard>
 
-                <SectionCard title="Największe ruchy cen" subtitle="podkategorie (klasy COICOP) — co najbardziej zdrożało i staniało"
+                <SectionCard editorial titleVariant="label" title="Największe ruchy cen" subtitle="podkategorie (klasy COICOP) — co najbardziej zdrożało i staniało"
                     actions={<Segmented value={moverMetric} onChange={setMoverMetric} options={[{ value: 'yoy', label: 'r/r' }, { value: 'mom', label: 'm/m' }]} />}>
                     <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                         {[{ t: 'Najbardziej zdrożało', arr: movers.risers, up: true }, { t: 'Najbardziej staniało', arr: movers.fallers, up: false }].map((col) => (
@@ -376,7 +379,7 @@ export function InflacjaFull() {
             </div>
 
             {/* ── Wkłady do inflacji w czasie (stacked area) ── */}
-            <SectionCard title="Wkłady do inflacji w czasie" subtitle="wkład każdego działu (waga × r/r) — co napędzało CPI · kwartalnie do 2025, miesięcznie 2026 (pp)">
+            <SectionCard editorial titleVariant="label" title="Wkłady do inflacji w czasie" subtitle="wkład każdego działu (waga × r/r) — co napędzało CPI · kwartalnie do 2025, miesięcznie 2026 (pp)">
                 {contribTime.length < 2 ? <div className="mk-skeleton h-[320px] w-full" /> : (
                     <ResponsiveContainer width="100%" height={340}>
                         <AreaChart data={contribTime} margin={{ top: 6, right: 12, left: -6, bottom: 0 }}>
@@ -401,7 +404,7 @@ export function InflacjaFull() {
             </SectionCard>
 
             {/* ── Mapa ciepła inflacji (dział × czas) ── */}
-            <SectionCard title="Mapa ciepła inflacji" subtitle={heatMetric === 'yoy' ? 'dynamika r/r każdego działu w czasie — 10 lat · kliknij wiersz, aby otworzyć szczegóły' : 'dynamika m/m każdego działu — miesięcznie 2026 · kliknij wiersz, aby otworzyć szczegóły'}
+            <SectionCard editorial titleVariant="label" title="Mapa ciepła inflacji" subtitle={heatMetric === 'yoy' ? 'dynamika r/r każdego działu w czasie — 10 lat · kliknij wiersz, aby otworzyć szczegóły' : 'dynamika m/m każdego działu — miesięcznie 2026 · kliknij wiersz, aby otworzyć szczegóły'}
                 actions={<div className="flex items-center gap-2"><Grid3x3 size={15} className="text-mk-faint" /><Segmented value={heatMetric} onChange={setHeatMetric} options={[{ value: 'yoy', label: 'r/r (10 lat)' }, { value: 'mom', label: 'm/m (2026)' }]} /></div>}>
                 {heatCols.length < 2 ? <div className="flex h-[280px] items-center justify-center text-sm text-mk-faint">Brak danych dla wybranej metryki.</div> : (
                     <Heatmap rows={heatRows} cols={heatCols} valueAt={heatValue} unit="%"
@@ -410,7 +413,7 @@ export function InflacjaFull() {
                 <p className="mt-2 text-[11px] text-mk-faint">Kolor = dynamika cen: <span className="font-medium" style={{ color: '#B91C1C' }}>czerwony</span> silny wzrost, biały ≈ 0, <span className="font-medium" style={{ color: '#1D4ED8' }}>niebieski</span> spadek. Skala nieliniowa (√) — żeby spokojne okresy nie zlewały się obok skoku 2022–23.</p>
             </SectionCard>
 
-            <div className="rounded-xl bg-mk-surface-alt p-4 text-sm text-mk-text-soft">
+            <div className="mk-card mk-card-editorial mk-card-pad text-sm text-mk-text-soft">
                 <span className="font-semibold text-mk-text">API: </span>
                 <code className="text-xs text-mk-muted">/api/gus-cpi-full</code>
                 {' → '}
