@@ -28,7 +28,7 @@ export function SectionCard({
     editorial = false,
 }: SectionCardProps) {
     return (
-        <section className={`mk-card ${editorial ? 'mk-card-editorial' : ''} ${padded ? 'mk-card-pad' : ''} ${className}`}>
+        <section className={`mk-card min-w-0 ${editorial ? 'mk-card-editorial' : ''} ${padded ? 'mk-card-pad' : ''} ${className}`}>
             {(title || actions) && (
                 <header className="mb-4 flex flex-wrap items-start justify-between gap-3">
                     <div className="min-w-0">

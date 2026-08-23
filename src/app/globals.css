@@ -607,10 +607,20 @@ button.mk-card,
   color: var(--color-mk-text);
 }
 
-/* Light table */
+/* Light table — scroll stays inside the wrap so the document never grows sideways.
+   `border-collapse: separate` is required for sticky first-column / header. */
+.mk-table-wrap {
+  max-width: 100%;
+  min-width: 0;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 .mk-table {
   width: 100%;
-  border-collapse: collapse;
+  min-width: max-content;
+  border-collapse: separate;
+  border-spacing: 0;
   font-variant-numeric: tabular-nums;
 }
 
@@ -623,6 +633,11 @@ button.mk-card,
   padding: 8px 12px;
   text-align: left;
   border-bottom: 1px solid var(--color-mk-border);
+  white-space: nowrap;
+  background: var(--color-mk-surface);
+  position: sticky;
+  top: 0;
+  z-index: 2;
 }
 
 .mk-table td {
@@ -630,14 +645,91 @@ button.mk-card,
   padding: 9px 12px;
   border-bottom: 1px solid var(--color-mk-border);
   color: var(--color-mk-text-soft);
+  white-space: nowrap;
+  background: var(--color-mk-surface);
+}
+
+.mk-table th:first-child,
+.mk-table td:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--color-mk-surface);
+  box-shadow: 1px 0 0 var(--color-mk-border);
+}
+
+.mk-table thead th:first-child {
+  z-index: 3;
 }
 
 .mk-table tbody tr:last-child td {
   border-bottom: none;
 }
 
-.mk-table tbody tr:hover {
+.mk-table tbody tr:hover td {
   background: var(--color-mk-surface-alt);
+}
+
+.mk-table-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 28px;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.mk-table-sort-end {
+  flex-direction: row-reverse;
+  justify-content: flex-start;
+}
+
+.mk-table-sort-center {
+  justify-content: center;
+}
+
+.mk-table-sort:focus {
+  outline: none;
+}
+
+.mk-table-sort:focus-visible {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-mk-primary) 50%, transparent);
+}
+
+.mk-table-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  text-align: left;
+  border: 1px solid var(--color-mk-border);
+  border-radius: 12px;
+  background: var(--color-mk-surface);
+  color: inherit;
+  cursor: pointer;
+}
+
+.mk-table-card:hover {
+  background: var(--color-mk-surface-alt);
+}
+
+.mk-table-card:focus {
+  outline: none;
+}
+
+.mk-table-card:focus-visible {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-mk-primary) 50%, transparent);
 }
 
 /* ── Live indicator ────────────────────────────────────────── */
