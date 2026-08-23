@@ -3,9 +3,10 @@
 // Globalna paleta poleceń (⌘K / Ctrl+K) — nowoczesny mechanizm nawigacji „napisz czego szukasz".
 // Fuzzy-search bez diakrytyków po zakładkach, wskaźnikach i działach inflacji; deep-linki do
 // pod-zakładek przez ?tab=. Otwierana skrótem ⌘K lub zdarzeniem `mk:palette` (z przycisku w headerze).
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
+import { useFocusTrap } from '@/lib/use-focus-trap';
 import {
     LayoutDashboard, Tag, Factory, Users, TrendingUp, Map, Search, Newspaper,
     Percent, Landmark, LineChart, Home, Wheat, HardHat, Fuel, Building2, CornerDownLeft, Briefcase,
@@ -24,6 +25,7 @@ const COMMANDS: Cmd[] = [
     { id: 'nav-rynki', group: 'Zakładki', label: 'Rynki', keywords: 'gpw waluty stopy złoto', href: '/rynki', icon: TrendingUp },
     { id: 'nav-newsy', group: 'Zakładki', label: 'Newsy', keywords: 'wiadomości aktualności prasa rss bankier money puls biznesu', href: '/newsy', icon: Newspaper },
     { id: 'nav-reg', group: 'Zakładki', label: 'Regiony', keywords: 'województwa mapa samorząd demografia', href: '/regiony', icon: Map },
+    { id: 'nav-prog', group: 'Zakładki', label: 'Prognozy', keywords: 'kredyt wibor rata symulator', href: '/prognozy', icon: Percent },
 
     // ── Wskaźniki / widoki (deep-link do pod-zakładek) ──
     { id: 'ind-cpi', group: 'Wskaźniki', label: 'Inflacja CPI', sub: 'Ceny', keywords: 'inflacja ceny konsumenckie r/r bazowa', href: '/ceny?tab=inflacja', icon: TrendingUp },
@@ -77,6 +79,9 @@ export function CommandPalette() {
     const [active, setActive] = useState(0);
     const inputRef = useRef<HTMLInputElement>(null);
     const listRef = useRef<HTMLDivElement>(null);
+    const panelRef = useRef<HTMLDivElement>(null);
+    const close = useCallback(() => setOpen(false), []);
+    useFocusTrap(open, panelRef, close);
 
     // Skrót ⌘K/Ctrl+K globalnie + zdarzenie z headera.
     useEffect(() => {
@@ -123,7 +128,6 @@ export function CommandPalette() {
         if (e.key === 'ArrowDown') { e.preventDefault(); setActive((a) => Math.min(a + 1, results.length - 1)); }
         else if (e.key === 'ArrowUp') { e.preventDefault(); setActive((a) => Math.max(a - 1, 0)); }
         else if (e.key === 'Enter') { e.preventDefault(); go(results[active]); }
-        else if (e.key === 'Escape') { e.preventDefault(); setOpen(false); }
     };
 
     // Auto-scroll aktywnego elementu do widoku.
@@ -144,9 +148,9 @@ export function CommandPalette() {
     }
 
     return createPortal(
-        <div className="fixed inset-0 z-[70] flex items-start justify-center px-4 pt-[12vh]" role="dialog" aria-modal="true" aria-label="Paleta poleceń">
-            <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-[2px]" onClick={() => setOpen(false)} />
-            <div className="relative w-full max-w-xl overflow-hidden rounded-2xl border border-mk-border bg-mk-surface shadow-2xl" onKeyDown={onKeyDown}>
+        <div className="fixed inset-0 z-[70] flex items-start justify-center p-3 pt-[8vh] sm:px-4 sm:pt-[12vh]" role="dialog" aria-modal="true" aria-label="Paleta poleceń">
+            <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-[2px]" onClick={close} />
+            <div ref={panelRef} className="relative w-full max-w-xl overflow-hidden rounded-2xl border border-mk-border bg-mk-surface shadow-2xl" onKeyDown={onKeyDown}>
                 <div className="flex items-center gap-2.5 border-b border-mk-border px-4">
                     <Search size={18} className="shrink-0 text-mk-faint" />
                     <input ref={inputRef} value={q} onChange={(e) => { setQ(e.target.value); setActive(0); }} placeholder="Szukaj wskaźnika, zakładki, działu…"
@@ -164,8 +168,8 @@ export function CommandPalette() {
                                 const Icon = cmd.icon;
                                 const on = i === active;
                                 return (
-                                    <button key={cmd.id} data-idx={i} onMouseMove={() => setActive(i)} onClick={() => go(cmd)}
-                                        className={`flex w-full items-center gap-3 px-4 py-2 text-left transition-colors ${on ? 'bg-mk-primary/10' : ''}`}>
+                                    <button key={cmd.id} type="button" data-idx={i} onMouseMove={() => setActive(i)} onClick={() => go(cmd)}
+                                        className={`flex min-h-10 w-full items-center gap-3 px-4 py-2 text-left transition-colors ${on ? 'bg-mk-primary/10' : ''}`}>
                                         <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${on ? 'bg-mk-primary text-white' : 'bg-mk-surface-alt text-mk-muted'}`}>
                                             <Icon size={15} />
                                         </span>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { BarChart3, Loader2, ShieldCheck } from 'lucide-react';
 import { useAuth } from '@/lib/auth/use-auth';
@@ -12,10 +12,11 @@ export default function LoginPage() {
     const [password, setPassword] = useState('');
     const [error, setError] = useState<string | null>(null);
     const [busy, setBusy] = useState(false);
-    const [from] = useState<string>(() => {
-        if (typeof window === 'undefined') return '/';
-        return new URLSearchParams(window.location.search).get('from') || '/';
-    });
+    const [from, setFrom] = useState('/');
+    useEffect(() => {
+        const q = new URLSearchParams(window.location.search).get('from');
+        if (q) setFrom(q);
+    }, []);
 
     const onSubmit = async (e: FormEvent) => {
         e.preventDefault();
@@ -56,7 +57,7 @@ export default function LoginPage() {
                             value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
                     </div>
 
-                    {error && <p className="text-sm font-medium text-mk-negative">{error}</p>}
+                    {error && <p role="alert" className="text-sm font-medium text-mk-negative">{error}</p>}
 
                     <button type="submit" className="mk-btn mk-btn-primary w-full" disabled={busy}>
                         {busy ? <Loader2 size={16} className="animate-spin" /> : null}

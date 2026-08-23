@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
+import { useFocusTrap } from '@/lib/use-focus-trap';
 
 interface DrawerProps {
     open: boolean;
@@ -20,16 +21,18 @@ interface DrawerProps {
  *  (przodek z `transform` inaczej łamie pozycjonowanie). Kontener `overflow-hidden` chowa panel poza ekranem. */
 export function Drawer({ open, onClose, title, subtitle, accent = '#2563EB', width = 480, children }: DrawerProps) {
     const [mounted, setMounted] = useState(false);
+    const panelRef = useRef<HTMLElement>(null);
+    const closeBtnRef = useRef<HTMLButtonElement>(null);
     useEffect(() => setMounted(true), []);
+    useFocusTrap(open, panelRef, onClose);
 
     useEffect(() => {
         if (!open) return;
-        const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
-        document.addEventListener('keydown', onKey);
         const prev = document.body.style.overflow;
         document.body.style.overflow = 'hidden';
-        return () => { document.removeEventListener('keydown', onKey); document.body.style.overflow = prev; };
-    }, [open, onClose]);
+        const id = setTimeout(() => closeBtnRef.current?.focus(), 20);
+        return () => { clearTimeout(id); document.body.style.overflow = prev; };
+    }, [open]);
 
     if (!mounted) return null;
 
@@ -38,7 +41,7 @@ export function Drawer({ open, onClose, title, subtitle, accent = '#2563EB', wid
             <div onClick={onClose}
                 className={`absolute inset-0 bg-slate-900/30 backdrop-blur-[1px] transition-opacity duration-300 ${open ? 'opacity-100' : 'opacity-0'}`} />
             <div className="absolute inset-0 overflow-hidden">
-                <aside role="dialog" aria-modal="true" style={{ width, maxWidth: '94vw' }}
+                <aside ref={panelRef} role="dialog" aria-modal="true" style={{ width, maxWidth: '94vw' }}
                     className={`pointer-events-auto absolute inset-y-0 right-0 flex flex-col bg-mk-surface shadow-2xl transition-transform duration-300 ease-out ${open ? 'translate-x-0' : 'translate-x-full'}`}>
                     <div style={{ height: 4, background: accent }} />
                     <header className="flex items-start justify-between gap-3 border-b border-mk-border px-5 py-4">
@@ -46,7 +49,7 @@ export function Drawer({ open, onClose, title, subtitle, accent = '#2563EB', wid
                             {title && <h2 className="text-lg font-bold leading-tight text-mk-text">{title}</h2>}
                             {subtitle && <p className="mt-0.5 text-sm text-mk-muted">{subtitle}</p>}
                         </div>
-                        <button onClick={onClose} aria-label="Zamknij" className="shrink-0 rounded-lg p-1.5 text-mk-muted transition-colors hover:bg-mk-surface-alt hover:text-mk-text">
+                        <button ref={closeBtnRef} type="button" onClick={onClose} aria-label="Zamknij" className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-mk-muted transition-colors hover:bg-mk-surface-alt hover:text-mk-text">
                             <X size={20} />
                         </button>
                     </header>

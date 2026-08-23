@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { LayoutDashboard, Tag, Factory, Users, TrendingUp, Map, Newspaper, type LucideIcon } from 'lucide-react';
@@ -22,14 +23,21 @@ export function isActive(pathname: string, href: string): boolean {
 
 export function TopNav({ className = '' }: { className?: string }) {
     const pathname = usePathname();
+    const navRef = useRef<HTMLElement>(null);
+
+    useEffect(() => {
+        const active = navRef.current?.querySelector<HTMLElement>('[aria-current="page"]');
+        active?.scrollIntoView({ inline: 'nearest', block: 'nearest' });
+    }, [pathname]);
+
     return (
-        <nav className={`flex items-center gap-1 ${className}`}>
+        <nav ref={navRef} className={`flex items-center gap-1 ${className}`}>
             {NAV_ITEMS.map((it) => {
                 const Icon = it.icon;
                 const active = isActive(pathname, it.href);
                 return (
                     <Link key={it.href} href={it.href} className={`mk-tab ${active ? 'mk-tab-active' : ''}`} aria-current={active ? 'page' : undefined}>
-                        <Icon size={16} strokeWidth={2} />
+                        <Icon size={16} strokeWidth={2} aria-hidden />
                         <span>{it.label}</span>
                     </Link>
                 );

@@ -21,6 +21,22 @@ export function UserMenu() {
         return () => document.removeEventListener('mousedown', handler);
     }, []);
 
+    useEffect(() => {
+        if (!open) return;
+        const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+        const onKey = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                setOpen(false);
+            }
+        };
+        document.addEventListener('keydown', onKey);
+        return () => {
+            document.removeEventListener('keydown', onKey);
+            previous?.focus?.();
+        };
+    }, [open]);
+
     const onSignOut = async () => {
         await signOut();
         router.push('/login');
@@ -29,10 +45,12 @@ export function UserMenu() {
     return (
         <div className="relative" ref={ref}>
             <button
+                type="button"
                 onClick={() => setOpen((o) => !o)}
-                className="flex items-center gap-1.5 rounded-full p-0.5 pr-1.5 transition-colors hover:bg-mk-surface-alt"
+                className="flex min-h-8 items-center gap-1.5 rounded-full p-0.5 pr-1.5 transition-colors hover:bg-mk-surface-alt"
                 aria-label="Menu użytkownika"
                 aria-expanded={open}
+                aria-haspopup="menu"
             >
                 {user?.photoURL ? (
                     <Image src={user.photoURL} alt="" width={34} height={34} className="rounded-full" />

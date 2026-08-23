@@ -39,7 +39,7 @@ export function SectionCard({
                         )}
                         {subtitle && <p className="mt-0.5 text-sm text-mk-muted">{subtitle}</p>}
                     </div>
-                    {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
+                    {actions && <div className="min-w-0 max-w-full">{actions}</div>}
                 </header>
             )}
             {children}

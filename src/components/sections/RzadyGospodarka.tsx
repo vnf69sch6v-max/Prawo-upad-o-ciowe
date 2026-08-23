@@ -46,7 +46,7 @@ export function RzadyGospodarka() {
     return (
         <div className="space-y-6">
             <SectionCard editorial titleVariant="label" title="Rządy a gospodarka" subtitle="roczne wskaźniki GUS — tło pokazuje ekipę rządzącą w danym okresie"
-                actions={<Segmented value={metric} onChange={setMetric} options={METRICS.map((m) => ({ value: m.value, label: m.label }))} />}>
+                actions={<Segmented value={metric} onChange={setMetric} aria-label="Wskaźnik" options={METRICS.map((m) => ({ value: m.value, label: m.label }))} />}>
                 <ResponsiveContainer width="100%" height={340}>
                     <ComposedChart data={merged} margin={{ top: 8, right: 14, left: -6, bottom: 4 }}>
                         <CartesianGrid stroke="#EDF0F5" vertical={false} />
