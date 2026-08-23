@@ -17,11 +17,56 @@
 // Tu mierzymy sami: `useLayoutEffect` (pomiar po DOM, przed malowaniem) + własny ResizeObserver na
 // zmiany. Wykres dostaje szerokość w PIKSELACH, więc nie zależy już od wewnętrznego stanu Rechartsa.
 // Dzieci renderujemy dopiero, gdy znamy szerokość — inaczej Recharts zapisałby sobie 0 i tam został.
+//
+// 2026-08-23 (375×812): `.recharts-surface` plotu = 309 px (OK). Powierzchnie 8×8 to ikony legendy
+// Rechartsa (`iconSize={8}`), nie zapadnięty wykres. Próg MIN_READY odrzuca pomiar < 32 px
+// (wyścig flex/grid), a rAF ponawia, zanim oddamy 0 Rechartsowi.
 
-import { Children, cloneElement, isValidElement, useEffect, useLayoutEffect, useRef, useState, type ReactElement } from 'react';
+import { Children, cloneElement, isValidElement, useEffect, useLayoutEffect, useRef, useState, type ReactElement, type RefObject } from 'react';
+import { mobilePlotHeight } from '@/lib/chart-theme';
 
 // useLayoutEffect ostrzega przy renderze serwerowym — na serwerze i tak nie ma czego mierzyć.
 const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect;
+
+/** Poniżej tego traktujemy pomiar jako „jeszcze nie gotowy” (0-width bug / flex race). */
+const MIN_READY = 32;
+const RAF_TRIES = 16;
+
+export function usePlotWidth(minReady = MIN_READY): { ref: RefObject<HTMLDivElement | null>; width: number } {
+    const ref = useRef<HTMLDivElement>(null);
+    const [width, setWidth] = useState(0);
+
+    useIsomorphicLayoutEffect(() => {
+        const el = ref.current;
+        if (!el) return;
+
+        const measure = () => {
+            const w = el.getBoundingClientRect().width || el.clientWidth;
+            if (w < minReady) return;
+            setWidth((prev) => (Math.abs(prev - w) >= 1 ? w : prev));
+        };
+        measure();
+
+        let tries = 0;
+        let raf = 0;
+        const retry = () => {
+            measure();
+            if (tries++ < RAF_TRIES && (ref.current?.getBoundingClientRect().width || 0) < minReady) {
+                raf = requestAnimationFrame(retry);
+            }
+        };
+        raf = requestAnimationFrame(retry);
+
+        const ro = new ResizeObserver(measure);
+        ro.observe(el);
+        return () => {
+            ro.disconnect();
+            cancelAnimationFrame(raf);
+        };
+    }, [minReady]);
+
+    return { ref, width };
+}
 
 interface ChartContainerProps {
     /** Zgodność z API Rechartsa. Obsługujemy tylko '100%' — jedyny wariant używany w projekcie. */
@@ -32,31 +77,14 @@ interface ChartContainerProps {
 }
 
 export function ResponsiveContainer({ height, children, className }: ChartContainerProps) {
-    const ref = useRef<HTMLDivElement>(null);
-    const [width, setWidth] = useState(0);
-
-    useIsomorphicLayoutEffect(() => {
-        const el = ref.current;
-        if (!el) return;
-
-        // Pomiar natychmiastowy — nie czekamy na pierwsze wywołanie obserwatora.
-        const measure = () => {
-            const w = el.clientWidth;
-            // Zmiany subpikselowe potrafią zapętlić ResizeObserver → aktualizujemy tylko przy realnej różnicy.
-            setWidth((prev) => (Math.abs(prev - w) >= 1 ? w : prev));
-        };
-        measure();
-
-        const ro = new ResizeObserver(measure);
-        ro.observe(el);
-        return () => ro.disconnect();
-    }, []);
+    const { ref, width } = usePlotWidth();
+    const plotH = mobilePlotHeight(width, height);
 
     const child = Children.only(children);
 
     return (
-        <div ref={ref} className={className} style={{ width: '100%', height }}>
-            {width > 0 && isValidElement(child) ? cloneElement(child, { width, height }) : null}
+        <div ref={ref} className={className} style={{ width: '100%', height: plotH, minWidth: 0, maxWidth: '100%' }}>
+            {width >= MIN_READY && isValidElement(child) ? cloneElement(child, { width, height: plotH }) : null}
         </div>
     );
 }

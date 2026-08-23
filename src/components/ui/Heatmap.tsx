@@ -3,8 +3,10 @@
 // Ogólna macierzowa mapa ciepła (wiersze × kolumny) z dywergentną skalą kolorów.
 // Interakcje: podświetlenie wiersza/kolumny (crosshair) + „inspektor" wartości nad siatką
 // (bez pływającego tooltipa — brak problemów z pozycjonowaniem pod transformem), klik wiersza.
-import { useMemo, useState } from 'react';
-import { AXIS_INK } from '@/lib/chart-theme';
+// Telefon: tap komórki pokazuje inspektor i ZOSTAJE do następnego tapu / tapu poza siatką.
+import { useEffect, useMemo, useState } from 'react';
+import { AXIS_INK, TICK_FONT } from '@/lib/chart-theme';
+import { usePlotWidth } from '@/components/ui/ChartContainer';
 
 export interface HeatmapRow { key: string; label: string }
 
@@ -39,6 +41,7 @@ const SENT_NEG: [number, number, number][] = [BASE, [252, 165, 165], [239, 68, 6
 
 export function Heatmap({ rows, cols, valueAt, colTickFormatter = (c) => c, valueFormatter = (v) => v.toFixed(1), unit = '', onRowClick, cellHeight = 20, maxTicks = 14, scheme = 'heat' }: HeatmapProps) {
     const [hover, setHover] = useState<{ r: string; c: string; v: number | null } | null>(null);
+    const { ref, width } = usePlotWidth();
     const posRamp = scheme === 'sentiment' ? SENT_POS : POS;
     const negRamp = scheme === 'sentiment' ? SENT_NEG : NEG;
     const posColor = scheme === 'sentiment' ? '#16A34A' : '#B91C1C';
@@ -57,13 +60,26 @@ export function Heatmap({ rows, cols, valueAt, colTickFormatter = (c) => c, valu
     };
 
     // Które kolumny dostają etykietę (przerzedzenie, zawsze pierwsza i ostatnia).
-    const tickEvery = Math.max(1, Math.ceil(cols.length / maxTicks));
+    // Na 375 px etykieta 11px ≈ 42 px — maxTicks z pomiaru, nie zgadywane.
+    const tickBudget = width > 0 ? Math.max(4, Math.floor(Math.min(width, 560) / 42)) : maxTicks;
+    const tickCap = Math.min(maxTicks, tickBudget);
+    const tickEvery = Math.max(1, Math.ceil(cols.length / tickCap));
     const showTick = (i: number) => i === 0 || i === cols.length - 1 || i % tickEvery === 0;
 
+    useEffect(() => {
+        const hide = (e: PointerEvent) => {
+            if (!ref.current?.contains(e.target as Node)) setHover(null);
+        };
+        document.addEventListener('pointerdown', hide);
+        return () => document.removeEventListener('pointerdown', hide);
+    }, [ref]);
+
+    const pin = (rowKey: string, c: string, v: number | null) => setHover({ r: rowKey, c, v });
+
     return (
-        <div className="w-full">
+        <div ref={ref} className="w-full min-w-0">
             {/* Inspektor: aktywna komórka */}
-            <div className="mb-2 flex h-5 items-center gap-2 text-xs">
+            <div className="mb-2 flex min-h-5 flex-wrap items-center gap-2 text-xs">
                 {hover ? (
                     <>
                         <span className="font-semibold text-mk-text">{rows.find((r) => r.key === hover.r)?.label}</span>
@@ -74,18 +90,19 @@ export function Heatmap({ rows, cols, valueAt, colTickFormatter = (c) => c, valu
                             {hover.v == null ? 'brak danych' : `${hover.v > 0 ? '+' : ''}${valueFormatter(hover.v)}${unit}`}
                         </span>
                     </>
-                ) : <span className="text-mk-faint">Najedź na komórkę, aby zobaczyć wartość · kliknij wiersz, aby otworzyć szczegóły</span>}
+                ) : <span className="text-mk-faint">Dotknij komórki, aby zobaczyć wartość · kliknij wiersz, aby otworzyć szczegóły</span>}
             </div>
 
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto overscroll-x-contain">
                 <div className="min-w-[560px]">
                     {rows.map((row) => {
                         const active = hover?.r === row.key;
                         return (
-                            <div key={row.key} className="flex items-center" onMouseLeave={() => setHover((h) => (h?.r === row.key ? null : h))}>
+                            <div key={row.key} className="flex items-center">
                                 <button
+                                    type="button"
                                     onClick={() => onRowClick?.(row.key)}
-                                    className={`w-[9.5rem] shrink-0 truncate pr-2 text-right text-[11px] transition-colors ${active ? 'font-semibold text-mk-text' : 'text-mk-muted'} ${onRowClick ? 'cursor-pointer hover:text-mk-text' : ''}`}
+                                    className={`w-[9.5rem] min-h-7 shrink-0 truncate pr-2 text-right text-[11px] transition-colors ${active ? 'font-semibold text-mk-text' : 'text-mk-muted'} ${onRowClick ? 'cursor-pointer hover:text-mk-text' : ''}`}
                                     title={row.label}>
                                     {row.label}
                                 </button>
@@ -97,7 +114,8 @@ export function Heatmap({ rows, cols, valueAt, colTickFormatter = (c) => c, valu
                                         return (
                                             <div
                                                 key={c}
-                                                onMouseEnter={() => setHover({ r: row.key, c, v })}
+                                                onMouseEnter={() => pin(row.key, c, v)}
+                                                onPointerDown={(e) => { e.stopPropagation(); pin(row.key, c, v); }}
                                                 onClick={() => onRowClick?.(row.key)}
                                                 title={`${row.label} · ${colTickFormatter(c)}: ${v == null ? 'brak' : `${v > 0 ? '+' : ''}${valueFormatter(v)}${unit}`}`}
                                                 className={onRowClick ? 'cursor-pointer' : ''}
@@ -122,7 +140,7 @@ export function Heatmap({ rows, cols, valueAt, colTickFormatter = (c) => c, valu
                         <div className="flex flex-1 gap-px">
                             {cols.map((c, i) => (
                                 <div key={c} style={{ flex: '1 1 0' }} className="overflow-visible text-center">
-                                    {showTick(i) && <span className="inline-block whitespace-nowrap text-[9px] text-mk-faint" style={{ transform: 'translateX(-2px)' }}>{colTickFormatter(c)}</span>}
+                                    {showTick(i) && <span className="inline-block whitespace-nowrap text-mk-faint" style={{ fontSize: TICK_FONT, transform: 'translateX(-2px)' }}>{colTickFormatter(c)}</span>}
                                 </div>
                             ))}
                         </div>

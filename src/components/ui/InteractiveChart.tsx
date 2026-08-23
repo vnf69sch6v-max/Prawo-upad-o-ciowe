@@ -1,12 +1,12 @@
 'use client';
 
-import { useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from 'react';
 import {
     ComposedChart, Line, Bar, Area,
     XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine, Legend,
 } from 'recharts';
-import { ResponsiveContainer } from '@/components/ui/ChartContainer';
-import { AXIS_INK } from '@/lib/chart-theme';
+import { ResponsiveContainer, usePlotWidth } from '@/components/ui/ChartContainer';
+import { AXIS_INK, AXIS_LINE, CHART_SM, CURSOR, GRID, TICK_FONT, mobilePlotHeight, xTickStep } from '@/lib/chart-theme';
 
 export interface ChartSeries {
     key: string;
@@ -63,7 +63,34 @@ function LightTooltip({ active, payload, label, valueFormatter, unit }: {
     );
 }
 
+function BelowLegend({ series }: { series: ChartSeries[] }) {
+    return (
+        <ul className="mt-2 flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5">
+            {series.map((s) => (
+                <li key={s.key} className="inline-flex items-center gap-1.5 text-xs text-mk-muted">
+                    <span
+                        className="h-2 w-2 shrink-0 rounded-full"
+                        style={s.dashed
+                            ? { boxShadow: `inset 0 0 0 1.5px ${s.color}`, background: 'transparent' }
+                            : { background: s.color }}
+                    />
+                    {s.name}
+                </li>
+            ))}
+        </ul>
+    );
+}
+
 const DEFAULT_RANGES: RangeKey[] = ['3M', '6M', '1R', 'ALL'];
+
+const RANGE_BTN: CSSProperties = {
+    minWidth: 28,
+    minHeight: 28,
+    padding: '4px 10px',
+    fontSize: 12,
+    lineHeight: 1.2,
+    touchAction: 'manipulation',
+};
 
 export function InteractiveChart({
     data, xKey, series, height = 300, unit = '', valueFormatter, xTickFormatter,
@@ -71,6 +98,8 @@ export function InteractiveChart({
 }: InteractiveChartProps) {
     const [range, setRange] = useState<RangeKey>(initialRange);
     const rangeButtons = ranges ?? DEFAULT_RANGES;
+    const { ref: rootRef, width: boxW } = usePlotWidth();
+    const [forceHide, setForceHide] = useState(false);
 
     const view = useMemo(() => {
         if (!showRange || range === 'ALL') return data;
@@ -88,15 +117,39 @@ export function InteractiveChart({
     // Bars need a 0 baseline; line/area charts look better tightly fitted to the data.
     const yDomain: [number | string, number | string] = hasBar ? [0, 'auto'] : ['auto', 'auto'];
 
+    const isNarrow = boxW === 0 || boxW < CHART_SM;
+    const plotH = mobilePlotHeight(boxW || 375, height);
+    const tickInterval = xTickStep(boxW || 309, view.length);
+    const legendBelow = Boolean(legend && isNarrow);
+
+    // Tooltip: na telefonie nie ma hover. `trigger="click"` pokazuje i ZOSTAJE.
+    // `active={false}` od startu BLOKUJE tap (Recharts nie otworzy tooltipa) —
+    // gasimy dopiero po tapie poza wykresem; kolejny tap w plot zdejmuje blokadę.
+    useEffect(() => {
+        const hide = (e: PointerEvent) => {
+            if (!rootRef.current?.contains(e.target as Node)) setForceHide(true);
+        };
+        document.addEventListener('pointerdown', hide);
+        return () => document.removeEventListener('pointerdown', hide);
+    }, [rootRef]);
+
     return (
-        <div>
+        <div ref={rootRef}>
             {(showRange || controls) && (
                 <div className="mb-3 flex items-center justify-between gap-3">
                     <div>{controls}</div>
                     {showRange && (
                         <div className="mk-seg" role="tablist" aria-label="Zakres">
                             {rangeButtons.map((r) => (
-                                <button key={r} type="button" onClick={() => setRange(r)} className={`mk-seg-btn ${range === r ? 'mk-seg-btn-active' : ''}`} style={{ padding: '3px 9px', fontSize: 12 }}>
+                                <button
+                                    key={r}
+                                    type="button"
+                                    role="tab"
+                                    aria-selected={range === r}
+                                    onClick={() => setRange(r)}
+                                    className={`mk-seg-btn ${range === r ? 'mk-seg-btn-active' : ''}`}
+                                    style={RANGE_BTN}
+                                >
                                     {r}
                                 </button>
                             ))}
@@ -107,7 +160,7 @@ export function InteractiveChart({
             {!hasData ? (
                 <div
                     className="flex flex-col items-center justify-center gap-1.5 rounded-xl bg-mk-surface-alt text-center"
-                    style={{ height }}
+                    style={{ height: plotH }}
                 >
                     <span className="text-sm font-medium text-mk-text">Brak danych do wyświetlenia</span>
                     <span className="max-w-[38ch] text-xs text-mk-muted">
@@ -116,7 +169,11 @@ export function InteractiveChart({
                 </div>
             ) : (
             <ResponsiveContainer width="100%" height={height}>
-                <ComposedChart data={view} margin={{ top: 6, right: hasRight ? 6 : 12, left: -6, bottom: 0 }}>
+                <ComposedChart
+                    data={view}
+                    margin={{ top: 6, right: hasRight ? 6 : 12, left: -6, bottom: legendBelow ? 2 : 0 }}
+                    onClick={() => setForceHide(false)}
+                >
                     <defs>
                         {series.filter((s) => s.type === 'area').map((s) => (
                             <linearGradient key={s.key} id={`grad-${s.key}`} x1="0" y1="0" x2="0" y2="1">
@@ -125,16 +182,31 @@ export function InteractiveChart({
                             </linearGradient>
                         ))}
                     </defs>
-                    <CartesianGrid stroke="#EDF0F5" vertical={false} />
-                    <XAxis dataKey={xKey} tick={{ fill: AXIS_INK, fontSize: 12 }} tickFormatter={xTickFormatter} axisLine={{ stroke: '#E7EAF0' }} tickLine={false} minTickGap={24} />
-                    <YAxis yAxisId="left" domain={yDomain} tick={{ fill: AXIS_INK, fontSize: 12 }} axisLine={false} tickLine={false} width={44} tickFormatter={valueFormatter} />
-                    {hasRight && <YAxis yAxisId="right" orientation="right" domain={['auto', 'auto']} tick={{ fill: AXIS_INK, fontSize: 12 }} axisLine={false} tickLine={false} width={44} />}
-                    <Tooltip content={<LightTooltip valueFormatter={valueFormatter} unit={unit} />} cursor={{ stroke: '#CBD2DD', strokeWidth: 1, strokeDasharray: '3 3' }} />
-                    {legend && <Legend wrapperStyle={{ fontSize: 12, paddingTop: 8 }} iconType="circle" iconSize={8} />}
+                    <CartesianGrid stroke={GRID} vertical={false} />
+                    <XAxis
+                        dataKey={xKey}
+                        tick={{ fill: AXIS_INK, fontSize: TICK_FONT }}
+                        tickFormatter={xTickFormatter}
+                        axisLine={{ stroke: AXIS_LINE }}
+                        tickLine={false}
+                        interval={tickInterval}
+                        minTickGap={36}
+                        angle={0}
+                    />
+                    <YAxis yAxisId="left" domain={yDomain} tick={{ fill: AXIS_INK, fontSize: TICK_FONT }} axisLine={false} tickLine={false} width={44} tickFormatter={valueFormatter} />
+                    {hasRight && <YAxis yAxisId="right" orientation="right" domain={['auto', 'auto']} tick={{ fill: AXIS_INK, fontSize: TICK_FONT }} axisLine={false} tickLine={false} width={44} />}
+                    <Tooltip
+                        trigger="click"
+                        active={forceHide ? false : undefined}
+                        content={<LightTooltip valueFormatter={valueFormatter} unit={unit} />}
+                        cursor={{ stroke: CURSOR, strokeWidth: 1, strokeDasharray: '3 3' }}
+                        isAnimationActive={false}
+                    />
+                    {legend && !legendBelow && <Legend wrapperStyle={{ fontSize: 12, paddingTop: 8 }} iconType="circle" iconSize={8} />}
 
                     {referenceLines?.map((r, i) => (
                         <ReferenceLine key={i} yAxisId={r.axis ?? 'left'} y={r.y} stroke={r.color ?? AXIS_INK} strokeDasharray="4 4"
-                            label={r.label ? { value: r.label, position: 'insideTopRight', fill: r.color ?? AXIS_INK, fontSize: 11 } : undefined} />
+                            label={r.label ? { value: r.label, position: 'insideTopRight', fill: r.color ?? AXIS_INK, fontSize: TICK_FONT } : undefined} />
                     ))}
 
                     {series.map((s) => {
@@ -150,6 +222,7 @@ export function InteractiveChart({
                 </ComposedChart>
             </ResponsiveContainer>
             )}
+            {hasData && legendBelow && <BelowLegend series={series} />}
         </div>
     );
 }

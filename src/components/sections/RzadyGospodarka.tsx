@@ -56,7 +56,7 @@ export function RzadyGospodarka() {
                         <ReferenceLine y={0} stroke="#CBD5E1" />
                         <XAxis dataKey="year" type="number" domain={[minY - 0.5, maxY + 0.5]} tick={{ fill: AXIS_INK, fontSize: 11 }} axisLine={{ stroke: '#E7EAF0' }} tickLine={false} tickCount={8} allowDecimals={false} />
                         <YAxis tick={{ fill: AXIS_INK, fontSize: 12 }} axisLine={false} tickLine={false} width={42} tickFormatter={(v) => formatDecimalPL(v, 0)} unit="%" />
-                        <Tooltip content={({ active, payload, label }) => {
+                        <Tooltip trigger="click" isAnimationActive={false} content={({ active, payload, label }) => {
                             if (!active || !payload?.length) return null;
                             const g = govForYear(Number(label));
                             const v = payload[0]?.value as number | undefined;
