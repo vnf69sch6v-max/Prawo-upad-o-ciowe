@@ -22,3 +22,10 @@ export function nextCalendarDate(yyyyMmDd: string): string {
     const noon = Date.UTC(y, m - 1, d, 12, 0, 0);
     return warsawDateKey(noon + 24 * 3600 * 1000);
 }
+
+/** Wczoraj względem podanej daty kalendarzowej YYYY-MM-DD. */
+export function prevCalendarDate(yyyyMmDd: string): string {
+    const [y, m, d] = yyyyMmDd.split('-').map(Number);
+    const noon = Date.UTC(y, m - 1, d, 12, 0, 0);
+    return warsawDateKey(noon - 24 * 3600 * 1000);
+}
