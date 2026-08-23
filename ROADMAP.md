@@ -60,6 +60,39 @@ przy podejmowaniu.
 
 ## ZROBIONE
 
+- **Podsumowanie dnia — akapit (Warstwa 2 digestu)** — 2026-08-23
+  Akapit „o czym dziś pisano" nad listą punktów na `/podsumowanie`. Pliki: `lib/news/summary.ts`
+  (szablon + walidator + adapter xAI), pole `podsumowanie?` w `DailyDigest`, wpięcie w
+  `build-digest.ts`, telemetria w cronie `news-digest`, `SummaryParagraph` w `app/podsumowanie/page.tsx`.
+  - **Model NIE MOŻE wprowadzić liczby spoza wejścia — i nie jest to prośba w prompcie, tylko kod.**
+    Walidator wyłuskuje liczby z wygenerowanego tekstu i odrzuca wszystko, czego nie było w wejściu.
+    Odrzucenie → szablon deterministyczny. Ta sama bramka broni przed brakiem klucza, wyczerpanymi
+    kredytami, timeoutem i awarią xAI — każda ścieżka kończy się szablonem, digest zawsze się publikuje.
+  - **Whitelist wywodzimy WPROST z `buildModelInput()`, nie z osobnego obchodzenia pól digestu.**
+    Pierwsza wersja robiła to drugie i natychmiast się rozjechała: wejście zawierało „3 niezależne
+    relacje", whitelist nie — więc WŁASNY szablon nie przechodził WŁASNEGO walidatora. Jedno źródło
+    prawdy kasuje całą tę klasę błędów. **Nie rozdzielać tego z powrotem.**
+  - **Liczebniki słowne działają na tej samej zasadzie co cyfry** — dozwolone są te obecne w wejściu.
+    Wymusił to realny nagłówek Bankiera „Trzy lata hossy uśpiły czujność": szablon cytuje tytuł
+    dosłownie, więc bezwarunkowa blokada „trzy" wywracała walidator na własnym fallbacku.
+  - **NIE dopisywać „kilka"/„kilkanaście"/„większość" do blokady liczebników** — prompt systemowy
+    w punkcie 4 WPROST dopuszcza „opisane niezależnie przez kilka redakcji". Walidator sprzeczny
+    z promptem spycha na szablon przy każdej generacji i cała warstwa traci sens.
+  - **Sklejanie spacji w tysiącach wymaga dokładnie 3 cyfr i negatywnego lookahead.** Bez tego
+    „WIG20 3 766" stawało się liczbą 203766, a „3,0 3.0" — 3.03. Oba wyszły dopiero w teście.
+  - ⚠ **ZNANY LIMIT:** walidator sprawdza WIELKOŚCI, nie KIERUNKI (whitelist ma „−0,4" i „0,4",
+    bo inaczej „spadł o 0,4%" byłoby odrzucane). Odwrócenie kierunku łapie tylko prompt.
+  - **Koszt:** ~$0,009/wywołanie × 365 = **~$3,3/rok** (grok-4.6, cennik xAI 08.2026). Budżet ścięty
+    twardo po stronie dostawcy: $10 prepaid + postpaid limit $0 → po wyczerpaniu xAI odrzuca żądania.
+    ⚠ **Generacja MUSI zostać w cronie.** Przeniesiona do ścieżki żądania przy 10 tys. odsłon/dobę
+    kosztowałaby ~$325 DZIENNIE. Różnica tysiąckrotna, niewidoczna w kodzie — widoczna na fakturze.
+  - **Zweryfikowane:** 21 testów jednostkowych walidatora + przebieg na żywych nagłówkach Bankiera
+    + 8 testów orkiestracji (halucynacja → szablon, awaria → szablon, brak klucza → szablon,
+    pusty dzień → brak karty). `tsc` i `build` zielone.
+  - **NIEzweryfikowane w tej sesji** (dev server był zablokowany): wygląd akapitu na żywo i realny
+    czas crona z wywołaniem modelu. Do sprawdzenia przy pierwszym uruchomieniu — cron zwraca
+    `summaryOrigin` i `summaryRejected`, więc widać to bez wchodzenia do Firestore.
+
 - **Naprawa: dane rynkowe stały miesiąc mimo „zielonych" cronów** — 2026-08-17, commit `58bb135`
   Produkcja serwowała tabelę NBP z 16.07 (u źródła 14.08), WIG20 z 13.07, Eurostat z 16.07.
   CPI/PPI/newsy były świeże, bo mają crony z `?refresh=1`.

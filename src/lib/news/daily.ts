@@ -54,6 +54,29 @@ export interface DailyDigestTomorrow {
     events: DailyDigestTomorrowEvent[];
 }
 
+/**
+ * Akapit „o czym dziś pisano" (Warstwa 2).
+ *
+ * ⚠ NAZEWNICTWO: to podsumowanie TYTUŁÓW, nie wydarzeń. Nie mamy treści artykułów
+ * (świadomie nie scrapujemy — paywalle i prawo autorskie), więc model widzi wyłącznie
+ * nagłówki i lidy. Nie podpisujcie tego w UI jako „co się wydarzyło".
+ * Wyjątkiem jest blok `dane` — CPI/WIG20/kursy pochodzą wprost z GUS/NBP/Yahoo.
+ */
+export interface DigestSummary {
+    text: string;
+    /** `szablon` = złożony deterministycznie; `model` = wygenerowany i PRZEPUSZCZONY przez walidator. */
+    origin: 'model' | 'szablon';
+    /** ID modelu, gdy origin === 'model'. */
+    model?: string;
+    /** Powód odrzucenia generacji — bez tego zły akapit jest niediagnozowalny. */
+    rejectedReason?: string;
+    /**
+     * Wejście, z którego powstał tekst. OBOWIĄZKOWE przy origin === 'model' — inaczej nie da się
+     * odróżnić halucynacji modelu od śmieci, które dostał.
+     */
+    input?: { titles: string[]; numbers: string[] };
+}
+
 export interface DailyDigest {
     date: string;
     generatedAt: string;
@@ -61,6 +84,8 @@ export interface DailyDigest {
     /** „Co się zmieniło w liczbach" — Etap 2; domyślnie puste. */
     dane: MacroChange[];
     jutro: DailyDigestTomorrow;
+    /** Akapit nad listą punktów (Warstwa 2). Opcjonalny — brak nie psuje digestu. */
+    podsumowanie?: DigestSummary;
 }
 
 function ownerOfItem(it: Pick<NewsItem, 'sourceId'> & { owner?: NewsOwner }): NewsOwner {

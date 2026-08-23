@@ -3,9 +3,9 @@
 import { Suspense, useMemo } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { ArrowRight, CalendarDays, ExternalLink, Layers } from 'lucide-react';
+import { ArrowRight, Bot, CalendarDays, ExternalLink, Layers } from 'lucide-react';
 import { useDailyDigest } from '@/lib/hooks';
-import { corroborationLabel } from '@/lib/news/daily';
+import { corroborationLabel, type DigestSummary } from '@/lib/news/daily';
 import { formatDate } from '@/lib/formatters';
 import { EVENT_COLORS } from '@/lib/calendar';
 import type { NewsTopic } from '@/lib/news/match';
@@ -45,6 +45,35 @@ function CorroborationTag({ n }: { n: number }) {
     );
 }
 
+/**
+ * Akapit „o czym dziś pisano".
+ *
+ * Oznaczenie pochodzenia jest OBOWIĄZKOWE i pokazujemy je niezależnie od tego, czy tekst napisał
+ * model, czy złożył szablon. Powód jest ten sam, dla którego stopka `/newsy` mówi wprost, że
+ * etykiety nadaje automat: oznaczanie tylko CZĘŚCI treści uwiarygodnia resztę (implied truth
+ * effect — Pennycook i in. 2020). Nieoznaczony akapit obok oznaczonych newsów byłby tu
+ * niekonsekwencją, którą sami sobie już raz wytknęliśmy.
+ *
+ * Mówimy „o czym pisano", nie „co się wydarzyło" — akapit powstaje z TYTUŁÓW, nie z treści
+ * artykułów (nie scrapujemy ich). Liczby to osobna sprawa: pochodzą z GUS/NBP/GPW.
+ */
+function SummaryParagraph({ summary }: { summary: DigestSummary }) {
+    return (
+        <section className="mk-card mk-card-editorial mk-card-pad">
+            <h2 className="mk-section-label mb-3">O czym dziś pisano</h2>
+            <p className="text-base leading-relaxed text-mk-text">{summary.text}</p>
+            <p className="mt-4 flex items-start gap-1.5 border-t border-mk-border pt-3 text-xs text-mk-muted">
+                <Bot size={13} className="mt-0.5 shrink-0" aria-hidden />
+                <span>
+                    {summary.origin === 'model'
+                        ? 'Akapit napisany automatycznie na podstawie tytułów artykułów. Liczby pochodzą z GUS, NBP i GPW.'
+                        : 'Akapit złożony automatycznie z najważniejszego tematu i odczytów wskaźników. Liczby pochodzą z GUS, NBP i GPW.'}
+                </span>
+            </p>
+        </section>
+    );
+}
+
 function DailyDigestFull({ date }: { date?: string }) {
     const { data: digest, isLoading, isError } = useDailyDigest(date);
 
@@ -73,6 +102,8 @@ function DailyDigestFull({ date }: { date?: string }) {
 
     return (
         <div className="space-y-8">
+            {digest.podsumowanie && <SummaryParagraph summary={digest.podsumowanie} />}
+
             <section>
                 <h2 className="mk-section-label mb-4">Najważniejsze tematy dnia</h2>
                 <div className="mk-card mk-card-editorial mk-card-pad">

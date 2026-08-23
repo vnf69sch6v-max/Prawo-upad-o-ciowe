@@ -33,6 +33,11 @@ export async function GET(request: NextRequest) {
             points: digest.punkty.length,
             macro: digest.dane.length,
             tomorrowEvents: digest.jutro.events.length,
+            // Telemetria akapitu — widoczna bez wchodzenia do Firestore. Regularne
+            // `summaryRejected` to sygnał, że model nie nadaje się do tego zadania
+            // i trzeba zostać przy szablonie, a nie rozluźniać walidator.
+            summaryOrigin: digest.podsumowanie?.origin ?? 'brak',
+            summaryRejected: digest.podsumowanie?.rejectedReason ?? null,
             feedCount: feed.count,
             sameDayCount,
             archiveCount,
