@@ -7,7 +7,6 @@ import { formatDecimalPL } from '@/lib/formatters';
 import { KpiCard } from '@/components/ui/KpiCard';
 import { InteractiveChart } from '@/components/ui/InteractiveChart';
 import { SectionCard } from '@/components/ui/SectionCard';
-import { CsvExport } from '@/components/ui/CsvExport';
 
 function Select({ label, value, onChange, options, disabled, placeholder }: {
     label: string; value: number | undefined; onChange: (v: number) => void;
@@ -65,7 +64,7 @@ export function SmupExplorer() {
 
     return (
         <div className="mk-fade-in space-y-6">
-            <SectionCard title="Wybór wskaźnika" padded>
+            <SectionCard editorial titleVariant="label" title="Wybór wskaźnika" padded>
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                     <Select label="Obszar" value={areaId} placeholder="Wybierz obszar"
                         options={areas.map((a) => ({ id: a['id-ou'], name: a['nazwa-obszaru'] }))}
@@ -88,8 +87,7 @@ export function SmupExplorer() {
                     footnote={series.length ? `${series[0].date}–${series[series.length - 1].date}` : '—'} loading={dataQ.isLoading} />
             </div>
 
-            <SectionCard title={indicatorName || 'Wskaźnik'} subtitle="Średnia dla jednostek samorządu · SMUP"
-                actions={<CsvExport filename="smup-wskaznik" headers={['Rok', 'Wartość (śr.)']} rows={series.map((s) => [s.date, s.value])} />}>
+            <SectionCard editorial titleVariant="label" title={indicatorName || 'Wskaźnik'} subtitle="Średnia dla jednostek samorządu · SMUP">
                 {dataQ.isLoading ? <div className="mk-skeleton h-[300px] w-full" /> : series.length === 0 ? (
                     <p className="py-10 text-center text-sm text-mk-faint">Brak danych dla wybranego wskaźnika.</p>
                 ) : (

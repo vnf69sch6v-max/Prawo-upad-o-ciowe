@@ -25,8 +25,10 @@ const nextConfig: NextConfig = {
       { source: '/fx', destination: '/rynki', permanent: false },
       { source: '/market', destination: '/rynki', permanent: false },
       { source: '/trade', destination: '/rynki', permanent: false },
-      { source: '/nowcast', destination: '/prognozy', permanent: false },
-      { source: '/tools', destination: '/prognozy', permanent: false },
+      { source: '/nowcast', destination: '/rynki', permanent: false },
+      { source: '/tools', destination: '/rynki', permanent: false },
+      // Zakładka Prognozy została wycofana — stare linki kierujemy na Rynki.
+      { source: '/prognozy', destination: '/rynki', permanent: false },
     ];
   },
 };

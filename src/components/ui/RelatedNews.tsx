@@ -4,9 +4,40 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { ExternalLink, ArrowRight, Layers, Copy, Megaphone } from 'lucide-react';
 import { useNews, type NewsItem } from '@/lib/hooks';
-import { matchNews, collapseClusters, type NewsTopic } from '@/lib/news/match';
+import { matchNews, collapseClusters, matchesTopic, type NewsTopic } from '@/lib/news/match';
 import { formatRelativeTime, formatTime } from '@/lib/formatters';
 import { SectionCard } from '@/components/ui/SectionCard';
+
+const TOPIC_LINKS: { topic: NewsTopic; label: string; href: string }[] = [
+    { topic: 'ceny', label: 'Inflacja CPI', href: '/ceny?tab=inflacja' },
+    { topic: 'gospodarka', label: 'PKB / aktywność', href: '/gospodarka?tab=aktywnosc' },
+    { topic: 'praca', label: 'Rynek pracy', href: '/praca' },
+    { topic: 'rynki', label: 'Rynki finansowe', href: '/rynki' },
+];
+
+function newsTopics(item: Pick<NewsItem, 'title' | 'description'>) {
+    return TOPIC_LINKS.filter((t) => matchesTopic(item, t.topic));
+}
+
+const SECTION_LABELS: Record<string, string> = {
+    ogolne: 'MAKRO',
+    gielda: 'GIEŁDA',
+    waluty: 'WALUTY',
+    przemysl: 'PRZEMYSŁ',
+};
+
+function sectionLabel(section: string): string {
+    const key = section.trim().toLowerCase();
+    if (SECTION_LABELS[key]) return SECTION_LABELS[key];
+    const trimmed = section.trim();
+    return trimmed ? trimmed.toUpperCase() : 'MAKRO';
+}
+
+export function CategoryTag({ section, filled = false }: { section: string; filled?: boolean }) {
+    const label = sectionLabel(section);
+    if (filled) return <span className="mk-tag-brand-fill">{label}</span>;
+    return <span className="mk-tag-brand">{label}</span>;
+}
 
 function NewsList({ items }: { items: NewsItem[] }) {
     const [mounted, setMounted] = useState(false);
@@ -61,8 +92,11 @@ function NewsList({ items }: { items: NewsItem[] }) {
 }
 
 // `py-1` daje 26px wysokości — poniżej ~24px cel dotykowy jest zbyt mały (WCAG 2.2 Target Size).
-const AllNewsLink = () => (
-    <Link href="/newsy" className="-mr-1.5 flex items-center gap-1 rounded px-1.5 py-1 text-sm font-medium text-mk-primary transition-colors hover:bg-mk-primary/5 hover:underline">
+const AllNewsLink = ({ brand = false }: { brand?: boolean }) => (
+    <Link
+        href="/newsy"
+        className={`-mr-1.5 flex items-center gap-1 rounded px-1.5 py-1 text-sm font-medium transition-colors hover:underline ${brand ? 'text-mk-brand hover:bg-mk-brand-soft' : 'text-mk-primary hover:bg-mk-primary/5'}`}
+    >
         Wszystkie <ArrowRight size={14} />
     </Link>
 );
@@ -96,7 +130,9 @@ export function RelatedNews({
             title={title}
             subtitle="Wiadomości dotyczące wskaźników z tej sekcji"
             className={className}
-            actions={<AllNewsLink />}
+            editorial
+            titleVariant="label"
+            actions={<AllNewsLink brand />}
         >
             <NewsList items={items} />
         </SectionCard>
@@ -147,14 +183,118 @@ function Flags({ item }: { item: NewsItem }) {
     );
 }
 
+function RelatedIndicators({ item }: { item: NewsItem }) {
+    const topics = useMemo(() => newsTopics(item), [item]);
+    if (topics.length === 0) return null;
+    return (
+        <div>
+            <p className="text-[11px] font-bold uppercase tracking-wide text-mk-muted">Powiązane wskaźniki</p>
+            <div className="mt-2 flex flex-wrap gap-2">
+                {topics.map((t) => (
+                    <Link
+                        key={t.topic}
+                        href={t.href}
+                        className="rounded-full border border-mk-border bg-mk-surface px-3 py-1 text-xs font-semibold text-mk-text-soft transition-colors hover:border-mk-brand/40 hover:bg-mk-brand-soft hover:text-mk-brand"
+                    >
+                        {t.label}
+                    </Link>
+                ))}
+            </div>
+        </div>
+    );
+}
+
 /**
- * Układ pasa „Najważniejsze newsy" na Przeglądzie: LEAD (news #1 wg ważności — duży tytuł, opis,
- * pełny badge) + kompaktowy indeks pozostałych, oddzielony hairline'em.
- *
- * Ważność niesie KOLEJNOŚĆ (lista malejąca wg importance) i ROZMIAR leada — NIE kolorowy pasek.
- * Świadomie: pasek ważności z /newsy wniósłby tu dekoracyjny kolor (który kafle KPI zdjęły), a na
- * topowych 6 newsach i tak zlewa się w jeden poziom → szum, nie ranking. Osobny render, nie NewsList
- * (ten zostaje dla wąskich pasów tematycznych „Newsy powiązane").
+ * Układ Przeglądu z sidebar „Dlaczego to ważne" + tagi kategorii.
+ */
+function OverviewNewsLayout({ items }: { items: NewsItem[] }) {
+    const [mounted, setMounted] = useState(false);
+    useEffect(() => setMounted(true), []);
+    const [lead, ...rest] = items;
+
+    return (
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+            <div className="lg:col-span-8">
+                <a
+                    href={lead.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group block rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-mk-brand/40"
+                >
+                    <div className="flex flex-wrap gap-2">
+                        <CategoryTag section={lead.section} filled />
+                        {(lead.corroboration ?? 1) >= 2 && (
+                            <span className="mk-tag-brand-fill opacity-90">POTWIERDZONE · {lead.corroboration}</span>
+                        )}
+                    </div>
+                    <h4 className="mt-3 text-xl font-bold leading-tight tracking-tight text-mk-text transition-colors group-hover:text-mk-brand sm:text-2xl">
+                        {lead.title}
+                    </h4>
+                    {lead.description && (
+                        <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-mk-muted">{lead.description}</p>
+                    )}
+                    <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
+                        <span className="font-semibold text-mk-brand">
+                            {mounted ? formatRelativeTime(lead.publishedAt) : formatTime(lead.publishedAt)}
+                        </span>
+                        <span className="text-mk-faint">·</span>
+                        <span className="text-mk-muted">{lead.source}</span>
+                        <ExternalLink size={14} className="ml-auto shrink-0 text-mk-faint transition-colors group-hover:text-mk-brand" aria-hidden />
+                    </div>
+                </a>
+
+                {rest.length > 0 && (
+                    <ul className="mt-6 divide-y divide-mk-border border-t border-mk-border pt-2">
+                        {rest.map((it) => (
+                            <li key={it.link}>
+                                <a
+                                    href={it.link}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="group flex items-start gap-3 py-3.5 first:pt-4"
+                                >
+                                    <time
+                                        dateTime={it.publishedAt}
+                                        className="mt-0.5 shrink-0 text-xs font-semibold tabular-nums text-mk-brand"
+                                    >
+                                        {mounted ? formatRelativeTime(it.publishedAt) : formatTime(it.publishedAt)}
+                                    </time>
+                                    <div className="min-w-0 flex-1">
+                                        <div className="text-sm font-medium leading-snug text-mk-text transition-colors group-hover:text-mk-brand">
+                                            {it.title}
+                                        </div>
+                                        <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                                            <CategoryTag section={it.section} />
+                                            <span className="text-xs text-mk-faint">{it.source}</span>
+                                        </div>
+                                    </div>
+                                    <ExternalLink size={14} className="mt-0.5 shrink-0 text-mk-faint transition-colors group-hover:text-mk-brand" aria-hidden />
+                                </a>
+                            </li>
+                        ))}
+                    </ul>
+                )}
+            </div>
+
+            <aside className="lg:col-span-4">
+                <div className="rounded-xl border border-mk-border bg-mk-surface-alt p-5 lg:sticky lg:top-24">
+                    <h4 className="text-[11px] font-bold uppercase tracking-wide text-mk-brand">Dlaczego to ważne</h4>
+                    <p className="mt-3 text-sm leading-relaxed text-mk-text-soft">
+                        {lead.description
+                            ? lead.description
+                            : `Temat o wysokiej ważności w rankingu Savori — obserwuj powiązane wskaźniki makro.`}
+                    </p>
+                    <div className="mt-5 border-t border-mk-border pt-5">
+                        <RelatedIndicators item={lead} />
+                    </div>
+                </div>
+            </aside>
+        </div>
+    );
+}
+
+/**
+ * Układ pasa „Najważniejsze newsy" (domyślny): LEAD + kompaktowy indeks pozostałych.
  */
 function LatestNewsLayout({ items }: { items: NewsItem[] }) {
     const [mounted, setMounted] = useState(false);
@@ -223,11 +363,16 @@ function LatestNewsLayout({ items }: { items: NewsItem[] }) {
 }
 
 /** Najważniejsze newsy bez filtrowania tematycznego — pas na Przeglądzie. */
-export function LatestNews({ limit = 5, className = '' }: { limit?: number; className?: string }) {
+export function LatestNews({
+    limit = 5,
+    className = '',
+    variant = 'default',
+}: {
+    limit?: number;
+    className?: string;
+    variant?: 'default' | 'overview';
+}) {
     const { data, isLoading } = useNews();
-    // Na Przeglądzie pokazujemy najważniejsze, nie po prostu najświeższe — inaczej pas zapełniłby
-    // się przypadkowym newsem sprzed minuty zamiast tematem, który opisuje pół rynku.
-    // `collapseClusters` pilnuje, by jedna historia z 3 redakcji nie zjadła 3 z 6 miejsc.
     const items = useMemo(
         () => collapseClusters([...(data?.items ?? [])])
             .sort((a, b) => (b.importance ?? 0) - (a.importance ?? 0))
@@ -236,7 +381,25 @@ export function LatestNews({ limit = 5, className = '' }: { limit?: number; clas
     );
 
     if (isLoading) {
-        // Skeleton w kształcie lead + wiersze, żeby układ nie skakał po dojściu danych.
+        if (variant === 'overview') {
+            return (
+                <section className={className}>
+                    <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+                        <h2 className="mk-section-label">Najważniejsze newsy</h2>
+                    </div>
+                    <div className="mk-card mk-card-editorial mk-card-pad">
+                        <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+                            <div className="space-y-3 lg:col-span-8">
+                                <div className="mk-skeleton h-5 w-24 rounded" />
+                                <div className="mk-skeleton h-6 w-4/5 rounded" />
+                                <div className="mk-skeleton h-3.5 w-full rounded" />
+                            </div>
+                            <div className="mk-skeleton h-32 rounded-xl lg:col-span-4" />
+                        </div>
+                    </div>
+                </section>
+            );
+        }
         return (
             <SectionCard title="Najważniejsze newsy" className={className}>
                 <div>
@@ -253,6 +416,20 @@ export function LatestNews({ limit = 5, className = '' }: { limit?: number; clas
         );
     }
     if (items.length === 0) return null;
+
+    if (variant === 'overview') {
+        return (
+            <section className={className}>
+                <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+                    <h2 className="mk-section-label">Najważniejsze newsy</h2>
+                    <AllNewsLink brand />
+                </div>
+                <div className="mk-card mk-card-editorial mk-card-pad">
+                    <OverviewNewsLayout items={items} />
+                </div>
+            </section>
+        );
+    }
 
     return (
         <SectionCard title="Najważniejsze newsy" className={className} actions={<AllNewsLink />}>

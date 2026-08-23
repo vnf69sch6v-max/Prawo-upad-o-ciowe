@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { LogOut, Sun, Moon } from 'lucide-react';
 import { useAuth } from '@/lib/auth/use-auth';
 import { SectionCard } from '@/components/ui/SectionCard';
+import { PageHeader, PageEyebrow } from '@/components/ui/PageHeader';
 
 const DATA_SOURCES = ['GUS BDL', 'NBP', 'Eurostat', 'Stooq', 'EIA', 'SMUP', 'SDP'];
 
@@ -18,15 +19,16 @@ export default function UstawieniaPage() {
 
     return (
         <div className="mk-fade-in max-w-2xl space-y-6">
-            <div>
-                <h1 className="text-3xl font-extrabold tracking-tight text-mk-text">Ustawienia</h1>
-                <p className="mt-1 text-sm text-mk-muted">Konto, motyw i źródła danych</p>
-            </div>
+            <PageHeader
+                eyebrow={<PageEyebrow section="Ustawienia" />}
+                title="Ustawienia"
+                subtitle="Konto, motyw i źródła danych"
+            />
 
-            <SectionCard title="Konto">
+            <SectionCard title="Konto" titleVariant="label" editorial>
                 <div className="flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
-                        <span className="flex h-11 w-11 items-center justify-center rounded-full bg-mk-primary-soft text-sm font-semibold text-mk-primary">
+                        <span className="flex h-11 w-11 items-center justify-center rounded-full bg-mk-brand-soft text-sm font-semibold text-mk-brand">
                             {user?.initials ?? 'MD'}
                         </span>
                         <div>
@@ -45,17 +47,17 @@ export default function UstawieniaPage() {
                 )}
             </SectionCard>
 
-            <SectionCard title="Motyw">
+            <SectionCard title="Motyw" titleVariant="label" editorial>
                 <div className="flex items-center gap-2">
-                    <span className="mk-btn mk-btn-primary cursor-default"><Sun size={15} /> Jasny</span>
+                    <span className="mk-btn mk-btn-primary cursor-default bg-mk-brand hover:bg-mk-brand"><Sun size={15} /> Jasny</span>
                     <span className="mk-btn cursor-not-allowed opacity-60"><Moon size={15} /> Ciemny (wkrótce)</span>
                 </div>
             </SectionCard>
 
-            <SectionCard title="Źródła danych">
+            <SectionCard title="Źródła danych" titleVariant="label" editorial>
                 <div className="flex flex-wrap gap-2">
                     {DATA_SOURCES.map((s) => (
-                        <span key={s} className="rounded-full border border-mk-border bg-mk-surface-alt px-3 py-1 text-xs font-medium text-mk-text-soft">{s}</span>
+                        <span key={s} className="mk-tag-brand">{s}</span>
                     ))}
                 </div>
             </SectionCard>

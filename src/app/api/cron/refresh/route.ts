@@ -11,7 +11,7 @@ const ENDPOINTS = [
     // Rynek pracy + regiony (BDL — osobny limit, wszystkie lata w 1 wywołaniu)
     '/api/bdl-series?start=154348&count=12',
     '/api/bdl-series?start=1615281&count=1',
-    '/api/bdl-series?start=1615457&count=1',
+    '/api/bdl-series?start=461680&count=12',                 // bezrobocie rejestrowane (miesięczne, kraj)
     '/api/gus-regional',
     '/api/gus-monthly',
     // Eurostat — `refresh=1` WYMUSZA pobranie u źródła. Bez tego warm tylko czytał cache
@@ -40,7 +40,7 @@ const ENDPOINTS = [
     '/api/eurostat?indicator=gdp_annual&geo=PL&refresh=1',
     '/api/eurostat?indicator=cpi_annual&geo=PL&refresh=1',
     '/api/eurostat?indicator=hicp_food_yoy&geo=PL&refresh=1',
-    '/api/regional-eu?refresh=1',                              // PKB regionalne + demografia (NUTS-2)
+    '/api/regional-gus?refresh=1',                             // PKB regionalne + demografia (GUS BDL)
     // NBP + rynki — dublują crony nbp/stooq (pn–pt); tu codziennie, więc dane nie stoją w weekend
     '/api/nbp?table=a&refresh=1',
     '/api/nbp-rates',
