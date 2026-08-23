@@ -8,13 +8,13 @@ import { type Observation } from '@/lib/observations';
 import { Segmented } from '@/components/ui/Segmented';
 import { EditorialHero } from '@/components/ui/EditorialHero';
 import { CompactKpiGrid, type CompactKpiItem } from '@/components/ui/CompactKpiGrid';
-import { DensePageLayout, DenseThreeCol } from '@/components/ui/DensePageLayout';
+import { DensePageLayout } from '@/components/ui/DensePageLayout';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { RelatedNews } from '@/components/ui/RelatedNews';
 import { ObservationsPanel } from '@/components/ui/ObservationsPanel';
 import { PublicationDatesPanel } from '@/components/ui/PublicationDatesPanel';
 import { Choropleth, type ChoroItem } from '@/components/ui/Choropleth';
-import { DataTable, type Column } from '@/components/ui/DataTable';
+import { RankingBars } from '@/components/ui/RankingBars';
 
 type MapView = 'pkb' | 'ludnosc';
 
@@ -121,18 +121,8 @@ export function RegionyDashboard() {
         observations.push({ text: `Ludność Polski: ${mln(nat.population)} (GUS BDL · ${data?.popYear ?? ''})`, tone: 'neutral' });
     }
 
-    type Row = (typeof regions)[number];
-    const cols: Column<Row>[] = isPkb
-        ? [
-            { key: 'name', header: 'Woj.', sortable: true, sortValue: (r) => r.name, render: (r) => woj(r.name) },
-            { key: 'gdp', header: 'PKB/mieszk.', align: 'right', sortable: true, sortValue: (r) => r.gdpPerCapita ?? 0, render: (r) => r.gdpPerCapita != null ? formatNumber(r.gdpPerCapita, 0) : '—' },
-            { key: 'pop', header: 'Ludność', align: 'right', sortable: true, sortValue: (r) => r.population ?? 0, render: (r) => r.population != null ? mln1(r.population) : '—' },
-        ]
-        : [
-            { key: 'name', header: 'Woj.', sortable: true, sortValue: (r) => r.name, render: (r) => woj(r.name) },
-            { key: 'pop', header: 'Ludność', align: 'right', sortable: true, sortValue: (r) => r.population ?? 0, render: (r) => r.population != null ? mln(r.population) : '—' },
-            { key: 'gdp', header: 'PKB/mieszk.', align: 'right', sortable: true, sortValue: (r) => r.gdpPerCapita ?? 0, render: (r) => r.gdpPerCapita != null ? formatNumber(r.gdpPerCapita, 0) : '—' },
-        ];
+    const RANK_BLUE = ['#DBEAFE', '#BFDBFE', '#93C5FD', '#60A5FA', '#3B82F6', '#2563EB', '#1D4ED8'];
+    const RANK_VIOLET = ['#EDE9FE', '#DDD6FE', '#C4B5FD', '#A78BFA', '#8B5CF6', '#7C3AED', '#6D28D9'];
 
     return (
         <DensePageLayout>
@@ -156,9 +146,12 @@ export function RegionyDashboard() {
 
             <CompactKpiGrid items={compactKpis} label="Wskaźniki uzupełniające" />
 
-            <DenseThreeCol
-                left={<RelatedNews topic="gospodarka" limit={3} title="Powiązane newsy" />}
-                center={
+            {/* Poniżej lg: ranking przed mapą (16 woj. ≈ 40px — etykiety nieczytelne). Desktop: news | mapa | ranking. */}
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-12 lg:items-start">
+                <div className="order-1 min-w-0 lg:order-1 lg:col-span-3">
+                    <RelatedNews topic="gospodarka" limit={3} title="Powiązane newsy" />
+                </div>
+                <div className="order-3 min-w-0 space-y-4 lg:order-2 lg:col-span-5" data-region-map>
                     <SectionCard
                         editorial
                         titleVariant="label"
@@ -191,54 +184,56 @@ export function RegionyDashboard() {
                             </div>
                         )}
                     </SectionCard>
-                }
-                right={
-                    <>
-                        <SectionCard editorial titleVariant="label" title={selected ? woj(selected.name) : 'Województwo'} padded>
-                            {selected ? (
-                                <dl className="space-y-2.5 text-sm">
-                                    <div className="flex justify-between gap-2">
-                                        <dt className="text-mk-muted">PKB / mieszk.</dt>
-                                        <dd className="font-semibold tnum">{selected.gdpPerCapita != null ? pln(selected.gdpPerCapita) : '—'}</dd>
-                                    </div>
-                                    <div className="flex justify-between gap-2">
-                                        <dt className="text-mk-muted">PKB łącznie</dt>
-                                        <dd className="font-semibold tnum">{selected.gdpTotal != null ? `${formatNumber(selected.gdpTotal, 0)} mln zł` : '—'}</dd>
-                                    </div>
-                                    <div className="flex justify-between gap-2">
-                                        <dt className="text-mk-muted">Ludność</dt>
-                                        <dd className="font-semibold tnum">{selected.population != null ? mln(selected.population) : '—'}</dd>
-                                    </div>
-                                </dl>
-                            ) : (
-                                <p className="text-sm text-mk-faint">Kliknij województwo na mapie.</p>
-                            )}
+                </div>
+                <div className="order-2 min-w-0 space-y-4 lg:order-3 lg:col-span-4">
+                    {selected ? (
+                        <SectionCard editorial titleVariant="label" title={woj(selected.name)} padded>
+                            <dl className="space-y-2.5 text-sm">
+                                <div className="flex justify-between gap-2">
+                                    <dt className="text-mk-muted">PKB / mieszk.</dt>
+                                    <dd className="font-semibold tnum">{selected.gdpPerCapita != null ? pln(selected.gdpPerCapita) : '—'}</dd>
+                                </div>
+                                <div className="flex justify-between gap-2">
+                                    <dt className="text-mk-muted">PKB łącznie</dt>
+                                    <dd className="font-semibold tnum">{selected.gdpTotal != null ? `${formatNumber(selected.gdpTotal, 0)} mln zł` : '—'}</dd>
+                                </div>
+                                <div className="flex justify-between gap-2">
+                                    <dt className="text-mk-muted">Ludność</dt>
+                                    <dd className="font-semibold tnum">{selected.population != null ? mln(selected.population) : '—'}</dd>
+                                </div>
+                            </dl>
                         </SectionCard>
+                    ) : (
+                        <SectionCard editorial titleVariant="label" title="Województwo" padded className="hidden lg:block">
+                            <p className="text-sm text-mk-faint">Kliknij województwo na mapie.</p>
+                        </SectionCard>
+                    )}
 
-                        <SectionCard
-                            editorial
-                            titleVariant="label"
-                            title="Tabela województw"
-                            subtitle={isPkb ? 'PKB na mieszkańca (zł)' : 'Liczba ludności'}
-                            padded
-                        >
+                    <SectionCard
+                        editorial
+                        titleVariant="label"
+                        title="Ranking województw"
+                        subtitle={isPkb ? 'PKB na mieszkańca (zł)' : 'Liczba ludności'}
+                        padded
+                        className="min-w-0"
+                    >
+                        <div data-region-ranking>
                             {isLoading ? (
                                 <div className="mk-skeleton h-[160px] w-full" />
                             ) : (
-                                <DataTable
-                                    columns={cols}
+                                <RankingBars
                                     rows={isPkb ? byGdp : byPop}
-                                    initialSort={isPkb ? 'gdp' : 'pop'}
-                                    initialDir="desc"
-                                    maxHeight={180}
-                                    rowKey={(r) => r.slug}
-                                    onRowClick={(r) => setSel(r.slug)}
+                                    valueOf={(r) => (isPkb ? r.gdpPerCapita : r.population)}
+                                    format={isPkb ? (v) => formatNumber(v, 0) : mln}
+                                    colors={isPkb ? RANK_BLUE : RANK_VIOLET}
+                                    selected={sel}
+                                    onSelect={setSel}
                                 />
                             )}
-                        </SectionCard>
-                    </>
-                }
-            />
+                        </div>
+                    </SectionCard>
+                </div>
+            </div>
 
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                 <ObservationsPanel items={observations.slice(0, 4)} variant="overview" />

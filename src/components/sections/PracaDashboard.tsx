@@ -21,9 +21,10 @@ import { RelatedNews } from '@/components/ui/RelatedNews';
 import { InsightBar } from '@/components/ui/InsightBar';
 import { DeltaChip } from '@/components/ui/DeltaChip';
 import { PublicationDatesPanel } from '@/components/ui/PublicationDatesPanel';
-import { DataTable, type Column } from '@/components/ui/DataTable';
 import { InteractiveChart } from '@/components/ui/InteractiveChart';
 import { StaleBadge } from '@/components/ui/StaleBadge';
+import { Drawer } from '@/components/ui/Drawer';
+import { RankingBars } from '@/components/ui/RankingBars';
 import PolandMap from '@/components/PolandMap';
 
 const woj = (name: string) => name.replace(/^województwo /i, '');
@@ -43,6 +44,8 @@ export function PracaDashboard() {
     const medianQ = useGusMedianWages(12);
     const regQ = useGusRegional();
     const [selected, setSelected] = useState<string | null>(null);
+    const [regionDrawer, setRegionDrawer] = useState(false);
+    const openRegion = (slug: string | null) => { setSelected(slug); if (slug) setRegionDrawer(true); };
 
     const unemp = useMemo(
         () => (unempQ.data?.series ?? []).map((d) => ({ date: d.date, value: d.value })),
@@ -172,11 +175,17 @@ export function PracaDashboard() {
         return out.slice(0, 3);
     }, [unemp, wages, baelQ.data?.series]);
 
-    const cols: Column<(typeof regions)[number]>[] = [
-        { key: 'name', header: 'Woj.', sortable: true, sortValue: (r) => r.name, render: (r) => woj(r.name) },
-        { key: 'unemp', header: 'Bezrob.', align: 'right', sortable: true, sortValue: (r) => r.unemployment ?? 0, render: (r) => r.unemployment != null ? `${formatDecimalPL(r.unemployment, 1)}%` : '—' },
-        { key: 'wages', header: 'Płace', align: 'right', sortable: true, sortValue: (r) => r.wages ?? 0, render: (r) => r.wages != null ? formatNumber(r.wages, 0) : '—' },
-    ];
+    const RANK_AMBER = ['#FDE68A', '#FCD34D', '#FBBF24', '#F59E0B', '#D97706', '#B45309', '#92400E'];
+    const regUnemp = useMemo(() => {
+        const tl = regQ.data?.timeline ?? [];
+        return selected
+            ? tl.map((t) => ({ date: t.month, value: t.rates?.[selected] })).filter((p): p is { date: string; value: number } => p.value != null)
+            : [];
+    }, [regQ.data, selected]);
+    const regWages = useMemo(
+        () => (selectedRegion?.wagesSeries ?? []).map((w) => ({ date: String(w.year), value: w.value })),
+        [selectedRegion],
+    );
 
     const mapDate = regions.find((r) => r.unemploymentMonth)?.unemploymentMonth ?? (unemp.length ? unemp[unemp.length - 1].date : null);
 
@@ -268,8 +277,8 @@ export function PracaDashboard() {
                 }
             />
 
-            <DenseTwoCol
-                left={
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                <div className="order-2 min-w-0 lg:order-1" data-region-map>
                     <SectionCard
                         editorial
                         titleVariant="label"
@@ -285,78 +294,93 @@ export function PracaDashboard() {
                                     regions={regions}
                                     national={national}
                                     selectedRegion={selected}
-                                    onRegionSelect={setSelected}
+                                    onRegionSelect={openRegion}
                                 />
                             </div>
                         )}
                     </SectionCard>
-                }
-                right={
-                    <>
+                </div>
+                <div className="order-1 min-w-0 space-y-4 lg:order-2">
+                    {selectedRegion ? (
                         <SectionCard
                             editorial
                             titleVariant="label"
-                            title={selectedRegion ? woj(selectedRegion.name) : 'Województwo'}
+                            title={woj(selectedRegion.name)}
                             padded
                         >
-                            {selectedRegion ? (
-                                <dl className="space-y-2.5 text-sm">
-                                    <div className="flex justify-between gap-2">
-                                        <dt className="text-mk-muted">Bezrobocie</dt>
-                                        <dd className="font-semibold tnum">
-                                            {selectedRegion.unemployment != null
-                                                ? `${formatDecimalPL(selectedRegion.unemployment, 1)}%`
-                                                : '—'}
-                                        </dd>
-                                    </div>
-                                    <div className="flex justify-between gap-2">
-                                        <dt className="text-mk-muted">Płace brutto</dt>
-                                        <dd className="font-semibold tnum">
-                                            {selectedRegion.wages != null
-                                                ? `${formatNumber(selectedRegion.wages, 0)} zł`
-                                                : '—'}
-                                        </dd>
-                                    </div>
-                                    <div className="flex justify-between gap-2">
-                                        <dt className="text-mk-muted">Płace r/r</dt>
-                                        <dd className="font-semibold tnum">
-                                            {selectedRegion.wagesYoY != null
-                                                ? `${formatDecimalPL(selectedRegion.wagesYoY, 1)}%`
-                                                : '—'}
-                                        </dd>
-                                    </div>
-                                </dl>
-                            ) : (
-                                <p className="text-sm text-mk-faint">
-                                    Kliknij region na mapie, aby zobaczyć szczegóły.
-                                </p>
-                            )}
+                            <dl className="space-y-2.5 text-sm">
+                                <div className="flex justify-between gap-2">
+                                    <dt className="text-mk-muted">Bezrobocie</dt>
+                                    <dd className="font-semibold tnum">
+                                        {selectedRegion.unemployment != null
+                                            ? `${formatDecimalPL(selectedRegion.unemployment, 1)}%`
+                                            : '—'}
+                                    </dd>
+                                </div>
+                                <div className="flex justify-between gap-2">
+                                    <dt className="text-mk-muted">Płace brutto</dt>
+                                    <dd className="font-semibold tnum">
+                                        {selectedRegion.wages != null
+                                            ? `${formatNumber(selectedRegion.wages, 0)} zł`
+                                            : '—'}
+                                    </dd>
+                                </div>
+                                <div className="flex justify-between gap-2">
+                                    <dt className="text-mk-muted">Płace r/r</dt>
+                                    <dd className="font-semibold tnum">
+                                        {selectedRegion.wagesYoY != null
+                                            ? `${formatDecimalPL(selectedRegion.wagesYoY, 1)}%`
+                                            : '—'}
+                                    </dd>
+                                </div>
+                            </dl>
+                            <button
+                                type="button"
+                                onClick={() => setRegionDrawer(true)}
+                                className="mt-4 min-h-11 w-full rounded-lg border border-mk-border px-3 py-2 text-sm font-medium text-mk-text transition-colors hover:bg-mk-surface-alt"
+                            >
+                                Historia 10 lat →
+                            </button>
                         </SectionCard>
-
+                    ) : (
                         <SectionCard
                             editorial
                             titleVariant="label"
-                            title="Ranking województw"
-                            subtitle="bezrobocie · płace"
+                            title="Województwo"
                             padded
+                            className="hidden lg:block"
                         >
+                            <p className="text-sm text-mk-faint">
+                                Kliknij region na mapie, aby zobaczyć szczegóły.
+                            </p>
+                        </SectionCard>
+                    )}
+
+                    <SectionCard
+                        editorial
+                        titleVariant="label"
+                        title="Ranking województw"
+                        subtitle="bezrobocie · płace"
+                        padded
+                        className="min-w-0"
+                    >
+                        <div data-region-ranking>
                             {regQ.isLoading ? (
                                 <div className="mk-skeleton h-[180px] w-full" />
                             ) : (
-                                <DataTable
-                                    columns={cols}
+                                <RankingBars
                                     rows={regions}
-                                    initialSort="unemp"
-                                    initialDir="desc"
-                                    maxHeight={200}
-                                    rowKey={(r) => r.slug}
-                                    onRowClick={(r) => setSelected(r.slug)}
+                                    valueOf={(r) => r.unemployment}
+                                    format={(v) => `${formatDecimalPL(v, 1)}%`}
+                                    colors={RANK_AMBER}
+                                    selected={selected}
+                                    onSelect={openRegion}
                                 />
                             )}
-                        </SectionCard>
-                    </>
-                }
-            />
+                        </div>
+                    </SectionCard>
+                </div>
+            </div>
 
             <DenseTwoCol
                 left={
@@ -411,6 +435,48 @@ export function PracaDashboard() {
                     Okres referencyjny leadu: {formatDataPeriodLabel(lastReal.date)} · źródła GUS BDL / CPI
                 </p>
             )}
+
+            <Drawer
+                open={regionDrawer && !!selectedRegion}
+                onClose={() => setRegionDrawer(false)}
+                accent="#0891B2"
+                title={selectedRegion ? woj(selectedRegion.name) : ''}
+                subtitle="rynek pracy województwa — 10 lat"
+            >
+                {selectedRegion && (
+                    <div className="space-y-5">
+                        <div className="grid grid-cols-3 gap-2">
+                            {[
+                                { l: 'Bezrobocie', v: selectedRegion.unemployment != null ? `${formatDecimalPL(selectedRegion.unemployment, 1)}%` : '—' },
+                                { l: 'Płace', v: selectedRegion.wages != null ? `${formatNumber(selectedRegion.wages, 0)} zł` : '—' },
+                                { l: 'Płace r/r', v: selectedRegion.wagesYoY != null ? `${formatDecimalPL(selectedRegion.wagesYoY, 1)}%` : '—' },
+                            ].map((x) => (
+                                <div key={x.l} className="rounded-xl border border-mk-border p-2 text-center">
+                                    <div className="text-[11px] text-mk-muted">{x.l}</div>
+                                    <div className="mt-0.5 text-sm font-bold tnum text-mk-text">{x.v}</div>
+                                </div>
+                            ))}
+                        </div>
+                        <div>
+                            <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-mk-muted">Stopa bezrobocia — 10 lat (miesięcznie)</div>
+                            {regUnemp.length > 1 ? (
+                                <InteractiveChart data={regUnemp} xKey="date" height={220} unit="%" showRange initialRange="ALL" ranges={['1R', '3L', '5L', 'ALL']}
+                                    valueFormatter={(v) => formatDecimalPL(v, 1)} xTickFormatter={monthTick}
+                                    series={[{ key: 'value', name: 'Bezrobocie', color: '#0891B2', type: 'area', strokeWidth: 2.5 }]} />
+                            ) : <div className="mk-skeleton h-[220px] w-full" />}
+                        </div>
+                        <div>
+                            <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-mk-muted">Przeciętne wynagrodzenie — rocznie (PLN)</div>
+                            {regWages.length > 1 ? (
+                                <InteractiveChart data={regWages} xKey="date" height={200} unit=" zł"
+                                    valueFormatter={(v) => formatNumber(v, 0)}
+                                    series={[{ key: 'value', name: 'Płace', color: '#16A34A', type: 'area', strokeWidth: 2.5 }]} />
+                            ) : <p className="py-6 text-center text-sm text-mk-faint">Brak serii płac dla województwa.</p>}
+                        </div>
+                        <p className="text-[11px] text-mk-faint">Źródło: GUS BDL — bezrobocie rejestrowane (miesięcznie) i przeciętne wynagrodzenie brutto (rocznie) dla województwa.</p>
+                    </div>
+                )}
+            </Drawer>
         </DensePageLayout>
     );
 }
