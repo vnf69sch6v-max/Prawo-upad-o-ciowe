@@ -1,135 +1,123 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
-import { Check, Pencil, Plus, RotateCcw } from 'lucide-react';
-import { formatDataPeriodLabel } from '@/lib/formatters';
+import { useMemo } from 'react';
+import { TrendingUp, Percent, Users, Factory, Euro, DollarSign, ShoppingCart, LineChart, Landmark, Gem } from 'lucide-react';
+import {
+    useCpiFull, useGusRegisteredUnemployment, useGusRetailSales, useGusIndustrialProduction,
+    useNBPInterestRates, useNBPTable, useEURPLN, useUSDPLN,
+    useBondYield10YPl, useGold, useStooq,
+    type NBPTable,
+} from '@/lib/hooks';
+import { plSeries, lastOf, prevOf } from '@/lib/series';
+import { formatDecimalPL, formatNumber, formatDate, percentChange, formatDataPeriodLabel } from '@/lib/formatters';
+import type { AccentKey } from '@/components/ui/KpiCard';
 import { CompactKpiGrid } from '@/components/ui/CompactKpiGrid';
 import { CsvExport } from '@/components/ui/CsvExport';
 import { LatestNews } from '@/components/ui/RelatedNews';
 import { OverviewHero } from '@/components/ui/OverviewHero';
 import { PageHeader, PageEyebrow } from '@/components/ui/PageHeader';
-import { WatchlistStrip } from '@/components/ui/WatchlistStrip';
-import { DashboardCanvas } from '@/components/panel/DashboardCanvas';
-import { WidgetPicker } from '@/components/panel/WidgetPicker';
-import { EditModeContext } from '@/components/panel/EditModeContext';
-import { LongPressSurface } from '@/components/panel/LongPressSurface';
-import { useDashboardLayout } from '@/lib/dashboard/useDashboardLayout';
-import { useOverviewData } from '@/lib/dashboard/overview-data';
+import { WatchlistStrip, type WatchableKpi } from '@/components/ui/WatchlistStrip';
 
-function DefaultOverview({ data }: { data: ReturnType<typeof useOverviewData> }) {
-    return (
-        <>
-            <OverviewHero cpi={data.cpi} retail={data.retail} cpiLoading={data.cpiLoading} retailLoading={data.retailLoading} />
-            <WatchlistStrip items={data.watchlistItems} compact />
-            <div className="space-y-2">
-                <CompactKpiGrid label="Wskaźniki makro" columns={5} dense items={data.macro.map((k) => ({ key: k.watchId, ...k, watchId: k.watchId }))} />
-                <CompactKpiGrid label="Rynki finansowe" columns={5} dense items={data.markets.map((k) => ({ key: k.watchId, ...k, watchId: k.watchId }))} />
-            </div>
-            <LatestNews limit={6} variant="overview" />
-        </>
-    );
+// ── Źródła KPI (Przegląd) ───────────────────────────────────
+// CPI            → useCpiFull              → /api/gus-cpi-full (GUS DBW)
+// Bezrobocie     → useGusRegisteredUnemployment → /api/bdl-series P3559 (GUS BDL)
+// Sprzedaż detal.→ useGusRetailSales       → /api/gus-monthly P3860 (GUS BDL)
+// Produkcja      → useGusIndustrialProduction → /api/dbw-series var 312 (GUS DBW)
+// Stopa NBP      → useNBPInterestRates     → /api/nbp-rates (NBP)
+// WIG20 / FX / złoto → Stooq / NBP
+// Rentowność 10Y → useBondYield10YPl       → Stooq 10ypl.b (rynek)
+// PKB kwartalny  — brak w GUS API → usunięty z siatki (roczny: useGusGdpAnnual w Prognozy)
+
+type Point = { date: string; value: number };
+const fmt1 = (n: number | null | undefined) => (n == null ? '—' : formatDecimalPL(n, 1));
+const ppDelta = (s: Point[]) => (lastOf(s) != null && prevOf(s) != null ? +(lastOf(s)! - prevOf(s)!).toFixed(1) : null);
+
+function fxDelta(data: unknown): number | null {
+    const raw = data as { rates?: { mid?: number }[] } | { mid?: number }[] | undefined;
+    const arr = Array.isArray(raw) ? raw : raw?.rates;
+    if (!arr || arr.length < 2) return null;
+    const a = arr[arr.length - 1]?.mid, b = arr[arr.length - 2]?.mid;
+    return a && b ? +percentChange(a, b).toFixed(2) : null;
 }
 
+
 export default function OverviewPage() {
-    const data = useOverviewData();
-    const dash = useDashboardLayout();
-    const [editing, setEditing] = useState(false);
-    const [pickerOpen, setPickerOpen] = useState(false);
+    const cpiQ = useCpiFull();
+    const unempQ = useGusRegisteredUnemployment(24);
+    const retailQ = useGusRetailSales();
+    const indQ = useGusIndustrialProduction();
+    const ratesQ = useNBPInterestRates();
+    const fxQ = useNBPTable('a');
+    const eurHQ = useEURPLN();
+    const usdHQ = useUSDPLN();
+    const yieldQ = useBondYield10YPl(30);
+    const goldQ = useGold(30);
+    const wig20Q = useStooq('wig20', 30);
 
-    useEffect(() => {
-        const enter = () => setEditing(true);
-        window.addEventListener('mk:edit-dashboard', enter);
-        try {
-            if (sessionStorage.getItem('mk:edit-once') === '1') {
-                sessionStorage.removeItem('mk:edit-once');
-                setEditing(true);
-            }
-            const q = new URLSearchParams(window.location.search);
-            if (q.get('edit') === '1') {
-                setEditing(true);
-                window.history.replaceState({}, '', '/');
-            }
-        } catch { /* ignore */ }
-        return () => window.removeEventListener('mk:edit-dashboard', enter);
-    }, []);
+    const cpi = useMemo(() => (cpiQ.data?.headline ?? []).filter((h) => h.yoy != null).map((h) => ({ date: h.date, value: h.yoy as number })), [cpiQ.data]);
+    const unemp = useMemo(
+        () => (unempQ.data?.series ?? []).map((d) => ({ date: d.date, value: d.value })),
+        [unempQ.data],
+    );
+    const retail = useMemo(() => plSeries(retailQ.data), [retailQ.data]);
+    const industrial = useMemo(() => plSeries(indQ.data), [indQ.data]);
+    const yield10 = useMemo(() => (yieldQ.data?.data ?? []).map((d) => ({ date: d.date, value: d.close })), [yieldQ.data]);
+    const gold = useMemo(() => (goldQ.data ?? []).map((g) => ({ date: g.data, value: g.cena })), [goldQ.data]);
 
-    useEffect(() => {
-        if (!editing) return;
-        const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setEditing(false); };
-        window.addEventListener('keydown', onKey);
-        return () => window.removeEventListener('keydown', onKey);
-    }, [editing]);
+    const refRate = useMemo(() => ratesQ.data?.rates?.find((x) => /referen/i.test(x.name) || /referen/i.test(x.nameEn)) ?? null, [ratesQ.data]);
+    const fxTable = useMemo(() => { const raw = fxQ.data as NBPTable | NBPTable[] | undefined; return Array.isArray(raw) ? raw[0] : raw; }, [fxQ.data]);
+    const mid = (code: string) => fxTable?.rates?.find((r) => r.code === code)?.mid ?? null;
+    const wigLast = wig20Q.data?.latest?.close ?? null;
+    const wigBars = useMemo(() => wig20Q.data?.data ?? [], [wig20Q.data]);
+    const wigDelta = wigBars.length > 1 ? +percentChange(wigBars[wigBars.length - 1].close, wigBars[wigBars.length - 2].close).toFixed(2) : null;
+    const goldLast = lastOf(gold), goldDelta = gold.length > 1 ? +percentChange(gold[gold.length - 1].value, gold[gold.length - 2].value).toFixed(2) : null;
 
-    const present = useMemo(() => new Set(dash.layout.map((i) => i.widgetId)), [dash.layout]);
-    const showDefault = (!dash.ready || dash.isDefault) && !editing;
+    const macro = [
+        { watchId: 'cpi', label: 'Inflacja CPI (r/r)', href: '/ceny?tab=inflacja', value: fmt1(lastOf(cpi)), unit: '%', accent: 'amber' as AccentKey, icon: TrendingUp, delta: ppDelta(cpi) != null ? { value: ppDelta(cpi)!, unit: 'pp' as const, invert: true } : undefined, footnote: cpi.length ? `GUS · ${cpi[cpi.length - 1].date}` : 'GUS · cel NBP 2,5%', loading: cpiQ.isLoading },
+        { watchId: 'unemployment', label: 'Stopa bezrobocia', href: '/praca?tab=bezrobocie', value: fmt1(lastOf(unemp)), unit: '%', accent: 'blue' as AccentKey, icon: Users, delta: ppDelta(unemp) != null ? { value: ppDelta(unemp)!, unit: 'pp' as const, invert: true } : undefined, footnote: unemp.length ? `GUS · rejestrowane · ${unemp[unemp.length - 1].date}` : 'GUS · rejestrowane', loading: unempQ.isLoading },
+        { watchId: 'ref-rate', label: 'Stopa referencyjna NBP', href: '/rynki?tab=stopy', value: refRate ? formatDecimalPL(refRate.value, 2) : '—', unit: '%', accent: 'violet' as AccentKey, icon: Percent, footnote: refRate ? `NBP · od ${formatDate(refRate.validFrom)}` : 'NBP', loading: ratesQ.isLoading },
+        { watchId: 'industrial', label: 'Produkcja przemysłowa (r/r)', href: '/gospodarka?tab=aktywnosc', value: fmt1(lastOf(industrial)), unit: '%', accent: 'rose' as AccentKey, icon: Factory, delta: ppDelta(industrial) != null ? { value: ppDelta(industrial)!, unit: 'pp' as const } : undefined, footnote: industrial.length ? `GUS · ${industrial[industrial.length - 1].date}` : 'GUS DBW', loading: indQ.isLoading },
+        { watchId: 'retail', label: 'Sprzedaż detaliczna (r/r)', href: '/gospodarka?tab=aktywnosc', value: fmt1(lastOf(retail)), unit: '%', accent: 'cyan' as AccentKey, icon: ShoppingCart, delta: ppDelta(retail) != null ? { value: ppDelta(retail)!, unit: 'pp' as const } : undefined, footnote: retail.length ? `GUS · ${retail[retail.length - 1].date}` : 'GUS BDL', loading: retailQ.isLoading },
+    ];
+
+    const markets = [
+        { watchId: 'wig20', label: 'WIG20', href: '/rynki?tab=gpw', value: wigLast != null ? formatNumber(wigLast, 0) : '—', unit: 'pkt', accent: 'blue' as AccentKey, icon: LineChart, delta: wigDelta != null ? { value: wigDelta, unit: 'pct' as const } : undefined, footnote: 'GPW · Stooq/Yahoo', loading: wig20Q.isLoading },
+        { watchId: 'eur-pln', label: 'EUR / PLN', href: '/rynki?tab=kursy', value: mid('EUR') != null ? formatDecimalPL(mid('EUR')!, 3) : '—', unit: 'zł', accent: 'cyan' as AccentKey, icon: Euro, delta: fxDelta(eurHQ.data) != null ? { value: fxDelta(eurHQ.data)!, unit: 'pct' as const, invert: true } : undefined, footnote: fxTable?.effectiveDate ? `NBP ${formatDate(fxTable.effectiveDate)}` : 'NBP', loading: fxQ.isLoading },
+        { watchId: 'usd-pln', label: 'USD / PLN', href: '/rynki?tab=kursy', value: mid('USD') != null ? formatDecimalPL(mid('USD')!, 3) : '—', unit: 'zł', accent: 'green' as AccentKey, icon: DollarSign, delta: fxDelta(usdHQ.data) != null ? { value: fxDelta(usdHQ.data)!, unit: 'pct' as const, invert: true } : undefined, footnote: fxTable?.effectiveDate ? `NBP ${formatDate(fxTable.effectiveDate)}` : 'NBP', loading: fxQ.isLoading },
+        { watchId: 'yield-10y', label: 'Rentowność 10Y', href: '/gospodarka?tab=finanse', value: lastOf(yield10) != null ? formatDecimalPL(lastOf(yield10)!, 2) : '—', unit: '%', accent: 'violet' as AccentKey, icon: Landmark, delta: lastOf(yield10) != null && prevOf(yield10) != null ? { value: +(lastOf(yield10)! - prevOf(yield10)!).toFixed(2), unit: 'pp' as const, invert: true } : undefined, footnote: yield10.length ? `Rynek · ${yield10[yield10.length - 1].date}` : 'Stooq 10Y PL', loading: yieldQ.isLoading },
+        { watchId: 'gold', label: 'Złoto (NBP)', href: '/rynki?tab=kursy', value: goldLast != null ? formatDecimalPL(goldLast, 2) : '—', unit: 'zł/g', accent: 'amber' as AccentKey, icon: Gem, delta: goldDelta != null ? { value: goldDelta, unit: 'pct' as const } : undefined, footnote: 'NBP · cena złota', loading: goldQ.isLoading },
+    ];
+
+    const watchlistItems: WatchableKpi[] = useMemo(() => [...macro, ...markets], [macro, markets]);
+
+    const dataDate = [unemp, industrial, retail, cpi].map((s) => (s.length ? s[s.length - 1].date : '')).filter(Boolean).sort().pop() ?? '';
+    const csvRows = [...macro, ...markets].map((k) => [k.label, `${k.value}${k.unit ? ' ' + k.unit : ''}`]);
 
     return (
-        <EditModeContext.Provider value={editing}>
-            <div className={`mk-fade-in mk-overview ${editing ? 'mk-overview-editing' : ''}`}>
-                <PageHeader
-                    compact
-                    eyebrow={<PageEyebrow section="Dane makro" />}
-                    title="Przegląd"
-                    subtitle={
-                        editing
-                            ? 'Przeciągnij kafle, zmień rozmiar albo dodaj wykres — jak ikony na iPhonie.'
-                            : (
-                                <>
-                                    Kluczowe wskaźniki makroekonomiczne dla Polski
-                                    {data.dataDate ? ` · ${formatDataPeriodLabel(data.dataDate)}` : ''}
-                                </>
-                            )
-                    }
-                    actions={
-                        <div className="flex flex-wrap items-center gap-2">
-                            {editing ? (
-                                <>
-                                    <button type="button" onClick={() => setPickerOpen(true)} className="mk-btn">
-                                        <Plus size={15} /> Dodaj
-                                    </button>
-                                    {!dash.isDefault && (
-                                        <button type="button" onClick={() => dash.reset()} className="mk-btn">
-                                            <RotateCcw size={15} /> Przywróć domyślny układ
-                                        </button>
-                                    )}
-                                    <button type="button" onClick={() => setEditing(false)} className="mk-btn mk-btn-primary">
-                                        <Check size={15} /> Gotowe
-                                    </button>
-                                </>
-                            ) : (
-                                <>
-                                    <button type="button" onClick={() => setEditing(true)} className="mk-btn" aria-label="Edytuj pulpit">
-                                        <Pencil size={15} /> Edytuj
-                                    </button>
-                                    <CsvExport filename="przeglad-makro" headers={['Wskaźnik', 'Wartość']} rows={data.csvRows} />
-                                </>
-                            )}
-                        </div>
-                    }
-                />
+        <div className="mk-fade-in mk-overview">
+            <PageHeader
+                compact
+                eyebrow={<PageEyebrow section="Dane makro" />}
+                title="Przegląd"
+                subtitle={
+                    <>
+                        Kluczowe wskaźniki makroekonomiczne dla Polski
+                        {dataDate ? ` · ${formatDataPeriodLabel(dataDate)}` : ''}
+                    </>
+                }
+                actions={<CsvExport filename="przeglad-makro" headers={['Wskaźnik', 'Wartość']} rows={csvRows} />}
+            />
 
-                {showDefault ? (
-                    <LongPressSurface onLongPress={() => setEditing(true)}>
-                        <DefaultOverview data={data} />
-                    </LongPressSurface>
-                ) : (
-                    <DashboardCanvas
-                        layout={dash.layout}
-                        editing={editing}
-                        onReorder={dash.setLayout}
-                        onRemove={dash.removeWidget}
-                        onResize={dash.resize}
-                        onAdd={() => setPickerOpen(true)}
-                    />
-                )}
+            <OverviewHero cpi={cpi} retail={retail} cpiLoading={cpiQ.isLoading} retailLoading={retailQ.isLoading} />
 
-                <WidgetPicker
-                    open={pickerOpen}
-                    onClose={() => setPickerOpen(false)}
-                    present={present}
-                    onAdd={(id) => { dash.addWidget(id); }}
-                />
+            <WatchlistStrip items={watchlistItems} compact />
+
+            <div className="space-y-2">
+                <CompactKpiGrid label="Wskaźniki makro" columns={5} dense items={macro.map((k) => ({ key: k.watchId, ...k, watchId: k.watchId }))} />
+                <CompactKpiGrid label="Rynki finansowe" columns={5} dense items={markets.map((k) => ({ key: k.watchId, ...k, watchId: k.watchId }))} />
             </div>
-        </EditModeContext.Provider>
+
+            <LatestNews limit={6} variant="overview" />
+        </div>
     );
 }
