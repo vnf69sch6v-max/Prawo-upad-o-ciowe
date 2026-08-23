@@ -78,7 +78,7 @@ export function DbwPriceSection({ title, subtitle, config, series, unit = '%', r
                     return (
                         <KpiCard key={s.poz} label={s.name} value={fmtPL(v)} unit={unit} accent={s.accent} icon={s.icon}
                             delta={d != null ? { value: d, unit: 'pp', invert: invertKpi } : undefined}
-                            footnote={last ? `GUS · ${last.date}` : 'GUS'} loading={q.isLoading} />
+                            footnote={last ? String(last.date) : ''} loading={q.isLoading} />
                     );
                 })}
                 </div>

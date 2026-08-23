@@ -97,7 +97,7 @@ export function RegionyDashboard() {
             label: 'Województw',
             value: regions.length ? String(regions.length) : '—',
             icon: MapPin,
-            footnote: 'GUS BDL',
+            footnote: '',
             loading: isLoading,
         },
     ], [topGdp, botGdp, topPop, botPop, popRatio, regions.length, isLoading]);

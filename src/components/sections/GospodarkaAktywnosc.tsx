@@ -124,7 +124,7 @@ export function GospodarkaAktywnosc() {
                 unit: '%',
                 icon: TrendingUp,
                 delta: ppDeltaAnnual(gdp) != null ? { value: ppDeltaAnnual(gdp)!, unit: 'pp' } : undefined,
-                footnote: gdpLast ? `GUS · ${gdpLast.date}` : 'GUS BDL',
+                footnote: gdpLast?.date ?? '',
                 loading: gdpQ.isLoading,
             },
             {
@@ -134,7 +134,7 @@ export function GospodarkaAktywnosc() {
                 unit: '%',
                 icon: Factory,
                 delta: deltaOf(ind) != null ? { value: deltaOf(ind)!, unit: 'pp' } : undefined,
-                footnote: ind.length ? `GUS DBW · ${ind[ind.length - 1].date}` : 'GUS DBW',
+                footnote: ind.length ? ind[ind.length - 1].date : '',
                 loading: indQ.isLoading,
             },
             {
@@ -144,7 +144,7 @@ export function GospodarkaAktywnosc() {
                 unit: '%',
                 icon: ShoppingCart,
                 delta: deltaOf(ret) != null ? { value: deltaOf(ret)!, unit: 'pp' } : undefined,
-                footnote: ret.length ? `GUS · ${ret[ret.length - 1].date}` : 'GUS BDL',
+                footnote: ret.length ? ret[ret.length - 1].date : '',
                 loading: retQ.isLoading,
             },
             {
@@ -154,7 +154,7 @@ export function GospodarkaAktywnosc() {
                 unit: '%',
                 icon: Percent,
                 delta: deltaOf(cpi) != null ? { value: deltaOf(cpi)!, unit: 'pp', invert: true } : undefined,
-                footnote: cpi.length ? `GUS · ${cpi[cpi.length - 1].date}` : 'GUS DBW',
+                footnote: cpi.length ? cpi[cpi.length - 1].date : '',
                 loading: cpiQ.isLoading,
             },
             {
@@ -164,7 +164,7 @@ export function GospodarkaAktywnosc() {
                 unit: '%',
                 icon: Users,
                 delta: deltaOf(unemp) != null ? { value: deltaOf(unemp)!, unit: 'pp', invert: true } : undefined,
-                footnote: unemp.length ? `GUS · ${unemp[unemp.length - 1].date}` : 'GUS BDL',
+                footnote: unemp.length ? unemp[unemp.length - 1].date : '',
                 loading: unempQ.isLoading,
             },
             {
@@ -174,7 +174,7 @@ export function GospodarkaAktywnosc() {
                 unit: '%',
                 icon: HardHat,
                 delta: deltaOf(con) != null ? { value: deltaOf(con)!, unit: 'pp' } : undefined,
-                footnote: con.length ? `GUS DBW · ${con[con.length - 1].date}` : 'GUS DBW',
+                footnote: con.length ? con[con.length - 1].date : '',
                 loading: conQ.isLoading,
             },
         ];

@@ -153,7 +153,7 @@ export function PpiFull() {
 
     const compactKpis: CompactKpiItem[] = [
         { key: 'ppi-mm', label: 'PPI m/m', value: latest?.mom != null ? formatDecimalPL(latest.mom, 1) : '—', unit: '%', icon: Activity, footnote: 'miesiąc do miesiąca', loading: isLoading },
-        { key: 'cpi-mm', label: 'CPI m/m', value: cpiLatest?.mom != null ? formatDecimalPL(cpiLatest.mom, 1) : '—', unit: '%', icon: Percent, footnote: 'GUS · konsument', loading: cpiQ.isLoading },
+        { key: 'cpi-mm', label: 'CPI m/m', value: cpiLatest?.mom != null ? formatDecimalPL(cpiLatest.mom, 1) : '—', unit: '%', icon: Percent, footnote: 'konsument', loading: cpiQ.isLoading },
         ...sections.slice(0, 4).map((s) => ({
             key: `sec-${s.code}`,
             label: `Sekcja ${s.code}`,

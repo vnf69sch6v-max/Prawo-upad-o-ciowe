@@ -239,7 +239,7 @@ export function InflacjaFull() {
         { key: 'cpi-mm', label: 'CPI m/m', value: fmtPL(latest?.mom), unit: '%', icon: Activity, footnote: 'miesiąc do miesiąca', loading: isLoading },
         { key: 'ppi-mm', label: 'PPI m/m', value: ppiLatest?.mom != null ? formatDecimalPL(ppiLatest.mom, 1) : '—', unit: '%', icon: Factory,
           delta: ppiLatest?.mom != null && ppiPrevPt?.mom != null ? { value: +(ppiLatest.mom - ppiPrevPt.mom).toFixed(1), unit: 'pp', invert: true } : undefined,
-          footnote: 'GUS · producent', loading: ppiFullQ.isLoading },
+          footnote: 'producent', loading: ppiFullQ.isLoading },
         { key: 'food', label: 'Żywność (01)', value: divOf('01')?.yoy != null ? formatDecimalPL(divOf('01')!.yoy!, 1) : '—', unit: '%', icon: Wheat, footnote: 'COICOP · r/r', loading: isLoading },
         { key: 'housing', label: 'Mieszkanie (04)', value: divOf('04')?.yoy != null ? formatDecimalPL(divOf('04')!.yoy!, 1) : '—', unit: '%', icon: Home, footnote: 'energia, czynsze', loading: isLoading },
         { key: 'transport', label: 'Transport (07)', value: divOf('07')?.yoy != null ? formatDecimalPL(divOf('07')!.yoy!, 1) : '—', unit: '%', icon: Car, footnote: 'paliwa, auta', loading: isLoading },

@@ -80,7 +80,7 @@ export function PracaDashboard() {
             value: wLast ? formatDecimalPL(wLast.value, 1) : '—',
             unit: 'tys.',
             icon: DoorOpen,
-            footnote: 'GUS BDL · kw.',
+            footnote: 'kw.',
             loading: wakQ.isLoading,
         },
         {
@@ -100,7 +100,7 @@ export function PracaDashboard() {
             unit: '%',
             icon: Wallet,
             delta: lastWage ? { value: lastWage.value, unit: 'pct' } : undefined,
-            footnote: lastWage?.date ?? 'GUS',
+            footnote: lastWage?.date ?? '',
             loading: monthlyQ.isLoading,
         },
         {

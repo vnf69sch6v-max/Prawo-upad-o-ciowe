@@ -108,7 +108,7 @@ function KoniunkturaSection() {
                         <KpiCard key={s.key} label={s.name} value={v != null ? `${v > 0 ? '+' : ''}${formatDecimalPL(v, 1)}` : '—'} unit="pkt"
                             accent={v != null && v >= 0 ? 'green' : 'rose'} icon={meta.icon}
                             delta={d != null ? { value: d, unit: 'none' } : undefined}
-                            footnote={latest ? `GUS · ${latest.date}` : 'GUS'} loading={q.isLoading} />
+                            footnote={latest?.date ?? ''} loading={q.isLoading} />
                     );
                 })}
                 </div>
