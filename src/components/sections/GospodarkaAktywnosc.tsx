@@ -20,7 +20,6 @@ import { DensePageLayout, DenseThreeCol } from '@/components/ui/DensePageLayout'
 import { InteractiveChart } from '@/components/ui/InteractiveChart';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { RelatedNews } from '@/components/ui/RelatedNews';
-import { CsvExport } from '@/components/ui/CsvExport';
 import { StaleBadge } from '@/components/ui/StaleBadge';
 
 const monthTick = (d: string) => {
@@ -231,12 +230,7 @@ export function GospodarkaAktywnosc() {
                             titleVariant="label"
                             title="PKB — dynamika roczna"
                             subtitle="GUS BDL · ostatnie 10 lat (r/r %)"
-                            actions={
-                                <div className="flex items-center gap-2">
-                                    <StaleBadge date={gdpLast?.date ?? null} label="GUS do" warnAfterMonths={18} />
-                                    <CsvExport filename="pkb-10lat" headers={['Rok', 'r/r %']} rows={gdp10.map((p) => [p.date, p.value])} />
-                                </div>
-                            }
+                            actions={<StaleBadge date={gdpLast?.date ?? null} label="GUS do" warnAfterMonths={18} />}
                         >
                             {gdpQ.isLoading ? (
                                 <div className="mk-skeleton h-[200px] w-full" />
@@ -262,13 +256,6 @@ export function GospodarkaAktywnosc() {
                                 titleVariant="label"
                                 title="Aktywność — produkcja, sprzedaż, budownictwo"
                                 subtitle="GUS · miesięcznie (r/r %)"
-                                actions={
-                                    <CsvExport
-                                        filename="aktywnosc-mies"
-                                        headers={['Miesiąc', 'Produkcja', 'Sprzedaż', 'Budownictwo']}
-                                        rows={activity.map((r) => [r.date, r.ind, r.ret, r.con])}
-                                    />
-                                }
                             >
                                 <InteractiveChart
                                     data={activity}

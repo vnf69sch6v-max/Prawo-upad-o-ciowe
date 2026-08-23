@@ -11,7 +11,6 @@ import { formatDecimalPL, formatNumber, formatDate } from '@/lib/formatters';
 import { KpiCard, type AccentKey } from '@/components/ui/KpiCard';
 import { InteractiveChart } from '@/components/ui/InteractiveChart';
 import { SectionCard } from '@/components/ui/SectionCard';
-import { CsvExport } from '@/components/ui/CsvExport';
 import { DataTable, type Column } from '@/components/ui/DataTable';
 import { StaleBadge } from '@/components/ui/StaleBadge';
 import { Drawer } from '@/components/ui/Drawer';
@@ -47,7 +46,7 @@ export function InflacjaSection() {
             <SectionCard editorial titleVariant="label"
                 title="Inflacja CPI — trend"
                 subtitle="Źródło: GUS DBW (krajowy CPI, r/r %)"
-                actions={<div className="flex items-center gap-2"><StaleBadge date={dataDate} label="CPI do" /><CsvExport filename="inflacja-cpi" headers={['Data', 'CPI r/r']} rows={cpi.map((r) => [r.date, r.value])} /></div>}
+                actions={<StaleBadge date={dataDate} label="CPI do" />}
             >
                 {cpi.length === 0 ? <div className="mk-skeleton h-[320px] w-full" /> : (
                     <InteractiveChart
@@ -93,16 +92,14 @@ export function AktywnoscSection() {
             </section>
 
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                <SectionCard editorial titleVariant="label" title="PKB — dynamika roczna (r/r)" subtitle="GUS BDL · rocznie (%)"
-                    actions={<CsvExport filename="pkb-rocznie" headers={['Rok', 'r/r']} rows={gdpS.map((p) => [p.date, p.value])} />}>
+                <SectionCard editorial titleVariant="label" title="PKB — dynamika roczna (r/r)" subtitle="GUS BDL · rocznie (%)">
                     {gdpS.length === 0 ? <div className="mk-skeleton h-[260px] w-full" /> : (
                         <InteractiveChart data={gdpS} xKey="date" height={260} unit="%" showRange initialRange="ALL"
                             valueFormatter={(v) => formatDecimalPL(v, 1)} referenceLines={[{ y: 0, color: '#CBD2DD' }]}
                             series={[{ key: 'value', name: 'PKB r/r', color: '#16A34A', type: 'area', strokeWidth: 2.5 }]} />
                     )}
                 </SectionCard>
-                <SectionCard editorial titleVariant="label" title="Produkcja, sprzedaż, budownictwo" subtitle="GUS · miesięcznie (r/r)"
-                    actions={<CsvExport filename="aktywnosc" headers={['Data', 'Produkcja', 'Sprzedaż', 'Budownictwo']} rows={activity.map((r) => [r.date, r.ind, r.ret, r.con])} />}>
+                <SectionCard editorial titleVariant="label" title="Produkcja, sprzedaż, budownictwo" subtitle="GUS · miesięcznie (r/r)">
                     {activity.length === 0 ? <div className="mk-skeleton h-[260px] w-full" /> : (
                         <InteractiveChart data={activity} xKey="date" height={260} unit="%" legend showRange initialRange="1R"
                             valueFormatter={(v) => formatDecimalPL(v, 1)} xTickFormatter={monthTick}
@@ -169,8 +166,7 @@ export function RynekPracySection() {
             </div>
 
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-                <SectionCard editorial titleVariant="label" className="lg:col-span-2" title="Bezrobocie rejestrowane — mapa województw" subtitle="GUS · kliknij region, aby zobaczyć 10-letnią historię"
-                    actions={<CsvExport filename="bezrobocie-regiony" headers={['Województwo', 'Bezrobocie %', 'Płace PLN']} rows={regions.map((r) => [r.name, r.unemployment, r.wages])} />}>
+                <SectionCard editorial titleVariant="label" className="lg:col-span-2" title="Bezrobocie rejestrowane — mapa województw" subtitle="GUS · kliknij region, aby zobaczyć 10-letnią historię">
                     {regQ.isLoading ? <div className="mk-skeleton h-[360px] w-full" /> : (
                         <PolandMap regions={regions} national={national} selectedRegion={selected} onRegionSelect={openRegion} />
                     )}
@@ -198,7 +194,7 @@ export function RynekPracySection() {
 
             {/* Płace realne — siła nabywcza (płace nominalne − CPI) */}
             <SectionCard editorial titleVariant="label" title="Płace realne — siła nabywcza" subtitle="wzrost płac nominalnych minus inflacja CPI (r/r, %) · dodatnie = rosnąca siła nabywcza"
-                actions={<div className="flex items-center gap-2"><StaleBadge date={lastReal?.date ?? null} label="do" warnAfterMonths={4} /><CsvExport filename="place-realne" headers={['Miesiąc', 'Nominalne', 'CPI', 'Realne']} rows={realWages.map((r) => [r.date, r.nominal, r.cpi, r.real])} /></div>}>
+                actions={<StaleBadge date={lastReal?.date ?? null} label="do" warnAfterMonths={4} />}>
                 <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
                     <KpiCard label="Płace nominalne (r/r)" value={fmtPL(lastReal?.nominal)} unit="%" accent="green" icon={Wallet} footnote={lastReal ? `GUS · ${lastReal.date}` : 'GUS'} loading={monthlyQ.isLoading} />
                     <KpiCard label="Inflacja CPI (r/r)" value={fmtPL(lastReal?.cpi)} unit="%" accent="amber" icon={TrendingUp} footnote="GUS · krajowy CPI" loading={cpiQ.isLoading} />
@@ -276,8 +272,7 @@ export function StopySection() {
             </div>
 
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                <SectionCard editorial titleVariant="label" title="WIBOR — terminy" subtitle="Szacowane z ref. NBP + spread"
-                    actions={<CsvExport filename="wibor" headers={['Termin', 'WIBOR', 'WIBID']} rows={wibor.map((w) => [w.tenor, w.wibor, w.wibid])} />}>
+                <SectionCard editorial titleVariant="label" title="WIBOR — terminy" subtitle="Szacowane z ref. NBP + spread">
                     {wibor.length === 0 ? <div className="mk-skeleton h-[220px] w-full" /> : (
                         <InteractiveChart data={wibor.map((w) => ({ tenor: w.tenor, wibor: w.wibor }))} xKey="tenor" height={220} unit="%"
                             valueFormatter={(v) => formatDecimalPL(v, 2)} series={[{ key: 'wibor', name: 'WIBOR', color: '#2563EB', type: 'bar' }]} />

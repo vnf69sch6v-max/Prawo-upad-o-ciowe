@@ -11,7 +11,6 @@ import { DensePageLayout, DenseTwoCol } from '@/components/ui/DensePageLayout';
 import { InteractiveChart } from '@/components/ui/InteractiveChart';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { Segmented } from '@/components/ui/Segmented';
-import { CsvExport } from '@/components/ui/CsvExport';
 import { StaleBadge } from '@/components/ui/StaleBadge';
 import { RefreshButton } from '@/components/ui/RefreshButton';
 import { Drawer } from '@/components/ui/Drawer';
@@ -209,7 +208,6 @@ export function PpiFull() {
                             <RefreshButton onClick={() => { void refreshFromSource(); }} loading={isFetching && !isLoading} />
                             {dataDate && <span className="text-[11px] font-medium text-mk-muted">{formatDataPeriodLabel(dataDate)}</span>}
                             <StaleBadge date={dataDate} label="dane za" warnAfterMonths={3} />
-                            <CsvExport filename="ppi-ogolem" headers={['Miesiąc', 'r/r', 'm/m']} rows={headline.map((h) => [h.date, h.yoy, h.mom])} />
                         </div>}>
                         <InteractiveChart data={chartData} xKey="date" height={280} unit="%" showRange initialRange="ALL" ranges={['1R', '3L', 'ALL']}
                             valueFormatter={(v) => formatDecimalPL(v, 1)} xTickFormatter={monthTick} referenceLines={[{ y: 0, color: '#CBD2DD' }]}

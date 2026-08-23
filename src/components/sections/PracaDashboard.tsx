@@ -20,7 +20,6 @@ import { ObservationsPanel } from '@/components/ui/ObservationsPanel';
 import { PublicationDatesPanel } from '@/components/ui/PublicationDatesPanel';
 import { DataTable, type Column } from '@/components/ui/DataTable';
 import { InteractiveChart } from '@/components/ui/InteractiveChart';
-import { CsvExport } from '@/components/ui/CsvExport';
 import { StaleBadge } from '@/components/ui/StaleBadge';
 import PolandMap from '@/components/PolandMap';
 
@@ -185,12 +184,7 @@ export function PracaDashboard() {
                             titleVariant="label"
                             title="Bezrobocie rejestrowane — mapa"
                             subtitle="GUS BDL · kliknij województwo"
-                            actions={
-                                <div className="flex items-center gap-2">
-                                    <StaleBadge date={dataDate || null} label="GUS do" warnAfterMonths={4} />
-                                    <CsvExport filename="bezrobocie-woj" headers={['Województwo', 'Bezrobocie %', 'Płace zł']} rows={regions.map((r) => [r.name, r.unemployment, r.wages])} />
-                                </div>
-                            }
+                            actions={<StaleBadge date={dataDate || null} label="GUS do" warnAfterMonths={4} />}
                         >
                             {regQ.isLoading ? (
                                 <div className="mk-skeleton h-[200px] w-full" />

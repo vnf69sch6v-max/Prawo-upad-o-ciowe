@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from 'react';
 import { Check, Pencil, Plus, RotateCcw } from 'lucide-react';
 import { formatDataPeriodLabel } from '@/lib/formatters';
 import { CompactKpiGrid } from '@/components/ui/CompactKpiGrid';
-import { CsvExport } from '@/components/ui/CsvExport';
 import { LatestNews } from '@/components/ui/RelatedNews';
 import { OverviewHero } from '@/components/ui/OverviewHero';
 import { PageHeader, PageEyebrow } from '@/components/ui/PageHeader';
@@ -101,7 +100,6 @@ export default function OverviewPage() {
                                     <button type="button" onClick={() => setEditing(true)} className="mk-btn" aria-label="Edytuj pulpit">
                                         <Pencil size={15} /> Edytuj
                                     </button>
-                                    <CsvExport filename="przeglad-makro" headers={['Wskaźnik', 'Wartość']} rows={data.csvRows} />
                                 </>
                             )}
                         </div>

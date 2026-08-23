@@ -5,7 +5,7 @@ import type { ReactNode } from 'react';
 interface SectionCardProps {
     title?: ReactNode;
     subtitle?: ReactNode;
-    /** Right-aligned header controls (toggles, export, etc.) */
+    /** Right-aligned header controls (toggles, badges, etc.) */
     actions?: ReactNode;
     children: ReactNode;
     className?: string;

@@ -8,7 +8,6 @@ import { KpiCard, type AccentKey } from '@/components/ui/KpiCard';
 import { EditorialHero } from '@/components/ui/EditorialHero';
 import { InteractiveChart } from '@/components/ui/InteractiveChart';
 import { SectionCard } from '@/components/ui/SectionCard';
-import { CsvExport } from '@/components/ui/CsvExport';
 
 export interface PriceSeries { poz: number; name: string; color: string; accent: AccentKey; icon?: LucideIcon }
 
@@ -19,8 +18,8 @@ const tick = (d: string) => {
 };
 
 /** Reusable price/index section backed by the generic DBW series route. */
-export function DbwPriceSection({ title, subtitle, config, series, unit = '%', refline, csvName, note, invertKpi = true, heroTitle, heroText, heroPoz }: {
-    title: string; subtitle: string; config: DbwSeriesConfig; series: PriceSeries[]; unit?: string; refline?: number; csvName: string; note?: string; invertKpi?: boolean;
+export function DbwPriceSection({ title, subtitle, config, series, unit = '%', refline, note, invertKpi = true, heroTitle, heroText, heroPoz }: {
+    title: string; subtitle: string; config: DbwSeriesConfig; series: PriceSeries[]; unit?: string; refline?: number; note?: string; invertKpi?: boolean;
     heroTitle?: string; heroText?: string; heroPoz?: number;
 }) {
     const q = useDbwSeries(config);
@@ -83,8 +82,7 @@ export function DbwPriceSection({ title, subtitle, config, series, unit = '%', r
                 })}
                 </div>
             </section>
-            <SectionCard editorial titleVariant="label" title={title} subtitle={subtitle}
-                actions={<CsvExport filename={csvName} headers={['Okres', ...series.map((s) => s.name)]} rows={data.map((r) => [r.date as string, ...series.map((s) => r[String(s.poz)] as number)])} />}>
+            <SectionCard editorial titleVariant="label" title={title} subtitle={subtitle}>
                 {q.isLoading ? <div className="mk-skeleton h-[300px] w-full" /> : data.length === 0 ? (
                     <p className="py-10 text-center text-sm text-mk-faint">Brak danych dla wybranego okresu.</p>
                 ) : (

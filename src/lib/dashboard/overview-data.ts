@@ -79,9 +79,8 @@ export function useOverviewData() {
 
     const watchlistItems = useMemo(() => [...macro, ...markets], [macro, markets]);
     const dataDate = [unemp, industrial, retail, cpi].map((s) => (s.length ? s[s.length - 1].date : '')).filter(Boolean).sort().pop() ?? '';
-    const csvRows = useMemo(() => [...macro, ...markets].map((k) => [k.label, `${k.value}${k.unit ? ' ' + k.unit : ''}`]), [macro, markets]);
 
-    return { cpi, retail, cpiLoading: cpiQ.isLoading, retailLoading: retailQ.isLoading, macro, markets, watchlistItems, dataDate, csvRows };
+    return { cpi, retail, cpiLoading: cpiQ.isLoading, retailLoading: retailQ.isLoading, macro, markets, watchlistItems, dataDate };
 }
 
 export type OverviewData = ReturnType<typeof useOverviewData>;
