@@ -26,13 +26,16 @@ export async function GET(request: NextRequest) {
     const sp = new URL(request.url).searchParams;
     const start = parseInt(sp.get('start') || '');
     const count = parseInt(sp.get('count') || '12');
+    // Krok między ID zmiennych — BDL często pakuje wymiary (płeć, miejsce) między miesiącami/kwartałami.
+    // np. mediana P4610: miesiące co 6 ID; BAEL stopa bezrobocia P3982: kwartały co 6 ID.
+    const step = Math.max(1, parseInt(sp.get('step') || '1') || 1);
     const year = parseInt(sp.get('year') || String(new Date().getFullYear()));
     const freq = sp.get('freq') === 'q' ? 'q' : 'm';
     if (!start) return NextResponse.json({ error: 'Wymagane: start (id zmiennej)' }, { status: 400 });
 
     const apiKey = process.env.GUS_BDL_KEY || process.env.GUS_API_KEY;
     const years = [year - 1, year];
-    const cacheKey = `bdl_series_${start}_${count}_${year}_${freq}_v2`;
+    const cacheKey = `bdl_series_${start}_${count}_${year}_${freq}_s${step}_v2`;
 
     try {
         const result = await withCache(
@@ -41,7 +44,7 @@ export async function GET(request: NextRequest) {
             async () => {
                 const perVar: Record<string, number | null>[] = [];
                 for (let i = 0; i < count; i++) {
-                    perVar[i] = await fetchVarYears(start + i, years, apiKey);
+                    perVar[i] = await fetchVarYears(start + i * step, years, apiKey);
                     await sleep(120);
                 }
                 const series: { date: string; value: number }[] = [];

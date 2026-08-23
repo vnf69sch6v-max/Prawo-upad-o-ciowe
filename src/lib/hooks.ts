@@ -234,8 +234,7 @@ export function useGusRegional() {
 // w gospodarce narodowej". Monthly (availability quarterly="K"), years from 2024.
 // Ogółem / miejsce zamieszkania: Jan=1750141 … Dec=1750207, stride +6/month
 // (6 vars/month: 2 scopes × 3 płcie). National unit-level=0 works; latest live
-// check: 2026-02 = 7690.82 zł. Do NOT use /api/bdl-series without stride=6.
-// Suggested: useGusMedianWages() → dedicated route or bdl-series?stride=6.
+// check: 2026-02 = 7690.82 zł. Hook: useGusMedianWages() → bdl-series?step=6.
 // Sibling mean from same survey: P4609 (≠ P2687 enterprise przeciętne).
 
 interface GusMonthlyData {
@@ -559,12 +558,29 @@ export function useCpiNational(year = new Date().getFullYear()) {
 
 // ─── Generic BDL series (zatrudnienie, bezrobotni, wakaty) ───
 
-export function useBdlSeries(start: number, count = 12, year = new Date().getFullYear(), freq: 'm' | 'q' = 'm') {
+export function useBdlSeries(
+    start: number,
+    count = 12,
+    year = new Date().getFullYear(),
+    freq: 'm' | 'q' = 'm',
+    /** Odległość między kolejnymi ID zmiennych (domyślnie 1). */
+    step = 1,
+) {
     return useQuery<{ series: { date: string; value: number }[]; source: string }>({
-        queryKey: ['bdl-series', start, count, year, freq],
-        queryFn: () => fetchJSON(`/api/bdl-series?start=${start}&count=${count}&year=${year}&freq=${freq}`),
+        queryKey: ['bdl-series', start, count, year, freq, step],
+        queryFn: () => fetchJSON(`/api/bdl-series?start=${start}&count=${count}&year=${year}&freq=${freq}&step=${step}`),
         ...refreshOptions('gusMonthly'),
     });
+}
+
+/** Mediana wynagrodzeń brutto (P4610, miejsce zamieszkania, ogółem) — miesięcznie. */
+export function useGusMedianWages(months = 12, year = new Date().getFullYear()) {
+    return useBdlSeries(1750141, months, year, 'm', 6);
+}
+
+/** Stopa bezrobocia BAEL (P3982 ogółem) — kwartalnie, stride 6 między Q. */
+export function useBaelUnemploymentRate(year = new Date().getFullYear()) {
+    return useBdlSeries(1615673, 4, year, 'q', 6);
 }
 
 // ─── Generic DBW series (PPI, ceny nieruchomości/budowlane/rolne) ───

@@ -1,22 +1,24 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Briefcase, Wallet, DoorOpen, TrendingUp, Scale, Percent, Users } from 'lucide-react';
+import { Briefcase, Wallet, DoorOpen, Users, Activity } from 'lucide-react';
 import {
     useGusRegisteredUnemployment,
     useGusMonthly,
     useGusRegional,
     useBdlSeries,
+    useCpiFull,
+    useGusMedianWages,
+    useBaelUnemploymentRate,
 } from '@/lib/hooks';
-import { lastOf, deltaOf, monthTick, fmtPL } from '@/lib/series';
+import { lastOf, deltaOf, monthTick } from '@/lib/series';
 import { formatDecimalPL, formatNumber, formatDataPeriod, formatDataPeriodLabel } from '@/lib/formatters';
-import { trendObservation, analyzeSeries, type Observation } from '@/lib/observations';
-import { EditorialHero } from '@/components/ui/EditorialHero';
+import { analyzeSeries, consecutiveRun, runPhrase, type Observation } from '@/lib/observations';
 import { CompactKpiGrid, type CompactKpiItem } from '@/components/ui/CompactKpiGrid';
-import { DensePageLayout, DenseThreeCol } from '@/components/ui/DensePageLayout';
+import { DensePageLayout, DenseTwoCol } from '@/components/ui/DensePageLayout';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { RelatedNews } from '@/components/ui/RelatedNews';
-import { ObservationsPanel } from '@/components/ui/ObservationsPanel';
+import { InsightBar } from '@/components/ui/InsightBar';
 import { PublicationDatesPanel } from '@/components/ui/PublicationDatesPanel';
 import { DataTable, type Column } from '@/components/ui/DataTable';
 import { InteractiveChart } from '@/components/ui/InteractiveChart';
@@ -25,12 +27,19 @@ import PolandMap from '@/components/PolandMap';
 
 const woj = (name: string) => name.replace(/^województwo /i, '');
 
-/** Gęsty dashboard rynku pracy — bezrobocie GUS, płace GUS, zatrudnienie BDL. */
+/**
+ * Rynek pracy — remodel 2026-08:
+ * góra = „ile mam" (płace realne), środek = „gdzie" (mapa), dół = „co dalej".
+ * Bez czerwonego hero; bez duplikacji liczb; InsightBar max 1 obserwacja / seria.
+ */
 export function PracaDashboard() {
     const unempQ = useGusRegisteredUnemployment(24);
     const monthlyQ = useGusMonthly();
+    const cpiQ = useCpiFull(); // cache React Query — bez refresh=1 (limit DBW)
     const zatrQ = useBdlSeries(154348, 12);
     const wakQ = useBdlSeries(1653025, 1);
+    const baelQ = useBaelUnemploymentRate();
+    const medianQ = useGusMedianWages(12);
     const regQ = useGusRegional();
     const [selected, setSelected] = useState<string | null>(null);
 
@@ -40,107 +49,120 @@ export function PracaDashboard() {
     );
     const wages = useMemo(() => monthlyQ.data?.wages ?? [], [monthlyQ.data?.wages]);
     const lastWage = wages.length ? wages[wages.length - 1] : null;
+
+    // Płace realne = nominalne r/r − CPI r/r (jak macro-sections)
+    const cpiByDate = useMemo(
+        () => new Map((cpiQ.data?.headline ?? []).map((h) => [h.date, h.yoy])),
+        [cpiQ.data],
+    );
+    const realWages = useMemo(
+        () => wages.map((w) => {
+            const cpi = cpiByDate.get(w.date) ?? null;
+            return { date: w.date, nominal: w.value, cpi, real: cpi != null ? +(w.value - cpi).toFixed(1) : null };
+        }),
+        [wages, cpiByDate],
+    );
+    const lastReal = useMemo(() => {
+        const hit = [...realWages].reverse().find((r) => r.real != null);
+        return hit && hit.real != null
+            ? { date: hit.date, nominal: hit.nominal, cpi: hit.cpi as number, real: hit.real }
+            : null;
+    }, [realWages]);
+    const realSeries = useMemo(
+        () => realWages.filter((r): r is typeof r & { real: number } => r.real != null).map((r) => r.real),
+        [realWages],
+    );
+    const realRunUp = consecutiveRun(realSeries, 'up');
+    const realRunDown = consecutiveRun(realSeries, 'down');
+
     const zatr = zatrQ.data?.series ?? [];
     const zLast = zatr.length ? zatr[zatr.length - 1] : null;
+    const zPrev = zatr.length > 1 ? zatr[zatr.length - 2] : null;
+    // tys. etatów — nie mln (0,00 mln to nie liczba)
+    const zatrDeltaTys = zLast && zPrev ? +((zLast.value - zPrev.value) / 1e3).toFixed(1) : null;
     const wLast = (wakQ.data?.series ?? []).at(-1) ?? null;
+
+    // BAEL: count w bdl-series = okresy; series.at(-1) = bieżący kw. (NIE series[0] — patrz ROADMAP)
+    const baelLast = baelQ.data?.series?.at(-1) ?? null;
+    const medianLast = medianQ.data?.series?.at(-1) ?? null;
 
     const regions = regQ.data?.regions ?? [];
     const national = regQ.data?.national ?? { avgUnemployment: null, avgWages: null };
     const selectedRegion = regions.find((r) => r.slug === selected) ?? null;
 
-    const withUnemp = regions.filter((r) => r.unemployment != null);
-    const hi = withUnemp.length ? withUnemp.reduce((a, b) => ((b.unemployment ?? 0) > (a.unemployment ?? 0) ? b : a)) : null;
-    const lo = withUnemp.length ? withUnemp.reduce((a, b) => ((b.unemployment ?? 0) < (a.unemployment ?? 0) ? b : a)) : null;
-    const spread = hi?.unemployment != null && lo?.unemployment != null ? hi.unemployment - lo.unemployment : null;
-
-    const zatrDeltaMln = zatr.length > 1
-        ? +((zatr[zatr.length - 1].value - zatr[zatr.length - 2].value) / 1e6).toFixed(2)
-        : null;
-
-    const dataDate = unemp.length ? unemp[unemp.length - 1].date : '';
-
-    // ── Hero „redakcyjny" — WYŁĄCZNIE realne dane GUS (bezrobocie rejestrowane) ──
     const heroU = lastOf(unemp);
-    const heroUDelta = deltaOf(unemp);
-    const heroPeriod = dataDate ? formatDataPeriod(dataDate) : null;
-    const heroHeadline = heroU == null ? 'Rynek pracy'
-        : heroUDelta != null && heroUDelta > 0.05 ? 'Bezrobocie rośnie'
-        : heroUDelta != null && heroUDelta < -0.05 ? 'Bezrobocie spada'
-        : 'Bezrobocie rejestrowane';
+    const leadLoading = monthlyQ.isLoading || cpiQ.isLoading;
 
-    const hiUnemp = hi?.unemployment ?? null;
-    const hiName = hi?.name ?? '';
-    const loName = lo?.name ?? '';
+    const leadHeadline = lastReal == null ? 'Siła nabywcza płac'
+        : lastReal.real > 0.2 ? 'Siła nabywcza rośnie'
+            : lastReal.real < -0.2 ? 'Siła nabywcza spada'
+                : 'Siła nabywcza płac';
 
+    const leadSentence = lastReal == null
+        ? 'Płace realne = wzrost wynagrodzeń nominalnych minus inflacja CPI — odpowiedź na „czy stać mnie na więcej niż rok temu".'
+        : `Płace rosną ${formatDecimalPL(lastReal.nominal, 1)}%, ceny ${formatDecimalPL(lastReal.cpi ?? 0, 1)}% — siła nabywcza ${
+            lastReal.real > 0.2
+                ? (realRunUp >= 2 ? `rośnie ${runPhrase(realRunUp)}` : 'rośnie')
+                : lastReal.real < -0.2
+                    ? (realRunDown >= 2 ? `spada ${runPhrase(realRunDown)}` : 'spada')
+                    : 'stoi w miejscu'
+        }.`;
+
+    // 4 kafle — bez max/rozpiętości (są w rankingu), bez Δ m/m (duplikat), bez wakatów (dół)
     const compactKpis: CompactKpiItem[] = [
         {
-            key: 'wak',
-            label: 'Wakaty',
-            value: wLast ? formatDecimalPL(wLast.value, 1) : '—',
-            unit: 'tys.',
-            icon: DoorOpen,
-            footnote: 'kw.',
-            loading: wakQ.isLoading,
-        },
-        {
-            key: 'unemp-d',
-            label: 'Bezrob. Δ m/m',
-            value: deltaOf(unemp) != null ? `${deltaOf(unemp)! > 0 ? '+' : ''}${formatDecimalPL(deltaOf(unemp)!, 1)}` : '—',
-            unit: 'pp',
-            icon: Percent,
+            key: 'unemp',
+            label: 'Bezrobocie rej.',
+            value: heroU != null ? formatDecimalPL(heroU, 1) : '—',
+            unit: '%',
+            icon: Users,
             delta: deltaOf(unemp) != null ? { value: deltaOf(unemp)!, unit: 'pp', invert: true } : undefined,
-            footnote: 'rejestrowane · kraj',
+            footnote: unemp.length ? formatDataPeriod(unemp[unemp.length - 1].date) : 'GUS BDL',
             loading: unempQ.isLoading,
         },
         {
-            key: 'wage-yoy',
-            label: 'Płace r/r',
-            value: lastWage ? formatDecimalPL(lastWage.value, 1) : '—',
+            key: 'bael',
+            label: 'BAEL',
+            value: baelLast != null ? formatDecimalPL(baelLast.value, 1) : '—',
             unit: '%',
+            icon: Activity,
+            footnote: baelLast ? `BAEL · ${formatDataPeriod(baelLast.date)}` : 'BAEL · GUS',
+            loading: baelQ.isLoading,
+        },
+        {
+            key: 'wage',
+            label: 'Śr. płaca',
+            value: lastWage ? formatNumber(lastWage.raw, 0) : '—',
+            unit: 'zł',
             icon: Wallet,
-            delta: lastWage ? { value: lastWage.value, unit: 'pct' } : undefined,
-            footnote: lastWage?.date ?? '',
+            footnote: lastWage ? `przedsiębiorstwa · ${formatDataPeriod(lastWage.date)}` : 'GUS',
             loading: monthlyQ.isLoading,
         },
         {
-            key: 'zatr-d',
-            label: 'Zatrudn. Δ m/m',
-            value: zatrDeltaMln != null ? `${zatrDeltaMln > 0 ? '+' : ''}${formatDecimalPL(zatrDeltaMln, 2)}` : '—',
-            unit: 'mln',
-            icon: Briefcase,
-            footnote: 'sektor przedsiębiorstw',
-            loading: zatrQ.isLoading,
-        },
-        {
-            key: 'hi-u',
-            label: 'Max bezrobocie',
-            value: hiUnemp != null ? formatDecimalPL(hiUnemp, 1) : '—',
-            unit: '%',
-            icon: TrendingUp,
-            footnote: hiName ? woj(hiName) : 'woj.',
-            loading: regQ.isLoading,
-        },
-        {
-            key: 'spread',
-            label: 'Rozpiętość woj.',
-            value: spread != null ? formatDecimalPL(spread, 1) : '—',
-            unit: 'pp',
-            icon: Scale,
-            footnote: loName && hiName ? `${woj(loName).slice(0, 10)} – ${woj(hiName).slice(0, 10)}` : 'max − min',
-            loading: regQ.isLoading,
+            key: 'median',
+            label: 'Mediana',
+            value: medianLast != null ? formatNumber(medianLast.value, 0) : '—',
+            unit: 'zł',
+            icon: Wallet,
+            footnote: medianLast
+                ? `rozkład GN · ${formatDataPeriod(medianLast.date)}`
+                : 'P4610 · GUS BDL',
+            loading: medianQ.isLoading,
         },
     ];
 
-    const observations = useMemo<Observation[]>(() => {
+    // InsightBar: MAX JEDNA obserwacja na serię (dedupe po wskaźniku, nie po treści)
+    const insights = useMemo<Observation[]>(() => {
         const out: Observation[] = [];
-        const push = (o: Observation | null) => { if (o) out.push(o); };
-        push(trendObservation('Bezrobocie rejestrowane', unemp.map((d) => d.value), true));
-        push(trendObservation('Płace nominalne', wages.map((w) => w.value), false));
-        out.push(...analyzeSeries('Bezrobocie', unemp.map((d) => d.value), { goodDown: true, unit: '%', decimals: 1 }).slice(0, 2));
-        const u = lastOf(unemp);
-        if (u != null) out.push({ text: `Stopa bezrobocia rejestrowanego: ${fmtPL(u)}% (GUS BDL)`, tone: u > 6 ? 'warn' : 'neutral' });
-        return out.slice(0, 4);
-    }, [unemp, wages]);
+        const one = (label: string, values: (number | null | undefined)[], opts: Parameters<typeof analyzeSeries>[2]) => {
+            const hit = analyzeSeries(label, values, opts)[0];
+            if (hit) out.push(hit);
+        };
+        one('Bezrobocie rej.', unemp.map((d) => d.value), { goodDown: true, unit: '%', decimals: 1 });
+        one('Płace realne', realSeries, { unit: '%', decimals: 1 });
+        one('Płace nominalne', wages.map((w) => w.value), { unit: '%', decimals: 1 });
+        return out.slice(0, 3);
+    }, [unemp, realSeries, wages]);
 
     const cols: Column<(typeof regions)[number]>[] = [
         { key: 'name', header: 'Woj.', sortable: true, sortValue: (r) => r.name, render: (r) => woj(r.name) },
@@ -148,136 +170,239 @@ export function PracaDashboard() {
         { key: 'wages', header: 'Płace', align: 'right', sortable: true, sortValue: (r) => r.wages ?? 0, render: (r) => r.wages != null ? formatNumber(r.wages, 0) : '—' },
     ];
 
+    const mapDate = regions.find((r) => r.unemploymentMonth)?.unemploymentMonth ?? (unemp.length ? unemp[unemp.length - 1].date : null);
+
     return (
         <DensePageLayout>
-            <EditorialHero
-                ariaLabel="Rynek pracy — najważniejszy odczyt"
-                period={heroPeriod}
-                source="GUS · rynek pracy"
-                headline={heroHeadline}
-                description={
+            {/* Lead: płace realne — mk-surface, kolor tylko na DeltaChip */}
+            <section
+                className="rounded-[14px] border border-mk-border bg-mk-surface p-5 sm:p-6"
+                aria-label="Płace realne — siła nabywcza"
+            >
+                {leadLoading ? (
+                    <div className="space-y-3">
+                        <div className="mk-skeleton h-3 w-40 rounded" />
+                        <div className="mk-skeleton h-8 w-64 rounded" />
+                        <div className="mk-skeleton h-14 w-40 rounded" />
+                        <div className="mk-skeleton h-4 w-full max-w-xl rounded" />
+                    </div>
+                ) : (
                     <>
-                        Stopa bezrobocia rejestrowanego w urzędach pracy wynosi {heroU != null ? fmtPL(heroU) : '—'}% (GUS BDL).
-                        {lastWage != null && ` Przeciętne wynagrodzenie brutto rośnie o ${formatDecimalPL(lastWage.value, 1)}% r/r.`}
+                        <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-mk-muted">
+                            {lastReal?.date && (
+                                <span className="inline-flex items-center rounded-full bg-mk-surface-alt px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-mk-text-soft tnum">
+                                    {formatDataPeriod(lastReal.date)}
+                                </span>
+                            )}
+                            <span>GUS · płace nominalne − CPI</span>
+                        </div>
+                        <h2 className="mt-3 text-[22px] font-extrabold leading-tight tracking-tight text-mk-text sm:text-[26px]">
+                            {leadHeadline}
+                        </h2>
+                        <div className="mt-4 flex flex-wrap items-baseline gap-2">
+                            <span className="mk-kpi-value text-mk-text">
+                                {lastReal?.real != null ? formatDecimalPL(lastReal.real, 1) : '—'}
+                            </span>
+                            <span className="text-lg font-semibold text-mk-muted">% r/r</span>
+                        </div>
+                        <p className="mt-3 max-w-[56ch] text-[15px] leading-relaxed text-mk-text-soft">
+                            {leadSentence}
+                        </p>
                     </>
+                )}
+            </section>
+
+            {insights.length > 0 && <InsightBar items={insights} />}
+
+            <CompactKpiGrid items={compactKpis} columns={4} label="Wskaźniki" />
+
+            <DenseTwoCol
+                left={
+                    <SectionCard
+                        editorial
+                        titleVariant="label"
+                        title="Płace nominalne · CPI · realne"
+                        subtitle="r/r % · dodatnie realne = rosnąca siła nabywcza"
+                        actions={<StaleBadge date={lastReal?.date ?? null} label="do" warnAfterMonths={4} />}
+                    >
+                        {realWages.length < 2 ? (
+                            <div className="mk-skeleton h-[260px] w-full" />
+                        ) : (
+                            <InteractiveChart
+                                data={realWages}
+                                xKey="date"
+                                height={260}
+                                unit="%"
+                                legend
+                                showRange
+                                initialRange="3L"
+                                ranges={['1R', '3L', '5L', 'ALL']}
+                                valueFormatter={(v) => formatDecimalPL(v, 1)}
+                                xTickFormatter={monthTick}
+                                referenceLines={[{ y: 0, color: '#CBD2DD' }]}
+                                series={[
+                                    { key: 'nominal', name: 'Płace nominalne', color: '#16A34A', type: 'line', strokeWidth: 2 },
+                                    { key: 'cpi', name: 'Inflacja CPI', color: '#D97706', type: 'line', strokeWidth: 2, dashed: true },
+                                    { key: 'real', name: 'Płace realne', color: '#2563EB', type: 'area', strokeWidth: 2.5 },
+                                ]}
+                            />
+                        )}
+                    </SectionCard>
                 }
-                value={heroU != null ? fmtPL(heroU) : '—'}
-                unit="%"
-                delta={heroUDelta}
-                panelTitle="Rynek pracy — skrót"
-                rows={[
-                    { label: 'Przeciętne wynagrodzenie', value: lastWage ? `${formatNumber(lastWage.raw, 0)} zł` : '—' },
-                    { label: 'Płace r/r', value: lastWage ? `${lastWage.value > 0 ? '+' : ''}${formatDecimalPL(lastWage.value, 1)}%` : '—' },
-                    { label: 'Przeciętne zatrudnienie', value: zLast ? `${formatDecimalPL(zLast.value / 1e6, 2)} mln` : '—' },
-                    { label: 'Wakaty', value: wLast ? `${formatDecimalPL(wLast.value, 1)} tys.` : '—', divider: true },
-                ]}
+                right={
+                    <RelatedNews
+                        topic="praca"
+                        limit={5}
+                        title="Powiązane newsy"
+                        matchTier="strong"
+                        excludeOpinion
+                    />
+                }
             />
 
-            <CompactKpiGrid items={compactKpis} label="Wskaźniki uzupełniające" />
-
-            <DenseThreeCol
-                left={<RelatedNews topic="praca" limit={3} title="Powiązane newsy" matchTier="strong" excludeOpinion />}
-                center={
+            <DenseTwoCol
+                left={
+                    <SectionCard
+                        editorial
+                        titleVariant="label"
+                        title="Bezrobocie rejestrowane — mapa"
+                        subtitle="GUS BDL · kliknij województwo"
+                        actions={<StaleBadge date={mapDate} label="GUS do" warnAfterMonths={4} />}
+                    >
+                        {regQ.isLoading ? (
+                            <div className="mk-skeleton h-[240px] w-full" />
+                        ) : (
+                            <div className="max-h-[280px] overflow-hidden [&_svg]:max-h-[270px]">
+                                <PolandMap
+                                    regions={regions}
+                                    national={national}
+                                    selectedRegion={selected}
+                                    onRegionSelect={setSelected}
+                                />
+                            </div>
+                        )}
+                    </SectionCard>
+                }
+                right={
                     <>
                         <SectionCard
                             editorial
                             titleVariant="label"
-                            title="Bezrobocie rejestrowane — mapa"
-                            subtitle="GUS BDL · kliknij województwo"
-                            actions={
-                                <StaleBadge date={dataDate || null} label="GUS do" warnAfterMonths={4} />
-                            }
+                            title={selectedRegion ? woj(selectedRegion.name) : 'Województwo'}
+                            padded
                         >
-                            {regQ.isLoading ? (
-                                <div className="mk-skeleton h-[200px] w-full" />
-                            ) : (
-                                <div className="max-h-[220px] overflow-hidden [&_svg]:max-h-[210px]">
-                                    <PolandMap regions={regions} national={national} selectedRegion={selected} onRegionSelect={setSelected} />
-                                </div>
-                            )}
-                        </SectionCard>
-
-                        {unemp.length > 1 && (
-                            <SectionCard editorial titleVariant="label" title="Trend bezrobocia — kraj" subtitle="GUS BDL · stopa rejestrowana (%)">
-                                <InteractiveChart
-                                    data={unemp}
-                                    xKey="date"
-                                    height={180}
-                                    unit="%"
-                                    showRange
-                                    initialRange="3L"
-                                    ranges={['1R', '3L', 'ALL']}
-                                    valueFormatter={(v) => formatDecimalPL(v, 1)}
-                                    xTickFormatter={monthTick}
-                                    series={[{ key: 'value', name: 'Bezrobocie', color: '#2563EB', type: 'area', strokeWidth: 2 }]}
-                                />
-                            </SectionCard>
-                        )}
-                    </>
-                }
-                right={
-                    <>
-                        <SectionCard editorial titleVariant="label" title={selectedRegion ? woj(selectedRegion.name) : 'Województwo'} padded>
                             {selectedRegion ? (
                                 <dl className="space-y-2.5 text-sm">
                                     <div className="flex justify-between gap-2">
                                         <dt className="text-mk-muted">Bezrobocie</dt>
-                                        <dd className="font-semibold tnum">{selectedRegion.unemployment != null ? `${formatDecimalPL(selectedRegion.unemployment, 1)}%` : '—'}</dd>
+                                        <dd className="font-semibold tnum">
+                                            {selectedRegion.unemployment != null
+                                                ? `${formatDecimalPL(selectedRegion.unemployment, 1)}%`
+                                                : '—'}
+                                        </dd>
                                     </div>
                                     <div className="flex justify-between gap-2">
                                         <dt className="text-mk-muted">Płace brutto</dt>
-                                        <dd className="font-semibold tnum">{selectedRegion.wages != null ? `${formatNumber(selectedRegion.wages, 0)} zł` : '—'}</dd>
+                                        <dd className="font-semibold tnum">
+                                            {selectedRegion.wages != null
+                                                ? `${formatNumber(selectedRegion.wages, 0)} zł`
+                                                : '—'}
+                                        </dd>
                                     </div>
                                     <div className="flex justify-between gap-2">
                                         <dt className="text-mk-muted">Płace r/r</dt>
-                                        <dd className="font-semibold tnum">{selectedRegion.wagesYoY != null ? `${formatDecimalPL(selectedRegion.wagesYoY, 1)}%` : '—'}</dd>
+                                        <dd className="font-semibold tnum">
+                                            {selectedRegion.wagesYoY != null
+                                                ? `${formatDecimalPL(selectedRegion.wagesYoY, 1)}%`
+                                                : '—'}
+                                        </dd>
                                     </div>
                                 </dl>
                             ) : (
-                                <p className="text-sm text-mk-faint">Kliknij region na mapie, aby zobaczyć szczegóły.</p>
+                                <p className="text-sm text-mk-faint">
+                                    Kliknij region na mapie, aby zobaczyć szczegóły.
+                                </p>
                             )}
                         </SectionCard>
 
-                        <SectionCard editorial titleVariant="label" title="Ranking województw" subtitle="bezrobocie · płace" padded>
+                        <SectionCard
+                            editorial
+                            titleVariant="label"
+                            title="Ranking województw"
+                            subtitle="bezrobocie · płace"
+                            padded
+                        >
                             {regQ.isLoading ? (
-                                <div className="mk-skeleton h-[160px] w-full" />
+                                <div className="mk-skeleton h-[180px] w-full" />
                             ) : (
                                 <DataTable
                                     columns={cols}
                                     rows={regions}
                                     initialSort="unemp"
                                     initialDir="desc"
-                                    maxHeight={180}
+                                    maxHeight={200}
                                     rowKey={(r) => r.slug}
                                     onRowClick={(r) => setSelected(r.slug)}
                                 />
                             )}
                         </SectionCard>
-
-                        <SectionCard editorial titleVariant="label" title="Średnie krajowe" padded>
-                            <dl className="space-y-2 text-sm">
-                                <div className="flex justify-between gap-2">
-                                    <dt className="flex items-center gap-1.5 text-mk-muted"><Users size={13} /> Bezrobocie śr.</dt>
-                                    <dd className="font-semibold tnum">{national.avgUnemployment != null ? `${formatDecimalPL(national.avgUnemployment, 1)}%` : '—'}</dd>
-                                </div>
-                                <div className="flex justify-between gap-2">
-                                    <dt className="flex items-center gap-1.5 text-mk-muted"><Wallet size={13} /> Płace śr.</dt>
-                                    <dd className="font-semibold tnum">{national.avgWages != null ? `${formatNumber(national.avgWages, 0)} zł` : '—'}</dd>
-                                </div>
-                            </dl>
-                        </SectionCard>
                     </>
                 }
             />
 
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                <ObservationsPanel items={observations} variant="overview" />
-                <PublicationDatesPanel count={4} variant="overview" />
+            <DenseTwoCol
+                left={
+                    <SectionCard editorial titleVariant="label" title="Zatrudnienie i wakaty" padded>
+                        <dl className="space-y-3 text-sm">
+                            <div className="flex justify-between gap-2">
+                                <dt className="flex items-center gap-1.5 text-mk-muted">
+                                    <Briefcase size={13} /> Zatrudnienie
+                                </dt>
+                                <dd className="text-right font-semibold tnum">
+                                    {zLast ? `${formatDecimalPL(zLast.value / 1e3, 1)} tys. etatów` : '—'}
+                                    {zatrDeltaTys != null && (
+                                        <span className="mt-0.5 block text-xs font-medium text-mk-muted">
+                                            {zatrDeltaTys > 0 ? '+' : ''}{formatDecimalPL(zatrDeltaTys, 1)} tys. m/m
+                                        </span>
+                                    )}
+                                </dd>
+                            </div>
+                            <div className="flex justify-between gap-2 border-t border-mk-border pt-3">
+                                <dt className="flex items-center gap-1.5 text-mk-muted">
+                                    <DoorOpen size={13} /> Wakaty
+                                </dt>
+                                <dd className="font-semibold tnum">
+                                    {wLast ? `${formatDecimalPL(wLast.value, 1)} tys.` : '—'}
+                                </dd>
+                            </div>
+                            {(zLast || wLast) && (
+                                <p className="text-[11px] text-mk-faint">
+                                    Sektor przedsiębiorstw
+                                    {zLast ? ` · ${formatDataPeriod(zLast.date)}` : ''}
+                                    {wLast ? ` · wakaty ${formatDataPeriod(wLast.date)}` : ''}
+                                </p>
+                            )}
+                        </dl>
+                    </SectionCard>
+                }
+                right={<PublicationDatesPanel count={4} variant="overview" />}
+            />
+
+            {/* BAEL vs rejestrowane — dwie definicje, nie błąd */}
+            <div className="mk-card mk-card-editorial mk-card-pad text-sm text-mk-text-soft">
+                <span className="font-semibold text-mk-text">BAEL vs rejestrowane: </span>
+                stopa BAEL (~{baelLast != null ? formatDecimalPL(baelLast.value, 1) : '3'}%) to bezrobocie
+                wg badania ankietowego GUS (standard ILO/Eurostat) — osoby bez pracy, szukające i gotowe
+                ją podjąć. Bezrobocie rejestrowane (~{heroU != null ? formatDecimalPL(heroU, 1) : '—'}%)
+                liczy osoby w urzędach pracy; bywa wyższe, bo obejmuje też osoby nieaktywne w sensie BAEL
+                i niższe, gdy ktoś nie rejestruje się mimo braku pracy. To dwie definicje, nie rozjazd danych.
+                {/* UWAGA: w /api/bdl-series `count` = liczba ID/okresów, nie „ile wyników".
+                    Endpoint zawsze bierze lata [rok-1, rok] → seria ma ≥2 wpisy; bieżący = series.at(-1). */}
             </div>
 
-            {dataDate && (
+            {lastReal?.date && (
                 <p className="text-center text-[11px] text-mk-faint">
-                    Okres referencyjny: {formatDataPeriodLabel(dataDate)} · wyłącznie źródła GUS
+                    Okres referencyjny leadu: {formatDataPeriodLabel(lastReal.date)} · źródła GUS BDL / CPI
                 </p>
             )}
         </DensePageLayout>

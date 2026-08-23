@@ -9,7 +9,7 @@ export default function RynekPracyPage() {
             <PageHeader
                 eyebrow={<PageEyebrow section="Rynek pracy" />}
                 title="Rynek pracy"
-                subtitle="Bezrobocie, płace i zatrudnienie — wyłącznie źródła GUS"
+                subtitle="Płace realne, bezrobocie i mediana — źródła GUS"
             />
             <PracaDashboard />
         </div>

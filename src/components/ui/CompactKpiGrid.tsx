@@ -16,13 +16,15 @@ export function CompactKpiGrid({
 }: {
     items: CompactKpiItem[];
     label?: string;
-    columns?: 5 | 6;
+    columns?: 4 | 5 | 6;
     /** gap-2 zamiast gap-3 — Przegląd above-the-fold */
     dense?: boolean;
 }) {
-    const colClass = columns === 5
-        ? 'md:grid-cols-3 lg:grid-cols-5'
-        : 'md:grid-cols-3 lg:grid-cols-6';
+    const colClass = columns === 4
+        ? 'md:grid-cols-2 lg:grid-cols-4'
+        : columns === 5
+            ? 'md:grid-cols-3 lg:grid-cols-5'
+            : 'md:grid-cols-3 lg:grid-cols-6';
 
     return (
         <section>

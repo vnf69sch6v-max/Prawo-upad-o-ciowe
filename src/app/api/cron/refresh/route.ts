@@ -12,6 +12,8 @@ const ENDPOINTS = [
     '/api/bdl-series?start=154348&count=12',
     '/api/bdl-series?start=1615281&count=1',
     '/api/bdl-series?start=461680&count=12',                 // bezrobocie rejestrowane (miesięczne, kraj)
+    '/api/bdl-series?start=1615673&count=4&freq=q&step=6',   // BAEL stopa bezrobocia (P3982)
+    '/api/bdl-series?start=1750141&count=12&step=6',         // mediana wynagrodzeń (P4610)
     '/api/gus-regional',
     '/api/gus-monthly',
     // Eurostat — `refresh=1` WYMUSZA pobranie u źródła. Bez tego warm tylko czytał cache
