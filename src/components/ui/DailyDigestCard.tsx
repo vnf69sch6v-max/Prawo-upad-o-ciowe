@@ -7,6 +7,7 @@ import { corroborationLabel } from '@/lib/news/daily';
 import { formatDate } from '@/lib/formatters';
 import type { NewsTopic } from '@/lib/news/match';
 import { SectionCard } from '@/components/ui/SectionCard';
+import { SummaryBody } from '@/components/ui/DigestSummaryCard';
 import { CategoryTag } from '@/components/ui/RelatedNews';
 
 const TOPIC_LABELS: Record<NewsTopic, string> = {
@@ -85,6 +86,14 @@ export function DailyDigestCard({
                 </Link>
             }
         >
+            {/* Akapit nad punktami — najpierw „o czym pisano", potem konkretne tematy.
+                Karta ma już własny tytuł, więc wstawiamy samą treść bez nagłówka. */}
+            {digest.podsumowanie && (
+                <div className="mb-4 border-b border-mk-border pb-4">
+                    <SummaryBody summary={digest.podsumowanie} compact />
+                </div>
+            )}
+
             <ul className="list-none space-y-4">
                 {shown.map((p) => (
                     <li key={p.link} className="flex gap-3">

@@ -7,6 +7,7 @@ import { formatRelativeTime, formatTime, formatDate } from '@/lib/formatters';
 import { norm, collapseClusters } from '@/lib/news/match';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Segmented } from '@/components/ui/Segmented';
+import { DailySummaryCard } from '@/components/ui/DigestSummaryCard';
 
 type Sort = 'waznosc' | 'data';
 
@@ -232,6 +233,10 @@ export default function NewsyPage() {
                     ) : undefined
                 }
             />
+
+            {/* Akapit dnia PRZED leadem — daje kontekst całej doby, zanim czytelnik wejdzie
+                w pojedynczą historię. Sam się chowa, gdy digestu jeszcze nie ma. */}
+            <DailySummaryCard compact />
 
             {lead && (
                 <div className="mk-card mk-card-editorial mk-card-pad-compact border-l-[3px] border-l-mk-brand">
