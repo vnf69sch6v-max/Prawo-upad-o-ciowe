@@ -2,6 +2,7 @@
 
 // Lekki sparkline (inline SVG, stały rozmiar) — do komórek tabeli. Bez ResponsiveContainer.
 // Rysuje linię + opcjonalną linię zera; kolor wg znaku ostatniej wartości lub podany.
+// viewBox + max-w-full: w wąskiej komórce kurczy się zamiast rozpychać stronę w poziomie.
 
 interface SparklineProps {
     data: (number | null)[];
@@ -35,7 +36,15 @@ export function Sparkline({ data, width = 88, height = 26, color, zeroLine = tru
     const zeroY = min <= 0 && max >= 0 ? y(0) : null;
 
     return (
-        <svg width={width} height={height} className="overflow-visible align-middle" role="img" aria-hidden>
+        <svg
+            viewBox={`0 0 ${width} ${height}`}
+            width={width}
+            height={height}
+            className="max-w-full overflow-visible align-middle"
+            preserveAspectRatio="xMidYMid meet"
+            role="img"
+            aria-hidden
+        >
             {zeroLine && zeroY != null && <line x1={pad} y1={zeroY} x2={width - pad} y2={zeroY} stroke="#CBD5E1" strokeWidth={0.75} strokeDasharray="2 2" />}
             <path d={d.trim()} fill="none" stroke={stroke} strokeWidth={strokeWidth} strokeLinejoin="round" strokeLinecap="round" />
             <circle cx={x(n - 1 - [...data].reverse().findIndex((v) => v != null))} cy={y(last)} r={1.8} fill={stroke} />
