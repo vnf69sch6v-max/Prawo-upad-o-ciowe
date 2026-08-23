@@ -109,7 +109,7 @@ export function WidgetPicker({
 
                 <div className="flex items-center justify-between border-t border-mk-border px-4 py-2 text-[11px] text-mk-faint">
                     <span>{WIDGETS.length} dostępnych widgetów</span>
-                    <span>{present.size} na panelu</span>
+                    <span>{present.size} na pulpicie</span>
                 </div>
             </div>
         </div>,

@@ -7,7 +7,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import {
-    LayoutDashboard, LayoutGrid, Tag, Factory, Users, TrendingUp, Map, Search, Newspaper,
+    LayoutDashboard, Pencil, Tag, Factory, Users, TrendingUp, Map, Search, Newspaper,
     Banknote, Percent, Landmark, LineChart, Home, Wheat, HardHat, Fuel, Building2, CornerDownLeft, Briefcase,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
@@ -18,7 +18,7 @@ interface Cmd { id: string; label: string; sub?: string; group: string; keywords
 const COMMANDS: Cmd[] = [
     // ── Zakładki ──
     { id: 'nav-home', group: 'Zakładki', label: 'Przegląd', keywords: 'dashboard start główna overview', href: '/', icon: LayoutDashboard },
-    { id: 'nav-panel', group: 'Zakładki', label: 'Mój panel', keywords: 'panel dashboard własny układ widgety kafle personalizacja edycja', href: '/panel', icon: LayoutGrid },
+    { id: 'edit-desk', group: 'Akcje', label: 'Edytuj pulpit', keywords: 'edytuj panel układ widgety kafle jiggle iphone personalizacja', href: '/?edit=1', icon: Pencil },
     { id: 'nav-ceny', group: 'Zakładki', label: 'Ceny', keywords: 'inflacja cpi', href: '/ceny', icon: Tag },
     { id: 'nav-gosp', group: 'Zakładki', label: 'Gospodarka', keywords: 'pkb aktywność', href: '/gospodarka', icon: Factory },
     { id: 'nav-praca', group: 'Zakładki', label: 'Rynek pracy', keywords: 'bezrobocie płace zatrudnienie', href: '/praca', icon: Users },
@@ -114,13 +114,20 @@ export function CommandPalette() {
         const query = norm(q.trim());
         const list = query
             ? COMMANDS.map((c) => ({ c, s: score(c, query) })).filter((x) => x.s >= 0).sort((a, b) => b.s - a.s).map((x) => x.c)
-            : COMMANDS.filter((c) => c.group === 'Zakładki').concat(COMMANDS.filter((c) => c.group === 'Wskaźniki').slice(0, 6));
+            : COMMANDS.filter((c) => c.group === 'Zakładki' || c.group === 'Akcje').concat(COMMANDS.filter((c) => c.group === 'Wskaźniki').slice(0, 6));
         return list.slice(0, 40);
     }, [q]);
 
     const go = (cmd: Cmd | undefined) => {
         if (!cmd) return;
         setOpen(false);
+        if (cmd.id === 'edit-desk') {
+            if (window.location.pathname === '/') {
+                window.dispatchEvent(new Event('mk:edit-dashboard'));
+                return;
+            }
+            try { sessionStorage.setItem('mk:edit-once', '1'); } catch { /* ignore */ }
+        }
         router.push(cmd.href);
     };
 

@@ -1,6 +1,6 @@
 'use client';
 
-// ─── Katalog widgetów „Mojego panelu" ──────────────────────────────────────
+// ─── Katalog widgetów pulpitu Przeglądu ──────────────────────────────────────
 // Każdy widget jest SAMODZIELNY: wywołuje własne hooki (te same, których używają zwykłe strony),
 // więc działa w izolacji na panelu. NIE reimplementujemy danych — opakowujemy istniejące hooki
 // (lib/hooks.ts) i komponenty (KpiCard, InteractiveChart, LatestNews, PublicationDatesPanel…).
@@ -11,8 +11,13 @@
 import { useMemo, type ReactNode } from 'react';
 import {
     TrendingUp, Factory, ShoppingCart, Users, Percent, Landmark, Gem, Euro, DollarSign,
-    LineChart, Banknote, Wallet, Newspaper, CalendarClock, Map as MapIcon,
+    LineChart, Banknote, Wallet, Newspaper, CalendarClock, Map as MapIcon, LayoutDashboard,
 } from 'lucide-react';
+import { OverviewHero } from '@/components/ui/OverviewHero';
+import { WatchlistStrip } from '@/components/ui/WatchlistStrip';
+import { useWatchlist } from '@/lib/watchlist';
+import { useOverviewData } from './overview-data';
+import { useEditMode } from '@/components/panel/EditModeContext';
 import {
     useCpiFull, usePpiFull, useGusGdpAnnual, useGusIndustrialProduction, useGusRetailSales,
     useGusRegisteredUnemployment, useGUSWages, useStooq, useWig20, useNBPTable, useEURPLN,
@@ -418,8 +423,31 @@ function RegionalGdpTable() {
 
 // ═══ NEWSY / PUBLIKACJE ════════════════════════════════════════
 
+function OverviewHeroWidget() {
+    const d = useOverviewData();
+    return <OverviewHero cpi={d.cpi} retail={d.retail} cpiLoading={d.cpiLoading} retailLoading={d.retailLoading} />;
+}
+
+function WatchlistWidget() {
+    const d = useOverviewData();
+    const editing = useEditMode();
+    const watch = useWatchlist();
+    if (!watch.ready) return editing ? <WatchlistPlaceholder /> : null;
+    const watched = d.watchlistItems.filter((k) => watch.has('wskaznik', k.watchId));
+    if (watched.length === 0) return editing ? <WatchlistPlaceholder /> : null;
+    return <WatchlistStrip items={d.watchlistItems} compact />;
+}
+
+function WatchlistPlaceholder() {
+    return (
+        <div className="rounded-xl border border-dashed border-mk-border-strong bg-mk-surface px-4 py-6 text-center text-sm text-mk-faint">
+            Obserwowane — dodaj gwiazdką na kafelku KPI
+        </div>
+    );
+}
+
 function LatestNewsWidget() {
-    return <div className="h-full overflow-y-auto"><LatestNews limit={6} /></div>;
+    return <LatestNews limit={6} variant="overview" />;
 }
 function PublicationWidget() {
     return <PublicationDatesPanel count={7} />;
@@ -437,6 +465,9 @@ function EmptyRow({ loading }: { loading?: boolean }) {
 // ═══ KATALOG ═══════════════════════════════════════════════════
 
 export const WIDGETS: WidgetDef[] = [
+    { id: 'overview-hero', title: 'Sygnały makro (hero)', category: 'Przegląd', description: 'Pas hero z CPI, sprzedażą i newsem', defaultSize: { w: 3, h: 2 }, minW: 2, autoHeight: true, render: () => <OverviewHeroWidget /> },
+    { id: 'watchlist-strip', title: 'Obserwowane', category: 'Przegląd', description: 'Pas wskaźników z gwiazdką', defaultSize: { w: 3, h: 1 }, autoHeight: true, render: () => <WatchlistWidget /> },
+
     // Ceny
     { id: 'cpi-kpi', title: 'Inflacja CPI (KPI)', category: 'Ceny', description: 'Ostatni odczyt CPI r/r', defaultSize: { w: 1, h: 1 }, render: () => <CpiKpi /> },
     { id: 'cpi-chart', title: 'Inflacja CPI (wykres)', category: 'Ceny', description: 'Trend CPI r/r i m/m', defaultSize: { w: 2, h: 2 }, minW: 2, minH: 2, render: (s) => <CpiChart size={s} /> },
@@ -475,7 +506,7 @@ export const WIDGETS: WidgetDef[] = [
     { id: 'regiony-pkb', title: 'PKB per capita — województwa', category: 'Regiony', description: 'Ranking województw wg PKB per capita', defaultSize: { w: 1, h: 2 }, minH: 2, render: () => <RegionalGdpTable /> },
 
     // Newsy / Publikacje
-    { id: 'latest-news', title: 'Najważniejsze newsy', category: 'Newsy', description: 'Agregat najważniejszych wiadomości', defaultSize: { w: 3, h: 2 }, minH: 2, render: () => <LatestNewsWidget /> },
+    { id: 'latest-news', title: 'Najważniejsze newsy', category: 'Newsy', description: 'Agregat najważniejszych wiadomości', defaultSize: { w: 3, h: 2 }, minH: 2, autoHeight: true, render: () => <LatestNewsWidget /> },
     { id: 'publication-dates', title: 'Kalendarz publikacji', category: 'Publikacje', description: 'Najbliższe publikacje danych GUS/NBP', defaultSize: { w: 1, h: 2 }, minH: 2, render: () => <PublicationWidget /> },
 ];
 
@@ -485,6 +516,7 @@ export function widgetExists(id: string): boolean { return BY_ID.has(id); }
 
 /** Kolejność kategorii w pickerze. */
 export const CATEGORY_ORDER: { key: WidgetDef['category']; icon: typeof TrendingUp }[] = [
+    { key: 'Przegląd', icon: LayoutDashboard },
     { key: 'Ceny', icon: TrendingUp },
     { key: 'Gospodarka', icon: Factory },
     { key: 'Rynki', icon: Banknote },

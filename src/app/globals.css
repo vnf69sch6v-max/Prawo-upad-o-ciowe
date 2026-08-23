@@ -698,12 +698,34 @@ button.mk-card,
    które i tak kończą się po ~0,4s. Realny problem to animacje `infinite`: kropka „na żywo"
    w stopce pulsowała bez końca, a shimmer skeletonów migotał przez cały czas ładowania.
    Właśnie one męczą przy nadwrażliwości przedsionkowej i deficytach uwagi. */
+@keyframes mk-jiggle {
+  0% { transform: rotate(-0.55deg); }
+  50% { transform: rotate(0.55deg); }
+  100% { transform: rotate(-0.55deg); }
+}
+
+.mk-jiggle {
+  animation: mk-jiggle 0.22s ease-in-out infinite;
+  transform-origin: center center;
+}
+
+.mk-jiggle:nth-child(2n) {
+  animation-direction: reverse;
+  animation-delay: -0.08s;
+}
+
+.mk-jiggle:nth-child(3n) {
+  animation-duration: 0.26s;
+}
+
 @media (prefers-reduced-motion: reduce) {
 
   .mk-fade-in,
-  .mk-stagger>* {
+  .mk-stagger>*,
+  .mk-jiggle {
     animation-duration: .01ms !important;
     animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
   }
 
   .live-dot {
