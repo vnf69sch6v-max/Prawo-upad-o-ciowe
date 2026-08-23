@@ -27,6 +27,20 @@ export const norm = (s: string): string =>
 
 export type NewsTopic = 'ceny' | 'gospodarka' | 'praca' | 'rynki';
 
+/**
+ * Poziom pewności dopasowania (bez zmiany słowników):
+ *  - `all` — domyślnie: tytuł = strong+titleOnly, opis = strong;
+ *  - `strong` — tylko frazy jednoznaczne (tytuł ORAZ opis). UI tematów wrażliwych
+ *    (np. Rynek pracy) może zawęzić pas newsów bez luzowania `TOPIC_PATTERNS`.
+ */
+export type MatchTier = 'all' | 'strong';
+
+export interface MatchNewsOptions {
+    matchTier?: MatchTier;
+    /** Odfiltruj pozycje oznaczone jako opinia/felieton (`isOpinion` z /api/news). */
+    excludeOpinion?: boolean;
+}
+
 interface Group {
     /** Dopasowanie od początku słowa — łapie całą rodzinę odmian. */
     prefixes?: string[];
@@ -126,23 +140,36 @@ function groupRegexes(...groups: Group[]): RegExp[] {
 }
 
 /** Cache skompilowanych regexów — `matchNews` bywa wołane przy każdym renderze sekcji. */
-const CACHE = new Map<NewsTopic, { title: RegExp[]; desc: RegExp[] }>();
+const CACHE = new Map<string, { title: RegExp[]; desc: RegExp[] }>();
 
-function compiled(topic: NewsTopic) {
-    const hit = CACHE.get(topic);
+function compiled(topic: NewsTopic, tier: MatchTier = 'all') {
+    const key = `${topic}:${tier}`;
+    const hit = CACHE.get(key);
     if (hit) return hit;
     const { strong, titleOnly } = TOPIC_PATTERNS[topic];
-    const built = {
-        title: groupRegexes(strong, titleOnly), // w tytule ufamy wszystkiemu
-        desc: groupRegexes(strong),             // w opisie tylko jednoznacznym frazom
-    };
-    CACHE.set(topic, built);
+    const strongRes = groupRegexes(strong);
+    const built =
+        tier === 'strong'
+            ? { title: strongRes, desc: strongRes } // tylko jednoznaczne — tytuł i opis
+            : {
+                title: groupRegexes(strong, titleOnly), // w tytule ufamy wszystkiemu
+                desc: strongRes,                        // w opisie tylko jednoznacznym frazom
+            };
+    CACHE.set(key, built);
     return built;
 }
 
-/** Czy news dotyczy tematu? Tytuł — pełny słownik; opis — tylko frazy jednoznaczne. */
-export function matchesTopic(item: Pick<NewsItem, 'title' | 'description'>, topic: NewsTopic): boolean {
-    const { title, desc } = compiled(topic);
+/**
+ * Czy news dotyczy tematu?
+ * Domyślnie (`all`): tytuł — pełny słownik; opis — tylko frazy jednoznaczne.
+ * Przy `strong`: wyłącznie frazy z grupy `strong` (tytuł lub opis).
+ */
+export function matchesTopic(
+    item: Pick<NewsItem, 'title' | 'description'>,
+    topic: NewsTopic,
+    tier: MatchTier = 'all',
+): boolean {
+    const { title, desc } = compiled(topic, tier);
     const t = norm(item.title);
     if (title.some((re) => re.test(t))) return true;
     if (!item.description) return false;
@@ -222,13 +249,27 @@ export function collapseClusters<T extends Pick<NewsItem, 'clusterId' | 'importa
  * Newsy dotyczące tematu, uszeregowane wg ważności (`importance` liczone w /api/news),
  * po jednej pozycji na temat.
  * Fallback na kolejność wejściową, gdy rankingu nie ma — API oddaje pozycje od najnowszych.
+ *
+ * Opcje `matchTier` / `excludeOpinion` zawężają wynik na warstwie wyświetlania —
+ * nie zmieniają słowników w `TOPIC_PATTERNS`.
  */
-export function matchNews<T extends Pick<NewsItem, 'title' | 'description' | 'importance' | 'clusterId'>>(
+export function matchNews<
+    T extends Pick<NewsItem, 'title' | 'description' | 'importance' | 'clusterId'> & {
+        isOpinion?: boolean;
+    },
+>(
     items: T[],
     topic: NewsTopic,
     limit = 5,
+    opts: MatchNewsOptions = {},
 ): T[] {
-    const hits = collapseClusters(items.filter((it) => matchesTopic(it, topic)));
+    const tier = opts.matchTier ?? 'all';
+    const hits = collapseClusters(
+        items.filter((it) => {
+            if (opts.excludeOpinion && it.isOpinion) return false;
+            return matchesTopic(it, topic, tier);
+        }),
+    );
     hits.sort((a, b) => (b.importance ?? 0) - (a.importance ?? 0));
     return hits.slice(0, limit);
 }

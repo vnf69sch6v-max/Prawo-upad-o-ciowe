@@ -176,7 +176,7 @@ export function PracaDashboard() {
             <CompactKpiGrid items={compactKpis} label="Wskaźniki uzupełniające" />
 
             <DenseThreeCol
-                left={<RelatedNews topic="praca" limit={3} title="Powiązane newsy" />}
+                left={<RelatedNews topic="praca" limit={3} title="Powiązane newsy" matchTier="strong" excludeOpinion />}
                 center={
                     <>
                         <SectionCard

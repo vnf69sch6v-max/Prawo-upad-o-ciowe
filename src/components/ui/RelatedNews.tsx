@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { ExternalLink, ArrowRight, Layers, Copy, Megaphone } from 'lucide-react';
 import { useNews, type NewsItem } from '@/lib/hooks';
-import { matchNews, collapseClusters, matchesTopic, type NewsTopic } from '@/lib/news/match';
+import { matchNews, collapseClusters, matchesTopic, type NewsTopic, type MatchTier } from '@/lib/news/match';
 import { formatRelativeTime, formatTime } from '@/lib/formatters';
 import { SectionCard } from '@/components/ui/SectionCard';
 
@@ -109,20 +109,32 @@ const AllNewsLink = ({ brand = false }: { brand?: boolean }) => (
  * Gdy nic nie pasuje albo dane jeszcze lecą — komponent NIE renderuje niczego. Pusta ramka
  * z napisem „brak" byłaby gorsza niż jej brak, a przy nastawieniu na precyzję zero trafień
  * to normalny stan (np. w dzień bez danych o PKB), nie błąd.
+ *
+ * `matchTier` / `excludeOpinion` — opcjonalne zaostrzenie na warstwie UI (np. Rynek pracy);
+ * inne tematy zostają przy domyślnym `all` bez filtrowania opinii.
  */
 export function RelatedNews({
     topic,
     title = 'Newsy powiązane',
     limit = 4,
     className = '',
+    matchTier = 'all',
+    excludeOpinion = false,
 }: {
     topic: NewsTopic;
     title?: string;
     limit?: number;
     className?: string;
+    /** `strong` = tylko frazy jednoznaczne; domyślnie pełny słownik tematu. */
+    matchTier?: MatchTier;
+    /** Ukryj felietony/opinie (`isOpinion`). */
+    excludeOpinion?: boolean;
 }) {
     const { data } = useNews();
-    const items = useMemo(() => matchNews(data?.items ?? [], topic, limit), [data, topic, limit]);
+    const items = useMemo(
+        () => matchNews(data?.items ?? [], topic, limit, { matchTier, excludeOpinion }),
+        [data, topic, limit, matchTier, excludeOpinion],
+    );
 
     if (items.length === 0) return null;
 
