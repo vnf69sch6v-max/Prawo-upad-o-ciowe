@@ -2,11 +2,13 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { BarChart3, TrendingUp, TrendingDown, Search, ExternalLink, Newspaper, ArrowUpRight } from 'lucide-react';
 import {
-    useStooq, useWig20, useNews,
-    type Wig20Quote, type NewsItem,
+    useStooq, useWig20, useNews, useNBPTable,
+    type Wig20Quote, type NewsItem, type NBPTable, type NBPRate,
 } from '@/lib/hooks';
+import { DataTable, type Column } from '@/components/ui/DataTable';
 import { WIG20, type Wig20Company } from '@/lib/wig20';
 import { matchCompanyNews } from '@/lib/news/match';
 import { formatDecimalPL, formatNumber, formatDate, formatRelativeTime, formatTime, percentChange } from '@/lib/formatters';
@@ -105,7 +107,40 @@ function CompanyCard({ company, quote, news }: { company: Wig20Company; quote: W
     );
 }
 
+function NbpFxTable() {
+    const fxQ = useNBPTable('a');
+    const table = useMemo(() => {
+        const raw = fxQ.data as NBPTable | NBPTable[] | undefined;
+        return Array.isArray(raw) ? raw[0] : raw;
+    }, [fxQ.data]);
+    const rates: NBPRate[] = table?.rates ?? [];
+
+    const cols: Column<NBPRate>[] = [
+        { key: 'currency', header: 'Waluta', sortable: true, sortValue: (r) => r.currency, render: (r) => <span className="capitalize">{r.currency}</span> },
+        { key: 'code', header: 'Kod', sortable: true, sortValue: (r) => r.code, render: (r) => <span className="font-semibold text-mk-text">{r.code}</span> },
+        { key: 'mid', header: 'Kurs (PLN)', align: 'right', sortable: true, sortValue: (r) => r.mid ?? 0, render: (r) => r.mid != null ? formatDecimalPL(r.mid, 4) : '—' },
+    ];
+
+    return (
+        <SectionCard
+            editorial
+            titleVariant="label"
+            title="Tabela kursów NBP (tab. A)"
+            subtitle={table?.effectiveDate ? `stan na ${formatDate(table.effectiveDate)}` : 'NBP'}
+        >
+            {fxQ.isLoading ? (
+                <div className="mk-skeleton h-[200px] w-full" />
+            ) : (
+                <DataTable columns={cols} rows={rates} initialSort="code" initialDir="asc" rowKey={(r) => r.code} maxHeight={360} />
+            )}
+        </SectionCard>
+    );
+}
+
+type CompanyRow = { ticker: string; name: string; price: number | null; changePct: number | null };
+
 function SpolkiSection() {
+    const router = useRouter();
     const spolki = useWig20();
     const wigIndex = useStooq('wig20', 30);
     const news = useNews();
@@ -160,6 +195,30 @@ function SpolkiSection() {
         return list;
     }, [query, sector, sort, quoteByTicker, newsByTicker]);
 
+    const companyRows: CompanyRow[] = useMemo(
+        () => cards.map((c) => ({
+            ticker: c.company.ticker,
+            name: c.company.name,
+            price: c.quote?.price ?? null,
+            changePct: c.quote?.changePct ?? null,
+        })),
+        [cards],
+    );
+
+    const companyCols: Column<CompanyRow>[] = [
+        { key: 'ticker', header: 'Ticker', sortable: true, sortValue: (r) => r.ticker, render: (r) => <span className="font-semibold text-mk-text">{r.ticker}</span> },
+        { key: 'name', header: 'Spółka', sortable: true, sortValue: (r) => r.name, render: (r) => <span className="text-mk-text">{r.name}</span> },
+        { key: 'price', header: 'Kurs (zł)', align: 'right', sortable: true, sortValue: (r) => r.price ?? -1, render: (r) => r.price != null ? formatDecimalPL(r.price, 2) : '—' },
+        {
+            key: 'changePct', header: 'Zmiana', align: 'right', sortable: true, sortValue: (r) => r.changePct ?? -999,
+            render: (r) => r.changePct == null ? '—' : (
+                <span style={{ color: changeColor(r.changePct), fontWeight: 600 }}>
+                    {r.changePct > 0 ? '+' : ''}{formatDecimalPL(r.changePct, 2)}%
+                </span>
+            ),
+        },
+    ];
+
     const pill = (active: boolean) =>
         `rounded-full border px-3 py-1 text-xs font-medium transition-colors ${active ? 'border-mk-primary bg-mk-primary text-white' : 'border-mk-border bg-mk-surface text-mk-muted hover:border-mk-primary/40 hover:text-mk-text'}`;
 
@@ -206,7 +265,7 @@ function SpolkiSection() {
 
             <div className="space-y-3">
                 <div className="flex flex-wrap items-center gap-3">
-                    <div className="relative flex-1 min-w-[220px]">
+                    <div className="relative min-w-0 flex-1 sm:min-w-[220px]">
                         <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-mk-faint" aria-hidden />
                         <input
                             value={query}
@@ -238,9 +297,36 @@ function SpolkiSection() {
             ) : cards.length === 0 ? (
                 <SectionCard editorial titleVariant="label"><p className="py-8 text-center text-sm text-mk-muted">Brak spółek dla wybranego filtra.</p></SectionCard>
             ) : (
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    {cards.map((c) => <CompanyCard key={c.company.ticker} company={c.company} quote={c.quote} news={c.news} />)}
-                </div>
+                <>
+                    <div className="sm:hidden">
+                        <DataTable
+                            columns={companyCols}
+                            rows={companyRows}
+                            initialSort="changePct"
+                            initialDir="desc"
+                            rowKey={(r) => r.ticker}
+                            onRowClick={(r) => router.push(`/spolki/${r.ticker}`)}
+                            mobileAsCards
+                            cardTitle={(r) => (
+                                <>
+                                    <span className="font-bold text-mk-text">{r.ticker}</span>
+                                    <span className="truncate font-medium text-mk-text">{r.name}</span>
+                                </>
+                            )}
+                            cardMeta={(r) => (
+                                <>
+                                    <span className="tnum font-semibold text-mk-text">
+                                        {r.price != null ? `${formatDecimalPL(r.price, 2)} zł` : '—'}
+                                    </span>
+                                    <span className="tnum font-bold" style={{ color: changeColor(r.changePct) }}>{fmtPct(r.changePct)}</span>
+                                </>
+                            )}
+                        />
+                    </div>
+                    <div className="hidden grid-cols-1 gap-4 sm:grid sm:grid-cols-2 lg:grid-cols-3">
+                        {cards.map((c) => <CompanyCard key={c.company.ticker} company={c.company} quote={c.quote} news={c.news} />)}
+                    </div>
+                </>
             )}
 
             <p className="text-xs text-mk-faint">
@@ -257,6 +343,8 @@ export default function RynkiPage() {
             <PageHeader title="Rynki" />
 
             <RynkiDashboard />
+
+            <NbpFxTable />
 
             <SpolkiSection />
         </DensePageLayout>
