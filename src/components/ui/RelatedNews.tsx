@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { ExternalLink, ArrowRight, Layers, Copy, Megaphone } from 'lucide-react';
 import { useNews, type NewsItem } from '@/lib/hooks';
-import { matchNews, collapseClusters, matchesTopic, type NewsTopic, type MatchTier } from '@/lib/news/match';
+import { collapseClusters, matchesTopic, type NewsTopic, type MatchTier } from '@/lib/news/match';
 import { formatRelativeTime, formatTime } from '@/lib/formatters';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { CategoryNewsPanel } from '@/components/ui/CategoryNews';
