@@ -10,7 +10,7 @@ import { formatDate } from '@/lib/formatters';
 import { EVENT_COLORS } from '@/lib/calendar';
 import type { NewsTopic } from '@/lib/news/match';
 import { warsawDateKey } from '@/lib/news/warsaw-date';
-import { PageHeader, PageEyebrow } from '@/components/ui/PageHeader';
+import { PageHeader } from '@/components/ui/PageHeader';
 import { CategoryTag } from '@/components/ui/RelatedNews';
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -180,12 +180,7 @@ function PodsumowanieContent() {
 
     return (
         <div className="mk-fade-in">
-            <PageHeader
-                compact
-                eyebrow={<PageEyebrow section="Newsy" />}
-                title={`Podsumowanie dnia · ${label}`}
-                subtitle="Redakcyjny wybór najważniejszych tematów makro"
-            />
+            <PageHeader compact title={`Podsumowanie dnia · ${label}`} />
             <DailyDigestFull date={date} />
         </div>
     );

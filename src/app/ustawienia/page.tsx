@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { LogOut, Sun, Moon } from 'lucide-react';
 import { useAuth } from '@/lib/auth/use-auth';
 import { SectionCard } from '@/components/ui/SectionCard';
-import { PageHeader, PageEyebrow } from '@/components/ui/PageHeader';
+import { PageHeader } from '@/components/ui/PageHeader';
 
 const DATA_SOURCES = ['GUS BDL', 'NBP', 'Eurostat', 'Stooq', 'EIA', 'SMUP', 'SDP'];
 
@@ -19,11 +19,7 @@ export default function UstawieniaPage() {
 
     return (
         <div className="mk-fade-in max-w-2xl space-y-6">
-            <PageHeader
-                eyebrow={<PageEyebrow section="Ustawienia" />}
-                title="Ustawienia"
-                subtitle="Konto, motyw i źródła danych"
-            />
+            <PageHeader title="Ustawienia" />
 
             <SectionCard title="Konto" titleVariant="label" editorial>
                 <div className="flex items-center justify-between gap-4">

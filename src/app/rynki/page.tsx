@@ -18,7 +18,7 @@ import { SectionCard } from '@/components/ui/SectionCard';
 import { Segmented } from '@/components/ui/Segmented';
 import { RynkiDashboard } from '@/components/sections/RynkiDashboard';
 import { DensePageLayout } from '@/components/ui/DensePageLayout';
-import { PageHeader, PageEyebrow } from '@/components/ui/PageHeader';
+import { PageHeader } from '@/components/ui/PageHeader';
 
 type QBar = { date: string; close: number };
 const barsOf = (q: { data?: { data: QBar[] } }): QBar[] => q.data?.data ?? [];
@@ -262,11 +262,7 @@ function SpolkiSection() {
 export default function RynkiPage() {
     return (
         <DensePageLayout>
-            <PageHeader
-                eyebrow={<PageEyebrow section="Rynki" />}
-                title="Rynki"
-                subtitle="Spółki WIG20, kursy walut, indeksy i stopy procentowe — podsumowanie rynku"
-            />
+            <PageHeader title="Rynki" />
 
             <RynkiDashboard />
 

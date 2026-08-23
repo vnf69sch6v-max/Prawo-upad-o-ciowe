@@ -1,6 +1,6 @@
 import { PublicationCalendar, UpcomingEventsInline } from '@/components/ui/PublicationCalendar';
 import { SectionCard } from '@/components/ui/SectionCard';
-import { PageHeader, PageEyebrow } from '@/components/ui/PageHeader';
+import { PageHeader } from '@/components/ui/PageHeader';
 
 const SOURCES = [
     { name: 'GUS — CPI wstępne', note: 'ok. 13–15. dnia M+1 · dane za miesiąc M · 09:30', url: 'https://stat.gov.pl/kalendarz-roczny/' },
@@ -16,18 +16,7 @@ const SOURCES = [
 export default function PublikacjePage() {
     return (
         <div className="mk-fade-in space-y-4">
-            <PageHeader
-                eyebrow={<PageEyebrow section="Publikacje" />}
-                title="Publikacje"
-                subtitle={
-                    <>
-                        Kalendarz publikacji danych i źródła statystyk
-                        <span className="mt-0.5 block text-xs text-mk-faint">
-                            Daty w kalendarzu = dzień publikacji. Nazwa wydarzenia wskazuje okres referencyjny danych.
-                        </span>
-                    </>
-                }
-            />
+            <PageHeader title="Publikacje" />
 
             <div className="mk-card mk-card-editorial mk-card-pad-compact">
                 <div className="grid grid-cols-1 gap-4 lg:grid-cols-12 lg:items-start">

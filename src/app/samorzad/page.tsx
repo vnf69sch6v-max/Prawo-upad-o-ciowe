@@ -1,15 +1,11 @@
 import Link from 'next/link';
 import { ArrowRight, Landmark } from 'lucide-react';
-import { PageHeader, PageEyebrow } from '@/components/ui/PageHeader';
+import { PageHeader } from '@/components/ui/PageHeader';
 
 export default function SamorzadPage() {
     return (
         <div className="mk-fade-in space-y-6">
-            <PageHeader
-                eyebrow={<PageEyebrow section="Samorząd" />}
-                title="Samorząd"
-                subtitle="Usługi publiczne i finanse jednostek samorządu terytorialnego (SMUP)"
-            />
+            <PageHeader title="Samorząd" />
 
             <div className="mk-card mk-card-editorial mk-card-pad max-w-xl">
                 <div className="flex items-start gap-3">
