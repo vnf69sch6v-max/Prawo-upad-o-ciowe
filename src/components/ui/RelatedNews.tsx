@@ -7,6 +7,7 @@ import { useNews, type NewsItem } from '@/lib/hooks';
 import { matchNews, collapseClusters, matchesTopic, type NewsTopic, type MatchTier } from '@/lib/news/match';
 import { formatRelativeTime, formatTime } from '@/lib/formatters';
 import { SectionCard } from '@/components/ui/SectionCard';
+import { CategoryNewsPanel } from '@/components/ui/CategoryNews';
 
 const TOPIC_LINKS: { topic: NewsTopic; label: string; href: string }[] = [
     { topic: 'ceny', label: 'Inflacja CPI', href: '/ceny?tab=inflacja' },
@@ -40,58 +41,6 @@ export function CategoryTag({ section, filled = false }: { section: string; fill
     return <span className="mk-tag-brand">{label}</span>;
 }
 
-function NewsList({ items }: { items: NewsItem[] }) {
-    const [mounted, setMounted] = useState(false);
-    useEffect(() => setMounted(true), []);
-
-    return (
-        <ul className="divide-y divide-mk-border">
-            {items.map((it) => (
-                <li key={it.link}>
-                    <a
-                        href={it.link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="group flex items-start gap-3 py-3 first:pt-0 last:pb-0"
-                    >
-                        <div className="min-w-0 flex-1">
-                            <div className="text-sm font-medium leading-snug text-mk-text transition-colors group-hover:text-mk-primary">
-                                {it.title}
-                            </div>
-                            <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-mk-muted">
-                                <span>{it.source}</span>
-                                <span className="text-mk-faint">·</span>
-                                {/* Czas względny dopiero po zamontowaniu — inaczej hydration mismatch. */}
-                                <time dateTime={it.publishedAt}>
-                                    {mounted ? formatRelativeTime(it.publishedAt) : formatTime(it.publishedAt)}
-                                </time>
-                                {/* Przedruk tej samej depeszy NIE jest potwierdzeniem — patrz cluster.ts. */}
-                                {it.wire && (it.corroboration ?? 1) < 2 ? (
-                                    <span
-                                        className="inline-flex items-center gap-1 rounded-full bg-mk-surface-alt px-1.5 py-0.5 text-[11px] font-medium text-mk-muted"
-                                        title={it.alsoIn?.length ? `Ta sama depesza: ${it.alsoIn.join(', ')}` : undefined}
-                                    >
-                                        <Copy size={10} /> depesza
-                                    </span>
-                                ) : (it.corroboration ?? 1) >= 2 && (
-                                    <span
-                                        className="inline-flex items-center gap-1 rounded-full bg-mk-positive/10 px-1.5 py-0.5 text-[11px] font-medium text-mk-positive"
-                                        title={it.alsoIn?.length ? `Niezależne relacje: ${it.alsoIn.join(', ')}` : undefined}
-                                    >
-                                        <Layers size={10} />
-                                        {it.corroboration}
-                                    </span>
-                                )}
-                            </div>
-                        </div>
-                        <ExternalLink size={14} className="mt-0.5 shrink-0 text-mk-faint transition-colors group-hover:text-mk-primary" aria-hidden />
-                    </a>
-                </li>
-            ))}
-        </ul>
-    );
-}
-
 // `py-1` daje 26px wysokości — poniżej ~24px cel dotykowy jest zbyt mały (WCAG 2.2 Target Size).
 const AllNewsLink = ({ brand = false }: { brand?: boolean }) => (
     <Link
@@ -113,9 +62,10 @@ const AllNewsLink = ({ brand = false }: { brand?: boolean }) => (
  * `matchTier` / `excludeOpinion` — opcjonalne zaostrzenie na warstwie UI (np. Rynek pracy);
  * inne tematy zostają przy domyślnym `all` bez filtrowania opinii.
  */
+/** @deprecated title — nagłówki sekcji są teraz stałe (KALENDARIUM / NEWSY). Parametr zachowany dla kompatybilności API. */
 export function RelatedNews({
     topic,
-    title = 'Newsy powiązane',
+    title: _title,
     limit = 4,
     className = '',
     matchTier = 'all',
@@ -130,25 +80,14 @@ export function RelatedNews({
     /** Ukryj felietony/opinie (`isOpinion`). */
     excludeOpinion?: boolean;
 }) {
-    const { data } = useNews();
-    const items = useMemo(
-        () => matchNews(data?.items ?? [], topic, limit, { matchTier, excludeOpinion }),
-        [data, topic, limit, matchTier, excludeOpinion],
-    );
-
-    if (items.length === 0) return null;
-
     return (
-        <SectionCard
-            title={title}
-            subtitle="Wiadomości dotyczące wskaźników z tej sekcji"
+        <CategoryNewsPanel
+            topic={topic}
+            limit={limit}
             className={className}
-            editorial
-            titleVariant="label"
-            actions={<AllNewsLink brand />}
-        >
-            <NewsList items={items} />
-        </SectionCard>
+            matchTier={matchTier}
+            excludeOpinion={excludeOpinion}
+        />
     );
 }
 
