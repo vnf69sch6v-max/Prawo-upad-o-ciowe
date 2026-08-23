@@ -24,11 +24,11 @@
         },
         {
             "path": "/api/cron/stooq",
-            "schedule": "30 17 * * 1-5"
+            "schedule": "20 15 * * 1-5"
         },
         {
             "path": "/api/cron/stooq-intraday",
-            "schedule": "0 15 * * 1-5"
+            "schedule": "0 14 * * 1-5"
         },
         {
             "path": "/api/cron/gus",

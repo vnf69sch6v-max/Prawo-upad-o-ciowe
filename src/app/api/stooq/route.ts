@@ -4,6 +4,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withCache } from '@/lib/server-cache';
 import { marketCacheTtlMs } from '@/lib/market-hours';
+import { warsawDateKey } from '@/lib/news/warsaw-date';
 
 interface Bar { date: string; open: number; high: number; low: number; close: number; volume: number }
 interface StooqResult { symbol: string; data: Bar[]; latest: Bar | null }
@@ -48,8 +49,9 @@ async function fetchYahoo(ySymbol: string, appSymbol: string, limit: number): Pr
     const ts: number[] = r?.timestamp ?? [];
     const q = r?.indicators?.quote?.[0] ?? {};
     if (!ts.length || !q.close) throw new Error('Yahoo: brak danych');
+    // Data sesji w Europe/Warsaw — NIE UTC (toISOString potrafi przesunąć dzień przy barach nocnych).
     const data: Bar[] = ts.map((t: number, i: number) => ({
-        date: new Date(t * 1000).toISOString().slice(0, 10),
+        date: warsawDateKey(t * 1000),
         open: q.open?.[i] ?? 0, high: q.high?.[i] ?? 0, low: q.low?.[i] ?? 0,
         close: q.close?.[i] ?? 0, volume: q.volume?.[i] ?? 0,
     })).filter((d: Bar) => d.close > 0);
