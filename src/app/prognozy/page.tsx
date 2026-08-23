@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { PageHeader, PageEyebrow } from '@/components/ui/PageHeader';
+import { PageHeader } from '@/components/ui/PageHeader';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { Segmented } from '@/components/ui/Segmented';
 import { Slider } from '@/components/ui/Slider';
@@ -30,9 +30,7 @@ export default function PrognozyPage() {
     return (
         <div className="mk-fade-in space-y-5">
             <PageHeader
-                eyebrow={<PageEyebrow section="Prognozy" />}
                 title="Prognozy"
-                subtitle="Symulator raty kredytu — żywy WIBOR z NBP i marża banku"
                 actions={
                     <Segmented
                         value={tenor}
