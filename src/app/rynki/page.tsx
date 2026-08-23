@@ -20,6 +20,7 @@ import { RynkiDashboard } from '@/components/sections/RynkiDashboard';
 import { DensePageLayout } from '@/components/ui/DensePageLayout';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { QueryState } from '@/components/ui/QueryState';
+import { WatchStar } from '@/components/ui/WatchStar';
 
 type QBar = { date: string; close: number };
 const barsOf = (q: { data?: { data: QBar[] } }): QBar[] => q.data?.data ?? [];
@@ -71,7 +72,10 @@ function CompanyCard({ company, quote, news }: { company: Wig20Company; quote: W
     const change = quote?.changePct ?? null;
     return (
         <div className="mk-card mk-card-editorial mk-card-pad relative flex flex-col">
-            <div className="flex items-start gap-2">
+            <div className="absolute right-2 top-2 z-10">
+                <WatchStar kind="spolka" id={company.ticker} label={company.name} variant="inline" />
+            </div>
+            <div className="flex items-start gap-2 pr-8">
                 <span className="mt-0.5 inline-flex shrink-0 items-center rounded-md bg-mk-surface-alt px-1.5 py-0.5 text-xs font-bold text-mk-text">{company.ticker}</span>
                 <div className="min-w-0">
                     <Link href={`/spolki/${company.ticker}`} className="block min-h-6 truncate text-base font-bold leading-tight text-mk-text transition-colors hover:text-mk-primary">
@@ -206,6 +210,14 @@ function SpolkiSection() {
     );
 
     const companyCols: Column<CompanyRow>[] = [
+        {
+            key: 'watch',
+            header: '★',
+            align: 'center',
+            width: 40,
+            // stopPropagation w WatchStar — wiersz jest klikalny (nawigacja do /spolki).
+            render: (r) => <WatchStar kind="spolka" id={r.ticker} label={r.name} variant="inline" />,
+        },
         { key: 'ticker', header: 'Ticker', sortable: true, sortValue: (r) => r.ticker, render: (r) => <span className="font-semibold text-mk-text">{r.ticker}</span> },
         { key: 'name', header: 'Spółka', sortable: true, sortValue: (r) => r.name, render: (r) => <span className="text-mk-text">{r.name}</span> },
         { key: 'price', header: 'Kurs (zł)', align: 'right', sortable: true, sortValue: (r) => r.price ?? -1, render: (r) => r.price != null ? formatDecimalPL(r.price, 2) : '—' },
@@ -307,6 +319,9 @@ function SpolkiSection() {
                             rowKey={(r) => r.ticker}
                             onRowClick={(r) => router.push(`/spolki/${r.ticker}`)}
                             mobileAsCards
+                            cardAction={(r) => (
+                                <WatchStar kind="spolka" id={r.ticker} label={r.name} variant="inline" />
+                            )}
                             cardTitle={(r) => (
                                 <>
                                     <span className="font-bold text-mk-text">{r.ticker}</span>

@@ -2,8 +2,9 @@
 
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { ArrowUpRight, Star, type LucideIcon } from 'lucide-react';
-import { useWatchlist } from '@/lib/watchlist';
+import { ArrowUpRight, type LucideIcon } from 'lucide-react';
+import type { WatchKind } from '@/lib/watchlist';
+import { WatchStar } from './WatchStar';
 import { DeltaChip } from './DeltaChip';
 import { AnimatedNumber } from './AnimatedNumber';
 
@@ -31,8 +32,13 @@ export interface KpiCardProps {
     onRetry?: () => void;
     /** Gdy podany, cały kafel jest linkiem do właściwej zakładki (deep-link, np. `/gospodarka?tab=aktywnosc`). */
     href?: string;
-    /** Gdy podany, kafel dostaje gwiazdkę „obserwuj" (watchlista w localStorage). */
+    /**
+     * Gdy podany, kafel dostaje gwiazdkę „obserwuj" (watchlista w localStorage).
+     * Wskaźniki: slug z Przeglądu (`cpi`, `wig20`…). Spółki: ticker + `watchKind="spolka"`.
+     */
     watchId?: string;
+    /** Rodzaj wpisu watchlisty — domyślnie `wskaznik`. */
+    watchKind?: WatchKind;
     /** Gęstszy wariant — mniejszy padding (siatka 6 KPI). */
     compact?: boolean;
 }
@@ -56,10 +62,12 @@ export interface KpiCardProps {
  *
  * ⚠ NIE dodawać paddingu na `.mk-kpi` — to kontener zapytań, a `cqi` liczy się od content-boxa,
  * więc padding skurczyłby liczbę. Padding mieszka na `.mk-kpi-body`.
+ *
+ * Gwiazdka watchlisty idzie przez `WatchStar` — nie wołamy `useWatchlist()` w każdym kaflu
+ * (dziesiątki listenerów na stronie), tylko w komponentach, które naprawdę pokazują stan.
  */
-export function KpiCard({ label, value, unit, delta, icon: Icon, footnote, loading, error, onRetry, href, watchId, compact }: KpiCardProps) {
+export function KpiCard({ label, value, unit, delta, icon: Icon, footnote, loading, error, onRetry, href, watchId, watchKind = 'wskaznik', compact }: KpiCardProps) {
     const footnoteText = footnote?.trim() || undefined;
-    const watch = useWatchlist();
     const wrap = (node: ReactNode, extra = '') => (
         <div className={`mk-kpi${compact ? ' mk-kpi-compact' : ''} ${extra}`.trim()}>{node}</div>
     );
@@ -123,19 +131,11 @@ export function KpiCard({ label, value, unit, delta, icon: Icon, footnote, loadi
         </div>
     );
 
-    const star = watchId ? (
-        <button
-            type="button"
-            onClick={() => watch.toggle('wskaznik', watchId)}
-            aria-pressed={watch.ready && watch.has('wskaznik', watchId)}
-            aria-label={watch.has('wskaznik', watchId) ? `${label} — przestań obserwować` : `${label} — obserwuj`}
-            title={watch.has('wskaznik', watchId) ? 'Przestań obserwować' : 'Obserwuj'}
-            className="absolute right-2 top-2 z-10 flex h-7 w-7 items-center justify-center rounded-lg text-mk-faint transition-colors hover:bg-mk-surface-alt hover:text-mk-text"
-        >
-            {/* `watch.ready` chroni przed hydration mismatch — na serwerze nie znamy localStorage. */}
-            <Star size={14} className={watch.ready && watch.has('wskaznik', watchId) ? 'fill-mk-primary text-mk-primary' : ''} />
-        </button>
-    ) : null;
+    // WatchStar poza <Link> — <button> w <a> to nieprawidłowy HTML; floating + stopPropagation
+    // chroni też kafle-linki przed nawigacją przy kliku w gwiazdkę.
+    const star = watchId
+        ? <WatchStar kind={watchKind} id={watchId} label={label} variant="floating" />
+        : null;
 
     if (href) {
         const link = (
@@ -147,7 +147,6 @@ export function KpiCard({ label, value, unit, delta, icon: Icon, footnote, loadi
                 {body}
             </Link>
         );
-        // Gwiazdka MUSI być rodzeństwem linku, nie dzieckiem — <button> w <a> to nieprawidłowy HTML.
         return star ? wrap(<>{link}{star}</>, 'relative') : wrap(link);
     }
 

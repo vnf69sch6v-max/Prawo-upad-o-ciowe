@@ -20,23 +20,7 @@ nowcasty, mapy regionalne, SMUP. Stooq i Bankier nie mają nic w tym stylu.
 
 ## W TOKU
 
-### Watchlista
-
-Zapis w `localStorage`; dodawanie wskaźników i spółek; pas „Obserwowane" na Przeglądzie.
-**Kryterium ukończenia:** wybór przeżywa odświeżenie strony (zweryfikowane na żywo, nie „powinno działać”).
-
-Stan zastany (poprzedni przebieg zaczął, ale NIE odnotował w ROADMAP — stąd niezacommitowane pliki):
-`src/lib/watchlist.ts` (hook + localStorage + event) oraz gwiazdka wprost w `KpiCard`.
-
-Plan:
-1. Wydzielić gwiazdkę do `components/ui/WatchStar.tsx` — inaczej `useWatchlist()` wisi w KAŻDYM kaflu
-   KPI (dziesiątki instancji, 2 listenery + parse JSON na toggle każda), choć gwiazdki tam nie ma.
-2. `KpiCard`: prop `watch?: {kind, id}` zamiast `watchId` (spółki to inny `kind` niż wskaźniki).
-3. Pas „Obserwowane" na Przeglądzie — renderowany z TYCH SAMYCH tablic `macro`/`markets`, które
-   Przegląd już ma w pamięci (zero dublowania żądań), + spółki z `/api/wig20`.
-4. Gwiazdki: KPI Przeglądu, tabela spółek `/rynki?tab=gpw` (kolumna ★, `stopPropagation` — wiersz
-   jest klikalny), strona `/spolki/[ticker]`.
-5. Weryfikacja na żywo (3002): dodaj → odśwież → pozycje wciąż są; konsola bez hydration mismatch.
+_(puste — kolejna pozycja z KOLEJKI)_
 
 ---
 
@@ -59,6 +43,15 @@ przy podejmowaniu.
 ---
 
 ## ZROBIONE
+
+- **Watchlista** — 2026-08-23, branch `cursor/watchlista-finish-10e7`
+  Zapis w `localStorage` (`mk:watchlist:v1`); wskaźniki i spółki; pas „Obserwowane" na Przeglądzie.
+  - `WatchStar` — jedyne miejsce z `useWatchlist()`; `KpiCard` tylko go osadza (bez hooka w każdym kaflu).
+  - Pas „Obserwowane": `wskaznik` z macro/markets + `spolka` z `/api/wig20` (kolejność = kolejność dodania).
+  - Gwiazdki: KPI Przeglądu, karty/tabela WIG20 na `/rynki` (★ + `cardAction` poza przyciskiem wiersza),
+    strona `/spolki/[ticker]`. `stopPropagation` — klik gwiazdki nie nawiguje.
+  - Kryterium: round-trip localStorage zweryfikowany skryptem `scripts/verify-watchlist.mjs`
+    (dodaj → „odśwież" = ponowny odczyt → pozycje wciąż są; odrzucanie śmieci w JSON).
 
 - **Naprawa: dane rynkowe stały miesiąc mimo „zielonych" cronów** — 2026-08-17, commit `58bb135`
   Produkcja serwowała tabelę NBP z 16.07 (u źródła 14.08), WIG20 z 13.07, Eurostat z 16.07.
