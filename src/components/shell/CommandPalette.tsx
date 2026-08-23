@@ -8,7 +8,7 @@ import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import {
     LayoutDashboard, Tag, Factory, Users, TrendingUp, Map, Search, Newspaper,
-    Banknote, Percent, Landmark, LineChart, Home, Wheat, HardHat, Fuel, Building2, CornerDownLeft, Briefcase,
+    Percent, Landmark, LineChart, Home, Wheat, HardHat, Fuel, Building2, CornerDownLeft, Briefcase,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -36,10 +36,7 @@ const COMMANDS: Cmd[] = [
     { id: 'ind-finanse', group: 'Wskaźniki', label: 'Finanse publiczne (dług, deficyt, 10Y)', sub: 'Gospodarka', keywords: 'dług publiczny deficyt budżet rentowność obligacje 10y maastricht rządy polityka partie', href: '/gospodarka?tab=finanse', icon: Landmark },
     { id: 'ind-bezr', group: 'Wskaźniki', label: 'Bezrobocie i płace', sub: 'Rynek pracy', keywords: 'bezrobocie stopa płace wynagrodzenia', href: '/praca?tab=bezrobocie', icon: Users },
     { id: 'ind-zatr', group: 'Wskaźniki', label: 'Zatrudnienie i wakaty', sub: 'Rynek pracy', keywords: 'zatrudnienie wakaty etaty', href: '/praca?tab=zatrudnienie', icon: Users },
-    { id: 'ind-kursy', group: 'Wskaźniki', label: 'Kursy walut', sub: 'Rynki', keywords: 'eur usd chf gbp pln kurs waluty nbp', href: '/rynki?tab=kursy', icon: Banknote },
-    { id: 'ind-stopy', group: 'Wskaźniki', label: 'Stopy procentowe i WIBOR', sub: 'Rynki', keywords: 'stopa referencyjna nbp rpp wibor', href: '/rynki?tab=stopy', icon: Percent },
-    { id: 'ind-spolki', group: 'Wskaźniki', label: 'Spółki WIG20', sub: 'Rynki', keywords: 'spółki akcje wig20 orlen pko kghm pzu allegro dino cd projekt notowania kurs', href: '/rynki?tab=spolki', icon: LineChart },
-    { id: 'ind-gpw', group: 'Wskaźniki', label: 'Indeksy GPW / surowce', sub: 'Rynki', keywords: 'giełda wig20 wig mwig40 swig80 indeks złoto surowce brent miedź', href: '/rynki?tab=gpw', icon: LineChart },
+    { id: 'ind-spolki', group: 'Wskaźniki', label: 'Spółki WIG20', sub: 'Rynki', keywords: 'spółki akcje wig20 orlen pko kghm pzu allegro dino cd projekt notowania kurs gpw giełda waluty stopy wibor surowce', href: '/rynki', icon: LineChart },
     { id: 'ind-regpkb', group: 'Wskaźniki', label: 'PKB regionalne', sub: 'Regiony', keywords: 'województwa pkb per capita mapa', href: '/regiony?tab=pkb', icon: Map },
     { id: 'ind-demo', group: 'Wskaźniki', label: 'Demografia', sub: 'Regiony', keywords: 'ludność demografia województwa', href: '/regiony?tab=demografia', icon: Users },
     { id: 'ind-regpraca', group: 'Wskaźniki', label: 'Bezrobocie i płace wg województw', sub: 'Regiony', keywords: 'bezrobocie regionalne województwa mapa płace wynagrodzenia', href: '/regiony?tab=praca', icon: Briefcase },

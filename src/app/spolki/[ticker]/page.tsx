@@ -38,7 +38,7 @@ export default function SpolkaPage() {
     if (!company) {
         return (
             <div className="mk-fade-in space-y-4">
-                <Link href="/rynki?tab=spolki" className="inline-flex items-center gap-1.5 text-sm font-medium text-mk-primary hover:underline">
+                <Link href="/rynki" className="inline-flex items-center gap-1.5 text-sm font-medium text-mk-primary hover:underline">
                     <ArrowLeft size={15} /> Wróć do spółek
                 </Link>
                 <SectionCard title="Nie znamy tej spółki">
@@ -54,7 +54,7 @@ export default function SpolkaPage() {
     return (
         <div className="mk-fade-in space-y-6">
             <div>
-                <Link href="/rynki?tab=spolki" className="inline-flex items-center gap-1.5 text-sm font-medium text-mk-primary hover:underline">
+                <Link href="/rynki" className="inline-flex items-center gap-1.5 text-sm font-medium text-mk-primary hover:underline">
                     <ArrowLeft size={15} /> Spółki WIG20
                 </Link>
                 <div className="mt-2 flex flex-wrap items-center gap-2">

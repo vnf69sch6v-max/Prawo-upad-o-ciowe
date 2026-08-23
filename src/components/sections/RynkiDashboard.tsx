@@ -106,7 +106,6 @@ export function RynkiDashboard() {
             delta: fxDelta(usdHQ.data) != null ? { value: fxDelta(usdHQ.data)!, unit: 'pct', invert: true } : undefined,
             footnote: fxTable?.effectiveDate ? formatDate(fxTable.effectiveDate) : undefined,
             loading: fxQ.isLoading,
-            href: '/rynki?tab=kursy',
             watchId: 'usd-pln',
         },
         {
@@ -117,7 +116,6 @@ export function RynkiDashboard() {
             icon: Percent,
             footnote: wiborQ.data?.rates?.[0]?.date ? formatDate(wiborQ.data.rates[0].date) : undefined,
             loading: wiborQ.isLoading,
-            href: '/rynki?tab=stopy',
         },
         {
             key: 'yield10',
@@ -140,7 +138,6 @@ export function RynkiDashboard() {
             delta: goldDelta != null ? { value: goldDelta, unit: 'pct' } : undefined,
             footnote: gold.length ? formatDate(gold[gold.length - 1].date) : undefined,
             loading: goldQ.isLoading,
-            href: '/rynki?tab=kursy',
             watchId: 'gold',
         },
         {
@@ -152,7 +149,6 @@ export function RynkiDashboard() {
             delta: pctDelta(barsOf(mwigQ)) != null ? { value: pctDelta(barsOf(mwigQ))!, unit: 'pct' } : undefined,
             footnote: barsOf(mwigQ).at(-1)?.date ? formatDate(barsOf(mwigQ).at(-1)!.date) : undefined,
             loading: mwigQ.isLoading,
-            href: '/rynki?tab=gpw',
         },
         {
             key: 'brent',
