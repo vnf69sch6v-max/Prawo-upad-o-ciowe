@@ -34,6 +34,11 @@ interface DataTableProps<T> {
     cardTitle?: (row: T) => ReactNode;
     /** Line 2 of a mobile card (defaults to remaining columns). */
     cardMeta?: (row: T) => ReactNode;
+    /**
+     * Optional control rendered beside the mobile card (e.g. WatchStar).
+     * Kept outside the row button so we never nest <button> in <button>.
+     */
+    cardAction?: (row: T) => ReactNode;
 }
 
 export function DataTable<T>({
@@ -48,6 +53,7 @@ export function DataTable<T>({
     mobileAsCards = false,
     cardTitle,
     cardMeta,
+    cardAction,
 }: DataTableProps<T>) {
     const [sortKey, setSortKey] = useState<string | undefined>(initialSort);
     const [dir, setDir] = useState<'asc' | 'desc'>(initialDir);
@@ -184,25 +190,28 @@ export function DataTable<T>({
                 ) : (
                     sorted.map((row, i) => {
                         const key = rowKey ? rowKey(row, i) : i;
+                        const action = cardAction?.(row);
                         const inner = (
                             <>
                                 <div className="flex min-w-0 items-baseline gap-2 text-sm font-semibold text-mk-text">{titleOf(row)}</div>
                                 <div className="mt-0.5 flex items-baseline justify-between gap-3 text-sm text-mk-text-soft">{metaOf(row)}</div>
                             </>
                         );
+                        const card = onRowClick ? (
+                            <button
+                                type="button"
+                                onClick={() => onRowClick(row)}
+                                className="mk-table-card min-w-0 flex-1"
+                            >
+                                {inner}
+                            </button>
+                        ) : (
+                            <div className="mk-table-card min-w-0 flex-1">{inner}</div>
+                        );
                         return (
-                            <li key={key}>
-                                {onRowClick ? (
-                                    <button
-                                        type="button"
-                                        onClick={() => onRowClick(row)}
-                                        className="mk-table-card"
-                                    >
-                                        {inner}
-                                    </button>
-                                ) : (
-                                    <div className="mk-table-card">{inner}</div>
-                                )}
+                            <li key={key} className={action ? 'flex items-center gap-1' : undefined}>
+                                {action}
+                                {card}
                             </li>
                         );
                     })

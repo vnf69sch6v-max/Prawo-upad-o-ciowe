@@ -5,9 +5,10 @@ import { TrendingUp, Percent, Users, Factory, Euro, DollarSign, ShoppingCart, Li
 import {
     useCpiFull, useGusRegisteredUnemployment, useGusRetailSales, useGusIndustrialProduction,
     useNBPInterestRates, useNBPTable, useEURPLN, useUSDPLN,
-    useBondYield10YPl, useGold, useStooq,
+    useBondYield10YPl, useGold, useStooq, useWig20,
     type NBPTable,
 } from '@/lib/hooks';
+import { WIG20 } from '@/lib/wig20';
 import { plSeries, lastOf, prevOf } from '@/lib/series';
 import { formatDecimalPL, formatNumber, formatDate, percentChange, formatDataPeriodLabel } from '@/lib/formatters';
 import type { AccentKey } from '@/components/ui/KpiCard';
@@ -27,6 +28,7 @@ import { WatchlistStrip, type WatchableKpi } from '@/components/ui/WatchlistStri
 // WIG20 / FX / złoto → Stooq / NBP
 // Rentowność 10Y → useBondYield10YPl       → Stooq 10ypl.b (rynek)
 // PKB kwartalny  — brak w GUS API → usunięty z siatki (roczny: useGusGdpAnnual w Prognozy)
+// Spółki WIG20   → useWig20                → /api/wig20 (tylko pod pas Obserwowane)
 
 type Point = { date: string; value: number };
 const fmt1 = (n: number | null | undefined) => (n == null ? '—' : formatDecimalPL(n, 1));
@@ -53,6 +55,8 @@ export default function OverviewPage() {
     const yieldQ = useBondYield10YPl(30);
     const goldQ = useGold(30);
     const wig20Q = useStooq('wig20', 30);
+    // Jedno zbiorcze żądanie — pas Obserwowane dokłada kafle spółek bez osobnych fetchy per ticker.
+    const spolkiQ = useWig20();
 
     const cpi = useMemo(() => (cpiQ.data?.headline ?? []).filter((h) => h.yoy != null).map((h) => ({ date: h.date, value: h.yoy as number })), [cpiQ.data]);
     const unemp = useMemo(
@@ -72,23 +76,56 @@ export default function OverviewPage() {
     const wigDelta = wigBars.length > 1 ? +percentChange(wigBars[wigBars.length - 1].close, wigBars[wigBars.length - 2].close).toFixed(2) : null;
     const goldLast = lastOf(gold), goldDelta = gold.length > 1 ? +percentChange(gold[gold.length - 1].value, gold[gold.length - 2].value).toFixed(2) : null;
 
-    const macro = [
+    const quoteByTicker = useMemo(() => {
+        const m = new Map<string, { price: number | null; changePct: number | null }>();
+        for (const q of spolkiQ.data?.items ?? []) m.set(q.ticker, { price: q.price, changePct: q.changePct });
+        return m;
+    }, [spolkiQ.data]);
+
+    const macro = useMemo(() => [
         { watchId: 'cpi', label: 'Inflacja CPI (r/r)', href: '/ceny?tab=inflacja', value: fmt1(lastOf(cpi)), unit: '%', accent: 'amber' as AccentKey, icon: TrendingUp, delta: ppDelta(cpi) != null ? { value: ppDelta(cpi)!, unit: 'pp' as const, invert: true } : undefined, footnote: cpi.length ? formatDataPeriodLabel(cpi[cpi.length - 1].date) : 'cel NBP 2,5%', loading: cpiQ.isLoading, error: cpiQ.isError, onRetry: () => { void cpiQ.refetch(); } },
         { watchId: 'unemployment', label: 'Stopa bezrobocia', href: '/praca?tab=bezrobocie', value: fmt1(lastOf(unemp)), unit: '%', accent: 'blue' as AccentKey, icon: Users, delta: ppDelta(unemp) != null ? { value: ppDelta(unemp)!, unit: 'pp' as const, invert: true } : undefined, footnote: unemp.length ? `rejestrowane · ${formatDataPeriodLabel(unemp[unemp.length - 1].date)}` : 'rejestrowane', loading: unempQ.isLoading, error: unempQ.isError, onRetry: () => { void unempQ.refetch(); } },
         { watchId: 'ref-rate', label: 'Stopa referencyjna NBP', href: '/rynki', value: refRate ? formatDecimalPL(refRate.value, 2) : '—', unit: '%', accent: 'violet' as AccentKey, icon: Percent, footnote: refRate ? `od ${formatDate(refRate.validFrom)}` : undefined, loading: ratesQ.isLoading, error: ratesQ.isError, onRetry: () => { void ratesQ.refetch(); } },
         { watchId: 'industrial', label: 'Produkcja przemysłowa (r/r)', href: '/gospodarka?tab=aktywnosc', value: fmt1(lastOf(industrial)), unit: '%', accent: 'rose' as AccentKey, icon: Factory, delta: ppDelta(industrial) != null ? { value: ppDelta(industrial)!, unit: 'pp' as const } : undefined, footnote: industrial.length ? formatDataPeriodLabel(industrial[industrial.length - 1].date) : undefined, loading: indQ.isLoading, error: indQ.isError, onRetry: () => { void indQ.refetch(); } },
         { watchId: 'retail', label: 'Sprzedaż detaliczna (r/r)', href: '/gospodarka?tab=aktywnosc', value: fmt1(lastOf(retail)), unit: '%', accent: 'cyan' as AccentKey, icon: ShoppingCart, delta: ppDelta(retail) != null ? { value: ppDelta(retail)!, unit: 'pp' as const } : undefined, footnote: retail.length ? formatDataPeriodLabel(retail[retail.length - 1].date) : undefined, loading: retailQ.isLoading, error: retailQ.isError, onRetry: () => { void retailQ.refetch(); } },
-    ];
+    ], [cpi, unemp, industrial, retail, refRate, cpiQ.isLoading, cpiQ.isError, unempQ.isLoading, unempQ.isError, ratesQ.isLoading, ratesQ.isError, indQ.isLoading, indQ.isError, retailQ.isLoading, retailQ.isError]);
 
-    const markets = [
+    const markets = useMemo(() => [
         { watchId: 'wig20', label: 'WIG20', href: '/rynki', value: wigLast != null ? formatNumber(wigLast, 0) : '—', unit: 'pkt', accent: 'blue' as AccentKey, icon: LineChart, delta: wigDelta != null ? { value: wigDelta, unit: 'pct' as const } : undefined, loading: wig20Q.isLoading, error: wig20Q.isError, onRetry: () => { void wig20Q.refetch(); } },
         { watchId: 'eur-pln', label: 'EUR / PLN', href: '/rynki', value: mid('EUR') != null ? formatDecimalPL(mid('EUR')!, 3) : '—', unit: 'zł', accent: 'cyan' as AccentKey, icon: Euro, delta: fxDelta(eurHQ.data) != null ? { value: fxDelta(eurHQ.data)!, unit: 'pct' as const, invert: true } : undefined, footnote: fxTable?.effectiveDate ? formatDate(fxTable.effectiveDate) : undefined, loading: fxQ.isLoading, error: fxQ.isError, onRetry: () => { void fxQ.refetch(); } },
         { watchId: 'usd-pln', label: 'USD / PLN', href: '/rynki', value: mid('USD') != null ? formatDecimalPL(mid('USD')!, 3) : '—', unit: 'zł', accent: 'green' as AccentKey, icon: DollarSign, delta: fxDelta(usdHQ.data) != null ? { value: fxDelta(usdHQ.data)!, unit: 'pct' as const, invert: true } : undefined, footnote: fxTable?.effectiveDate ? formatDate(fxTable.effectiveDate) : undefined, loading: fxQ.isLoading, error: fxQ.isError, onRetry: () => { void fxQ.refetch(); } },
         { watchId: 'yield-10y', label: 'Rentowność 10Y', href: '/gospodarka?tab=finanse', value: lastOf(yield10) != null ? formatDecimalPL(lastOf(yield10)!, 2) : '—', unit: '%', accent: 'violet' as AccentKey, icon: Landmark, delta: lastOf(yield10) != null && prevOf(yield10) != null ? { value: +(lastOf(yield10)! - prevOf(yield10)!).toFixed(2), unit: 'pp' as const, invert: true } : undefined, footnote: yield10.length ? yield10[yield10.length - 1].date : undefined, loading: yieldQ.isLoading, error: yieldQ.isError, onRetry: () => { void yieldQ.refetch(); } },
         { watchId: 'gold', label: 'Złoto (NBP)', href: '/rynki', value: goldLast != null ? formatDecimalPL(goldLast, 2) : '—', unit: 'zł/g', accent: 'amber' as AccentKey, icon: Gem, delta: goldDelta != null ? { value: goldDelta, unit: 'pct' as const } : undefined, footnote: 'cena złota', loading: goldQ.isLoading, error: goldQ.isError, onRetry: () => { void goldQ.refetch(); } },
-    ];
+    ], [wigLast, wigDelta, wig20Q.isLoading, wig20Q.isError, fxTable, eurHQ.data, usdHQ.data, fxQ.isLoading, fxQ.isError, yield10, yieldQ.isLoading, yieldQ.isError, goldLast, goldDelta, goldQ.isLoading, goldQ.isError]);
 
-    const watchlistItems: WatchableKpi[] = useMemo(() => [...macro, ...markets], [macro, markets]);
+    const companies: WatchableKpi[] = useMemo(
+        () => WIG20.map((c) => {
+            const q = quoteByTicker.get(c.ticker);
+            return {
+                kind: 'spolka' as const,
+                watchId: c.ticker,
+                label: c.name,
+                href: `/spolki/${c.ticker}`,
+                value: q?.price != null ? formatDecimalPL(q.price, 2) : '—',
+                unit: 'zł',
+                delta: q?.changePct != null ? { value: q.changePct, unit: 'pct' as const } : undefined,
+                footnote: c.ticker,
+                loading: spolkiQ.isLoading,
+                error: spolkiQ.isError,
+                onRetry: () => { void spolkiQ.refetch(); },
+            };
+        }),
+        [quoteByTicker, spolkiQ.isLoading, spolkiQ.isError],
+    );
+
+    const watchlistItems: WatchableKpi[] = useMemo(
+        () => [
+            ...macro.map((k) => ({ ...k, kind: 'wskaznik' as const })),
+            ...markets.map((k) => ({ ...k, kind: 'wskaznik' as const })),
+            ...companies,
+        ],
+        [macro, markets, companies],
+    );
 
     return (
         <div className="mk-fade-in mk-overview">
