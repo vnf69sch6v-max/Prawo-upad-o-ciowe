@@ -205,7 +205,7 @@ export function RegionyDashboard() {
                         </SectionCard>
                     ) : (
                         <SectionCard editorial titleVariant="label" title="Województwo" padded className="hidden lg:block">
-                            <p className="text-sm text-mk-faint">Kliknij województwo na mapie.</p>
+                            <p data-empty-region className="text-sm text-mk-faint">Kliknij województwo na mapie.</p>
                         </SectionCard>
                     )}
 

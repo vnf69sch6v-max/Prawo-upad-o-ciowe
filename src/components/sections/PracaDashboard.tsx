@@ -350,7 +350,7 @@ export function PracaDashboard() {
                             padded
                             className="hidden lg:block"
                         >
-                            <p className="text-sm text-mk-faint">
+                            <p data-empty-region className="text-sm text-mk-faint">
                                 Kliknij region na mapie, aby zobaczyć szczegóły.
                             </p>
                         </SectionCard>

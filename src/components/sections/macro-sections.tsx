@@ -179,7 +179,7 @@ export function RynekPracySection() {
                         </SectionCard>
                     ) : (
                         <SectionCard editorial titleVariant="label" title="Wybierz województwo" padded className="hidden lg:block">
-                            <p className="text-sm text-mk-faint">Kliknij region na mapie, aby zobaczyć szczegóły i 10-letnią historię.</p>
+                            <p data-empty-region className="text-sm text-mk-faint">Kliknij region na mapie, aby zobaczyć szczegóły i 10-letnią historię.</p>
                         </SectionCard>
                     )}
                     <SectionCard editorial titleVariant="label" title="Ranking" padded className="min-w-0">
