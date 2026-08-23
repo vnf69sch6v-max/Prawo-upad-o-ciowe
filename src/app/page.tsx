@@ -47,7 +47,7 @@ export default function OverviewPage() {
             const q = new URLSearchParams(window.location.search);
             if (q.get('edit') === '1') {
                 setEditing(true);
-                window.history.replaceState({}, '', '/');
+                window.history.replaceState({}, '', window.location.pathname || '/');
             }
         } catch { /* ignore */ }
         return () => window.removeEventListener('mk:edit-dashboard', enter);

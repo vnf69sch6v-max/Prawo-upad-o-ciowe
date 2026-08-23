@@ -2,8 +2,8 @@ import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 
 export const metadata: Metadata = {
-    title: 'Przegląd — Savori',
-    description: 'Kluczowe wskaźniki makroekonomiczne dla Polski.',
+    title: 'Mój panel — Savori',
+    description: 'Edytowalny pulpit makro — układaj kafle z danych GUS, NBP i GPW.',
 };
 
 export default function PanelLayout({ children }: { children: ReactNode }) {
