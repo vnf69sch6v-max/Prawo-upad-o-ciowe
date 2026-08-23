@@ -181,7 +181,7 @@ function TimelineEntryRow({ entry, mounted }: { entry: TimelineEntry; mounted: b
                 href={it.link}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group block min-w-0 pl-0.5"
+                className="group block min-w-0"
             >
                 <div className="text-sm font-bold leading-snug text-mk-text transition-colors group-hover:text-mk-brand">
                     {it.title}
@@ -211,12 +211,12 @@ function TimelineEntryRow({ entry, mounted }: { entry: TimelineEntry; mounted: b
 
     if (row.href) {
         return (
-            <Link href={row.href} className="group block min-w-0 pl-0.5 transition-opacity hover:opacity-90">
+            <Link href={row.href} className="group block min-w-0 transition-opacity hover:opacity-90">
                 {inner}
             </Link>
         );
     }
-    return <div className="min-w-0 pl-0.5">{inner}</div>;
+    return <div className="min-w-0">{inner}</div>;
 }
 
 /**
@@ -330,10 +330,10 @@ export function Kalendarium({
                             {group.entries.map((entry, idx) => (
                                 <li
                                     key={entry.id}
-                                    className={`relative pl-4 ${idx < group.entries.length - 1 ? 'pb-5' : 'pb-0'}`}
+                                    className={`relative pl-5 ${idx < group.entries.length - 1 ? 'pb-5' : 'pb-0'}`}
                                 >
                                     <span
-                                        className={`absolute top-1.5 h-2 w-2 -translate-x-[calc(0.25rem+1px)] rounded-full ${
+                                        className={`absolute left-0 top-1.5 h-2 w-2 -translate-x-[calc(0.25rem+1px)] rounded-full ${
                                             entry.kind === 'data' ? 'bg-mk-brand' : 'bg-[#CBD2DD]'
                                         }`}
                                         aria-hidden
