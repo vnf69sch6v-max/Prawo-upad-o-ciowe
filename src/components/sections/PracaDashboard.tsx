@@ -25,6 +25,7 @@ import { DataTable, type Column } from '@/components/ui/DataTable';
 import { InteractiveChart } from '@/components/ui/InteractiveChart';
 import { StaleBadge } from '@/components/ui/StaleBadge';
 import PolandMap from '@/components/PolandMap';
+import { QueryState } from '@/components/ui/QueryState';
 
 const woj = (name: string) => name.replace(/^województwo /i, '');
 
@@ -127,6 +128,8 @@ export function PracaDashboard() {
             delta: deltaOf(unemp) != null ? { value: deltaOf(unemp)!, unit: 'pp', invert: true } : undefined,
             footnote: unemp.length ? formatDataPeriod(unemp[unemp.length - 1].date) : 'GUS BDL',
             loading: unempQ.isLoading,
+            error: unempQ.isError,
+            onRetry: () => { void unempQ.refetch(); },
         },
         {
             key: 'bael',
@@ -136,6 +139,8 @@ export function PracaDashboard() {
             icon: Activity,
             footnote: baelLast ? `BAEL · ${formatDataPeriod(baelLast.date)}` : 'BAEL · GUS',
             loading: baelQ.isLoading,
+            error: baelQ.isError,
+            onRetry: () => { void baelQ.refetch(); },
         },
         {
             key: 'wage',
@@ -145,6 +150,8 @@ export function PracaDashboard() {
             icon: Wallet,
             footnote: lastWage ? `przedsiębiorstwa · ${formatDataPeriod(lastWage.date)}` : 'GUS',
             loading: monthlyQ.isLoading,
+            error: monthlyQ.isError,
+            onRetry: () => { void monthlyQ.refetch(); },
         },
         {
             key: 'median',
@@ -156,6 +163,8 @@ export function PracaDashboard() {
                 ? `rozkład GN · ${formatDataPeriod(medianLast.date)}`
                 : 'P4610 · GUS BDL',
             loading: medianQ.isLoading,
+            error: medianQ.isError,
+            onRetry: () => { void medianQ.refetch(); },
         },
     ];
 
@@ -188,12 +197,18 @@ export function PracaDashboard() {
                 aria-label="Płace realne — siła nabywcza"
             >
                 {leadLoading ? (
-                    <div className="space-y-3">
+                    <div className="space-y-3" role="status" aria-busy="true" aria-label="Ładowanie płac realnych">
                         <div className="mk-skeleton h-3 w-40 rounded" />
                         <div className="mk-skeleton h-8 w-64 rounded" />
                         <div className="mk-skeleton h-14 w-40 rounded" />
                         <div className="mk-skeleton h-4 w-full max-w-xl rounded" />
                     </div>
+                ) : (monthlyQ.isError || cpiQ.isError) ? (
+                    <QueryState
+                        isError
+                        onRetry={() => { void monthlyQ.refetch(); void cpiQ.refetch(); }}
+                        height={160}
+                    />
                 ) : (
                     <>
                         <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-mk-muted">
@@ -233,9 +248,14 @@ export function PracaDashboard() {
                         subtitle="r/r % · dodatnie realne = rosnąca siła nabywcza"
                         actions={<StaleBadge date={lastReal?.date ?? null} label="do" warnAfterMonths={4} />}
                     >
-                        {realWages.length < 2 ? (
-                            <div className="mk-skeleton h-[260px] w-full" />
-                        ) : (
+                        <QueryState
+                            isLoading={monthlyQ.isLoading || cpiQ.isLoading}
+                            isError={monthlyQ.isError || cpiQ.isError}
+                            isEmpty={realWages.length < 2}
+                            onRetry={() => { void monthlyQ.refetch(); void cpiQ.refetch(); }}
+                            height={260}
+                            emptyTitle="Brak danych płac realnych"
+                        >
                             <InteractiveChart
                                 data={realWages}
                                 xKey="date"
@@ -254,7 +274,7 @@ export function PracaDashboard() {
                                     { key: 'real', name: 'Płace realne', color: '#2563EB', type: 'area', strokeWidth: 2.5 },
                                 ]}
                             />
-                        )}
+                        </QueryState>
                     </SectionCard>
                 }
                 right={
@@ -277,9 +297,14 @@ export function PracaDashboard() {
                         subtitle="GUS BDL · kliknij województwo"
                         actions={<StaleBadge date={mapDate} label="GUS do" warnAfterMonths={4} />}
                     >
-                        {regQ.isLoading ? (
-                            <div className="mk-skeleton h-[240px] w-full" />
-                        ) : (
+                        <QueryState
+                            isLoading={regQ.isLoading}
+                            isError={regQ.isError}
+                            isEmpty={regions.length === 0}
+                            onRetry={() => { void regQ.refetch(); }}
+                            height={240}
+                            emptyTitle="Brak danych regionalnych"
+                        >
                             <div className="max-h-[280px] overflow-hidden [&_svg]:max-h-[270px]">
                                 <PolandMap
                                     regions={regions}
@@ -288,7 +313,7 @@ export function PracaDashboard() {
                                     onRegionSelect={setSelected}
                                 />
                             </div>
-                        )}
+                        </QueryState>
                     </SectionCard>
                 }
                 right={
@@ -340,9 +365,14 @@ export function PracaDashboard() {
                             subtitle="bezrobocie · płace"
                             padded
                         >
-                            {regQ.isLoading ? (
-                                <div className="mk-skeleton h-[180px] w-full" />
-                            ) : (
+                            <QueryState
+                                isLoading={regQ.isLoading}
+                                isError={regQ.isError}
+                                isEmpty={regions.length === 0}
+                                onRetry={() => { void regQ.refetch(); }}
+                                height={180}
+                                emptyTitle="Brak danych województw"
+                            >
                                 <DataTable
                                     columns={cols}
                                     rows={regions}
@@ -352,7 +382,7 @@ export function PracaDashboard() {
                                     rowKey={(r) => r.slug}
                                     onRowClick={(r) => setSelected(r.slug)}
                                 />
-                            )}
+                            </QueryState>
                         </SectionCard>
                     </>
                 }

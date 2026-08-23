@@ -7,6 +7,7 @@ import { formatDecimalPL } from '@/lib/formatters';
 import { KpiCard } from '@/components/ui/KpiCard';
 import { InteractiveChart } from '@/components/ui/InteractiveChart';
 import { SectionCard } from '@/components/ui/SectionCard';
+import { QueryState } from '@/components/ui/QueryState';
 
 function Select({ label, value, onChange, options, disabled, placeholder }: {
     label: string; value: number | undefined; onChange: (v: number) => void;
@@ -80,20 +81,28 @@ export function SmupExplorer() {
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <KpiCard label="Ostatnia wartość (śr. JST)" value={latest ? formatDecimalPL(latest.value, 2) : '—'} accent="blue" icon={Landmark}
-                    footnote={latest ? `rok ${latest.date}` : '—'} loading={dataQ.isLoading} />
+                    footnote={latest ? `rok ${latest.date}` : '—'} loading={dataQ.isLoading}
+                    error={dataQ.isError} onRetry={() => { void dataQ.refetch(); }} />
                 <KpiCard label="Liczba jednostek (TERYT)" value={jstCount ? String(jstCount) : '—'} unit="JST" accent="violet" icon={MapPin}
-                    footnote="gminy/powiaty w próbie" loading={dataQ.isLoading} />
+                    footnote="gminy/powiaty w próbie" loading={dataQ.isLoading}
+                    error={dataQ.isError} onRetry={() => { void dataQ.refetch(); }} />
                 <KpiCard label="Lata danych" value={series.length ? String(series.length) : '—'} accent="green" icon={Layers}
-                    footnote={series.length ? `${series[0].date}–${series[series.length - 1].date}` : '—'} loading={dataQ.isLoading} />
+                    footnote={series.length ? `${series[0].date}–${series[series.length - 1].date}` : '—'} loading={dataQ.isLoading}
+                    error={dataQ.isError} onRetry={() => { void dataQ.refetch(); }} />
             </div>
 
             <SectionCard editorial titleVariant="label" title={indicatorName || 'Wskaźnik'} subtitle="Średnia dla jednostek samorządu · SMUP">
-                {dataQ.isLoading ? <div className="mk-skeleton h-[300px] w-full" /> : series.length === 0 ? (
-                    <p className="py-10 text-center text-sm text-mk-faint">Brak danych dla wybranego wskaźnika.</p>
-                ) : (
+                <QueryState
+                    isLoading={dataQ.isLoading}
+                    isError={dataQ.isError}
+                    isEmpty={series.length === 0}
+                    onRetry={() => { void dataQ.refetch(); }}
+                    height={300}
+                    emptyTitle="Brak danych dla wybranego wskaźnika."
+                >
                     <InteractiveChart data={series} xKey="date" height={300} valueFormatter={(v) => formatDecimalPL(v, 1)}
                         series={[{ key: 'value', name: 'Średnia JST', color: '#2563EB', type: 'area', strokeWidth: 2.5 }]} />
-                )}
+                </QueryState>
                 <p className="mt-3 text-xs text-mk-faint">
                     Wartość uśredniona po jednostkach samorządu (gminy/powiaty) w próbie danych. Dane pierwotne SMUP są w podziale TERYT — mapa regionalna (choropleta) planowana jako rozszerzenie.
                 </p>

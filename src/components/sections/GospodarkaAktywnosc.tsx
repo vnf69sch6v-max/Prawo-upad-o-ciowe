@@ -21,6 +21,7 @@ import { InteractiveChart } from '@/components/ui/InteractiveChart';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { RelatedNews } from '@/components/ui/RelatedNews';
 import { StaleBadge } from '@/components/ui/StaleBadge';
+import { QueryState } from '@/components/ui/QueryState';
 
 const monthTick = (d: string) => {
     const [y, m] = d.split('-');
@@ -125,6 +126,8 @@ export function GospodarkaAktywnosc() {
                 delta: ppDeltaAnnual(gdp) != null ? { value: ppDeltaAnnual(gdp)!, unit: 'pp' } : undefined,
                 footnote: gdpLast?.date ?? '',
                 loading: gdpQ.isLoading,
+                error: gdpQ.isError,
+                onRetry: () => { void gdpQ.refetch(); },
             },
             {
                 key: 'ind',
@@ -135,6 +138,8 @@ export function GospodarkaAktywnosc() {
                 delta: deltaOf(ind) != null ? { value: deltaOf(ind)!, unit: 'pp' } : undefined,
                 footnote: ind.length ? ind[ind.length - 1].date : '',
                 loading: indQ.isLoading,
+                error: indQ.isError,
+                onRetry: () => { void indQ.refetch(); },
             },
             {
                 key: 'ret',
@@ -145,6 +150,8 @@ export function GospodarkaAktywnosc() {
                 delta: deltaOf(ret) != null ? { value: deltaOf(ret)!, unit: 'pp' } : undefined,
                 footnote: ret.length ? ret[ret.length - 1].date : '',
                 loading: retQ.isLoading,
+                error: retQ.isError,
+                onRetry: () => { void retQ.refetch(); },
             },
             {
                 key: 'cpi',
@@ -155,6 +162,8 @@ export function GospodarkaAktywnosc() {
                 delta: deltaOf(cpi) != null ? { value: deltaOf(cpi)!, unit: 'pp', invert: true } : undefined,
                 footnote: cpi.length ? cpi[cpi.length - 1].date : '',
                 loading: cpiQ.isLoading,
+                error: cpiQ.isError,
+                onRetry: () => { void cpiQ.refetch(); },
             },
             {
                 key: 'unemp',
@@ -165,6 +174,8 @@ export function GospodarkaAktywnosc() {
                 delta: deltaOf(unemp) != null ? { value: deltaOf(unemp)!, unit: 'pp', invert: true } : undefined,
                 footnote: unemp.length ? unemp[unemp.length - 1].date : '',
                 loading: unempQ.isLoading,
+                error: unempQ.isError,
+                onRetry: () => { void unempQ.refetch(); },
             },
             {
                 key: 'con',
@@ -175,10 +186,12 @@ export function GospodarkaAktywnosc() {
                 delta: deltaOf(con) != null ? { value: deltaOf(con)!, unit: 'pp' } : undefined,
                 footnote: con.length ? con[con.length - 1].date : '',
                 loading: conQ.isLoading,
+                error: conQ.isError,
+                onRetry: () => { void conQ.refetch(); },
             },
         ];
         return items;
-    }, [gdp, ind, ret, cpi, unemp, con, gdpQ.isLoading, indQ.isLoading, retQ.isLoading, cpiQ.isLoading, unempQ.isLoading, conQ.isLoading, gdpLast]);
+    }, [gdp, ind, ret, cpi, unemp, con, gdpQ, indQ, retQ, cpiQ, unempQ, conQ, gdpLast]);
 
     const observations = useMemo<Observation[]>(() => {
         const out: Observation[] = [];
@@ -234,11 +247,14 @@ export function GospodarkaAktywnosc() {
                                 <StaleBadge date={gdpLast?.date ?? null} label="GUS do" warnAfterMonths={18} />
                             }
                         >
-                            {gdpQ.isLoading ? (
-                                <div className="mk-skeleton h-[200px] w-full" />
-                            ) : gdp10.length === 0 ? (
-                                <p className="py-8 text-center text-sm text-mk-faint">Brak danych PKB w GUS BDL.</p>
-                            ) : (
+                            <QueryState
+                                isLoading={gdpQ.isLoading}
+                                isError={gdpQ.isError}
+                                isEmpty={gdp10.length === 0}
+                                onRetry={() => { void gdpQ.refetch(); }}
+                                height={200}
+                                emptyTitle="Brak danych PKB w GUS BDL."
+                            >
                                 <InteractiveChart
                                     data={gdp10}
                                     xKey="date"
@@ -249,7 +265,7 @@ export function GospodarkaAktywnosc() {
                                     referenceLines={[{ y: 0, color: '#CBD2DD' }]}
                                     series={[{ key: 'value', name: 'PKB r/r', color: '#16A34A', type: 'area', strokeWidth: 2.5 }]}
                                 />
-                            )}
+                            </QueryState>
                         </SectionCard>
 
                         {activity.length > 1 && (
@@ -280,13 +296,20 @@ export function GospodarkaAktywnosc() {
                     </>
                 }
                 right={
-                    sectorBars.length > 0 ? (
-                        <SectionCard
-                            editorial
-                            titleVariant="label"
-                            title="Klimat sektorów"
-                            subtitle="GUS koniunktura · saldo ocen przedsiębiorców"
-                            actions={<StaleBadge date={konLatest?.date ?? null} label="GUS do" warnAfterMonths={3} />}
+                    <SectionCard
+                        editorial
+                        titleVariant="label"
+                        title="Klimat sektorów"
+                        subtitle="GUS koniunktura · saldo ocen przedsiębiorców"
+                        actions={<StaleBadge date={konLatest?.date ?? null} label="GUS do" warnAfterMonths={3} />}
+                    >
+                        <QueryState
+                            isLoading={konQ.isLoading}
+                            isError={konQ.isError}
+                            isEmpty={sectorBars.length === 0}
+                            onRetry={() => { void konQ.refetch(); }}
+                            height={220}
+                            emptyTitle="Brak danych koniunktury"
                         >
                             <div className="space-y-2.5">
                                 {sectorBars.map((s) => (
@@ -316,10 +339,8 @@ export function GospodarkaAktywnosc() {
                             <p className="mt-3 text-[11px] text-mk-faint">
                                 Dekompozycja PKB i eksport nie są publikowane przez GUS w tej aplikacji — wykres pominięty. Saldo sektorów = wskaźnik koniunktury GUS (pkt).
                             </p>
-                        </SectionCard>
-                    ) : konQ.isLoading ? (
-                        <div className="mk-skeleton h-[220px] w-full rounded-xl" />
-                    ) : null
+                        </QueryState>
+                    </SectionCard>
                 }
             />
 

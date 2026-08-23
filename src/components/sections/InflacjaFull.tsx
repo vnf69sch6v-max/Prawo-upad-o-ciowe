@@ -21,6 +21,7 @@ import { RelatedNews } from '@/components/ui/RelatedNews';
 import { ObservationsPanel } from '@/components/ui/ObservationsPanel';
 import { analyzeSeries, type Observation } from '@/lib/observations';
 import { AXIS_INK } from '@/lib/chart-theme';
+import { QueryState, QueryEmpty } from '@/components/ui/QueryState';
 
 const PALETTE = ['#2563EB', '#16A34A', '#D97706', '#7C3AED', '#E11D48', '#0891B2', '#CA8A04', '#DB2777', '#059669', '#4F46E5', '#EA580C', '#0D9488', '#64748B'];
 const monthTick = (d: string) => { const [y, m] = d.split('-'); return m ? `${m}.${y.slice(2)}` : d; };
@@ -86,7 +87,7 @@ const subFallback = (name: string): string =>
     /pozostał|gdzie indziej|niesklasyfikowan/i.test(name) ? 'Kategoria zbiorcza — obejmuje pozycje nieujęte w pozostałych klasach tego działu.' : '';
 
 export function InflacjaFull() {
-    const { data, isLoading, isFetching, refreshFromSource } = useCpiFull();
+    const { data, isLoading, isError, isFetching, refetch, refreshFromSource } = useCpiFull();
     const ppiHeadQ = useGusPpiHeadline();
     const ppiFullQ = usePpiFull();
 
@@ -262,7 +263,22 @@ export function InflacjaFull() {
         return out.slice(0, 4);
     }, [cpiInsights, topContrib, coreLatest, latest]);
 
-    if (isLoading) return <div className="space-y-3"><div className="mk-skeleton h-24 w-full" /><div className="grid grid-cols-3 gap-2">{Array.from({ length: 6 }).map((_, i) => <div key={i} className="mk-card h-16" />)}</div><div className="mk-skeleton h-[280px] w-full" /></div>;
+    if (isLoading) {
+        return (
+            <div className="space-y-3" role="status" aria-busy="true" aria-label="Ładowanie inflacji">
+                <div className="mk-skeleton h-24 w-full" />
+                <div className="grid grid-cols-2 gap-2 min-[360px]:grid-cols-2">
+                    {Array.from({ length: 6 }).map((_, i) => <div key={i} className="mk-card h-16" />)}
+                </div>
+                <div className="mk-skeleton h-[280px] w-full" />
+            </div>
+        );
+    }
+    if (isError) {
+        return (
+            <QueryState isError onRetry={() => { void refetch(); }} height={320} />
+        );
+    }
 
     return (
         <DensePageLayout>
@@ -392,7 +408,7 @@ export function InflacjaFull() {
             <DenseTwoCol
                 left={
                     <SectionCard editorial titleVariant="label" title="Wkłady w czasie" subtitle="waga × r/r każdego działu (pp)">
-                        {contribTime.length < 2 ? <div className="mk-skeleton h-[220px] w-full" /> : (
+                        {contribTime.length < 2 ? <QueryEmpty title="Brak danych" height={220} /> : (
                             <ResponsiveContainer width="100%" height={220}>
                                 <AreaChart data={contribTime} margin={{ top: 4, right: 8, left: -8, bottom: 0 }}>
                                     <CartesianGrid stroke="#EDF0F5" vertical={false} />
@@ -417,7 +433,7 @@ export function InflacjaFull() {
                 right={
                     <SectionCard editorial titleVariant="label" title="Mapa ciepła" subtitle={heatMetric === 'yoy' ? 'r/r · 10 lat' : 'm/m · 2026'}
                         actions={<Segmented value={heatMetric} onChange={setHeatMetric} options={[{ value: 'yoy', label: 'r/r' }, { value: 'mom', label: 'm/m' }]} />}>
-                        {heatCols.length < 2 ? <div className="flex h-[220px] items-center justify-center text-sm text-mk-faint">Brak danych.</div> : (
+                        {heatCols.length < 2 ? <QueryEmpty title="Brak danych" height={220} /> : (
                             <Heatmap rows={heatRows} cols={heatCols} valueAt={heatValue} unit="%" colTickFormatter={monthTick} valueFormatter={(v) => formatDecimalPL(v, 1)} onRowClick={openDiv} cellHeight={heatMetric === 'yoy' ? 16 : 20} />
                         )}
                     </SectionCard>
@@ -466,7 +482,7 @@ export function InflacjaFull() {
                                 <InteractiveChart data={divChange} xKey="date" height={220} unit="%" showRange initialRange="ALL" ranges={['1R', '3L', '5L', 'ALL']}
                                     valueFormatter={(v) => formatDecimalPL(v, 1)} xTickFormatter={monthTick} referenceLines={[{ y: 0, color: '#CBD2DD' }]}
                                     series={[{ key: 'value', name: sel.name, color: selColor, type: 'area', strokeWidth: 2.5 }]} />
-                            ) : <p className="flex h-[120px] items-center justify-center text-center text-xs text-mk-faint">Brak danych GUS dla wybranej metryki na tym poziomie.</p>}
+                            ) : <QueryEmpty title="Brak danych GUS dla wybranej metryki na tym poziomie." height={120} />}
                             <p className="mt-1.5 text-[11px] text-mk-faint">GUS: r/r kwartalnie (COICOP 1999) do 2025 + miesięcznie (2026); kw/kw kwartalnie; m/m od 2026.</p>
                         </div>
 

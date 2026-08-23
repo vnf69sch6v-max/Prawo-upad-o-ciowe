@@ -17,6 +17,8 @@ export interface WatchableKpi {
     delta?: { value: number; unit?: 'pp' | 'pct' | 'none'; note?: string; invert?: boolean };
     footnote?: string;
     loading?: boolean;
+    error?: boolean;
+    onRetry?: () => void;
 }
 
 /**

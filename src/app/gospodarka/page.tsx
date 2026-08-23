@@ -19,6 +19,7 @@ import { analyzeSeries } from '@/lib/observations';
 import { GospodarkaAktywnosc } from '@/components/sections/GospodarkaAktywnosc';
 import { RzadyGospodarka } from '@/components/sections/RzadyGospodarka';
 import { PageHeader, PageEyebrow } from '@/components/ui/PageHeader';
+import { QueryState } from '@/components/ui/QueryState';
 
 type Tab = 'aktywnosc' | 'koniunktura' | 'finanse';
 const TABS: { value: Tab; label: string }[] = [
@@ -105,7 +106,8 @@ function KoniunkturaSection() {
                         <KpiCard key={s.key} label={s.name} value={v != null ? `${v > 0 ? '+' : ''}${formatDecimalPL(v, 1)}` : '—'} unit="pkt"
                             accent={v != null && v >= 0 ? 'green' : 'rose'} icon={meta.icon}
                             delta={d != null ? { value: d, unit: 'none' } : undefined}
-                            footnote={latest?.date ?? ''} loading={q.isLoading} />
+                            footnote={latest?.date ?? ''} loading={q.isLoading}
+                            error={q.isError} onRetry={() => { void q.refetch(); }} />
                     );
                 })}
                 </div>
@@ -116,27 +118,48 @@ function KoniunkturaSection() {
             {/* Mapa ciepła nastrojów (sektor × miesiąc) — klik wiersza → drawer */}
             <SectionCard editorial titleVariant="label" title="Mapa ciepła nastrojów" subtitle="saldo koniunktury · sektor × miesiąc · zielony = optymizm, czerwony = pesymizm · kliknij wiersz"
                 actions={<Grid3x3 size={15} className="text-mk-faint" />}>
-                {heatCols.length < 2 ? <div className="mk-skeleton h-[200px] w-full" /> : (
+                <QueryState
+                    isLoading={q.isLoading}
+                    isError={q.isError}
+                    isEmpty={heatCols.length < 2}
+                    onRetry={() => { void q.refetch(); }}
+                    height={200}
+                    emptyTitle="Brak danych koniunktury"
+                >
                     <Heatmap rows={heatRows} cols={heatCols} valueAt={heatValue} scheme="sentiment" cellHeight={28}
                         colTickFormatter={monthTick} valueFormatter={(v) => formatDecimalPL(v, 0)} onRowClick={openSector} />
-                )}
+                </QueryState>
             </SectionCard>
 
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                 <SectionCard editorial titleVariant="label" title="Koniunktura — trend" subtitle="wskaźnik ogólnego klimatu (saldo)"
                     actions={<StaleBadge date={dataDate} label="GUS do" warnAfterMonths={3} />}>
-                    {q.isLoading ? <div className="mk-skeleton h-[300px] w-full" /> : (
+                    <QueryState
+                        isLoading={q.isLoading}
+                        isError={q.isError}
+                        isEmpty={trend.length === 0}
+                        onRetry={() => { void q.refetch(); }}
+                        height={300}
+                        emptyTitle="Brak danych koniunktury"
+                    >
                         <InteractiveChart data={trend} xKey="date" height={300} unit=" pkt" legend showRange initialRange="ALL"
                             valueFormatter={(v) => formatDecimalPL(v, 0)} xTickFormatter={monthTick}
                             referenceLines={[{ y: 0, label: '0 = neutralnie', color: '#CBD2DD' }]}
                             series={sectors.map((s) => ({ key: s.key, name: s.name, color: SECTOR_META[s.key]?.color ?? '#64748B', type: 'line' as const }))} />
-                    )}
+                    </QueryState>
                 </SectionCard>
 
                 <SectionCard editorial titleVariant="label" title="Sektory" subtitle="kliknij sektor, aby zobaczyć trend i opis">
-                    {q.isLoading ? <div className="mk-skeleton h-[300px] w-full" /> : (
+                    <QueryState
+                        isLoading={q.isLoading}
+                        isError={q.isError}
+                        isEmpty={rows.length === 0}
+                        onRetry={() => { void q.refetch(); }}
+                        height={300}
+                        emptyTitle="Brak danych sektorów"
+                    >
                         <DataTable columns={cols} rows={rows} initialSort="latest" initialDir="desc" rowKey={(r) => r.key} onRowClick={(r) => openSector(r.key)} />
-                    )}
+                    </QueryState>
                 </SectionCard>
             </div>
 

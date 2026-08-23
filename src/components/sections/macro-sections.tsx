@@ -16,18 +16,21 @@ import { StaleBadge } from '@/components/ui/StaleBadge';
 import { Drawer } from '@/components/ui/Drawer';
 import PolandMap from '@/components/PolandMap';
 import { AXIS_INK } from '@/lib/chart-theme';
+import { QueryState, QueryEmpty } from '@/components/ui/QueryState';
 
 const byDate = (pts: Point[]) => new Map(pts.map((p) => [p.date, p.value]));
 
-function Kpi({ label, series, unit = '%', accent, icon, invert, footnote }: {
+function Kpi({ label, series, unit = '%', accent, icon, invert, footnote, loading, error, onRetry }: {
     label: string; series: Point[]; unit?: string; accent: AccentKey; icon: typeof TrendingUp; invert?: boolean; footnote?: string;
+    loading?: boolean; error?: boolean; onRetry?: () => void;
 }) {
     const last = lastOf(series);
     const d = deltaOf(series);
     return (
         <KpiCard label={label} value={fmtPL(last)} unit={unit} accent={accent} icon={icon}
             delta={d != null ? { value: d, unit: 'pp', invert } : undefined}
-            footnote={footnote ?? (series.length ? series[series.length - 1].date : '—')} loading={series.length === 0} />
+            footnote={footnote ?? (series.length ? series[series.length - 1].date : '—')}
+            loading={loading} error={error} onRetry={onRetry} />
     );
 }
 
@@ -40,7 +43,8 @@ export function InflacjaSection() {
     return (
         <div className="space-y-6">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-1">
-                <Kpi label="CPI ogółem (r/r)" series={cpi} accent="amber" icon={TrendingUp} invert footnote="GUS · krajowy CPI" />
+                <Kpi label="CPI ogółem (r/r)" series={cpi} accent="amber" icon={TrendingUp} invert footnote="GUS · krajowy CPI"
+                    loading={cpiQ.isLoading} error={cpiQ.isError} onRetry={() => { void cpiQ.refetch(); }} />
             </div>
 
             <SectionCard editorial titleVariant="label"
@@ -48,14 +52,21 @@ export function InflacjaSection() {
                 subtitle="Źródło: GUS DBW (krajowy CPI, r/r %)"
                 actions={<StaleBadge date={dataDate} label="CPI do" />}
             >
-                {cpi.length === 0 ? <div className="mk-skeleton h-[320px] w-full" /> : (
+                <QueryState
+                    isLoading={cpiQ.isLoading}
+                    isError={cpiQ.isError}
+                    isEmpty={cpi.length === 0}
+                    onRetry={() => { void cpiQ.refetch(); }}
+                    height={320}
+                    emptyTitle="Brak danych CPI"
+                >
                     <InteractiveChart
                         data={cpi.map((p) => ({ date: p.date, value: p.value }))} xKey="date" height={320} unit="%" showRange initialRange="1R"
                         valueFormatter={(v) => formatDecimalPL(v, 1)} xTickFormatter={monthTick}
                         referenceLines={[{ y: 2.5, label: 'Cel NBP', color: AXIS_INK }]}
                         series={[{ key: 'value', name: 'CPI ogółem', color: '#2563EB', type: 'line', strokeWidth: 3 }]}
                     />
-                )}
+                </QueryState>
             </SectionCard>
         </div>
     );
@@ -84,23 +95,41 @@ export function AktywnoscSection() {
             <section>
                 <h2 className="mk-section-label mb-3">Aktywność gospodarcza</h2>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <Kpi label="PKB (r/r)" series={gdpS} accent="green" icon={TrendingUp} footnote="GUS · rocznie" />
-                <Kpi label="Produkcja przemysłowa (r/r)" series={ind} accent="violet" icon={Factory} footnote="GUS DBW" />
-                <Kpi label="Sprzedaż detaliczna (r/r)" series={ret} accent="amber" icon={ShoppingCart} footnote="GUS BDL P3860" />
-                <Kpi label="Budownictwo (r/r)" series={con} accent="cyan" icon={HardHat} footnote="GUS DBW" />
+                <Kpi label="PKB (r/r)" series={gdpS} accent="green" icon={TrendingUp} footnote="GUS · rocznie"
+                    loading={gdpQ.isLoading} error={gdpQ.isError} onRetry={() => { void gdpQ.refetch(); }} />
+                <Kpi label="Produkcja przemysłowa (r/r)" series={ind} accent="violet" icon={Factory} footnote="GUS DBW"
+                    loading={indQ.isLoading} error={indQ.isError} onRetry={() => { void indQ.refetch(); }} />
+                <Kpi label="Sprzedaż detaliczna (r/r)" series={ret} accent="amber" icon={ShoppingCart} footnote="GUS BDL P3860"
+                    loading={retQ.isLoading} error={retQ.isError} onRetry={() => { void retQ.refetch(); }} />
+                <Kpi label="Budownictwo (r/r)" series={con} accent="cyan" icon={HardHat} footnote="GUS DBW"
+                    loading={conQ.isLoading} error={conQ.isError} onRetry={() => { void conQ.refetch(); }} />
                 </div>
             </section>
 
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                 <SectionCard editorial titleVariant="label" title="PKB — dynamika roczna (r/r)" subtitle="GUS BDL · rocznie (%)">
-                    {gdpS.length === 0 ? <div className="mk-skeleton h-[260px] w-full" /> : (
+                    <QueryState
+                        isLoading={gdpQ.isLoading}
+                        isError={gdpQ.isError}
+                        isEmpty={gdpS.length === 0}
+                        onRetry={() => { void gdpQ.refetch(); }}
+                        height={260}
+                        emptyTitle="Brak danych PKB"
+                    >
                         <InteractiveChart data={gdpS} xKey="date" height={260} unit="%" showRange initialRange="ALL"
                             valueFormatter={(v) => formatDecimalPL(v, 1)} referenceLines={[{ y: 0, color: '#CBD2DD' }]}
                             series={[{ key: 'value', name: 'PKB r/r', color: '#16A34A', type: 'area', strokeWidth: 2.5 }]} />
-                    )}
+                    </QueryState>
                 </SectionCard>
                 <SectionCard editorial titleVariant="label" title="Produkcja, sprzedaż, budownictwo" subtitle="GUS · miesięcznie (r/r)">
-                    {activity.length === 0 ? <div className="mk-skeleton h-[260px] w-full" /> : (
+                    <QueryState
+                        isLoading={indQ.isLoading || retQ.isLoading || conQ.isLoading}
+                        isError={indQ.isError || retQ.isError || conQ.isError}
+                        isEmpty={activity.length === 0}
+                        onRetry={() => { void indQ.refetch(); void retQ.refetch(); void conQ.refetch(); }}
+                        height={260}
+                        emptyTitle="Brak danych aktywności"
+                    >
                         <InteractiveChart data={activity} xKey="date" height={260} unit="%" legend showRange initialRange="1R"
                             valueFormatter={(v) => formatDecimalPL(v, 1)} xTickFormatter={monthTick}
                             series={[
@@ -108,7 +137,7 @@ export function AktywnoscSection() {
                                 { key: 'ret', name: 'Sprzedaż', color: '#D97706', type: 'line' },
                                 { key: 'con', name: 'Budownictwo', color: '#0891B2', type: 'line' },
                             ]} />
-                    )}
+                    </QueryState>
                 </SectionCard>
             </div>
         </div>
@@ -167,9 +196,16 @@ export function RynekPracySection() {
 
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
                 <SectionCard editorial titleVariant="label" className="lg:col-span-2" title="Bezrobocie rejestrowane — mapa województw" subtitle="GUS · kliknij region, aby zobaczyć 10-letnią historię">
-                    {regQ.isLoading ? <div className="mk-skeleton h-[360px] w-full" /> : (
+                    <QueryState
+                        isLoading={regQ.isLoading}
+                        isError={regQ.isError}
+                        isEmpty={regions.length === 0}
+                        onRetry={() => { void regQ.refetch(); }}
+                        height={360}
+                        emptyTitle="Brak danych regionalnych"
+                    >
                         <PolandMap regions={regions} national={national} selectedRegion={selected} onRegionSelect={openRegion} />
-                    )}
+                    </QueryState>
                 </SectionCard>
                 <div className="space-y-4">
                     <SectionCard editorial titleVariant="label" title={selectedRegion ? selectedRegion.name : 'Wybierz województwo'} padded>
@@ -200,7 +236,14 @@ export function RynekPracySection() {
                     <KpiCard label="Inflacja CPI (r/r)" value={fmtPL(lastReal?.cpi)} unit="%" accent="amber" icon={TrendingUp} footnote="GUS · krajowy CPI" loading={cpiQ.isLoading} />
                     <KpiCard label="Płace realne (r/r)" value={fmtPL(lastReal?.real)} unit="%" accent={(lastReal?.real ?? 0) >= 0 ? 'blue' : 'rose'} icon={Percent} footnote="zmiana siły nabywczej" loading={monthlyQ.isLoading || cpiQ.isLoading} />
                 </div>
-                {realWages.length < 2 ? <div className="mk-skeleton h-[300px] w-full" /> : (
+                <QueryState
+                    isLoading={monthlyQ.isLoading || cpiQ.isLoading}
+                    isError={monthlyQ.isError || cpiQ.isError}
+                    isEmpty={realWages.length < 2}
+                    onRetry={() => { void monthlyQ.refetch(); void cpiQ.refetch(); }}
+                    height={300}
+                    emptyTitle="Brak danych płac realnych"
+                >
                     <InteractiveChart data={realWages} xKey="date" height={300} unit="%" legend showRange initialRange="3L" ranges={['1R', '3L', '5L', 'ALL']}
                         valueFormatter={(v) => formatDecimalPL(v, 1)} xTickFormatter={monthTick} referenceLines={[{ y: 0, color: '#CBD2DD' }]}
                         series={[
@@ -208,7 +251,7 @@ export function RynekPracySection() {
                             { key: 'cpi', name: 'Inflacja CPI', color: '#D97706', type: 'line', strokeWidth: 2, dashed: true },
                             { key: 'real', name: 'Płace realne', color: '#2563EB', type: 'area', strokeWidth: 2.5 },
                         ]} />
-                )}
+                </QueryState>
             </SectionCard>
 
             {/* Drawer województwa — 10-letnia historia */}
@@ -234,7 +277,7 @@ export function RynekPracySection() {
                                 <InteractiveChart data={regUnemp} xKey="date" height={220} unit="%" showRange initialRange="ALL" ranges={['1R', '3L', '5L', 'ALL']}
                                     valueFormatter={(v) => formatDecimalPL(v, 1)} xTickFormatter={monthTick}
                                     series={[{ key: 'value', name: 'Bezrobocie', color: '#0891B2', type: 'area', strokeWidth: 2.5 }]} />
-                            ) : <div className="mk-skeleton h-[220px] w-full" />}
+                            ) : <QueryEmpty title="Brak serii bezrobocia dla województwa." height={220} />}
                         </div>
                         <div>
                             <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-mk-muted">Przeciętne wynagrodzenie — rocznie (PLN)</div>
@@ -242,7 +285,7 @@ export function RynekPracySection() {
                                 <InteractiveChart data={regWages} xKey="date" height={200} unit=" zł"
                                     valueFormatter={(v) => formatNumber(v, 0)}
                                     series={[{ key: 'value', name: 'Płace', color: '#16A34A', type: 'area', strokeWidth: 2.5 }]} />
-                            ) : <p className="py-6 text-center text-sm text-mk-faint">Brak serii płac dla województwa.</p>}
+                            ) : <QueryEmpty title="Brak serii płac dla województwa." height={120} />}
                         </div>
                         <p className="text-[11px] text-mk-faint">Źródło: GUS BDL — bezrobocie rejestrowane (miesięcznie) i przeciętne wynagrodzenie brutto (rocznie) dla województwa.</p>
                     </div>
@@ -273,21 +316,31 @@ export function StopySection() {
 
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                 <SectionCard editorial titleVariant="label" title="WIBOR — terminy" subtitle="Szacowane z ref. NBP + spread">
-                    {wibor.length === 0 ? <div className="mk-skeleton h-[220px] w-full" /> : (
+                    <QueryState
+                        isLoading={wiborQ.isLoading}
+                        isError={wiborQ.isError}
+                        isEmpty={wibor.length === 0}
+                        onRetry={() => { void wiborQ.refetch(); }}
+                        height={220}
+                        emptyTitle="Brak danych WIBOR"
+                    >
                         <InteractiveChart data={wibor.map((w) => ({ tenor: w.tenor, wibor: w.wibor }))} xKey="tenor" height={220} unit="%"
                             valueFormatter={(v) => formatDecimalPL(v, 2)} series={[{ key: 'wibor', name: 'WIBOR', color: '#2563EB', type: 'bar' }]} />
-                    )}
+                    </QueryState>
                 </SectionCard>
                 <SectionCard editorial titleVariant="label" title="Krzywa rentowności obligacji" subtitle="Stooq · 2Y / 5Y / 10Y">
-                    {curve.length === 0 ? (
-                        <div className="flex h-[220px] flex-col items-center justify-center text-center text-sm text-mk-faint">
-                            <p>Brak danych — źródło Stooq jest chwilowo niedostępne.</p>
-                            <p className="mt-1 text-xs">Alternatywne źródło obligacji planowane w module Rynki.</p>
-                        </div>
-                    ) : (
+                    <QueryState
+                        isLoading={yc.y2.isLoading || yc.y5.isLoading || yc.y10.isLoading}
+                        isError={yc.y2.isError || yc.y5.isError || yc.y10.isError}
+                        isEmpty={curve.length === 0}
+                        onRetry={() => { void yc.y2.refetch(); void yc.y5.refetch(); void yc.y10.refetch(); }}
+                        height={220}
+                        emptyTitle="Brak danych rentowności"
+                        emptyDetail="Źródło obligacji nie zwróciło serii. To nie znaczy, że rentowność wynosi zero."
+                    >
                         <InteractiveChart data={curve.map((c) => ({ tenor: c.tenor, yield: c.yield }))} xKey="tenor" height={220} unit="%"
                             valueFormatter={(v) => formatDecimalPL(v, 2)} series={[{ key: 'yield', name: 'Rentowność', color: '#0891B2', type: 'line', strokeWidth: 3 }]} />
-                    )}
+                    </QueryState>
                 </SectionCard>
             </div>
         </div>

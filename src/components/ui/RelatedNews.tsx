@@ -8,6 +8,7 @@ import { collapseClusters, matchesTopic, type NewsTopic, type MatchTier } from '
 import { formatRelativeTime, formatTime } from '@/lib/formatters';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { CategoryNewsPanel } from '@/components/ui/CategoryNews';
+import { QueryState } from '@/components/ui/QueryState';
 
 const TOPIC_LINKS: { topic: NewsTopic; label: string; href: string }[] = [
     { topic: 'ceny', label: 'Inflacja CPI', href: '/ceny?tab=inflacja' },
@@ -326,7 +327,7 @@ export function LatestNews({
     className?: string;
     variant?: 'default' | 'overview';
 }) {
-    const { data, isLoading } = useNews();
+    const { data, isLoading, isError, refetch } = useNews();
     const items = useMemo(
         () => collapseClusters([...(data?.items ?? [])])
             .sort((a, b) => (b.importance ?? 0) - (a.importance ?? 0))
@@ -369,7 +370,20 @@ export function LatestNews({
             </SectionCard>
         );
     }
-    if (items.length === 0) return null;
+    if (isError) {
+        return (
+            <SectionCard title="Najważniejsze newsy" className={className}>
+                <QueryState isError onRetry={() => { void refetch(); }} height={160} />
+            </SectionCard>
+        );
+    }
+    if (items.length === 0) {
+        return (
+            <SectionCard title="Najważniejsze newsy" className={className}>
+                <QueryState isEmpty emptyTitle="Brak newsów do wyświetlenia" height={120} />
+            </SectionCard>
+        );
+    }
 
     if (variant === 'overview') {
         return (

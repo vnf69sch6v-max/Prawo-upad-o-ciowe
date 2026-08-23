@@ -26,6 +26,9 @@ export interface KpiCardProps {
     /** Small line under the value, e.g. "maj 2026" — pominięte gdy puste */
     footnote?: string;
     loading?: boolean;
+    /** Awaria źródła — nie mylić z pustą serią. Pokazuje komunikat i opcjonalne ponowienie. */
+    error?: boolean;
+    onRetry?: () => void;
     /** Gdy podany, cały kafel jest linkiem do właściwej zakładki (deep-link, np. `/gospodarka?tab=aktywnosc`). */
     href?: string;
     /** Gdy podany, kafel dostaje gwiazdkę „obserwuj" (watchlista w localStorage). */
@@ -54,7 +57,7 @@ export interface KpiCardProps {
  * ⚠ NIE dodawać paddingu na `.mk-kpi` — to kontener zapytań, a `cqi` liczy się od content-boxa,
  * więc padding skurczyłby liczbę. Padding mieszka na `.mk-kpi-body`.
  */
-export function KpiCard({ label, value, unit, delta, icon: Icon, footnote, loading, href, watchId, compact }: KpiCardProps) {
+export function KpiCard({ label, value, unit, delta, icon: Icon, footnote, loading, error, onRetry, href, watchId, compact }: KpiCardProps) {
     const footnoteText = footnote?.trim() || undefined;
     const watch = useWatchlist();
     const wrap = (node: ReactNode, extra = '') => (
@@ -69,6 +72,34 @@ export function KpiCard({ label, value, unit, delta, icon: Icon, footnote, loadi
                     <div className="mk-kpi-label"><span className="mk-skeleton h-3 w-24 rounded" /></div>
                     <div className="mk-kpi-figure"><span className="mk-skeleton h-8 w-28 rounded" /></div>
                     <div className="mk-kpi-foot"><span className="mk-skeleton h-2.5 w-20 rounded" /></div>
+                </div>
+            </div>,
+        );
+    }
+    if (error) {
+        return wrap(
+            <div className="mk-card overflow-hidden">
+                <div className="mk-kpi-body">
+                    <div className="mk-kpi-label">
+                        {Icon && <Icon className="mk-kpi-icon" size={14} strokeWidth={1.75} aria-hidden />}
+                        <span>{label}</span>
+                    </div>
+                    <div className="mk-kpi-figure">
+                        <span className="mk-kpi-value">—</span>
+                    </div>
+                    <div className="mk-kpi-foot">
+                        {onRetry ? (
+                            <button
+                                type="button"
+                                onClick={onRetry}
+                                className="text-left text-[11px] font-medium text-mk-primary hover:underline"
+                            >
+                                Błąd źródła · ponów
+                            </button>
+                        ) : (
+                            <span>Błąd źródła</span>
+                        )}
+                    </div>
                 </div>
             </div>,
         );

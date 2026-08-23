@@ -30,16 +30,16 @@ export function SectionCard({
     return (
         <section className={`mk-card ${editorial ? 'mk-card-editorial' : ''} ${padded ? 'mk-card-pad' : ''} ${className}`}>
             {(title || actions) && (
-                <header className="mb-4 flex flex-wrap items-start justify-between gap-3">
-                    <div className="min-w-0">
+                <header className="mk-section-head">
+                    <div className="mk-section-head-text">
                         {title && (
                             titleVariant === 'label'
                                 ? <h3 className="mk-section-label">{title}</h3>
                                 : <h3 className="mk-section-title">{title}</h3>
                         )}
-                        {subtitle && <p className="mt-0.5 text-sm text-mk-muted">{subtitle}</p>}
+                        {subtitle && <p className="mk-section-head-sub">{subtitle}</p>}
                     </div>
-                    {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
+                    {actions && <div className="mk-section-head-actions">{actions}</div>}
                 </header>
             )}
             {children}

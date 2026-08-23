@@ -84,7 +84,7 @@ function retailSignal(retail: Point[]) {
 }
 
 export function OverviewHero({ cpi, retail, cpiLoading, retailLoading }: OverviewHeroProps) {
-    const { data: newsData, isLoading: newsLoading } = useNews();
+    const { data: newsData, isLoading: newsLoading, isError: newsError, refetch: refetchNews } = useNews();
     const cpiSig = useMemo(() => cpiSignal(cpi), [cpi]);
     const actSig = useMemo(() => retailSignal(retail), [retail]);
     const topNews = useMemo(() => {
@@ -128,6 +128,17 @@ export function OverviewHero({ cpi, retail, cpiLoading, retailLoading }: Overvie
                                 <HeroNewsTime publishedAt={topNews.publishedAt} />
                             </div>
                         </a>
+                    ) : newsError ? (
+                        <div>
+                            <p className="text-sm font-medium">Nie udało się pobrać newsów.</p>
+                            <button
+                                type="button"
+                                onClick={() => { void refetchNews(); }}
+                                className="mt-2 text-xs font-semibold underline underline-offset-2 hover:opacity-90"
+                            >
+                                Spróbuj ponownie
+                            </button>
+                        </div>
                     ) : (
                         <div>
                             <p className="mk-hero-muted text-xs sm:text-sm">Brak newsów do wyświetlenia.</p>
