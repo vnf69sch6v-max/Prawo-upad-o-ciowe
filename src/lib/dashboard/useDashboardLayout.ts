@@ -1,14 +1,13 @@
 'use client';
 
 /**
- * Układ pulpitu Przeglądu — kafle wybrane przez użytkownika, trzymane w `localStorage`.
+ * Układ „Mojego panelu" — kafle wybrane przez użytkownika, trzymane w `localStorage`.
  *
  * Wzorowane na `lib/watchlist.ts`: hydration-safe (flaga `ready`, bo `localStorage` nie istnieje
- * po stronie serwera), a zmiany rozsyłamy zdarzeniem `mk:overview`, żeby wiele instancji hooka
+ * po stronie serwera), a zmiany rozsyłamy zdarzeniem `mk:dashboard`, żeby wiele instancji hooka
  * na jednej stronie widziało to samo. Walidujemy kształt i odrzucamy nieznane id widgetów.
  *
- * Pierwsza wizyta NIE zapisuje nic — brak klucza = dokładnie dzisiejszy Przegląd.
- * „Przywróć domyślny układ" kasuje klucz, zamiast zapisywać kopię defaultu.
+ * Pierwsza wizyta nie zapisuje nic — brak klucza = domyślny starter. Reset kasuje klucz.
  */
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
