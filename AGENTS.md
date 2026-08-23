@@ -34,3 +34,8 @@ There is no automated test runner configured (no `test` script, no test files).
   unavailable, so a missing data value is not necessarily a bug.
 - The `middleware`-file deprecation warning from Next.js at startup is
   expected and harmless.
+- Przegląd (`/`) **is** the dashboard. Users enter Apple-style edit mode
+  in-place (button „Edytuj”, long-press a widget, or ⌘K → „Edytuj pulpit”).
+  Custom layouts persist in `localStorage` key `mk:overview:v1`. First visit
+  and „Przywróć domyślny układ” render today’s overview exactly — do not
+  replace `/` with a separate empty panel. `/panel` is only a redirect to `/`.
