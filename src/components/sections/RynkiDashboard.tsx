@@ -8,13 +8,12 @@ import {
 } from '@/lib/hooks';
 import { lastOf, prevOf, monthTick } from '@/lib/series';
 import { formatDecimalPL, formatNumber, formatDate, percentChange } from '@/lib/formatters';
-import { PageHeroBand, type HeroKpiItem } from '@/components/ui/PageHeroBand';
+import { EditorialHero } from '@/components/ui/EditorialHero';
 import { CompactKpiGrid, type CompactKpiItem } from '@/components/ui/CompactKpiGrid';
 import { DenseTwoCol } from '@/components/ui/DensePageLayout';
 import { RelatedNews } from '@/components/ui/RelatedNews';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { InteractiveChart } from '@/components/ui/InteractiveChart';
-import { CsvExport } from '@/components/ui/CsvExport';
 
 function fxDelta(data: unknown): number | null {
     const raw = data as { rates?: { mid?: number }[] } | { mid?: number }[] | undefined;
@@ -30,7 +29,7 @@ const lastCloseOf = (q: { data?: { latest: QBar | null } }): number | null => q.
 const pctDelta = (bars: QBar[]): number | null =>
     bars.length > 1 ? +percentChange(bars[bars.length - 1].close, bars[bars.length - 2].close).toFixed(2) : null;
 
-/** Gęsty dashboard rynkowy — hero 3 + siatka KPI + newsy i wykres. Źródła: NBP + Stooq. */
+/** Gęsty dashboard rynkowy — EditorialHero + siatka KPI + newsy i wykres. Źródła: NBP + Stooq. */
 export function RynkiDashboard() {
     const fxQ = useNBPTable('a');
     const eurHQ = useEURPLN();
@@ -65,38 +64,11 @@ export function RynkiDashboard() {
     const goldDelta = gold.length > 1 ? +percentChange(gold[gold.length - 1].value, gold[gold.length - 2].value).toFixed(2) : null;
 
     const wig20Chart = useMemo(() => wigBars.map((b) => ({ date: b.date, value: b.close })), [wigBars]);
-
-    const heroLoading = wig20Q.isLoading || fxQ.isLoading || ratesQ.isLoading;
-    const heroItems: [HeroKpiItem, HeroKpiItem, HeroKpiItem] = [
-        {
-            label: 'WIG20',
-            value: wigLast != null ? formatNumber(wigLast, 0) : '—',
-            unit: 'pkt',
-            delta: wigDelta,
-            deltaUnit: 'pct',
-            text: 'Indeks blue chip GPW · notowania Yahoo/Stooq.',
-            footnote: 'GPW · Stooq/Yahoo',
-            loading: heroLoading,
-        },
-        {
-            label: 'EUR / PLN',
-            value: mid('EUR') != null ? formatDecimalPL(mid('EUR')!, 3) : '—',
-            unit: 'zł',
-            delta: fxDelta(eurHQ.data),
-            deltaUnit: 'pct',
-            text: fxTable?.effectiveDate ? `Kurs średni NBP · ${formatDate(fxTable.effectiveDate)}` : 'Kurs średni NBP (tabela A).',
-            footnote: fxTable?.effectiveDate ? `NBP · ${formatDate(fxTable.effectiveDate)}` : 'NBP tab. A',
-            loading: heroLoading,
-        },
-        {
-            label: 'Stopa referencyjna',
-            value: refRate ? formatDecimalPL(refRate.value, 2) : '—',
-            unit: '%',
-            text: refRate ? `Obowiązuje od ${formatDate(refRate.validFrom)}.` : 'Kluczowa stopa polityki pieniężnej NBP.',
-            footnote: refRate ? `NBP · od ${formatDate(refRate.validFrom)}` : 'NBP',
-            loading: heroLoading,
-        },
-    ];
+    const wigDate = wigBars.at(-1)?.date ?? null;
+    const heroHeadline = wigLast == null ? 'Rynki'
+        : wigDelta != null && wigDelta > 0 ? 'WIG20 rośnie'
+        : wigDelta != null && wigDelta < 0 ? 'WIG20 spada'
+        : 'WIG20';
 
     const gridItems: CompactKpiItem[] = [
         {
@@ -170,7 +142,29 @@ export function RynkiDashboard() {
 
     return (
         <div className="space-y-4">
-            <PageHeroBand items={heroItems} />
+            <EditorialHero
+                ariaLabel="Rynki — najważniejszy odczyt"
+                period={wigDate ? formatDate(wigDate) : null}
+                source="GPW · NBP"
+                headline={heroHeadline}
+                description={
+                    <>
+                        Indeks 20 największych spółek Giełdy Papierów Wartościowych.
+                        {mid('EUR') != null && ` EUR/PLN: ${formatDecimalPL(mid('EUR')!, 3)} zł.`}
+                    </>
+                }
+                value={wigLast != null ? formatNumber(wigLast, 0) : '—'}
+                unit="pkt"
+                delta={wigDelta}
+                deltaUnit="%"
+                valueCaption="WIG20 · notowania Yahoo/Stooq"
+                panelTitle="Skrót rynku"
+                rows={[
+                    { label: 'EUR / PLN', value: mid('EUR') != null ? `${formatDecimalPL(mid('EUR')!, 3)} zł` : '—' },
+                    { label: 'Stopa referencyjna', value: refRate ? `${formatDecimalPL(refRate.value, 2)}%` : '—' },
+                    { label: 'WIBOR 3M', value: wibor3M != null ? `${formatDecimalPL(wibor3M, 2)}%` : '—', divider: true },
+                ]}
+            />
             <CompactKpiGrid items={gridItems} label="Rynek — więcej wskaźników" columns={6} />
             <DenseTwoCol
                 left={<RelatedNews topic="rynki" limit={5} title="Newsy rynkowe" />}
@@ -180,7 +174,6 @@ export function RynkiDashboard() {
                         titleVariant="label"
                         title="WIG20 — 60 sesji"
                         subtitle="poziom indeksu · Yahoo/Stooq"
-                        actions={<CsvExport filename="wig20-dashboard" headers={['Data', 'Zamknięcie']} rows={wig20Chart.map((r) => [r.date, r.value])} />}
                     >
                         {wig20Chart.length < 2 ? (
                             <div className="mk-skeleton h-[280px] w-full" />

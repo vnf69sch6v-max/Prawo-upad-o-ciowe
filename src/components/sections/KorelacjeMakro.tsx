@@ -10,6 +10,7 @@ import {
 import { plSeries } from '@/lib/series';
 import { formatDecimalPL } from '@/lib/formatters';
 import { SectionCard } from '@/components/ui/SectionCard';
+import { EditorialHero } from '@/components/ui/EditorialHero';
 
 interface Ind { key: string; short: string; label: string; data: ReturnType<typeof plSeries> }
 
@@ -75,9 +76,24 @@ export function KorelacjeMakro() {
     }, [inds]);
 
     const ready = inds.every((it) => it.data.length > 0);
+    const top = pairs[0] ?? null;
 
     return (
         <div className="space-y-6">
+            <EditorialHero
+                ariaLabel="Zależności makro — najsilniejsza korelacja"
+                source="GUS · Pearson na wspólnych miesiącach"
+                headline={top ? 'Najsilniejsza zależność' : 'Zależności makro'}
+                description="Współczynnik Pearsona liczony wyłącznie na wspólnych miesiącach serii GUS. Korelacja nie oznacza przyczynowości."
+                value={top ? `${top.r > 0 ? '+' : ''}${formatDecimalPL(top.r, 2)}` : '—'}
+                valueCaption={top ? `${top.a} ↔ ${top.b}` : 'za mało wspólnych obserwacji'}
+                panelTitle="Top pary"
+                rows={pairs.slice(0, 4).map((p, i) => ({
+                    label: `${p.a} ↔ ${p.b}`,
+                    value: `${p.r > 0 ? '+' : ''}${formatDecimalPL(p.r, 2)}`,
+                    divider: i === 0,
+                }))}
+            />
             <SectionCard editorial titleVariant="label" title="Macierz korelacji makro" subtitle="współczynnik Pearsona na wspólnych miesiącach · GUS (BDL/DBW)">
                 {!ready ? <div className="mk-skeleton h-[360px] w-full" /> : (
                     <div className="overflow-x-auto">

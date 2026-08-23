@@ -9,7 +9,7 @@ import { plSeries } from '@/lib/series';
 import { formatDecimalPL } from '@/lib/formatters';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { Segmented } from '@/components/ui/Segmented';
-import { CsvExport } from '@/components/ui/CsvExport';
+import { EditorialHero } from '@/components/ui/EditorialHero';
 import { PL_GOVERNMENTS, govForYear } from '@/lib/pl-governments';
 import { AXIS_INK } from '@/lib/chart-theme';
 
@@ -43,11 +43,37 @@ export function RzadyGospodarka() {
     }), [merged, maxY]);
 
     const cur = METRICS.find((m) => m.value === metric)!;
+    const gdpPts = merged.filter((r) => r.gdp != null);
+    const lastGdp = gdpPts.length ? gdpPts[gdpPts.length - 1] : null;
+    const prevGdp = gdpPts.length > 1 ? gdpPts[gdpPts.length - 2] : null;
+    const gdpDelta = lastGdp?.gdp != null && prevGdp?.gdp != null ? +(lastGdp.gdp - prevGdp.gdp).toFixed(1) : null;
+    const lastCpi = [...merged].reverse().find((r) => r.cpi != null) ?? null;
+    const heroHeadline = lastGdp?.gdp == null ? 'Rządy a gospodarka'
+        : lastGdp.gdp > 0 ? 'Gospodarka rośnie'
+        : lastGdp.gdp < 0 ? 'Gospodarka się kurczy'
+        : 'Dynamika PKB';
 
     return (
         <div className="space-y-6">
+            <EditorialHero
+                ariaLabel="Finanse publiczne — PKB i inflacja"
+                period={lastGdp ? String(lastGdp.year) : null}
+                source="GUS BDL · rocznie"
+                headline={heroHeadline}
+                description="Roczne PKB i CPI na tle ekip rządzących — wyłącznie dane GUS BDL. Brakujące odczyty pokazujemy jako —."
+                value={lastGdp?.gdp != null ? formatDecimalPL(lastGdp.gdp, 1) : '—'}
+                unit="%"
+                delta={gdpDelta}
+                valueCaption="PKB · dynamika roczna (r/r)"
+                panelTitle="Ostatnie odczyty"
+                rows={[
+                    { label: 'PKB r/r', value: lastGdp?.gdp != null ? `${lastGdp.gdp > 0 ? '+' : ''}${formatDecimalPL(lastGdp.gdp, 1)}%` : '—' },
+                    { label: 'Inflacja CPI', value: lastCpi?.cpi != null ? `${formatDecimalPL(lastCpi.cpi, 1)}%` : '—' },
+                    { label: 'Rząd', value: lastGdp ? (govForYear(lastGdp.year)?.label ?? '—') : '—', divider: true },
+                ]}
+            />
             <SectionCard editorial titleVariant="label" title="Rządy a gospodarka" subtitle="roczne wskaźniki GUS — tło pokazuje ekipę rządzącą w danym okresie"
-                actions={<div className="flex flex-wrap items-center gap-2"><Segmented value={metric} onChange={setMetric} options={METRICS.map((m) => ({ value: m.value, label: m.label }))} /><CsvExport filename="rzady-gospodarka" headers={['Rok', 'PKB %', 'Inflacja %']} rows={merged.map((r) => [r.year, r.gdp, r.cpi])} /></div>}>
+                actions={<Segmented value={metric} onChange={setMetric} options={METRICS.map((m) => ({ value: m.value, label: m.label }))} />}>
                 <ResponsiveContainer width="100%" height={340}>
                     <ComposedChart data={merged} margin={{ top: 8, right: 14, left: -6, bottom: 4 }}>
                         <CartesianGrid stroke="#EDF0F5" vertical={false} />

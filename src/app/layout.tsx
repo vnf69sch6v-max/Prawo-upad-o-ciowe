@@ -8,6 +8,13 @@ export const metadata: Metadata = {
   description:
     "Platforma danych o polskiej gospodarce — inflacja, PKB, rynek pracy, stopy procentowe, giełda, spółki, regiony i newsy finansowe aktualizowane na bieżąco.",
   keywords: ["polska", "makroekonomia", "dashboard", "GUS", "NBP", "inflacja", "PKB", "CPI", "koszyk inflacyjny", "giełda", "WIG20", "spółki", "regiony", "newsy finansowe"],
+  openGraph: {
+    title: "Savori — dane makro, rynkowe i newsy z Polski",
+    description:
+      "Platforma danych o polskiej gospodarce — inflacja, PKB, rynek pracy, stopy procentowe, giełda, spółki, regiony i newsy finansowe aktualizowane na bieżąco.",
+    locale: "pl_PL",
+    type: "website",
+  },
 };
 
 export const viewport: Viewport = {

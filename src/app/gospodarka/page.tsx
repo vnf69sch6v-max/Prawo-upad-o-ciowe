@@ -4,12 +4,12 @@ import { useState, useMemo, useCallback } from 'react';
 import { useInitialTab } from '@/lib/use-initial-tab';
 import { Factory, HardHat, ShoppingCart, Truck, Radio, Info, Grid3x3 } from 'lucide-react';
 import { useKoniunktura } from '@/lib/hooks';
-import { formatDecimalPL } from '@/lib/formatters';
+import { formatDecimalPL, formatDataPeriod } from '@/lib/formatters';
 import { Segmented } from '@/components/ui/Segmented';
 import { KpiCard, type AccentKey } from '@/components/ui/KpiCard';
 import { InteractiveChart } from '@/components/ui/InteractiveChart';
 import { SectionCard } from '@/components/ui/SectionCard';
-import { CsvExport } from '@/components/ui/CsvExport';
+import { EditorialHero } from '@/components/ui/EditorialHero';
 import { StaleBadge } from '@/components/ui/StaleBadge';
 import { Heatmap } from '@/components/ui/Heatmap';
 import { Sparkline } from '@/components/ui/Sparkline';
@@ -94,8 +94,40 @@ function KoniunkturaSection() {
         { key: 'trend', header: 'Trend 18M', align: 'center', render: (r) => <Sparkline data={r.history} color={SECTOR_META[r.key]?.color} /> },
     ];
 
+    const processed = rows.find((r) => r.key === 'przetworstwo') ?? rows[0] ?? null;
+    const heroVal = processed?.latest ?? null;
+    const heroDelta = processed?.delta ?? null;
+    const heroPeriod = dataDate ? formatDataPeriod(dataDate) : null;
+    const heroHeadline = heroVal == null ? 'Koniunktura'
+        : heroVal > 0 ? 'Przewaga optymizmu'
+        : heroVal < 0 ? 'Przewaga pesymizmu'
+        : 'Koniunktura neutralna';
+
     return (
         <div className="space-y-6">
+            <EditorialHero
+                ariaLabel="Koniunktura — najważniejszy odczyt"
+                period={heroPeriod}
+                source="GUS · badanie koniunktury"
+                headline={heroHeadline}
+                description={
+                    <>
+                        Saldo nastrojów w przetwórstwie wynosi {heroVal != null ? `${heroVal > 0 ? '+' : ''}${formatDecimalPL(heroVal, 1)}` : '—'} pkt (GUS).
+                        Dodatnie saldo oznacza przewagę optymizmu przedsiębiorców.
+                    </>
+                }
+                value={heroVal != null ? `${heroVal > 0 ? '+' : ''}${formatDecimalPL(heroVal, 1)}` : '—'}
+                unit="pkt"
+                delta={heroDelta}
+                valueCaption="Przetwórstwo · saldo ocen"
+                panelTitle="Sektory"
+                rows={rows.map((r, i) => ({
+                    label: r.name,
+                    value: r.latest != null ? `${r.latest > 0 ? '+' : ''}${formatDecimalPL(r.latest, 1)} pkt` : '—',
+                    divider: i === 1,
+                }))}
+            />
+
             <section>
                 <h2 className="mk-section-label mb-3">Nastroje sektorów</h2>
                 <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
@@ -127,7 +159,7 @@ function KoniunkturaSection() {
 
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                 <SectionCard editorial titleVariant="label" title="Koniunktura — trend" subtitle="wskaźnik ogólnego klimatu (saldo)"
-                    actions={<div className="flex items-center gap-2"><StaleBadge date={dataDate} label="GUS do" warnAfterMonths={3} /><CsvExport filename="koniunktura" headers={['Miesiąc', ...sectors.map((s) => s.name)]} rows={trend.map((t) => [t.date as string, ...sectors.map((s) => t[s.key] as number)])} /></div>}>
+                    actions={<StaleBadge date={dataDate} label="GUS do" warnAfterMonths={3} />}>
                     {q.isLoading ? <div className="mk-skeleton h-[300px] w-full" /> : (
                         <InteractiveChart data={trend} xKey="date" height={300} unit=" pkt" legend showRange initialRange="ALL"
                             valueFormatter={(v) => formatDecimalPL(v, 0)} xTickFormatter={monthTick}

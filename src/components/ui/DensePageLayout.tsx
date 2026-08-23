@@ -7,7 +7,7 @@ export function DensePageLayout({ children, className = '' }: { children: ReactN
     return <div className={`mk-dense-page mk-fade-in ${className}`.trim()}>{children}</div>;
 }
 
-/** Układ dwukolumnowy — newsy + wykres (Rynki, Prognozy). */
+/** Układ dwukolumnowy — newsy + wykres (Rynki i sekcje tematyczne). */
 export function DenseTwoCol({
     left,
     right,
