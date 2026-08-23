@@ -371,6 +371,9 @@ export function Kalendarium({
 /**
  * Pas newsów na stronach kategorii — Kalendarium (oś czasu) + lista NEWSY poniżej.
  * Kalendarium pokazuje tylko dziś/wczoraj; NEWSY uzupełnia starsze dopasowane wiadomości.
+ *
+ * `variant="rail"` — jedna karta (Kalendarium albo NEWSY). Używać w DenseTwoCol / wąskiej
+ * kolumnie: stack Kalendarium+NEWSY rozciąga wiersz siatki i zostawia pustą „połowę” obok wykresu.
  */
 export function CategoryNewsPanel({
     topic,
@@ -378,12 +381,14 @@ export function CategoryNewsPanel({
     className = '',
     matchTier = 'all',
     excludeOpinion = false,
+    variant = 'stack',
 }: {
     topic: NewsTopic;
     limit?: number;
     className?: string;
     matchTier?: MatchTier;
     excludeOpinion?: boolean;
+    variant?: 'stack' | 'rail';
 }) {
     const todayKey = useMemo(() => warsawDateKey(), []);
     const yesterdayKey = useMemo(() => prevCalendarDate(todayKey), [todayKey]);
@@ -410,6 +415,18 @@ export function CategoryNewsPanel({
             <CategoryNews
                 topic={topic}
                 limit={limit}
+                className={className}
+                matchTier={matchTier}
+                excludeOpinion={excludeOpinion}
+            />
+        );
+    }
+
+    if (variant === 'rail') {
+        return (
+            <Kalendarium
+                topic={topic}
+                newsLimit={limit + 7}
                 className={className}
                 matchTier={matchTier}
                 excludeOpinion={excludeOpinion}

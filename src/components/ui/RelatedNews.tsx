@@ -71,6 +71,8 @@ export function RelatedNews({
     className = '',
     matchTier = 'all',
     excludeOpinion = false,
+    /** `rail` = jedna karta (bez stacku Kalendarium+NEWSY) — do DenseTwoCol. */
+    variant = 'stack',
 }: {
     topic: NewsTopic;
     title?: string;
@@ -80,6 +82,7 @@ export function RelatedNews({
     matchTier?: MatchTier;
     /** Ukryj felietony/opinie (`isOpinion`). */
     excludeOpinion?: boolean;
+    variant?: 'stack' | 'rail';
 }) {
     return (
         <CategoryNewsPanel
@@ -88,6 +91,7 @@ export function RelatedNews({
             className={className}
             matchTier={matchTier}
             excludeOpinion={excludeOpinion}
+            variant={variant}
         />
     );
 }

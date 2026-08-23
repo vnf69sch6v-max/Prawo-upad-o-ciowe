@@ -196,7 +196,7 @@ export function PpiFull() {
             <CompactKpiGrid items={compactKpis} label="Wskaźniki uzupełniające" dense />
 
             <DenseTwoCol
-                left={<RelatedNews topic="ceny" limit={5} title="Newsy — ceny i inflacja" />}
+                left={<RelatedNews topic="ceny" limit={5} title="Newsy — ceny i inflacja" variant="rail" />}
                 right={
                     <SectionCard editorial titleVariant="label" title="PPI — trend" subtitle={`${freq === 'yoy' ? 'rok do roku' : 'miesiąc do miesiąca'} (%) · GUS`}
                         actions={<div className="flex flex-wrap items-center gap-2">
