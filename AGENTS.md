@@ -38,4 +38,5 @@ There is no automated test runner configured (no `test` script, no test files).
   in-place (button „Edytuj”, long-press a widget, or ⌘K → „Edytuj pulpit”).
   Custom layouts persist in `localStorage` key `mk:overview:v1`. First visit
   and „Przywróć domyślny układ” render today’s overview exactly — do not
-  replace `/` with a separate empty panel. `/panel` is only a redirect to `/`.
+  replace `/` with a second empty home. `/panel` re-exports the same canvas
+  (nav label „Mój panel”). Layout key remains `mk:overview:v1`.
