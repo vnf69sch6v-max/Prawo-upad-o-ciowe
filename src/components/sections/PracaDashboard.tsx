@@ -19,6 +19,7 @@ import { DensePageLayout, DenseTwoCol } from '@/components/ui/DensePageLayout';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { RelatedNews } from '@/components/ui/RelatedNews';
 import { InsightBar } from '@/components/ui/InsightBar';
+import { DeltaChip } from '@/components/ui/DeltaChip';
 import { PublicationDatesPanel } from '@/components/ui/PublicationDatesPanel';
 import { DataTable, type Column } from '@/components/ui/DataTable';
 import { InteractiveChart } from '@/components/ui/InteractiveChart';
@@ -74,6 +75,13 @@ export function PracaDashboard() {
     );
     const realRunUp = consecutiveRun(realSeries, 'up');
     const realRunDown = consecutiveRun(realSeries, 'down');
+    const prevReal = useMemo(() => {
+        const withReal = realWages.filter((r) => r.real != null);
+        return withReal.length > 1 ? withReal[withReal.length - 2] : null;
+    }, [realWages]);
+    const realDelta = lastReal?.real != null && prevReal?.real != null
+        ? +(lastReal.real - (prevReal.real as number)).toFixed(1)
+        : null;
 
     const zatr = zatrQ.data?.series ?? [];
     const zLast = zatr.length ? zatr[zatr.length - 1] : null;
@@ -151,7 +159,7 @@ export function PracaDashboard() {
         },
     ];
 
-    // InsightBar: MAX JEDNA obserwacja na serię (dedupe po wskaźniku, nie po treści)
+    // InsightBar: MAX JEDNA obserwacja na serię. Płace realne są w leadzie — tu bez powtórki %.
     const insights = useMemo<Observation[]>(() => {
         const out: Observation[] = [];
         const one = (label: string, values: (number | null | undefined)[], opts: Parameters<typeof analyzeSeries>[2]) => {
@@ -159,10 +167,10 @@ export function PracaDashboard() {
             if (hit) out.push(hit);
         };
         one('Bezrobocie rej.', unemp.map((d) => d.value), { goodDown: true, unit: '%', decimals: 1 });
-        one('Płace realne', realSeries, { unit: '%', decimals: 1 });
         one('Płace nominalne', wages.map((w) => w.value), { unit: '%', decimals: 1 });
+        one('BAEL', (baelQ.data?.series ?? []).map((d) => d.value), { goodDown: true, unit: '%', decimals: 1, period: 'quarter' });
         return out.slice(0, 3);
-    }, [unemp, realSeries, wages]);
+    }, [unemp, wages, baelQ.data?.series]);
 
     const cols: Column<(typeof regions)[number]>[] = [
         { key: 'name', header: 'Woj.', sortable: true, sortValue: (r) => r.name, render: (r) => woj(r.name) },
@@ -195,19 +203,19 @@ export function PracaDashboard() {
                                 </span>
                             )}
                             <span>GUS · płace nominalne − CPI</span>
-                        </div>
-                        <h2 className="mt-3 text-[22px] font-extrabold leading-tight tracking-tight text-mk-text sm:text-[26px]">
-                            {leadHeadline}
-                        </h2>
-                        <div className="mt-4 flex flex-wrap items-baseline gap-2">
-                            <span className="mk-kpi-value text-mk-text">
-                                {lastReal?.real != null ? formatDecimalPL(lastReal.real, 1) : '—'}
-                            </span>
-                            <span className="text-lg font-semibold text-mk-muted">% r/r</span>
+                            <StaleBadge date={lastReal?.date ?? null} label="do" warnAfterMonths={4} />
                         </div>
                         <p className="mt-3 max-w-[56ch] text-[15px] leading-relaxed text-mk-text-soft">
                             {leadSentence}
                         </p>
+                        <div className="mt-4 flex flex-wrap items-baseline gap-3">
+                            <span className="mk-kpi-value text-mk-text">
+                                {lastReal?.real != null ? formatDecimalPL(lastReal.real, 1) : '—'}
+                            </span>
+                            <span className="text-lg font-semibold text-mk-muted">% r/r</span>
+                            {realDelta != null && <DeltaChip value={realDelta} unit="pp" note="m/m" />}
+                        </div>
+                        <p className="mt-1.5 text-xs text-mk-muted">{leadHeadline}</p>
                     </>
                 )}
             </section>
@@ -388,14 +396,12 @@ export function PracaDashboard() {
                 right={<PublicationDatesPanel count={4} variant="overview" />}
             />
 
-            {/* BAEL vs rejestrowane — dwie definicje, nie błąd */}
+            {/* BAEL vs rejestrowane — dwie definicje; liczby są w kaflach powyżej (bez powtórki). */}
             <div className="mk-card mk-card-editorial mk-card-pad text-sm text-mk-text-soft">
                 <span className="font-semibold text-mk-text">BAEL vs rejestrowane: </span>
-                stopa BAEL (~{baelLast != null ? formatDecimalPL(baelLast.value, 1) : '3'}%) to bezrobocie
-                wg badania ankietowego GUS (standard ILO/Eurostat) — osoby bez pracy, szukające i gotowe
-                ją podjąć. Bezrobocie rejestrowane (~{heroU != null ? formatDecimalPL(heroU, 1) : '—'}%)
-                liczy osoby w urzędach pracy; bywa wyższe, bo obejmuje też osoby nieaktywne w sensie BAEL
-                i niższe, gdy ktoś nie rejestruje się mimo braku pracy. To dwie definicje, nie rozjazd danych.
+                BAEL to badanie ankietowe GUS (standard ILO/Eurostat) — osoby bez pracy, szukające i gotowe
+                ją podjąć. Rejestrowane liczy osoby w urzędach pracy. To dwie definicje, nie rozjazd danych;
+                BAEL zwykle wychodzi niżej.
                 {/* UWAGA: w /api/bdl-series `count` = liczba ID/okresów, nie „ile wyników".
                     Endpoint zawsze bierze lata [rok-1, rok] → seria ma ≥2 wpisy; bieżący = series.at(-1). */}
             </div>
