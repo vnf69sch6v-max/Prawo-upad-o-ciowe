@@ -306,15 +306,6 @@ button.mk-card,
   color: var(--color-mk-muted);
 }
 
-/* Breadcrumb nad tytułem strony */
-.mk-page-eyebrow {
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--color-mk-faint);
-}
-
 .mk-dense-page > * + * {
   margin-top: 1.25rem;
 }

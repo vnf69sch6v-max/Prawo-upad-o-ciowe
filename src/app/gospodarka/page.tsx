@@ -18,7 +18,7 @@ import { InsightBar } from '@/components/ui/InsightBar';
 import { analyzeSeries } from '@/lib/observations';
 import { GospodarkaAktywnosc } from '@/components/sections/GospodarkaAktywnosc';
 import { RzadyGospodarka } from '@/components/sections/RzadyGospodarka';
-import { PageHeader, PageEyebrow } from '@/components/ui/PageHeader';
+import { PageHeader } from '@/components/ui/PageHeader';
 
 type Tab = 'aktywnosc' | 'koniunktura' | 'finanse';
 const TABS: { value: Tab; label: string }[] = [
@@ -188,9 +188,7 @@ export default function GospodarkaPage() {
     return (
         <div className="mk-fade-in space-y-5">
             <PageHeader
-                eyebrow={<PageEyebrow section="Gospodarka" />}
                 title="Gospodarka"
-                subtitle="PKB, produkcja, sprzedaż i koniunktura gospodarcza"
                 actions={<Segmented value={tab} onChange={setTab} options={TABS} aria-label="Sekcja gospodarki" />}
             />
 

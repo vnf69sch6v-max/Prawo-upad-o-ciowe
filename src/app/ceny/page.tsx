@@ -7,7 +7,7 @@ import { Segmented } from '@/components/ui/Segmented';
 import { InflacjaFull } from '@/components/sections/InflacjaFull';
 import { PpiFull } from '@/components/sections/PpiFull';
 import { DbwPriceSection } from '@/components/sections/DbwPriceSection';
-import { PageHeader, PageEyebrow } from '@/components/ui/PageHeader';
+import { PageHeader } from '@/components/ui/PageHeader';
 
 type Tab = 'inflacja' | 'ppi' | 'nieruchomosci' | 'budowlane' | 'rolne';
 const TABS: { value: Tab; label: string }[] = [
@@ -24,9 +24,7 @@ export default function CenyPage() {
     return (
         <div className="mk-fade-in space-y-5">
             <PageHeader
-                eyebrow={<PageEyebrow section="Ceny" />}
                 title="Ceny"
-                subtitle="Inflacja konsumencka, ceny producenta, nieruchomości, budownictwo i rolnictwo"
                 actions={<Segmented value={tab} onChange={setTab} options={TABS} aria-label="Sekcja cen" />}
             />
 

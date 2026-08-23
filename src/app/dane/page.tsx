@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { ArrowRight, BarChart3 } from 'lucide-react';
-import { PageHeader, PageEyebrow } from '@/components/ui/PageHeader';
+import { PageHeader } from '@/components/ui/PageHeader';
 
 const SECTIONS = [
     { label: 'Ceny', href: '/ceny', note: 'Inflacja CPI, PPI, nieruchomości, budownictwo, rolnictwo' },
@@ -11,11 +11,7 @@ const SECTIONS = [
 export default function DanePage() {
     return (
         <div className="mk-fade-in space-y-6">
-            <PageHeader
-                eyebrow={<PageEyebrow section="Dane makro" />}
-                title="Dane makro"
-                subtitle="Wskaźniki makroekonomiczne podzielone na dedykowane sekcje tematyczne"
-            />
+            <PageHeader title="Dane makro" />
 
             <div className="mk-card mk-card-editorial mk-card-pad">
                 <div className="flex items-start gap-3">

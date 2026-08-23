@@ -15,7 +15,7 @@ import { CompactKpiGrid } from '@/components/ui/CompactKpiGrid';
 import { LatestNews } from '@/components/ui/RelatedNews';
 import { DailyDigestCard } from '@/components/ui/DailyDigestCard';
 import { OverviewHero } from '@/components/ui/OverviewHero';
-import { PageHeader, PageEyebrow } from '@/components/ui/PageHeader';
+import { PageHeader } from '@/components/ui/PageHeader';
 import { WatchlistStrip, type WatchableKpi } from '@/components/ui/WatchlistStrip';
 
 // ── Źródła KPI (Przegląd) ───────────────────────────────────
@@ -90,21 +90,9 @@ export default function OverviewPage() {
 
     const watchlistItems: WatchableKpi[] = useMemo(() => [...macro, ...markets], [macro, markets]);
 
-    const dataDate = [unemp, industrial, retail, cpi].map((s) => (s.length ? s[s.length - 1].date : '')).filter(Boolean).sort().pop() ?? '';
-
     return (
         <div className="mk-fade-in mk-overview">
-            <PageHeader
-                compact
-                eyebrow={<PageEyebrow section="Dane makro" />}
-                title="Przegląd"
-                subtitle={
-                    <>
-                        Kluczowe wskaźniki makroekonomiczne dla Polski
-                        {dataDate ? ` · ${formatDataPeriodLabel(dataDate)}` : ''}
-                    </>
-                }
-            />
+            <PageHeader compact title="Przegląd" />
 
             <OverviewHero cpi={cpi} retail={retail} cpiLoading={cpiQ.isLoading} retailLoading={retailQ.isLoading} />
 

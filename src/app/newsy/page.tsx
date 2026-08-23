@@ -5,7 +5,7 @@ import { Search, ExternalLink, AlertTriangle, Newspaper, X, Layers, Flame, Clock
 import { useNews, type NewsItem } from '@/lib/hooks';
 import { formatRelativeTime, formatTime, formatDate } from '@/lib/formatters';
 import { norm, collapseClusters } from '@/lib/news/match';
-import { PageHeader, PageEyebrow } from '@/components/ui/PageHeader';
+import { PageHeader } from '@/components/ui/PageHeader';
 
 type Sort = 'waznosc' | 'data';
 
@@ -222,9 +222,7 @@ export default function NewsyPage() {
     return (
         <div className="mk-fade-in space-y-4">
             <PageHeader
-                eyebrow={<PageEyebrow section="Newsy" />}
                 title="Newsy"
-                subtitle="Wiadomości gospodarcze i rynkowe z polskich redakcji — scalone, odduplikowane i uszeregowane wg ważności"
                 actions={
                     data && mounted ? (
                         <p className="text-[11px] text-mk-faint">
