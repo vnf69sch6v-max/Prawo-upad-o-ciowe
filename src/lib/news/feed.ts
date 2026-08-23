@@ -3,7 +3,8 @@ import { NEWS_SOURCES } from '@/lib/news/sources';
 import { parseRss, urlKey, titleKey } from '@/lib/news/parse';
 import { clusterNews } from '@/lib/news/cluster';
 import { scoreItem } from '@/lib/news/score';
-import { appendFeedToTodayArchive } from '@/lib/news/archive';
+import { appendFeedToTodayArchive, readNewsArchive, type NewsArchiveItem } from '@/lib/news/archive';
+import { warsawDateKey } from '@/lib/news/warsaw-date';
 import type { NewsItem, NewsSourceStatus } from '@/lib/news/types';
 
 const FETCH_TIMEOUT_MS = 8000;
@@ -135,15 +136,35 @@ export async function buildNewsFeed(): Promise<NewsFeedResult> {
 /**
  * Odświeża RSS i **czekając** scala do archiwum dnia (Warsaw).
  * Krytyczne na Vercel: fire-and-forget po `return` jest zamrażane — merge musi być awaited.
+ *
+ * Gdy RSS wróci pusty, nie zerujemy archiwum — zwracamy to, co już było zapisane
+ * (np. poranny `/api/cron/refresh`), żeby digest nie dostał points:0 przez chwilowy pad feedów.
  */
 export async function refreshAndMergeTodayArchive(): Promise<{
     feed: NewsFeedResult;
     archiveCount: number;
+    sameDayCount: number;
+    archiveItems: NewsArchiveItem[];
 }> {
+    const date = warsawDateKey();
     const feed = await buildNewsFeed();
+    const sameDayCount = feed.items.filter((it) => warsawDateKey(it.publishedAt) === date).length;
+
     if (!feed.items.length) {
-        return { feed, archiveCount: 0 };
+        const existing = await readNewsArchive(date);
+        return {
+            feed,
+            archiveCount: existing?.items.length ?? 0,
+            sameDayCount,
+            archiveItems: existing?.items ?? [],
+        };
     }
+
     const archive = await appendFeedToTodayArchive(feed.items);
-    return { feed, archiveCount: archive.items.length };
+    return {
+        feed,
+        archiveCount: archive.items.length,
+        sameDayCount,
+        archiveItems: archive.items,
+    };
 }

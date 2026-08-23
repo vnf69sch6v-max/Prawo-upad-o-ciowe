@@ -106,7 +106,7 @@ export async function mergeNewsArchive(
     return doc;
 }
 
-/** Append z wyniku `/api/news` (po refresh) — wywołanie fire-and-forget OK. */
+/** Append z wyniku `/api/news` (po refresh). Wołający MUSI await — na Vercel FaaS fire-and-forget jest zamrażane. */
 export async function appendFeedToTodayArchive(items: NewsItem[]): Promise<NewsArchiveDoc> {
     const date = warsawDateKey();
     return mergeNewsArchive(items.map(toArchiveItem), date);

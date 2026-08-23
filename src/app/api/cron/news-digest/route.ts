@@ -24,9 +24,9 @@ export async function GET(request: NextRequest) {
 
     const date = warsawDateKey();
     try {
-        const { feed, archiveCount } = await refreshAndMergeTodayArchive();
+        const { feed, archiveCount, sameDayCount, archiveItems } = await refreshAndMergeTodayArchive();
         const macro = await fetchMacroChangesForDate(date);
-        const digest = await buildAndSaveDigest(date, macro);
+        const digest = await buildAndSaveDigest(date, macro, archiveItems);
         return NextResponse.json({
             ok: true,
             date,
@@ -34,6 +34,7 @@ export async function GET(request: NextRequest) {
             macro: digest.dane.length,
             tomorrowEvents: digest.jutro.events.length,
             feedCount: feed.count,
+            sameDayCount,
             archiveCount,
             sourcesOk: feed.sourcesOk,
             timestamp: new Date().toISOString(),
