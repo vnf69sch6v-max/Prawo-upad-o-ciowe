@@ -38,6 +38,7 @@ export async function GET(request: NextRequest) {
             // i trzeba zostać przy szablonie, a nie rozluźniać walidator.
             summaryOrigin: digest.podsumowanie?.origin ?? 'brak',
             summaryRejected: digest.podsumowanie?.rejectedReason ?? null,
+            summaryTokens: digest.podsumowanie?.tokens ?? null,
             feedCount: feed.count,
             sameDayCount,
             archiveCount,

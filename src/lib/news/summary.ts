@@ -31,13 +31,26 @@ import { corroborationLabel } from '@/lib/news/daily';
  * `/api/news/daily` ma tylko CZYTAĆ gotowy dokument.
  */
 
-// grok-4.6 — 500k kontekstu; przy ~1,5 tys. tokenów wejścia jesteśmy w tańszym progu cennika.
-// ⚠ xAI rozlicza żądanie powyżej 200 tys. tokenów wyższą stawką dla WSZYSTKICH tokenów, nie tylko
-// nadwyżki — stąd twarda asercja rozmiaru wejścia niżej.
-const MODEL = 'grok-4.6';
+/**
+ * Wariant BEZ ROZUMOWANIA — wybrany pomiarem, nie przeczuciem (porównanie na realnym wejściu):
+ *
+ *   grok-4.6            1245 wej. + 220 wyj. + 979 rozumowania | 17,3 s | ~$3,53/rok | walidator ✓
+ *   grok-4.3             770 wej. + 116 wyj. + 875 rozumowania |  7,3 s | ~$1,26/rok | walidator ✗
+ *   grok-4.20 non-reas.  762 wej. + 142 wyj. +   0 rozumowania |  2,4 s | ~$0,48/rok | walidator ✓
+ *
+ * ⚠ `reasoning_tokens` NIE są wliczone w `completion_tokens` — xAI dolicza je osobno (979 > 220).
+ * Kto liczy koszt z samego `completion_tokens`, zaniży go trzykrotnie.
+ *
+ * Zadanie jest proste: 3 zdania z zamkniętego wejścia. Rozumowanie nic tu nie wnosiło poza
+ * rachunkiem i 15 sekundami z 60-sekundowego budżetu crona. Jakość tekstu porównywalna.
+ *
+ * ⚠ xAI rozlicza żądanie powyżej 200 tys. tokenów wyższą stawką dla WSZYSTKICH tokenów, nie tylko
+ * nadwyżki — stąd twarda asercja rozmiaru wejścia niżej.
+ */
+const MODEL = 'grok-4.20-0309-non-reasoning';
 const ENDPOINT = 'https://api.x.ai/v1/chat/completions';
 const TIMEOUT_MS = 20_000;
-const MAX_OUTPUT_TOKENS = 600;
+const MAX_OUTPUT_TOKENS = 300;   // zmierzone wyjście: ~142 tok.; to sufit awaryjny, nie cel
 /** Szacunek: polszczyzna ≈ 3 znaki/token. Wejście ma mieć ~1,5 tys. tokenów; 4 tys. to sufit awaryjny. */
 const MAX_INPUT_TOKENS = 4_000;
 const MIN_SENTENCES = 2;
@@ -57,6 +70,10 @@ ZAKAZY — złamanie któregokolwiek unieważnia całą odpowiedź:
 4. Nie pisz, że coś zostało "potwierdzone". Wiele redakcji opisujących temat to syndykacja,
    nie weryfikacja. Wolno: "opisane niezależnie przez kilka redakcji".
 5. Nie streszczaj treści artykułów — nie masz ich. Masz tytuły.
+
+FORMA: jeden akapit ciągłego tekstu. Bez nagłówka, bez tytułu, bez markdown (gwiazdek, krat,
+myślników listy), bez pustych linii, bez wypunktowania. Zacznij od pierwszego zdania treści.
+Skup się na 2-3 najważniejszych tematach — nie wymieniaj wszystkich.
 
 Pisz o tym, o czym pisano, nie o tym, co się wydarzyło.`;
 
@@ -208,6 +225,14 @@ export function validateSummary(text: string, allowed: AllowedTokens): Validatio
         return { ok: false, reason: `liczebnik słowny spoza wejścia: „${obceSlowa[0]}”` };
     }
 
+    // UI renderuje `summary.text` jako CZYSTY TEKST — „**Podsumowanie**" pokazałoby gwiazdki
+    // dosłownie. Wariant nierozumujący lubi dokleić nagłówek, więc bramka jest konieczna,
+    // a nie tylko ostrożnościowa (zaobserwowane na pierwszym przebiegu).
+    const markdown = trimmed.match(/\*\*|^#{1,6}\s|^[-*+]\s|\n\s*\n/m);
+    if (markdown) {
+        return { ok: false, reason: 'formatowanie markdown / wiele akapitów' };
+    }
+
     if (/potwierdz/i.test(trimmed)) {
         return { ok: false, reason: 'sugeruje potwierdzenie (mierzymy syndykację, nie weryfikację)' };
     }
@@ -239,7 +264,12 @@ export function buildModelInput(digest: DailyDigest): string {
  * Jedyny fragment zależny od dostawcy. Cała reszta pliku — szablon, walidator, orkiestracja —
  * jest od niego niezależna, więc zmiana modelu czy providera to podmiana tej jednej funkcji.
  */
-export type Generate = (system: string, user: string) => Promise<string>;
+export interface GenerateResult {
+    text: string;
+    tokens?: { input: number; output: number; reasoning: number };
+}
+
+export type Generate = (system: string, user: string) => Promise<GenerateResult>;
 
 /** xAI ma API zgodne z OpenAI; jedno wywołanie na dobę nie uzasadnia dokładania zależności SDK. */
 export const generateXai: Generate = async (system, user) => {
@@ -256,9 +286,7 @@ export const generateXai: Generate = async (system, user) => {
                 { role: 'user', content: user },
             ],
             max_tokens: MAX_OUTPUT_TOKENS,
-            // Zadanie jest proste (3 zdania z zamkniętego wejścia) — głębokie rozumowanie tylko
-            // podnosi koszt i czas. Tokeny rozumowania xAI rozlicza jako wyjściowe.
-            reasoning_effort: 'low',
+            // Bez `reasoning_effort` — model jest z definicji nierozumujący (patrz komentarz przy MODEL).
             temperature: 0.3,
         }),
         signal: AbortSignal.timeout(TIMEOUT_MS),
@@ -268,10 +296,20 @@ export const generateXai: Generate = async (system, user) => {
         // Świadomie BEZ całego obiektu odpowiedzi — bywają w nim nagłówki żądania razem z kluczem.
         throw new Error(`xAI HTTP ${res.status}`);
     }
-    const json = (await res.json()) as { choices?: { message?: { content?: string } }[] };
+    const json = (await res.json()) as {
+        choices?: { message?: { content?: string } }[];
+        usage?: { prompt_tokens?: number; completion_tokens?: number; completion_tokens_details?: { reasoning_tokens?: number } };
+    };
     const text = json.choices?.[0]?.message?.content;
     if (!text) throw new Error('xAI: pusta odpowiedź');
-    return text;
+    return {
+        text,
+        tokens: {
+            input: json.usage?.prompt_tokens ?? 0,
+            output: json.usage?.completion_tokens ?? 0,
+            reasoning: json.usage?.completion_tokens_details?.reasoning_tokens ?? 0,
+        },
+    };
 };
 
 // ─── Orkiestracja ───────────────────────────────────────────
@@ -305,16 +343,18 @@ export async function makeDigestSummary(
         numbers: [...allowed.numbers],
     };
 
-    let text: string;
+    let generated: GenerateResult;
     try {
-        text = (await generate(SYSTEM_PROMPT, user)).trim();
+        generated = await generate(SYSTEM_PROMPT, user);
     } catch (err) {
         return fallback(`błąd generacji: ${err instanceof Error ? err.message : String(err)}`);
     }
+    const text = generated.text.trim();
 
     const verdict = validateSummary(text, allowed);
     if (!verdict.ok) {
-        return { ...fallback(`walidator: ${verdict.reason}`), input };
+        // Tokeny zapisujemy TAKŻE przy odrzuceniu — zapłaciliśmy za nie tak samo.
+        return { ...fallback(`walidator: ${verdict.reason}`), input, tokens: generated.tokens };
     }
-    return { text, origin: 'model', model: MODEL, input };
+    return { text, origin: 'model', model: MODEL, input, tokens: generated.tokens };
 }

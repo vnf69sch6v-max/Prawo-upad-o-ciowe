@@ -71,6 +71,12 @@ export interface DigestSummary {
     /** Powód odrzucenia generacji — bez tego zły akapit jest niediagnozowalny. */
     rejectedReason?: string;
     /**
+     * Zużycie tokenów ostatniego wywołania — zapisywane, żeby dało się pilnować kosztu
+     * z historii digestów, bez wchodzenia do konsoli dostawcy.
+     * ⚠ `reasoning` xAI dolicza OSOBNO do `output`, nie zawiera go w nim.
+     */
+    tokens?: { input: number; output: number; reasoning: number };
+    /**
      * Wejście, z którego powstał tekst. OBOWIĄZKOWE przy origin === 'model' — inaczej nie da się
      * odróżnić halucynacji modelu od śmieci, które dostał.
      */
