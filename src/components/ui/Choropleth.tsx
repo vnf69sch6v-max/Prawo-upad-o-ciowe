@@ -43,7 +43,7 @@ export function Choropleth({ items, format, labelFormat, scheme = 'blue', revers
     const hov = hovered ? bySlug.get(hovered) : null;
 
     return (
-        <div className="relative" onMouseMove={(e) => { const r = e.currentTarget.getBoundingClientRect(); setPos({ x: e.clientX - r.left, y: e.clientY - r.top }); }}>
+        <div data-choropleth className="relative" onMouseMove={(e) => { const r = e.currentTarget.getBoundingClientRect(); setPos({ x: e.clientX - r.left, y: e.clientY - r.top }); }}>
             <svg viewBox="0 0 580 550" className="h-auto w-full" style={{ maxHeight: '62vh' }}>
                 {Object.entries(SLUG_TO_PATH).map(([slug, pathKey]) => {
                     const d = VOIVODESHIP_PATHS[pathKey];

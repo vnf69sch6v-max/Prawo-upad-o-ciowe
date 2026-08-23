@@ -11,9 +11,9 @@ import { formatDecimalPL, formatNumber, formatDate } from '@/lib/formatters';
 import { KpiCard, type AccentKey } from '@/components/ui/KpiCard';
 import { InteractiveChart } from '@/components/ui/InteractiveChart';
 import { SectionCard } from '@/components/ui/SectionCard';
-import { DataTable, type Column } from '@/components/ui/DataTable';
 import { StaleBadge } from '@/components/ui/StaleBadge';
 import { Drawer } from '@/components/ui/Drawer';
+import { RankingBars } from '@/components/ui/RankingBars';
 import PolandMap from '@/components/PolandMap';
 import { AXIS_INK } from '@/lib/chart-theme';
 import { QueryState, QueryEmpty } from '@/components/ui/QueryState';
@@ -177,11 +177,7 @@ export function RynekPracySection() {
     }, [regQ.data, selected]);
     const regWages = useMemo(() => (selectedRegion?.wagesSeries ?? []).map((w) => ({ date: String(w.year), value: w.value })), [selectedRegion]);
 
-    const cols: Column<typeof regions[number]>[] = [
-        { key: 'name', header: 'Województwo', sortable: true, sortValue: (r) => r.name, render: (r) => r.name },
-        { key: 'unemp', header: 'Bezrobocie', align: 'right', sortable: true, sortValue: (r) => r.unemployment ?? 0, render: (r) => r.unemployment != null ? `${formatDecimalPL(r.unemployment, 1)}%` : '—' },
-        { key: 'wages', header: 'Płace (PLN)', align: 'right', sortable: true, sortValue: (r) => r.wages ?? 0, render: (r) => r.wages != null ? formatNumber(r.wages, 0) : '—' },
-    ];
+    const RANK_AMBER = ['#FDE68A', '#FCD34D', '#FBBF24', '#F59E0B', '#D97706', '#B45309', '#92400E'];
 
     return (
         <div className="space-y-6">
@@ -195,7 +191,7 @@ export function RynekPracySection() {
             </div>
 
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-                <SectionCard editorial titleVariant="label" className="lg:col-span-2" title="Bezrobocie rejestrowane — mapa województw" subtitle="GUS · kliknij region, aby zobaczyć 10-letnią historię">
+                <SectionCard editorial titleVariant="label" className="order-2 min-w-0 lg:order-1 lg:col-span-2" title="Bezrobocie rejestrowane — mapa województw" subtitle="GUS · kliknij region, aby zobaczyć 10-letnią historię">
                     <QueryState
                         isLoading={regQ.isLoading}
                         isError={regQ.isError}
@@ -207,22 +203,31 @@ export function RynekPracySection() {
                         <PolandMap regions={regions} national={national} selectedRegion={selected} onRegionSelect={openRegion} />
                     </QueryState>
                 </SectionCard>
-                <div className="space-y-4">
-                    <SectionCard editorial titleVariant="label" title={selectedRegion ? selectedRegion.name : 'Wybierz województwo'} padded>
-                        {selectedRegion ? (
-                            <>
-                                <dl className="space-y-3 text-sm">
-                                    <div className="flex justify-between"><dt className="text-mk-muted">Bezrobocie</dt><dd className="font-semibold tnum">{selectedRegion.unemployment != null ? `${formatDecimalPL(selectedRegion.unemployment, 1)}%` : '—'}</dd></div>
-                                    <div className="flex justify-between"><dt className="text-mk-muted">Płace</dt><dd className="font-semibold tnum">{selectedRegion.wages != null ? `${formatNumber(selectedRegion.wages, 0)} zł` : '—'}</dd></div>
-                                    <div className="flex justify-between"><dt className="text-mk-muted">Płace r/r</dt><dd className="font-semibold tnum">{selectedRegion.wagesYoY != null ? `${formatDecimalPL(selectedRegion.wagesYoY, 1)}%` : '—'}</dd></div>
-                                </dl>
-                                <button onClick={() => setRegionDrawer(true)} className="mt-4 w-full rounded-lg border border-mk-border px-3 py-2 text-sm font-medium text-mk-text transition-colors hover:bg-mk-surface-alt">Historia 10 lat →</button>
-                            </>
-                        ) : <p className="text-sm text-mk-faint">Kliknij region na mapie, aby zobaczyć szczegóły i 10-letnią historię.</p>}
-                    </SectionCard>
-                    <SectionCard editorial titleVariant="label" title="Ranking" padded>
-                        <div className="max-h-[240px] overflow-auto">
-                            <DataTable columns={cols} rows={regions} initialSort="unemp" initialDir="desc" rowKey={(r) => r.slug} />
+                <div className="order-1 min-w-0 space-y-4 lg:order-2">
+                    {selectedRegion ? (
+                        <SectionCard editorial titleVariant="label" title={selectedRegion.name} padded>
+                            <dl className="space-y-3 text-sm">
+                                <div className="flex justify-between"><dt className="text-mk-muted">Bezrobocie</dt><dd className="font-semibold tnum">{selectedRegion.unemployment != null ? `${formatDecimalPL(selectedRegion.unemployment, 1)}%` : '—'}</dd></div>
+                                <div className="flex justify-between"><dt className="text-mk-muted">Płace</dt><dd className="font-semibold tnum">{selectedRegion.wages != null ? `${formatNumber(selectedRegion.wages, 0)} zł` : '—'}</dd></div>
+                                <div className="flex justify-between"><dt className="text-mk-muted">Płace r/r</dt><dd className="font-semibold tnum">{selectedRegion.wagesYoY != null ? `${formatDecimalPL(selectedRegion.wagesYoY, 1)}%` : '—'}</dd></div>
+                            </dl>
+                            <button type="button" onClick={() => setRegionDrawer(true)} className="mt-4 min-h-11 w-full rounded-lg border border-mk-border px-3 py-2 text-sm font-medium text-mk-text transition-colors hover:bg-mk-surface-alt">Historia 10 lat →</button>
+                        </SectionCard>
+                    ) : (
+                        <SectionCard editorial titleVariant="label" title="Wybierz województwo" padded className="hidden lg:block">
+                            <p data-empty-region className="text-sm text-mk-faint">Kliknij region na mapie, aby zobaczyć szczegóły i 10-letnią historię.</p>
+                        </SectionCard>
+                    )}
+                    <SectionCard editorial titleVariant="label" title="Ranking" padded className="min-w-0">
+                        <div data-region-ranking className="max-h-[240px] overflow-auto">
+                            <RankingBars
+                                rows={regions}
+                                valueOf={(r) => r.unemployment}
+                                format={(v) => `${formatDecimalPL(v, 1)}%`}
+                                colors={RANK_AMBER}
+                                selected={selected}
+                                onSelect={openRegion}
+                            />
                         </div>
                     </SectionCard>
                 </div>

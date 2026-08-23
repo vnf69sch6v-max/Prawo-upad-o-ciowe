@@ -132,7 +132,7 @@ export default function PolandMap({ regions, national, selectedRegion, onRegionS
     const hoveredData = hovered ? getRegion(hovered) : null;
 
     return (
-        <div className="relative" onMouseMove={handleMouseMove}>
+        <div data-poland-map className="relative" onMouseMove={handleMouseMove}>
             <svg viewBox="0 0 580 550" className="w-full h-auto" style={{ maxHeight: '65vh' }}>
                 {Object.entries(SLUG_TO_PATH).map(([slug, pathKey]) => {
                     const path = VOIVODESHIP_PATHS[pathKey];
