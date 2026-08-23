@@ -99,7 +99,7 @@ export function InteractiveChart({
     const [range, setRange] = useState<RangeKey>(initialRange);
     const rangeButtons = ranges ?? DEFAULT_RANGES;
     const { ref: rootRef, width: boxW } = usePlotWidth();
-    const [tipOn, setTipOn] = useState(false);
+    const [forceHide, setForceHide] = useState(false);
 
     const view = useMemo(() => {
         if (!showRange || range === 'ALL') return data;
@@ -122,11 +122,12 @@ export function InteractiveChart({
     const tickInterval = xTickStep(boxW || 309, view.length);
     const legendBelow = Boolean(legend && isNarrow);
 
-    // Tooltip: na telefonie nie ma hover. `trigger="click"` pokazuje i ZOSTAJE;
-    // tap poza wykresem zdejmuje (active=false). Kolejny tap w plot — nowy punkt.
+    // Tooltip: na telefonie nie ma hover. `trigger="click"` pokazuje i ZOSTAJE.
+    // `active={false}` od startu BLOKUJE tap (Recharts nie otworzy tooltipa) —
+    // gasimy dopiero po tapie poza wykresem; kolejny tap w plot zdejmuje blokadę.
     useEffect(() => {
         const hide = (e: PointerEvent) => {
-            if (!rootRef.current?.contains(e.target as Node)) setTipOn(false);
+            if (!rootRef.current?.contains(e.target as Node)) setForceHide(true);
         };
         document.addEventListener('pointerdown', hide);
         return () => document.removeEventListener('pointerdown', hide);
@@ -171,9 +172,7 @@ export function InteractiveChart({
                 <ComposedChart
                     data={view}
                     margin={{ top: 6, right: hasRight ? 6 : 12, left: -6, bottom: legendBelow ? 2 : 0 }}
-                    onClick={(state) => {
-                        if (state && state.activeTooltipIndex != null) setTipOn(true);
-                    }}
+                    onClick={() => setForceHide(false)}
                 >
                     <defs>
                         {series.filter((s) => s.type === 'area').map((s) => (
@@ -198,7 +197,7 @@ export function InteractiveChart({
                     {hasRight && <YAxis yAxisId="right" orientation="right" domain={['auto', 'auto']} tick={{ fill: AXIS_INK, fontSize: TICK_FONT }} axisLine={false} tickLine={false} width={44} />}
                     <Tooltip
                         trigger="click"
-                        active={tipOn ? undefined : false}
+                        active={forceHide ? false : undefined}
                         content={<LightTooltip valueFormatter={valueFormatter} unit={unit} />}
                         cursor={{ stroke: CURSOR, strokeWidth: 1, strokeDasharray: '3 3' }}
                         isAnimationActive={false}
