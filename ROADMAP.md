@@ -264,7 +264,7 @@ przy podejmowaniu.
   (nie najświeższe). Pliki: `lib/news/{score,cluster}.ts`, `sources.ts` (owner + OWNER_WEIGHT),
   ranking w `api/news/route.ts`.
   - **Klastry liczone po WŁAŚCICIELACH, nie domenach.** Bankier.pl i Puls Biznesu to jedna spółka
-    (Bonnier) → ten sam temat u obu to JEDEN niezależny głos. 8 feedów = 5 właścicieli.
+    (Bonnier) → ten sam temat u obu to JEDEN niezależny głos. 11 feedów = 8 właścicieli.
     Bez tego ważność byłaby systematycznie zawyżona.
   - **Brak publicznych ocen wiarygodności polskich mediów finansowych** (sprawdzone: NewsGuard nie
     pokrywa PL, MBFC nie ma Bankiera/Money.pl, Reuters DNR nie wymienia naszych źródeł) → `OWNER_WEIGHT`
@@ -287,6 +287,12 @@ przy podejmowaniu.
     z 2 niezależnych redakcji), 0 fałszywych reklam.
   - Whitelist skrótowców (NBP/GUS/RPP/KGHM/WIG20…) w detektorze clickbaitu jest KONIECZNA — bez niej
     reguła ALL-CAPS karałaby najtwardsze newsy makro. Dodając spółki WIG20, dopisz ich tickery.
+- **Newsy — retuning wag + źródła (2026-08-23)** — pakiet zatwierdzony przez właściciela.
+  `OWNER_WEIGHT`: official 1.35, isbnews 1.25, ptwp/bonnier 1.15, wp 1.10, polsat 1.05, rasp/g300 1.00.
+  Półokres świeżości per tier w `score.ts`: official 36h, isbnews 18h, ptwp 12h, portale 10h;
+  breaking bonus +0.15 przy age < 2h. Dodane feedy: ISBnews.TV, GUS Aktualności + Komunikaty, 300Gospodarka.
+  Odłożone: zero.pl (brak RSS), NBP/MF (brak content feedu — tylko tabele kursów / HTML gov.pl),
+  GUS Infografiki (stare pozycje). Cap Bonnier w top-20 — pominięty (opcjonalny).
 - **Newsy w kontekście danych** — 2026-07-16, commit `b6b3414`
   Pas „Newsy powiązane" na Cenach, Gospodarce, Pracy i Rynkach + „Najnowsze newsy" na Przeglądzie.
   Pliki: `src/lib/news/match.ts` (silnik), `src/lib/news/types.ts` (wspólne typy), `RelatedNews.tsx`

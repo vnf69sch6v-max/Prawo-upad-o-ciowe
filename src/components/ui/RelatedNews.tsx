@@ -24,6 +24,7 @@ const SECTION_LABELS: Record<string, string> = {
     gielda: 'GIEŁDA',
     waluty: 'WALUTY',
     przemysl: 'PRZEMYSŁ',
+    oficjalne: 'OFICJALNE',
 };
 
 function sectionLabel(section: string): string {

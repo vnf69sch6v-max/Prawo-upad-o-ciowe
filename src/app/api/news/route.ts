@@ -104,7 +104,13 @@ function rank(items: NewsItem[]): NewsItem[] {
     const scored = items.map((it) => ({ it, raw: 0, cluster: null as (typeof clusters)[number] | null }));
     for (const [ci, c] of clusters.entries()) {
         for (const i of c.members) {
-            const res = scoreItem({ item: items[i], clusterWeight: c.weight, isFirst: i === c.firstIndex, now });
+            const res = scoreItem({
+                item: items[i],
+                clusterWeight: c.weight,
+                isFirst: i === c.firstIndex,
+                owner: ownerOf.get(items[i].sourceId),
+                now,
+            });
             scored[i].raw = res.raw;
             scored[i].cluster = c;
             items[i].clusterId = ci;
@@ -139,7 +145,7 @@ export async function GET(request: NextRequest) {
             'news',
             'rss_pl',
             buildFeed,
-            'RSS: Bankier, Money.pl, Business Insider PL, Interia, Puls Biznesu, wnp.pl',
+            'RSS: Bankier, Money.pl, BI PL, Interia, PB, wnp.pl, ISBnews, GUS, 300Gospodarka',
             refresh ? 0 : TTL_MS,
         );
         return NextResponse.json(result);

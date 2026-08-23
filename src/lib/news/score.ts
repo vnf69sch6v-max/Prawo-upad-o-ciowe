@@ -9,23 +9,46 @@
 // Jedyny obiektywny sygnał, jaki mamy, to korroboracja: ilu NIEZALEŻNYCH właścicieli opisuje temat.
 
 import { norm } from './match';
+import { type NewsOwner } from './sources';
 import type { NewsItem } from './types';
 
 /**
- * Zanik świeżości — wykładniczy, z jawnym półokresem.
+ * Zanik świeżości — wykładniczy, z jawnym półokresem per tier właściciela.
  *
  * Świadomie NIE kopiujemy wzoru Hacker News (`score/(t+2)^1.8`): HN operuje na głosach 1–1000
  * (~250× dynamiki), a u nas „głosem" jest liczba niezależnych właścicieli w klastrze (1–5, ~5×).
  * Przy grawitacji 1.8 news sprzed 24h musiałby mieć ~370× więcej źródeł, żeby dogonić świeży —
  * czyli czas zmiażdżyłby sygnał ważności i wyszłoby zwykłe sortowanie po dacie.
  *
- * H = po ilu godzinach news traci połowę wartości. To jedna z dwóch liczb, które się tu stroi.
+ * H = po ilu godzinach news traci połowę wartości. Retune 2026-08-23:
+ *   A official 36h · B isbnews 18h · C specialty (ptwp) 12h · D portale 10h.
  */
-export const HALF_LIFE_HOURS = 10;
+export const HALF_LIFE_HOURS = 10; // domyślny Tier D — zachowany dla kompatybilności
 
-export function freshness(publishedAt: string, now = Date.now()): number {
+const HALF_LIFE_BY_OWNER: Partial<Record<NewsOwner, number>> = {
+    official: 36,
+    isbnews: 18,
+    ptwp: 12,
+};
+
+/** Bonus za świeży news (< 2h) — sygnał „breaking". */
+export const BREAKING_AGE_HOURS = 2;
+export const BREAKING_BONUS = 0.15;
+
+export function halfLifeHours(owner?: NewsOwner): number {
+    if (owner && HALF_LIFE_BY_OWNER[owner] != null) return HALF_LIFE_BY_OWNER[owner]!;
+    return HALF_LIFE_HOURS;
+}
+
+export function freshness(publishedAt: string, now = Date.now(), owner?: NewsOwner): number {
     const ageH = Math.max(0, (now - new Date(publishedAt).getTime()) / 3_600_000);
-    return Math.exp((-Math.LN2 * ageH) / HALF_LIFE_HOURS);
+    const h = halfLifeHours(owner);
+    return Math.exp((-Math.LN2 * ageH) / h);
+}
+
+export function breakingBonus(publishedAt: string, now = Date.now()): number {
+    const ageH = Math.max(0, (now - new Date(publishedAt).getTime()) / 3_600_000);
+    return ageH < BREAKING_AGE_HOURS ? BREAKING_BONUS : 0;
 }
 
 // ─── Detektor reklamy ────────────────────────────────────
@@ -107,7 +130,11 @@ export function isOpinion(title: string): boolean {
 }
 
 // ─── Sygnały „twardego" newsa makro ──────────────────────
-const HARD_ENTITIES = ['nbp', 'rpp', 'gus', 'ebc', 'fed', 'eurostat', 'knf', 'uokik', 'ministerstwo finansow', 'cpi', 'ppi', 'pkb', 'inflacj', 'stopy procentow', 'wibor', 'gpw', 'wig'];
+const HARD_ENTITIES = [
+    'nbp', 'rpp', 'gus', 'ebc', 'fed', 'eurostat', 'knf', 'uokik',
+    'ministerstwo finansow', 'glowny urzad statystyczn',
+    'cpi', 'ppi', 'pkb', 'inflacj', 'stopy procentow', 'wibor', 'gpw', 'wig',
+];
 
 export function hasHardEntity(item: Pick<NewsItem, 'title' | 'description'>): boolean {
     const t = norm(`${item.title} ${item.description}`);
@@ -125,6 +152,8 @@ export interface ScoreInput {
     clusterWeight: number;
     /** Czy to najstarszy news w klastrze — proxy „oryginalnego zgłoszenia tematu". */
     isFirst: boolean;
+    /** Właściciel źródła — wpływa na półokres zaniku świeżości. */
+    owner?: NewsOwner;
     now?: number;
 }
 
@@ -141,8 +170,9 @@ export interface ScoreResult {
  *
  * • `^0.8` — malejące zwroty: druga redakcja opisująca temat wnosi więcej niż piąta.
  * • kary multiplikatywne (jak `penalties` w HN) — reklama praktycznie zeruje pozycję.
+ * • breaking bonus +0.15 gdy age < 2h (dodawany do bonusów, nie mnożnik).
  */
-export function scoreItem({ item, clusterWeight, isFirst, now = Date.now() }: ScoreInput): ScoreResult {
+export function scoreItem({ item, clusterWeight, isFirst, owner, now = Date.now() }: ScoreInput): ScoreResult {
     const ad = isAd(item);
     const selfPromo = isSelfPromo(item);
     const clickbait = clickbaitLevel(item.title);
@@ -152,6 +182,7 @@ export function scoreItem({ item, clusterWeight, isFirst, now = Date.now() }: Sc
     if (hasHardEntity(item)) bonus += 0.2;
     if (hasHardNumber(item)) bonus += 0.1;
     if (isFirst) bonus += 0.1;
+    bonus += breakingBonus(item.publishedAt, now);
 
     let penalty = 1;
     if (ad) penalty *= 0.02;
@@ -160,6 +191,6 @@ export function scoreItem({ item, clusterWeight, isFirst, now = Date.now() }: Sc
     else if (clickbait === 'weak') penalty *= 0.8;
     if (opinion) penalty *= 0.7;
 
-    const raw = Math.pow(Math.max(clusterWeight, 0.1), 0.8) * bonus * freshness(item.publishedAt, now) * penalty;
+    const raw = Math.pow(Math.max(clusterWeight, 0.1), 0.8) * bonus * freshness(item.publishedAt, now, owner) * penalty;
     return { raw, ad, clickbait, opinion };
 }
