@@ -24,7 +24,7 @@ export function WidgetPicker({
 
     useEffect(() => {
         if (!open) return;
-        setQ('');
+        setQ(''); // eslint-disable-line react-hooks/set-state-in-effect -- celowy reset wyszukiwarki przy otwarciu
         const id = setTimeout(() => inputRef.current?.focus(), 20);
         const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
         window.addEventListener('keydown', onKey);

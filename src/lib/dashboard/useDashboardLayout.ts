@@ -1,17 +1,20 @@
 'use client';
 
 /**
- * Układ „Mojego panelu" — kafle wybrane przez użytkownika, trzymane w `localStorage`.
+ * Układ pulpitu Przeglądu — kafle wybrane przez użytkownika, trzymane w `localStorage`.
  *
  * Wzorowane na `lib/watchlist.ts`: hydration-safe (flaga `ready`, bo `localStorage` nie istnieje
- * po stronie serwera), a zmiany rozsyłamy zdarzeniem `mk:dashboard`, żeby wiele instancji hooka
- * na jednej stronie widziało to samo. Walidujemy kształt i odrzucamy nieznane id widgetów
- * (np. po usunięciu widgetu z katalogu albo ręcznej edycji storage).
+ * po stronie serwera), a zmiany rozsyłamy zdarzeniem `mk:overview`, żeby wiele instancji hooka
+ * na jednej stronie widziało to samo. Walidujemy kształt i odrzucamy nieznane id widgetów.
+ *
+ * Pierwsza wizyta NIE zapisuje nic — brak klucza = dokładnie dzisiejszy Przegląd.
+ * „Przywróć domyślny układ" kasuje klucz, zamiast zapisywać kopię defaultu.
  */
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-    DEFAULT_LAYOUT, MAX_COLS, MAX_ROWS, STORAGE_KEY, STORAGE_EVENT, type WidgetInstance,
+    DEFAULT_LAYOUT, MAX_COLS, MAX_ROWS, STORAGE_KEY, STORAGE_EVENT,
+    layoutsEqual, type WidgetInstance,
 } from './types';
 import { getWidget, widgetExists } from './registry';
 
@@ -29,44 +32,54 @@ function sanitize(instance: WidgetInstance): WidgetInstance | null {
     };
 }
 
+function defaultLayout(): WidgetInstance[] {
+    return DEFAULT_LAYOUT.map(sanitize).filter((x): x is WidgetInstance => x != null);
+}
+
 function read(): WidgetInstance[] {
-    if (typeof window === 'undefined') return [];
+    if (typeof window === 'undefined') return defaultLayout();
     try {
         const raw = window.localStorage.getItem(STORAGE_KEY);
-        if (!raw) return DEFAULT_LAYOUT.map(sanitize).filter((x): x is WidgetInstance => x != null);
+        if (!raw) return defaultLayout();
         const parsed = JSON.parse(raw);
-        if (!Array.isArray(parsed)) return [];
+        if (!Array.isArray(parsed)) return defaultLayout();
         const seen = new Set<string>();
-        return parsed
+        const next = parsed
             .filter((x): x is WidgetInstance => x && typeof x.widgetId === 'string' && widgetExists(x.widgetId))
             .map(sanitize)
             .filter((x): x is WidgetInstance => {
-                if (!x || seen.has(x.widgetId)) return false; // bez duplikatów — id jest kluczem sortable
+                if (!x || seen.has(x.widgetId)) return false;
                 seen.add(x.widgetId);
                 return true;
             });
+        return next.length ? next : defaultLayout();
     } catch {
-        return [];
+        return defaultLayout();
     }
 }
 
 function write(items: WidgetInstance[]) {
     try {
-        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-    } catch { /* tryb prywatny / brak miejsca — panel jest dodatkiem, nie blokujemy UI */ }
+        if (layoutsEqual(items, defaultLayout())) {
+            window.localStorage.removeItem(STORAGE_KEY);
+        } else {
+            window.localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+        }
+    } catch { /* tryb prywatny / brak miejsca — układ jest dodatkiem, nie blokujemy UI */ }
     window.dispatchEvent(new Event(STORAGE_EVENT));
 }
 
-export function defaultLayout(): WidgetInstance[] {
-    return DEFAULT_LAYOUT.map(sanitize).filter((x): x is WidgetInstance => x != null);
+function clearStorage() {
+    try { window.localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
+    window.dispatchEvent(new Event(STORAGE_EVENT));
 }
 
 export function useDashboardLayout() {
-    const [layout, setLayoutState] = useState<WidgetInstance[]>([]);
+    const [layout, setLayoutState] = useState<WidgetInstance[]>(() => defaultLayout());
     const [ready, setReady] = useState(false);
 
     useEffect(() => {
-        setLayoutState(read());
+        setLayoutState(read()); // eslint-disable-line react-hooks/set-state-in-effect -- hydration: localStorage only exists on the client
         setReady(true);
         const sync = () => setLayoutState(read());
         window.addEventListener(STORAGE_EVENT, sync);
@@ -76,6 +89,8 @@ export function useDashboardLayout() {
             window.removeEventListener('storage', sync);
         };
     }, []);
+
+    const isDefault = useMemo(() => layoutsEqual(layout, defaultLayout()), [layout]);
 
     const commit = useCallback((next: WidgetInstance[]) => {
         write(next);
@@ -88,7 +103,7 @@ export function useDashboardLayout() {
         const def = getWidget(widgetId);
         if (!def) return;
         const next = read();
-        if (next.some((i) => i.widgetId === widgetId)) return; // już dodany
+        if (next.some((i) => i.widgetId === widgetId)) return;
         next.push({ widgetId, w: def.defaultSize.w, h: def.defaultSize.h });
         commit(next);
     }, [commit]);
@@ -120,7 +135,21 @@ export function useDashboardLayout() {
         resize(widgetId, { h: nextH });
     }, [resize]);
 
-    const reset = useCallback(() => commit(defaultLayout()), [commit]);
+    const reset = useCallback(() => {
+        clearStorage();
+        setLayoutState(defaultLayout());
+    }, []);
 
-    return { layout, ready, setLayout, addWidget, removeWidget, resize, cycleWidth, cycleHeight, reset };
+    return {
+        layout,
+        ready,
+        isDefault,
+        setLayout,
+        addWidget,
+        removeWidget,
+        resize,
+        cycleWidth,
+        cycleHeight,
+        reset,
+    };
 }
