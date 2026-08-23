@@ -123,7 +123,7 @@ export function CommandPalette() {
         if (!cmd) return;
         setOpen(false);
         if (cmd.id === 'edit-desk') {
-            if (window.location.pathname === '/') {
+            if (window.location.pathname === '/' || window.location.pathname === '/panel') {
                 window.dispatchEvent(new Event('mk:edit-dashboard'));
                 return;
             }
