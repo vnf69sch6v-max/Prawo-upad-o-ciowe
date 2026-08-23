@@ -51,7 +51,7 @@ function CompanyNewsList({ items }: { items: NewsItem[] }) {
         <ul className="space-y-2">
             {items.map((n) => (
                 <li key={n.link}>
-                    <a href={n.link} target="_blank" rel="noopener noreferrer" className="group block">
+                    <a href={n.link} target="_blank" rel="noopener noreferrer" className="group block min-h-6">
                         <span className="line-clamp-2 text-xs font-medium leading-snug text-mk-text transition-colors group-hover:text-mk-primary">{n.title}</span>
                         <span className="mt-0.5 flex items-center gap-1.5 text-[11px] text-mk-muted">
                             <span>{n.source}</span>
@@ -73,7 +73,7 @@ function CompanyCard({ company, quote, news }: { company: Wig20Company; quote: W
             <div className="flex items-start gap-2">
                 <span className="mt-0.5 inline-flex shrink-0 items-center rounded-md bg-mk-surface-alt px-1.5 py-0.5 text-xs font-bold text-mk-text">{company.ticker}</span>
                 <div className="min-w-0">
-                    <Link href={`/spolki/${company.ticker}`} className="block truncate text-base font-bold leading-tight text-mk-text transition-colors hover:text-mk-primary">
+                    <Link href={`/spolki/${company.ticker}`} className="block min-h-6 truncate text-base font-bold leading-tight text-mk-text transition-colors hover:text-mk-primary">
                         {company.name}
                     </Link>
                     <span className="mt-0.5 inline-block rounded-full bg-mk-surface-alt px-2 py-0.5 text-[11px] font-medium text-mk-muted">{company.sector}</span>
@@ -99,7 +99,7 @@ function CompanyCard({ company, quote, news }: { company: Wig20Company; quote: W
                 <CompanyNewsList items={news} />
             </div>
 
-            <Link href={`/spolki/${company.ticker}`} className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-mk-primary transition-colors hover:underline">
+            <Link href={`/spolki/${company.ticker}`} className="mt-3 inline-flex min-h-6 items-center gap-1 text-sm font-medium text-mk-primary transition-colors hover:underline">
                 Szczegóły i wykres <ArrowUpRight size={14} aria-hidden />
             </Link>
         </div>
