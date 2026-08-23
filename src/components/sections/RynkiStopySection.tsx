@@ -23,9 +23,9 @@ export function RynkiStopySection() {
     return (
         <div className="space-y-6">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                <KpiCard label="Stopa referencyjna NBP" value={fmtPL(ref, 2)} unit="%" accent="violet" icon={Percent} footnote="NBP · RPP" loading={ratesQ.isLoading} watchId="ref-rate" />
-                <KpiCard label="Stopa lombardowa" value={fmtPL(lom, 2)} unit="%" accent="rose" icon={Percent} footnote="NBP" loading={ratesQ.isLoading} />
-                <KpiCard label="Stopa depozytowa" value={fmtPL(dep, 2)} unit="%" accent="cyan" icon={Percent} footnote="NBP" loading={ratesQ.isLoading} />
+                <KpiCard label="Stopa referencyjna NBP" value={fmtPL(ref, 2)} unit="%" accent="violet" icon={Percent} loading={ratesQ.isLoading} watchId="ref-rate" />
+                <KpiCard label="Stopa lombardowa" value={fmtPL(lom, 2)} unit="%" accent="rose" icon={Percent} loading={ratesQ.isLoading} />
+                <KpiCard label="Stopa depozytowa" value={fmtPL(dep, 2)} unit="%" accent="cyan" icon={Percent} loading={ratesQ.isLoading} />
             </div>
 
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">

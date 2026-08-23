@@ -75,7 +75,6 @@ export function RynkiDashboard() {
             delta: wigDelta,
             deltaUnit: 'pct',
             text: 'Indeks blue chip GPW · notowania Yahoo/Stooq.',
-            footnote: 'GPW · Stooq/Yahoo',
             loading: heroLoading,
         },
         {
@@ -85,7 +84,7 @@ export function RynkiDashboard() {
             delta: fxDelta(eurHQ.data),
             deltaUnit: 'pct',
             text: fxTable?.effectiveDate ? `Kurs średni NBP · ${formatDate(fxTable.effectiveDate)}` : 'Kurs średni NBP (tabela A).',
-            footnote: fxTable?.effectiveDate ? `NBP · ${formatDate(fxTable.effectiveDate)}` : 'NBP tab. A',
+            footnote: fxTable?.effectiveDate ? formatDate(fxTable.effectiveDate) : undefined,
             loading: heroLoading,
         },
         {
@@ -93,7 +92,7 @@ export function RynkiDashboard() {
             value: refRate ? formatDecimalPL(refRate.value, 2) : '—',
             unit: '%',
             text: refRate ? `Obowiązuje od ${formatDate(refRate.validFrom)}.` : 'Kluczowa stopa polityki pieniężnej NBP.',
-            footnote: refRate ? `NBP · od ${formatDate(refRate.validFrom)}` : 'NBP',
+            footnote: refRate ? formatDate(refRate.validFrom) : undefined,
             loading: heroLoading,
         },
     ];
@@ -106,7 +105,7 @@ export function RynkiDashboard() {
             unit: 'zł',
             icon: DollarSign,
             delta: fxDelta(usdHQ.data) != null ? { value: fxDelta(usdHQ.data)!, unit: 'pct', invert: true } : undefined,
-            footnote: fxTable?.effectiveDate ? `NBP ${formatDate(fxTable.effectiveDate)}` : 'NBP',
+            footnote: fxTable?.effectiveDate ? formatDate(fxTable.effectiveDate) : undefined,
             loading: fxQ.isLoading,
             href: '/rynki?tab=kursy',
             watchId: 'usd-pln',
@@ -117,7 +116,7 @@ export function RynkiDashboard() {
             value: wibor3M != null ? formatDecimalPL(wibor3M, 2) : '—',
             unit: '%',
             icon: Percent,
-            footnote: wiborQ.data?.rates?.[0]?.date ? `NBP · ${wiborQ.data.rates[0].date}` : 'NBP',
+            footnote: wiborQ.data?.rates?.[0]?.date ? formatDate(wiborQ.data.rates[0].date) : undefined,
             loading: wiborQ.isLoading,
             href: '/rynki?tab=stopy',
         },
@@ -130,7 +129,7 @@ export function RynkiDashboard() {
             delta: lastOf(yield10) != null && prevOf(yield10) != null
                 ? { value: +(lastOf(yield10)! - prevOf(yield10)!).toFixed(2), unit: 'pp', invert: true }
                 : undefined,
-            footnote: yield10.length ? `Rynek · ${yield10[yield10.length - 1].date}` : 'Stooq 10Y PL',
+            footnote: yield10.length ? formatDate(yield10[yield10.length - 1].date) : undefined,
             loading: yieldQ.isLoading,
         },
         {
@@ -140,7 +139,7 @@ export function RynkiDashboard() {
             unit: 'zł/g',
             icon: Gem,
             delta: goldDelta != null ? { value: goldDelta, unit: 'pct' } : undefined,
-            footnote: 'NBP · cena złota',
+            footnote: gold.length ? formatDate(gold[gold.length - 1].date) : undefined,
             loading: goldQ.isLoading,
             href: '/rynki?tab=kursy',
             watchId: 'gold',
@@ -152,7 +151,7 @@ export function RynkiDashboard() {
             unit: 'pkt',
             icon: BarChart3,
             delta: pctDelta(barsOf(mwigQ)) != null ? { value: pctDelta(barsOf(mwigQ))!, unit: 'pct' } : undefined,
-            footnote: 'GPW · notowania',
+            footnote: barsOf(mwigQ).at(-1)?.date ? formatDate(barsOf(mwigQ).at(-1)!.date) : undefined,
             loading: mwigQ.isLoading,
             href: '/rynki?tab=gpw',
         },
@@ -163,7 +162,7 @@ export function RynkiDashboard() {
             unit: 'USD/bbl',
             icon: Fuel,
             delta: pctDelta(barsOf(brentQ)) != null ? { value: pctDelta(barsOf(brentQ))!, unit: 'pct' } : undefined,
-            footnote: 'Yahoo Finance',
+            footnote: barsOf(brentQ).at(-1)?.date ? formatDate(barsOf(brentQ).at(-1)!.date) : undefined,
             loading: brentQ.isLoading,
         },
     ];

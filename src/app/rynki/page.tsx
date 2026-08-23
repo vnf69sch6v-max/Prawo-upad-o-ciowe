@@ -108,7 +108,7 @@ function KursySection() {
                 {kpis.map((k) => (
                     <KpiCard key={k.code} label={k.label} value={mid(k.code) != null ? formatDecimalPL(mid(k.code)!, 3) : '—'} unit="zł" accent={k.accent} icon={k.icon}
                         delta={histDelta(k.hist) != null ? { value: histDelta(k.hist)!, unit: 'pct', invert: true } : undefined}
-                        footnote={table?.effectiveDate ? `NBP ${formatDate(table.effectiveDate)}` : 'NBP tab. A'} loading={tableQ.isLoading} watchId={k.watchId} />
+                        footnote={table?.effectiveDate ? formatDate(table.effectiveDate) : undefined} loading={tableQ.isLoading} watchId={k.watchId} />
                 ))}
             </div>
 
@@ -473,7 +473,7 @@ function GpwSection() {
                     return (
                         <KpiCard key={ix.label} label={ix.label} value={last != null ? formatNumber(Math.round(last)) : '—'} unit="pkt" accent={ix.accent} icon={BarChart3}
                             delta={pctDelta(bars) != null ? { value: pctDelta(bars)!, unit: 'pct' } : undefined}
-                            footnote={bars.length > 2 ? 'GPW · notowania' : 'GPW · poziom bieżący'} loading={ix.q.isLoading}
+                            footnote={bars.at(-1)?.date ? formatDate(bars.at(-1)!.date) : undefined} loading={ix.q.isLoading}
                             watchId={ix.label === 'WIG20' ? 'wig20' : undefined} />
                     );
                 })}

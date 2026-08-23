@@ -23,7 +23,7 @@ export interface KpiCardProps {
     /** @deprecated ignorowany — kolor kafla nie jest już dekoracją. */
     accent?: AccentKey;
     icon?: LucideIcon;
-    /** Small line under the value, e.g. "Cel NBP: 2,5%" or "maj 2026" */
+    /** Small line under the value, e.g. "maj 2026" — pominięte gdy puste */
     footnote?: string;
     loading?: boolean;
     /** Gdy podany, cały kafel jest linkiem do właściwej zakładki (deep-link, np. `/gospodarka?tab=aktywnosc`). */
@@ -55,6 +55,7 @@ export interface KpiCardProps {
  * więc padding skurczyłby liczbę. Padding mieszka na `.mk-kpi-body`.
  */
 export function KpiCard({ label, value, unit, delta, icon: Icon, footnote, loading, href, watchId, compact }: KpiCardProps) {
+    const footnoteText = footnote?.trim() || undefined;
     const watch = useWatchlist();
     const wrap = (node: ReactNode, extra = '') => (
         <div className={`mk-kpi${compact ? ' mk-kpi-compact' : ''} ${extra}`.trim()}>{node}</div>
@@ -87,7 +88,7 @@ export function KpiCard({ label, value, unit, delta, icon: Icon, footnote, loadi
                 {unit && <span className="mk-kpi-unit shrink-0">{unit}</span>}
             </div>
             {delta && <div className="mk-kpi-delta"><DeltaChip value={delta.value} unit={delta.unit} note={delta.note} invert={delta.invert} /></div>}
-            {footnote && <div className="mk-kpi-foot">{footnote}</div>}
+            {footnoteText && <div className="mk-kpi-foot">{footnoteText}</div>}
         </div>
     );
 
