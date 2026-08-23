@@ -4,14 +4,12 @@ import { useMemo, useState } from 'react';
 import { MapPin, Users, Award, Scale, TrendingDown } from 'lucide-react';
 import { useRegionalGus } from '@/lib/hooks';
 import { formatNumber } from '@/lib/formatters';
-import { type Observation } from '@/lib/observations';
 import { Segmented } from '@/components/ui/Segmented';
 import { EditorialHero } from '@/components/ui/EditorialHero';
 import { CompactKpiGrid, type CompactKpiItem } from '@/components/ui/CompactKpiGrid';
 import { DensePageLayout, DenseThreeCol } from '@/components/ui/DensePageLayout';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { RelatedNews } from '@/components/ui/RelatedNews';
-import { ObservationsPanel } from '@/components/ui/ObservationsPanel';
 import { PublicationDatesPanel } from '@/components/ui/PublicationDatesPanel';
 import { Choropleth, type ChoroItem } from '@/components/ui/Choropleth';
 import { DataTable, type Column } from '@/components/ui/DataTable';
@@ -100,26 +98,6 @@ export function RegionyDashboard() {
             loading: isLoading,
         },
     ], [topGdp, botGdp, topPop, botPop, popRatio, regions.length, isLoading]);
-
-    const observations: Observation[] = [];
-    if (topGdp?.gdpPerCapita && botGdp?.gdpPerCapita) {
-        observations.push({
-            text: `Rozpiętość PKB/mieszk.: ${pln(topGdp.gdpPerCapita)} (${woj(topGdp.name)}) vs ${pln(botGdp.gdpPerCapita)} (${woj(botGdp.name)}) — ${gdpRatio}×`,
-            tone: 'neutral',
-        });
-    }
-    if (topPop?.population) {
-        observations.push({
-            text: `Najludniejsze: ${woj(topPop.name)} (${mln(topPop.population)}), ${popRatio}× więcej niż ${botPop ? woj(botPop.name) : 'najmniejsze'}`,
-            tone: 'neutral',
-        });
-    }
-    if (nat?.gdpPerCapita) {
-        observations.push({ text: `PKB na mieszkańca w kraju: ${pln(nat.gdpPerCapita)} (GUS BDL · ${data?.gdpYear ?? ''})`, tone: 'neutral' });
-    }
-    if (nat?.population) {
-        observations.push({ text: `Ludność Polski: ${mln(nat.population)} (GUS BDL · ${data?.popYear ?? ''})`, tone: 'neutral' });
-    }
 
     type Row = (typeof regions)[number];
     const cols: Column<Row>[] = isPkb
@@ -240,10 +218,7 @@ export function RegionyDashboard() {
                 }
             />
 
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                <ObservationsPanel items={observations.slice(0, 4)} variant="overview" />
-                <PublicationDatesPanel count={4} variant="overview" />
-            </div>
+            <PublicationDatesPanel count={4} variant="overview" />
 
             <p className="text-center text-[11px] text-mk-faint">
                 Źródło: GUS BDL · PKB {data?.gdpYear ?? '—'} · ludność {data?.popYear ?? '—'}

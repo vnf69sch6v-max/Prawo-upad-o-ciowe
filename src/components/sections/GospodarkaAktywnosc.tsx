@@ -12,8 +12,7 @@ import {
     useKoniunktura,
 } from '@/lib/hooks';
 import { plSeries, lastOf, deltaOf, fmtPL, type Point } from '@/lib/series';
-import { formatDecimalPL, formatDataPeriod, formatDataPeriodLabel } from '@/lib/formatters';
-import { analyzeSeries, trendObservation, type Observation } from '@/lib/observations';
+import { formatDecimalPL, formatDataPeriod } from '@/lib/formatters';
 import { EditorialHero } from '@/components/ui/EditorialHero';
 import { CompactKpiGrid, type CompactKpiItem } from '@/components/ui/CompactKpiGrid';
 import { DensePageLayout, DenseThreeCol } from '@/components/ui/DensePageLayout';
@@ -39,24 +38,6 @@ function ppDeltaAnnual(series: Point[]) {
     const last = lastOf(series);
     const prev = series.length > 1 ? series[series.length - 2].value : null;
     return last != null && prev != null ? +(last - prev).toFixed(1) : null;
-}
-
-function ObservationsRow({ items }: { items: Observation[] }) {
-    const slice = items.slice(0, 3);
-    if (!slice.length) return null;
-    return (
-        <section>
-            <h2 className="mk-section-label mb-2">Kluczowe obserwacje</h2>
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-                {slice.map((o, i) => (
-                    <div key={i} className="mk-card mk-card-editorial mk-card-pad-compact flex gap-3">
-                        <span className="mk-obs-num shrink-0">{String(i + 1).padStart(2, '0')}</span>
-                        <p className="text-[13px] leading-snug text-mk-text-soft">{o.text}</p>
-                    </div>
-                ))}
-            </div>
-        </section>
-    );
 }
 
 /** Gęsty dashboard PKB i aktywności — domyślna zakładka /gospodarka (tylko GUS). */
@@ -99,7 +80,6 @@ export function GospodarkaAktywnosc() {
         return ind.map((p) => ({ date: p.date, ind: p.value, ret: rm.get(p.date) ?? null, con: cm.get(p.date) ?? null }));
     }, [ind, ret, con]);
 
-    const dataDate = [ind, ret, cpi, unemp].map((s) => (s.length ? s[s.length - 1].date : '')).filter(Boolean).sort().pop() ?? '';
     const gdpLast = gdp.length ? gdp[gdp.length - 1] : null;
 
     // ── Hero „redakcyjny" — WYŁĄCZNIE realne dane GUS. Metryka wiodąca: PKB r/r, a gdy brak → produkcja przemysłowa r/r. ──
@@ -179,19 +159,6 @@ export function GospodarkaAktywnosc() {
         ];
         return items;
     }, [gdp, ind, ret, cpi, unemp, con, gdpQ.isLoading, indQ.isLoading, retQ.isLoading, cpiQ.isLoading, unempQ.isLoading, conQ.isLoading, gdpLast]);
-
-    const observations = useMemo<Observation[]>(() => {
-        const out: Observation[] = [];
-        const push = (o: Observation | null) => { if (o) out.push(o); };
-        push(trendObservation('PKB', gdp.map((d) => d.value), false));
-        push(trendObservation('Produkcja przemysłowa', ind.map((d) => d.value), false));
-        push(trendObservation('Sprzedaż detaliczna', ret.map((d) => d.value), false));
-        out.push(...analyzeSeries('CPI', cpi.map((d) => d.value), { goodDown: true, unit: '%', target: { value: 2.5, label: 'NBP' } }).slice(0, 1));
-        out.push(...analyzeSeries('Bezrobocie', unemp.map((d) => d.value), { goodDown: true, unit: '%' }).slice(0, 1));
-        const g = lastOf(gdp);
-        if (g != null) out.push({ text: `Dynamika PKB ${fmtPL(g)}% rocznie (GUS BDL)`, tone: g < 0 ? 'down' : 'up' });
-        return out.slice(0, 6);
-    }, [gdp, ind, ret, cpi, unemp]);
 
     return (
         <DensePageLayout>
@@ -323,13 +290,6 @@ export function GospodarkaAktywnosc() {
                 }
             />
 
-            <ObservationsRow items={observations} />
-
-            {dataDate && (
-                <p className="text-center text-[11px] text-mk-faint">
-                    Okres referencyjny danych: {formatDataPeriodLabel(dataDate)} · wyłącznie źródła GUS
-                </p>
-            )}
         </DensePageLayout>
     );
 }

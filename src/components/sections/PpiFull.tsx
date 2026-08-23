@@ -3,7 +3,6 @@
 import { useMemo, useState, useCallback } from 'react';
 import { Factory, Activity, ChevronRight, Info, Pickaxe, Zap, Droplets, Percent } from 'lucide-react';
 import { usePpiFull, useCpiFull, useGusPpiHeadline, type PpiSection, type PpiHistPoint } from '@/lib/hooks';
-import { analyzeSeries, type Observation } from '@/lib/observations';
 import { formatDecimalPL, formatDataPeriodLabel } from '@/lib/formatters';
 import { CompactKpiGrid, type CompactKpiItem } from '@/components/ui/CompactKpiGrid';
 import { EditorialHero } from '@/components/ui/EditorialHero';
@@ -16,7 +15,6 @@ import { RefreshButton } from '@/components/ui/RefreshButton';
 import { Drawer } from '@/components/ui/Drawer';
 import { Heatmap } from '@/components/ui/Heatmap';
 import { RelatedNews } from '@/components/ui/RelatedNews';
-import { ObservationsPanel } from '@/components/ui/ObservationsPanel';
 
 const monthTick = (d: string) => { const [y, m] = d.split('-'); return m ? `${m}.${y.slice(2)}` : d; };
 const seriesFor = (hist: PpiHistPoint[] | undefined, metric: 'yoy' | 'mom') =>
@@ -60,8 +58,6 @@ const DIV_INFO: Record<string, string> = {
     '38': 'Odpady i odzysk — opłaty, ceny surowców wtórnych i energii.',
 };
 const divFallback = (secName: string) => `Dział sekcji „${secName}". Ceny producenta zależą od kosztów surowców, energii i pracy w tej branży.`;
-
-const PIPELINE_NOTE = 'PPI (ceny u producenta) wyprzedza CPI — presja surowców i energii najpierw podnosi górnictwo (B), potem przetwórstwo (C), a z opóźnieniem trafia do koszyka konsumenta.';
 
 export function PpiFull() {
     const { data, isLoading, isFetching, refreshFromSource } = usePpiFull();
@@ -112,14 +108,6 @@ export function PpiFull() {
     const heatRows = useMemo(() => [...allDivs].sort((a, b) => (b.yoy ?? -999) - (a.yoy ?? -999)).map((d) => ({ key: d.code, label: `${d.code} · ${d.name}` })), [allDivs]);
     const heatValue = useCallback((code: string, date: string) => heat.lookup.get(code)?.get(date)?.[heatMetric] ?? null, [heat, heatMetric]);
 
-    // Auto-analiza
-    const insights = useMemo(() => {
-        const out: Observation[] = analyzeSeries('PPI ogółem', headline.map((h) => h.yoy), { unit: '%', decimals: 1, period: 'month' }).slice(0, 2);
-        const hot = [...allDivs].filter((d) => d.yoy != null).sort((a, b) => (b.yoy ?? 0) - (a.yoy ?? 0))[0];
-        if (hot?.yoy != null) out.push({ kind: 'record', tone: 'warn', text: `Najszybciej drożeje: ${hot.name} (${hot.yoy > 0 ? '+' : ''}${formatDecimalPL(hot.yoy, 1)}% r/r)` });
-        return out;
-    }, [headline, allDivs]);
-
     // Drawer sekcji
     const [selCode, setSelCode] = useState<string | null>(null);
     const [open, setOpen] = useState(false);
@@ -163,12 +151,6 @@ export function PpiFull() {
             loading: isLoading,
         })),
     ].slice(0, 6);
-
-    const observations = useMemo<Observation[]>(() => {
-        const out: Observation[] = [...insights.slice(0, 3)];
-        out.push({ tone: 'neutral', text: PIPELINE_NOTE });
-        return out.slice(0, 4);
-    }, [insights]);
 
     if (isLoading) return <div className="space-y-3"><div className="mk-skeleton h-24 w-full" /><div className="grid grid-cols-3 gap-2">{Array.from({ length: 6 }).map((_, i) => <div key={i} className="mk-card h-16" />)}</div><div className="mk-skeleton h-[280px] w-full" /></div>;
 
@@ -284,15 +266,6 @@ export function PpiFull() {
                 }
             />
 
-            <ObservationsPanel items={observations} variant="overview" />
-
-            {dataDate && (
-                <p className="text-center text-[11px] text-mk-faint">
-                    Okres referencyjny: {formatDataPeriodLabel(dataDate)} · wyłącznie źródła GUS (DBW)
-                </p>
-            )}
-
-            {/* Drawer sekcji */}
             {/* Drawer sekcji */}
             <Drawer open={open && !!sel} onClose={() => setOpen(false)} accent={selColor}
                 title={sel ? `${sel.code} · ${sel.name}` : ''} subtitle="sekcja PKD · ceny produkcji przemysłu">

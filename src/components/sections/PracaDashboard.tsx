@@ -12,13 +12,12 @@ import {
     useBaelUnemploymentRate,
 } from '@/lib/hooks';
 import { lastOf, deltaOf, monthTick } from '@/lib/series';
-import { formatDecimalPL, formatNumber, formatDataPeriod, formatDataPeriodLabel } from '@/lib/formatters';
-import { analyzeSeries, consecutiveRun, runPhrase, type Observation } from '@/lib/observations';
+import { formatDecimalPL, formatNumber, formatDataPeriod } from '@/lib/formatters';
+import { consecutiveRun, runPhrase } from '@/lib/observations';
 import { CompactKpiGrid, type CompactKpiItem } from '@/components/ui/CompactKpiGrid';
 import { DensePageLayout, DenseTwoCol } from '@/components/ui/DensePageLayout';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { RelatedNews } from '@/components/ui/RelatedNews';
-import { InsightBar } from '@/components/ui/InsightBar';
 import { DeltaChip } from '@/components/ui/DeltaChip';
 import { PublicationDatesPanel } from '@/components/ui/PublicationDatesPanel';
 import { DataTable, type Column } from '@/components/ui/DataTable';
@@ -31,7 +30,7 @@ const woj = (name: string) => name.replace(/^województwo /i, '');
 /**
  * Rynek pracy — remodel 2026-08:
  * góra = „ile mam" (płace realne), środek = „gdzie" (mapa), dół = „co dalej".
- * Bez czerwonego hero; bez duplikacji liczb; InsightBar max 1 obserwacja / seria.
+ * Bez czerwonego hero; bez duplikacji liczb.
  */
 export function PracaDashboard() {
     const unempQ = useGusRegisteredUnemployment(24);
@@ -159,19 +158,6 @@ export function PracaDashboard() {
         },
     ];
 
-    // InsightBar: analyzeSeries jak na innych stronach; MAX JEDNA obserwacja na serię.
-    const insights = useMemo<Observation[]>(() => {
-        const out: Observation[] = [];
-        const one = (label: string, values: (number | null | undefined)[], opts: Parameters<typeof analyzeSeries>[2]) => {
-            const hit = analyzeSeries(label, values, opts)[0];
-            if (hit) out.push(hit);
-        };
-        one('Bezrobocie rej.', unemp.map((d) => d.value), { goodDown: true, unit: '%', decimals: 1 });
-        one('Płace nominalne', wages.map((w) => w.value), { unit: '%', decimals: 1 });
-        one('BAEL', (baelQ.data?.series ?? []).map((d) => d.value), { goodDown: true, unit: '%', decimals: 1, period: 'quarter' });
-        return out.slice(0, 3);
-    }, [unemp, wages, baelQ.data?.series]);
-
     const cols: Column<(typeof regions)[number]>[] = [
         { key: 'name', header: 'Woj.', sortable: true, sortValue: (r) => r.name, render: (r) => woj(r.name) },
         { key: 'unemp', header: 'Bezrob.', align: 'right', sortable: true, sortValue: (r) => r.unemployment ?? 0, render: (r) => r.unemployment != null ? `${formatDecimalPL(r.unemployment, 1)}%` : '—' },
@@ -219,8 +205,6 @@ export function PracaDashboard() {
                     </>
                 )}
             </section>
-
-            {insights.length > 0 && <InsightBar items={insights} />}
 
             <CompactKpiGrid items={compactKpis} columns={4} label="Wskaźniki" />
 
@@ -395,22 +379,6 @@ export function PracaDashboard() {
                 }
                 right={<PublicationDatesPanel count={4} variant="overview" />}
             />
-
-            {/* BAEL vs rejestrowane — dwie definicje; liczby są w kaflach powyżej (bez powtórki). */}
-            <div className="mk-card mk-card-editorial mk-card-pad text-sm text-mk-text-soft">
-                <span className="font-semibold text-mk-text">BAEL vs rejestrowane: </span>
-                BAEL to badanie ankietowe GUS (standard ILO/Eurostat) — osoby bez pracy, szukające i gotowe
-                ją podjąć. Rejestrowane liczy osoby w urzędach pracy. To dwie definicje, nie rozjazd danych;
-                BAEL zwykle wychodzi niżej.
-                {/* UWAGA: w /api/bdl-series `count` = liczba ID/okresów, nie „ile wyników".
-                    Endpoint zawsze bierze lata [rok-1, rok] → seria ma ≥2 wpisy; bieżący = series.at(-1). */}
-            </div>
-
-            {lastReal?.date && (
-                <p className="text-center text-[11px] text-mk-faint">
-                    Okres referencyjny leadu: {formatDataPeriodLabel(lastReal.date)} · źródła GUS BDL / CPI
-                </p>
-            )}
         </DensePageLayout>
     );
 }
