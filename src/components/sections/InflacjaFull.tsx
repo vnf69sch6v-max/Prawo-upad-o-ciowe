@@ -350,8 +350,8 @@ export function InflacjaFull() {
                             <BarChart data={waterfall} layout="vertical" margin={{ top: 4, right: 36, left: 4, bottom: 4 }} barCategoryGap={4}>
                                 <CartesianGrid stroke="#EDF0F5" horizontal={false} />
                                 <XAxis type="number" tick={{ fill: AXIS_INK, fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => formatDecimalPL(v, 1)} />
-                                <YAxis type="category" dataKey="name" width={120} tick={{ fill: '#475569', fontSize: 10 }} axisLine={false} tickLine={false} />
-                                <Tooltip cursor={{ fill: 'rgba(0,0,0,0.03)' }} content={({ active, payload }) => {
+                                <YAxis type="category" dataKey="name" width={120} tick={{ fill: '#475569', fontSize: 11 }} axisLine={false} tickLine={false} />
+                                <Tooltip trigger="click" isAnimationActive={false} cursor={{ fill: 'rgba(0,0,0,0.03)' }} content={({ active, payload }) => {
                                     if (!active || !payload?.length) return null;
                                     const p = payload[0].payload as { name: string; c: number };
                                     return <div style={{ background: '#fff', border: '1px solid #E7EAF0', borderRadius: 10, padding: '6px 10px', fontSize: 12, boxShadow: '0 6px 16px rgba(16,24,40,.12)' }}>
@@ -396,9 +396,9 @@ export function InflacjaFull() {
                             <ResponsiveContainer width="100%" height={220}>
                                 <AreaChart data={contribTime} margin={{ top: 4, right: 8, left: -8, bottom: 0 }}>
                                     <CartesianGrid stroke="#EDF0F5" vertical={false} />
-                                    <XAxis dataKey="date" tick={{ fill: AXIS_INK, fontSize: 10 }} tickFormatter={monthTick} axisLine={{ stroke: '#E7EAF0' }} tickLine={false} minTickGap={32} />
-                                    <YAxis tick={{ fill: AXIS_INK, fontSize: 10 }} axisLine={false} tickLine={false} width={36} tickFormatter={(v) => formatDecimalPL(v, 0)} />
-                                    <Tooltip content={({ active, payload, label }) => {
+                                    <XAxis dataKey="date" tick={{ fill: AXIS_INK, fontSize: 11 }} tickFormatter={monthTick} axisLine={{ stroke: '#E7EAF0' }} tickLine={false} minTickGap={36} interval="preserveStartEnd" />
+                                    <YAxis tick={{ fill: AXIS_INK, fontSize: 11 }} axisLine={false} tickLine={false} width={36} tickFormatter={(v) => formatDecimalPL(v, 0)} />
+                                    <Tooltip trigger="click" isAnimationActive={false} content={({ active, payload, label }) => {
                                         if (!active || !payload?.length) return null;
                                         const nums = payload.filter((p) => typeof p.value === 'number') as { value: number; color?: string; name?: string }[];
                                         const total = nums.reduce((s, p) => s + p.value, 0);
