@@ -13,6 +13,7 @@ import { KpiCard } from '@/components/ui/KpiCard';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { InteractiveChart } from '@/components/ui/InteractiveChart';
 import { WatchStar } from '@/components/ui/WatchStar';
+import { QueryState } from '@/components/ui/QueryState';
 
 export default function SpolkaPage() {
     const params = useParams<{ ticker: string }>();
@@ -77,22 +78,30 @@ export default function SpolkaPage() {
             </div>
 
             <SectionCard title={`${company.name} — kurs (120 sesji)`} subtitle="zamknięcie dzienne · Yahoo Finance (GPW)">
-                {hist.isLoading ? <div className="mk-skeleton h-[300px] w-full" /> : chart.length < 2 ? (
-                    <p className="py-8 text-center text-sm text-mk-muted">Brak historii notowań dla tego tickera.</p>
-                ) : (
+                <QueryState
+                    isLoading={hist.isLoading}
+                    isError={hist.isError}
+                    isEmpty={chart.length < 2}
+                    onRetry={() => { void hist.refetch(); }}
+                    height={300}
+                    emptyTitle="Brak historii notowań dla tego tickera."
+                >
                     <InteractiveChart data={chart} xKey="date" height={300} unit=" zł" showRange initialRange="ALL"
                         valueFormatter={(v) => formatDecimalPL(v, 2)} xTickFormatter={monthTick}
                         series={[{ key: 'value', name: company.name, color: '#2563EB', type: 'area', strokeWidth: 2.5 }]} />
-                )}
+                </QueryState>
             </SectionCard>
 
             <SectionCard title="Wiadomości o spółce" subtitle="dopasowane po nazwie spółki — tytuł liczy się zawsze, opis tylko dla jednoznacznych nazw">
-                {companyNews.length === 0 ? (
-                    <p className="py-6 text-center text-sm text-mk-muted">
-                        Brak newsów o tej spółce w bieżącej paczce. To normalne — agregator trzyma ~150
-                        najnowszych pozycji, a nie każda spółka pojawia się codziennie.
-                    </p>
-                ) : (
+                <QueryState
+                    isLoading={news.isLoading}
+                    isError={news.isError}
+                    isEmpty={companyNews.length === 0}
+                    onRetry={() => { void news.refetch(); }}
+                    height={140}
+                    emptyTitle="Brak newsów o tej spółce w bieżącej paczce."
+                    emptyDetail="To normalne — agregator trzyma ~150 najnowszych pozycji, a nie każda spółka pojawia się codziennie."
+                >
                     <ul className="divide-y divide-mk-border">
                         {companyNews.map((n) => (
                             <li key={n.link}>
@@ -110,7 +119,7 @@ export default function SpolkaPage() {
                             </li>
                         ))}
                     </ul>
-                )}
+                </QueryState>
             </SectionCard>
         </div>
     );

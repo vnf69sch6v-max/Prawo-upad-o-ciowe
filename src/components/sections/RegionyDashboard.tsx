@@ -13,6 +13,7 @@ import { RelatedNews } from '@/components/ui/RelatedNews';
 import { PublicationDatesPanel } from '@/components/ui/PublicationDatesPanel';
 import { Choropleth, type ChoroItem } from '@/components/ui/Choropleth';
 import { DataTable, type Column } from '@/components/ui/DataTable';
+import { QueryState } from '@/components/ui/QueryState';
 
 type MapView = 'pkb' | 'ludnosc';
 
@@ -23,7 +24,7 @@ const woj = (name: string) => name.replace(/^województwo /i, '');
 
 /** Gęsty dashboard regionów — PKB i ludność GUS BDL, mapa + tabela. */
 export function RegionyDashboard() {
-    const { data, isLoading } = useRegionalGus();
+    const { data, isLoading, isError, refetch } = useRegionalGus();
     const [view, setView] = useState<MapView>('pkb');
     const [sel, setSel] = useState<string | null>(null);
 
@@ -54,6 +55,8 @@ export function RegionyDashboard() {
             icon: Award,
             footnote: topGdp ? woj(topGdp.name) : 'PKB/mieszk.',
             loading: isLoading,
+            error: isError,
+            onRetry: () => { void refetch(); },
         },
         {
             key: 'bot-gdp',
@@ -63,6 +66,8 @@ export function RegionyDashboard() {
             icon: TrendingDown,
             footnote: botGdp ? woj(botGdp.name) : 'PKB/mieszk.',
             loading: isLoading,
+            error: isError,
+            onRetry: () => { void refetch(); },
         },
         {
             key: 'top-pop',
@@ -71,6 +76,8 @@ export function RegionyDashboard() {
             icon: Users,
             footnote: topPop ? woj(topPop.name) : '',
             loading: isLoading,
+            error: isError,
+            onRetry: () => { void refetch(); },
         },
         {
             key: 'bot-pop',
@@ -79,6 +86,8 @@ export function RegionyDashboard() {
             icon: Users,
             footnote: botPop ? woj(botPop.name) : '',
             loading: isLoading,
+            error: isError,
+            onRetry: () => { void refetch(); },
         },
         {
             key: 'pop-ratio',
@@ -88,6 +97,8 @@ export function RegionyDashboard() {
             icon: Scale,
             footnote: 'max / min województw',
             loading: isLoading,
+            error: isError,
+            onRetry: () => { void refetch(); },
         },
         {
             key: 'count',
@@ -96,8 +107,10 @@ export function RegionyDashboard() {
             icon: MapPin,
             footnote: '',
             loading: isLoading,
+            error: isError,
+            onRetry: () => { void refetch(); },
         },
-    ], [topGdp, botGdp, topPop, botPop, popRatio, regions.length, isLoading]);
+    ], [topGdp, botGdp, topPop, botPop, popRatio, regions.length, isLoading, isError, refetch]);
 
     type Row = (typeof regions)[number];
     const cols: Column<Row>[] = isPkb
@@ -154,9 +167,14 @@ export function RegionyDashboard() {
                             />
                         }
                     >
-                        {isLoading ? (
-                            <div className="mk-skeleton h-[200px] w-full" />
-                        ) : (
+                        <QueryState
+                            isLoading={isLoading}
+                            isError={isError}
+                            isEmpty={regions.length === 0}
+                            onRetry={() => { void refetch(); }}
+                            height={200}
+                            emptyTitle="Brak danych regionalnych"
+                        >
                             <div className="max-h-[220px] [&_svg]:max-h-[210px]">
                                 <Choropleth
                                     items={mapItems}
@@ -167,7 +185,7 @@ export function RegionyDashboard() {
                                     onSelect={setSel}
                                 />
                             </div>
-                        )}
+                        </QueryState>
                     </SectionCard>
                 }
                 right={
@@ -200,9 +218,14 @@ export function RegionyDashboard() {
                             subtitle={isPkb ? 'PKB na mieszkańca (zł)' : 'Liczba ludności'}
                             padded
                         >
-                            {isLoading ? (
-                                <div className="mk-skeleton h-[160px] w-full" />
-                            ) : (
+                            <QueryState
+                                isLoading={isLoading}
+                                isError={isError}
+                                isEmpty={regions.length === 0}
+                                onRetry={() => { void refetch(); }}
+                                height={160}
+                                emptyTitle="Brak danych województw"
+                            >
                                 <DataTable
                                     columns={cols}
                                     rows={isPkb ? byGdp : byPop}
@@ -212,7 +235,7 @@ export function RegionyDashboard() {
                                     rowKey={(r) => r.slug}
                                     onRowClick={(r) => setSel(r.slug)}
                                 />
-                            )}
+                            </QueryState>
                         </SectionCard>
                     </>
                 }

@@ -14,6 +14,7 @@ import { DenseTwoCol } from '@/components/ui/DensePageLayout';
 import { RelatedNews } from '@/components/ui/RelatedNews';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { InteractiveChart } from '@/components/ui/InteractiveChart';
+import { QueryState } from '@/components/ui/QueryState';
 
 function fxDelta(data: unknown): number | null {
     const raw = data as { rates?: { mid?: number }[] } | { mid?: number }[] | undefined;
@@ -106,6 +107,8 @@ export function RynkiDashboard() {
             delta: fxDelta(usdHQ.data) != null ? { value: fxDelta(usdHQ.data)!, unit: 'pct', invert: true } : undefined,
             footnote: fxTable?.effectiveDate ? formatDate(fxTable.effectiveDate) : undefined,
             loading: fxQ.isLoading,
+            error: fxQ.isError,
+            onRetry: () => { void fxQ.refetch(); },
             watchId: 'usd-pln',
         },
         {
@@ -116,6 +119,8 @@ export function RynkiDashboard() {
             icon: Percent,
             footnote: wiborQ.data?.rates?.[0]?.date ? formatDate(wiborQ.data.rates[0].date) : undefined,
             loading: wiborQ.isLoading,
+            error: wiborQ.isError,
+            onRetry: () => { void wiborQ.refetch(); },
         },
         {
             key: 'yield10',
@@ -128,6 +133,8 @@ export function RynkiDashboard() {
                 : undefined,
             footnote: yield10.length ? formatDate(yield10[yield10.length - 1].date) : undefined,
             loading: yieldQ.isLoading,
+            error: yieldQ.isError,
+            onRetry: () => { void yieldQ.refetch(); },
         },
         {
             key: 'gold',
@@ -138,6 +145,8 @@ export function RynkiDashboard() {
             delta: goldDelta != null ? { value: goldDelta, unit: 'pct' } : undefined,
             footnote: gold.length ? formatDate(gold[gold.length - 1].date) : undefined,
             loading: goldQ.isLoading,
+            error: goldQ.isError,
+            onRetry: () => { void goldQ.refetch(); },
             watchId: 'gold',
         },
         {
@@ -149,6 +158,8 @@ export function RynkiDashboard() {
             delta: pctDelta(barsOf(mwigQ)) != null ? { value: pctDelta(barsOf(mwigQ))!, unit: 'pct' } : undefined,
             footnote: barsOf(mwigQ).at(-1)?.date ? formatDate(barsOf(mwigQ).at(-1)!.date) : undefined,
             loading: mwigQ.isLoading,
+            error: mwigQ.isError,
+            onRetry: () => { void mwigQ.refetch(); },
         },
         {
             key: 'brent',
@@ -159,6 +170,8 @@ export function RynkiDashboard() {
             delta: pctDelta(barsOf(brentQ)) != null ? { value: pctDelta(barsOf(brentQ))!, unit: 'pct' } : undefined,
             footnote: barsOf(brentQ).at(-1)?.date ? formatDate(barsOf(brentQ).at(-1)!.date) : undefined,
             loading: brentQ.isLoading,
+            error: brentQ.isError,
+            onRetry: () => { void brentQ.refetch(); },
         },
     ];
 
@@ -175,9 +188,14 @@ export function RynkiDashboard() {
                         title="WIG20 — 60 sesji"
                         subtitle="poziom indeksu · Yahoo/Stooq"
                     >
-                        {wig20Chart.length < 2 ? (
-                            <div className="mk-skeleton h-[280px] w-full" />
-                        ) : (
+                        <QueryState
+                            isLoading={wig20Q.isLoading}
+                            isError={wig20Q.isError}
+                            isEmpty={wig20Chart.length < 2}
+                            onRetry={() => { void wig20Q.refetch(); }}
+                            height={280}
+                            emptyTitle="Brak danych WIG20"
+                        >
                             <InteractiveChart
                                 data={wig20Chart}
                                 xKey="date"
@@ -188,7 +206,7 @@ export function RynkiDashboard() {
                                 xTickFormatter={monthTick}
                                 series={[{ key: 'value', name: 'WIG20', color: '#2563EB', type: 'area', strokeWidth: 2.5 }]}
                             />
-                        )}
+                        </QueryState>
                     </SectionCard>
                 }
             />

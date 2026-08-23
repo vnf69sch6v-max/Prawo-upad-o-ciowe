@@ -17,6 +17,7 @@ import { Segmented } from '@/components/ui/Segmented';
 import { RynkiDashboard } from '@/components/sections/RynkiDashboard';
 import { DensePageLayout } from '@/components/ui/DensePageLayout';
 import { PageHeader } from '@/components/ui/PageHeader';
+import { QueryState } from '@/components/ui/QueryState';
 
 type QBar = { date: string; close: number };
 const barsOf = (q: { data?: { data: QBar[] } }): QBar[] => q.data?.data ?? [];
@@ -190,13 +191,17 @@ function SpolkiSection() {
 
             <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
                 <KpiCard label="WIG20" value={wigLast != null ? formatNumber(Math.round(wigLast)) : '—'} unit="pkt" icon={BarChart3}
-                    delta={wigDelta != null ? { value: wigDelta, unit: 'pct' } : undefined} footnote="indeks 20 największych spółek" loading={wigIndex.isLoading} watchId="wig20" />
+                    delta={wigDelta != null ? { value: wigDelta, unit: 'pct' } : undefined}                     footnote="indeks 20 największych spółek" loading={wigIndex.isLoading} watchId="wig20"
+                    error={wigIndex.isError} onRetry={() => { void wigIndex.refetch(); }} />
                 <KpiCard label="Spółki na plusie" value={summary.n ? String(summary.up) : '—'} unit={summary.n ? `z ${summary.n}` : ''} icon={TrendingUp}
-                    footnote="rosną na ostatniej sesji" loading={spolki.isLoading} />
+                    footnote="rosną na ostatniej sesji" loading={spolki.isLoading}
+                    error={spolki.isError} onRetry={() => { void spolki.refetch(); }} />
                 <KpiCard label="Spółki na minusie" value={summary.n ? String(summary.down) : '—'} unit={summary.n ? `z ${summary.n}` : ''} icon={TrendingDown}
-                    footnote="spadają na ostatniej sesji" loading={spolki.isLoading} />
+                    footnote="spadają na ostatniej sesji" loading={spolki.isLoading}
+                    error={spolki.isError} onRetry={() => { void spolki.refetch(); }} />
                 <KpiCard label="Średnia zmiana" value={summary.avg != null ? fmtPct(summary.avg) : '—'} icon={TrendingUp}
-                    footnote="średnia z notowań WIG20" loading={spolki.isLoading} />
+                    footnote="średnia z notowań WIG20" loading={spolki.isLoading}
+                    error={spolki.isError} onRetry={() => { void spolki.refetch(); }} />
             </div>
 
             <div className="space-y-3">
@@ -223,9 +228,13 @@ function SpolkiSection() {
             </div>
 
             {spolki.isLoading ? (
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3" role="status" aria-busy="true" aria-label="Ładowanie spółek">
                     {Array.from({ length: 6 }, (_, i) => <div key={i} className="mk-skeleton h-64 w-full rounded-2xl" />)}
                 </div>
+            ) : spolki.isError ? (
+                <SectionCard editorial titleVariant="label">
+                    <QueryState isError onRetry={() => { void spolki.refetch(); }} height={160} />
+                </SectionCard>
             ) : cards.length === 0 ? (
                 <SectionCard editorial titleVariant="label"><p className="py-8 text-center text-sm text-mk-muted">Brak spółek dla wybranego filtra.</p></SectionCard>
             ) : (

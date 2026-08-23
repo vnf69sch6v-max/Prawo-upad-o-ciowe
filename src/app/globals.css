@@ -595,7 +595,58 @@ button.mk-card,
   font-size: 17px;
   font-weight: 700;
   letter-spacing: -0.01em;
+  line-height: 1.45;
   color: var(--color-mk-text);
+}
+
+/* Nagłówek SectionCard: zawijaj akcje zamiast ściskać tytuł poniżej 24px. */
+.mk-section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.mk-section-head-text {
+  flex: 1 1 14rem;
+  min-width: min(100%, 14rem);
+}
+
+.mk-section-head .mk-section-title,
+.mk-section-head .mk-section-label {
+  min-height: 24px;
+}
+
+.mk-section-head .mk-section-label {
+  display: flex;
+  align-items: center;
+}
+
+.mk-section-head-sub {
+  display: flex;
+  align-items: center;
+  min-height: 24px;
+  margin-top: 2px;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: var(--color-mk-muted);
+}
+
+.mk-section-head-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-height: 24px;
+}
+
+.mk-section-head-actions .mk-seg-btn,
+.mk-section-head-actions span {
+  min-height: 24px;
+  display: inline-flex;
+  align-items: center;
 }
 
 /* Light table */

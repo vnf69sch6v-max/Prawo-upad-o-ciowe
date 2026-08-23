@@ -15,6 +15,7 @@ import { RefreshButton } from '@/components/ui/RefreshButton';
 import { Drawer } from '@/components/ui/Drawer';
 import { Heatmap } from '@/components/ui/Heatmap';
 import { RelatedNews } from '@/components/ui/RelatedNews';
+import { QueryState, QueryEmpty } from '@/components/ui/QueryState';
 
 const monthTick = (d: string) => { const [y, m] = d.split('-'); return m ? `${m}.${y.slice(2)}` : d; };
 const seriesFor = (hist: PpiHistPoint[] | undefined, metric: 'yoy' | 'mom') =>
@@ -60,7 +61,7 @@ const DIV_INFO: Record<string, string> = {
 const divFallback = (secName: string) => `Dział sekcji „${secName}". Ceny producenta zależą od kosztów surowców, energii i pracy w tej branży.`;
 
 export function PpiFull() {
-    const { data, isLoading, isFetching, refreshFromSource } = usePpiFull();
+    const { data, isLoading, isError, isFetching, refetch, refreshFromSource } = usePpiFull();
     const cpiQ = useCpiFull();
     useGusPpiHeadline();
 
@@ -152,7 +153,20 @@ export function PpiFull() {
         })),
     ].slice(0, 6);
 
-    if (isLoading) return <div className="space-y-3"><div className="mk-skeleton h-24 w-full" /><div className="grid grid-cols-3 gap-2">{Array.from({ length: 6 }).map((_, i) => <div key={i} className="mk-card h-16" />)}</div><div className="mk-skeleton h-[280px] w-full" /></div>;
+    if (isLoading) {
+        return (
+            <div className="space-y-3" role="status" aria-busy="true" aria-label="Ładowanie PPI">
+                <div className="mk-skeleton h-24 w-full" />
+                <div className="grid grid-cols-2 gap-2">
+                    {Array.from({ length: 6 }).map((_, i) => <div key={i} className="mk-card h-16" />)}
+                </div>
+                <div className="mk-skeleton h-[280px] w-full" />
+            </div>
+        );
+    }
+    if (isError) {
+        return <QueryState isError onRetry={() => { void refetch(); }} height={320} />;
+    }
 
     return (
         <DensePageLayout>
@@ -237,7 +251,7 @@ export function PpiFull() {
                 left={
                     <SectionCard editorial titleVariant="label" title="Mapa ciepła — działy PKD" subtitle="dynamika cen producenta"
                         actions={<Segmented value={heatMetric} onChange={setHeatMetric} options={[{ value: 'yoy', label: 'r/r' }, { value: 'mom', label: 'm/m' }]} />}>
-                        {heat.dates.length < 2 ? <div className="flex h-[220px] items-center justify-center text-sm text-mk-faint">Brak danych.</div> : (
+                        {heat.dates.length < 2 ? <QueryEmpty title="Brak danych" height={220} /> : (
                             <Heatmap rows={heatRows} cols={heat.dates} valueAt={heatValue} unit="%" colTickFormatter={monthTick} valueFormatter={(v) => formatDecimalPL(v, 1)} cellHeight={14}
                                 onRowClick={(code) => { const d = allDivs.find((x) => x.code === code); if (d) openSec(d.sec); }} />
                         )}

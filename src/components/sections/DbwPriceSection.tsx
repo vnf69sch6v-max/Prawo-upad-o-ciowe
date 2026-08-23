@@ -8,6 +8,7 @@ import { KpiCard, type AccentKey } from '@/components/ui/KpiCard';
 import { EditorialHero } from '@/components/ui/EditorialHero';
 import { InteractiveChart } from '@/components/ui/InteractiveChart';
 import { SectionCard } from '@/components/ui/SectionCard';
+import { QueryState } from '@/components/ui/QueryState';
 
 export interface PriceSeries { poz: number; name: string; color: string; accent: AccentKey; icon?: LucideIcon }
 
@@ -77,20 +78,26 @@ export function DbwPriceSection({ title, subtitle, config, series, unit = '%', r
                     return (
                         <KpiCard key={s.poz} label={s.name} value={fmtPL(v)} unit={unit} accent={s.accent} icon={s.icon}
                             delta={d != null ? { value: d, unit: 'pp', invert: invertKpi } : undefined}
-                            footnote={last ? String(last.date) : ''} loading={q.isLoading} />
+                            footnote={last ? String(last.date) : ''} loading={q.isLoading}
+                            error={q.isError} onRetry={() => { void q.refetch(); }} />
                     );
                 })}
                 </div>
             </section>
             <SectionCard editorial titleVariant="label" title={title} subtitle={subtitle}>
-                {q.isLoading ? <div className="mk-skeleton h-[300px] w-full" /> : data.length === 0 ? (
-                    <p className="py-10 text-center text-sm text-mk-faint">Brak danych dla wybranego okresu.</p>
-                ) : (
+                <QueryState
+                    isLoading={q.isLoading}
+                    isError={q.isError}
+                    isEmpty={data.length === 0}
+                    onRetry={() => { void q.refetch(); }}
+                    height={300}
+                    emptyTitle="Brak danych dla wybranego okresu."
+                >
                     <InteractiveChart data={data} xKey="date" height={300} unit={` ${unit}`} legend={series.length > 1}
                         valueFormatter={(v) => formatDecimalPL(v, 1)} xTickFormatter={tick}
                         referenceLines={refline != null ? [{ y: refline, color: '#CBD2DD' }] : undefined}
                         series={series.map((s) => ({ key: String(s.poz), name: s.name, color: s.color, type: series.length > 1 ? ('line' as const) : ('area' as const) }))} />
-                )}
+                </QueryState>
             </SectionCard>
             {note && <div className="mk-card mk-card-editorial mk-card-pad text-sm text-mk-text-soft">{note}</div>}
         </div>

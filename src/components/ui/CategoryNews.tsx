@@ -9,6 +9,7 @@ import type { MacroChange } from '@/lib/news/daily';
 import { prevCalendarDate, warsawDateKey } from '@/lib/news/warsaw-date';
 import { formatRelativeTime, formatTime } from '@/lib/formatters';
 import { SectionCard } from '@/components/ui/SectionCard';
+import { QueryState } from '@/components/ui/QueryState';
 
 /** Nagłówki sekcji per temat — zgodnie z mockupami redakcyjnymi. */
 export const CATEGORY_LABELS: Record<NewsTopic, string> = {
@@ -238,7 +239,7 @@ export function CategoryNews({
     matchTier?: MatchTier;
     excludeOpinion?: boolean;
 }) {
-    const { data } = useNews();
+    const { data, isLoading, isError, refetch } = useNews();
     const items = useMemo(() => {
         const matched = matchNews(data?.items ?? [], topic, limit + (excludeDateKeys?.length ? 10 : 0), {
             matchTier,
@@ -251,7 +252,7 @@ export function CategoryNews({
             .slice(0, limit);
     }, [data, topic, limit, excludeDateKeys, matchTier, excludeOpinion]);
 
-    if (items.length === 0) return null;
+    if (!isLoading && !isError && items.length === 0) return null;
 
     return (
         <SectionCard
@@ -262,7 +263,16 @@ export function CategoryNews({
             titleVariant="label"
             actions={<AllNewsLink />}
         >
-            <NewsyList items={items} />
+            <QueryState
+                isLoading={isLoading}
+                isError={isError}
+                isEmpty={items.length === 0}
+                onRetry={() => { void refetch(); }}
+                height={160}
+                emptyTitle="Brak newsów w tym temacie"
+            >
+                <NewsyList items={items} />
+            </QueryState>
         </SectionCard>
     );
 }
@@ -287,7 +297,7 @@ export function Kalendarium({
     const todayKey = useMemo(() => warsawDateKey(), []);
     const yesterdayKey = useMemo(() => prevCalendarDate(todayKey), [todayKey]);
 
-    const { data: newsData } = useNews();
+    const { data: newsData, isLoading, isError, refetch } = useNews();
     const { data: digestToday } = useDailyDigest();
     const { data: digestYesterday } = useDailyDigest(yesterdayKey);
 
@@ -310,7 +320,7 @@ export function Kalendarium({
 
     const groups = useMemo(() => groupTimelineEntries(entries, todayKey), [entries, todayKey]);
 
-    if (entries.length === 0) return null;
+    if (!isLoading && !isError && entries.length === 0) return null;
 
     return (
         <SectionCard
@@ -320,6 +330,14 @@ export function Kalendarium({
             titleVariant="label"
             actions={<AllNewsLink />}
         >
+            <QueryState
+                isLoading={isLoading}
+                isError={isError}
+                isEmpty={entries.length === 0}
+                onRetry={() => { void refetch(); }}
+                height={140}
+                emptyTitle="Brak wpisów w kalendarium"
+            >
             <div className="space-y-6">
                 {groups.map((group) => (
                     <div key={group.dateKey}>
@@ -345,6 +363,7 @@ export function Kalendarium({
                     </div>
                 ))}
             </div>
+            </QueryState>
         </SectionCard>
     );
 }
