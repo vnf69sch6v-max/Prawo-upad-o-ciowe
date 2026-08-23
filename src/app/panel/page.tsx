@@ -1,6 +1,4 @@
-import { redirect } from 'next/navigation';
+'use client';
 
-/** Alias — pulpit to Przegląd (`/`). */
-export default function PanelAlias() {
-    redirect('/');
-}
+/** Ten sam edytowalny pulpit co Przegląd — osobny URL „Mój panel". */
+export { default } from '../page';
