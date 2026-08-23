@@ -6,7 +6,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
-import { useFocusTrap } from '@/lib/use-focus-trap';
+import { rememberOpener, useFocusTrap } from '@/lib/use-focus-trap';
 import {
     LayoutDashboard, Tag, Factory, Users, TrendingUp, Map, Search, Newspaper,
     Percent, Landmark, LineChart, Home, Wheat, HardHat, Fuel, Building2, CornerDownLeft, Briefcase,
@@ -86,9 +86,13 @@ export function CommandPalette() {
     // Skrót ⌘K/Ctrl+K globalnie + zdarzenie z headera.
     useEffect(() => {
         const onKey = (e: KeyboardEvent) => {
-            if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); setOpen((o) => !o); }
+            if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+                e.preventDefault();
+                rememberOpener();
+                setOpen((o) => !o);
+            }
         };
-        const onEvt = () => setOpen(true);
+        const onEvt = () => { rememberOpener(); setOpen(true); };
         window.addEventListener('keydown', onKey);
         window.addEventListener('mk:palette', onEvt);
         return () => { window.removeEventListener('keydown', onKey); window.removeEventListener('mk:palette', onEvt); };

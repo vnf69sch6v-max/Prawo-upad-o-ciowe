@@ -16,6 +16,21 @@ const FOCUSABLE = [
  * Escape wywołuje `onEscape`, a po zamknięciu wraca focus do elementu, który
  * otworzył warstwę.
  */
+/** Przetrwa remount Strict Mode — inaczej restore wskazywałby odmontowany input. */
+let lastOpener: HTMLElement | null = null;
+
+export function rememberOpener(el?: EventTarget | null) {
+    if (lastOpener && document.contains(lastOpener)) return;
+    if (el instanceof HTMLElement) lastOpener = el;
+    else if (document.activeElement instanceof HTMLElement) lastOpener = document.activeElement;
+}
+
+export function restoreOpener() {
+    const el = lastOpener;
+    lastOpener = null;
+    if (el && document.contains(el)) el.focus();
+}
+
 export function useFocusTrap(
     active: boolean,
     containerRef: RefObject<HTMLElement | null>,
@@ -25,8 +40,10 @@ export function useFocusTrap(
     escapeRef.current = onEscape;
 
     useEffect(() => {
-        if (!active) return;
-        const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+        if (!active) {
+            if (lastOpener) restoreOpener();
+            return;
+        }
 
         const focusables = () => {
             const root = containerRef.current;
@@ -67,7 +84,6 @@ export function useFocusTrap(
         document.addEventListener('keydown', onKey);
         return () => {
             document.removeEventListener('keydown', onKey);
-            previous?.focus?.();
         };
     }, [active, containerRef]);
 }

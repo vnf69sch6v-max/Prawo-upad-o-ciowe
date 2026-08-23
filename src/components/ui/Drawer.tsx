@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
-import { useFocusTrap } from '@/lib/use-focus-trap';
+import { rememberOpener, useFocusTrap } from '@/lib/use-focus-trap';
 
 interface DrawerProps {
     open: boolean;
@@ -25,6 +25,10 @@ export function Drawer({ open, onClose, title, subtitle, accent = '#2563EB', wid
     const closeBtnRef = useRef<HTMLButtonElement>(null);
     useEffect(() => setMounted(true), []);
     useFocusTrap(open, panelRef, onClose);
+
+    useEffect(() => {
+        if (open) rememberOpener();
+    }, [open]);
 
     useEffect(() => {
         if (!open) return;
