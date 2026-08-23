@@ -14,8 +14,6 @@ import { Heatmap } from '@/components/ui/Heatmap';
 import { Sparkline } from '@/components/ui/Sparkline';
 import { Drawer } from '@/components/ui/Drawer';
 import { DataTable, type Column } from '@/components/ui/DataTable';
-import { InsightBar } from '@/components/ui/InsightBar';
-import { analyzeSeries } from '@/lib/observations';
 import { GospodarkaAktywnosc } from '@/components/sections/GospodarkaAktywnosc';
 import { RzadyGospodarka } from '@/components/sections/RzadyGospodarka';
 import { PageHeader, PageEyebrow } from '@/components/ui/PageHeader';
@@ -71,12 +69,6 @@ function KoniunkturaSection() {
         };
     }), [sectors, latest, prev, trend]);
 
-    // Auto-analiza: najmocniejszy sygnał z każdego sektora → ≤4 najistotniejsze.
-    const insights = useMemo(() => {
-        const all = sectors.flatMap((s) => analyzeSeries(s.name, trend.map((t) => (typeof t[s.key] === 'number' ? (t[s.key] as number) : null)), { unit: 'pkt', decimals: 0 }).slice(0, 1));
-        return all.slice(0, 4);
-    }, [sectors, trend]);
-
     const [selKey, setSelKey] = useState<string | null>(null);
     const [open, setOpen] = useState(false);
     const openSector = (key: string) => { setSelKey(key); setOpen(true); };
@@ -110,8 +102,6 @@ function KoniunkturaSection() {
                 })}
                 </div>
             </section>
-
-            {insights.length > 0 && <InsightBar items={insights} />}
 
             {/* Mapa ciepła nastrojów (sektor × miesiąc) — klik wiersza → drawer */}
             <SectionCard editorial titleVariant="label" title="Mapa ciepła nastrojów" subtitle="saldo koniunktury · sektor × miesiąc · zielony = optymizm, czerwony = pesymizm · kliknij wiersz"

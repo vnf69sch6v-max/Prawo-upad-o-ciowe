@@ -18,8 +18,6 @@ import { RefreshButton } from '@/components/ui/RefreshButton';
 import { Drawer } from '@/components/ui/Drawer';
 import { Heatmap } from '@/components/ui/Heatmap';
 import { RelatedNews } from '@/components/ui/RelatedNews';
-import { ObservationsPanel } from '@/components/ui/ObservationsPanel';
-import { analyzeSeries, type Observation } from '@/lib/observations';
 import { AXIS_INK } from '@/lib/chart-theme';
 
 const PALETTE = ['#2563EB', '#16A34A', '#D97706', '#7C3AED', '#E11D48', '#0891B2', '#CA8A04', '#DB2777', '#059669', '#4F46E5', '#EA580C', '#0D9488', '#64748B'];
@@ -95,9 +93,6 @@ export function InflacjaFull() {
     const dataDate = data?.dataDate ?? null;
     const latest = headline.length ? headline[headline.length - 1] : null;
     const prev = headline.length > 1 ? headline[headline.length - 2] : null;
-
-    // Auto-analiza (augmented analytics): sygnały z serii CPI r/r względem celu NBP.
-    const cpiInsights = useMemo(() => analyzeSeries('Inflacja', headline.map((h) => h.yoy), { goodDown: true, unit: '%', target: { value: 2.5, label: 'NBP' } }), [headline]);
 
     // ── Struktura inflacji: CPI vs bazowa (GUS, bez żywności) vs PPI — wszystko na datach headline ──
     const ppiSeries = useMemo(() => plSeries(ppiHeadQ.data), [ppiHeadQ.data]);
@@ -245,22 +240,6 @@ export function InflacjaFull() {
         { key: 'contrib', label: 'Największy wkład', value: topContrib?.contribution != null ? `${topContrib.contribution > 0 ? '+' : ''}${formatDecimalPL(topContrib.contribution, 2)}` : '—', unit: 'pp', icon: Scale,
           footnote: topContrib ? `${topContrib.code} · ${topContrib.name.slice(0, 18)}…` : 'wkład do CPI', loading: isLoading },
     ];
-
-    const observations = useMemo<Observation[]>(() => {
-        const out: Observation[] = [...cpiInsights.slice(0, 3)];
-        if (topContrib?.contribution != null) {
-            out.push({ kind: 'record', tone: topContrib.contribution > 0 ? 'warn' : 'neutral',
-                text: `Największy wkład: ${topContrib.name} (${topContrib.contribution > 0 ? '+' : ''}${formatDecimalPL(topContrib.contribution, 2)} pp)` });
-        }
-        if (coreLatest != null && latest?.yoy != null) {
-            const diff = +(latest.yoy - coreLatest).toFixed(1);
-            if (Math.abs(diff) > 0.3) {
-                out.push({ kind: 'trend', tone: 'neutral',
-                    text: `CPI bez żywności (${formatDecimalPL(coreLatest, 1)}%) ${diff > 0 ? 'niższe' : 'wyższe'} od CPI ogółem o ${formatDecimalPL(Math.abs(diff), 1)} pp.` });
-            }
-        }
-        return out.slice(0, 4);
-    }, [cpiInsights, topContrib, coreLatest, latest]);
 
     if (isLoading) return <div className="space-y-3"><div className="mk-skeleton h-24 w-full" /><div className="grid grid-cols-3 gap-2">{Array.from({ length: 6 }).map((_, i) => <div key={i} className="mk-card h-16" />)}</div><div className="mk-skeleton h-[280px] w-full" /></div>;
 
@@ -424,15 +403,6 @@ export function InflacjaFull() {
                 }
             />
 
-            <ObservationsPanel items={observations} variant="overview" />
-
-            {dataDate && (
-                <p className="text-center text-[11px] text-mk-faint">
-                    Okres referencyjny: {formatDataPeriodLabel(dataDate)} · wyłącznie źródła GUS (DBW)
-                </p>
-            )}
-
-            {/* ── Drawer: szczegóły klikniętego działu ── */}
             {/* ── Drawer: szczegóły klikniętego działu ── */}
             <Drawer open={drawerOpen && !!sel} onClose={() => setDrawerOpen(false)} accent={selColor}
                 title={sel ? `${sel.code} · ${sel.name}` : ''} subtitle={sel ? `waga ${formatDecimalPL(sel.weight, 1)}% koszyka inflacyjnego` : ''}>

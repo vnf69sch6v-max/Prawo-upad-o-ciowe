@@ -2,8 +2,6 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { InsightBar } from '@/components/ui/InsightBar';
-import type { Observation } from '@/lib/observations';
 import { BarChart3, TrendingUp, TrendingDown, Search, ExternalLink, Newspaper, ArrowUpRight } from 'lucide-react';
 import {
     useStooq, useWig20, useNews,
@@ -148,19 +146,6 @@ function SpolkiSection() {
         : wigDelta != null && wigDelta < 0 ? 'WIG20 spada'
         : 'WIG20';
 
-    const moodInsights = useMemo<Observation[]>(() => {
-        const out: Observation[] = [];
-        if (summary.top && summary.top.changePct > 0) {
-            const c = WIG20.find((x) => x.ticker === summary.top!.ticker);
-            out.push({ kind: 'trend', tone: 'up', text: `Najmocniej rośnie ${c?.name ?? summary.top.ticker} (${summary.top.ticker}): ${fmtPct(summary.top.changePct)} dziś` });
-        }
-        if (summary.bottom && summary.bottom.changePct < 0) {
-            const c = WIG20.find((x) => x.ticker === summary.bottom!.ticker);
-            out.push({ kind: 'trend', tone: 'down', text: `Najmocniej spada ${c?.name ?? summary.bottom.ticker} (${summary.bottom.ticker}): ${fmtPct(summary.bottom.changePct)} dziś` });
-        }
-        return out;
-    }, [summary]);
-
     const cards = useMemo(() => {
         const q = query.trim().toLowerCase();
         let list = WIG20.map((c) => ({ company: c, quote: quoteByTicker.get(c.ticker) ?? null, news: newsByTicker.get(c.ticker) ?? [] }));
@@ -213,8 +198,6 @@ function SpolkiSection() {
                 <KpiCard label="Średnia zmiana" value={summary.avg != null ? fmtPct(summary.avg) : '—'} icon={TrendingUp}
                     footnote="średnia z notowań WIG20" loading={spolki.isLoading} />
             </div>
-
-            {moodInsights.length > 0 && <InsightBar items={moodInsights} />}
 
             <div className="space-y-3">
                 <div className="flex flex-wrap items-center gap-3">
