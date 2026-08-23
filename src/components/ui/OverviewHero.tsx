@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useNews } from '@/lib/hooks';
-import { formatDecimalPL, formatRelativeTime, formatTime } from '@/lib/formatters';
+import { formatDecimalPL, formatDataPeriodLabel, formatRelativeTime, formatTime } from '@/lib/formatters';
 import { collapseClusters } from '@/lib/news/match';
 import { consecutiveRun } from '@/lib/observations';
 import { HeroMetricCard } from '@/components/ui/HeroMetricCard';
@@ -28,7 +28,7 @@ function cpiSignal(cpi: Point[]) {
     const prev = prevOf(cpi);
     const delta = ppDelta(cpi);
     if (last == null) {
-        return { headline: 'Inflacja CPI', value: '—', delta: null as number | null, text: 'Oczekiwanie na dane GUS…', footnote: 'GUS · cel NBP 2,5%' };
+        return { headline: 'Inflacja CPI', value: '—', delta: null as number | null, text: 'Oczekiwanie na dane GUS…', footnote: 'cel NBP 2,5%' };
     }
     const above = last > NBP_TARGET;
     const wasBelow = prev != null && prev <= NBP_TARGET;
@@ -47,7 +47,7 @@ function cpiSignal(cpi: Point[]) {
         value: `${formatDecimalPL(last, 1)}%`,
         delta,
         text,
-        footnote: date ? `GUS · ${date} · cel NBP 2,5%` : 'GUS · cel NBP 2,5%',
+        footnote: date ? `${formatDataPeriodLabel(date)} · cel NBP 2,5%` : 'cel NBP 2,5%',
     };
 }
 
@@ -58,7 +58,7 @@ function retailSignal(retail: Point[]) {
     const values = retail.map((d) => d.value);
 
     if (last == null) {
-        return { headline: label, value: '—', delta: null as number | null, text: 'Oczekiwanie na dane GUS…', footnote: 'GUS BDL' };
+        return { headline: label, value: '—', delta: null as number | null, text: 'Oczekiwanie na dane GUS…' };
     }
 
     const upRun = consecutiveRun(values, 'up');
@@ -79,7 +79,7 @@ function retailSignal(retail: Point[]) {
         value: `${formatDecimalPL(last, 1)}%`,
         delta,
         text,
-        footnote: date ? `GUS · ${date}` : 'GUS BDL',
+        footnote: date ? formatDataPeriodLabel(date) : undefined,
     };
 }
 
