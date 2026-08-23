@@ -37,6 +37,10 @@
         {
             "path": "/api/cron/refresh",
             "schedule": "0 6 * * *"
+        },
+        {
+            "path": "/api/cron/news-archive",
+            "schedule": "0 20 * * *"
         }
     ],
     "headers": [

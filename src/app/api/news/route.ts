@@ -7,6 +7,7 @@ import { NEWS_SOURCES } from '@/lib/news/sources';
 import { parseRss, urlKey, titleKey } from '@/lib/news/parse';
 import { clusterNews } from '@/lib/news/cluster';
 import { scoreItem } from '@/lib/news/score';
+import { appendFeedToTodayArchive } from '@/lib/news/archive';
 import type { NewsItem, NewsSourceStatus } from '@/lib/news/types';
 
 export const revalidate = 0;
@@ -148,6 +149,16 @@ export async function GET(request: NextRequest) {
             'RSS: Bankier, Money.pl, BI PL, Interia, PB, wnp.pl, ISBnews, GUS, 300Gospodarka',
             refresh ? 0 : TTL_MS,
         );
+
+        // Hobby: Vercel pozwala tylko 1 cron/dzień — archiwum dzienne budujemy przy każdym
+        // `?refresh=1` (cron/refresh, ręczny warm, przyszły cron archive). Bez tego dzienne
+        // okno RSS (TTL 15 min) gubiłoby pozycje sprzed kilku godzin.
+        if (refresh && result?.items?.length) {
+            appendFeedToTodayArchive(result.items).catch((err) => {
+                console.error('[news-archive] merge-on-refresh:', err);
+            });
+        }
+
         return NextResponse.json(result);
     } catch (error) {
         return NextResponse.json({ error: String(error) }, { status: 500 });

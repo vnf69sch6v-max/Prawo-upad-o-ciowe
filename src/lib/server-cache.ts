@@ -14,6 +14,10 @@ const CACHE_TTL: Record<string, number> = {
     'sdp': 24 * 3600 * 1000,             // 24h — GUS SDP warehouse
     'dbw': 24 * 3600 * 1000,             // 24h — GUS thematic DBs (prices, koniunktura)
     'news': 15 * 60 * 1000,              // 15 min — RSS newsy starzeją się szybko
+    // Archiwum dzienne / digest — NIE mogą wygasać jak feed. Czytniki i tak podają maxAgeMs,
+    // ale domyślny TTL kolekcji musi być długi na wypadek pominięcia argumentu.
+    'news_archive': 365 * 24 * 3600 * 1000,
+    'digest': 365 * 24 * 3600 * 1000,
 };
 
 /**
