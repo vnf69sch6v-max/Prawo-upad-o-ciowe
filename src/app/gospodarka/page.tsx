@@ -9,7 +9,6 @@ import { Segmented } from '@/components/ui/Segmented';
 import { KpiCard, type AccentKey } from '@/components/ui/KpiCard';
 import { InteractiveChart } from '@/components/ui/InteractiveChart';
 import { SectionCard } from '@/components/ui/SectionCard';
-import { CsvExport } from '@/components/ui/CsvExport';
 import { StaleBadge } from '@/components/ui/StaleBadge';
 import { Heatmap } from '@/components/ui/Heatmap';
 import { Sparkline } from '@/components/ui/Sparkline';
@@ -127,7 +126,7 @@ function KoniunkturaSection() {
 
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                 <SectionCard editorial titleVariant="label" title="Koniunktura — trend" subtitle="wskaźnik ogólnego klimatu (saldo)"
-                    actions={<div className="flex items-center gap-2"><StaleBadge date={dataDate} label="GUS do" warnAfterMonths={3} /><CsvExport filename="koniunktura" headers={['Miesiąc', ...sectors.map((s) => s.name)]} rows={trend.map((t) => [t.date as string, ...sectors.map((s) => t[s.key] as number)])} /></div>}>
+                    actions={<StaleBadge date={dataDate} label="GUS do" warnAfterMonths={3} />}>
                     {q.isLoading ? <div className="mk-skeleton h-[300px] w-full" /> : (
                         <InteractiveChart data={trend} xKey="date" height={300} unit=" pkt" legend showRange initialRange="ALL"
                             valueFormatter={(v) => formatDecimalPL(v, 0)} xTickFormatter={monthTick}

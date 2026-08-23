@@ -34,7 +34,7 @@ export default function CenyPage() {
             {tab === 'inflacja' && <InflacjaFull />}
             {tab === 'ppi' && <PpiFull />}
             {tab === 'nieruchomosci' && (
-                <DbwPriceSection title="Ceny mieszkań — indeks (r/r)" subtitle="GUS · kwartalnie (%)" csvName="ceny-nieruchomosci" refline={0}
+                <DbwPriceSection title="Ceny mieszkań — indeks (r/r)" subtitle="GUS · kwartalnie (%)" refline={0}
                     heroTitle="Ceny mieszkań" heroPoz={4801796}
                     heroText="Wskaźnik cen nieruchomości mieszkaniowych GUS — dynamika r/r dla rynku pierwotnego i wtórnego."
                     config={{ var: 310, przekroj: 484, poz: [4801795, 4801796], freq: 'q' }}
@@ -45,14 +45,14 @@ export default function CenyPage() {
                     note="Wskaźnik cen nieruchomości mieszkaniowych GUS — dynamika r/r dla rynku pierwotnego i wtórnego." />
             )}
             {tab === 'budowlane' && (
-                <DbwPriceSection title="Ceny robót budowlano-montażowych" subtitle="GUS · r/r (%)" csvName="ceny-budowlane" refline={0}
+                <DbwPriceSection title="Ceny robót budowlano-montażowych" subtitle="GUS · r/r (%)" refline={0}
                     heroTitle="Ceny robót budowlano-montażowych" heroPoz={6661787}
                     heroText="Dynamika cen robót budowlano-montażowych publikowana przez GUS (r/r)."
                     config={{ var: 312, przekroj: 93, poz: [6661787] }}
                     series={[{ poz: 6661787, name: 'Budownictwo (r/r)', color: '#0891B2', accent: 'cyan', icon: HardHat }]} />
             )}
             {tab === 'rolne' && (
-                <DbwPriceSection title="Ceny skupu produktów rolnych (r/r)" subtitle="GUS · r/r (%)" csvName="ceny-rolne" refline={0}
+                <DbwPriceSection title="Ceny skupu produktów rolnych (r/r)" subtitle="GUS · r/r (%)" refline={0}
                     heroTitle="Ceny skupu produktów rolnych" heroPoz={7124724}
                     heroText="Dynamika cen skupu podstawowych produktów rolnych (GUS, r/r) — żywiec i zboża."
                     config={{ var: 324, przekroj: 775, poz: [7124703, 7124713, 7124724, 7189791, 7121981] }}

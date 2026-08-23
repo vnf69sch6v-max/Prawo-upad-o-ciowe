@@ -15,7 +15,6 @@ import { ObservationsPanel } from '@/components/ui/ObservationsPanel';
 import { PublicationDatesPanel } from '@/components/ui/PublicationDatesPanel';
 import { Choropleth, type ChoroItem } from '@/components/ui/Choropleth';
 import { DataTable, type Column } from '@/components/ui/DataTable';
-import { CsvExport } from '@/components/ui/CsvExport';
 
 type MapView = 'pkb' | 'ludnosc';
 
@@ -221,13 +220,6 @@ export function RegionyDashboard() {
                             titleVariant="label"
                             title="Tabela województw"
                             subtitle={isPkb ? 'PKB na mieszkańca (zł)' : 'Liczba ludności'}
-                            actions={
-                                <CsvExport
-                                    filename="regiony-gus"
-                                    headers={['Województwo', 'PKB/mieszk zł', 'PKB mln zł', 'Ludność']}
-                                    rows={regions.map((r) => [r.name, r.gdpPerCapita, r.gdpTotal, r.population])}
-                                />
-                            }
                             padded
                         >
                             {isLoading ? (

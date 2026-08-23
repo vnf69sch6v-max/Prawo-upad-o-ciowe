@@ -7,7 +7,6 @@ import { formatDecimalPL } from '@/lib/formatters';
 import { KpiCard } from '@/components/ui/KpiCard';
 import { InteractiveChart } from '@/components/ui/InteractiveChart';
 import { SectionCard } from '@/components/ui/SectionCard';
-import { CsvExport } from '@/components/ui/CsvExport';
 
 function Select({ label, value, onChange, options, disabled, placeholder }: {
     label: string; value: number | undefined; onChange: (v: number) => void;
@@ -88,8 +87,7 @@ export function SmupExplorer() {
                     footnote={series.length ? `${series[0].date}–${series[series.length - 1].date}` : '—'} loading={dataQ.isLoading} />
             </div>
 
-            <SectionCard editorial titleVariant="label" title={indicatorName || 'Wskaźnik'} subtitle="Średnia dla jednostek samorządu · SMUP"
-                actions={<CsvExport filename="smup-wskaznik" headers={['Rok', 'Wartość (śr.)']} rows={series.map((s) => [s.date, s.value])} />}>
+            <SectionCard editorial titleVariant="label" title={indicatorName || 'Wskaźnik'} subtitle="Średnia dla jednostek samorządu · SMUP">
                 {dataQ.isLoading ? <div className="mk-skeleton h-[300px] w-full" /> : series.length === 0 ? (
                     <p className="py-10 text-center text-sm text-mk-faint">Brak danych dla wybranego wskaźnika.</p>
                 ) : (

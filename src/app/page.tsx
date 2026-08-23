@@ -12,7 +12,6 @@ import { plSeries, lastOf, prevOf } from '@/lib/series';
 import { formatDecimalPL, formatNumber, formatDate, percentChange, formatDataPeriodLabel } from '@/lib/formatters';
 import type { AccentKey } from '@/components/ui/KpiCard';
 import { CompactKpiGrid } from '@/components/ui/CompactKpiGrid';
-import { CsvExport } from '@/components/ui/CsvExport';
 import { LatestNews } from '@/components/ui/RelatedNews';
 import { OverviewHero } from '@/components/ui/OverviewHero';
 import { PageHeader, PageEyebrow } from '@/components/ui/PageHeader';
@@ -91,7 +90,6 @@ export default function OverviewPage() {
     const watchlistItems: WatchableKpi[] = useMemo(() => [...macro, ...markets], [macro, markets]);
 
     const dataDate = [unemp, industrial, retail, cpi].map((s) => (s.length ? s[s.length - 1].date : '')).filter(Boolean).sort().pop() ?? '';
-    const csvRows = [...macro, ...markets].map((k) => [k.label, `${k.value}${k.unit ? ' ' + k.unit : ''}`]);
 
     return (
         <div className="mk-fade-in mk-overview">
@@ -105,7 +103,6 @@ export default function OverviewPage() {
                         {dataDate ? ` · ${formatDataPeriodLabel(dataDate)}` : ''}
                     </>
                 }
-                actions={<CsvExport filename="przeglad-makro" headers={['Wskaźnik', 'Wartość']} rows={csvRows} />}
             />
 
             <OverviewHero cpi={cpi} retail={retail} cpiLoading={cpiQ.isLoading} retailLoading={retailQ.isLoading} />

@@ -19,7 +19,6 @@ import { EditorialHero } from '@/components/ui/EditorialHero';
 import { InteractiveChart } from '@/components/ui/InteractiveChart';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { Segmented } from '@/components/ui/Segmented';
-import { CsvExport } from '@/components/ui/CsvExport';
 import { DataTable, type Column } from '@/components/ui/DataTable';
 import { RynkiStopySection } from '@/components/sections/RynkiStopySection';
 import { RynkiDashboard } from '@/components/sections/RynkiDashboard';
@@ -115,8 +114,7 @@ function KursySection() {
             {fxInsights.length > 0 && <InsightBar items={fxInsights} />}
 
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-                <SectionCard editorial titleVariant="label" className="lg:col-span-2" title="Kursy walut — historia 90 dni" subtitle="NBP · EUR / USD / CHF / GBP"
-                    actions={<CsvExport filename="kursy-walut" headers={['Data', 'EUR', 'USD', 'CHF', 'GBP']} rows={chart.map((r) => [r.date, r.EUR, r.USD, r.CHF, r.GBP])} />}>
+                <SectionCard editorial titleVariant="label" className="lg:col-span-2" title="Kursy walut — historia 90 dni" subtitle="NBP · EUR / USD / CHF / GBP">
                     {chart.length === 0 ? <div className="mk-skeleton h-[320px] w-full" /> : (
                         <InteractiveChart data={chart} xKey="date" height={320} unit=" zł" legend showRange initialRange="3M"
                             valueFormatter={(v) => formatDecimalPL(v, 2)} xTickFormatter={monthTick}
@@ -140,8 +138,7 @@ function KursySection() {
                 </SectionCard>
             </div>
 
-            <SectionCard editorial titleVariant="label" title="Tabela kursów NBP (tab. A)" subtitle={table?.effectiveDate ? `stan na ${formatDate(table.effectiveDate)}` : 'NBP'}
-                actions={<CsvExport filename="tabela-kursow" headers={['Waluta', 'Kod', 'Kurs PLN']} rows={rates.map((r) => [r.currency, r.code, r.mid])} />}>
+            <SectionCard editorial titleVariant="label" title="Tabela kursów NBP (tab. A)" subtitle={table?.effectiveDate ? `stan na ${formatDate(table.effectiveDate)}` : 'NBP'}>
                 <div className="max-h-[360px] overflow-auto">
                     <DataTable columns={cols} rows={rates} initialSort="code" initialDir="asc" rowKey={(r) => r.code} />
                 </div>
@@ -479,8 +476,7 @@ function GpwSection() {
                 })}
             </div>
 
-            <SectionCard editorial titleVariant="label" title="WIG20 — 60 sesji" subtitle="poziom indeksu · seria z ETF WIG20TR skalowana do poziomu indeksu (Yahoo)"
-                actions={<CsvExport filename="wig20" headers={['Data', 'Zamknięcie']} rows={wig20Chart.map((r) => [r.date, r.value])} />}>
+            <SectionCard editorial titleVariant="label" title="WIG20 — 60 sesji" subtitle="poziom indeksu · seria z ETF WIG20TR skalowana do poziomu indeksu (Yahoo)">
                 {wig20Chart.length < 2 ? <div className="mk-skeleton h-[280px] w-full" /> : (
                     <InteractiveChart data={wig20Chart} xKey="date" height={280} showRange initialRange="ALL"
                         valueFormatter={(v) => formatNumber(Math.round(v))} xTickFormatter={monthTick}
@@ -489,8 +485,7 @@ function GpwSection() {
             </SectionCard>
 
             <SectionCard editorial titleVariant="label" title="Indeksy GPW — dynamika (rebazowane do 100)"
-                subtitle="porównanie zmian %: WIG20, mWIG40, sWIG80 · serie z ETF-ów replikujących (Yahoo)"
-                actions={<CsvExport filename="indeksy-gpw" headers={['Data', 'WIG20', 'mWIG40', 'sWIG80']} rows={indexChart.map((r) => [r.date, r.wig20, r.mwig40, r.swig80])} />}>
+                subtitle="porównanie zmian %: WIG20, mWIG40, sWIG80 · serie z ETF-ów replikujących (Yahoo)">
                 {indexChart.length < 2 ? <div className="mk-skeleton h-[320px] w-full" /> : (
                     <InteractiveChart data={indexChart} xKey="date" height={320} legend showRange initialRange="3M"
                         valueFormatter={(v) => formatDecimalPL(v, 0)} xTickFormatter={monthTick} referenceLines={[{ y: 100, color: '#CBD2DD' }]}
@@ -524,8 +519,7 @@ function GpwSection() {
                 </div>
             </div>
 
-            <SectionCard editorial titleVariant="label" title="Surowce — dynamika (rebazowane do 100)" subtitle="porównanie zmian %: ropa Brent/WTI, złoto, miedź, gaz ziemny"
-                actions={<CsvExport filename="surowce" headers={['Data', 'Brent', 'WTI', 'Złoto', 'Miedź', 'Gaz']} rows={commodChart.map((r) => [r.date, r.brent, r.wti, r.gold, r.copper, r.gas])} />}>
+            <SectionCard editorial titleVariant="label" title="Surowce — dynamika (rebazowane do 100)" subtitle="porównanie zmian %: ropa Brent/WTI, złoto, miedź, gaz ziemny">
                 {commodChart.length < 2 ? <div className="mk-skeleton h-[320px] w-full" /> : (
                     <InteractiveChart data={commodChart} xKey="date" height={320} legend showRange initialRange="3M"
                         valueFormatter={(v) => formatDecimalPL(v, 0)} xTickFormatter={monthTick} referenceLines={[{ y: 100, color: '#CBD2DD' }]}

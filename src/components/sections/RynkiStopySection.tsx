@@ -7,7 +7,6 @@ import { formatDecimalPL } from '@/lib/formatters';
 import { KpiCard } from '@/components/ui/KpiCard';
 import { InteractiveChart } from '@/components/ui/InteractiveChart';
 import { SectionCard } from '@/components/ui/SectionCard';
-import { CsvExport } from '@/components/ui/CsvExport';
 
 /** Sekcja stóp procentowych na stronie Rynki — wariant editorial (mockup). */
 export function RynkiStopySection() {
@@ -29,8 +28,7 @@ export function RynkiStopySection() {
             </div>
 
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                <SectionCard editorial titleVariant="label" title="WIBOR — terminy" subtitle="Szacowane z ref. NBP + spread"
-                    actions={<CsvExport filename="wibor" headers={['Termin', 'WIBOR', 'WIBID']} rows={wibor.map((w) => [w.tenor, w.wibor, w.wibid])} />}>
+                <SectionCard editorial titleVariant="label" title="WIBOR — terminy" subtitle="Szacowane z ref. NBP + spread">
                     {wibor.length === 0 ? <div className="mk-skeleton h-[220px] w-full" /> : (
                         <InteractiveChart data={wibor.map((w) => ({ tenor: w.tenor, wibor: w.wibor }))} xKey="tenor" height={220} unit="%"
                             valueFormatter={(v) => formatDecimalPL(v, 2)} series={[{ key: 'wibor', name: 'WIBOR', color: '#2563EB', type: 'bar' }]} />

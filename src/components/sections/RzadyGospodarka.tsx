@@ -9,7 +9,6 @@ import { plSeries } from '@/lib/series';
 import { formatDecimalPL } from '@/lib/formatters';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { Segmented } from '@/components/ui/Segmented';
-import { CsvExport } from '@/components/ui/CsvExport';
 import { PL_GOVERNMENTS, govForYear } from '@/lib/pl-governments';
 import { AXIS_INK } from '@/lib/chart-theme';
 
@@ -47,7 +46,7 @@ export function RzadyGospodarka() {
     return (
         <div className="space-y-6">
             <SectionCard editorial titleVariant="label" title="Rządy a gospodarka" subtitle="roczne wskaźniki GUS — tło pokazuje ekipę rządzącą w danym okresie"
-                actions={<div className="flex flex-wrap items-center gap-2"><Segmented value={metric} onChange={setMetric} options={METRICS.map((m) => ({ value: m.value, label: m.label }))} /><CsvExport filename="rzady-gospodarka" headers={['Rok', 'PKB %', 'Inflacja %']} rows={merged.map((r) => [r.year, r.gdp, r.cpi])} /></div>}>
+                actions={<Segmented value={metric} onChange={setMetric} options={METRICS.map((m) => ({ value: m.value, label: m.label }))} />}>
                 <ResponsiveContainer width="100%" height={340}>
                     <ComposedChart data={merged} margin={{ top: 8, right: 14, left: -6, bottom: 4 }}>
                         <CartesianGrid stroke="#EDF0F5" vertical={false} />

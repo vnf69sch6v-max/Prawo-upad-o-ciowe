@@ -12,7 +12,6 @@ import { monthTick } from '@/lib/series';
 import { KpiCard } from '@/components/ui/KpiCard';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { InteractiveChart } from '@/components/ui/InteractiveChart';
-import { CsvExport } from '@/components/ui/CsvExport';
 import { WatchStar } from '@/components/ui/WatchStar';
 
 export default function SpolkaPage() {
@@ -77,8 +76,7 @@ export default function SpolkaPage() {
                     footnote="z naszego agregatora RSS" loading={news.isLoading} />
             </div>
 
-            <SectionCard title={`${company.name} — kurs (120 sesji)`} subtitle="zamknięcie dzienne · Yahoo Finance (GPW)"
-                actions={<CsvExport filename={`kurs-${ticker.toLowerCase()}`} headers={['Data', 'Zamknięcie']} rows={chart.map((r) => [r.date, r.value])} />}>
+            <SectionCard title={`${company.name} — kurs (120 sesji)`} subtitle="zamknięcie dzienne · Yahoo Finance (GPW)">
                 {hist.isLoading ? <div className="mk-skeleton h-[300px] w-full" /> : chart.length < 2 ? (
                     <p className="py-8 text-center text-sm text-mk-muted">Brak historii notowań dla tego tickera.</p>
                 ) : (

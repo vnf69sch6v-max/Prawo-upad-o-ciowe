@@ -14,7 +14,6 @@ import { DenseTwoCol } from '@/components/ui/DensePageLayout';
 import { RelatedNews } from '@/components/ui/RelatedNews';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { InteractiveChart } from '@/components/ui/InteractiveChart';
-import { CsvExport } from '@/components/ui/CsvExport';
 
 function fxDelta(data: unknown): number | null {
     const raw = data as { rates?: { mid?: number }[] } | { mid?: number }[] | undefined;
@@ -179,7 +178,6 @@ export function RynkiDashboard() {
                         titleVariant="label"
                         title="WIG20 — 60 sesji"
                         subtitle="poziom indeksu · Yahoo/Stooq"
-                        actions={<CsvExport filename="wig20-dashboard" headers={['Data', 'Zamknięcie']} rows={wig20Chart.map((r) => [r.date, r.value])} />}
                     >
                         {wig20Chart.length < 2 ? (
                             <div className="mk-skeleton h-[280px] w-full" />
