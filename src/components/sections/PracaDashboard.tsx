@@ -13,7 +13,7 @@ import {
 } from '@/lib/hooks';
 import { lastOf, deltaOf, monthTick } from '@/lib/series';
 import { formatDecimalPL, formatNumber, formatDataPeriod, formatDataPeriodLabel } from '@/lib/formatters';
-import { consecutiveRun, runPhrase, trendObservation, type Observation } from '@/lib/observations';
+import { analyzeSeries, consecutiveRun, runPhrase, type Observation } from '@/lib/observations';
 import { CompactKpiGrid, type CompactKpiItem } from '@/components/ui/CompactKpiGrid';
 import { DensePageLayout, DenseTwoCol } from '@/components/ui/DensePageLayout';
 import { SectionCard } from '@/components/ui/SectionCard';
@@ -159,20 +159,16 @@ export function PracaDashboard() {
         },
     ];
 
-    // InsightBar: MAX JEDNA obserwacja na serię; bez poziomu % (ten jest w kafle/lead).
+    // InsightBar: analyzeSeries jak na innych stronach; MAX JEDNA obserwacja na serię.
     const insights = useMemo<Observation[]>(() => {
         const out: Observation[] = [];
-        const push = (o: Observation | null) => { if (o) out.push(o); };
-        // trendObservation nie dokłada „(teraz X%)" — unikamy dublowania z CompactKpi.
-        push(trendObservation('Bezrobocie rej.', unemp.map((d) => d.value), true));
-        push(trendObservation('Płace nominalne', wages.map((w) => w.value), false));
-        const baelVals = (baelQ.data?.series ?? []).map((d) => d.value);
-        if (baelVals.length >= 3) {
-            const down = consecutiveRun(baelVals, 'down');
-            const up = consecutiveRun(baelVals, 'up');
-            if (down >= 2) out.push({ kind: 'trend', tone: 'up', text: `BAEL: trend spadkowy ${runPhrase(down, 'quarter')}` });
-            else if (up >= 2) out.push({ kind: 'trend', tone: 'down', text: `BAEL: trend wzrostowy ${runPhrase(up, 'quarter')}` });
-        }
+        const one = (label: string, values: (number | null | undefined)[], opts: Parameters<typeof analyzeSeries>[2]) => {
+            const hit = analyzeSeries(label, values, opts)[0];
+            if (hit) out.push(hit);
+        };
+        one('Bezrobocie rej.', unemp.map((d) => d.value), { goodDown: true, unit: '%', decimals: 1 });
+        one('Płace nominalne', wages.map((w) => w.value), { unit: '%', decimals: 1 });
+        one('BAEL', (baelQ.data?.series ?? []).map((d) => d.value), { goodDown: true, unit: '%', decimals: 1, period: 'quarter' });
         return out.slice(0, 3);
     }, [unemp, wages, baelQ.data?.series]);
 
