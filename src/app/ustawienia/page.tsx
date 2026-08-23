@@ -22,7 +22,7 @@ export default function UstawieniaPage() {
             <PageHeader title="Ustawienia" />
 
             <SectionCard title="Konto" titleVariant="label" editorial>
-                <div className="flex items-center justify-between gap-4">
+                <div className="flex flex-wrap items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
                         <span className="flex h-11 w-11 items-center justify-center rounded-full bg-mk-brand-soft text-sm font-semibold text-mk-brand">
                             {user?.initials ?? 'MD'}
@@ -44,7 +44,7 @@ export default function UstawieniaPage() {
             </SectionCard>
 
             <SectionCard title="Motyw" titleVariant="label" editorial>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                     <span className="mk-btn mk-btn-primary cursor-default bg-mk-brand hover:bg-mk-brand"><Sun size={15} /> Jasny</span>
                     <span className="mk-btn cursor-not-allowed opacity-60"><Moon size={15} /> Ciemny (wkrótce)</span>
                 </div>

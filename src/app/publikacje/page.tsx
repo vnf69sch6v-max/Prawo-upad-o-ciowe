@@ -37,7 +37,7 @@ export default function PublikacjePage() {
                                 href={s.url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="shrink-0 text-xs font-semibold text-mk-brand transition-colors hover:underline"
+                                className="inline-flex min-h-6 shrink-0 items-center px-1.5 text-xs font-semibold text-mk-brand transition-colors hover:underline"
                             >
                                 źródło
                             </a>

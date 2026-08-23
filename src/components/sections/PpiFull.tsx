@@ -200,7 +200,7 @@ export function PpiFull() {
                 right={
                     <SectionCard editorial titleVariant="label" title="PPI — trend" subtitle={`${freq === 'yoy' ? 'rok do roku' : 'miesiąc do miesiąca'} (%) · GUS`}
                         actions={<div className="flex flex-wrap items-center gap-2">
-                            <Segmented value={freq} onChange={setFreq} options={[{ value: 'yoy', label: 'r/r' }, { value: 'mom', label: 'm/m' }]} />
+                            <Segmented value={freq} onChange={setFreq} aria-label="Częstotliwość PPI" options={[{ value: 'yoy', label: 'r/r' }, { value: 'mom', label: 'm/m' }]} />
                             <RefreshButton onClick={() => { void refreshFromSource(); }} loading={isFetching && !isLoading} />
                             {dataDate && <span className="text-[11px] font-medium text-mk-muted">{formatDataPeriodLabel(dataDate)}</span>}
                             <StaleBadge date={dataDate} label="dane za" warnAfterMonths={3} />
@@ -250,7 +250,7 @@ export function PpiFull() {
             <DenseTwoCol
                 left={
                     <SectionCard editorial titleVariant="label" title="Mapa ciepła — działy PKD" subtitle="dynamika cen producenta"
-                        actions={<Segmented value={heatMetric} onChange={setHeatMetric} options={[{ value: 'yoy', label: 'r/r' }, { value: 'mom', label: 'm/m' }]} />}>
+                        actions={<Segmented value={heatMetric} onChange={setHeatMetric} aria-label="Metryka mapy ciepła" options={[{ value: 'yoy', label: 'r/r' }, { value: 'mom', label: 'm/m' }]} />}>
                         {heat.dates.length < 2 ? <QueryEmpty title="Brak danych" height={220} /> : (
                             <Heatmap rows={heatRows} cols={heat.dates} valueAt={heatValue} unit="%" colTickFormatter={monthTick} valueFormatter={(v) => formatDecimalPL(v, 1)} cellHeight={14}
                                 onRowClick={(code) => { const d = allDivs.find((x) => x.code === code); if (d) openSec(d.sec); }} />
@@ -259,7 +259,7 @@ export function PpiFull() {
                 }
                 right={
                     <SectionCard editorial titleVariant="label" title="Największe ruchy cen" subtitle="działy PKD u producenta"
-                        actions={<Segmented value={moverMetric} onChange={setMoverMetric} options={[{ value: 'yoy', label: 'r/r' }, { value: 'mom', label: 'm/m' }]} />}>
+                        actions={<Segmented value={moverMetric} onChange={setMoverMetric} aria-label="Metryka zmian" options={[{ value: 'yoy', label: 'r/r' }, { value: 'mom', label: 'm/m' }]} />}>
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             {[{ t: 'Zdrożało', arr: movers.risers, up: true }, { t: 'Staniało', arr: movers.fallers, up: false }].map((col) => (
                                 <div key={col.t}>
@@ -297,7 +297,7 @@ export function PpiFull() {
                         <div>
                             <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                                 <div className="text-[11px] font-semibold uppercase tracking-wide text-mk-muted">Trend cen — {divMetric === 'yoy' ? 'r/r' : 'm/m'}</div>
-                                <Segmented value={divMetric} onChange={setDivMetric} options={[{ value: 'yoy', label: 'r/r' }, { value: 'mom', label: 'm/m' }]} />
+                                <Segmented value={divMetric} onChange={setDivMetric} aria-label="Metryka działu" options={[{ value: 'yoy', label: 'r/r' }, { value: 'mom', label: 'm/m' }]} />
                             </div>
                             {secChange.length > 1 && (
                                 <InteractiveChart data={secChange} xKey="date" height={200} unit="%" showRange initialRange="ALL" ranges={['1R', 'ALL']}

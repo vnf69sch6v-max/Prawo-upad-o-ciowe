@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { Search, CalendarClock, BarChart3 } from 'lucide-react';
+import { rememberOpener } from '@/lib/use-focus-trap';
 import { TopNav } from './TopNav';
 import { UserMenu } from './UserMenu';
 
@@ -22,7 +23,8 @@ export function AppHeader() {
 
                 <div className="ml-auto flex items-center gap-1.5">
                     <button
-                        onClick={() => window.dispatchEvent(new Event('mk:palette'))}
+                        type="button"
+                        onClick={(e) => { rememberOpener(e.currentTarget); window.dispatchEvent(new Event('mk:palette')); }}
                         className="group hidden h-[38px] items-center gap-2 rounded-lg border border-mk-border bg-mk-surface-alt px-3 text-mk-faint transition-colors hover:border-mk-primary/40 hover:text-mk-muted md:flex"
                         style={{ width: 220 }}
                         aria-label="Szukaj (⌘K)"
@@ -32,7 +34,8 @@ export function AppHeader() {
                         <kbd className="shrink-0 rounded border border-mk-border bg-mk-surface px-1.5 py-0.5 text-[11px] font-medium tracking-wide">⌘K</kbd>
                     </button>
                     <button
-                        onClick={() => window.dispatchEvent(new Event('mk:palette'))}
+                        type="button"
+                        onClick={(e) => { rememberOpener(e.currentTarget); window.dispatchEvent(new Event('mk:palette')); }}
                         className="flex h-9 w-9 items-center justify-center rounded-lg text-mk-muted transition-colors hover:bg-mk-surface-alt hover:text-mk-text md:hidden"
                         aria-label="Szukaj (paleta poleceń)"
                     >

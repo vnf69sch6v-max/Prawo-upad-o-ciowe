@@ -446,6 +446,7 @@ button.mk-card,
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  min-height: 32px;
   padding: 6px 12px;
   border-radius: 8px;
   font-size: 14px;
@@ -460,6 +461,7 @@ button.mk-card,
 /* Przewijany pasek nawigacji (telefon/tablet): chowamy surowy pasek przewijania i zaznaczamy
    zanikiem, że po prawej jest jeszcze treść — inaczej pozycje wyglądają na ucięte przez błąd. */
 .mk-navrow {
+  min-width: 0;
   overflow-x: auto;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
@@ -528,9 +530,14 @@ button.mk-card,
   cursor: not-allowed;
 }
 
-/* Segmented control (toggles) */
+/* Segmented control (toggles) — poziomy pasek, bez zawijania.
+   Na wąskim ekranie przełączniki się przewijają; aktywny musi zostać w kadrze
+   (scrollIntoView w Segmented.tsx). min-height 28px = WCAG 2.2 Target Size. */
 .mk-seg {
   display: inline-flex;
+  flex-wrap: nowrap;
+  min-width: 0;
+  width: max-content;
   max-width: 100%;
   overflow-x: auto;
   scrollbar-width: none;
@@ -547,8 +554,12 @@ button.mk-card,
 }
 
 .mk-seg-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
   white-space: nowrap;
+  min-height: 28px;
   padding: 5px 12px;
   border-radius: 7px;
   font-size: 13px;

@@ -39,7 +39,7 @@ export function SectionCard({
                         )}
                         {subtitle && <p className="mk-section-head-sub">{subtitle}</p>}
                     </div>
-                    {actions && <div className="mk-section-head-actions">{actions}</div>}
+                    {actions && <div className="mk-section-head-actions min-w-0 max-w-full">{actions}</div>}
                 </header>
             )}
             {children}

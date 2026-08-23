@@ -291,7 +291,7 @@ export function InflacjaFull() {
                 right={
                     <SectionCard editorial titleVariant="label" title="Inflacja CPI — trend (10 lat)" subtitle={`${freq === 'yoy' ? 'rok do roku' : 'miesiąc do miesiąca'} (%) · GUS`}
                         actions={<div className="flex flex-wrap items-center gap-2">
-                            <Segmented value={freq} onChange={setFreq} options={[{ value: 'yoy', label: 'r/r' }, { value: 'mom', label: 'm/m' }]} />
+                            <Segmented value={freq} onChange={setFreq} aria-label="Częstotliwość CPI" options={[{ value: 'yoy', label: 'r/r' }, { value: 'mom', label: 'm/m' }]} />
                             <RefreshButton onClick={() => { void refreshFromSource(); }} loading={isFetching && !isLoading} />
                             {dataDate && <span className="text-[11px] font-medium text-mk-muted">{formatDataPeriodLabel(dataDate)}</span>}
                             <StaleBadge date={dataDate} label="dane za" warnAfterMonths={4} />
@@ -363,7 +363,7 @@ export function InflacjaFull() {
                 }
                 right={
                     <SectionCard editorial titleVariant="label" title="Największe ruchy cen" subtitle="podkategorie COICOP"
-                        actions={<Segmented value={moverMetric} onChange={setMoverMetric} options={[{ value: 'yoy', label: 'r/r' }, { value: 'mom', label: 'm/m' }]} />}>
+                        actions={<Segmented value={moverMetric} onChange={setMoverMetric} aria-label="Metryka zmian" options={[{ value: 'yoy', label: 'r/r' }, { value: 'mom', label: 'm/m' }]} />}>
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             {[{ t: 'Zdrożało', arr: movers.risers, up: true }, { t: 'Staniało', arr: movers.fallers, up: false }].map((col) => (
                                 <div key={col.t}>
@@ -411,7 +411,7 @@ export function InflacjaFull() {
                 }
                 right={
                     <SectionCard editorial titleVariant="label" title="Mapa ciepła" subtitle={heatMetric === 'yoy' ? 'r/r · 10 lat' : 'm/m · 2026'}
-                        actions={<Segmented value={heatMetric} onChange={setHeatMetric} options={[{ value: 'yoy', label: 'r/r' }, { value: 'mom', label: 'm/m' }]} />}>
+                        actions={<Segmented value={heatMetric} onChange={setHeatMetric} aria-label="Metryka mapy ciepła" options={[{ value: 'yoy', label: 'r/r' }, { value: 'mom', label: 'm/m' }]} />}>
                         {heatCols.length < 2 ? <QueryEmpty title="Brak danych" height={220} /> : (
                             <Heatmap rows={heatRows} cols={heatCols} valueAt={heatValue} unit="%" colTickFormatter={monthTick} valueFormatter={(v) => formatDecimalPL(v, 1)} onRowClick={openDiv} cellHeight={heatMetric === 'yoy' ? 16 : 20} />
                         )}
@@ -446,7 +446,7 @@ export function InflacjaFull() {
                         <div>
                             <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                                 <div className="text-[11px] font-semibold uppercase tracking-wide text-mk-muted">Dynamika cen — {METRIC_LABEL[divMetric]}</div>
-                                <Segmented value={divMetric} onChange={setDivMetric} options={[{ value: 'yoy', label: 'r/r' }, { value: 'qoq', label: 'kw/kw' }, { value: 'mom', label: 'm/m' }]} />
+                                <Segmented value={divMetric} onChange={setDivMetric} aria-label="Metryka działu" options={[{ value: 'yoy', label: 'r/r' }, { value: 'qoq', label: 'kw/kw' }, { value: 'mom', label: 'm/m' }]} />
                             </div>
                             {divChange.length > 1 ? (
                                 <InteractiveChart data={divChange} xKey="date" height={220} unit="%" showRange initialRange="ALL" ranges={['1R', '3L', '5L', 'ALL']}

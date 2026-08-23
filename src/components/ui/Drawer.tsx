@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
+import { rememberOpener, useFocusTrap } from '@/lib/use-focus-trap';
 
 interface DrawerProps {
     open: boolean;
@@ -15,15 +16,6 @@ interface DrawerProps {
     children: ReactNode;
 }
 
-const FOCUSABLE = [
-    'a[href]',
-    'button:not([disabled])',
-    'textarea:not([disabled])',
-    'input:not([disabled])',
-    'select:not([disabled])',
-    '[tabindex]:not([tabindex="-1"])',
-].join(',');
-
 /** Wysuwany panel: na ≥sm z prawej, poniżej sm jako arkusz ~90% z dołu.
  *  Renderowany przez portal do <body>, by `position: fixed` był względny do viewportu.
  *  Zamyka: X (≥44px), klik w tło, Escape, przeciągnięcie w dół na mobile.
@@ -31,63 +23,24 @@ const FOCUSABLE = [
 export function Drawer({ open, onClose, title, subtitle, accent = '#2563EB', width = 480, children }: DrawerProps) {
     const [mounted, setMounted] = useState(false);
     const panelRef = useRef<HTMLElement>(null);
-    const openerRef = useRef<HTMLElement | null>(null);
-    const onCloseRef = useRef(onClose);
+    const closeBtnRef = useRef<HTMLButtonElement>(null);
     const dragStartY = useRef<number | null>(null);
-    onCloseRef.current = onClose;
 
     useEffect(() => setMounted(true), []);
+    useFocusTrap(open, panelRef, onClose);
+
+    useEffect(() => {
+        if (open) rememberOpener();
+    }, [open]);
 
     useEffect(() => {
         if (!open) return;
-        openerRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
         const prevOverflow = document.body.style.overflow;
         document.body.style.overflow = 'hidden';
-
-        const panel = panelRef.current;
-        const focusables = () =>
-            [...(panel?.querySelectorAll<HTMLElement>(FOCUSABLE) ?? [])].filter(
-                (el) => el.offsetParent !== null || el === document.activeElement,
-            );
-
-        const focusId = requestAnimationFrame(() => {
-            const list = focusables();
-            (list[0] ?? panel)?.focus();
-        });
-
-        const onKey = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') {
-                e.preventDefault();
-                onCloseRef.current();
-                return;
-            }
-            if (e.key !== 'Tab' || !panel) return;
-            const list = focusables();
-            if (list.length === 0) {
-                e.preventDefault();
-                panel.focus();
-                return;
-            }
-            const first = list[0];
-            const last = list[list.length - 1];
-            const active = document.activeElement;
-            if (e.shiftKey) {
-                if (active === first || !panel.contains(active)) {
-                    e.preventDefault();
-                    last.focus();
-                }
-            } else if (active === last || !panel.contains(active)) {
-                e.preventDefault();
-                first.focus();
-            }
-        };
-
-        document.addEventListener('keydown', onKey);
+        const focusId = setTimeout(() => closeBtnRef.current?.focus(), 20);
         return () => {
-            cancelAnimationFrame(focusId);
-            document.removeEventListener('keydown', onKey);
+            clearTimeout(focusId);
             document.body.style.overflow = prevOverflow;
-            openerRef.current?.focus?.();
         };
     }, [open]);
 
@@ -137,6 +90,7 @@ export function Drawer({ open, onClose, title, subtitle, accent = '#2563EB', wid
                             {subtitle && <p className="mt-0.5 text-sm text-mk-muted">{subtitle}</p>}
                         </div>
                         <button
+                            ref={closeBtnRef}
                             type="button"
                             onClick={onClose}
                             aria-label="Zamknij"

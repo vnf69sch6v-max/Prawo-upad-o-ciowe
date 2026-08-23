@@ -27,8 +27,6 @@ const nextConfig: NextConfig = {
       { source: '/trade', destination: '/rynki', permanent: false },
       { source: '/nowcast', destination: '/rynki', permanent: false },
       { source: '/tools', destination: '/rynki', permanent: false },
-      // Zakładka Prognozy została wycofana — stare linki kierujemy na Rynki.
-      { source: '/prognozy', destination: '/rynki', permanent: false },
     ];
   },
 };

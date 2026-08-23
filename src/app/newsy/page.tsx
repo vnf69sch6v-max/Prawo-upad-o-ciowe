@@ -1,11 +1,12 @@
 'use client';
 
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { Search, ExternalLink, AlertTriangle, Newspaper, X, Layers, Flame, Clock, Megaphone, Copy } from 'lucide-react';
+import { Search, ExternalLink, AlertTriangle, Newspaper, X, Layers, Flame, Megaphone, Copy } from 'lucide-react';
 import { useNews, type NewsItem } from '@/lib/hooks';
 import { formatRelativeTime, formatTime, formatDate } from '@/lib/formatters';
 import { norm, collapseClusters } from '@/lib/news/match';
 import { PageHeader } from '@/components/ui/PageHeader';
+import { Segmented } from '@/components/ui/Segmented';
 
 type Sort = 'waznosc' | 'data';
 
@@ -160,7 +161,7 @@ function FilterBtn({
         <button
             type="button"
             onClick={onClick}
-            className={`flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-left text-xs font-medium transition-colors ${
+            className={`flex min-h-6 w-full items-center justify-between rounded-md px-2.5 py-1.5 text-left text-xs font-medium transition-colors ${
                 active
                     ? 'bg-mk-brand-soft text-mk-brand ring-1 ring-mk-brand/25'
                     : 'text-mk-muted hover:bg-mk-surface-alt hover:text-mk-text'
@@ -252,30 +253,31 @@ export default function NewsyPage() {
                                 placeholder="Szukaj…"
                                 aria-label="Szukaj w newsach"
                                 className="mk-input w-full py-2 text-sm"
-                                style={{ paddingLeft: 32, paddingRight: q ? 32 : 12 }}
+                                style={{ paddingLeft: 32, paddingRight: q ? 36 : 14 }}
                             />
                             {q && (
                                 <button
                                     type="button"
                                     onClick={() => setQ('')}
                                     aria-label="Wyczyść wyszukiwanie"
-                                    className="absolute right-2 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded text-mk-faint transition-colors hover:bg-mk-surface-alt hover:text-mk-text"
+                                    className="absolute right-1.5 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded text-mk-faint transition-colors hover:bg-mk-surface-alt hover:text-mk-text"
                                 >
-                                    <X size={12} />
+                                    <X size={14} />
                                 </button>
                             )}
                         </div>
 
                         <div>
                             <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-mk-faint">Sortowanie</p>
-                            <div className="space-y-0.5">
-                                <FilterBtn active={sort === 'waznosc'} onClick={() => setSort('waznosc')}>
-                                    <span className="inline-flex items-center gap-1.5"><Flame size={12} /> Ważne</span>
-                                </FilterBtn>
-                                <FilterBtn active={sort === 'data'} onClick={() => setSort('data')}>
-                                    <span className="inline-flex items-center gap-1.5"><Clock size={12} /> Najnowsze</span>
-                                </FilterBtn>
-                            </div>
+                            <Segmented
+                                value={sort}
+                                onChange={setSort}
+                                aria-label="Sortowanie newsów"
+                                options={[
+                                    { value: 'waznosc', label: 'Ważne' },
+                                    { value: 'data', label: 'Najnowsze' },
+                                ]}
+                            />
                         </div>
 
                         {sources.length > 0 && (
@@ -324,7 +326,7 @@ export default function NewsyPage() {
                     )}
 
                     {isError && (
-                        <div className="mk-card mk-card-editorial mk-card-pad-compact flex items-start gap-2 text-sm text-mk-negative">
+                        <div role="alert" className="mk-card mk-card-editorial mk-card-pad-compact flex items-start gap-2 text-sm text-mk-negative">
                             <AlertTriangle size={15} className="mt-0.5 shrink-0" />
                             <div>
                                 <p className="font-medium">Nie udało się pobrać newsów.</p>
