@@ -42,11 +42,11 @@ export default function OverviewPage() {
         try {
             if (sessionStorage.getItem('mk:edit-once') === '1') {
                 sessionStorage.removeItem('mk:edit-once');
-                setEditing(true);
+                setEditing(true); // eslint-disable-line react-hooks/set-state-in-effect -- session flag to enter edit on landing
             }
             const q = new URLSearchParams(window.location.search);
             if (q.get('edit') === '1') {
-                setEditing(true);
+                setEditing(true); // eslint-disable-line react-hooks/set-state-in-effect -- ?edit=1 deep-link
                 window.history.replaceState({}, '', window.location.pathname || '/');
             }
         } catch { /* ignore */ }

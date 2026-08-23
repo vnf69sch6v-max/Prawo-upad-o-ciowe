@@ -7,7 +7,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import {
-    LayoutDashboard, Pencil, Tag, Factory, Users, TrendingUp, Map, Search, Newspaper,
+    LayoutDashboard, LayoutGrid, Pencil, Tag, Factory, Users, TrendingUp, Map, Search, Newspaper,
     Banknote, Percent, Landmark, LineChart, Home, Wheat, HardHat, Fuel, Building2, CornerDownLeft, Briefcase,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
@@ -18,7 +18,8 @@ interface Cmd { id: string; label: string; sub?: string; group: string; keywords
 const COMMANDS: Cmd[] = [
     // ── Zakładki ──
     { id: 'nav-home', group: 'Zakładki', label: 'Przegląd', keywords: 'dashboard start główna overview', href: '/', icon: LayoutDashboard },
-    { id: 'edit-desk', group: 'Akcje', label: 'Edytuj pulpit', keywords: 'edytuj panel układ widgety kafle jiggle iphone personalizacja', href: '/?edit=1', icon: Pencil },
+    { id: 'nav-panel', group: 'Zakładki', label: 'Mój panel', keywords: 'panel dashboard własny układ widgety kafle personalizacja edycja', href: '/panel', icon: LayoutGrid },
+    { id: 'edit-desk', group: 'Akcje', label: 'Edytuj pulpit', keywords: 'edytuj panel układ widgety kafle jiggle iphone personalizacja', href: '/panel?edit=1', icon: Pencil },
     { id: 'nav-ceny', group: 'Zakładki', label: 'Ceny', keywords: 'inflacja cpi', href: '/ceny', icon: Tag },
     { id: 'nav-gosp', group: 'Zakładki', label: 'Gospodarka', keywords: 'pkb aktywność', href: '/gospodarka', icon: Factory },
     { id: 'nav-praca', group: 'Zakładki', label: 'Rynek pracy', keywords: 'bezrobocie płace zatrudnienie', href: '/praca', icon: Users },
