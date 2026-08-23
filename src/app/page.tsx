@@ -13,7 +13,7 @@ import { formatDecimalPL, formatNumber, formatDate, percentChange, formatDataPer
 import type { AccentKey } from '@/components/ui/KpiCard';
 import { CompactKpiGrid } from '@/components/ui/CompactKpiGrid';
 import { LatestNews } from '@/components/ui/RelatedNews';
-import { DailyDigestCard } from '@/components/ui/DailyDigest';
+import { DailyDigestCard } from '@/components/ui/DailyDigestCard';
 import { OverviewHero } from '@/components/ui/OverviewHero';
 import { PageHeader, PageEyebrow } from '@/components/ui/PageHeader';
 import { WatchlistStrip, type WatchableKpi } from '@/components/ui/WatchlistStrip';

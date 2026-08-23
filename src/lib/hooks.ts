@@ -813,11 +813,15 @@ export function useDailyDigest(date?: string) {
     return useQuery<DailyDigest | null>({
         queryKey: ['daily-digest', date ?? 'today'],
         queryFn: async () => {
-            const res = await fetch(`/api/news/daily${qs}`, { cache: 'no-store' });
-            if (res.status === 404) return null;
-            if (!res.ok) throw new Error(`digest ${res.status}`);
-            const body = await res.json() as { digest: DailyDigest | null };
-            return body.digest;
+            try {
+                const res = await fetch(`/api/news/daily${qs}`, { cache: 'no-store' });
+                if (res.status === 404) return null;
+                if (!res.ok) return null;
+                const body = await res.json() as { digest?: DailyDigest | null };
+                return body.digest ?? null;
+            } catch {
+                return null;
+            }
         },
         staleTime: 5 * 60 * 1000,
         retry: false,
