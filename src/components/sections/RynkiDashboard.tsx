@@ -1,9 +1,9 @@
 'use client';
 
 import { useMemo } from 'react';
-import { DollarSign, Percent, LineChart, Landmark, Gem, BarChart3, Fuel } from 'lucide-react';
+import { DollarSign, Percent, Landmark, Gem, BarChart3, Fuel } from 'lucide-react';
 import {
-    useNBPTable, useEURPLN, useUSDPLN, useGold, useStooq, useNBPInterestRates, useWibor, useBondYield10YPl,
+    useNBPTable, useUSDPLN, useGold, useStooq, useNBPInterestRates, useWibor, useBondYield10YPl,
     type NBPTable,
 } from '@/lib/hooks';
 import { lastOf, prevOf, monthTick } from '@/lib/series';
@@ -32,7 +32,6 @@ const pctDelta = (bars: QBar[]): number | null =>
 /** Gęsty dashboard rynkowy — EditorialHero + siatka KPI + newsy i wykres. Źródła: NBP + Stooq. */
 export function RynkiDashboard() {
     const fxQ = useNBPTable('a');
-    const eurHQ = useEURPLN();
     const usdHQ = useUSDPLN();
     const ratesQ = useNBPInterestRates();
     const wiborQ = useWibor();
