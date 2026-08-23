@@ -247,38 +247,34 @@ export function PpiFull() {
                 }
             />
 
-            <DenseTwoCol
-                left={
-                    <SectionCard editorial titleVariant="label" title="Mapa ciepła — działy PKD" subtitle="dynamika cen producenta"
-                        actions={<Segmented value={heatMetric} onChange={setHeatMetric} aria-label="Metryka mapy ciepła" options={[{ value: 'yoy', label: 'r/r' }, { value: 'mom', label: 'm/m' }]} />}>
-                        {heat.dates.length < 2 ? <QueryEmpty title="Brak danych" height={220} /> : (
-                            <Heatmap rows={heatRows} cols={heat.dates} valueAt={heatValue} unit="%" colTickFormatter={monthTick} valueFormatter={(v) => formatDecimalPL(v, 1)} cellHeight={14}
-                                onRowClick={(code) => { const d = allDivs.find((x) => x.code === code); if (d) openSec(d.sec); }} />
-                        )}
-                    </SectionCard>
-                }
-                right={
-                    <SectionCard editorial titleVariant="label" title="Największe ruchy cen" subtitle="działy PKD u producenta"
-                        actions={<Segmented value={moverMetric} onChange={setMoverMetric} aria-label="Metryka zmian" options={[{ value: 'yoy', label: 'r/r' }, { value: 'mom', label: 'm/m' }]} />}>
-                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                            {[{ t: 'Zdrożało', arr: movers.risers, up: true }, { t: 'Staniało', arr: movers.fallers, up: false }].map((col) => (
-                                <div key={col.t}>
-                                    <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide" style={{ color: col.up ? '#DC2626' : '#16A34A' }}>{col.up ? '▲' : '▼'} {col.t}</div>
-                                    <div className="space-y-1">
-                                        {col.arr.slice(0, 6).map((m) => (
-                                            <div key={m.code} className="flex items-center gap-1.5 text-[11px]">
-                                                <span className="w-24 shrink-0 truncate text-mk-text-soft" title={m.name}><span className="text-mk-faint">{m.code}</span> {m.name}</span>
-                                                <span className="h-2 flex-1 rounded-full bg-mk-surface-alt"><span className="block h-2 rounded-full" style={{ width: `${(Math.abs(m.v) / movers.maxV) * 100}%`, marginLeft: m.v < 0 ? 'auto' : undefined, background: m.v >= 0 ? '#DC2626' : '#16A34A' }} /></span>
-                                                <span className="w-10 shrink-0 text-right font-semibold tnum" style={{ color: m.v >= 0 ? '#DC2626' : '#16A34A' }}>{m.v > 0 ? '+' : ''}{formatDecimalPL(m.v, 1)}</span>
-                                            </div>
-                                        ))}
+            {/* Pełna szerokość: wysoka mapa ciepła obok krótkich „ruchów” zostawiała ~½ pustej kolumny. */}
+            <SectionCard editorial titleVariant="label" title="Największe ruchy cen" subtitle="działy PKD u producenta"
+                actions={<Segmented value={moverMetric} onChange={setMoverMetric} aria-label="Metryka zmian" options={[{ value: 'yoy', label: 'r/r' }, { value: 'mom', label: 'm/m' }]} />}>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    {[{ t: 'Zdrożało', arr: movers.risers, up: true }, { t: 'Staniało', arr: movers.fallers, up: false }].map((col) => (
+                        <div key={col.t}>
+                            <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide" style={{ color: col.up ? '#DC2626' : '#16A34A' }}>{col.up ? '▲' : '▼'} {col.t}</div>
+                            <div className="space-y-1">
+                                {col.arr.slice(0, 6).map((m) => (
+                                    <div key={m.code} className="flex items-center gap-1.5 text-[11px]">
+                                        <span className="w-24 shrink-0 truncate text-mk-text-soft" title={m.name}><span className="text-mk-faint">{m.code}</span> {m.name}</span>
+                                        <span className="h-2 flex-1 rounded-full bg-mk-surface-alt"><span className="block h-2 rounded-full" style={{ width: `${(Math.abs(m.v) / movers.maxV) * 100}%`, marginLeft: m.v < 0 ? 'auto' : undefined, background: m.v >= 0 ? '#DC2626' : '#16A34A' }} /></span>
+                                        <span className="w-10 shrink-0 text-right font-semibold tnum" style={{ color: m.v >= 0 ? '#DC2626' : '#16A34A' }}>{m.v > 0 ? '+' : ''}{formatDecimalPL(m.v, 1)}</span>
                                     </div>
-                                </div>
-                            ))}
+                                ))}
+                            </div>
                         </div>
-                    </SectionCard>
-                }
-            />
+                    ))}
+                </div>
+            </SectionCard>
+
+            <SectionCard editorial titleVariant="label" title="Mapa ciepła — działy PKD" subtitle="dynamika cen producenta"
+                actions={<Segmented value={heatMetric} onChange={setHeatMetric} aria-label="Metryka mapy ciepła" options={[{ value: 'yoy', label: 'r/r' }, { value: 'mom', label: 'm/m' }]} />}>
+                {heat.dates.length < 2 ? <QueryEmpty title="Brak danych" height={220} /> : (
+                    <Heatmap rows={heatRows} cols={heat.dates} valueAt={heatValue} unit="%" colTickFormatter={monthTick} valueFormatter={(v) => formatDecimalPL(v, 1)} cellHeight={14}
+                        onRowClick={(code) => { const d = allDivs.find((x) => x.code === code); if (d) openSec(d.sec); }} />
+                )}
+            </SectionCard>
 
             {/* Drawer sekcji */}
             <Drawer open={open && !!sel} onClose={() => setOpen(false)} accent={selColor}

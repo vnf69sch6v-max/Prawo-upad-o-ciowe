@@ -338,86 +338,78 @@ export function InflacjaFull() {
                 }
             />
 
-            <DenseTwoCol
-                left={
-                    <SectionCard editorial titleVariant="label" title="Dekompozycja CPI" subtitle={`wkłady działów (pp)${dataDate ? ` · ${formatDataPeriodLabel(dataDate)}` : ''}`}>
-                        <ResponsiveContainer width="100%" height={Math.min(280, Math.max(200, waterfall.length * 24))}>
-                            <BarChart data={waterfall} layout="vertical" margin={{ top: 4, right: 36, left: 4, bottom: 4 }} barCategoryGap={4}>
-                                <CartesianGrid stroke="#EDF0F5" horizontal={false} />
-                                <XAxis type="number" tick={{ fill: AXIS_INK, fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => formatDecimalPL(v, 1)} />
-                                <YAxis type="category" dataKey="name" width={120} tick={{ fill: '#475569', fontSize: 11 }} axisLine={false} tickLine={false} />
-                                <Tooltip trigger="click" isAnimationActive={false} cursor={{ fill: 'rgba(0,0,0,0.03)' }} content={({ active, payload }) => {
-                                    if (!active || !payload?.length) return null;
-                                    const p = payload[0].payload as { name: string; c: number };
-                                    return <div style={{ background: '#fff', border: '1px solid #E7EAF0', borderRadius: 10, padding: '6px 10px', fontSize: 12, boxShadow: '0 6px 16px rgba(16,24,40,.12)' }}>
-                                        <div style={{ fontWeight: 600, color: '#0F172A' }}>{p.name}</div><div style={{ color: '#64748B' }}>wkład {p.c > 0 ? '+' : ''}{formatDecimalPL(p.c, 2)} pp</div>
-                                    </div>;
-                                }} />
-                                <Bar dataKey="base" stackId="a" fill="transparent" />
-                                <Bar dataKey="value" stackId="a" radius={[0, 3, 3, 0]}>
-                                    {waterfall.map((r, i) => <Cell key={i} fill={r.total ? '#0F172A' : r.up ? '#DC2626' : '#16A34A'} />)}
-                                </Bar>
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </SectionCard>
-                }
-                right={
-                    <SectionCard editorial titleVariant="label" title="Największe ruchy cen" subtitle="podkategorie COICOP"
-                        actions={<Segmented value={moverMetric} onChange={setMoverMetric} aria-label="Metryka zmian" options={[{ value: 'yoy', label: 'r/r' }, { value: 'mom', label: 'm/m' }]} />}>
-                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                            {[{ t: 'Zdrożało', arr: movers.risers, up: true }, { t: 'Staniało', arr: movers.fallers, up: false }].map((col) => (
-                                <div key={col.t}>
-                                    <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide" style={{ color: col.up ? '#DC2626' : '#16A34A' }}>{col.up ? '▲' : '▼'} {col.t}</div>
-                                    <div className="space-y-1">
-                                        {col.arr.slice(0, 6).map((m, i) => (
-                                            <div key={i} className="flex items-center gap-1.5 text-[11px]">
-                                                <span className="w-24 shrink-0 truncate text-mk-text-soft" title={`${m.name} · ${m.div}`}>{m.name}</span>
-                                                <span className="h-2 flex-1 rounded-full bg-mk-surface-alt"><span className="block h-2 rounded-full" style={{ width: `${(Math.abs(m.v) / movers.maxV) * 100}%`, marginLeft: m.v < 0 ? 'auto' : undefined, background: m.v >= 0 ? '#DC2626' : '#16A34A' }} /></span>
-                                                <span className="w-10 shrink-0 text-right font-semibold tnum" style={{ color: m.v >= 0 ? '#DC2626' : '#16A34A' }}>{m.v > 0 ? '+' : ''}{formatDecimalPL(m.v, 1)}</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </SectionCard>
-                }
-            />
+            {/* Pełna szerokość zamiast DenseTwoCol: wodospad vs krótkie „ruchy” / mapa ciepła
+                vs wkłady zostawiały pustą kolumnę obok niższej karty („pół strony”). */}
+            <SectionCard editorial titleVariant="label" title="Dekompozycja CPI" subtitle={`wkłady działów (pp)${dataDate ? ` · ${formatDataPeriodLabel(dataDate)}` : ''}`}>
+                <ResponsiveContainer width="100%" height={Math.min(280, Math.max(200, waterfall.length * 24))}>
+                    <BarChart data={waterfall} layout="vertical" margin={{ top: 4, right: 36, left: 4, bottom: 4 }} barCategoryGap={4}>
+                        <CartesianGrid stroke="#EDF0F5" horizontal={false} />
+                        <XAxis type="number" tick={{ fill: AXIS_INK, fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => formatDecimalPL(v, 1)} />
+                        <YAxis type="category" dataKey="name" width={120} tick={{ fill: '#475569', fontSize: 11 }} axisLine={false} tickLine={false} />
+                        <Tooltip trigger="click" isAnimationActive={false} cursor={{ fill: 'rgba(0,0,0,0.03)' }} content={({ active, payload }) => {
+                            if (!active || !payload?.length) return null;
+                            const p = payload[0].payload as { name: string; c: number };
+                            return <div style={{ background: '#fff', border: '1px solid #E7EAF0', borderRadius: 10, padding: '6px 10px', fontSize: 12, boxShadow: '0 6px 16px rgba(16,24,40,.12)' }}>
+                                <div style={{ fontWeight: 600, color: '#0F172A' }}>{p.name}</div><div style={{ color: '#64748B' }}>wkład {p.c > 0 ? '+' : ''}{formatDecimalPL(p.c, 2)} pp</div>
+                            </div>;
+                        }} />
+                        <Bar dataKey="base" stackId="a" fill="transparent" />
+                        <Bar dataKey="value" stackId="a" radius={[0, 3, 3, 0]}>
+                            {waterfall.map((r, i) => <Cell key={i} fill={r.total ? '#0F172A' : r.up ? '#DC2626' : '#16A34A'} />)}
+                        </Bar>
+                    </BarChart>
+                </ResponsiveContainer>
+            </SectionCard>
 
-            <DenseTwoCol
-                left={
-                    <SectionCard editorial titleVariant="label" title="Wkłady w czasie" subtitle="waga × r/r każdego działu (pp)">
-                        {contribTime.length < 2 ? <QueryEmpty title="Brak danych" height={220} /> : (
-                            <ResponsiveContainer width="100%" height={220}>
-                                <AreaChart data={contribTime} margin={{ top: 4, right: 8, left: -8, bottom: 0 }}>
-                                    <CartesianGrid stroke="#EDF0F5" vertical={false} />
-                                    <XAxis dataKey="date" tick={{ fill: AXIS_INK, fontSize: 11 }} tickFormatter={monthTick} axisLine={{ stroke: '#E7EAF0' }} tickLine={false} minTickGap={36} interval="preserveStartEnd" />
-                                    <YAxis tick={{ fill: AXIS_INK, fontSize: 11 }} axisLine={false} tickLine={false} width={36} tickFormatter={(v) => formatDecimalPL(v, 0)} />
-                                    <Tooltip trigger="click" isAnimationActive={false} content={({ active, payload, label }) => {
-                                        if (!active || !payload?.length) return null;
-                                        const nums = payload.filter((p) => typeof p.value === 'number') as { value: number; color?: string; name?: string }[];
-                                        const total = nums.reduce((s, p) => s + p.value, 0);
-                                        const top = [...nums].filter((p) => Math.abs(p.value) > 0.01).sort((a, b) => Math.abs(b.value) - Math.abs(a.value)).slice(0, 4);
-                                        return <div style={{ background: '#fff', border: '1px solid #E7EAF0', borderRadius: 10, padding: '6px 10px', fontSize: 11, boxShadow: '0 6px 16px rgba(16,24,40,.12)', minWidth: 170 }}>
-                                            <div style={{ fontWeight: 600, color: '#0F172A', marginBottom: 4 }}>{monthTick(String(label))} · ≈ {formatDecimalPL(total, 1)} pp</div>
-                                            {top.map((p, i) => <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#64748B', marginTop: 2 }}><span style={{ width: 7, height: 7, borderRadius: 2, background: p.color, flexShrink: 0 }} /><span style={{ flex: 1 }}>{p.name}</span><span style={{ fontWeight: 600, color: '#0F172A' }}>{formatDecimalPL(p.value, 2)}</span></div>)}
-                                        </div>;
-                                    }} />
-                                    {divisions.map((d, i) => <Area key={d.code} type="monotone" dataKey={d.code} name={d.name} stackId="1" stroke="none" fill={colorFor(i)} fillOpacity={0.88} />)}
-                                </AreaChart>
-                            </ResponsiveContainer>
-                        )}
-                    </SectionCard>
-                }
-                right={
-                    <SectionCard editorial titleVariant="label" title="Mapa ciepła" subtitle={heatMetric === 'yoy' ? 'r/r · 10 lat' : 'm/m · 2026'}
-                        actions={<Segmented value={heatMetric} onChange={setHeatMetric} aria-label="Metryka mapy ciepła" options={[{ value: 'yoy', label: 'r/r' }, { value: 'mom', label: 'm/m' }]} />}>
-                        {heatCols.length < 2 ? <QueryEmpty title="Brak danych" height={220} /> : (
-                            <Heatmap rows={heatRows} cols={heatCols} valueAt={heatValue} unit="%" colTickFormatter={monthTick} valueFormatter={(v) => formatDecimalPL(v, 1)} onRowClick={openDiv} cellHeight={heatMetric === 'yoy' ? 16 : 20} />
-                        )}
-                    </SectionCard>
-                }
-            />
+            <SectionCard editorial titleVariant="label" title="Największe ruchy cen" subtitle="podkategorie COICOP"
+                actions={<Segmented value={moverMetric} onChange={setMoverMetric} aria-label="Metryka zmian" options={[{ value: 'yoy', label: 'r/r' }, { value: 'mom', label: 'm/m' }]} />}>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    {[{ t: 'Zdrożało', arr: movers.risers, up: true }, { t: 'Staniało', arr: movers.fallers, up: false }].map((col) => (
+                        <div key={col.t}>
+                            <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide" style={{ color: col.up ? '#DC2626' : '#16A34A' }}>{col.up ? '▲' : '▼'} {col.t}</div>
+                            <div className="space-y-1">
+                                {col.arr.slice(0, 6).map((m, i) => (
+                                    <div key={i} className="flex items-center gap-1.5 text-[11px]">
+                                        <span className="w-24 shrink-0 truncate text-mk-text-soft" title={`${m.name} · ${m.div}`}>{m.name}</span>
+                                        <span className="h-2 flex-1 rounded-full bg-mk-surface-alt"><span className="block h-2 rounded-full" style={{ width: `${(Math.abs(m.v) / movers.maxV) * 100}%`, marginLeft: m.v < 0 ? 'auto' : undefined, background: m.v >= 0 ? '#DC2626' : '#16A34A' }} /></span>
+                                        <span className="w-10 shrink-0 text-right font-semibold tnum" style={{ color: m.v >= 0 ? '#DC2626' : '#16A34A' }}>{m.v > 0 ? '+' : ''}{formatDecimalPL(m.v, 1)}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </SectionCard>
+
+            <SectionCard editorial titleVariant="label" title="Wkłady w czasie" subtitle="waga × r/r każdego działu (pp)">
+                {contribTime.length < 2 ? <QueryEmpty title="Brak danych" height={220} /> : (
+                    <ResponsiveContainer width="100%" height={220}>
+                        <AreaChart data={contribTime} margin={{ top: 4, right: 8, left: -8, bottom: 0 }}>
+                            <CartesianGrid stroke="#EDF0F5" vertical={false} />
+                            <XAxis dataKey="date" tick={{ fill: AXIS_INK, fontSize: 11 }} tickFormatter={monthTick} axisLine={{ stroke: '#E7EAF0' }} tickLine={false} minTickGap={36} interval="preserveStartEnd" />
+                            <YAxis tick={{ fill: AXIS_INK, fontSize: 11 }} axisLine={false} tickLine={false} width={36} tickFormatter={(v) => formatDecimalPL(v, 0)} />
+                            <Tooltip trigger="click" isAnimationActive={false} content={({ active, payload, label }) => {
+                                if (!active || !payload?.length) return null;
+                                const nums = payload.filter((p) => typeof p.value === 'number') as { value: number; color?: string; name?: string }[];
+                                const total = nums.reduce((s, p) => s + p.value, 0);
+                                const top = [...nums].filter((p) => Math.abs(p.value) > 0.01).sort((a, b) => Math.abs(b.value) - Math.abs(a.value)).slice(0, 4);
+                                return <div style={{ background: '#fff', border: '1px solid #E7EAF0', borderRadius: 10, padding: '6px 10px', fontSize: 11, boxShadow: '0 6px 16px rgba(16,24,40,.12)', minWidth: 170 }}>
+                                    <div style={{ fontWeight: 600, color: '#0F172A', marginBottom: 4 }}>{monthTick(String(label))} · ≈ {formatDecimalPL(total, 1)} pp</div>
+                                    {top.map((p, i) => <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#64748B', marginTop: 2 }}><span style={{ width: 7, height: 7, borderRadius: 2, background: p.color, flexShrink: 0 }} /><span style={{ flex: 1 }}>{p.name}</span><span style={{ fontWeight: 600, color: '#0F172A' }}>{formatDecimalPL(p.value, 2)}</span></div>)}
+                                </div>;
+                            }} />
+                            {divisions.map((d, i) => <Area key={d.code} type="monotone" dataKey={d.code} name={d.name} stackId="1" stroke="none" fill={colorFor(i)} fillOpacity={0.88} />)}
+                        </AreaChart>
+                    </ResponsiveContainer>
+                )}
+            </SectionCard>
+
+            <SectionCard editorial titleVariant="label" title="Mapa ciepła" subtitle={heatMetric === 'yoy' ? 'r/r · 10 lat' : 'm/m · 2026'}
+                actions={<Segmented value={heatMetric} onChange={setHeatMetric} aria-label="Metryka mapy ciepła" options={[{ value: 'yoy', label: 'r/r' }, { value: 'mom', label: 'm/m' }]} />}>
+                {heatCols.length < 2 ? <QueryEmpty title="Brak danych" height={220} /> : (
+                    <Heatmap rows={heatRows} cols={heatCols} valueAt={heatValue} unit="%" colTickFormatter={monthTick} valueFormatter={(v) => formatDecimalPL(v, 1)} onRowClick={openDiv} cellHeight={heatMetric === 'yoy' ? 16 : 20} />
+                )}
+            </SectionCard>
 
             {/* ── Drawer: szczegóły klikniętego działu ── */}
             <Drawer open={drawerOpen && !!sel} onClose={() => setDrawerOpen(false)} accent={selColor}

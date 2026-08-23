@@ -426,8 +426,8 @@ export function CategoryNewsPanel({
         return (
             <Kalendarium
                 topic={topic}
-                newsLimit={limit + 7}
-                className={className}
+                newsLimit={Math.min(limit + 2, 7)}
+                className={`max-h-[min(28rem,70vh)] overflow-y-auto ${className}`.trim()}
                 matchTier={matchTier}
                 excludeOpinion={excludeOpinion}
             />
