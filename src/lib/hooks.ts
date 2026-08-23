@@ -3,6 +3,7 @@
 import { useCallback, useMemo } from 'react';
 import { useQuery, useQueries, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
 import type { NewsResult } from '@/lib/news/types';
+import type { DailyDigest } from '@/lib/news/daily';
 import { refreshOptions } from '@/lib/query-refresh';
 
 // ─── Types ───────────────────────────────────────────────
@@ -802,6 +803,24 @@ export function useNews() {
         queryKey: ['news'],
         queryFn: () => fetchJSON('/api/news'),
         ...refreshOptions('news'),
+    });
+}
+
+// ─── Daily Digest ────────────────────────────────────────
+
+export function useDailyDigest(date?: string) {
+    const qs = date ? `?date=${encodeURIComponent(date)}` : '';
+    return useQuery<DailyDigest | null>({
+        queryKey: ['daily-digest', date ?? 'today'],
+        queryFn: async () => {
+            const res = await fetch(`/api/news/daily${qs}`, { cache: 'no-store' });
+            if (res.status === 404) return null;
+            if (!res.ok) throw new Error(`digest ${res.status}`);
+            const body = await res.json() as { digest: DailyDigest | null };
+            return body.digest;
+        },
+        staleTime: 5 * 60 * 1000,
+        retry: false,
     });
 }
 

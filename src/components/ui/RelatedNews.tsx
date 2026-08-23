@@ -225,7 +225,9 @@ function OverviewNewsLayout({ items }: { items: NewsItem[] }) {
                     <div className="flex flex-wrap gap-2">
                         <CategoryTag section={lead.section} filled />
                         {(lead.corroboration ?? 1) >= 2 && (
-                            <span className="mk-tag-brand-fill opacity-90">POTWIERDZONE · {lead.corroboration}</span>
+                            <span className="mk-tag-brand-fill opacity-90">
+                                {(lead.corroboration ?? 1) === 2 ? '2 niezależne relacje' : `${lead.corroboration} niezależne relacje`}
+                            </span>
                         )}
                     </div>
                     <h4 className="mt-3 text-xl font-bold leading-tight tracking-tight text-mk-text transition-colors group-hover:text-mk-brand sm:text-2xl">
