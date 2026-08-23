@@ -2,7 +2,7 @@
 // Wejście: surowe pozycje z archiwum + data + opcjonalny blok makro.
 // Ranking liczony od zera (cluster → score → normalizacja), bez zaniku świeżości.
 
-import { getUpcomingEvents, type MacroEvent } from '@/lib/calendar';
+import { generateMacroCalendar, type MacroEvent } from '@/lib/calendar';
 import { clusterNews } from '@/lib/news/cluster';
 import { scoreItem, isSelfPromo } from '@/lib/news/score';
 import { collapseClusters, matchesTopic, type NewsTopic } from '@/lib/news/match';
@@ -192,10 +192,11 @@ export function toDigestPoint(it: NewsItem): DailyDigestPoint {
     };
 }
 
-/** Blok „Jutro" — nadchodzące publikacje makro na następny dzień kalendarzowy. */
+/** Blok „Jutro" — publikacje makro na następny dzień kalendarzowy względem `date`. */
 export function buildTomorrowBlock(date: string): DailyDigestTomorrow {
     const tomorrow = nextCalendarDate(date);
-    const events = getUpcomingEvents(40)
+    const year = parseInt(date.slice(0, 4), 10);
+    const events = [...generateMacroCalendar(year), ...generateMacroCalendar(year + 1)]
         .filter((e) => e.date === tomorrow)
         .map((e) => ({
             name: e.name,
