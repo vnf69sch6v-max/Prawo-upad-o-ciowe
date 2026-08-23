@@ -69,6 +69,12 @@
     "functions": {
         "app/api/**/*.ts": {
             "maxDuration": 30
+        },
+        "app/api/cron/news-digest/route.ts": {
+            "maxDuration": 60
+        },
+        "app/api/cron/news-archive/route.ts": {
+            "maxDuration": 60
         }
     }
 }

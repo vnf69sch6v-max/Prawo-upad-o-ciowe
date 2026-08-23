@@ -4,9 +4,11 @@
 // czytamy z jawnym maxAgeMs (~1 rok) i zapisujemy przez setServerCache do kolekcji
 // `news_archive` (osobna od `news`).
 //
-// Hobby (Vercel): cron co 2h jest niedozwolony (max 1×/dzień). Dlatego archiwum buduje się
-// GŁÓWNIE przy każdym `/api/news?refresh=1` (merge-on-refresh). Dedykowany cron codzienny
-// to tylko backup. Na Pro można dodać `0 */2 * * *` — patrz komentarz w vercel.json.
+// Hobby (Vercel): cron co 2h jest niedozwolony (max 1×/dzień). Archiwum buduje się:
+//  1. w cronie news-digest (refresh+merge PRZED buildem — 16:05 UTC),
+//  2. przy każdym `/api/news?refresh=1` (merge awaited — bez fire-and-forget),
+//  3. cron news-archive 20:00 UTC = backup.
+// Na Pro można dodać `0 */2 * * *` — patrz komentarz w vercel.json.
 
 import { getServerCache, setServerCache } from '@/lib/server-cache';
 import { NEWS_SOURCES, type NewsOwner } from '@/lib/news/sources';

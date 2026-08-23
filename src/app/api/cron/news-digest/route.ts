@@ -2,11 +2,15 @@
  * Cron: budowa Daily Digest raz dziennie (~18:05 Europe/Warsaw).
  *
  * Vercel Hobby: 1 cron/dzień — OK. Harmonogram UTC: 16:05 ≈ 18:05 CEST (latem),
- * zimą (CET) ≈ 17:05 Warsaw. Makro (Etap 2) dokładane później w tym samym cronie.
+ * zimą (CET) ≈ 17:05 Warsaw.
+ *
+ * Kolejność OBOWIĄZKOWA: najpierw refresh RSS + merge do archiwum dnia, potem build.
+ * Cron `news-archive` (20:00 UTC) to tylko backup — digest NIE może na niego czekać.
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { buildAndSaveDigest } from '@/lib/news/build-digest';
 import { fetchMacroChangesForDate } from '@/lib/news/daily-macro';
+import { refreshAndMergeTodayArchive } from '@/lib/news/feed';
 import { warsawDateKey } from '@/lib/news/warsaw-date';
 
 export const maxDuration = 60;
@@ -20,6 +24,7 @@ export async function GET(request: NextRequest) {
 
     const date = warsawDateKey();
     try {
+        const { feed, archiveCount } = await refreshAndMergeTodayArchive();
         const macro = await fetchMacroChangesForDate(date);
         const digest = await buildAndSaveDigest(date, macro);
         return NextResponse.json({
@@ -28,6 +33,9 @@ export async function GET(request: NextRequest) {
             points: digest.punkty.length,
             macro: digest.dane.length,
             tomorrowEvents: digest.jutro.events.length,
+            feedCount: feed.count,
+            archiveCount,
+            sourcesOk: feed.sourcesOk,
             timestamp: new Date().toISOString(),
         });
     } catch (err) {

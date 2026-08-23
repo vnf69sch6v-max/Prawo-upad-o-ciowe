@@ -3,8 +3,9 @@
  *
  * Vercel Hobby: maksymalnie JEDEN cron dziennie na ścieżkę — harmonogram co 2h ODRZUCA deploy.
  * Dlatego:
- *  1. Główna ścieżka zapisu = merge w `/api/news?refresh=1` (każdy warm cron/refresh buduje archiwum).
- *  2. Ten cron = raz dziennie backup (22:00 czasu Warszawy latem ≈ 20:00 UTC).
+ *  1. Digest (16:05 UTC) sam robi refresh+merge PRZED buildem — to główna ścieżka na dzień D.
+ *  2. Merge w `/api/news?refresh=1` (await!) — warm cron/refresh też buduje archiwum.
+ *  3. Ten cron = backup wieczorny (22:00 Warszawy latem ≈ 20:00 UTC), po digescie.
  * Na Pro można dodać osobny wpis co 2h — Hobby tego nie przeżyje.
  */
 import { NextRequest } from 'next/server';
