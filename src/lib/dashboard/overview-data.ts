@@ -10,7 +10,6 @@ import {
     useCpiFull, useGusRegisteredUnemployment, useGusRetailSales, useGusIndustrialProduction,
     useNBPInterestRates, useNBPTable, useEURPLN, useUSDPLN,
     useBondYield10YPl, useGold, useStooq,
-    type NBPTable,
 } from '@/lib/hooks';
 import { plSeries, lastOf, prevOf } from '@/lib/series';
 import { formatDecimalPL, formatNumber, formatDate, percentChange } from '@/lib/formatters';
@@ -50,8 +49,12 @@ export function useOverviewData() {
     const gold = useMemo(() => (goldQ.data ?? []).map((g) => ({ date: g.data, value: g.cena })), [goldQ.data]);
 
     const refRate = useMemo(() => ratesQ.data?.rates?.find((x) => /referen/i.test(x.name) || /referen/i.test(x.nameEn)) ?? null, [ratesQ.data]);
-    const fxTable = useMemo(() => { const raw = fxQ.data as NBPTable | NBPTable[] | undefined; return Array.isArray(raw) ? raw[0] : raw; }, [fxQ.data]);
-    const mid = (code: string) => fxTable?.rates?.find((r) => r.code === code)?.mid ?? null;
+    const fxTable = useMemo(() => {
+        const raw = fxQ.data as { effectiveDate?: string; rates?: { code: string; mid?: number }[] } | { effectiveDate?: string; rates?: { code: string; mid?: number }[] }[] | undefined;
+        return Array.isArray(raw) ? raw[0] : raw;
+    }, [fxQ.data]);
+    const eurMid = fxTable?.rates?.find((r) => r.code === 'EUR')?.mid ?? null;
+    const usdMid = fxTable?.rates?.find((r) => r.code === 'USD')?.mid ?? null;
     const wigLast = wig20Q.data?.latest?.close ?? null;
     const wigBars = useMemo(() => wig20Q.data?.data ?? [], [wig20Q.data]);
     const wigDelta = wigBars.length > 1 ? +percentChange(wigBars[wigBars.length - 1].close, wigBars[wigBars.length - 2].close).toFixed(2) : null;
@@ -68,11 +71,11 @@ export function useOverviewData() {
 
     const markets: WatchableKpi[] = useMemo(() => [
         { watchId: 'wig20', label: 'WIG20', href: '/rynki?tab=gpw', value: wigLast != null ? formatNumber(wigLast, 0) : '—', unit: 'pkt', accent: 'blue' as AccentKey, icon: LineChart, delta: wigDelta != null ? { value: wigDelta, unit: 'pct' as const } : undefined, footnote: 'GPW · Stooq/Yahoo', loading: wig20Q.isLoading },
-        { watchId: 'eur-pln', label: 'EUR / PLN', href: '/rynki?tab=kursy', value: mid('EUR') != null ? formatDecimalPL(mid('EUR')!, 3) : '—', unit: 'zł', accent: 'cyan' as AccentKey, icon: Euro, delta: fxDelta(eurHQ.data) != null ? { value: fxDelta(eurHQ.data)!, unit: 'pct' as const, invert: true } : undefined, footnote: fxTable?.effectiveDate ? `NBP ${formatDate(fxTable.effectiveDate)}` : 'NBP', loading: fxQ.isLoading },
-        { watchId: 'usd-pln', label: 'USD / PLN', href: '/rynki?tab=kursy', value: mid('USD') != null ? formatDecimalPL(mid('USD')!, 3) : '—', unit: 'zł', accent: 'green' as AccentKey, icon: DollarSign, delta: fxDelta(usdHQ.data) != null ? { value: fxDelta(usdHQ.data)!, unit: 'pct' as const, invert: true } : undefined, footnote: fxTable?.effectiveDate ? `NBP ${formatDate(fxTable.effectiveDate)}` : 'NBP', loading: fxQ.isLoading },
+        { watchId: 'eur-pln', label: 'EUR / PLN', href: '/rynki?tab=kursy', value: eurMid != null ? formatDecimalPL(eurMid, 3) : '—', unit: 'zł', accent: 'cyan' as AccentKey, icon: Euro, delta: fxDelta(eurHQ.data) != null ? { value: fxDelta(eurHQ.data)!, unit: 'pct' as const, invert: true } : undefined, footnote: fxTable?.effectiveDate ? `NBP ${formatDate(fxTable.effectiveDate)}` : 'NBP', loading: fxQ.isLoading },
+        { watchId: 'usd-pln', label: 'USD / PLN', href: '/rynki?tab=kursy', value: usdMid != null ? formatDecimalPL(usdMid, 3) : '—', unit: 'zł', accent: 'green' as AccentKey, icon: DollarSign, delta: fxDelta(usdHQ.data) != null ? { value: fxDelta(usdHQ.data)!, unit: 'pct' as const, invert: true } : undefined, footnote: fxTable?.effectiveDate ? `NBP ${formatDate(fxTable.effectiveDate)}` : 'NBP', loading: fxQ.isLoading },
         { watchId: 'yield-10y', label: 'Rentowność 10Y', href: '/gospodarka?tab=finanse', value: lastOf(yield10) != null ? formatDecimalPL(lastOf(yield10)!, 2) : '—', unit: '%', accent: 'violet' as AccentKey, icon: Landmark, delta: lastOf(yield10) != null && prevOf(yield10) != null ? { value: +(lastOf(yield10)! - prevOf(yield10)!).toFixed(2), unit: 'pp' as const, invert: true } : undefined, footnote: yield10.length ? `Rynek · ${yield10[yield10.length - 1].date}` : 'Stooq 10Y PL', loading: yieldQ.isLoading },
         { watchId: 'gold', label: 'Złoto (NBP)', href: '/rynki?tab=kursy', value: goldLast != null ? formatDecimalPL(goldLast, 2) : '—', unit: 'zł/g', accent: 'amber' as AccentKey, icon: Gem, delta: goldDelta != null ? { value: goldDelta, unit: 'pct' as const } : undefined, footnote: 'NBP · cena złota', loading: goldQ.isLoading },
-    ], [wigLast, wigDelta, wig20Q.isLoading, fxTable, eurHQ.data, usdHQ.data, fxQ.isLoading, yield10, yieldQ.isLoading, goldLast, goldDelta, goldQ.isLoading]);
+    ], [wigLast, wigDelta, wig20Q.isLoading, fxTable, eurMid, usdMid, eurHQ.data, usdHQ.data, fxQ.isLoading, yield10, yieldQ.isLoading, goldLast, goldDelta, goldQ.isLoading]);
 
     const watchlistItems = useMemo(() => [...macro, ...markets], [macro, markets]);
     const dataDate = [unemp, industrial, retail, cpi].map((s) => (s.length ? s[s.length - 1].date : '')).filter(Boolean).sort().pop() ?? '';
