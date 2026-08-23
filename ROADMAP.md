@@ -60,6 +60,34 @@ przy podejmowaniu.
 
 ## ZROBIONE
 
+- **Klasyfikator tematów AI — ZMIERZONY I ODRZUCONY przez właściciela** — 2026-08-23
+  Kod działa i jest przetestowany (gałąź `feature/klasyfikator-tematow`, commity `9748dd0`,
+  `897cb22`), ale NIE jest wpięty i produkcja nie wydaje na niego nic. **Nie wpinać bez
+  ponownej decyzji właściciela.**
+  - **Powód odrzucenia — POMIAR, nie przeczucie:** na 120 newsach model dał netto osiem
+    trafnych decyzji więcej i trzy błędy więcej, czyli poprawił ~4% pozycji. Za ~$5/rok plus
+    zależność od zewnętrznego API i niedeterminizm. Właściciel uznał, że parser to udźwignie —
+    słusznie, bo połowa poprawek modelu jest w zasięgu kilkunastu dodatkowych reguł.
+  - **Jedyna przewaga modelu, której parser nie ma:** tytuły bez ani jednego słowa kluczowego.
+    „Domański reaguje na decyzję ws. ratingu" to news makro, którego słownik nie złapie, dopóki
+    ktoś nie dopisze „rating", potem „Fitch", potem „perspektywa stabilna". Parser wymaga
+    przewidzenia każdego brzmienia z góry. Jeśli kiedyś to zacznie uwierać — kod czeka.
+  - **Ustalenia warte zapamiętania, gdyby wrócić do tematu:**
+    - Tematy trzeba opisać modelowi jako „co pokazuje ta zakładka", nie jako kategorie ogólne.
+      Wersja ogólna dawała `gospodarka` irańskim złożom gazu; zgodność 3/10 → 8/10 po zmianie.
+    - Zamkniętą listę etykiet trzeba wypisać OSOBNO od opisu zakresu. Słowo „podatki" w opisie
+      zakładki sprawiło, że model zwrócił je jako etykietę i walidator odrzucił całą paczkę.
+    - Walidacja musi być PACZKOWA. Nie da się odróżnić „model się pomylił" od „model pogubił
+      numerację", a to drugie przypisuje etykiety nie tym newsom.
+    - Model myli się WZORCAMI, nie losowo: 26 rozbieżności sprowadzało się do czterech decyzji
+      (ZUS→praca, krypto→rynki, branże→gospodarka, poradniki→ceny).
+  - **Zysk, który został:** `scripts/audit-topics.mjs` — audyt słowników na żywym feedzie,
+    za darmo i deterministycznie. Pokazuje, który prefiks co złapał i które wzorce są martwe.
+    Pierwszy przebieg: `ceny/titleOnly: tanie` dał 2 trafienia i OBA były fałszywe
+    („Prawo jazdy nie jest tanie", „Kupić drożej w Polsce czy taniej z Chin").
+    ⚠ Nie wyrzucać prefiksu po jednej dobie — feed wymienia się w kilkanaście godzin,
+    więc jeden przebieg to mała próbka. Odpalić kilka razy w różnych dniach.
+
 - **Podsumowanie dnia — akapit (Warstwa 2 digestu)** — 2026-08-23
   Akapit „o czym dziś pisano" nad listą punktów na `/podsumowanie`. Pliki: `lib/news/summary.ts`
   (szablon + walidator + adapter xAI), pole `podsumowanie?` w `DailyDigest`, wpięcie w
