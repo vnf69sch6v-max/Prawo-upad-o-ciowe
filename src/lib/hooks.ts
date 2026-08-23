@@ -229,6 +229,14 @@ export function useGusRegional() {
 }
 
 // ─── GUS Monthly (retail sales + wages) ──────────────────
+// STEP7 research (2026-08-23): mediana wynagrodzeń IS in BDL — subject P4610
+// "Mediana wynagrodzeń miesięcznych brutto według badania Rozkład wynagrodzeń
+// w gospodarce narodowej". Monthly (availability quarterly="K"), years from 2024.
+// Ogółem / miejsce zamieszkania: Jan=1750141 … Dec=1750207, stride +6/month
+// (6 vars/month: 2 scopes × 3 płcie). National unit-level=0 works; latest live
+// check: 2026-02 = 7690.82 zł. Do NOT use /api/bdl-series without stride=6.
+// Suggested: useGusMedianWages() → dedicated route or bdl-series?stride=6.
+// Sibling mean from same survey: P4609 (≠ P2687 enterprise przeciętne).
 
 interface GusMonthlyData {
     retail: { date: string; value: number; raw: number }[];
