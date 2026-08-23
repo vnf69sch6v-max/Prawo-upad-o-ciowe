@@ -1,10 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowRight, CalendarDays, ExternalLink, Layers } from 'lucide-react';
+import { ArrowRight, ExternalLink, Layers } from 'lucide-react';
 import { useDailyDigest } from '@/lib/hooks';
+import { corroborationLabel } from '@/lib/news/daily';
 import { formatDate } from '@/lib/formatters';
-import { EVENT_COLORS } from '@/lib/calendar';
 import type { NewsTopic } from '@/lib/news/match';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { CategoryTag } from '@/components/ui/RelatedNews';
@@ -28,10 +28,11 @@ function TopicTags({ topics }: { topics: NewsTopic[] }) {
 }
 
 function CorroborationTag({ n }: { n: number }) {
-    if (n < 2) return null;
+    const label = corroborationLabel(n);
+    if (!label) return null;
     return (
         <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full bg-mk-positive/10 px-1.5 py-0.5 text-[11px] font-medium text-mk-positive">
-            <Layers size={10} /> {n} niezależnych relacji
+            <Layers size={10} /> {label}
         </span>
     );
 }
