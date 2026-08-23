@@ -1,5 +1,5 @@
 // Cron: odświeżenie notowań GPW w trakcie sesji (backup gdy nikt nie ma otwartej zakładki).
-// Harmonogram: pn–pt 12:00 i 15:00 CET — między publikacją NBP a zamknięciem sesji.
+// Harmonogram: pn–pt 14:00 UTC ≈ 16:00 CEST — przed zamknięciem i przed Daily Digest (16:05 UTC).
 import { NextRequest } from 'next/server';
 import { warmEndpoints } from '@/lib/cron-warm';
 

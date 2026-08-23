@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { withCache } from '@/lib/server-cache';
 import { marketCacheTtlMs } from '@/lib/market-hours';
 import { WIG20 } from '@/lib/wig20';
+import { warsawDateKey } from '@/lib/news/warsaw-date';
 
 export const revalidate = 0;
 
@@ -48,7 +49,7 @@ async function fetchOne(c: (typeof WIG20)[number]): Promise<Wig20Quote> {
             ...base,
             price: +last.v.toFixed(2),
             changePct: prev ? +(((last.v / prev.v) - 1) * 100).toFixed(2) : null,
-            date: new Date(last.t * 1000).toISOString().slice(0, 10),
+            date: warsawDateKey(last.t * 1000),
         };
     } catch {
         return base;
