@@ -41,3 +41,10 @@ Standard scripts in `package.json`:
   at the bottom of `src/app/globals.css` and mapped onto the light `mk-*`
   palette — change colours there, never inside the parser components. `pdfjs-dist`
   and `exceljs` are listed in `serverExternalPackages` and must stay there.
+  PDF uploads on Vercel need `pdf.worker.mjs` in the serverless trace
+  (`outputFileTracingIncludes` for `/api/parser/parse` plus an absolute
+  `GlobalWorkerOptions.workerSrc` in `src/lib/parser/extract.ts`). TXT
+  samples work without the worker; a missing worker is a 500
+  (`Setting up fake worker failed`), not an empty parse. Do not drop either
+  of those two pins. Local `node_modules` hides the bug because the worker
+  file is already on disk.

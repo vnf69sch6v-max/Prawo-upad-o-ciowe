@@ -5,7 +5,8 @@
 // Digital (loss-making, 2 columns, "Net loss", "Revenue - bitcoin mining",
 // December year-end) proves the logic is not overfit to one issuer.
 
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
+import { createRequire } from "node:module";
 import { resolve } from "node:path";
 import { describe, it, expect } from "vitest";
 import { parseReport } from "@/lib/parser/parser";
@@ -448,5 +449,23 @@ describe("extractedRows — available on US fixtures too", () => {
   it("Microsoft yields a large numeric-row inventory", () => {
     expect(MSFT.extractedRows.length).toBeGreaterThan(50);
     expect(MSFT.extractedRows.some((r) => /revenue/i.test(r.label))).toBe(true);
+  });
+});
+
+describe("PDF extraction (pdfjs worker)", () => {
+  it("resolves pdf.worker.mjs from node_modules (Vercel NFT root)", () => {
+    const req = createRequire(import.meta.url);
+    const workerPath = req.resolve("pdfjs-dist/legacy/build/pdf.worker.mjs");
+    expect(workerPath).toMatch(/pdf\.worker\.mjs$/);
+    expect(existsSync(workerPath)).toBe(true);
+  });
+
+  it("extracts text from the Cipher Digital sample PDF", async () => {
+    const { extractPdfText } = await import("@/lib/parser/extract");
+    const buf = readFileSync(resolve(process.cwd(), "public/parser-samples/cipher-digital-10q.pdf"));
+    const extracted = await extractPdfText(buf);
+    expect(extracted.pages).toBeGreaterThan(1);
+    expect(extracted.charCount).toBeGreaterThan(200);
+    expect(extracted.text.toLowerCase()).toMatch(/cipher|bitcoin|revenue/);
   });
 });

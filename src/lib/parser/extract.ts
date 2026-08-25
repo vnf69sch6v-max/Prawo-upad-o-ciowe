@@ -5,6 +5,9 @@
 // position and order them left-to-right by X, inserting column separators on
 // large horizontal gaps. This layout fidelity is what makes the parser possible.
 
+import { createRequire } from "node:module";
+import { pathToFileURL } from "node:url";
+
 export interface ExtractResult {
   text: string;
   pages: number;
@@ -19,10 +22,21 @@ interface Glyph {
   h: number;
 }
 
-// pdfjs ships an ESM "legacy" build that runs in Node without a browser worker.
-// Loaded lazily so importing this module (e.g. from tests) is cheap.
+const require = createRequire(import.meta.url);
+
+// pdfjs ships an ESM "legacy" build that runs in Node without a browser Worker.
+// On Node it disables the Worker and fake-imports workerSrc (see PDFWorker in
+// pdfjs-dist). The default `./pdf.worker.mjs` resolves next to pdf.mjs, which
+// exists locally in node_modules but is NOT traced into the Vercel serverless
+// bundle — production then 500s with:
+//   Setting up fake worker failed: Cannot find module
+//   '.../node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs'
+// require.resolve() both yields an absolute file:// URL and is a tracing root
+// for NFT; next.config outputFileTracingIncludes is the belt.
 async function loadPdfjs() {
   const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
+  const workerPath = require.resolve("pdfjs-dist/legacy/build/pdf.worker.mjs");
+  pdfjs.GlobalWorkerOptions.workerSrc = pathToFileURL(workerPath).href;
   return pdfjs;
 }
 

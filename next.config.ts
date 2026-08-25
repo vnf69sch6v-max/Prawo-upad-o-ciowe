@@ -16,6 +16,15 @@ const nextConfig: NextConfig = {
   },
   // External packages that should not be bundled
   serverExternalPackages: ['firebase-admin', 'pdfjs-dist', 'exceljs'],
+  // pdfjs fake-worker dynamically imports pdf.worker.mjs (webpackIgnore). NFT
+  // does not follow that import, so Vercel /api/parser/parse 500s on PDFs
+  // unless the worker is traced in explicitly. TXT uploads are unaffected.
+  outputFileTracingIncludes: {
+    '/api/parser/parse': [
+      './node_modules/pdfjs-dist/legacy/build/pdf.mjs',
+      './node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs',
+    ],
+  },
   // Legacy (dark) routes → new light domains
   async redirects() {
     return [
