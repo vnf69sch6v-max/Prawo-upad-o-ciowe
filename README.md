@@ -14,6 +14,7 @@ z oficjalnych źródeł i odświeżają się automatycznie — bez danych wpisan
 | **Praca / Regiony** | Rynek pracy, mapa województw, płace, bezrobocie |
 | **Newsy** | Agregat polskich feedów finansowych, zwijanie przedruków, dopasowanie do wskaźników |
 | **Publikacje / Samorząd** | Kalendarz publikacji GUS/NBP, dane usług publicznych (SMUP) |
+| **Parser raportów** | Regułowa ekstrakcja metryk ze sprawozdań (10-Q / 10-K / NewConnect) wgranych jako PDF |
 
 ## Źródła danych
 
@@ -24,6 +25,20 @@ z oficjalnych źródeł i odświeżają się automatycznie — bez danych wpisan
 - **Yahoo/Stooq** (`/api/stooq`, `/api/wig20`) — indeksy, spółki, surowce
 - **SMUP** (`/api/smup`) — usługi publiczne w samorządach
 - **RSS** (`/api/news`) — newsy finansowe z 8 zweryfikowanych feedów
+
+## Parser raportów (`/parser`)
+
+Jedyna sekcja, która **nie** pobiera danych z zewnętrznego źródła — czyta plik wgrany przez
+użytkownika. PDF trafia do `/api/parser/parse`, gdzie `src/lib/parser/extract.ts` odtwarza układ
+tabel z pozycji glifów (pdfjs, build „legacy", bez workera przeglądarkowego), a dalej regułowy
+silnik dopasowuje pozycje sprawozdania po synonimach z `patterns.ts`. **Bez modelu językowego w
+runtime i bez gałęzi per emitent** — te same reguły czytają 10-Q Microsoftu, stratny 10-Q Cipher
+Digital i raport kwartalny NewConnect po polsku.
+
+- Nic nie jest zapisywane: plik żyje tylko w pamięci żądania, w cache nie ląduje.
+- Eksport (CSV / XLSX / JSON) idzie przez `/api/parser/export` — klient odsyła wynik, który już ma.
+- `npm test` (vitest) sprawdza parser wobec czterech utrwalonych sprawozdań w `tests/fixtures/`.
+  To jedyne testy w repozytorium; uruchamiaj je po każdej zmianie w `src/lib/parser/`.
 
 ## Automatyczne odświeżanie
 
@@ -48,6 +63,7 @@ Recharts · React Query · Firebase Auth (opcjonalny) · cache w Firestore · Ve
 ```bash
 npm install
 npm run dev
+npm test        # testy parsera raportów (jedyne w repo)
 ```
 
 Klucze API (`SMUP_API_KEY`, `SDP_API_KEY`, konfiguracja Firebase) trzymaj w `.env.local` —
@@ -66,13 +82,15 @@ src/
 ├── components/
 │   ├── shell/                # Nagłówek, nawigacja, stopka, paleta ⌘K
 │   ├── ui/                   # KpiCard, wykresy, tabele, eksport CSV
-│   └── sections/             # Sekcje merytoryczne stron
+│   ├── sections/             # Sekcje merytoryczne stron
+│   └── parser/               # Widoki parsera raportów (tokeny `rp-*` w globals.css)
 └── lib/
     ├── hooks.ts              # Hooki React Query dla wszystkich źródeł
     ├── dbw-fetch.ts          # Pobieranie z GUS DBW (limity, backoff 429)
     ├── server-cache.ts       # Cache-through na Firestore
     ├── calculations/         # Koszyk CPI, nowcasty, Taylor, kredyt
-    └── news/                 # Źródła RSS, parser, dopasowanie do wskaźników
+    ├── news/                 # Źródła RSS, parser, dopasowanie do wskaźników
+    └── parser/               # Silnik parsera sprawozdań (ekstrakcja, wzorce, walidacja)
 ```
 
 Trasy `/macro`, `/rates`, `/fx`, `/market`, `/trade`, `/labor`, `/nowcast`, `/dane`, `/tools`

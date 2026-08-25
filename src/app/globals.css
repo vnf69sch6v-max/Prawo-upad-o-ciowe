@@ -898,3 +898,107 @@ button.mk-card,
     overflow: hidden;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   PARSER RAPORTÓW (/parser)
+   Warstwa tokenów dla przeniesionego report-parsera. Komponenty parsera
+   używają własnych, semantycznych nazw (`text-rp-data`, `bg-rp-surface-raised`,
+   `border-rp-hairline`), a tutaj są one podpięte pod jasną paletę Savori —
+   dzięki temu jedna zmiana koloru marki przechodzi przez cały parser i nie ma
+   dwóch konkurencyjnych motywów. Prefiks `rp-` izoluje je od tokenów `mk-*`.
+
+   Kontrakt kolorystyczny parsera: skala szarości niesie dane, a kolor tylko
+   dwa kanały — kierunek (wzrost/spadek) i ostrzeżenie.
+   ═══════════════════════════════════════════════════════════════ */
+
+@theme {
+  /* Rampa danych (skala szarości = skala tekstu Savori) */
+  --color-rp-data: #0F172A;
+  --color-rp-data-muted: #475569;
+  --color-rp-data-dim: #64748B;
+
+  /* Kanał 1 — kierunek (tylko kolumny delt) */
+  --color-rp-dir-up: #16A34A;
+  --color-rp-dir-down: #DC2626;
+  --color-rp-dir-neutral: #64748B;
+
+  /* Kanał 2 — ostrzeżenie (zdarzenia jednorazowe, intensywność capexu) */
+  --color-rp-warn: #D97706;
+
+  /* Powierzchnie i ramki */
+  --color-rp-surface: #F7F8FA;
+  --color-rp-surface-raised: #FFFFFF;
+  --color-rp-hairline: #E7EAF0;
+  --color-rp-secondary: #F1F3F7;
+  --color-rp-muted: #F1F3F7;
+  --color-rp-border: #E7EAF0;
+  --color-rp-ring: #DC2626;
+}
+
+/* Te same wartości jako surowe zmienne — wykresy SVG parsera rysują nimi
+   wypełnienia i linie (`fill="var(--rp-data)"`), poza systemem klas Tailwinda. */
+:root {
+  --rp-data: #0F172A;
+  --rp-data-muted: #475569;
+  --rp-data-dim: #64748B;
+  --rp-hairline: #E7EAF0;
+}
+
+/* Role typograficzne parsera — zakresowane do `.rp-root`, żeby ogólne nazwy
+   (`.cell`, `.num`, `.overline`) nie wyciekły na resztę serwisu. Liczby idą
+   Interem z cyframi tabularnymi, tak jak wszystkie dane w Savori. */
+.rp-root .overline {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-mk-muted);
+}
+
+.rp-root .t-label {
+  font-size: 12px;
+  color: var(--color-mk-muted);
+}
+
+.rp-root .t-metric {
+  /* Fallback poza kontenerem — patrz .mk-kpi-value wyżej, ta sama pułapka z cqi. */
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  color: var(--color-mk-text);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+/* Kafelek KPI parsera jest kontenerem zapytań: pełne kwoty w złotych
+   („2 924 056,55 zł", z nawiasami dla strat) są długie i przy stałych 28 px
+   łamią się na dwie linie. Rozmiar liczy się od SZEROKOŚCI KAFLA. */
+.rp-root .rp-kpi {
+  container-type: inline-size;
+}
+
+@container (min-width: 0px) {
+  .rp-root .t-metric {
+    font-size: clamp(1rem, 11cqi, 1.75rem);
+  }
+}
+
+.rp-root .col-header {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-mk-muted);
+}
+
+.rp-root .cell {
+  font-size: 13px;
+  color: var(--color-mk-text);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.rp-root .num {
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+

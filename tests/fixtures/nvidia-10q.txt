@@ -1,0 +1,148 @@
+UNITED STATES
+SECURITIES AND EXCHANGE COMMISSION
+Washington, D.C. 20549
+FORM 10-Q
+QUARTERLY REPORT PURSUANT TO SECTION 13 OR 15(d) OF THE SECURITIES EXCHANGE ACT OF 1934
+For the quarterly period ended April 26, 2026
+NVIDIA Corporation
+(Exact name of registrant as specified in its charter)
+Delaware 94-3177549
+(State or other jurisdiction of incorporation or organization) (I.R.S. Employer Identification No.)
+
+First Quarter of Fiscal Year 2027 Summary
+The first quarters of fiscal years 2027 and 2026 were both 13-week quarters.
+
+NVIDIA Corporation and Subsidiaries
+Condensed Consolidated Statements of Income
+(In millions, except per share data)
+(Unaudited)
+Three Months Ended
+Apr 26, 2026 Apr 27, 2025
+Revenue $ 81,615 $ 44,062
+Cost of revenue 20,458 17,394
+Gross profit 61,157 26,668
+Operating expenses
+Research and development 6,321 3,989
+Sales, general and administrative 1,300 1,041
+Total operating expenses 7,621 5,030
+Operating income 53,536 21,638
+Interest income 540 442
+Interest expense (102) (66)
+Other, net 15,929 (104)
+Other income (expense), net 16,367 272
+Income before income tax 69,903 21,910
+Income tax expense 11,582 3,135
+Net income $ 58,321 $ 18,775
+Net income per share:
+Basic $ 2.40 $ 0.77
+Diluted $ 2.39 $ 0.76
+Weighted average shares used in per share computation:
+Basic 24,300 24,611
+Diluted 24,436 24,759
+
+NVIDIA Corporation and Subsidiaries
+Condensed Consolidated Balance Sheets
+(In millions)
+(Unaudited)
+Apr 26, 2026 Jan 25, 2026
+Assets
+Current assets:
+Cash and cash equivalents $ 13,237 $ 10,605
+Marketable securities 37,098 39,065
+Accounts receivable, net 40,710 38,466
+Inventories 25,797 21,403
+Prepaid expenses and other current assets 34,153 16,066
+Total current assets 150,995 125,605
+Property and equipment, net 12,403 10,383
+Operating lease assets 2,200 1,892
+Goodwill 20,894 20,832
+Intangible assets, net 700 807
+Marketable equity securities 30,237 12,886
+Deferred income tax assets 38,000 31,000
+Other assets 4,045 3,398
+Total assets $ 259,474 $ 206,803
+Liabilities and Shareholders' Equity
+Current liabilities:
+Accounts payable $ 7,500 $ 6,310
+Accrued and other current liabilities 14,000 11,737
+Short-term debt 1,000 999
+Total current liabilities 22,500 19,046
+Long-term debt 7,470 7,469
+Long-term operating lease liabilities 1,800 1,557
+Other long-term liabilities 32,230 21,438
+Total liabilities 64,000 49,510
+Commitments and contingencies
+Shareholders' equity:
+Common stock and additional paid-in capital 12,000 11,500
+Retained earnings 183,474 145,793
+Total shareholders' equity 195,474 157,293
+Total liabilities and shareholders' equity $ 259,474 $ 206,803
+
+NVIDIA Corporation and Subsidiaries
+Condensed Consolidated Statements of Cash Flows
+(In millions)
+(Unaudited)
+Three Months Ended
+Apr 26, 2026 Apr 27, 2025
+Cash flows from operating activities:
+Net income $ 58,321 $ 18,775
+Adjustments to reconcile net income to net cash provided by operating activities:
+Stock-based compensation expense 1,928 1,474
+Depreciation and amortization 997 611
+Deferred income taxes (3,000) (1,200)
+Changes in operating assets and liabilities, net of acquisitions:
+Accounts receivable (2,244) (1,786)
+Inventories (4,394) (1,290)
+Accounts payable 1,190 540
+Other (570) 10,470
+Net cash provided by operating activities 50,344 27,414
+Cash flows from investing activities:
+Purchases related to property and equipment and intangible assets (1,757) (1,227)
+Purchases of marketable securities (18,000) (12,000)
+Proceeds from maturities of marketable securities 20,000 9,000
+Net cash provided by (used in) investing activities 243 (4,227)
+Cash flows from financing activities:
+Payments related to repurchases of common stock (19,312) (14,095)
+Payments related to dividends (243) (244)
+Principal payments related to debt (0) (0)
+Net cash used in financing activities (19,555) (14,339)
+Change in cash and cash equivalents 2,632 (1,152)
+Cash and cash equivalents at beginning of period 10,605 8,589
+Cash and cash equivalents at end of period $ 13,237 $ 7,437
+
+NVIDIA Corporation and Subsidiaries
+Notes to Condensed Consolidated Financial Statements (Continued)
+(Unaudited)
+Note 13 - Segment Information
+We have two reportable segments: Compute & Networking and Graphics. Our Chief Executive Officer, who is our chief operating
+decision maker, reviews financial information presented on an operating segment basis for purposes of making decisions and
+assessing financial performance.
+Compute &
+Networking Graphics Total
+(In millions)
+Three Months Ended Apr 26, 2026
+Revenue $ 74,550 $ 7,065 $ 81,615
+Other segment items 21,215 4,124 25,339
+Operating income $ 53,335 $ 2,941 $ 56,276
+Three Months Ended Apr 27, 2025
+Revenue $ 39,589 $ 4,473 $ 44,062
+Other segment items 17,535 2,833 20,368
+Operating income $ 22,054 $ 1,640 $ 23,694
+Reconciliation of segment operating income to consolidated income before income tax:
+Three Months Ended
+Apr 26, 2026 Apr 27, 2025
+Total segment operating income $ 56,276 $ 23,694
+Stock-based compensation expense (1,928) (1,474)
+Unallocated cost of revenue and operating expenses (565) (520)
+Acquisition-related and other costs (247) (62)
+Interest income 540 442
+Interest expense (102) (66)
+Other, net 15,929 (104)
+Income before income tax $ 69,903 $ 21,910
+
+Revenue by Reportable Segments
+Three Months Ended
+Apr 26, 2026 Apr 27, 2025 % Change
+Compute & Networking $ 74,550 $ 39,589 88 %
+Graphics 7,065 4,473 58 %
+Total $ 81,615 $ 44,062 85 %

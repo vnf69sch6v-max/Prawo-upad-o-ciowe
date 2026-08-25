@@ -15,7 +15,7 @@ const nextConfig: NextConfig = {
     ],
   },
   // External packages that should not be bundled
-  serverExternalPackages: ['firebase-admin'],
+  serverExternalPackages: ['firebase-admin', 'pdfjs-dist', 'exceljs'],
   // Legacy (dark) routes → new light domains
   async redirects() {
     return [

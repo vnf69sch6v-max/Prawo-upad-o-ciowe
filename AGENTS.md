@@ -15,7 +15,9 @@ Standard scripts in `package.json`:
 - `npm run build` — production build (used to validate compilation).
 - `npm run lint` — ESLint (`eslint-config-next`).
 
-There is no automated test runner configured (no `test` script, no test files).
+- `npm test` — vitest, wyłącznie testy parsera raportów (`tests/parser.test.ts`
+  wobec utrwalonych sprawozdań w `tests/fixtures/`). Reszta serwisu nie ma
+  testów, więc zielony `npm test` nie mówi nic o stronach z danymi makro.
 
 ### Non-obvious caveats
 
@@ -34,3 +36,8 @@ There is no automated test runner configured (no `test` script, no test files).
   unavailable, so a missing data value is not necessarily a bug.
 - The `middleware`-file deprecation warning from Next.js at startup is
   expected and harmless.
+- `/parser` is the only route that takes user input instead of an external
+  source. Its components use their own semantic colour tokens (`rp-*`), defined
+  at the bottom of `src/app/globals.css` and mapped onto the light `mk-*`
+  palette — change colours there, never inside the parser components. `pdfjs-dist`
+  and `exceljs` are listed in `serverExternalPackages` and must stay there.

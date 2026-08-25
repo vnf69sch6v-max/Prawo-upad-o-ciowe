@@ -10,6 +10,7 @@ import { rememberOpener, useFocusTrap } from '@/lib/use-focus-trap';
 import {
     LayoutDashboard, Tag, Factory, Users, TrendingUp, Map, Search, Newspaper,
     Percent, Landmark, LineChart, Home, Wheat, HardHat, Fuel, Building2, CornerDownLeft, Briefcase,
+    FileBarChart2,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -25,6 +26,7 @@ const COMMANDS: Cmd[] = [
     { id: 'nav-rynki', group: 'Zakładki', label: 'Rynki', keywords: 'gpw waluty stopy złoto', href: '/rynki', icon: TrendingUp },
     { id: 'nav-newsy', group: 'Zakładki', label: 'Newsy', keywords: 'wiadomości aktualności prasa rss bankier money puls biznesu', href: '/newsy', icon: Newspaper },
     { id: 'nav-reg', group: 'Zakładki', label: 'Regiony', keywords: 'województwa mapa samorząd demografia', href: '/regiony', icon: Map },
+    { id: 'nav-parser', group: 'Zakładki', label: 'Parser raportów', keywords: 'raport sprawozdanie pdf 10-q 10-k newconnect ekstrakcja bilans rachunek wyników cash flow eps', href: '/parser', icon: FileBarChart2 },
     { id: 'nav-prog', group: 'Zakładki', label: 'Prognozy', keywords: 'kredyt wibor rata symulator', href: '/prognozy', icon: Percent },
 
     // ── Wskaźniki / widoki (deep-link do pod-zakładek) ──

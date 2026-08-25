@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Tag, Factory, Users, TrendingUp, Map, Newspaper, type LucideIcon } from 'lucide-react';
+import { LayoutDashboard, Tag, Factory, Users, TrendingUp, Map, Newspaper, FileBarChart2, type LucideIcon } from 'lucide-react';
 
 export interface NavItem { label: string; href: string; icon: LucideIcon }
 
@@ -15,6 +15,7 @@ export const NAV_ITEMS: NavItem[] = [
     { label: 'Rynki', href: '/rynki', icon: TrendingUp },
     { label: 'Newsy', href: '/newsy', icon: Newspaper },
     { label: 'Regiony', href: '/regiony', icon: Map },
+    { label: 'Parser', href: '/parser', icon: FileBarChart2 },
 ];
 
 export function isActive(pathname: string, href: string): boolean {

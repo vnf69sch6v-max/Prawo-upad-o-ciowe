@@ -1,0 +1,825 @@
+JEDNOSTKOWY RAPORT OKRESOWY
+ZA II KWARTAŁ 2026 ROKU
+KOMBINAT KONOPNY S.A.
+14 SIERPNIA 2026 R., GRONOWO GÓRNE
+Raport Kombinat Konopny S.A. za II kwartał 2026 roku został przygotowany zgodnie z aktualnym stanem prawnym w
+oparciu o Regulamin Alternatywnego Systemu Obrotu Zarządu Giełdy Papierów Wartościowych w Warszawie S.A. oraz
+Załącznik nr 3 Regulaminu ASO - „Informacje bieżące i okresowe przekazywane w Alternatywnym Systemie Obrotu na
+rynku NewConnect”.
+
+Jednostkowy raport okresowy za II kwartał 2026 r.
+Kombunat Konopny Spółka Akcyjna
+Kraj: Polska
+Siedziba: Gronowo Górne
+Adres: ul. Berylowa 7F, 82-310 Gronowo Górne
+Numer KRS: 0000864387
+Oznaczenie Sądu: Sąd Rejonowy w Olsztynie, VIII Wydział Gospodarczy KRS
+REGON: 38737406
+NIP: 5783144484
+Kapitał zakładowy: 6.094.721,30 PLN składa się z 60.947.213 akcji o wartości nominalnej 0,10 PLN każda
+Telefon: +48 533 355 327
+Poczta e-mail: biuro@kombinatkonopny.pl
+Strona www: www.kombinatkonopny.pl
+ZARZĄD:
+ Maciej Kowalski - Prezes Zarządu,
+ Katarzyna Białęcka – Członek Zarządu
+RADA NADZORCZA:
+ Beata Plutowska,
+ Mirosław Kowalski,
+ Karolina Gawałkiewicz,
+ Waldemar Greszczuk,
+ Izabela Zalewska
+- 2 -
+
+Jednostkowy raport okresowy za II kwartał 2026 r.
+List od Zarządu
+Szanowni Akcjonariusze,
+Drugi kwartał tego roku zamykamy z dodatnią EBITDA i ponad dwukrotnym wzrostem przychodów r/r!
+Największym motorem napędowym wzrostu sprzedaży był kanał detaliczny e-commerce, w którym
+sprzedaż wzrosła z 0,9 mln zł brutto w Q2'25 do 1,9 mln zł brutto w Q2'26, napędzana przede wszystkim
+licznymi premierami oraz intensywną promocją w social mediach.
+Występujące w pierwszym kwartale trudności z zapewnieniem stałej dostępności części asortymentu
+udało się w dużej mierze wyeliminować dzięki odpowiedniej organizacji pracy i wdrożonym usprawnieniom.
+Mając na uwadze spodziewany dynamiczny wzrost sprzedaży w czwartym kwartale, związany z sezonem
+świątecznym, systematycznie uzupełniamy też stany magazynowe, tak by nie zabrakło motorów napędowych
+wzrostu przychodów w tym kluczowym dla spółki okresie.
+Choć pisząc o tym w sierpniu, kwietniowy debiut na rynku wydaje się odległy - nie sposób ominąć tego
+historycznego wydarzenia dla spółki, które miało miejsce w omawianym okresie. Uruchomienie notowań
+nastąpiło dopiero po kilku dniach od oficjalnego debiutu, a obroty w pierwszych tygodniach notowań
+przewyższyły łączną wartość wszystkich emisji akcji, przy cenie wyższej od średniej ceny, po jakiej obejmowane
+były wszystkie akcje.
+Obserwując dynamikę sprzedaży spółka podjęła decyzję o rozpoczęciu przygotowań do emisji akcji,
+której skuteczne przeprowadzenie pozwoli na kilkukrotne zwiększenie mocy produkcyjnych.
+W drugie półrocze wchodzimy zatem z bardzo dobrymi widokami na przyszłość (i daleką i tę bliższą),
+ubrani od stóp do głów w polskie konopie, nie/śmiało spoglądając w kierunku rynków zagranicznych!
+Z wyrazami szacunku,
+Maciej Kowalski
+Prezes Zarządu
+- 3 -
+
+Jednostkowy raport okresowy za II kwartał 2026 r.
+Spis treści
+1 KWARTALNE SKRÓCONE SPRAWOZDANIE FINANSOWE ............................................................................... 5
+1.1 Bilans ......................................................................................................................................................... 5
+1.2 Rachunek Zysków I Strat ......................................................................................................................... 11
+1.3 Rachunek Przepływów Pieniężnych ........................................................................................................ 13
+1.4 Zestawienie Zmian W Kapitale Własnym ................................................................................................ 15
+2 INFORMACJE O ZASADACH PRZYJĘTYCH PRZY SPORZĄDZANIU RAPORTU, W TYM INFORMACJE O
+ZMIANACH STOSOWANYCH ZASAD (POLITYKI) RACHUNKOWOŚCI ...................................................................... 17
+3 KOMENTARZ EMITENTA NA TEMAT OKOLICZNOŚCI I ZDARZEŃ ISTOTNIE WPŁYWAJĄCYCH NA DZIAŁALNOŚĆ
+EMITENTA, JEGO SYTUACJĘ FINANSOWĄ I WYNIKI OSIĄGNIĘTE W DANYM KWARTALE ..................................... 20
+4 STANOWISKO ODNOŚNIE DO MOŻLIWOŚCI ZREALIZOWANIA PUBLIKOWANYCH PROGNOZ WYNIKÓW NA
+DANY ROK W ŚWIETLE WYNIKÓW ZAPREZENTOWANYCH W RAPORCIE KWARTALNYM ..................................... 23
+5 OPIS STANU REALIZACJI DZIAŁAŃ I INWESTYCJI EMITENTA ORAZ HARMONOGRAMU ICH REALIZACJI ..... 23
+6 INFORMACJE NA TEMAT AKTYWNOŚCI W ZAKRESIE WPROWADZANIA ROZWIĄZAŃ INNOWACYJNYCH W
+PRZEDSIĘBIORSTWIE ............................................................................................................................................. 23
+7 OPIS ORGANIZACJI GRUPY KAPITAŁOWEJ, Z WYSZCZEGÓLNIENIEM JEDNOSTEK PODLEGAJĄCYCH
+KONSOLIDACJI ORAZ JEDNOSTEK NIEOBJĘTYCH KONSOLIDACJĄ ......................................................................... 23
+8 WSKAZANIE PRZYCZYN NIESPORZĄDZANIA SPRAWOZDAŃ SKONSOLIDOWANYCH PRZEZ PODMIOT
+DOMINUJĄCY LUB PRZYCZYN ZWOLNIENIA Z KONSOLIDACJI W ODNIESIENIU DO KAŻDEJ JEDNOSTKI ZALEŻNEJ
+NIEOBJĘTEJ KONSOLIDACJĄ .................................................................................................................................. 23
+9 WYBRANE DANE FINANSOWE WSZYSTKICH JEDNOSTEK ZALEŻNYCH EMITENTA NIEOBJĘTYCH
+KONSOLIDACJĄ ...................................................................................................................................................... 23
+10 INFORMACJE O STRUKTURZE AKCJONARIATU EMITENTA, ZE WSKAZANIEM AKCJONARIUSZY
+POSIADAJĄCYCH, NA DZIEŃ PRZEKAZANIA RAPORTU, CO NAJMNIEJ 5% GŁOSÓW NA WALNYM ZGROMADZENIU
+24
+11 INFORMACJE DOTYCZĄCE LICZBY OSÓB ZATRUDNIONYCH PRZEZ EMITENTA, W PRZELICZENIU NA PEŁNE
+ETATY .................................................................................................................................................................... 24
+- 4 -
+
+Jednostkowy raport okresowy za II kwartał 2026 r.
+1 KWARTALNE SKRÓCONE SPRAWOZDANIE FINANSOWE
+1.1 Bilans
+Wyszczególnienie Stan na 30.06.2026 Stan na 30.06.2025
+AKTYWA
+A. AKTYWA TRWAŁE 7 122 042,32 7 415 006,37
+I. Wartości niematerialne i prawne - -
+1. Koszty zakończonych prac rozwojowych - -
+2. Wartość firmy - -
+3. Inne wartości niematerialne i prawne - -
+4. Zaliczki na wartości niematerialne i prawne - -
+II. Rzeczowe aktywa trwałe 7 056 198,42 7 350 709,07
+1. Środki trwałe 5 589 070,29 6 120 072,52
+a) grunty (w tym prawo wieczystego użytkowania gruntu) 1 080 684,98 1 080 684,98
+b) budynki, lokale, prawa do lokali i obiekty inżynierii lądowej i wodnej 1 392 471,15 1 427 257,48
+c) urządzenia techniczne i maszyny 2 980 914,02 3 403 583,70
+d) środki transportu 96 941,29 139 991,14
+e) inne środki trwałe 38 058,85 68 555,22
+2. Środki trwałe w budowie 1 467 128,13 1 230 636,55
+3. Zaliczki na środki trwałe w budowie - -
+1. Od jednostek powiązanych - -
+2. Od pozostałych jednostek - -
+III. Należności długoterminowe - -
+1. Od jednostek powiązanych - -
+2. Od pozostałych jednostek, w których jednostka posiada zaangażowanie w kapitale - -
+3. Od pozostałych jednostek - -
+- 5 -
+
+Jednostkowy raport okresowy za II kwartał 2026 r.
+Wyszczególnienie Stan na 30.06.2026 Stan na 30.06.2025
+IV. Inwestycje długoterminowe - -
+1. Nieruchomości - -
+2. Wartości niematerialne i prawne - -
+3. Długoterminowe aktywa finansowe - -
+a) w jednostkach powiązanych - -
+- udziały lub akcje - -
+- inne papiery wartościowe - -
+- udzielone pożyczki - -
+- inne długoterminowe aktywa finansowe - -
+b) w pozostałych jednostkach, w których jednostka posiada zaangażowanie w kapitale - -
+- udziały lub akcje - -
+- inne papiery wartościowe - -
+- udzielone pożyczki - -
+- inne długoterminowe aktywa finansowe - -
+c) w pozostałych jednostkach - -
+- udziały lub akcje - -
+- inne papiery wartościowe - -
+- udzielone pożyczki - -
+- inne długoterminowe aktywa finansowe - -
+4. Inne inwestycje Długoterminowe - -
+V. Długoterminowe rozliczenia międzyokresowe 65 843,90 64 297,30
+1. Aktywa z tytułu odroczonego podatku dochodowego 29 303,90 26 497,30
+2. Inne rozliczenia międzyokresowe 36 540,00 37 800,00
+- 6 -
+
+Jednostkowy raport okresowy za II kwartał 2026 r.
+Wyszczególnienie Stan na 30.06.2026 Stan na 30.06.2025
+B. AKTYWA OBROTOWE 4 399 716,60 4 474 651,75
+I. Zapasy 3 436 798,12 2 665 068,68
+1. Materiały 1 194 509,87 1 257 725,83
+2. Półprodukty i produkty w toku 713 024,44 738 418,59
+3. Produkty gotowe 1 507 621,86 595 609,38
+4. Towary - -
+5. Zaliczki na dostawy i usługi 21 641,95 73 314,88
+II. Należności krótkoterminowe 249 851,51 305 654,77
+1. Należności od jednostek powiązanych - -
+a) z tytułu dostaw i usług, o okresie spłaty: - -
+- do 12 miesięcy - -
+- powyżej 12 miesięcy - -
+b) inne - -
+2. Należności od pozostałych jednostek, w których jednostka posiada zaangażowanie w
+- -
+kapitale
+a) z tytułu dostaw i usług, o okresie spłaty: - -
+- do 12 miesięcy - -
+- powyżej 12 miesięcy - -
+b) inne - -
+3. Należności od pozostałych jednostek 249 851,51 305 654,77
+a) z tytułu dostaw i usług, o okresie spłaty: 189 027,80 180 124,89
+- do 12 miesięcy 189 027,80 180 124,89
+- powyżej 12 miesięcy - -
+b) z tytułu podatków, dotacji, ceł, ubezpieczeń społecznych i zdrowotnych oraz innych
+54 000,20 120 869,00
+świadczeń oraz innych tytułów publicznoprawnych
+c) inne 6 823,51 4 660,88
+d) dochodzone na drodze sądowej - -
+- 7 -
+
+Jednostkowy raport okresowy za II kwartał 2026 r.
+Wyszczególnienie Stan na 30.06.2026 Stan na 30.06.2025
+III. Inwestycje krótkoterminowe 645 589,76 1 460 259,87
+1. Krótkoterminowe aktywa finansowe 645 589,76 1 460 259,87
+a) w jednostkach powiązanych - -
+- udziały lub akcje - -
+- inne papiery wartościowe - -
+- udzielone pożyczki - -
+- inne krótkoterminowe aktywa finansowe - -
+b) w pozostałych jednostkach - -
+- udziały lub akcje - -
+- inne papiery wartościowe - -
+- udzielone pożyczki - -
+- inne krótkoterminowe aktywa finansowe - -
+c) środki pieniężne i inne aktywa pieniężne 645 589,76 1 460 259,87
+- środki pieniężne w kasie i na rachunkach 645 589,76 1 458 225,06
+- inne środki pieniężne - 2 034,81
+- inne aktywa pieniężne - -
+2. Inne inwestycje krótkoterminowe - -
+IV. Krótkoterminowe rozliczenia międzyokresowe 67 477,21 43 668,43
+C. NALEŻNE WPŁATY NA KAPITAŁ (FUNDUSZ) PODSTAWOWY - -
+D. UDZIAŁY (AKCJE) WŁASNE - -
+AKTYWA RAZEM: 11 521 758,92 11 889 658,12
+- 8 -
+
+Jednostkowy raport okresowy za II kwartał 2026 r.
+Wyszczególnienie Stan na 30.06.2026 Stan na 30.06.2025
+PASYWA
+A. KAPITAŁ (FUNDUSZ) WŁASNY 5 561 263,98 7 587 590,62
+I. Kapitał (fundusz) podstawowy 6 094 721,30 6 094 721,30
+II. Kapitał (fundusz) zapasowy, w tym: 20 287 418,82 20 287 418,82
+- nadwyżka wartości sprzedaży (wartości emisyjnej) nad wartością nominalną udziałów
+(akcji) 20 287 418,82 20 287 418,82
+III. Kapitał (fundusz) z aktualizacji wyceny, w tym: - -
+- z tytułu aktualizacji wartości godziwej - -
+IV. Pozostałe kapitały (fundusze) rezerwowe, w tym: - -
+- tworzone zgodnie z umową (statutem) spółki - -
+- na udziały (akcje) własne - -
+V. Zysk (strata) z lat ubiegłych - 20 061 616,24 - 17 970 988,00
+VI. Zysk (strata) netto roku obrotowego - 759 259,90 - 823 561,50
+VII. Odpisy z zysku netto w ciągu roku obrotowego (wielkość ujemna) - -
+B. ZOBOWIĄZANIA I REZERWY NA ZOBOWIĄZ. 5 960 494,94 4 302 067,50
+I. Rezerwy na zobowiązania 225 808,79 158 381,31
+1. Rezerwa z tytułu odroczonego podatku dochodowego 102 712,29 88 661,98
+2. Rezerwa na świadczenia emerytalne i podobne 106 096,50 69 719,33
+- długoterminowa - -
+- krótkoterminowa 106 096,50 69 719,33
+3. Pozostałe rezerwy 17 000,00 -
+- długoterminowe - -
+- krótkoterminowe 17 000,00 -
+II. Zobowiązania długoterminowe 5 006 258,51 3 601 346,74
+1. Wobec jednostek powiązanych - -
+2. Wobec pozostałych jednostek, w których jednostka posiada zaangażowanie w kapitale - -
+3. Wobec pozostałych jednostek 5 006 258,51 3 601 346,74
+a) kredyty i pożyczki 4 969 718,51 3 549 423,92
+b) z tytułu emisji dłużnych papierów wartościowych
+c) inne zobowiązania finansowe 14 122,82
+d) zobowiązania wekslowe
+e) inne 36 540,00 37 800,00
+- 9 -
+
+Jednostkowy raport okresowy za II kwartał 2026 r.
+Wyszczególnienie Stan na 30.06.2026 Stan na 30.06.2025
+III. Zobowiązania krótkoterminowe 728 427,64 542 339,46
+1. Wobec jednostek powiązanych - -
+a) z tytułu dostaw i usług, o okresie wymagalności: - -
+- do 12 miesięcy - -
+- powyżej 12 miesięcy - -
+b) inne - -
+2. Wobec pozostałych jednostek, w których jednostka posiada zaangażowanie w kapitale - -
+a) z tytułu dostaw i usług, o okresie wymagalności: - -
+- do 12 miesięcy - -
+- powyżej 12 miesięcy - -
+b) inne - -
+3. Wobec pozostałych jednostek 728 427,64 542 339,46
+a) kredyty i pożyczki 41 407,68 28 184,23
+b) z tytułu emisji dłużnych papierów wartościowych
+c) inne zobowiązania finansowe 18 721,11 25 161,39
+d) z tytułu dostaw i usług, o okresie wymagalności: 295 732,15 121 919,63
+- do 12 miesięcy 295 732,15 121 919,63
+- powyżej 12 miesięcy - -
+e) zaliczki otrzymane na dostawy i usługi 12 755,01 -
+f) zobowiązania wekslowe - -
+g) z tytułu podatków, ceł, ubezpieczeń społecznych i zdrowotnych oraz innych tytułów
+227 286,90 191 505,25
+publicznoprawnych
+h) z tytułu wynagrodzeń 132 524,79 148 681,75
+i) inne - 26 887,21
+4. Fundusze specjalne - -
+IV. Rozliczenia międzyokresowe - -
+1. Ujemna wartość firmy - -
+2. Inne rozliczenia międzyokresowe - -
+- długoterminowe - -
+- krótkoterminowe - -
+PASYWA RAZEM: 11 521 758,92 11 889 658,12
+- 10 -
+
+Jednostkowy raport okresowy za II kwartał 2026 r.
+1.2 Rachunek Zysków I Strat
+Od 01.04.2026   Od 01.04.2025   Od 01.01.2026   Od 01.01.2025
+Wyszczególnienie
+do 30.06.2026   do 30.06.2025   do 30.06.2026   do 30.06.2025
+A Przychody netto ze sprzedaży i zrównane z nimi, 2 924 056,55 1 438 920,70 4 627 592,48 2 828 911,39
+w tym: od jednostek powiązanych - - -
+I. Przychody netto ze sprzedaży produktów 2 072 179,50 1 210 087,57 3 764 466,95 2 452 742,29
+II. Zmiana stanu produktów (zwiększenie - wartość
+851 877,05 228 833,13 863 125,53 376 169,10
+dodatnia, zmniejszenie - wartość ujemna)
+III. Koszt wytworzenia produktów na własne potrzeby
+- - - -
+jednostki
+IV. Przychody netto ze sprzedaży towarów - - - -
+B. Koszty działalności operacyjnej 3 007 999,30 1 834 128,33 5 143 584,88 3 527 876,25
+I. Amortyzacja 126 630,90 137 975,07 261 228,34 280 952,02
+II. Zużycie materiałów i energii 1 457 749,00 501 081,64 2 013 005,12 992 574,18
+III. Usługi obce 557 281,48 414 815,22 1 084 903,71 747 243,58
+IV. Podatki i opłaty, w tym: 27 079,00 22 688,60 48 702,00 43 175,60
+- podatek akcyzowy - - - -
+V. Wynagrodzenia 611 391,28 564 761,26 1 218 152,30 1 092 463,14
+VI. Ubezpieczenia społeczne i inne świadczenia; w tym: -
+106 612,70 108 304,09 212 961,93 210 598,49
+emerytalne
+VII. Pozostałe koszty rodzajowe 121 254,94 84 502,45 304 631,48 160 869,24
+VIII. Wartość sprzedanych towarów - - - -
+C. Zysk (strata) ze sprzedaży (A-B) - 83 942,75 - 395 207,63 - 515 992,40 - 698 964,86
+D. Pozostałe przychody operacyjne - 53 769,19 2,04 65 607,91
+I. Zysk z tytułu rozchodu niefinansowych aktywów
+- 53 714,19 - 53 714,19
+trwałych
+II. Dotacje - - - 11 463,96
+III. Aktualizacja wartości aktywów niefinansowych - - - -
+IV. Inne przychody operacyjne - 55,00 2,04 429,76
+E. Pozostałe koszty operacyjne 600,97 17 747,97 3 902,16 20 183,18
+I. Strata z tytułu rozchodu niefinansowych aktywów
+- - - -
+trwałych
+II. Aktualizacja wartości aktywów niefinansowych - - - -
+III. Inne koszty operacyjne 600,97 17 747,97 3 902,16 20 183,18
+F. Zysk (strata) z działalności operacyjnej (C+D-E) - 84 543,72 - 359 186,41 - 519 892,52 - 653 540,13
+- 11 -
+
+Jednostkowy raport okresowy za II kwartał 2026 r.
+Od 01.04.2026   Od 01.04.2025   Od 01.01.2026   Od 01.01.2025
+Wyszczególnienie
+do 30.06.2026   do 30.06.2025   do 30.06.2026   do 30.06.2025
+G. Przychody finansowe - 5 945,38 - 6 063,35
+I. Dywidendy i udziały w zyskach, w tym: - - - -
+a) od jednostek powiązanych, w tym: - - - -
+- w których jednostka posiada zaangażowanie w kapitale - - - -
+b) od jednostek pozostałych, w tym: - - - -
+- w których jednostka posiada zaangażowanie w kapitale - - - -
+II. Odsetki, w tym: - 6 063,35 - 6 063,35
+- od jednostek powiązanych - - - -
+III. Zysk z tytułu rozchodu aktywów finansowych, w tym: - - - -
+- w jednostkach powiązanych - - - -
+IV. Aktualizacja wartości aktywów finansowych - - - -
+V. Inne - - 117,97 - -
+H. Koszty finansowe 123 376,00 96 541,57 239 367,38 176 084,72
+I. Odsetki, w tym: 122 796,97 96 396,23 235 764,30 172 676,17
+- dla jednostek powiązanych - - - -
+II. Strata z tytułu rozchodu aktywów finansowych, w tym: - - - -
+- w jednostkach powiązanych - - - -
+III. Aktualizacja wartości aktywów finansowych - - - -
+IV. Inne 579,03 145,34 3 603,08 3 408,55
+I. Zysk (strata) brutto (F+G-H) - 207 919,72 - 449 782,60 - 759 259,90 - 823 561,50
+J. Podatek dochodowy - - - -
+K. Pozostałe obowiązkowe zmniejszenia zysku
+- - - -
+(zwiększenia straty)
+L. Zysk (strata) netto (I-J-K) - 207 919,72 - 449 782,60 - 759 259,90 - 823 561,50
+- 12 -
+
+Jednostkowy raport okresowy za II kwartał 2026 r.
+1.3 Rachunek Przepływów Pieniężnych
+Od 01.04.2026   Od 01.04.2025   Od 01.01.2026   Od 01.01.2025 do
+Wyszczególnienie
+do 30.06.2026   do 30.06.2025   do 30.06.2026   30.06.2025
+A. PRZEPŁYWY ŚRODKÓW PIENIĘŻNYCH Z
+DZIAŁALNOŚCI OPERACYJNEJ
+I. Zysk (strata) netto -207 919,72 -449 782,60 -759 259,90 -823 561,50
+II. Korekty razem -37 933,54 -350 251,41 -81 676,17 -429 891,89
+1. Amortyzacja 125 892,42 137 975,07 261 228,34 280 952,02
+2. Zyski (straty) z tytułu różnic kursowych 0,00 0,00 0,00 0,00
+3. Odsetki i udziały w zyskach (dywidendy) 129 345,66 108 489,50 236 771,27 172 676,17
+4. Zysk (strata) z działalności inwestycyjnej 0,00 -44 998,36 0,00 -44 998,36
+5. Zmiana stanu rezerw -39 297,02 -25 000,00 -39 297,02 -25 000,00
+6. Zmiana stanu zapasów -450 696,50 -459 887,94 -764 192,92 -711 520,22
+7. Zmiana stanu należności 139 125,59 -26 552,87 11 348,94 -169 724,38
+8. Zmiana stanu zobowiązań krótkoterminowych, z
+69 118,23 -52 073,13 271 607,13 94 723,53
+wyjątkiem pożyczek i kredytów
+9. Zmiana stanu rozliczeń międzyokresowych -6 962,14 14 312,57 -59 880,40 -24 484,31
+10. Inne korekty -4 459,78 -2 516,25 738,49 -2 516,34
+III. Przepływy pieniężne netto z działalności operacyjnej
+-245 853,26 -800 034,01 -840 936,07 -1 253 453,39
+(I +/-II)
+B. PRZEPŁYWY ŚRODKÓW PIENIĘŻNYCH Z
+DZIAŁALNOŚCI INWESTYCYJNEJ
+I. Wpływy 0,00 157 966,31 0,00 157 966,31
+1. Zbycie wartości niematerialnych i prawnych oraz
+0,00 157 966,31 0,00 157 966,31
+rzeczowych aktywów trwałych
+2. Zbycie inwestycji w nieruchomości oraz wartości
+0,00 0,00 0,00 0,00
+niematerialne i prawne
+3. Z aktywów finansowych, w tym: 0,00 0,00 0,00 0,00
+a) w jednostkach powiązanych 0,00 0,00 0,00 0,00
+b) w pozostałych jednostkach 0,00 0,00 0,00 0,00
+-zbycie aktywów finansowych 0,00 0,00 0,00 0,00
+- dywidendy i udziały w zyskach 0,00 0,00 0,00 0,00
+- spłata udzielonych pożyczek długoterminowych 0,00 0,00 0,00 0,00
+- odsetki 0,00 0,00 0,00 0,00
+- inne wpływy z aktywów finansowych 0,00 0,00 0,00 0,00
+4. Inne wpływy inwestycyjne 0,00 0,00 0,00 0,00
+- 13 -
+
+Jednostkowy raport okresowy za II kwartał 2026 r.
+Od 01.04.2026   Od 01.04.2025   Od 01.01.2026   Od 01.01.2025
+Wyszczególnienie
+do 30.06.2026   do 30.06.2025   do 30.06.2026   do 30.06.2025
+II. Wydatki 78 046,48 39 682,71 154 766,92 83 416,66
+1. Nabycie wartości niematerialnych i prawnych oraz
+78 046,48 39 682,71 154 766,92 83 416,66
+rzeczowych aktywów trwałych
+2. Inwestycje w nieruchomości oraz wartości
+0,00 0,00 0,00 0,00
+niematerialne i prawne
+3. Na aktywa finansowe, w tym: 0,00 0,00 0,00 0,00
+a) w jednostkach powiązanych 0,00 0,00 0,00 0,00
+b) w pozostałych jednostkach 0,00 0,00 0,00 0,00
+- nabycie aktywów finansowych 0,00 0,00 0,00 0,00
+- udzielone pożyczki długoterminowe 0,00 0,00 0,00 0,00
+4. Inne wydatki inwestycyjne 0,00 0,00 0,00 0,00
+III. Przepływy pieniężne netto z działalności
+-78 046,48 118 283,60 -154 766,92 74 549,65
+inwestycyjnej (I-II)
+C. PRZEPŁYWY ŚRODKÓW PIENIĘŻNYCH Z
+DZIAŁALNOŚCI FINANSOWEJ
+I. Wpływy 700 000,00 607 000,00 720 000,00 607 000,00
+1. Wpływy netto z wydania udziałów (emisji akcji) i innych
+0,00 0,00 0,00 0,00
+instrumentów kapitałowych oraz dopłat do kapitału
+2. Kredyty i pożyczki 700 000,00 607 000,00 720 000,00 607 000,00
+3. Emisja dłużnych papierów wartościowych 0,00 0,00 0,00 0,00
+4. Inne wpływy finansowe 0,00 0,00 0,00 0,00
+II. Wydatki 119 379,63 436 251,08 229 339,87 826 321,03
+1. Nabycie udziałów (akcji) własnych 0,00 0,00 0,00 0,00
+2. Dywidendy i inne wypłaty na rzecz właścicieli 0,00 0,00 0,00 0,00
+3. Inne, niż wypłaty na rzecz właścicieli, wydatki z tytułu
+0,00 0,00 0,00 0,00
+podziału zysku
+4. Spłaty kredytów i pożyczek 0,00 149 000,00 0,00 479 000,00
+5. Wykup dłużnych papierów wartościowych 0,00 0,00 0,00 0,00
+6. Z tytułu innych zobowiązań finansowych 0,00 0,00 0,00 0,00
+7. Płatności zobowiązań z tytułu umów leasingu
+3 606,51 5 520,25 7 060,50 11 838,41
+finansowego
+8. Odsetki 115 773,12 281 730,83 222 279,37 335 482,62
+9. Inne wydatki finansowe 0,00 0,00 0,00 0,00
+III. Przepływy pieniężne netto z działalności finansowej
+580 620,37 170 748,92 490 660,13 -219 321,03
+(I-II)
+D. PRZEPŁYWY PIENIĘŻNE NETTO, RAZEM (A.III+/-
+256 720,63 -511 001,49 -505 042,86 -1 398 224,77
+B.III+/-C.III)
+E. BILANSOWA ZMIANA ŚRODKÓW PIENIĘŻNYCH, W
+0,00 0,00 0,00 0,00
+TYM
+- zmiana stanu środków pieniężnych z tytułu różnic
+0,00 0,00 0,00 0,00
+kursowych
+F. ŚRODKI PIENIĘŻNE NA POCZĄTEK OKRESU 388 869,13 1 971 261,36 1 150 632,62 2 858 484,64
+G. ŚRODKI PIENIĘŻNE NA KONIEC OKRESU (F+/-D), W
+645 589,76 1 460 259,87 645 589,76 1 460 259,87
+TYM
+- o ograniczonej możliwości dysponowania 0,00 0,00 0,00 0,00
+- 14 -
+
+Jednostkowy raport okresowy za II kwartał 2026 r.
+1.4 Zestawienie Zmian W Kapitale Własnym
+Od 01.04.2026   Od 01.04.2025   Od 01.01.2026   Od 01.01.2025
+Wyszczególnienie
+do 30.06.2026   do 30.06.2025   do 30.06.2026   do 30.06.2025
+I.a. Kapitał (fundusz) własny na początek okresu (BO) 5 769 183,70 8 037 412,22 6 320 523,88 8 411 191,12
+a) zmiany przyjętych zasad (polityki) rachunkowości 0,00 0,00 0,00 0,00
+b) korekty błędów 0,00 0,00 0,00 0,00
+I.a. Kapitał (fundusz) własny na początek okresu (BO), po
+5 769 183,70 8 037 412,22 6 320 523,88 8 411 191,12
+korektach
+1. Kapitał (fundusz) podstawowy na początek okresu 6 094 721,30 3 047 372,70 6 094 721,30 3 047 372,70
+1.1. Zmiany kapitału (funduszu) podstawowego 0,00 3 047 348,60 0,00 3 047 348,60
+a) zwiększenie (z tytułu) 0,00 3 047 348,60 0,00 3 047 348,60
+- wydania udziałów (emisji akcji) 0,00 3 047 348,60 0,00 3 047 348,60
+- inne 0,00 0,00 0,00 0,00
+b) zmniejszenie (z tytułu) 0,00 0,00 0,00 0,00
+- umorzenia udziałów (akcji) 0,00 0,00 0,00 0,00
+- inne 0,00 0,00 0,00 0,00
+1.2. Kapitał (fundusz) podstawowy na koniec okresu 6 094 721,30 6 094 721,30 6 094 721,30 6 094 721,30
+2. Kapitał (fundusz) zapasowy na początek okresu 20 287 418,82 20 309 571,00 20 287 418,82 20 309 571,00
+2.1. Zmiany kapitału (funduszu) zapasowego 0,00 -22 152,18 0,00 -22 152,18
+a) zwiększenie (z tytułu) 0,00 0,00 0,00 0,00
+- emisji akcji powyżej wartości nominalnej 0,00 0,00 0,00 0,00
+- podziału zysku (ustawowo) 0,00 0,00 0,00 0,00
+- podziału zysku (ponad wymaganą ustawowo
+0,00 0,00 0,00 0,00
+minimalną wartość)
+- inne 0,00 0,00 0,00 0,00
+b) zmniejszenie (z tytułu) 0,00 -22 152,18 0,00 -22 152,18
+- pokrycia straty 0,00 0,00 0,00 0,00
+- inne 0,00 -22 152,18 0,00 -22 152,18
+2.2. Stan kapitału (funduszu) zapasowego na koniec
+20 287 418,82 20 287 418,82 20 287 418,82 20 287 418,82
+okresu
+3. Kapitał (fundusz) z aktualizacji wyceny na początek
+okresu - zmiany przyjętych zasad (polityki)   0,00 0,00 0,00 0,00
+rachunkowości
+3.1. Zmiany kapitału (funduszu) z aktualizacji wyceny 0,00 0,00 0,00 0,00
+3.2. Kapitał (fundusz) z aktualizacji wyceny na koniec
+0,00 0,00 0,00 0,00
+okresu
+4. Pozostałe kapitały (fundusze) rezerwowe na
+0,00 0,00 0,00 0,00
+początek okresu
+4.1. Zmiany pozostałych kapitałów (funduszy)
+0,00 0,00 0,00 0,00
+rezerwowych
+4.2. Pozostałe kapitały (fundusze) rezerwowe na
+0,00 0,00 0,00 0,00
+koniec okresu
+- 15 -
+
+Jednostkowy raport okresowy za II kwartał 2026 r.
+Od 01.04.2026   Od 01.04.2025   Od 01.01.2026   Od 01.01.2025
+Wyszczególnienie
+do 30.06.2026   do 30.06.2025   do 30.06.2026   do 30.06.2025
+5. Zysk (strata) z lat ubiegłych na początek okresu -17 970 988,00 -14 070 136,92 -17 970 988,00 -14 070 136,92
+5.1. Zysk z lat ubiegłych na początek okresu 0,00 0,00 0,00 0,00
+a) zmiany przyjętych zasad (polityki) rachunkowości 0,00 0,00 0,00 0,00
+b) korekty błędów 0,00 0,00 0,00 0,00
+5.2. Zysk z lat ubiegłych na początek okresu, po
+0,00 0,00 0,00 0,00
+korektach
+a) zwiększenia (z tytułu) 0,00 0,00 0,00 0,00
+- podziału zysku z lat ubiegłych 0,00 0,00 0,00
+5.3. Zysk z lat ubiegłych na koniec okresu 0,00 0,00 0,00
+5.4. Strata z lat ubiegłych na początek okresu 0,00 0,00 0,00 0,00
+a) zmiany przyjętych zasad (polityki) rachunkowości 0,00 0,00 0,00
+b) korekty błędów 0,00 0,00 0,00 0,00
+5.5 Strata z lat ubiegłych na początek okresu, po
+-17 970 988,00 -14 070 136,92 -17 970 988,00 -14 070 136,92
+korektach
+a) zwiększenie (z tytułu) -2 641 968,42 -4 274 629,98 -2 090 628,24 -3 900 851,08
+- przeniesienia straty z lat ubiegłych do pokrycia -2 090 628,24 -3 900 851,08 -2 090 628,24 -3 900 851,08
+- przeniesienie wyniku z Q12026 -551 340,18 -373 778,90 0,00 0,00
+b) zmniejszenie (z tytułu) 0,00 0,00 0,00 0,00
+- … 0,00 0,00 0,00 0,00
+5.6. Strata z lat ubiegłych na koniec okresu -20 612 956,42 -18 344 766,90 -20 061 616,24 -17 970 988,00
+5.7. Zysk (strata) z lat ubiegłych na koniec okresu -20 612 956,42 -18 344 766,90 -20 061 616,24 -17 970 988,00
+6. Wynik netto -207 919,72 -449 782,60 -759 259,90 -823 561,50
+a) zysk netto 0,00 0,00 0,00 0,00
+b) strata netto -207 919,72 -449 782,60 -759 259,90 -823 561,50
+c) odpisy z zysku 0,00 0,00 0,00 0,00
+II. Kapitał (fundusz) własny na koniec okresu (BZ) 5 561 263,98 7 587 590,62 5 561 263,98 7 587 590,62
+III. Kapitał (fundusz) własny po uwzględnieniu
+5 561 263,98 7 587 590,62 5 561 263,98 7 587 590,62
+proponowanego podziału zysku (pokrycia straty)
+- 16 -
+
+Jednostkowy raport okresowy za II kwartał 2026 r.
+2 INFORMACJE O ZASADACH PRZYJĘTYCH PRZY SPORZĄDZANIU RAPORTU, W TYM
+INFORMACJE O ZMIANACH STOSOWANYCH ZASAD (POLITYKI) RACHUNKOWOŚCI
+Format oraz podstawa sporządzania sprawozdania finansowego
+Raport kwartalny spółki Kombinat Konopny S.A. nie podlegał badaniu ani przeglądowi przez podmiot uprawniony
+do badania sprawozdań finansowych.
+Niniejszy raport został sporządzony zgodnie z postanowieniami: Załącznika nr 3 do Regulaminu Alternatywnego
+Systemu Obrotu „Informacje bieżące i okresowe przekazywane w alternatywnym systemie obrotu na rynku
+NewConnect”; Ustawy o rachunkowości z dnia 29 września 1994 roku (tekst jednolity Dz. U. z 2023 r. poz. 120,
+z późniejszymi zmianami) oraz Załącznikiem nr 1 do tej ustawy „Zakres informacji wykazywanych w sprawozdaniu
+finansowym, o którym mowa w art. 45 ustawy, dla innych jednostek niż banki, zakłady ubezpieczeń i zakłady
+reasekuracji”.
+Spółka wycenia aktywa i pasywa przy uwzględnieniu nadrzędnych zasad rachunkowości, w tym zasady
+ostrożności i ciągłości. W okresie sprawozdawczym nie nastąpiły zmiany stosowanych zasad rachunkowości.
+Rachunek zysków i strat sporządzany jest w wersji porównawczej. Rachunek przepływów pieniężnych jest
+sporządzany metodą pośrednią.
+Rokiem obrotowym Spółki jest rok kalendarzowy podzielony na okresy sprawozdawcze odpowiadające
+poszczególnym miesiącom w roku obrotowym.
+Punktem wyjściowym do sporządzenia sprawozdania finansowego były prawidłowo prowadzone księgi
+rachunkowe, po uzyskaniu zgodności analityki z syntetyka oraz zgodności dzienników częściowych z obrotami i
+saldami księgi głównej. Zamknięte na dzień bilansowy księgi rachunkowe zawierają salda, które po uwzględnieniu
+sald kont korygujących bądź aktualizujących zostały wykazane odpowiednio w sprawozdaniu finansowym.
+Dowody księgowe i księgi rachunkowe oraz dokumenty inwentaryzacyjne zostały uprzednio sprawdzone,
+odpowiednio zaksięgowane i chronologicznie uporządkowane.
+Środki trwałe oraz wartości niematerialne i prawne
+Środki trwałe oraz wartości niematerialne i prawne wyceniane są według cen nabycia lub kosztów wytworzenia.
+Środki trwałe w budowie wyceniane są w wysokości ogółu kosztów pozostających w bezpośrednim związku z ich
+nabyciem lub wytworzeniem. Wartości niematerialne i prawne umarzane są zgodnie z obowiązującymi
+przepisami ustawy z dnia 15 lutego 1992 r. o podatku dochodowym od osób prawnych.
+Wartości niematerialne i prawne o wartości początkowej nieprzekraczającej kwoty określonej w przepisach
+podatkowych jako dolna kwota, od której składniki majątku zalicza się do wartości niematerialnych i prawnych,
+umarzane są w miesiącu przekazania do użytkowania.
+Obejmuje się bilansową ewidencją wszystkie środki trwałe o okresie użytkowania ponad jeden rok, o wartości w
+dniu przyjęcia do użytkowania równej lub wyższej 5.000,00 zł netto, ewidencjonując je wartościowo i ilościowo.
+Przedmioty o wartości poniżej 5.000,00 zł netto odnoszone są bezpośrednio w koszt zużycia materiałów.
+Środki trwałe, dla celów podatkowych amortyzowane są metodą liniową za pomocą stawek amortyzacyjnych
+określonych w ustawie o podatku dochodowym od osób prawnych. Środki trwałe, dla celów bilansowych
+amortyzowane są metodą liniową za pomocą stawek amortyzacyjnych wyznaczanych na podstawie
+przewidywanego okresu użytkowania środka trwałego.
+Prawo wieczystego użytkowania gruntów amortyzuje się metodą liniową. Zgodnie z obowiązującą w
+rachunkowości zasadą ostrożności, okres amortyzacji wymienionego prawa przyjęto na 20 lat (od 1 stycznia 2002
+r.), tj. tyle, ile wynosi maksymalny okres amortyzacji "wartości firmy" określony w art. 44b ust. 10 ustawy
+o rachunkowości.
+Nie rzadziej niż na dzień bilansowy dokonuje się weryfikacji posiadanych środków trwałych pod kątem ich dalszej
+przydatności w działalności Spółki, zakończonej stosownym protokołem. Na tej podstawie ustala się tytuły
+podlegając e ewentualnym odpisom aktualizacyjnym zmniejszającym wartość środków trwałych.
+- 17 -
+
+Jednostkowy raport okresowy za II kwartał 2026 r.
+Umowy leasingu, są klasyfikowane jako leasing finansowy, jeżeli powoduje przeniesienie zasadniczo całego
+ryzyka i korzyści związanych z własnością czyli:
+ rozciąga się zasadniczo na cały okres użytkowania danego składnika aktywów,
+ wartość bieżąca opłat leasingowych jest zasadniczo równa wartości godziwej danego składnika
+aktywów.
+Leasing finansowy jest kapitalizowany w momencie rozpoczęcia okresu leasingu według wartości bieżącej
+minimalnych opłat leasingowych. Opłaty leasingowe poniesione w okresie sprawozdawczym w części dotyczącej
+rat kapitałowych pomniejszają część kapitałową zobowiązania z tytułu leasingu finansowego, pozostała część
+stanowiąca część odsetkową obciąża koszty finansowe okresu.
+Rozdzielenie opłat leasingowych na część kapitałową i część odsetkową dokonywane jest w taki sposób, aby
+uzyskać dla każdego okresu stałą stopę procentową w stosunku do pozostałej do spłacenia kwoty zobowiązania
+(wewnętrzną stopą zwrotu).
+Rzeczowe aktywa trwałe będące przedmiotem leasingu finansowe go są wykazywane w bilansie na równi z
+pozostałymi składnikami majątku trwałego i podlegają umorzeniu według takich samych zasad.
+Środki trwałe użytkowane na podstawie umów leasingu finansowego są amortyzowane na podstawie
+planowanego okresu ich ekonomicznego użytkowania.
+Umowy leasingu nie spełniające warunków leasingu finansowego, klasyfikuje się jako leasing operacyjny.
+Opłaty leasingowe ujmowane są jako koszty w rachunku zysków i strat. Na dzień bilansowy środki pieniężne
+wyrażone w zł wyceniane są w wartości nominalnej, a wyrażone w walutach obcych przeliczone są według kursu
+średniego NBP obowiązującego dla danej waluty w dniu bilansowym.
+Należności i zobowiązania
+Należności i zobowiązania, z wyjątkiem tych, które są skutkiem instrumentów finansowych, wycenia się na dzień
+ujęcia w księgach rachunkowych w wartości nominalnej z zachowaniem zasady ostrożności. Na dzień bilansowy
+należności wycenia się w kwocie wymagalnej spłaty, zaś zobowiązania w kwocie wymagalnej zapłaty.
+Odpisem aktualizującym obejmuje się należności przeterminowane wg zasad:
+ 50% wartości należności przeterminowanej powyżej 6 miesięcy do 12 miesięcy
+ 100% wartości należności przeterminowanej powyżej 12 miesięcy.
+Należności dochodzone na drodze sądowej obejmowane są odpisem aktualizującym w pełnej ich wartości. W
+momencie uzyskania pozytywnego wyroku sądowego w księgach rachunkowych ujmuje się pełną wartość
+odsetek do dnia wydania wyroku oraz zasądzone zgodnie z wyrokiem koszty postępowania sądowego i
+ewentualne inne kwoty wskazane przez sąd, a następnie obejmuje się je odpisem aktualizującym w pełnej
+wartości do momentu ich zapłaty.
+Na dzień sporządzenia sprawozdania finansowego wszystkie należności wyrażone w walutach obcych są
+wycenione po średnim kursie NBP obowiązującym w tym dniu. Zasada ta dotyczy również zobowiązań
+wyrażonych w walutach obcych. Wartość należności aktualizuje się, uwzględniając stopień prawdopodobieństwa
+zapłaty, poprzez dokonanie odpisu aktualizującego pomniejszającego wartość należności.
+Rozliczenia międzyokresowe czynne
+Rozliczenia międzyokresowe czynne wyceniane są w wartości nominalnej poniesionych kosztów ( wydatków )
+aktywowane w okresach następnych.
+- 18 -
+
+Jednostkowy raport okresowy za II kwartał 2026 r.
+Zapasy
+Materiały wyceniane są według cen zakupu. Materiały podlegają magazynowaniu ilościowemu. Zakup
+materiałów zaliczany jest bezpośrednio w koszty.
+Towary wyceniane są wg ceny zakupu. Wartość zakupionych towarów odpisywana jest w koszty w chwili zakupu.
+Produkty gotowe, półprodukty i półprodukty w toku wyceniane są według kosztów wytworzenia nie wyższych od
+ich cen sprzedaży.
+Rozliczenia międzyokresowe przychodów
+Rozliczenia międzyokresowe przychodów dokonywane są z zachowaniem zasady ostrożności i obejmują w
+szczególności równowartość otrzymanych lub należnych od kontrahentów środków z tytułu świadczeń, których
+wykonanie nastąpi w następnych okresach.
+Kapitały oraz pozostałe pasywa
+Kapitały oraz pozostałe pasywa są wycenione według wartości nominalnych. Kapitał wycenia się nie rzadziej niż
+na dzień jego zmiany w wartości nominalnej.
+Kapitał podstawowy Spółki wykazuje się w wysokości wartości nominalnej udziałów.
+Spółka tworzy rezerwy i ustala aktywa z tytułu podatku dochodowego, którego jest podatnikiem z działalności
+pozarolniczej.
+Przyjmuje się podatkową metodę ujęcia rozliczania różnic kursowych.
+Ustalenia wyniku finansowego
+Przychody ze sprzedaży obejmują należne kwoty netto, tj. bez podatku należnego VAT od sprzedaży wyrobów
+gotowych i usług, ujmowane zgodnie z datą powstania przychodu.
+Wynik finansowy brutto korygują bieżące zobowiązania z tytułu podatku dochodowego od osób prawnych.
+Ewidencja kosztów prowadzona jest w układzie rodzajowym.
+Spółka w przypadku zbywania niefinansowych aktywów trwałych oraz inwestycji, przeprowadzone transakcje
+rozlicza ujmując przychody ze zbycia aktywów po stronie przychodów, a koszty zbycia aktywów po stronie
+kosztów ujmując w rachunku zysków i strat wynik z transakcji per saldo po stronie zysków bądź strat, w zależności
+od uzyskane go wyniku.
+Uzyskane przychody oraz poniesione koszty z wyceny transakcji w walutach obcych ujmowane są po stronie
+przychodów w przypadku dodatnich różnic kursowych i po stronie kosztów w przypadku ujemnych różnic
+kursowych ujmując w rachunku zysków i strat wynik z transakcji per saldo po stronie zysków bądź strat, w
+zależności od uzyskanego wyniku z zachowaniem podatkowej metody ich rozliczania.
+- 19 -
+
+Jednostkowy raport okresowy za II kwartał 2026 r.
+3 KOMENTARZ EMITENTA NA TEMAT OKOLICZNOŚCI I ZDARZEŃ ISTOTNIE
+WPŁYWAJĄCYCH NA DZIAŁALNOŚĆ EMITENTA, JEGO SYTUACJĘ FINANSOWĄ I WYNIKI
+OSIĄGNIĘTE W DANYM KWARTALE
+Znaczącym składnikiem aktywów Spółki są rzeczowe aktywa trwałe, na które składają się budynki i urządzenia
+produkcyjne. Emitent na koniec 2 kw. 2026 roku ewidencjonował również halę magazynowo-produkcyjną jako
+środek trwały w budowie w kwocie 1 ,47 mln PLN. Na dzień 30 czerwca 2026 r. Spółka dysponowała 0, 65 mln
+PLN środków pieniężnych. Ponadto wykazanych zostało 3,4 mln PLN zapasów oraz 189 tys. PLN należności
+krótkoterminowych z tytułu dostaw i usług o okresie spłaty do 12 miesięcy. W większości przypadków spływ
+należności następuje w terminie. Należności przeterminowane pow. 90 dni, według stanu na 30 czerwca 2026
+roku, stanowiły 10 % ogółu należności krótkoterminowych. Suma bilansowa w analizowanym okresie
+kształtowała się na poziomie 11,52 mln PLN.
+Spółka systematycznie zwiększa bazę klientów, a także znacząco poszerza asortyment tekstylny co przekłada się
+na wzrost sprzedaży. Przychody ze sprzedaży Emitenta w 2 kw. 2026 roku wyniosły 2,07 mln PLN, co stanowi
+wzrost o 71 % r/r (bez uwzględnienia zmiany stanu produktów). Równocześnie przychody pierwszego półrocza
+2026 roku stanowiły 70 % przychodów całego 2025 roku. Koszty działalności operacyjnej wyniosły w 2 kw. 2026
+r. 3,01 mln PLN co stanowiło wzrost o 64 % r/r. Dynamika przyrostów kosztów operacyjnych jest mniejsza od
+dynamiki przychodów ze sprzedaży w analizowanym okresie. Na koszty operacyjne składały się w szczególności
+koszty zużycia materiałów i energii 1,46 mln PLN, usług obcych 0,56 mln PLN i wynagrodzeń 0,61 mln PLN, co jest
+pochodną produkcyjnego charakteru działalności Emitenta. W 2 kw. 2026 Spółka wykazała stratę netto w
+wysokości 0,21 mln PLN oraz dodatnią EBITDA na poziomie 41 tys. PLN.
+W 2 kw. 2026 roku przychód ze sprzedaży wynikał w 72 % ze sprzedaży w segmencie tekstylnym (35% w 2 kw.
+2025) oraz 28% ze sprzedaży w segmencie zielarskim (65% w 2 kw. 2025).
+W II kwartale 2026 roku miały miejsce następujące istotne wydarzenia:
+Debiut na rynku NewConnect
+1
+Premiera koszul ze stójką z krótkim rękawem, nowych kolorów włóczek, letnich
+spodni, butów (we współpracy z marką Brubeck), czarnej bluzy z kapturem,
+2   spodni jeansowych (we współpracy z marką LENAR), letniej czapki, opaski,
+kimona, koszul damskich, skarpetek-stopek, kocy, poduszek oraz prototypowej
+partii ręczników.
+Zakończenie żniw słomy konopnej u lokalnych rolników - zabezpieczenie
+3   wystarczającej ilości surowca do produkcji do czasu kolejnych zbiorów.
+Siewy konopi na areale blisko 50 hektarów pod przewidywany wzrost
+4   zapotrzebowania na surowiec w związku z dalszymi wzrostami sprzedaży.
+Podpisanie listu intencyjnego z greckim producentem surowca farmaceutycznego
+5   ("medycznej marihuany") oraz rozpoczęcie pracy nad złożeniem wniosku o
+rejestrację do Urzędu Rejestracji Produktów Leczniczych.
+6   Rozpoczęcie negocjacji limitu w rachunku w wysokości 1 mln zł z bankiem BNP
+7   Rozpoczęcie negocjacji z lokalnym dystrybutorem na rynku amerykańskim.
+- 20 -
+
+Jednostkowy raport okresowy za II kwartał 2026 r.
+Przyjęcie pierwszego zamówienia na tkaninę (o której mowa była w raporcie za
+8   Q1) dla marki Bytom.
+Rozpoczęcie przygotowań do nowej emisji akcji w celu zwiększenia mocy
+9   produkcyjnych.
+RAPORTY EBI I ESPI KOMBINATU KONOPNEGO S.A. ZA 1 PÓŁROCZE 2026 R.:
+Numer   Tytuł raportu
+raportu
+EBI   link
+1/2026 Harmonogram publikacji raportów okresowych
+https://newconnect.pl/komunikat_1/2026
+2/2026 Odwołanie lub rezygnacja osoby zarządzającej lub nadzorującej
+https://newconnect.pl/komunikat_2/2026
+3/2026 Powołanie osoby zarządzającej lub nadzorującej
+https://newconnect.pl/komunikat_3/2026
+4/2026 Inne informacje
+https://newconnect.pl/komunikat_4/2026
+5/2026 Raport kwartalny za I kwartał
+https://newconnect.pl/komunikat_5/2026
+6/2026 Raport roczny
+https://newconnect.pl/komunikat_6/2026
+7/2026 Informacje o walnym zgromadzeniu - zwołanie WZ z projektami uchwał, zmiany w porządku obrad
+WZ
+https://newconnect.pl/komunikat_7/2026
+8/2026 Informacje o walnym zgromadzeniu - zwołanie WZ z projektami uchwał, zmiany w porządku obrad
+WZ
+https://newconnect.pl/komunikat_8/2026
+9/2026 Informacje o walnym zgromadzeniu - treść uchwał podjętych przez WZ (w tym informacje o
+ogłoszeniu przerwy w obradach)
+https://newconnect.pl/komunikat_9/2026
+10/2026 Powołanie osoby zarządzającej lub nadzorującej
+https://newconnect.pl/komunikat_10/2026
+- 21 -
+
+Jednostkowy raport okresowy za II kwartał 2026 r.
+Numer   Tytuł raportu
+raportu
+ESPI   link
+1/2026 Wybrane szacunkowe dane finansowe za IV kwartał 2025
+NewConnect - Raport ESPI 1/2026
+2/2026 Podpisanie listu intencyjnego w sprawie współpracy dotyczącej surowca farmaceutycznego
+["marihuany medycznej"]
+NewConnect - Raport ESPI 2/2026
+3/2026 Ogłoszenie o zwołaniu Zwyczajnego Walnego Zgromadzenia na dzień 29 czerwca 2026 r. wraz z
+projektami uchwał
+NewConnect - Raport ESPI 3/2026
+4/2026 Szacunkowe dane dotyczące sprzedaży detalicznej w kanale e-commerce w maju 2026 roku
+NewConnect - Raport ESPI 4/2026
+5/2026 Informacja o otrzymaniu powiadomienia, o którym mowa w art. 19 ust. 1 rozporządzenia MAR
+NewConnect - Raport ESPI 5/2026
+6/2026 Zgłoszenie żądania uprawnionego akcjonariusza umieszczenia określonych spraw w porządku
+obrad ZWZA zwołanego na dzień 29.06.2026 r. wraz z projektami uchwał
+NewConnect - Raport ESPI 6/2026
+7/2026 Informacja o otrzymaniu powiadomienia, o którym mowa w art. 19 ust. 1 rozporządzenia MAR
+NewConnect - Raport ESPI 7/2026
+8/2026 Lista akcjonariuszy, którzy wzięli udział w Walnym Zgromadzeniu oraz mieli co najmniej 5% głosów
+NewConnect - Raport ESPI 8/2026
+9/2026 Szacunkowe dane dotyczące sprzedaży detalicznej w kanale e-commerce w czerwcu 2026 roku
+NewConnect - Raport ESPI 9/2026
+10/2026 Informacja o otrzymaniu powiadomienia, o którym mowa w art. 19 ust. 1 rozporządzenia MAR
+NewConnect - Raport ESPI 10/2026
+11/2026 Informacja o otrzymaniu powiadomienia, o którym mowa w art. 19 ust. 1 rozporządzenia MAR
+NewConnect - Raport ESPI 11/2026
+12/2026 Szacunkowe dane dotyczące sprzedaży detalicznej w kanale e-commerce w lipcu 2026 roku
+NewConnect - Raport ESPI 12/2026
+13/2026 Ustalenie ceny emisyjnej akcji zwykłych na okaziciela serii I
+NewConnect - Raport ESPI 13/2026
+- 22 -
+
+Jednostkowy raport okresowy za II kwartał 2026 r.
+4 STANOWISKO ODNOŚNIE DO MOŻLIWOŚCI ZREALIZOWANIA PUBLIKOWANYCH
+PROGNOZ WYNIKÓW NA DANY ROK W ŚWIETLE WYNIKÓW ZAPREZENTOWANYCH W
+RAPORCIE KWARTALNYM
+Emitent nie publikował prognoz finansowych na rok 2026.
+5 OPIS STANU REALIZACJI DZIAŁAŃ I INWESTYCJI EMITENTA ORAZ HARMONOGRAMU ICH
+REALIZACJI
+Nie dotyczy.
+6 INFORMACJE NA TEMAT AKTYWNOŚCI W ZAKRESIE WPROWADZANIA ROZWIĄZAŃ
+INNOWACYJNYCH W PRZEDSIĘBIORSTWIE
+Emitent nie podejmował w okresie objętym raportem inicjatyw nastawionych na wprowadzenie rozwiązań
+innowacyjnych w przedsiębiorstwie.
+7 OPIS ORGANIZACJI GRUPY KAPITAŁOWEJ, Z WYSZCZEGÓLNIENIEM JEDNOSTEK
+PODLEGAJĄCYCH KONSOLIDACJI ORAZ JEDNOSTEK NIEOBJĘTYCH KONSOLIDACJĄ
+Emitent nie tworzy grupy kapitałowej
+8 WSKAZANIE PRZYCZYN NIESPORZĄDZANIA SPRAWOZDAŃ SKONSOLIDOWANYCH
+PRZEZ PODMIOT DOMINUJĄCY LUB PRZYCZYN ZWOLNIENIA Z KONSOLIDACJI W
+ODNIESIENIU DO KAŻDEJ JEDNOSTKI ZALEŻNEJ NIEOBJĘTEJ KONSOLIDACJĄ
+Nie dotyczy.
+9 WYBRANE DANE FINANSOWE WSZYSTKICH JEDNOSTEK ZALEŻNYCH EMITENTA
+NIEOBJĘTYCH KONSOLIDACJĄ
+Nie dotyczy.
+- 23 -
+
+Jednostkowy raport okresowy za II kwartał 2026 r.
+10 INFORMACJE O STRUKTURZE AKCJONARIATU EMITENTA, ZE WSKAZANIEM
+AKCJONARIUSZY POSIADAJĄCYCH, NA DZIEŃ PRZEKAZANIA RAPORTU, CO NAJMNIEJ
+5% GŁOSÓW NA WALNYM ZGROMADZENIU
+Liczba   Udział w
+Udział w głosach
+Akcjonariusz   posiadanych   kapitale
+na WZA
+akcji   zakładowym
+Maciej Kowalski 20 080 000 33% 50%
+Pozostali akcjonariusze 40 867 213 67% 50%
+SUMA 60 947 213 100% 100%
+11 INFORMACJE DOTYCZĄCE LICZBY OSÓB ZATRUDNIONYCH PRZEZ EMITENTA, W
+PRZELICZENIU NA PEŁNE ETATY
+Forma zatrudnienia Stan na 30.06.2026 Stan na 30.06.2025
+Umowa o pracę 25 29
+Umowa o dzieło, zlecenie i inne 4 2
+Dane na koniec II kwartału 2026 r.
+Gronowo Górne, dnia 14 sierpnia 2026 r.
+Maciej Kowalski Katarzyna Białęcka
+Prezes Zarządu Członek Zarządu
+- 24 -
