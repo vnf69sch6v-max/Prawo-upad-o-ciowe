@@ -1,5 +1,6 @@
 // Cron: odświeżenie danych rynkowych (indeksy GPW, spółki WIG20, surowce).
-// Harmonogram: pn–pt 17:30 CET (po zamknięciu sesji GPW).
+// Harmonogram: pn–pt 15:20 UTC ≈ 17:20 CEST (tuż po zamknięciu GPW 17:05),
+// żeby Daily Digest (16:05 UTC) widział sesję „dziś".
 //
 // UWAGA — poprzednia wersja pobierała CSV bezpośrednio ze stooq.pl i JE WYRZUCAŁA
 // (nigdy nie zapisywała do cache'u), w dodatku ze źródła, którego aplikacja już nie używa:
