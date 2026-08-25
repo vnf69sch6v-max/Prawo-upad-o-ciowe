@@ -18,6 +18,10 @@ export interface ExportTable {
   valueFormat: CellFormat;
   /** Nadpisanie formatu dla pojedynczych wierszy: indeks wiersza → format. */
   rowFormats?: Record<number, CellFormat>;
+  /** Nadpisanie formatu dla kolumn (indeks od 0, z kolumną etykiety). Ma
+   *  pierwszeństwo przed `rowFormats` — kolumna zna swoją jednostkę lepiej
+   *  niż wiersz (np. „Marża operacyjna" obok kwot w tabeli segmentów). */
+  columnFormats?: Record<number, CellFormat>;
   /** Zdanie pod tabelą — podstawa wyliczenia albo zastrzeżenie. */
   note?: string;
 }
@@ -254,7 +258,7 @@ export function buildExportTables(result: ParseResult): ExportTable[] {
         s.name, s.revenue, s.operatingIncome, s.operatingMargin, s.revenueYoY,
       ]),
       valueFormat: "money",
-      note: "Kolumny „Marża operacyjna” i „Przychody r/r” są w procentach.",
+      columnFormats: { 3: "pct", 4: "pct" },
     });
   }
   if (result.productRevenue) {
@@ -263,6 +267,71 @@ export function buildExportTables(result: ParseResult): ExportTable[] {
       columns: ["Produkt", "Przychody", "Udział"],
       rows: result.productRevenue.items.map((i) => [i.name, i.value, i.share]),
       valueFormat: "money",
+      columnFormats: { 2: "pct" },
+    });
+  }
+
+  // ── Gotówka netto i dług ─────────────────────────────────────
+  if (result.netCash) {
+    const nc = result.netCash;
+    tables.push({
+      name: "Gotówka netto i dług",
+      columns: ["Pozycja", nc.periodLabel],
+      rows: [
+        ["Zadłużenie ogółem", nc.totalDebt],
+        ["Gotówka i ekwiwalenty", nc.cash],
+        ["Inwestycje krótkoterminowe", nc.shortTermInvestments],
+        [nc.isNetCash ? "Gotówka netto (bez inwestycji KT)" : "Dług netto (bez inwestycji KT)", nc.netCashExclStInv],
+        [nc.isNetCash ? "Gotówka netto (z inwestycjami KT)" : "Dług netto (z inwestycjami KT)", nc.netCashInclStInv],
+      ],
+      valueFormat: "money",
+    });
+  }
+
+  // ── Zwroty dla akcjonariuszy ─────────────────────────────────
+  if (result.capitalReturns && (result.capitalReturns.dividends !== null || result.capitalReturns.buybacks !== null)) {
+    const cr = result.capitalReturns;
+    tables.push({
+      name: "Zwroty dla akcjonariuszy",
+      columns: ["Pozycja", cr.periodLabel],
+      rows: [
+        ["Wypłacone dywidendy", cr.dividends],
+        ["Wykup akcji własnych", cr.buybacks],
+        ["Razem zwrócone", cr.total],
+        ["Wolne przepływy", cr.fcf],
+        ["Udział zwrotów w FCF", cr.payoutOfFcf],
+      ],
+      valueFormat: "money",
+      rowFormats: { 4: "pct" },
+    });
+  }
+
+  // ── Zdarzenia jednorazowe ────────────────────────────────────
+  if (result.oneOff.detected) {
+    const o = result.oneOff;
+    const rows: (string | number | null)[][] = [];
+    if (o.note) rows.push(["Opis", o.note]);
+    for (const g of o.gaapNetIncome ?? []) rows.push([`Zysk netto GAAP (${g.periodLabel})`, g.value]);
+    for (const a of o.adjustedNetIncome ?? []) rows.push([`Zysk netto skorygowany (${a.periodLabel})`, a.value]);
+    for (const e of o.adjustedEpsDiluted ?? []) rows.push([`EPS rozwodniony skorygowany (${e.periodLabel})`, e.value]);
+    if (o.oneOffEstimate !== undefined) rows.push(["Szacowany wpływ zdarzenia", o.oneOffEstimate]);
+    if (o.gaapGrowth !== undefined) rows.push(["Dynamika GAAP", o.gaapGrowth]);
+    if (o.adjustedGrowth !== undefined) rows.push(["Dynamika skorygowana", o.adjustedGrowth]);
+    const rowFormats: Record<number, CellFormat> = {};
+    rows.forEach((r, i) => {
+      const l = String(r[0]);
+      if (l === "Opis") rowFormats[i] = "text";
+      else if (l.startsWith("Dynamika")) rowFormats[i] = "pct";
+      else if (l.startsWith("EPS")) rowFormats[i] = "money";
+      else rowFormats[i] = "money";
+    });
+    tables.push({
+      name: "Zdarzenia jednorazowe",
+      columns: ["Pozycja", "Wartość"],
+      rows,
+      valueFormat: "money",
+      rowFormats,
+      note: "Pozycja jednorazowa zaburza porównanie r/r — dlatego obok GAAP jest wersja skorygowana.",
     });
   }
 
@@ -278,6 +347,55 @@ export function buildExportTables(result: ParseResult): ExportTable[] {
     valueFormat: "text",
     note: "Tożsamości sprawdzane na liczbach odczytanych z dokumentu — dowód, że kolumny zostały przypisane poprawnie.",
   });
+
+  // ── Metryki: skąd wzięła się każda liczba ────────────────────
+  const provenance = result.metrics
+    .filter((m) => m.values.some((v) => v.value !== null))
+    .map((m) => [
+      label(m.key, m.label),
+      m.confidence,
+      m.matchedLabel ?? "—",
+      m.sourceLine !== undefined ? m.sourceLine + 1 : null,
+      m.note ?? "",
+    ]);
+  if (provenance.length) {
+    tables.push({
+      name: "Metryki — źródła",
+      columns: ["Pozycja", "Pewność", "Etykieta w dokumencie", "Wiersz", "Uwaga"],
+      rows: provenance,
+      valueFormat: "text",
+      columnFormats: { 3: "int" },
+      note: "Numer wiersza odnosi się do arkusza „Wszystkie wiersze” i do surowego tekstu dokumentu.",
+    });
+  }
+
+  // ── Wszystkie wiersze wyciągnięte z dokumentu ────────────────
+  if (result.extractedRows.length) {
+    const maxCols = Math.max(...result.extractedRows.map((r) => r.values.length));
+    const kindPl: Record<string, string> = {
+      income: "Wynikowy",
+      balance: "Bilansowy",
+      unknown: "Nieokreślony",
+    };
+    tables.push({
+      name: "Wszystkie wiersze",
+      columns: [
+        "Etykieta",
+        "Rodzaj",
+        "Wiersz",
+        ...Array.from({ length: maxCols }, (_, i) => `Kolumna ${i + 1}`),
+      ],
+      rows: result.extractedRows.map((r) => [
+        r.label,
+        kindPl[r.periodKind] ?? r.periodKind,
+        r.lineIndex + 1,
+        ...Array.from({ length: maxCols }, (_, i) => r.values[i] ?? null),
+      ]),
+      valueFormat: "money",
+      columnFormats: { 1: "text", 2: "int" },
+      note: "Wszystko, co parser odczytał z dokumentu — także pozycje spoza standardowych sprawozdań. Kolumny odpowiadają układowi z oryginału.",
+    });
+  }
 
   return tables;
 }

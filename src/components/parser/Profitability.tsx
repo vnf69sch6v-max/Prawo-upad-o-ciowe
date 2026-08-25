@@ -1,6 +1,7 @@
 "use client";
 
 import { DocSection } from "@/components/parser/DocSection";
+import { MarginsChart } from "@/components/parser/MarginsChart";
 import { useScale } from "@/components/parser/ScaleContext";
 import { fmtPct } from "@/lib/parser/format";
 import { pl } from "@/lib/parser/copy.pl";
@@ -65,6 +66,12 @@ export function Profitability({
 
   return (
     <DocSection id="rentownosc" title="Rentowność" aside={hasFcf ? active.unitLabel : undefined}>
+      {hasRatios && (
+        <div className="mt-4 mb-6">
+          <MarginsChart derived={derived} periods={periods} />
+        </div>
+      )}
+
       {hasRatios && (
         <div className="mk-table-wrap">
           <table className="w-full min-w-[480px] border-collapse tnum">

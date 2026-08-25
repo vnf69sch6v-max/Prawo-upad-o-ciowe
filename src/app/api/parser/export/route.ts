@@ -98,12 +98,14 @@ export async function POST(req: Request) {
         // ── Dane ──
         table.rows.forEach((r, i) => {
           const row = ws.addRow(r);
-          const fmt = table.rowFormats?.[i] ?? table.valueFormat;
           row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
             if (colNumber === 1) {
               cell.alignment = { vertical: "middle" };
               return;
             }
+            // Kolumna zna swoją jednostkę lepiej niż wiersz, więc wygrywa.
+            const fmt =
+              table.columnFormats?.[colNumber - 1] ?? table.rowFormats?.[i] ?? table.valueFormat;
             if (typeof cell.value === "number") {
               cell.numFmt = numFmtFor(fmt, currency);
               cell.alignment = { horizontal: "right", vertical: "middle" };

@@ -1,6 +1,7 @@
 "use client";
 
 import { DocSection } from "@/components/parser/DocSection";
+import { CostBars } from "@/components/parser/CostBars";
 import { fmtPct } from "@/lib/parser/format";
 import { metricLabelPl } from "@/lib/parser/copy.pl";
 import type { MetricKey, ParseResult, Period } from "@/lib/parser/types";
@@ -61,6 +62,9 @@ export function CostStructure({
 
   return (
     <DocSection id="koszty" title="Struktura kosztów" aside="udział w przychodach">
+      <div className="mt-4 mb-6">
+        <CostBars rows={rows} periods={periods} />
+      </div>
       <div className="mk-table-wrap">
         <table className="w-full min-w-[480px] border-collapse tnum">
           <thead>
