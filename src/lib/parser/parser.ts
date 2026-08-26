@@ -23,6 +23,7 @@ import {
   type MetricPattern,
 } from "./patterns";
 import { parseCells, type NumericCell } from "./numbers";
+import { splitLeadingLabel } from "./split";
 import {
   detectForm,
   detectIssuer,
@@ -41,26 +42,6 @@ import {
   detectOneOff,
 } from "./derived";
 import { validate, applyConfidenceBumps } from "./validate";
-
-interface LabelSplit {
-  label: string;
-  rest: string;
-}
-
-/** Split a row into its leading label and the trailing numeric region. */
-function splitLeadingLabel(line: string): LabelSplit {
-  // Strip a leading list/PAS marker ("1.", "a)", "III.") so its digit is not
-  // mistaken for the start of the value region.
-  const marker = line.match(/^\s*(?:[a-ząćęłńóśźż]|[ivxlcdm]{1,6}|\d{1,2})\s*[.)]\s+/i);
-  const offset = marker ? marker[0].length : 0;
-  const body = line.slice(offset);
-  const idx = body.search(/\(?\s*[$€£]?\s*\d|—|–|[−-]\s*\d/);
-  if (idx < 0) return { label: line.trim(), rest: "" };
-  let start = offset + idx;
-  const pre = line.slice(0, start).match(/[$€£(−-]\s*$/);
-  if (pre) start = start - pre[0].length;
-  return { label: line.slice(0, start).trim(), rest: line.slice(start) };
-}
 
 /** True when a line is (almost) only numeric cells / dashes — a wrap continuation. */
 function isValuesOnlyLine(line: string): boolean {

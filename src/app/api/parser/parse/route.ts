@@ -4,20 +4,29 @@
 // Każda awaria jest widoczna — nigdy ciche 200 z popsutymi danymi.
 
 import { NextResponse } from "next/server";
-import { extractPdfText } from "@/lib/parser/extract";
+import { extractPdfText, classifyPdfExtractError } from "@/lib/parser/extract";
 import { parseReport } from "@/lib/parser/parser";
+import { MAX_UPLOAD_BYTES, MAX_UPLOAD_LABEL } from "@/lib/parser/limits";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
-const MAX_BYTES = 25 * 1024 * 1024; // 25 MB
+const MAX_BYTES = MAX_UPLOAD_BYTES;
 
 function fail(message: string, status: number, detail?: string) {
   return NextResponse.json({ error: message, detail }, { status });
 }
 
 export async function POST(req: Request) {
+  const declared = Number(req.headers.get("content-length") || 0);
+  if (declared > MAX_BYTES + 1024 * 1024) {
+    return fail(
+      `Plik za duży (${(declared / 1e6).toFixed(1)} MB). Limit to ${MAX_UPLOAD_LABEL} (limit hostingu Vercel).`,
+      413,
+    );
+  }
+
   let form: FormData;
   try {
     form = await req.formData();
@@ -40,7 +49,7 @@ export async function POST(req: Request) {
 
   const size = (file as File).size ?? 0;
   if (size > MAX_BYTES) {
-    return fail(`Plik za duży (${(size / 1e6).toFixed(1)} MB). Limit to 25 MB.`, 413);
+    return fail(`Plik za duży (${(size / 1e6).toFixed(1)} MB). Limit to ${MAX_UPLOAD_LABEL} (limit hostingu Vercel).`, 413);
   }
 
   let buffer: ArrayBuffer;
@@ -82,10 +91,9 @@ export async function POST(req: Request) {
       result,
     });
   } catch (err) {
-    // Głośna awaria: pełny stos do logu serwera, czytelny komunikat do UI.
     console.error("[parse] pipeline error:", err);
-    const detail = err instanceof Error ? err.message : String(err);
-    return fail("Parsowanie nie powiodło się. Ślad stosu jest w logach serwera.", 500, detail);
+    const classified = classifyPdfExtractError(err);
+    return fail(classified.userMessage, classified.status, classified.detail);
   }
 }
 

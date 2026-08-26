@@ -40,10 +40,13 @@ const s = (text: string, match: MatchType = "exact"): Synonym => ({
 });
 
 /** Normalise a label for comparison: lowercase, unify quotes, drop (unaudited)/colon,
- *  strip PAS letter/Roman prefixes (A. / III. / c)) and trailing (A-B) formulae. */
+ *  strip PAS letter/Roman prefixes (A. / III. / c)) and trailing (A-B) formulae.
+ *  Polish IFRS writes "Zysk/(strata) netto" — treat "/(" as a space so it matches
+ *  the PAS form "Zysk (strata) netto". */
 export function normalizeLabel(input: string): string {
   return input
     .toLowerCase()
+    .replace(/\/\(/g, " (")
     .replace(/[’‘]/g, "'")
     .replace(/[“”]/g, '"')
     .replace(/\(unaudited\)/g, " ")
@@ -121,6 +124,7 @@ export const PATTERNS: MetricPattern[] = [
       // PAS by-nature: total operating costs by nature (maps to Rev − Cost = Gross)
       p("Koszty działalności operacyjnej"),
       p("Koszt własny sprzedaży"),
+      p("Koszty sprzedanych produktów, usług, towarów i materiałów"),
       p("Koszty sprzedanych produktów"),
     ],
     exclude: ["excluding", "depreciation shown"],
@@ -137,6 +141,8 @@ export const PATTERNS: MetricPattern[] = [
       p("Zysk (strata) ze sprzedaży"),
       p("Zysk ze sprzedaży"),
       p("Strata ze sprzedaży"),
+      p("Zysk (strata) brutto na sprzedaży"),
+      p("Zysk brutto na sprzedaży"),
     ],
     exclude: ["percent", "rate", "%"],
   },
@@ -203,6 +209,9 @@ export const PATTERNS: MetricPattern[] = [
       p("Zysk (strata) z działalności operacyjnej"),
       p("Zysk z działalności operacyjnej"),
       p("Strata z działalności operacyjnej"),
+      p("Zysk (strata) na działalności operacyjnej"),
+      p("Zysk na działalności operacyjnej"),
+      p("Strata na działalności operacyjnej"),
     ],
     exclude: ["segment", "non-operating", "other operating"],
   },
@@ -250,6 +259,8 @@ export const PATTERNS: MetricPattern[] = [
       p("Zysk (strata) brutto"),
       p("Zysk brutto"),
       p("Strata brutto"),
+      p("Zysk (strata) przed opodatkowaniem"),
+      p("Zysk przed opodatkowaniem"),
     ],
     exclude: ["equity", "noncontrolling"],
   },
@@ -419,6 +430,8 @@ export const PATTERNS: MetricPattern[] = [
       p("środki pieniężne w kasie i na rachunkach"),
       p("Środki pieniężne i inne aktywa pieniężne"),
       p("Środki pieniężne w kasie i na rachunkach"),
+      p("Środki pieniężne i ekwiwalenty środków pieniężnych"),
+      p("Środki pieniężne i ekwiwalenty"),
     ],
     exclude: [
       "short-term investments",

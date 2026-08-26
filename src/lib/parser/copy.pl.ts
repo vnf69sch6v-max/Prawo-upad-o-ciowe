@@ -22,7 +22,7 @@ export const pl = {
   },
   upload: {
     drop: "Upuść PDF (10-Q / 10-K / NewConnect)",
-    browse: "lub kliknij, aby wybrać · max 25 MB",
+    browse: "lub kliknij, aby wybrać · max 4,5 MB",
     sampleHint: "lub wczytaj przykład (bez pliku)",
     uploading: "Przesyłanie…",
     parsing: "Parsowanie…",
@@ -41,7 +41,7 @@ export const pl = {
   },
   toast: {
     needPdf: "Wgraj plik PDF (lub .txt z fixture).",
-    tooLarge: "Plik za duży — limit 25 MB.",
+    tooLarge: "Plik za duży — limit 4,5 MB (limit hostingu).",
     parsed: (name: string, matched: number, total: number) =>
       `Przetworzono ${name} — ${matched}/${total} metryk`,
     parseFailed: "Parsowanie nie powiodło się.",

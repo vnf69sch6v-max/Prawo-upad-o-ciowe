@@ -7,6 +7,7 @@
 import type { Period } from "./types";
 import { PATTERNS, labelMatches, isExcluded } from "./patterns";
 import { parseCells } from "./numbers";
+import { splitLeadingLabel } from "./split";
 
 const MONTHS: Record<string, number> = {
   jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6,
@@ -178,16 +179,6 @@ function lineMatchesMetric(line: string, pattern = revenuePattern): boolean {
   if (!label) return false;
   if (isExcluded(label, pattern.exclude)) return false;
   return pattern.synonyms.some((syn) => labelMatches(label, syn));
-}
-
-/** Label = text before the first numeric cell (cheap split for header scanning). */
-function splitLeadingLabel(line: string): { label: string } {
-  const marker = line.match(/^\s*(?:[a-ząćęłńóśźż]|[ivxlcdm]{1,6}|\d{1,2})\s*[.)]\s+/i);
-  const offset = marker ? marker[0].length : 0;
-  const body = line.slice(offset);
-  const m = body.search(/\(?\s*[$€£]?\s*\d|—|–|[−-]\s*\d/);
-  if (m < 0) return { label: line.trim() };
-  return { label: line.slice(0, offset + m).trim() };
 }
 
 const PL_DATE_RE = /(\d{1,2})\.(\d{1,2})\.((?:19|20)\d{2})/g;

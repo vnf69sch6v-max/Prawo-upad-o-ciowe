@@ -25,6 +25,7 @@ import { AllRowsView } from "@/components/parser/AllRowsView";
 import { ExportMenu } from "@/components/parser/ExportMenu";
 import { SourceModal } from "@/components/parser/SourceModal";
 import { pl } from "@/lib/parser/copy.pl";
+import { MAX_UPLOAD_BYTES } from "@/lib/parser/limits";
 import type { Metric, MetricKey, ParseResult } from "@/lib/parser/types";
 
 interface ApiOk {
@@ -75,7 +76,7 @@ function ParserView() {
       notify("error", pl.toast.needPdf);
       return;
     }
-    if (file.size > 25 * 1024 * 1024) {
+    if (file.size > MAX_UPLOAD_BYTES) {
       notify("error", pl.toast.tooLarge);
       return;
     }
@@ -86,7 +87,14 @@ function ParserView() {
       fd.append("file", file);
       setStatus("parsing");
       const res = await fetch("/api/parser/parse", { method: "POST", body: fd });
-      const json = await res.json();
+      const raw = await res.text();
+      let json: { ok?: boolean; error?: string; detail?: string } & Partial<ApiOk>;
+      try {
+        json = raw ? JSON.parse(raw) : {};
+      } catch {
+        if (res.status === 413) throw new Error(pl.toast.tooLarge);
+        throw new Error(`${pl.toast.parseFailed} (HTTP ${res.status})`);
+      }
       if (!res.ok || !json.ok) {
         const detail = typeof json?.detail === "string" && json.detail.trim() ? json.detail.trim() : "";
         const msg = json?.error || `Żądanie nie powiodło się (${res.status})`;

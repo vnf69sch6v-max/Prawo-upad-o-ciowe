@@ -479,3 +479,60 @@ describe("PDF extraction (pdfjs worker)", () => {
     expect(extracted.text.toLowerCase()).toMatch(/cipher|bitcoin|revenue/);
   });
 });
+
+describe("splitLeadingLabel — en-dash punctuation vs empty cells", () => {
+  it("does not treat a Polish ' – ' in a TOC title as the start of values", async () => {
+    const { splitLeadingLabel } = await import("@/lib/parser/split");
+    const toc =
+      "Przychody ze sprzedaży – struktura geograficzna** ...................................................................................................................................... 28";
+    const { label, rest } = splitLeadingLabel(toc);
+    expect(label).toMatch(/struktura geograficzna/i);
+    expect(rest.trim()).toMatch(/^28/);
+  });
+
+  it("still splits a US empty-cell em dash before a number", async () => {
+    const { splitLeadingLabel } = await import("@/lib/parser/split");
+    const { label, rest } = splitLeadingLabel("Total revenue     —     82,886");
+    expect(label.toLowerCase()).toBe("total revenue");
+    expect(rest).toMatch(/82,886/);
+  });
+});
+
+describe("classifyPdfExtractError", () => {
+  it("maps password and invalid-PDF to 422, unknown to 500", async () => {
+    const { classifyPdfExtractError } = await import("@/lib/parser/extract");
+    const pw = new Error("No password given");
+    pw.name = "PasswordException";
+    expect(classifyPdfExtractError(pw).status).toBe(422);
+    expect(classifyPdfExtractError(pw).userMessage).toMatch(/hasłem/);
+
+    const inv = new Error("Invalid PDF structure.");
+    inv.name = "InvalidPDFException";
+    expect(classifyPdfExtractError(inv).status).toBe(422);
+
+    const boom = new Error("Setting up fake worker failed");
+    boom.name = "Error";
+    expect(classifyPdfExtractError(boom).status).toBe(500);
+  });
+});
+
+describe("Polish IFRS slash labels (CD Projekt-style)", () => {
+  const IFRS = parseFixture("polish-ifrs-slash.txt");
+
+  it("does not steal revenue from a TOC page number after an en-dash", () => {
+    expect(values(IFRS, "revenue")[0]).toBe(349072);
+  });
+
+  it("reads Zysk/(strata) … and IFRS cash equivalents", () => {
+    expect(values(IFRS, "grossProfit")[0]).toBe(294463);
+    expect(values(IFRS, "operatingIncome")[0]).toBe(194630);
+    expect(values(IFRS, "incomeBeforeTax")[0]).toBe(213188);
+    expect(values(IFRS, "netIncome")[0]).toBe(193492);
+    expect(values(IFRS, "cash")[0]).toBe(122806);
+    expect(values(IFRS, "costOfRevenue")[0]).toBe(54609);
+  });
+
+  it("matches the headline set", () => {
+    expect(IFRS.matchedCount).toBeGreaterThanOrEqual(9);
+  });
+});

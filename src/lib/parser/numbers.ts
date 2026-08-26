@@ -5,6 +5,8 @@
 // as empty cells, percent signs, and footnote/superscript noise.
 // Nothing here is issuer-specific.
 
+import { VALUE_START_RE } from "./split";
+
 export interface NumericCell {
   raw: string;
   /** Parsed numeric value; null when the cell is a dash / blank / unparseable. */
@@ -201,7 +203,7 @@ export function splitLabelAndCells(line: string): {
   const offset = marker ? marker[0].length : 0;
   const body = denoised.slice(offset);
 
-  const digit = body.search(/\(?\s*[$€£]?\s*\d|—|–|[−-]\s*\d/);
+  const digit = body.search(VALUE_START_RE);
   if (digit < 0) {
     const onlyCells = parseCells(denoised);
     if (onlyCells.length > 0 && !/[a-zA-ZąćęłńóśźżĄĆĘŁŃÓŚŹŻ]/.test(denoised)) {
