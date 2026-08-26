@@ -9,8 +9,8 @@ import { useRouter } from 'next/navigation';
 import { rememberOpener, useFocusTrap } from '@/lib/use-focus-trap';
 import {
     LayoutDashboard, Tag, Factory, Users, TrendingUp, Map, Search, Newspaper,
-    Percent, Landmark, LineChart, Home, Wheat, HardHat, Fuel, Building2, CornerDownLeft, Briefcase,
-    FileBarChart2,
+    Landmark, LineChart, Home, Wheat, HardHat, Fuel, Building2, CornerDownLeft, Briefcase,
+    FileBarChart2, CalendarClock,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -27,7 +27,7 @@ const COMMANDS: Cmd[] = [
     { id: 'nav-newsy', group: 'Zakładki', label: 'Newsy', keywords: 'wiadomości aktualności prasa rss bankier money puls biznesu', href: '/newsy', icon: Newspaper },
     { id: 'nav-reg', group: 'Zakładki', label: 'Regiony', keywords: 'województwa mapa samorząd demografia', href: '/regiony', icon: Map },
     { id: 'nav-parser', group: 'Zakładki', label: 'Parser raportów', keywords: 'raport sprawozdanie pdf 10-q 10-k newconnect ekstrakcja bilans rachunek wyników cash flow eps', href: '/parser', icon: FileBarChart2 },
-    { id: 'nav-prog', group: 'Zakładki', label: 'Prognozy', keywords: 'kredyt wibor rata symulator', href: '/prognozy', icon: Percent },
+    { id: 'nav-pub', group: 'Zakładki', label: 'Publikacje', keywords: 'kalendarz gus nbp publikacje dane', href: '/publikacje', icon: CalendarClock },
 
     // ── Wskaźniki / widoki (deep-link do pod-zakładek) ──
     { id: 'ind-cpi', group: 'Wskaźniki', label: 'Inflacja CPI', sub: 'Ceny', keywords: 'inflacja ceny konsumenckie r/r bazowa', href: '/ceny?tab=inflacja', icon: TrendingUp },
@@ -37,13 +37,14 @@ const COMMANDS: Cmd[] = [
     { id: 'ind-rol', group: 'Wskaźniki', label: 'Ceny skupu produktów rolnych', sub: 'Ceny', keywords: 'rolne pszenica żyto mleko żywiec', href: '/ceny?tab=rolne', icon: Wheat },
     { id: 'ind-pkb', group: 'Wskaźniki', label: 'PKB i wzrost gospodarczy', sub: 'Gospodarka', keywords: 'pkb wzrost aktywność produkcja', href: '/gospodarka?tab=aktywnosc', icon: LineChart },
     { id: 'ind-kon', group: 'Wskaźniki', label: 'Koniunktura', sub: 'Gospodarka', keywords: 'koniunktura nastroje przedsiębiorstwa konsumencka', href: '/gospodarka?tab=koniunktura', icon: Building2 },
-    { id: 'ind-finanse', group: 'Wskaźniki', label: 'Finanse publiczne (dług, deficyt, 10Y)', sub: 'Gospodarka', keywords: 'dług publiczny deficyt budżet rentowność obligacje 10y maastricht rządy polityka partie', href: '/gospodarka?tab=finanse', icon: Landmark },
-    { id: 'ind-bezr', group: 'Wskaźniki', label: 'Bezrobocie i płace', sub: 'Rynek pracy', keywords: 'bezrobocie stopa płace wynagrodzenia', href: '/praca?tab=bezrobocie', icon: Users },
-    { id: 'ind-zatr', group: 'Wskaźniki', label: 'Zatrudnienie i wakaty', sub: 'Rynek pracy', keywords: 'zatrudnienie wakaty etaty', href: '/praca?tab=zatrudnienie', icon: Users },
+    { id: 'ind-finanse', group: 'Wskaźniki', label: 'Finanse publiczne (rządy, PKB, inflacja)', sub: 'Gospodarka', keywords: 'dług publiczny deficyt budżet rentowność obligacje 10y maastricht rządy polityka partie pkb inflacja', href: '/gospodarka?tab=finanse', icon: Landmark },
+    { id: 'ind-10y', group: 'Wskaźniki', label: 'Rentowność 10Y', sub: 'Rynki', keywords: 'obligacje 10y rentowność maastricht eurostat', href: '/rynki', icon: Landmark },
+    { id: 'ind-bezr', group: 'Wskaźniki', label: 'Bezrobocie i płace', sub: 'Rynek pracy', keywords: 'bezrobocie stopa płace wynagrodzenia', href: '/praca', icon: Users },
+    { id: 'ind-zatr', group: 'Wskaźniki', label: 'Zatrudnienie i wakaty', sub: 'Rynek pracy', keywords: 'zatrudnienie wakaty etaty', href: '/praca', icon: Users },
     { id: 'ind-spolki', group: 'Wskaźniki', label: 'Spółki WIG20', sub: 'Rynki', keywords: 'spółki akcje wig20 orlen pko kghm pzu allegro dino cd projekt notowania kurs gpw giełda waluty stopy wibor surowce', href: '/rynki', icon: LineChart },
     { id: 'ind-regpkb', group: 'Wskaźniki', label: 'PKB regionalne', sub: 'Regiony', keywords: 'województwa pkb per capita mapa', href: '/regiony?tab=pkb', icon: Map },
-    { id: 'ind-demo', group: 'Wskaźniki', label: 'Demografia', sub: 'Regiony', keywords: 'ludność demografia województwa', href: '/regiony?tab=demografia', icon: Users },
-    { id: 'ind-regpraca', group: 'Wskaźniki', label: 'Bezrobocie i płace wg województw', sub: 'Regiony', keywords: 'bezrobocie regionalne województwa mapa płace wynagrodzenia', href: '/regiony?tab=praca', icon: Briefcase },
+    { id: 'ind-demo', group: 'Wskaźniki', label: 'Demografia', sub: 'Regiony', keywords: 'ludność demografia województwa', href: '/regiony?tab=ludnosc', icon: Users },
+    { id: 'ind-regpraca', group: 'Wskaźniki', label: 'Bezrobocie i płace wg województw', sub: 'Rynek pracy', keywords: 'bezrobocie regionalne województwa mapa płace wynagrodzenia', href: '/praca', icon: Briefcase },
     { id: 'ind-smup', group: 'Wskaźniki', label: 'Samorząd (SMUP)', sub: 'Regiony', keywords: 'samorząd usługi publiczne smup jst', href: '/regiony?tab=samorzad', icon: Landmark },
 
     // ── Działy inflacji (COICOP) → /ceny ──
