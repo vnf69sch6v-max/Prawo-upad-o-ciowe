@@ -60,6 +60,8 @@
 /* ── Base ──────────────────────────────────────────────────── */
 html {
   background: var(--color-mk-bg);
+  /* Skeleton → wysoki hero nie może kotwiczyć scrolla okna (dump na środek strony). */
+  overflow-anchor: none;
 }
 
 body {
@@ -530,9 +532,16 @@ button.mk-card,
   cursor: not-allowed;
 }
 
+/* Panel zakładki strony: nowa treść (hero zamiast krótkiego skeletonu) nie może
+   być kotwicą scroll-anchoring — inaczej Chrome trzyma stary węzeł w kadrze
+   i zrzuca widok na środek strony. */
+.mk-tab-panel {
+  overflow-anchor: none;
+}
+
 /* Segmented control (toggles) — poziomy pasek, bez zawijania.
-   Na wąskim ekranie przełączniki się przewijają; aktywny musi zostać w kadrze
-   (scrollIntoView w Segmented.tsx). min-height 28px = WCAG 2.2 Target Size. */
+   Na wąskim ekranie przełączniki się przewijają; aktywny zostaje w kadrze
+   przez scrollLeft kontenera (nie scrollIntoView). min-height 28px = WCAG 2.2 Target Size. */
 .mk-seg {
   display: inline-flex;
   flex-wrap: nowrap;

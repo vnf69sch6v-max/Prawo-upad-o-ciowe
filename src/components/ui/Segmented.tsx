@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { scrollChildInline } from '@/lib/tab-scroll';
 
 interface SegmentedProps<T extends string> {
     options: { value: T; label: string }[];
@@ -15,8 +16,9 @@ export function Segmented<T extends string>({ options, value, onChange, size = '
     const listRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        const active = listRef.current?.querySelector<HTMLElement>('[aria-selected="true"]');
-        active?.scrollIntoView({ inline: 'nearest', block: 'nearest' });
+        const list = listRef.current;
+        const active = list?.querySelector<HTMLElement>('[aria-selected="true"]');
+        if (list && active) scrollChildInline(list, active);
     }, [value]);
 
     const move = (dir: 1 | -1) => {

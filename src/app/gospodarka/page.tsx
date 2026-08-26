@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
-import { useInitialTab } from '@/lib/use-initial-tab';
+import { useInitialTab, useTabScrollReset } from '@/lib/use-initial-tab';
 import { Factory, HardHat, ShoppingCart, Truck, Radio, Info, Grid3x3 } from 'lucide-react';
 import { useKoniunktura } from '@/lib/hooks';
 import { formatDecimalPL } from '@/lib/formatters';
@@ -198,6 +198,7 @@ function FinansePubliczne() {
 export default function GospodarkaPage() {
     const [tab, setTab] = useState<Tab>('aktywnosc');
     useInitialTab(TABS.map((t) => t.value), setTab);
+    useTabScrollReset(tab);
     return (
         <div className="mk-fade-in space-y-5">
             <PageHeader
@@ -205,7 +206,7 @@ export default function GospodarkaPage() {
                 actions={<Segmented value={tab} onChange={setTab} options={TABS} aria-label="Sekcja gospodarki" />}
             />
 
-            <div key={tab} className="mk-fade-in">
+            <div key={tab} className="mk-tab-panel mk-fade-in">
                 {tab === 'aktywnosc' && <GospodarkaAktywnosc />}
                 {tab === 'koniunktura' && <KoniunkturaSection />}
                 {tab === 'finanse' && <FinansePubliczne />}
