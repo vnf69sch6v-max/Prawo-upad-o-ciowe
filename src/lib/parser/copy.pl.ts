@@ -7,7 +7,7 @@ export const pl = {
   app: {
     title: "report-parser",
     subtitle: "ekstrakcja sprawozdań finansowych",
-    badgeLocal: "lokalnie · reguły",
+    badgeLocal: "reguły, nie model",
     badgeNoLlm: "bez LLM w runtime",
   },
   tabs: {
@@ -35,7 +35,7 @@ export const pl = {
     title: "Wczytaj raport, aby zacząć",
     errorTitle: "Coś poszło nie tak",
     body:
-      "Upuść PDF 10-Q, 10-K lub raportu NewConnect po lewej. Tekst jest wyciągany po stronie serwera, a potem parsowany regułami — lokalnie, bez AI w runtime.",
+      "Upuść PDF 10-Q, 10-K lub raportu NewConnect. Tekst jest wyciągany po stronie serwera, a potem parsowany regułami — bez AI w runtime.",
     orSample: "Albo wczytaj przykład",
     badges: ["Wodospad", "Segmenty · produkty", "Wskaźniki · FCF", "CSV · XLSX · JSON"],
   },

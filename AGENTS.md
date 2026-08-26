@@ -43,8 +43,10 @@ Standard scripts in `package.json`:
   and `exceljs` are listed in `serverExternalPackages` and must stay there.
   PDF uploads on Vercel need `pdf.worker.mjs` in the serverless trace
   (`outputFileTracingIncludes` for `/api/parser/parse` plus an absolute
-  `GlobalWorkerOptions.workerSrc` in `src/lib/parser/extract.ts`). TXT
-  samples work without the worker; a missing worker is a 500
-  (`Setting up fake worker failed`), not an empty parse. Do not drop either
-  of those two pins. Local `node_modules` hides the bug because the worker
-  file is already on disk.
+  `GlobalWorkerOptions.workerSrc` from `resolvePdfWorkerSrc()` in
+  `src/lib/parser/extract.ts`). Do not call `require.resolve("literal")`
+  — webpack rewrites that to a numeric module id and production 500s
+  (`The "path" argument must be of type string. Received type number`).
+  Split the module id and bind `require["resolve"]` so the bundler
+  leaves it alone. TXT samples work without the worker; a missing
+  worker is a 500 (`Setting up fake worker failed`), not an empty parse.

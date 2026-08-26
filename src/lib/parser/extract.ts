@@ -5,7 +5,9 @@
 // position and order them left-to-right by X, inserting column separators on
 // large horizontal gaps. This layout fidelity is what makes the parser possible.
 
+import { existsSync } from "node:fs";
 import { createRequire } from "node:module";
+import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 
 export interface ExtractResult {
@@ -22,21 +24,49 @@ interface Glyph {
   h: number;
 }
 
-const require = createRequire(import.meta.url);
+const WORKER_SEGMENTS = ["pdfjs-dist", "legacy", "build", "pdf.worker.mjs"] as const;
 
-// pdfjs ships an ESM "legacy" build that runs in Node without a browser Worker.
-// On Node it disables the Worker and fake-imports workerSrc (see PDFWorker in
-// pdfjs-dist). The default `./pdf.worker.mjs` resolves next to pdf.mjs, which
-// exists locally in node_modules but is NOT traced into the Vercel serverless
-// bundle — production then 500s with:
-//   Setting up fake worker failed: Cannot find module
-//   '.../node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs'
-// require.resolve() both yields an absolute file:// URL and is a tracing root
-// for NFT; next.config outputFileTracingIncludes is the belt.
+/**
+ * Absolute file:// URL for pdf.worker.mjs.
+ *
+ * Two production traps:
+ * 1. NFT does not follow pdfjs' webpackIgnore fake-import of `./pdf.worker.mjs`,
+ *    so the worker must be in outputFileTracingIncludes (see next.config.ts).
+ * 2. Webpack rewrites `require.resolve("literal")` to a numeric module id
+ *    (prod then 500s: `pathToFileURL` got number 65956). Split the id and
+ *    call resolve through a computed property so the bundler leaves it alone.
+ */
+export function resolvePdfWorkerSrc(): string {
+  const candidates: string[] = [];
+
+  try {
+    const req = createRequire(import.meta.url);
+    const resolveId = req["resolve"].bind(req) as (id: string) => unknown;
+    const resolved = resolveId(WORKER_SEGMENTS.join("/"));
+    if (typeof resolved === "string") candidates.push(resolved);
+  } catch {
+    // fall through to cwd / lambda layout
+  }
+
+  candidates.push(
+    join(process.cwd(), "node_modules", ...WORKER_SEGMENTS),
+    join("/var/task", "node_modules", ...WORKER_SEGMENTS),
+  );
+
+  for (const candidate of candidates) {
+    if (typeof candidate === "string" && existsSync(candidate)) {
+      return pathToFileURL(candidate).href;
+    }
+  }
+
+  throw new Error(
+    `pdf.worker.mjs not found (tried ${candidates.filter((c) => typeof c === "string").join(", ") || "nothing"})`,
+  );
+}
+
 async function loadPdfjs() {
   const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
-  const workerPath = require.resolve("pdfjs-dist/legacy/build/pdf.worker.mjs");
-  pdfjs.GlobalWorkerOptions.workerSrc = pathToFileURL(workerPath).href;
+  pdfjs.GlobalWorkerOptions.workerSrc = resolvePdfWorkerSrc();
   return pdfjs;
 }
 

@@ -87,7 +87,11 @@ function ParserView() {
       setStatus("parsing");
       const res = await fetch("/api/parser/parse", { method: "POST", body: fd });
       const json = await res.json();
-      if (!res.ok || !json.ok) throw new Error(json?.error || `Żądanie nie powiodło się (${res.status})`);
+      if (!res.ok || !json.ok) {
+        const detail = typeof json?.detail === "string" && json.detail.trim() ? json.detail.trim() : "";
+        const msg = json?.error || `Żądanie nie powiodło się (${res.status})`;
+        throw new Error(detail ? `${msg} (${detail})` : msg);
+      }
       setData(json as ApiOk);
       setStatus("done");
       window.scrollTo({ top: 0, behavior: "auto" });

@@ -460,6 +460,16 @@ describe("PDF extraction (pdfjs worker)", () => {
     expect(existsSync(workerPath)).toBe(true);
   });
 
+  it("resolvePdfWorkerSrc returns a file:// URL string, never a bundler module id", async () => {
+    const { resolvePdfWorkerSrc } = await import("@/lib/parser/extract");
+    const src = resolvePdfWorkerSrc();
+    expect(typeof src).toBe("string");
+    expect(src.startsWith("file://")).toBe(true);
+    expect(src).toMatch(/pdf\.worker\.mjs$/);
+    const { fileURLToPath } = await import("node:url");
+    expect(existsSync(fileURLToPath(src))).toBe(true);
+  });
+
   it("extracts text from the Cipher Digital sample PDF", async () => {
     const { extractPdfText } = await import("@/lib/parser/extract");
     const buf = readFileSync(resolve(process.cwd(), "public/parser-samples/cipher-digital-10q.pdf"));
