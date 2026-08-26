@@ -513,6 +513,10 @@ describe("classifyPdfExtractError", () => {
     const boom = new Error("Setting up fake worker failed");
     boom.name = "Error";
     expect(classifyPdfExtractError(boom).status).toBe(500);
+
+    const timeout = new Error("extract timeout");
+    expect(classifyPdfExtractError(timeout).status).toBe(422);
+    expect(classifyPdfExtractError(timeout).userMessage).toMatch(/zbyt długo/);
   });
 });
 

@@ -9,19 +9,16 @@ import { existsSync } from "node:fs";
 import { createRequire } from "node:module";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
+import { reconstructPage } from "./layout-text";
+import { classifyPdfExtractError } from "./extract-errors";
+
+export type { ClassifiedExtractError } from "./extract-errors";
+export { classifyPdfExtractError };
 
 export interface ExtractResult {
   text: string;
   pages: number;
   charCount: number;
-}
-
-interface Glyph {
-  str: string;
-  x: number;
-  y: number;
-  w: number;
-  h: number;
 }
 
 const WORKER_SEGMENTS = ["pdfjs-dist", "legacy", "build", "pdf.worker.mjs"] as const;
@@ -64,48 +61,6 @@ export function resolvePdfWorkerSrc(): string {
   );
 }
 
-export interface ClassifiedExtractError {
-  userMessage: string;
-  status: number;
-  detail: string;
-}
-
-/** Map pdfjs failures to a client-visible status. Password / invalid PDF are
- *  expected inputs, not 500s. Worker/OOM stay 500. */
-export function classifyPdfExtractError(err: unknown): ClassifiedExtractError {
-  const detail = err instanceof Error ? err.message : String(err);
-  const name = err instanceof Error ? err.name : "";
-  if (
-    name === "PasswordException" ||
-    /no password given/i.test(detail) ||
-    /password required/i.test(detail) ||
-    /incorrect password/i.test(detail)
-  ) {
-    return {
-      userMessage: "PDF jest chroniony hasłem. Parser nie otwiera plików zaszyfrowanych.",
-      status: 422,
-      detail,
-    };
-  }
-  if (
-    name === "InvalidPDFException" ||
-    /invalid pdf structure/i.test(detail) ||
-    /invalid PDF/i.test(detail) ||
-    /size is zero bytes/i.test(detail)
-  ) {
-    return {
-      userMessage: "Plik nie jest prawidłowym PDF (uszkodzony, pusty albo to nie jest PDF).",
-      status: 422,
-      detail,
-    };
-  }
-  return {
-    userMessage: "Parsowanie nie powiodło się. Ślad stosu jest w logach serwera.",
-    status: 500,
-    detail,
-  };
-}
-
 async function loadPdfjs() {
   const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
   pdfjs.GlobalWorkerOptions.workerSrc = resolvePdfWorkerSrc();
@@ -115,76 +70,6 @@ async function loadPdfjs() {
 function toUint8(data: Uint8Array | ArrayBuffer | Buffer): Uint8Array {
   if (data instanceof Uint8Array) return new Uint8Array(data);
   return new Uint8Array(data as ArrayBuffer);
-}
-
-/** Reconstruct one page's text from its positioned glyph runs. */
-function reconstructPage(rawItems: unknown[]): string {
-  const glyphs: Glyph[] = [];
-  for (const raw of rawItems) {
-    const it = raw as {
-      str?: unknown;
-      transform?: number[];
-      width?: number;
-      height?: number;
-    };
-    if (typeof it.str !== "string" || it.str.length === 0) continue;
-    const t = it.transform;
-    if (!t) continue;
-    // Font size proxy from the vertical scale of the text transform.
-    const h = Math.hypot(t[2], t[3]) || it.height || 10;
-    glyphs.push({ str: it.str, x: t[4], y: t[5], w: it.width || 0, h });
-  }
-  if (glyphs.length === 0) return "";
-
-  // Top-to-bottom (PDF Y grows upward), then left-to-right.
-  glyphs.sort((a, b) => b.y - a.y || a.x - b.x);
-
-  // Cluster into rows by Y proximity. Reference Y is fixed at each row's first
-  // (highest) glyph so a long row cannot drift into the next line.
-  const rows: Glyph[][] = [];
-  let current: Glyph[] = [];
-  let rowY = 0;
-  for (const g of glyphs) {
-    if (current.length === 0) {
-      current = [g];
-      rowY = g.y;
-      continue;
-    }
-    const tol = Math.max(2, g.h * 0.5);
-    if (Math.abs(g.y - rowY) <= tol) {
-      current.push(g);
-    } else {
-      rows.push(current);
-      current = [g];
-      rowY = g.y;
-    }
-  }
-  if (current.length) rows.push(current);
-
-  const lines: string[] = [];
-  for (const row of rows) {
-    row.sort((a, b) => a.x - b.x);
-    let line = row[0].str;
-    let prevEnd = row[0].x + row[0].w;
-    let prevH = row[0].h;
-    for (let i = 1; i < row.length; i++) {
-      const g = row[i];
-      const gap = g.x - prevEnd;
-      const ref = Math.max(prevH, g.h);
-      if (gap < 0.15 * ref) {
-        line += g.str; // same token (split number / word) — glue
-      } else if (gap < 0.7 * ref) {
-        line += (/\s$/.test(line) ? "" : " ") + g.str; // ordinary word space
-      } else {
-        line += (/\s$/.test(line) ? "  " : "   ") + g.str; // column separator
-      }
-      prevEnd = g.x + g.w;
-      prevH = g.h;
-    }
-    const trimmed = line.replace(/\s+$/g, "");
-    if (trimmed.trim().length > 0) lines.push(trimmed);
-  }
-  return lines.join("\n");
 }
 
 /** Extract layout-preserving text from a PDF buffer. */

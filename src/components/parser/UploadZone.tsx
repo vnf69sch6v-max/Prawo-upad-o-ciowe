@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils/cn";
 import { fmtBytes } from "@/lib/parser/format";
 import { pl } from "@/lib/parser/copy.pl";
 
-export type UploadStatus = "idle" | "dragging" | "uploading" | "parsing" | "done" | "error";
+export type UploadStatus = "idle" | "dragging" | "uploading" | "extracting" | "parsing" | "done" | "error";
 
 export function UploadZone({
   status,
@@ -27,7 +27,7 @@ export function UploadZone({
 }) {
   const inputRef = React.useRef<HTMLInputElement>(null);
   const [drag, setDrag] = React.useState(false);
-  const busy = status === "uploading" || status === "parsing";
+  const busy = status === "uploading" || status === "extracting" || status === "parsing";
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
@@ -96,7 +96,11 @@ export function UploadZone({
         <>
           <Loader2 className="mb-3 h-7 w-7 animate-spin text-mk-primary" />
           <p className="text-sm font-medium text-rp-data">
-            {status === "uploading" ? pl.upload.uploading : pl.upload.parsing}
+            {status === "extracting"
+              ? pl.upload.extractingLocal
+              : status === "uploading"
+                ? pl.upload.uploading
+                : pl.upload.parsing}
           </p>
           <p className="mt-1 max-w-[14rem] truncate text-xs text-rp-data-muted">{fileName}</p>
         </>

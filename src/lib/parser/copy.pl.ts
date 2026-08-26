@@ -22,9 +22,10 @@ export const pl = {
   },
   upload: {
     drop: "Upuść PDF (10-Q / 10-K / NewConnect)",
-    browse: "lub kliknij, aby wybrać · max 4,5 MB",
+    browse: "lub kliknij, aby wybrać · max 40 MB",
     sampleHint: "lub wczytaj przykład (bez pliku)",
     uploading: "Przesyłanie…",
+    extractingLocal: "Duży plik — odczytuję lokalnie…",
     parsing: "Parsowanie…",
     parsed: "przetworzono",
     uploadAnother: "Wczytaj kolejny",
@@ -35,13 +36,13 @@ export const pl = {
     title: "Wczytaj raport, aby zacząć",
     errorTitle: "Coś poszło nie tak",
     body:
-      "Upuść PDF 10-Q, 10-K lub raportu NewConnect. Tekst jest wyciągany po stronie serwera, a potem parsowany regułami — bez AI w runtime.",
+      "Upuść PDF 10-Q, 10-K lub raportu NewConnect. Małe pliki idą na serwer; większe (do 40 MB) odczytywane są w przeglądarce, a na serwer leci sam tekst. Parsowanie regułami — bez AI w runtime.",
     orSample: "Albo wczytaj przykład",
     badges: ["Wodospad", "Segmenty · produkty", "Wskaźniki · FCF", "CSV · XLSX · JSON"],
   },
   toast: {
     needPdf: "Wgraj plik PDF (lub .txt z fixture).",
-    tooLarge: "Plik za duży — limit 4,5 MB (limit hostingu).",
+    tooLarge: "Plik za duży — limit 40 MB. Skanowane i zaszyfrowane PDF-y nie zadziałają.",
     parsed: (name: string, matched: number, total: number) =>
       `Przetworzono ${name} — ${matched}/${total} metryk`,
     parseFailed: "Parsowanie nie powiodło się.",

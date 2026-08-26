@@ -25,7 +25,7 @@ import { AllRowsView } from "@/components/parser/AllRowsView";
 import { ExportMenu } from "@/components/parser/ExportMenu";
 import { SourceModal } from "@/components/parser/SourceModal";
 import { pl } from "@/lib/parser/copy.pl";
-import { MAX_UPLOAD_BYTES } from "@/lib/parser/limits";
+import { chooseParseStrategy, isPdfFile, isTextFile } from "@/lib/parser/upload-strategy";
 import type { Metric, MetricKey, ParseResult } from "@/lib/parser/types";
 
 interface ApiOk {
@@ -71,38 +71,70 @@ function ParserView() {
   const [data, setData] = React.useState<ApiOk | null>(null);
   const [sourceMetric, setSourceMetric] = React.useState<Metric | null>(null);
 
+  const postAndApply = async (res: Response) => {
+    const raw = await res.text();
+    let json: { ok?: boolean; error?: string; detail?: string } & Partial<ApiOk>;
+    try {
+      json = raw ? JSON.parse(raw) : {};
+    } catch {
+      if (res.status === 413) throw new Error(pl.toast.tooLarge);
+      throw new Error(`${pl.toast.parseFailed} (HTTP ${res.status})`);
+    }
+    if (!res.ok || !json.ok) {
+      const detail = typeof json?.detail === "string" && json.detail.trim() ? json.detail.trim() : "";
+      const msg = json?.error || `Żądanie nie powiodło się (${res.status})`;
+      throw new Error(detail ? `${msg} (${detail})` : msg);
+    }
+    setData(json as ApiOk);
+    setStatus("done");
+    window.scrollTo({ top: 0, behavior: "auto" });
+  };
+
   const handleFile = async (file: File) => {
-    if (!/pdf/i.test(file.type) && !/\.pdf$/i.test(file.name) && !/\.txt$/i.test(file.name) && !/text\/plain/i.test(file.type)) {
+    if (!isPdfFile(file) && !isTextFile(file)) {
       notify("error", pl.toast.needPdf);
       return;
     }
-    if (file.size > MAX_UPLOAD_BYTES) {
+    const strategy = chooseParseStrategy(file);
+    if (strategy === "reject-too-large") {
       notify("error", pl.toast.tooLarge);
       return;
     }
-    setStatus("uploading");
     setData(null);
     try {
+      if (strategy === "client-extract") {
+        setStatus("extracting");
+        let text: string;
+        let pages = 1;
+        if (isPdfFile(file)) {
+          const { extractPdfTextInBrowser } = await import("@/lib/parser/extract-browser");
+          const extracted = await extractPdfTextInBrowser(file);
+          text = extracted.text;
+          pages = extracted.pages;
+        } else {
+          text = await file.text();
+        }
+        setStatus("parsing");
+        const res = await fetch("/api/parser/parse", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            text,
+            pages,
+            fileName: file.name,
+            fileSize: file.size,
+          }),
+        });
+        await postAndApply(res);
+        return;
+      }
+
+      setStatus("uploading");
       const fd = new FormData();
       fd.append("file", file);
       setStatus("parsing");
       const res = await fetch("/api/parser/parse", { method: "POST", body: fd });
-      const raw = await res.text();
-      let json: { ok?: boolean; error?: string; detail?: string } & Partial<ApiOk>;
-      try {
-        json = raw ? JSON.parse(raw) : {};
-      } catch {
-        if (res.status === 413) throw new Error(pl.toast.tooLarge);
-        throw new Error(`${pl.toast.parseFailed} (HTTP ${res.status})`);
-      }
-      if (!res.ok || !json.ok) {
-        const detail = typeof json?.detail === "string" && json.detail.trim() ? json.detail.trim() : "";
-        const msg = json?.error || `Żądanie nie powiodło się (${res.status})`;
-        throw new Error(detail ? `${msg} (${detail})` : msg);
-      }
-      setData(json as ApiOk);
-      setStatus("done");
-      window.scrollTo({ top: 0, behavior: "auto" });
+      await postAndApply(res);
     } catch (err) {
       console.error(err);
       setStatus("error");
@@ -162,7 +194,7 @@ function ParserView() {
     return list;
   }, [result]);
 
-  const busy = status === "parsing" || status === "uploading";
+  const busy = status === "parsing" || status === "uploading" || status === "extracting";
 
   // ── Widok startowy: tylko wgrywanie ────────────────────────────
   if (!result && !busy) {
@@ -198,8 +230,15 @@ function ParserView() {
 
   // ── Widok wczytywania ──────────────────────────────────────────
   if (busy) {
+    const busyLabel =
+      status === "extracting"
+        ? pl.upload.extractingLocal
+        : status === "uploading"
+          ? pl.upload.uploading
+          : pl.upload.parsing;
     return (
       <div className="rp-root mk-fade-in mx-auto max-w-[860px] space-y-5 py-6">
+        <p className="text-sm font-medium text-mk-muted">{busyLabel}</p>
         <Skeleton className="h-9 w-72" />
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (

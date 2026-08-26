@@ -50,3 +50,8 @@ Standard scripts in `package.json`:
   Split the module id and bind `require["resolve"]` so the bundler
   leaves it alone. TXT samples work without the worker; a missing
   worker is a 500 (`Setting up fake worker failed`), not an empty parse.
+  Vercel Function request bodies are a hard 4.5 MB (`FUNCTION_PAYLOAD_TOO_LARGE`)
+  on every plan — do not raise `MAX_BINARY_UPLOAD_BYTES` or add
+  `bodyParser.sizeLimit`. PDFs above ~4 MB are extracted in the browser
+  (`extractPdfTextInBrowser`, worker at `/pdfjs/pdf.worker.min.mjs`) and
+  POSTed as JSON text (cap 40 MB file / 250 pages / 45 s).

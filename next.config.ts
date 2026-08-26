@@ -1,4 +1,16 @@
+import { copyFileSync, existsSync, mkdirSync } from "node:fs";
+import { dirname, join } from "node:path";
 import type { NextConfig } from "next";
+
+/** Browser pdfjs worker — copied so /parser can extract large PDFs locally. */
+function copyPdfWorkerToPublic() {
+  const src = join(process.cwd(), "node_modules/pdfjs-dist/build/pdf.worker.min.mjs");
+  const dest = join(process.cwd(), "public/pdfjs/pdf.worker.min.mjs");
+  if (!existsSync(src)) return;
+  mkdirSync(dirname(dest), { recursive: true });
+  copyFileSync(src, dest);
+}
+copyPdfWorkerToPublic();
 
 const nextConfig: NextConfig = {
   // Image optimization
