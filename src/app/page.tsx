@@ -10,7 +10,7 @@ import {
 } from '@/lib/hooks';
 import { WIG20 } from '@/lib/wig20';
 import { plSeries, lastOf, prevOf } from '@/lib/series';
-import { formatDecimalPL, formatNumber, formatDate, percentChange, formatDataPeriodLabel } from '@/lib/formatters';
+import { formatDecimalPL, formatNumber, formatDate, percentChange, formatDataPeriod, formatDataPeriodLabel } from '@/lib/formatters';
 import type { AccentKey } from '@/components/ui/KpiCard';
 import { CompactKpiGrid } from '@/components/ui/CompactKpiGrid';
 import { LatestNews } from '@/components/ui/RelatedNews';
@@ -26,7 +26,7 @@ import { WatchlistStrip, type WatchableKpi } from '@/components/ui/WatchlistStri
 // Produkcja      → useGusIndustrialProduction → /api/dbw-series var 312 (GUS DBW)
 // Stopa NBP      → useNBPInterestRates     → /api/nbp-rates (NBP)
 // WIG20 / FX / złoto → Stooq / NBP
-// Rentowność 10Y → useBondYield10YPl       → Stooq 10ypl.b (rynek)
+// Rentowność 10Y → useBondYield10YPl       → Eurostat Maastricht (Stooq 10ypl.b zablokowany)
 // PKB kwartalny  — brak w GUS API → usunięty z siatki (roczny: useGusGdpAnnual w Prognozy)
 // Spółki WIG20   → useWig20                → /api/wig20 (tylko pod pas Obserwowane)
 
@@ -94,7 +94,7 @@ export default function OverviewPage() {
         { watchId: 'wig20', label: 'WIG20', href: '/rynki', value: wigLast != null ? formatNumber(wigLast, 0) : '—', unit: 'pkt', accent: 'blue' as AccentKey, icon: LineChart, delta: wigDelta != null ? { value: wigDelta, unit: 'pct' as const } : undefined, loading: wig20Q.isLoading, error: wig20Q.isError, onRetry: () => { void wig20Q.refetch(); } },
         { watchId: 'eur-pln', label: 'EUR / PLN', href: '/rynki', value: mid('EUR') != null ? formatDecimalPL(mid('EUR')!, 3) : '—', unit: 'zł', accent: 'cyan' as AccentKey, icon: Euro, delta: fxDelta(eurHQ.data) != null ? { value: fxDelta(eurHQ.data)!, unit: 'pct' as const, invert: true } : undefined, footnote: fxTable?.effectiveDate ? formatDate(fxTable.effectiveDate) : undefined, loading: fxQ.isLoading, error: fxQ.isError, onRetry: () => { void fxQ.refetch(); } },
         { watchId: 'usd-pln', label: 'USD / PLN', href: '/rynki', value: mid('USD') != null ? formatDecimalPL(mid('USD')!, 3) : '—', unit: 'zł', accent: 'green' as AccentKey, icon: DollarSign, delta: fxDelta(usdHQ.data) != null ? { value: fxDelta(usdHQ.data)!, unit: 'pct' as const, invert: true } : undefined, footnote: fxTable?.effectiveDate ? formatDate(fxTable.effectiveDate) : undefined, loading: fxQ.isLoading, error: fxQ.isError, onRetry: () => { void fxQ.refetch(); } },
-        { watchId: 'yield-10y', label: 'Rentowność 10Y', href: '/gospodarka?tab=finanse', value: lastOf(yield10) != null ? formatDecimalPL(lastOf(yield10)!, 2) : '—', unit: '%', accent: 'violet' as AccentKey, icon: Landmark, delta: lastOf(yield10) != null && prevOf(yield10) != null ? { value: +(lastOf(yield10)! - prevOf(yield10)!).toFixed(2), unit: 'pp' as const, invert: true } : undefined, footnote: yield10.length ? yield10[yield10.length - 1].date : undefined, loading: yieldQ.isLoading, error: yieldQ.isError, onRetry: () => { void yieldQ.refetch(); } },
+        { watchId: 'yield-10y', label: 'Rentowność 10Y', href: '/rynki', value: lastOf(yield10) != null ? formatDecimalPL(lastOf(yield10)!, 2) : '—', unit: '%', accent: 'violet' as AccentKey, icon: Landmark, delta: lastOf(yield10) != null && prevOf(yield10) != null ? { value: +(lastOf(yield10)! - prevOf(yield10)!).toFixed(2), unit: 'pp' as const, invert: true } : undefined, footnote: yield10.length ? `Eurostat · ${formatDataPeriod(yield10[yield10.length - 1].date)}` : 'Eurostat · Maastricht', loading: yieldQ.isLoading, error: yieldQ.isError, onRetry: () => { void yieldQ.refetch(); } },
         { watchId: 'gold', label: 'Złoto (NBP)', href: '/rynki', value: goldLast != null ? formatDecimalPL(goldLast, 2) : '—', unit: 'zł/g', accent: 'amber' as AccentKey, icon: Gem, delta: goldDelta != null ? { value: goldDelta, unit: 'pct' as const } : undefined, footnote: 'cena złota', loading: goldQ.isLoading, error: goldQ.isError, onRetry: () => { void goldQ.refetch(); } },
     ], [wigLast, wigDelta, wig20Q.isLoading, wig20Q.isError, fxTable, eurHQ.data, usdHQ.data, fxQ.isLoading, fxQ.isError, yield10, yieldQ.isLoading, yieldQ.isError, goldLast, goldDelta, goldQ.isLoading, goldQ.isError]);
 

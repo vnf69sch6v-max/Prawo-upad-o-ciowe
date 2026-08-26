@@ -7,7 +7,7 @@ import {
     type NBPTable,
 } from '@/lib/hooks';
 import { lastOf, prevOf, monthTick } from '@/lib/series';
-import { formatDecimalPL, formatNumber, formatDate, percentChange } from '@/lib/formatters';
+import { formatDecimalPL, formatNumber, formatDate, formatDataPeriod, percentChange } from '@/lib/formatters';
 import { PageHeroBand, type HeroKpiItem } from '@/components/ui/PageHeroBand';
 import { CompactKpiGrid, type CompactKpiItem } from '@/components/ui/CompactKpiGrid';
 import { DenseTwoCol } from '@/components/ui/DensePageLayout';
@@ -131,7 +131,7 @@ export function RynkiDashboard() {
             delta: lastOf(yield10) != null && prevOf(yield10) != null
                 ? { value: +(lastOf(yield10)! - prevOf(yield10)!).toFixed(2), unit: 'pp', invert: true }
                 : undefined,
-            footnote: yield10.length ? formatDate(yield10[yield10.length - 1].date) : undefined,
+            footnote: yield10.length ? `Eurostat · ${formatDataPeriod(yield10[yield10.length - 1].date)}` : 'Eurostat · Maastricht',
             loading: yieldQ.isLoading,
             error: yieldQ.isError,
             onRetry: () => { void yieldQ.refetch(); },
