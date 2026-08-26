@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useInitialTab } from '@/lib/use-initial-tab';
+import { useInitialTab, useTabScrollReset } from '@/lib/use-initial-tab';
 import { Home, HardHat, Wheat } from 'lucide-react';
 import { Segmented } from '@/components/ui/Segmented';
 import { InflacjaFull } from '@/components/sections/InflacjaFull';
@@ -21,6 +21,7 @@ const TABS: { value: Tab; label: string }[] = [
 export default function CenyPage() {
     const [tab, setTab] = useState<Tab>('inflacja');
     useInitialTab(TABS.map((t) => t.value), setTab);
+    useTabScrollReset(tab);
     return (
         <div className="mk-fade-in space-y-5">
             <PageHeader
@@ -28,7 +29,7 @@ export default function CenyPage() {
                 actions={<Segmented value={tab} onChange={setTab} options={TABS} aria-label="Sekcja cen" />}
             />
 
-            <div key={tab} className="mk-fade-in">
+            <div key={tab} className="mk-tab-panel mk-fade-in">
             {tab === 'inflacja' && <InflacjaFull />}
             {tab === 'ppi' && <PpiFull />}
             {tab === 'nieruchomosci' && (

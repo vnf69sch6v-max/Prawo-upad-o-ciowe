@@ -15,7 +15,7 @@ import { Choropleth, type ChoroItem } from '@/components/ui/Choropleth';
 import { RankingBars } from '@/components/ui/RankingBars';
 import { QueryState } from '@/components/ui/QueryState';
 
-type MapView = 'pkb' | 'ludnosc';
+export type MapView = 'pkb' | 'ludnosc';
 
 const pln = (v: number) => `${formatNumber(v, 0)} zł`;
 const mln = (v: number) => `${(v / 1e6).toFixed(2)} mln`;
@@ -23,9 +23,11 @@ const mln1 = (v: number) => `${(v / 1e6).toFixed(1)}`;
 const woj = (name: string) => name.replace(/^województwo /i, '');
 
 /** Gęsty dashboard regionów — PKB i ludność GUS BDL, mapa + ranking. */
-export function RegionyDashboard() {
+export function RegionyDashboard({ view: viewProp }: { view?: MapView }) {
     const { data, isLoading, isError, refetch } = useRegionalGus();
-    const [view, setView] = useState<MapView>('pkb');
+    const [viewLocal, setViewLocal] = useState<MapView>('pkb');
+    const view = viewProp ?? viewLocal;
+    const controlled = viewProp != null;
     const [sel, setSel] = useState<string | null>(null);
 
     const regions = useMemo(() => data?.regions ?? [], [data?.regions]);
@@ -149,15 +151,17 @@ export function RegionyDashboard() {
                         title={isPkb ? 'PKB na mieszkańca — mapa' : 'Ludność — mapa województw'}
                         subtitle={isPkb ? `GUS BDL · zł/mieszkańca · ${data?.gdpYear ?? ''}` : `GUS BDL · mln · ${data?.popYear ?? ''}`}
                         actions={
+                            controlled ? undefined : (
                             <Segmented
                                 value={view}
-                                onChange={setView}
+                                onChange={setViewLocal}
                                 options={[
                                     { value: 'pkb', label: 'PKB' },
                                     { value: 'ludnosc', label: 'Ludność' },
                                 ]}
                                 aria-label="Widok mapy"
                             />
+                            )
                         }
                     >
                         <QueryState

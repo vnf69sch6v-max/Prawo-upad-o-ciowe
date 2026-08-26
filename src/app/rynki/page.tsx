@@ -13,7 +13,6 @@ import { WIG20, type Wig20Company } from '@/lib/wig20';
 import { matchCompanyNews } from '@/lib/news/match';
 import { formatDecimalPL, formatNumber, formatDate, formatRelativeTime, formatTime, percentChange } from '@/lib/formatters';
 import { KpiCard } from '@/components/ui/KpiCard';
-import { EditorialHero } from '@/components/ui/EditorialHero';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { Segmented } from '@/components/ui/Segmented';
 import { RynkiDashboard } from '@/components/sections/RynkiDashboard';
@@ -179,12 +178,6 @@ function SpolkiSection() {
 
     const wigLast = lastCloseOf(wigIndex);
     const wigDelta = pctDelta(barsOf(wigIndex));
-    const wigDate = barsOf(wigIndex).at(-1)?.date ?? null;
-
-    const heroHeadline = wigLast == null ? 'WIG20'
-        : wigDelta != null && wigDelta > 0 ? 'WIG20 rośnie'
-        : wigDelta != null && wigDelta < 0 ? 'WIG20 spada'
-        : 'WIG20';
 
     const cards = useMemo(() => {
         const q = query.trim().toLowerCase();
@@ -236,29 +229,13 @@ function SpolkiSection() {
 
     return (
         <div className="space-y-6">
-            <EditorialHero
-                ariaLabel="WIG20 — najważniejszy odczyt"
-                period={wigDate ? formatDate(wigDate) : null}
-                source="GPW · Stooq/Yahoo"
-                headline={heroHeadline}
-                description={
-                    <>
-                        Indeks 20 największych spółek Giełdy Papierów Wartościowych.
-                        {summary.n ? ` Na ostatniej sesji na plusie ${summary.up} z ${summary.n} spółek.` : ''}
-                    </>
-                }
-                value={wigLast != null ? formatNumber(Math.round(wigLast)) : '—'}
-                unit="pkt"
-                delta={wigDelta}
-                deltaUnit="%"
-                valueCaption="Indeks blue chip · GPW"
-                panelTitle="Szerokość rynku"
-                rows={[
-                    { label: 'Spółki na plusie', value: summary.n ? `${summary.up} z ${summary.n}` : '—' },
-                    { label: 'Spółki na minusie', value: summary.n ? `${summary.down} z ${summary.n}` : '—' },
-                    { label: 'Średnia zmiana', value: summary.avg != null ? fmtPct(summary.avg) : '—', divider: true },
-                ]}
-            />
+            <div>
+                <h2 className="text-lg font-extrabold tracking-tight text-mk-text">Spółki WIG20</h2>
+                <p className="mt-1 text-sm text-mk-muted">
+                    Indeks 20 największych spółek GPW.
+                    {summary.n ? ` Na ostatniej sesji na plusie ${summary.up} z ${summary.n}.` : ''}
+                </p>
+            </div>
 
             <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
                 <KpiCard label="WIG20" value={wigLast != null ? formatNumber(Math.round(wigLast)) : '—'} unit="pkt" icon={BarChart3}

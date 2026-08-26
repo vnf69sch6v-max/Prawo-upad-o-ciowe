@@ -27,6 +27,7 @@ interface StooqData {
     symbol: string;
     data: { date: string; close: number; volume?: number }[];
     latest: { date: string; close: number; volume?: number } | null;
+    source?: string;
 }
 
 interface GoldPrice {
@@ -252,7 +253,7 @@ export function useGusMonthly() {
     });
 }
 
-/** Rentowność obligacji skarbowych 10Y (rynek GPW/Stooq — nie Eurostat Maastricht) */
+/** Rentowność 10Y. Stooq 10ypl.b jest zablokowany serwerowo — API zwraca Eurostat Maastricht. */
 export function useBondYield10YPl(limit = 30) {
     return useStooq('10ypl.b', limit);
 }

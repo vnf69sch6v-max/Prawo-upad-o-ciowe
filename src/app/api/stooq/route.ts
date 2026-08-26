@@ -7,7 +7,7 @@ import { marketCacheTtlMs } from '@/lib/market-hours';
 import { warsawDateKey } from '@/lib/news/warsaw-date';
 
 interface Bar { date: string; open: number; high: number; low: number; close: number; volume: number }
-interface StooqResult { symbol: string; data: Bar[]; latest: Bar | null }
+interface StooqResult { symbol: string; data: Bar[]; latest: Bar | null; source?: string }
 
 // Mapa symbol-appki → symbol Yahoo. Yahoo używamy jako podstawowego dla tych, bo Stooq blokuje serwer.
 const YAHOO_MAP: Record<string, string> = {
@@ -92,9 +92,32 @@ async function fetchYahooProxy(appSymbol: string, cfg: { level: string; series: 
     return { symbol: appSymbol, data, latest: data[data.length - 1] || null };
 }
 
+/**
+ * Stooq 10ypl.b is blocked by the JS challenge (same as other raw Stooq CSV).
+ * Yahoo has no Poland 10Y series. Eurostat irt_lt_mcby_m (Maastricht long-term
+ * rate, monthly) is the honest public fallback — not a live GPW quote.
+ */
+async function fetchEurostatMaastricht10Y(appSymbol: string, limit: number): Promise<StooqResult> {
+    const { fetchEurostat } = await import('../eurostat/route');
+    const result = await fetchEurostat('irt_lt_mcby_m', { int_rt: 'MCBY' }, ['PL'], '2018-01');
+    const series = result.data.PL ?? [];
+    const data: Bar[] = series
+        .filter((p): p is { date: string; value: number } => p.value != null)
+        .map((p) => {
+            const v = p.value;
+            return { date: p.date, open: v, high: v, low: v, close: v, volume: 0 };
+        })
+        .slice(-limit);
+    if (!data.length) throw new Error('Eurostat 10Y: pusta seria');
+    return { symbol: appSymbol, data, latest: data[data.length - 1] || null, source: 'eurostat-maastricht' };
+}
+
 /** Yahoo-first dla zmapowanych symboli (Stooq blokuje serwer), z fallbackiem na Stooq. */
 async function fetchQuote(symbol: string, interval: string, limit: number): Promise<StooqResult> {
     const key = symbol.toLowerCase();
+    if (key === '10ypl.b' || key === '10ypl') {
+        return fetchEurostatMaastricht10Y(symbol, limit);
+    }
     const proxy = YAHOO_PROXY[key];
     if (proxy) {
         try { return await fetchYahooProxy(symbol, proxy, limit); } catch { /* spróbuj Stooq poniżej */ }

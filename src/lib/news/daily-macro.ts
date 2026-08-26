@@ -261,7 +261,7 @@ export async function fetchMacroChangesWithDiagnostics(
         { symbol: 'wig20', id: 'wig20', label: 'WIG20', href: '/rynki', unit: 'pkt' },
         { symbol: 'mwig40', id: 'mwig40', label: 'mWIG40', href: '/rynki', unit: 'pkt' },
         { symbol: 'swig80', id: 'swig80', label: 'sWIG80', href: '/rynki', unit: 'pkt' },
-        { symbol: '10ypl.b', id: 'yield-10y', label: 'Rentowność 10Y', href: '/gospodarka?tab=finanse', unit: '%' },
+        { symbol: '10ypl.b', id: 'yield-10y', label: 'Rentowność 10Y', href: '/rynki', unit: '%' },
     ];
 
     for (const idx of indices) {
