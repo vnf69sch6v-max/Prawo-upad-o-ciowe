@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { scrollChildInline } from '@/lib/tab-scroll';
 import { LayoutDashboard, Tag, Factory, Users, TrendingUp, Map, Newspaper, FileBarChart2, type LucideIcon } from 'lucide-react';
 
 export interface NavItem { label: string; href: string; icon: LucideIcon }
@@ -27,8 +28,9 @@ export function TopNav({ className = '' }: { className?: string }) {
     const navRef = useRef<HTMLElement>(null);
 
     useEffect(() => {
-        const active = navRef.current?.querySelector<HTMLElement>('[aria-current="page"]');
-        active?.scrollIntoView({ inline: 'nearest', block: 'nearest' });
+        const nav = navRef.current;
+        const active = nav?.querySelector<HTMLElement>('[aria-current="page"]');
+        if (nav && active) scrollChildInline(nav, active);
     }, [pathname]);
 
     return (

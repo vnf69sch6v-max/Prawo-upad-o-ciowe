@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+export { useTabScrollReset } from '@/lib/tab-scroll';
 
 /**
  * Czyta `?tab=` z URL raz przy montażu i ustawia pod-zakładkę, jeśli wartość jest poprawna.

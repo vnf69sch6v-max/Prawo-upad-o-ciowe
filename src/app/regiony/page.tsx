@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useInitialTab } from '@/lib/use-initial-tab';
+import { useInitialTab, useTabScrollReset } from '@/lib/use-initial-tab';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Segmented } from '@/components/ui/Segmented';
 import { RegionyDashboard, type MapView } from '@/components/sections/RegionyDashboard';
@@ -19,13 +19,16 @@ export default function RegionyPage() {
     useInitialTab(['pkb', 'ludnosc', 'samorzad', 'demografia'] as const, (t) => {
         setTab(t === 'demografia' ? 'ludnosc' : t);
     });
+    useTabScrollReset(tab);
     return (
         <div className="space-y-5">
             <PageHeader
                 title="Regiony"
                 actions={<Segmented value={tab} onChange={setTab} options={TABS} aria-label="Sekcja regionów" />}
             />
-            {tab === 'samorzad' ? <SmupExplorer /> : <RegionyDashboard view={tab} />}
+            <div key={tab} className="mk-tab-panel">
+                {tab === 'samorzad' ? <SmupExplorer /> : <RegionyDashboard view={tab} />}
+            </div>
         </div>
     );
 }
