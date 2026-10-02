@@ -5,11 +5,11 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { ArrowRight, CalendarDays, ExternalLink, Layers } from 'lucide-react';
 import { useDailyDigest } from '@/lib/hooks';
-import { corroborationLabel } from '@/lib/news/daily';
+import { corroborationLabel, type DailyDigest } from '@/lib/news/daily';
 import { formatDate } from '@/lib/formatters';
 import { EVENT_COLORS } from '@/lib/calendar';
 import type { NewsTopic } from '@/lib/news/match';
-import { warsawDateKey } from '@/lib/news/warsaw-date';
+import { warsawDateKey, prevCalendarDate } from '@/lib/news/warsaw-date';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { CategoryTag } from '@/components/ui/RelatedNews';
 import { SummaryCard } from '@/components/ui/DigestSummaryCard';
@@ -46,9 +46,7 @@ function CorroborationTag({ n }: { n: number }) {
     );
 }
 
-function DailyDigestFull({ date }: { date?: string }) {
-    const { data: digest, isLoading, isError } = useDailyDigest(date);
-
+function DailyDigestFull({ digest, isLoading, isError, staleDate }: { digest: DailyDigest | null | undefined; isLoading: boolean; isError: boolean; staleDate?: string }) {
     if (isLoading) {
         return (
             <div className="space-y-6">
@@ -67,14 +65,14 @@ function DailyDigestFull({ date }: { date?: string }) {
             <div className="mk-card mk-card-editorial mk-card-pad text-center text-sm text-mk-muted">
                 {isError
                     ? 'Nie udało się wczytać podsumowania.'
-                    : 'Brak podsumowania na ten dzień — digest buduje się wieczorem po zebraniu archiwum newsów.'}
+                    : 'Brak podsumowania na ten dzień — digest buduje się wieczorem (ok. 18:00) po zebraniu archiwum newsów.'}
             </div>
         );
     }
 
     return (
         <div className="space-y-8">
-            {digest.podsumowanie && <SummaryCard summary={digest.podsumowanie} />}
+            {digest.podsumowanie && <SummaryCard summary={digest.podsumowanie} staleDate={staleDate} />}
 
             <section>
                 <h2 className="mk-section-label mb-4">Najważniejsze tematy dnia</h2>
@@ -179,12 +177,37 @@ function PodsumowanieContent() {
     const sp = useSearchParams();
     const raw = sp.get('date');
     const date = useMemo(() => (raw && DATE_RE.test(raw) ? raw : undefined), [raw]);
-    const label = date ? formatDate(date) : formatDate(warsawDateKey());
+    const todayKey = useMemo(() => warsawDateKey(), []);
+    const yesterdayKey = useMemo(() => prevCalendarDate(todayKey), [todayKey]);
+
+    // Bez `?date=`: dziś, a gdy dzisiejszego jeszcze nie ma (digest powstaje ~18:00) — wczorajszy,
+    // JAWNIE podpisany datą. Wcześniej strona była pusta przez ~19 godzin na dobę.
+    const primary = useDailyDigest(date);
+    const hasPrimary = !!primary.data && primary.data.punkty.length > 0;
+    const useFallback = !date && !primary.isLoading && !hasPrimary;
+    const fallback = useDailyDigest(yesterdayKey, useFallback);
+    const showingFallback = useFallback && !!fallback.data && fallback.data.punkty.length > 0;
+
+    const digest = showingFallback ? fallback.data : primary.data;
+    // `data === undefined` = jeszcze nie pobrano (queryFn zwraca `null`, nigdy `undefined`) — bez mignięcia „brak".
+    const isLoading = primary.isLoading || (useFallback && fallback.data === undefined);
+    const shownDate = date ?? (showingFallback ? yesterdayKey : todayKey);
 
     return (
         <div className="mk-fade-in">
-            <PageHeader compact title={`Podsumowanie dnia · ${label}`} />
-            <DailyDigestFull date={date} />
+            <PageHeader compact title={`Podsumowanie dnia · ${formatDate(shownDate)}`} />
+            {showingFallback && (
+                <p className="mb-4 text-sm text-mk-muted">
+                    Dzisiejsze podsumowanie powstaje wieczorem (ok. 18:00) — poniżej wczorajsze, z {formatDate(yesterdayKey)}.
+                </p>
+            )}
+            <DailyDigestFull
+                digest={digest}
+                isLoading={isLoading}
+                isError={primary.isError}
+                // „O czym dziś pisano" tylko dla dzisiejszego digestu — wczorajszy/archiwalny podpisujemy datą.
+                staleDate={shownDate !== todayKey ? shownDate : undefined}
+            />
         </div>
     );
 }

@@ -298,7 +298,9 @@ export function PracaDashboard() {
                             height={240}
                             emptyTitle="Brak danych regionalnych"
                         >
-                            <div className="max-h-[280px] overflow-hidden [&_svg]:max-h-[270px]">
+                            {/* Skalujemy szerokością, NIE przycinamy wysokością: dawne `max-h-[280px] overflow-hidden`
+                                ucinało południową połowę mapy (inline `maxHeight: 65vh` na SVG wygrywa z klasą). */}
+                            <div className="mx-auto w-full max-w-[460px]">
                                 <PolandMap
                                     regions={regions}
                                     national={national}

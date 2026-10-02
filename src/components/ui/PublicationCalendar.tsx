@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { generateMacroCalendar, getUpcomingEvents, EVENT_COLORS, type MacroEvent } from '@/lib/calendar';
 import { formatDate } from '@/lib/formatters';
+import { warsawDateKey } from '@/lib/news/warsaw-date';
+import { useIsClient } from '@/lib/use-is-client';
 import { SectionCard } from './SectionCard';
 
 const WEEKDAYS = ['Pn', 'Wt', 'Śr', 'Cz', 'Pt', 'So', 'Nd'];
@@ -23,13 +25,18 @@ type Cell = { day: number; iso: string } | null;
  * Kompaktowy pasek nadchodzących publikacji — wyświetlany obok kalendarza.
  */
 export function UpcomingEventsInline({ count = 6, className = '' }: { count?: number; className?: string }) {
-    const events = useMemo(() => getUpcomingEvents(count), [count]);
+    // Jak w PublicationDatesPanel: „nadchodzące" zależy od dziś → liczymy dopiero po hydratacji.
+    const isClient = useIsClient();
+    const events = useMemo(() => (isClient ? getUpcomingEvents(count) : null), [isClient, count]);
 
     return (
         <div className={className}>
             <h3 className="mk-section-label mb-2">Nadchodzące publikacje</h3>
-            <ul className="divide-y divide-mk-border rounded-lg border border-mk-border bg-mk-surface-alt/50">
-                {events.map((e, i) => (
+            <ul className="divide-y divide-mk-border rounded-lg border border-mk-border bg-mk-surface-alt/50" aria-busy={events == null}>
+                {events == null && Array.from({ length: count }, (_, i) => (
+                    <li key={i} className="px-2.5 py-2"><div className="mk-skeleton h-4 w-full" /></li>
+                ))}
+                {events?.map((e, i) => (
                     <li key={i} className="flex items-center gap-2 px-2.5 py-2 text-sm">
                         <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: EVENT_COLORS[e.type] }} />
                         <time dateTime={e.date} className="w-14 shrink-0 text-[11px] font-semibold tabular-nums text-mk-brand">
@@ -43,7 +50,7 @@ export function UpcomingEventsInline({ count = 6, className = '' }: { count?: nu
                         )}
                     </li>
                 ))}
-                {events.length === 0 && (
+                {events?.length === 0 && (
                     <li className="px-2.5 py-3 text-xs text-mk-muted">Brak zaplanowanych publikacji.</li>
                 )}
             </ul>
@@ -74,7 +81,7 @@ export function PublicationCalendar({
     useEffect(() => {
         const now = new Date();
         setView({ y: now.getFullYear(), m: now.getMonth() });
-        setTodayISO(now.toISOString().slice(0, 10));
+        setTodayISO(warsawDateKey(now)); // „dziś" w Warszawie — toISOString() to UTC (00:00–02:00 = wczoraj)
     }, []);
 
     const byDate = useMemo(() => {

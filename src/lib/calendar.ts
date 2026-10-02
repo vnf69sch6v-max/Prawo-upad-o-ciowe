@@ -11,6 +11,7 @@ import {
     industrialDate,
     retailDate,
 } from '@/lib/calendar-schedules';
+import { warsawDateKey } from '@/lib/news/warsaw-date';
 
 export interface MacroEvent {
     date: string;           // ISO YYYY-MM-DD — dzień publikacji
@@ -123,8 +124,9 @@ export function generateMacroCalendar(year: number): MacroEvent[] {
 
 /** Nadchodzące publikacje — z obsługą przejścia roku. */
 export function getUpcomingEvents(count = 5): MacroEvent[] {
-    const today = new Date().toISOString().slice(0, 10);
-    const year = new Date().getFullYear();
+    // „Dziś" w Warszawie — `toISOString()` to UTC, więc 00:00–02:00 pokazywało wczorajsze publikacje.
+    const today = warsawDateKey();
+    const year = Number(today.slice(0, 4));
     const events = [
         ...generateMacroCalendar(year),
         ...generateMacroCalendar(year + 1),

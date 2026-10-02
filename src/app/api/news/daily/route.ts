@@ -14,7 +14,9 @@ export async function GET(request: NextRequest) {
 
     const digest = await readDailyDigest(date);
     if (!digest || digest.punkty.length === 0) {
-        return NextResponse.json({ date, empty: true, digest: null }, { status: 404 });
+        // 200, nie 404: „digestu na dziś jeszcze nie ma" to stan oczekiwany do ~18:00 (cron 16:05 UTC),
+        // a 404 lądowało jako czerwony błąd w konsoli KAŻDEJ strony z pasem newsów. Klient czyta `empty`.
+        return NextResponse.json({ date, empty: true, digest: null });
     }
 
     return NextResponse.json({ date, digest });

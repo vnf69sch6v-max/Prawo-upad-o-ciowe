@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { VOIVODESHIP_PATHS, LABEL_POS, SLUG_TO_PATH } from '@/lib/poland-geo';
+import { formatDecimalPL } from '@/lib/formatters';
 
 // ═══════════════════════════════════════════════════════════════
 // TYPES
@@ -167,7 +168,7 @@ export default function PolandMap({ regions, national, selectedRegion, onRegionS
                                     className="pointer-events-none select-none"
                                     style={{ textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}
                                 >
-                                    {rate !== null ? `${rate}%` : ''}
+                                    {rate !== null ? `${formatDecimalPL(rate, 1)}%` : ''}
                                 </text>
                             )}
                         </g>
