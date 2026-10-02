@@ -1,10 +1,14 @@
 'use client';
 
-// Nakładka okresów rządzenia na roczne serie makro GUS (PKB, inflacja CPI).
+// Nakładka okresów rządzenia na roczne serie makro (realny PKB, inflacja CPI).
+//
+// PKB: REALNY wzrost (Eurostat nama_10_gdp, ceny stałe — dane GUS), NIE BDL var 458272.
+// Tamta zmienna to PKB w cenach bieżących, więc „Wzrost PKB" był nominalny (2022: 16,5% zamiast 5,3%)
+// i zawyżał średnie rządów proporcjonalnie do inflacji w ich kadencji.
 import { useMemo, useState } from 'react';
 import { ComposedChart, Line, XAxis, YAxis, CartesianGrid, ReferenceArea, ReferenceLine, Tooltip } from 'recharts';
 import { ResponsiveContainer } from '@/components/ui/ChartContainer';
-import { useGusGdpAnnual, useGusCpiAnnual } from '@/lib/hooks';
+import { useGDPAnnual, useGusCpiAnnual } from '@/lib/hooks';
 import { plSeries } from '@/lib/series';
 import { formatDecimalPL } from '@/lib/formatters';
 import { SectionCard } from '@/components/ui/SectionCard';
@@ -20,7 +24,7 @@ const METRICS: { value: Metric; label: string; color: string }[] = [
 const yr = (to: number) => (to >= 9999 ? '…' : String(to));
 
 export function RzadyGospodarka() {
-    const gdpQ = useGusGdpAnnual();
+    const gdpQ = useGDPAnnual();
     const cpiQ = useGusCpiAnnual();
     const [metric, setMetric] = useState<Metric>('gdp');
 
@@ -45,7 +49,7 @@ export function RzadyGospodarka() {
 
     return (
         <div className="space-y-6">
-            <SectionCard editorial titleVariant="label" title="Rządy a gospodarka" subtitle="roczne wskaźniki GUS — tło pokazuje ekipę rządzącą w danym okresie"
+            <SectionCard editorial titleVariant="label" title="Rządy a gospodarka" subtitle="realny wzrost PKB i inflacja CPI, rocznie — tło pokazuje ekipę rządzącą w danym okresie"
                 actions={<Segmented value={metric} onChange={setMetric} aria-label="Wskaźnik" options={METRICS.map((m) => ({ value: m.value, label: m.label }))} />}>
                 <ResponsiveContainer width="100%" height={340}>
                     <ComposedChart data={merged} margin={{ top: 8, right: 14, left: -6, bottom: 4 }}>
@@ -76,7 +80,7 @@ export function RzadyGospodarka() {
                 </div>
             </SectionCard>
 
-            <SectionCard editorial titleVariant="label" title="Bilans gospodarczy rządów" subtitle="średnie roczne w okresie rządzenia · GUS BDL">
+            <SectionCard editorial titleVariant="label" title="Bilans gospodarczy rządów" subtitle="średnie roczne w okresie rządzenia · PKB: ceny stałe (Eurostat/GUS) · CPI: GUS BDL">
                 <div className="overflow-x-auto">
                     <table className="w-full min-w-[420px] text-sm">
                         <thead>
@@ -97,7 +101,7 @@ export function RzadyGospodarka() {
                         </tbody>
                     </table>
                 </div>
-                <p className="mt-3 text-[11px] text-mk-faint">Dane: GUS BDL — dynamika PKB ogółem (var 458272) i CPI ogółem (var 217230), rok poprzedni = 100. Dług publiczny i wynik sektora finansów publicznych nie są publikowane przez GUS w BDL/DBW w tej aplikacji — sekcje Eurostat zostały usunięte. <span className="font-medium text-mk-muted">Zestawienie opisowe</span> — na wyniki wpływa też koniunktura światowa i cykl, nie tylko polityka rządu.</p>
+                <p className="mt-3 text-[11px] text-mk-faint">Dane: realny wzrost PKB — Eurostat nama_10_gdp (ceny stałe, dane przekazywane przez GUS); CPI ogółem — GUS BDL (var 217230, rok poprzedni = 100). Dług publiczny i wynik sektora finansów publicznych nie są publikowane przez GUS w BDL/DBW w tej aplikacji — sekcje Eurostat zostały usunięte. <span className="font-medium text-mk-muted">Zestawienie opisowe</span> — na wyniki wpływa też koniunktura światowa i cykl, nie tylko polityka rządu.</p>
             </SectionCard>
         </div>
     );

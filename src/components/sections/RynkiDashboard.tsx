@@ -3,11 +3,11 @@
 import { useMemo } from 'react';
 import { DollarSign, Percent, LineChart, Landmark, Gem, BarChart3, Fuel } from 'lucide-react';
 import {
-    useNBPTable, useEURPLN, useUSDPLN, useGold, useStooq, useNBPInterestRates, useWibor, useBondYield10YPl,
+    useNBPTable, useEURPLN, useUSDPLN, useGold, useStooq, useNBPInterestRates, useWibor, useBondYield10Y,
     type NBPTable,
 } from '@/lib/hooks';
-import { lastOf, prevOf, monthTick } from '@/lib/series';
-import { formatDecimalPL, formatNumber, formatDate, percentChange } from '@/lib/formatters';
+import { lastOf, prevOf, dayTick, plSeries } from '@/lib/series';
+import { formatDecimalPL, formatNumber, formatDate, formatDataPeriod, percentChange } from '@/lib/formatters';
 import { PageHeroBand, type HeroKpiItem } from '@/components/ui/PageHeroBand';
 import { CompactKpiGrid, type CompactKpiItem } from '@/components/ui/CompactKpiGrid';
 import { DenseTwoCol } from '@/components/ui/DensePageLayout';
@@ -30,14 +30,15 @@ const lastCloseOf = (q: { data?: { latest: QBar | null } }): number | null => q.
 const pctDelta = (bars: QBar[]): number | null =>
     bars.length > 1 ? +percentChange(bars[bars.length - 1].close, bars[bars.length - 2].close).toFixed(2) : null;
 
-/** Gęsty dashboard rynkowy — hero 3 + siatka KPI + newsy i wykres. Źródła: NBP + Stooq. */
+/** Gęsty dashboard rynkowy — hero 3 + siatka KPI + newsy i wykres. Źródła: NBP + Yahoo Finance (przez /api/stooq). */
 export function RynkiDashboard() {
     const fxQ = useNBPTable('a');
     const eurHQ = useEURPLN();
     const usdHQ = useUSDPLN();
     const ratesQ = useNBPInterestRates();
     const wiborQ = useWibor();
-    const yieldQ = useBondYield10YPl(30);
+    // Rentowność 10Y: średnia miesięczna Eurostatu — dzienne źródło (Stooq 10ypl.b) blokuje serwer.
+    const yieldQ = useBondYield10Y();
     const goldQ = useGold(30);
     const wig20Q = useStooq('wig20', 60);
     const mwigQ = useStooq('mwig40', 30);
@@ -54,12 +55,16 @@ export function RynkiDashboard() {
         [ratesQ.data],
     );
     const wibor3M = useMemo(() => wiborQ.data?.rates?.find((r) => r.tenor === '3M')?.wibor ?? null, [wiborQ.data]);
+    // /api/wibor NIE ma źródła fixingu (GPW Benchmark blokuje serwer): po zmianie stopy NBP liczy
+    // „stopa referencyjna + stały spread" i stempluje to dzisiejszą datą. Kafel nie może udawać fixingu.
+    const wiborRow = wiborQ.data?.rates?.[0];
+    const wiborEstimated = wiborRow?.source?.startsWith('estimated') ?? false;
 
     const wigBars = useMemo(() => barsOf(wig20Q), [wig20Q.data]);
     const wigLast = lastCloseOf(wig20Q);
     const wigDelta = pctDelta(wigBars);
 
-    const yield10 = useMemo(() => (yieldQ.data?.data ?? []).map((d) => ({ date: d.date, value: d.close })), [yieldQ.data]);
+    const yield10 = useMemo(() => plSeries(yieldQ.data), [yieldQ.data]);
     const gold = useMemo(() => (goldQ.data ?? []).map((g) => ({ date: g.data, value: g.cena })), [goldQ.data]);
     const goldLast = lastOf(gold);
     const goldDelta = gold.length > 1 ? +percentChange(gold[gold.length - 1].value, gold[gold.length - 2].value).toFixed(2) : null;
@@ -74,7 +79,7 @@ export function RynkiDashboard() {
             unit: 'pkt',
             delta: wigDelta,
             deltaUnit: 'pct',
-            text: 'Indeks blue chip GPW · notowania Yahoo/Stooq.',
+            text: 'Indeks blue chip GPW · notowania Yahoo Finance.',
             loading: heroLoading,
         },
         {
@@ -113,11 +118,13 @@ export function RynkiDashboard() {
         },
         {
             key: 'wibor',
-            label: 'WIBOR 3M',
+            label: wiborEstimated ? 'WIBOR 3M (szac.)' : 'WIBOR 3M',
             value: wibor3M != null ? formatDecimalPL(wibor3M, 2) : '—',
             unit: '%',
             icon: Percent,
-            footnote: wiborQ.data?.rates?.[0]?.date ? formatDate(wiborQ.data.rates[0].date) : undefined,
+            footnote: wiborRow
+                ? (wiborEstimated ? 'szacunek: stopa ref. NBP + spread' : `fixing GPW · ${formatDate(wiborRow.date)}`)
+                : undefined,
             loading: wiborQ.isLoading,
             error: wiborQ.isError,
             onRetry: () => { void wiborQ.refetch(); },
@@ -131,7 +138,7 @@ export function RynkiDashboard() {
             delta: lastOf(yield10) != null && prevOf(yield10) != null
                 ? { value: +(lastOf(yield10)! - prevOf(yield10)!).toFixed(2), unit: 'pp', invert: true }
                 : undefined,
-            footnote: yield10.length ? formatDate(yield10[yield10.length - 1].date) : undefined,
+            footnote: yield10.length ? `śr. mies. · ${formatDataPeriod(yield10[yield10.length - 1].date)}` : 'średnia miesięczna',
             loading: yieldQ.isLoading,
             error: yieldQ.isError,
             onRetry: () => { void yieldQ.refetch(); },
@@ -186,7 +193,7 @@ export function RynkiDashboard() {
                         editorial
                         titleVariant="label"
                         title="WIG20 — 60 sesji"
-                        subtitle="poziom indeksu · Yahoo/Stooq"
+                        subtitle="poziom indeksu · Yahoo Finance"
                     >
                         <QueryState
                             isLoading={wig20Q.isLoading}
@@ -203,7 +210,7 @@ export function RynkiDashboard() {
                                 showRange
                                 initialRange="ALL"
                                 valueFormatter={(v) => formatNumber(Math.round(v))}
-                                xTickFormatter={monthTick}
+                                xTickFormatter={dayTick}
                                 series={[{ key: 'value', name: 'WIG20', color: '#2563EB', type: 'area', strokeWidth: 2.5 }]}
                             />
                         </QueryState>

@@ -19,6 +19,19 @@ export const monthTick = (d: string): string => {
     return m && /^\d{2}$/.test(m) ? `${m}.${y.slice(2)}` : d;
 };
 
+/** Oś serii DZIENNYCH: "YYYY-MM-DD" → "DD.MM". `monthTick` dawał tu „07.26 07.26 07.26…" (ten sam miesiąc co sesję). */
+export const dayTick = (d: string): string => {
+    const m = d.match(/^\d{4}-(\d{2})-(\d{2})$/);
+    return m ? `${m[2]}.${m[1]}` : monthTick(d);
+};
+
+const QUARTER_ROMAN = ['I', 'II', 'III', 'IV'];
+/** Oś serii KWARTALNYCH: "YYYY-Qn" → "II kw. 26". */
+export const quarterTick = (d: string): string => {
+    const m = d.match(/^(\d{4})-Q([1-4])$/);
+    return m ? `${QUARTER_ROMAN[+m[2] - 1]} kw. ${m[1].slice(2)}` : d;
+};
+
 /** Format a number (or "—" for null) with a Polish decimal comma. */
 export const fmtPL = (n: number | null | undefined, decimals = 1): string =>
     n == null ? '—' : formatDecimalPL(n, decimals);

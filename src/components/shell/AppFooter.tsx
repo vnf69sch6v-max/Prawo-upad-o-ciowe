@@ -4,7 +4,7 @@ export function AppFooter() {
     return (
         <footer className="mt-10 border-t border-mk-border bg-mk-surface">
             <div className="mx-auto flex max-w-[1440px] flex-col items-center justify-between gap-3 px-4 py-5 text-xs text-mk-muted sm:flex-row md:px-6">
-                <div>Źródła: GUS · NBP · Eurostat · Stooq · SMUP · SDP</div>
+                <div>Źródła: GUS · NBP · Eurostat · Yahoo Finance · SMUP · SDP</div>
                 {/* `py-1.5` daje linkom 28px wysokości — poniżej ~24px cel dotykowy jest zbyt mały
                     (WCAG 2.2 Target Size). Sam tekst 12px dawał 16px. */}
                 <div className="flex items-center gap-2">

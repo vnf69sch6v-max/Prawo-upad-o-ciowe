@@ -6,7 +6,7 @@ import { useAuth } from '@/lib/auth/use-auth';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { PageHeader } from '@/components/ui/PageHeader';
 
-const DATA_SOURCES = ['GUS BDL', 'NBP', 'Eurostat', 'Stooq', 'EIA', 'SMUP', 'SDP'];
+const DATA_SOURCES = ['GUS BDL', 'NBP', 'Eurostat', 'Yahoo Finance', 'EIA', 'SMUP', 'SDP'];
 
 export default function UstawieniaPage() {
     const { user, enabled, signOut } = useAuth();

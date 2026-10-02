@@ -239,7 +239,7 @@ function SpolkiSection() {
             <EditorialHero
                 ariaLabel="WIG20 — najważniejszy odczyt"
                 period={wigDate ? formatDate(wigDate) : null}
-                source="GPW · Stooq/Yahoo"
+                source="GPW · Yahoo Finance"
                 headline={heroHeadline}
                 description={
                     <>
