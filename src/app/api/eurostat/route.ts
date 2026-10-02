@@ -6,46 +6,53 @@ import { withCache } from '@/lib/server-cache';
 const EUROSTAT_BASE = 'https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data';
 
 // Pre-configured dataset definitions with correct parameters
+//
+// HICP: od publikacji za styczeń 2026 (luty 2026) Eurostat publikuje HICP w klasyfikacji
+// ECOICOP ver. 2 w NOWYCH zbiorach (`prc_hicp_minr` miesięczny, `prc_hicp_ainr` roczny).
+// Stare `prc_hicp_manr` / `prc_hicp_midx` / `prc_hicp_aind` są zamrożone na 2025-12.
+// Nowe zbiory mają wymiar `coicop18` (zamiast `coicop`; ogółem = `TOTAL`, nie `CP00`)
+// i kilka jednostek naraz — `unit` MUSI być podany, bo `parseJsonStat` zakłada, że każdy
+// wymiar poza `time`/`geo` ma rozmiar 1.
 const DATASETS: Record<string, { params: Record<string, string>; label: string; since?: string }> = {
     // CPI HICP — monthly annual rate of change (%)
     cpi: {
-        params: { coicop: 'CP00' },
+        params: { coicop18: 'TOTAL', unit: 'RCH_A' },
         label: 'HICP Inflation YoY',
         since: '2024-01',
     },
     // ─── HICP Index (2015=100) — for CPI Forecaster M/M calculations ───
     hicp_index: {
-        params: { coicop: 'CP00', unit: 'I15' },
+        params: { coicop18: 'TOTAL', unit: 'I15' },
         label: 'HICP Index (2015=100)',
         since: '2019-01',
     },
     hicp_food: {
-        params: { coicop: 'CP01', unit: 'I15' },
+        params: { coicop18: 'CP01', unit: 'I15' },
         label: 'HICP Food Index',
         since: '2019-01',
     },
     hicp_fuel: {
-        params: { coicop: 'CP0722', unit: 'I15' },
+        params: { coicop18: 'CP0722', unit: 'I15' },
         label: 'HICP Fuels Index',
         since: '2019-01',
     },
     hicp_energy: {
-        params: { coicop: 'CP04', unit: 'I15' },
+        params: { coicop18: 'CP04', unit: 'I15' },
         label: 'HICP Housing/Energy Index',
         since: '2019-01',
     },
     hicp_core: {
-        params: { coicop: 'TOT_X_NRG_FOOD', unit: 'I15' },
+        params: { coicop18: 'TOT_X_NRG_FOOD', unit: 'I15' },
         label: 'HICP Core (ex food & energy) Index',
         since: '2019-01',
     },
     hicp_food_yoy: {
-        params: { coicop: 'CP01' },
+        params: { coicop18: 'CP01', unit: 'RCH_A' },
         label: 'HICP Food YoY',
         since: '2019-01',
     },
     hicp_core_yoy: {
-        params: { coicop: 'TOT_X_NRG_FOOD' },
+        params: { coicop18: 'TOT_X_NRG_FOOD', unit: 'RCH_A' },
         label: 'HICP Core YoY',
         since: '2019-01',
     },
@@ -143,21 +150,21 @@ const DATASETS: Record<string, { params: Record<string, string>; label: string; 
     },
     // Inflacja HICP — średnioroczna (od 1997)
     cpi_annual: {
-        params: { coicop: 'CP00', unit: 'RCH_A_AVG' },
+        params: { coicop18: 'TOTAL', unit: 'RCH_A_AVG' },
         label: 'Inflacja HICP średnioroczna (%)',
     },
 };
 
 // Eurostat dataset code mapping
 const DATASET_CODES: Record<string, string> = {
-    cpi: 'prc_hicp_manr',
-    hicp_index: 'prc_hicp_midx',
-    hicp_food: 'prc_hicp_midx',
-    hicp_fuel: 'prc_hicp_midx',
-    hicp_energy: 'prc_hicp_midx',
-    hicp_core: 'prc_hicp_midx',
-    hicp_food_yoy: 'prc_hicp_manr',
-    hicp_core_yoy: 'prc_hicp_manr',
+    cpi: 'prc_hicp_minr',
+    hicp_index: 'prc_hicp_minr',
+    hicp_food: 'prc_hicp_minr',
+    hicp_fuel: 'prc_hicp_minr',
+    hicp_energy: 'prc_hicp_minr',
+    hicp_core: 'prc_hicp_minr',
+    hicp_food_yoy: 'prc_hicp_minr',
+    hicp_core_yoy: 'prc_hicp_minr',
     ppi: 'sts_inppd_m',
     unemployment: 'une_rt_m',
     gdp_qoq: 'namq_10_gdp',
@@ -177,7 +184,7 @@ const DATASET_CODES: Record<string, string> = {
     gov_debt: 'gov_10dd_edpt1',
     gov_deficit: 'gov_10dd_edpt1',
     gdp_annual: 'nama_10_gdp',
-    cpi_annual: 'prc_hicp_aind',
+    cpi_annual: 'prc_hicp_ainr',
 };
 
 interface EurostatTimeSeries {
@@ -278,7 +285,9 @@ export async function fetchEurostat(
     for (const g of geo) searchParams.append('geo', g);
 
     const url = `${EUROSTAT_BASE}/${datasetCode}?${searchParams}`;
-    const res = await fetch(url, { next: { revalidate: 43200 } }); // 12h revalidation
+    // `no-store`: cache'em jest Firestore (`withCache`, 12h). Data Cache Next.js w trybie
+    // stale-while-revalidate podsuwałby cronowi z `?refresh=1` starą odpowiedź.
+    const res = await fetch(url, { cache: 'no-store' });
 
     if (!res.ok) {
         const text = await res.text();
