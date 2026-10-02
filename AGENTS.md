@@ -36,6 +36,17 @@ Standard scripts in `package.json`:
   unavailable, so a missing data value is not necessarily a bug.
 - The `middleware`-file deprecation warning from Next.js at startup is
   expected and harmless.
+- Inside a `withCache(...)` fetcher, fetch upstream with `cache: 'no-store'`,
+  not `next: { revalidate }`. The Next.js Data Cache is stale-while-revalidate,
+  so the first request after expiry gets an old response that `withCache` then
+  stores in Firestore with a fresh timestamp — even on cron `?refresh=1`. This
+  froze NBP rates and Yahoo quotes for weeks in production. GUS BDL/DBW routes
+  keep `revalidate` on purpose (shared rate limit). Never cache NBP `.../today`
+  under a fixed key; use `exchangerates/tables/{t}/` (latest table).
+- Pages are prerendered at build time. Anything derived from "now" (upcoming
+  publication dates, "today") must wait for `useIsClient()`
+  (`src/lib/use-is-client.ts`), otherwise React throws hydration error #418
+  and visitors see build-day dates until hydration.
 - `/parser` is the only route that takes user input instead of an external
   source. Its components use their own semantic colour tokens (`rp-*`), defined
   at the bottom of `src/app/globals.css` and mapped onto the light `mk-*`
