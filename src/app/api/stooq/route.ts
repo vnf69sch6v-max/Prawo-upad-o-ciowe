@@ -39,9 +39,13 @@ const YAHOO_PROXY: Record<string, { level: string; series: string }> = {
 async function fetchYahoo(ySymbol: string, appSymbol: string, limit: number): Promise<StooqResult> {
     // dobierz zakres tak, by pokryć `limit` sesji dziennych
     const range = limit <= 5 ? '5d' : limit <= 30 ? '3mo' : limit <= 90 ? '6mo' : '1y';
+    // `no-store`, NIE `next: { revalidate }`: Data Cache Next.js oddaje po wygaśnięciu STARĄ
+    // odpowiedź (stale-while-revalidate), a `withCache` zapisywał ją do Firestore jako świeżą.
+    // Skutek na produkcji 02.10: mWIG40 i Brent z 11.09, WIG20 z wczorajszą zmianą −2,0%
+    // przy dzisiejszym +0,2%. Cache'em jest Firestore (TTL z `marketCacheTtlMs`) — tak jak w /api/wig20.
     const res = await fetch(
         `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ySymbol)}?range=${range}&interval=1d`,
-        { next: { revalidate: 3600 }, headers: { 'User-Agent': 'Mozilla/5.0', Accept: 'application/json' } },
+        { cache: 'no-store', headers: { 'User-Agent': 'Mozilla/5.0', Accept: 'application/json' } },
     );
     if (!res.ok) throw new Error(`Yahoo error: ${res.status}`);
     const json = await res.json();
@@ -61,7 +65,7 @@ async function fetchYahoo(ySymbol: string, appSymbol: string, limit: number): Pr
 
 async function fetchStooq(symbol: string, interval: string, limit: number): Promise<StooqResult> {
     const res = await fetch(`https://stooq.pl/q/d/l/?s=${symbol}&i=${interval}`, {
-        next: { revalidate: 3600 }, headers: { 'User-Agent': 'Mozilla/5.0 (compatible; EcoDashboard/1.0)' },
+        cache: 'no-store', headers: { 'User-Agent': 'Mozilla/5.0 (compatible; EcoDashboard/1.0)' },
     });
     if (!res.ok) throw new Error(`Stooq error: ${res.status}`);
     const csv = await res.text();
@@ -79,14 +83,19 @@ async function fetchStooq(symbol: string, interval: string, limit: number): Prom
     return { symbol, data: limited, latest: limited[limited.length - 1] || null };
 }
 
-/** Seria z ETF-a (historia) przeskalowana do żywego poziomu indeksu (ostatni punkt = poziom indeksu). */
+/** Seria z ETF-a (historia) przeskalowana do żywego poziomu indeksu (punkt z tej samej sesji = poziom indeksu). */
 async function fetchYahooProxy(appSymbol: string, cfg: { level: string; series: string }, limit: number): Promise<StooqResult> {
     const series = await fetchYahoo(cfg.series, appSymbol, limit);
     let scale = 1;
     try {
         const lvl = await fetchYahoo(cfg.level, appSymbol, 1);
-        const live = lvl.latest?.close, last = series.latest?.close;
-        if (live && last) scale = live / last;
+        const live = lvl.latest;
+        // Skalujemy po TEJ SAMEJ sesji. Gdy seria ETF kończyła się dzień wcześniej, dawne
+        // „ostatni punkt = poziom indeksu" przypisywało dzisiejszy poziom wczorajszej świecy
+        // i kafel pokazywał wczorajszą zmianę % jako dzisiejszą.
+        const sameSession = live ? series.data.find((b) => b.date === live.date) : undefined;
+        const anchor = sameSession ?? series.latest;
+        if (live?.close && anchor?.close) scale = live.close / anchor.close;
     } catch { /* brak żywego poziomu → seria ETF bez skalowania */ }
     const data = series.data.map((b) => ({ ...b, open: b.open * scale, high: b.high * scale, low: b.low * scale, close: b.close * scale }));
     return { symbol: appSymbol, data, latest: data[data.length - 1] || null };
