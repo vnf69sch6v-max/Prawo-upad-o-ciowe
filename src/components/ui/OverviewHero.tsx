@@ -86,11 +86,12 @@ const shortDay = (iso: string) => new Date(`${iso}T12:00:00`).toLocaleDateString
 
 function Footnote({ r }: { r: RankedSignal }) {
     const period = r.candidate.kind === 'market' ? `sesja ${formatDate(r.period)}` : `dane za ${formatDataPeriod(r.period)}`;
+    // Strzałka w tym samym bloku `nowrap` co ostatni fragment — inaczej na telefonie spada do osobnej linii.
+    const arrow = <span className="ml-1 inline-block transition-transform group-hover:translate-x-0.5" aria-hidden>→</span>;
     return (
         <>
-            <span className="whitespace-nowrap">{period}</span>
-            {r.next && <span className="whitespace-nowrap"> · kolejny odczyt {shortDay(r.next.date)}</span>}
-            <span className="ml-1 inline-block transition-transform group-hover:translate-x-0.5" aria-hidden>→</span>
+            <span className="whitespace-nowrap">{period}{!r.next && arrow}</span>
+            {r.next && <> · <span className="whitespace-nowrap">kolejny odczyt {shortDay(r.next.date)}{arrow}</span></>}
         </>
     );
 }
