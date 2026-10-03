@@ -13,15 +13,16 @@ export default function SamorzadPage() {
                         <Landmark size={20} />
                     </span>
                     <div>
-                        <h2 className="mk-section-label">Przeniesiono do Regiony</h2>
+                        <h2 className="mk-section-label">Dane o województwach są w Regionach</h2>
                         <p className="mt-2 text-sm leading-relaxed text-mk-text-soft">
-                            Eksplorator SMUP i dane samorządowe znajdują się teraz w zakładce Regiony, w sekcji Samorząd (SMUP).
+                            Dane samorządowe (SMUP) nie są obecnie prezentowane w serwisie. PKB, ludność i rynek pracy
+                            w podziale na województwa znajdziesz w zakładce Regiony.
                         </p>
                         <Link
-                            href="/regiony?tab=samorzad"
+                            href="/regiony"
                             className="mk-btn mk-btn-primary mt-4 inline-flex min-h-11 items-center gap-1.5 bg-mk-brand hover:bg-mk-brand-strong active:bg-mk-brand-strong"
                         >
-                            Otwórz Samorząd (SMUP) <ArrowRight size={15} />
+                            Otwórz Regiony <ArrowRight size={15} />
                         </Link>
                     </div>
                 </div>

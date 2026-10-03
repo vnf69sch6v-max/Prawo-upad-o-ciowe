@@ -17,7 +17,7 @@ export function AppFooter() {
                     <Link href="/status" className={LINK}>Stan danych</Link>
                     <Link href="/ustawienia" className={LINK}>Ustawienia</Link>
                 </nav>
-                <div className="lg:order-1">Źródła: GUS · NBP · Eurostat · Yahoo Finance · SMUP · SDP</div>
+                <div className="lg:order-1">Źródła: GUS · NBP · Eurostat · Yahoo Finance · SDP</div>
                 <div className="flex items-center justify-between gap-3 lg:order-3 lg:gap-4">
                     <span className="flex items-center gap-1.5"><span className="live-dot" /> Auto-odświeżanie</span>
                     <span>© 2026 Savori</span>

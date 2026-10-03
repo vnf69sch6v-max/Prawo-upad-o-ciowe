@@ -46,7 +46,6 @@ const COMMANDS: Cmd[] = [
     { id: 'ind-regpkb', group: 'Wskaźniki', label: 'PKB regionalne', sub: 'Regiony', keywords: 'województwa pkb per capita mapa', href: '/regiony?tab=pkb', icon: Map },
     { id: 'ind-demo', group: 'Wskaźniki', label: 'Demografia', sub: 'Regiony', keywords: 'ludność demografia województwa', href: '/regiony?tab=demografia', icon: Users },
     { id: 'ind-regpraca', group: 'Wskaźniki', label: 'Bezrobocie i płace wg województw', sub: 'Regiony', keywords: 'bezrobocie regionalne województwa mapa płace wynagrodzenia', href: '/regiony?tab=praca', icon: Briefcase },
-    { id: 'ind-smup', group: 'Wskaźniki', label: 'Samorząd (SMUP)', sub: 'Regiony', keywords: 'samorząd usługi publiczne smup jst', href: '/regiony?tab=samorzad', icon: Landmark },
 
     // ── Działy inflacji (COICOP) → /ceny ──
     ...[
