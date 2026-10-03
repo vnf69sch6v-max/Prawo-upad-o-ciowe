@@ -45,7 +45,7 @@ export function RankingBars<T extends RankingRow>({
         .sort((a, b) => (asc ? (valueOf(a) ?? 0) - (valueOf(b) ?? 0) : (valueOf(b) ?? 0) - (valueOf(a) ?? 0)));
 
     return (
-        <ol className="min-w-0 space-y-1.5 pointer-coarse:space-y-0">
+        <ol className="min-w-0 space-y-1.5 touch:space-y-0">
             {sorted.map((r, i) => {
                 const v = valueOf(r) as number;
                 const label = shortName(r.name);
@@ -54,7 +54,7 @@ export function RankingBars<T extends RankingRow>({
                         <button
                             type="button"
                             onClick={() => onSelect?.(r.slug)}
-                            className={`mk-press-row flex min-h-7 w-full min-w-0 items-center gap-2 rounded-md text-left text-sm transition-colors hover:bg-mk-surface-alt pointer-coarse:min-h-11 ${
+                            className={`mk-press-row flex min-h-7 w-full min-w-0 items-center gap-2 rounded-md text-left text-sm transition-colors hover:bg-mk-surface-alt touch:min-h-11 ${
                                 selected === r.slug ? 'bg-mk-surface-alt font-semibold text-mk-text' : 'text-mk-text'
                             }`}
                             aria-pressed={onSelect ? selected === r.slug : undefined}

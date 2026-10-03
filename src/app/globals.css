@@ -1,5 +1,19 @@
 @import "tailwindcss";
 
+/* `touch:` — cele dotykowe ≥ 44 px: urządzenia dotykowe ORAZ wszystko poniżej `lg` (tam działa
+   mobilna powłoka z dolnym paskiem). Sam `pointer: coarse` nie łapał wąskiego okna z myszą ani
+   części emulacji; desktop ≥ lg z myszą zostaje przy gęstych rozmiarach. Reguły CSS niżej używają
+   tego samego warunku. */
+@custom-variant touch {
+  @media (pointer: coarse) {
+    @slot;
+  }
+
+  @media (max-width: 1023px) {
+    @slot;
+  }
+}
+
 /* ═══════════════════════════════════════════════════════════════
    MAKRO DATA PLATFORM — LIGHT THEME
    White surfaces, soft shadows, Inter, tabular numerals.
@@ -880,10 +894,10 @@ button.mk-card:active,
   }
 }
 
-/* Dotyk (telefon, tablet): przełączniki segmentowe mają cel ≥ 44 px. Przycisk wypełnia całą wysokość
+/* Dotyk (telefon, tablet, < lg): przełączniki segmentowe mają cel ≥ 44 px. Przycisk wypełnia całą wysokość
    paska, a „pigułka" aktywnej opcji jest pseudo-elementem z wcięciem — wygląd jak dotąd, cel większy.
    Specyficzność .mk-seg .mk-seg-btn (0,2,0) + pozycja w pliku wygrywa z .mk-section-head-actions. */
-@media (pointer: coarse) {
+@media (pointer: coarse), (max-width: 1023px) {
   .mk-seg {
     padding: 0;
     gap: 0;
@@ -1081,11 +1095,13 @@ button.mk-table-row {
   }
 }
 
-@media (pointer: coarse) {
+@media (pointer: coarse), (max-width: 1023px) {
   .mk-table-sort {
     min-height: 44px;
   }
+}
 
+@media (pointer: coarse) {
   /* Recharts 3 robi z plotu element fokusowalny (tabindex=0); stuknięcie w wykres zostawiało wokół
      plotu ramkę fokusu przez cały czas czytania dymka. Klawiatura (desktop) zachowuje ramkę. */
   .recharts-surface:focus,

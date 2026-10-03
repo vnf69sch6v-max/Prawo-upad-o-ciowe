@@ -43,7 +43,7 @@ export function QueryError({
                 <button
                     type="button"
                     onClick={onRetry}
-                    className="mk-press mt-1 inline-flex min-h-6 items-center gap-1.5 rounded-lg border border-mk-border bg-mk-surface px-2.5 py-1.5 text-xs font-medium text-mk-text transition-colors hover:bg-mk-surface-alt active:bg-mk-surface-alt pointer-coarse:min-h-11 pointer-coarse:px-4 pointer-coarse:text-sm"
+                    className="mk-press mt-1 inline-flex min-h-6 items-center gap-1.5 rounded-lg border border-mk-border bg-mk-surface px-2.5 py-1.5 text-xs font-medium text-mk-text transition-colors hover:bg-mk-surface-alt active:bg-mk-surface-alt touch:min-h-11 touch:px-4 touch:text-sm"
                 >
                     <RefreshCw size={13} aria-hidden />
                     Spróbuj ponownie

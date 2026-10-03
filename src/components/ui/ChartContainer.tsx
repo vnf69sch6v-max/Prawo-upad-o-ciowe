@@ -91,11 +91,17 @@ interface ChartContainerProps {
     height: number;
     children: ReactElement<{ width?: number; height?: number }>;
     className?: string;
+    /**
+     * `true` — zawsze `height`, bez skalowania na wąskim ekranie. Dla wykresów, których wysokość
+     * wynika z liczby kategorii (poziome słupki: wiersz × 24 px), a nie z proporcji osi czasu —
+     * ściśnięte do ~220 px gubiły co drugą etykietę działu.
+     */
+    fixedHeight?: boolean;
 }
 
-export function ResponsiveContainer({ height, children, className }: ChartContainerProps) {
+export function ResponsiveContainer({ height, children, className, fixedHeight = false }: ChartContainerProps) {
     const { ref, width } = usePlotWidth();
-    const plotH = mobileChartHeight(width, height);
+    const plotH = fixedHeight ? height : mobileChartHeight(width, height);
 
     const child = Children.only(children);
 

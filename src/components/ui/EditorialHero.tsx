@@ -1,6 +1,8 @@
 'use client';
 
+import { useId, useState } from 'react';
 import type React from 'react';
+import { ChevronDown } from 'lucide-react';
 import { formatDecimalPL } from '@/lib/formatters';
 
 export interface EditorialHeroRow {
@@ -23,6 +25,12 @@ export interface EditorialHeroProps {
     gauge?: { pct: number; labels: [string, string, string] } | null;
     rows?: EditorialHeroRow[];
     ariaLabel?: string;
+    /**
+     * Telefon (< md): panel z wierszami/skalą zwinięty za przyciskiem „Szczegóły" (domyślnie `true`).
+     * Wiersze zwykle powtarzają kafle KPI tuż pod hero, a rozwinięty panel wydłużał hero do ~480 px.
+     * `false` — panel zawsze widoczny. Od md zawsze widoczny (kolumna obok liczby).
+     */
+    collapsePanelOnMobile?: boolean;
 }
 
 /**
@@ -44,8 +52,12 @@ export function EditorialHero({
     gauge,
     rows,
     ariaLabel,
+    collapsePanelOnMobile = true,
 }: EditorialHeroProps) {
     const showPanel = !!panelTitle || (rows != null && rows.length > 0) || gauge != null;
+    const [panelOpen, setPanelOpen] = useState(false);
+    const panelId = useId();
+    const collapsed = collapsePanelOnMobile && !panelOpen;
 
     return (
         <section className="overflow-hidden rounded-[14px] bg-mk-brand p-4 text-white sm:p-6" aria-label={ariaLabel}>
@@ -68,9 +80,24 @@ export function EditorialHero({
                     </div>
                     {valueCaption && <div className="mt-2 text-xs font-semibold text-white/70">{valueCaption}</div>}
                 </div>
+                {showPanel && collapsePanelOnMobile && (
+                    <button
+                        type="button"
+                        onClick={() => setPanelOpen((v) => !v)}
+                        aria-expanded={panelOpen}
+                        aria-controls={panelId}
+                        className="mk-press -mb-2 -mt-1 flex min-h-11 w-full items-center justify-between gap-2 border-t border-white/25 pt-1 text-left text-[11px] font-bold uppercase tracking-wide text-white/80 active:text-white md:hidden"
+                    >
+                        <span>{panelOpen ? 'Zwiń szczegóły' : panelTitle ? `Szczegóły · ${panelTitle}` : 'Szczegóły'}</span>
+                        <ChevronDown size={16} className={`shrink-0 transition-transform motion-reduce:transition-none ${panelOpen ? 'rotate-180' : ''}`} aria-hidden />
+                    </button>
+                )}
                 {showPanel && (
-                    <div className="border-t border-white/25 pt-4 md:border-l md:border-t-0 md:pl-6 md:pt-0">
-                        {panelTitle && <div className="text-[11px] font-bold uppercase tracking-wide text-white/70">{panelTitle}</div>}
+                    <div
+                        id={panelId}
+                        className={`border-t border-white/25 pt-4 md:block md:border-l md:border-t-0 md:pl-6 md:pt-0 ${collapsed ? 'hidden' : ''} ${collapsePanelOnMobile ? 'max-md:border-t-0 max-md:pt-0' : ''}`}
+                    >
+                        {panelTitle && <div className={`text-[11px] font-bold uppercase tracking-wide text-white/70 ${collapsePanelOnMobile ? 'max-md:hidden' : ''}`}>{panelTitle}</div>}
                         {gauge && (
                             <>
                                 <div className="relative mt-3 h-[34px] sm:mt-4">

@@ -48,7 +48,7 @@ export function CategoryTag({ section, filled = false }: { section: string; fill
 const AllNewsLink = ({ brand = false }: { brand?: boolean }) => (
     <Link
         href="/newsy"
-        className={`mk-press -mr-1.5 flex items-center gap-1 rounded px-1.5 py-1 text-sm font-medium transition-colors hover:underline pointer-coarse:-my-2.5 pointer-coarse:min-h-11 ${brand ? 'text-mk-brand hover:bg-mk-brand-soft active:bg-mk-brand-soft' : 'text-mk-primary hover:bg-mk-primary/5 active:bg-mk-primary/5'}`}
+        className={`mk-press -mr-1.5 flex items-center gap-1 rounded px-1.5 py-1 text-sm font-medium transition-colors hover:underline touch:-my-2.5 touch:min-h-11 ${brand ? 'text-mk-brand hover:bg-mk-brand-soft active:bg-mk-brand-soft' : 'text-mk-primary hover:bg-mk-primary/5 active:bg-mk-primary/5'}`}
     >
         Wszystkie <ArrowRight size={14} />
     </Link>
@@ -153,7 +153,7 @@ function RelatedIndicators({ item }: { item: NewsItem }) {
                     <Link
                         key={t.topic}
                         href={t.href}
-                        className="mk-press inline-flex items-center rounded-full border border-mk-border bg-mk-surface px-3 py-1 text-xs font-semibold text-mk-text-soft transition-colors hover:border-mk-brand/40 hover:bg-mk-brand-soft hover:text-mk-brand pointer-coarse:min-h-11 pointer-coarse:px-4 pointer-coarse:text-sm"
+                        className="mk-press inline-flex items-center rounded-full border border-mk-border bg-mk-surface px-3 py-1 text-xs font-semibold text-mk-text-soft transition-colors hover:border-mk-brand/40 hover:bg-mk-brand-soft hover:text-mk-brand touch:min-h-11 touch:px-4 touch:text-sm"
                     >
                         {t.label}
                     </Link>

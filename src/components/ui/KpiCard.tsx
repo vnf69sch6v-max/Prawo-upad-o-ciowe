@@ -111,7 +111,7 @@ export function KpiCard({ label, value, unit, delta, icon: Icon, footnote, loadi
                             <button
                                 type="button"
                                 onClick={onRetry}
-                                className="mk-press inline-flex min-h-6 items-center text-left text-[11px] font-medium text-mk-primary hover:underline pointer-coarse:min-h-11"
+                                className="mk-press inline-flex min-h-6 items-center text-left text-[11px] font-medium text-mk-primary hover:underline touch:min-h-11"
                             >
                                 Błąd źródła · ponów
                             </button>

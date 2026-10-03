@@ -321,7 +321,7 @@ export default function NewsyPage() {
                 onChange={(e) => setQ(e.target.value)}
                 placeholder="Szukaj w tytułach i opisach…"
                 aria-label="Szukaj w newsach"
-                className="mk-input h-11 w-full py-2 max-lg:text-base! lg:h-auto [&::-webkit-search-cancel-button]:hidden"
+                className="mk-input h-11 w-full py-2 max-lg:text-base! lg:h-10 [&::-webkit-search-cancel-button]:hidden"
                 style={{ paddingLeft: 36, paddingRight: q ? 44 : 14 }}
             />
             {q && (

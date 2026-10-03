@@ -83,7 +83,7 @@ export function UploadZone({
                       e.stopPropagation();
                       onSample(s.file, s.name);
                     }}
-                    className="mk-btn min-h-11 px-3 py-1 text-sm active:bg-mk-surface-alt sm:px-2.5 sm:text-xs lg:min-h-0 lg:px-2 lg:text-[11px]"
+                    className="mk-btn min-h-11 px-3 py-1 text-sm active:bg-mk-surface-alt sm:px-2.5 sm:text-xs lg:min-h-10 lg:px-3 lg:text-sm"
                   >
                     {s.label}
                   </button>

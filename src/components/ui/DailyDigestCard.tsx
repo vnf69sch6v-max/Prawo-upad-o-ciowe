@@ -80,7 +80,7 @@ export function DailyDigestCard({
             actions={
                 <Link
                     href={`/podsumowanie?date=${digest.date}`}
-                    className="mk-press -mr-1.5 flex items-center gap-1 rounded px-1.5 py-1 text-sm font-medium text-mk-brand transition-colors hover:bg-mk-brand-soft hover:underline active:bg-mk-brand-soft pointer-coarse:-my-2.5 pointer-coarse:min-h-11"
+                    className="mk-press -mr-1.5 flex items-center gap-1 rounded px-1.5 py-1 text-sm font-medium text-mk-brand transition-colors hover:bg-mk-brand-soft hover:underline active:bg-mk-brand-soft touch:-my-2.5 touch:min-h-11"
                 >
                     Całe podsumowanie <ArrowRight size={14} />
                 </Link>

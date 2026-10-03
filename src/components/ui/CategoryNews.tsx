@@ -127,7 +127,7 @@ function groupTimelineEntries(entries: TimelineEntry[], todayKey: string) {
 const AllNewsLink = () => (
     <Link
         href="/newsy"
-        className="mk-press -mr-1.5 flex items-center gap-1 rounded px-1.5 py-1 text-sm font-medium text-mk-brand transition-colors hover:bg-mk-brand-soft hover:underline active:bg-mk-brand-soft pointer-coarse:-my-2.5 pointer-coarse:min-h-11"
+        className="mk-press -mr-1.5 flex items-center gap-1 rounded px-1.5 py-1 text-sm font-medium text-mk-brand transition-colors hover:bg-mk-brand-soft hover:underline active:bg-mk-brand-soft touch:-my-2.5 touch:min-h-11"
     >
         Wszystkie <ArrowRight size={14} />
     </Link>

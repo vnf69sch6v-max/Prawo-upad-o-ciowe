@@ -9,10 +9,11 @@ import { AXIS_INK, TICK_FONT } from '@/lib/chart-theme';
 import { usePlotWidth } from '@/components/ui/ChartContainer';
 import { useScrollFade } from '@/lib/use-scroll-fade';
 
-// Kolumna etykiet: na telefonie węższa (104 px zamiast 152 px z 326 px karty) i PRZYKLEJONA —
-// przy przewijaniu siatki w bok nazwa wiersza zostaje w kadrze.
-const LABEL_W = 'w-[6.5rem] sm:w-[9.5rem]';
-const LABEL_LEFT = 'left-[6.5rem] sm:left-[9.5rem]';
+// Kolumna etykiet: na telefonie węższa (120 px zamiast 152 px z 326 px karty) i PRZYKLEJONA —
+// przy przewijaniu siatki w bok nazwa wiersza zostaje w kadrze. Na dotyku (`touch:`) wiersz ma
+// 44 px, więc etykieta mieści się w dwóch liniach zamiast „Przetwórstwo p…".
+const LABEL_W = 'w-[7.5rem] sm:w-[9.5rem]';
+const LABEL_LEFT = 'left-[7.5rem] sm:left-[9.5rem]';
 
 export interface HeatmapRow { key: string; label: string }
 
@@ -92,7 +93,7 @@ export function Heatmap({ rows, cols, valueAt, colTickFormatter = (c) => c, valu
     const pin = (rowKey: string, c: string, v: number | null) => setHover({ r: rowKey, c, v });
 
     return (
-        <div ref={ref} className="w-full min-w-0">
+        <div ref={ref} className="w-full min-w-0" style={{ ['--hm-cell' as string]: `${cellHeight}px` }}>
             {/* Inspektor: aktywna komórka */}
             <div className="mb-2 flex min-h-5 flex-wrap items-center gap-2 text-xs">
                 {hover ? (
@@ -118,11 +119,12 @@ export function Heatmap({ rows, cols, valueAt, colTickFormatter = (c) => c, valu
                                 <button
                                     type="button"
                                     onClick={() => onRowClick?.(row.key)}
-                                    className={`sticky left-0 z-[1] ${LABEL_W} min-h-7 shrink-0 truncate bg-mk-surface pr-2 text-right text-[11px] transition-colors ${active ? 'font-semibold text-mk-text' : 'text-mk-muted'} ${onRowClick ? 'cursor-pointer hover:text-mk-text' : ''}`}
+                                    className={`sticky left-0 z-[1] ${LABEL_W} flex min-h-7 shrink-0 items-center justify-end bg-mk-surface pr-2 text-right text-[11px] leading-tight transition-colors [-webkit-tap-highlight-color:transparent] active:text-mk-text touch:min-h-11 ${active ? 'font-semibold text-mk-text' : 'text-mk-muted'} ${onRowClick ? 'cursor-pointer hover:text-mk-text' : ''}`}
                                     title={row.label}>
-                                    {row.label}
+                                    <span className="min-w-0 truncate touch:line-clamp-2 touch:whitespace-normal touch:break-words">{row.label}</span>
                                 </button>
-                                <div className="flex flex-1 gap-px">
+                                {/* Dotyk: komórki wypełniają wiersz 44 px (cel dotykowy), mysz — gęste `cellHeight`. */}
+                                <div className="flex flex-1 gap-px touch:self-stretch touch:py-0.5">
                                     {cols.map((c) => {
                                         const v = valueAt(row.key, c);
                                         const isHover = hover?.r === row.key && hover?.c === c;
@@ -134,9 +136,9 @@ export function Heatmap({ rows, cols, valueAt, colTickFormatter = (c) => c, valu
                                                 onPointerDown={(e) => { e.stopPropagation(); pin(row.key, c, v); }}
                                                 onClick={() => onRowClick?.(row.key)}
                                                 title={`${row.label} · ${colTickFormatter(c)}: ${v == null ? 'brak' : `${v > 0 ? '+' : ''}${valueFormatter(v)}${unit}`}`}
-                                                className={onRowClick ? 'cursor-pointer' : ''}
+                                                className={`h-(--hm-cell) touch:h-auto ${onRowClick ? 'cursor-pointer' : ''}`}
                                                 style={{
-                                                    flex: '1 1 0', height: cellHeight, background: colorOf(v),
+                                                    flex: '1 1 0', background: colorOf(v),
                                                     borderRadius: 2,
                                                     outline: isHover ? '2px solid #0F172A' : colHover || active ? '1px solid rgba(15,23,42,.22)' : 'none',
                                                     outlineOffset: isHover ? -2 : -1,

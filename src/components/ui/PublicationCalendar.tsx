@@ -204,11 +204,11 @@ export function PublicationCalendar({
 
     const nav = view && (
         <div className="flex items-center gap-0.5">
-            <button type="button" onClick={prev} aria-label="Poprzedni miesiąc" className="mk-press flex h-7 w-7 items-center justify-center rounded-md text-mk-muted transition-colors hover:bg-mk-surface-alt hover:text-mk-text active:bg-mk-surface-alt pointer-coarse:h-11 pointer-coarse:w-11">
+            <button type="button" onClick={prev} aria-label="Poprzedni miesiąc" className="mk-press flex h-7 w-7 items-center justify-center rounded-md text-mk-muted transition-colors hover:bg-mk-surface-alt hover:text-mk-text active:bg-mk-surface-alt touch:h-11 touch:w-11">
                 <ChevronLeft size={16} />
             </button>
             <span className="w-28 text-center text-xs font-semibold capitalize text-mk-text">{MONTHS[view.m]} {view.y}</span>
-            <button type="button" onClick={next} aria-label="Następny miesiąc" className="mk-press flex h-7 w-7 items-center justify-center rounded-md text-mk-muted transition-colors hover:bg-mk-surface-alt hover:text-mk-text active:bg-mk-surface-alt pointer-coarse:h-11 pointer-coarse:w-11">
+            <button type="button" onClick={next} aria-label="Następny miesiąc" className="mk-press flex h-7 w-7 items-center justify-center rounded-md text-mk-muted transition-colors hover:bg-mk-surface-alt hover:text-mk-text active:bg-mk-surface-alt touch:h-11 touch:w-11">
                 <ChevronRight size={16} />
             </button>
         </div>

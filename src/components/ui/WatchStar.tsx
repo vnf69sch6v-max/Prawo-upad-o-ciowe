@@ -35,8 +35,8 @@ export function WatchStar({ kind, id, label, variant = 'floating', size = 14 }: 
     // 28 px w rogu kafla była łatwa do chybienia, a pudło otwierało kafel zamiast go obserwować.
     // Wersja `floating` rośnie w stronę rogu (right-0/top-0), więc ikona zostaje tam, gdzie była.
     const box = variant === 'floating'
-        ? 'absolute right-2 top-2 z-10 h-7 w-7 pointer-coarse:right-0 pointer-coarse:top-0 pointer-coarse:h-11 pointer-coarse:w-11'
-        : 'h-7 w-7 pointer-coarse:h-11 pointer-coarse:w-11';
+        ? 'absolute right-2 top-2 z-10 h-7 w-7 touch:right-0 touch:top-0 touch:h-11 touch:w-11'
+        : 'h-7 w-7 touch:h-11 touch:w-11';
 
     return (
         <button
