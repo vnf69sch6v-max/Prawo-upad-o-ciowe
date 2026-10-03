@@ -3,15 +3,15 @@
 import { useMemo } from 'react';
 import { TrendingUp, Factory, ShoppingCart, HardHat, Percent, Users } from 'lucide-react';
 import {
-    useGusGdpAnnual,
+    useGDPQuarterly,
     useGusIndustrialProduction,
     useGusRetailSales,
     useGusConstructionOutput,
     useCpiFull,
-    useGusUnemploymentNational,
+    useGusRegisteredUnemployment,
     useKoniunktura,
 } from '@/lib/hooks';
-import { plSeries, lastOf, deltaOf, fmtPL, type Point } from '@/lib/series';
+import { plSeries, lastOf, deltaOf, fmtPL, quarterTick, type Point } from '@/lib/series';
 import { formatDecimalPL, formatDataPeriod } from '@/lib/formatters';
 import { EditorialHero } from '@/components/ui/EditorialHero';
 import { CompactKpiGrid, type CompactKpiItem } from '@/components/ui/CompactKpiGrid';
@@ -35,24 +35,32 @@ const SECTOR_COLORS: Record<string, string> = {
     ikt: '#7C3AED',
 };
 
+/** Trend kafli KPI (KpiSparkline): 12 miesięcy; PKB — 8 kwartałów. */
+const SPARK = 12;
+const pct1 = (v: number) => `${formatDecimalPL(v, 1)}%`;
+
 function ppDeltaAnnual(series: Point[]) {
     const last = lastOf(series);
     const prev = series.length > 1 ? series[series.length - 2].value : null;
     return last != null && prev != null ? +(last - prev).toFixed(1) : null;
 }
 
-/** Gęsty dashboard PKB i aktywności — domyślna zakładka /gospodarka (tylko GUS). */
+/** Gęsty dashboard PKB i aktywności — domyślna zakładka /gospodarka. */
 export function GospodarkaAktywnosc() {
-    const gdpQ = useGusGdpAnnual();
+    // PKB: REALNA dynamika r/r, kwartalnie (Eurostat namq_10_gdp, CLV_PCH_SM — dane przekazywane przez GUS).
+    // NIE `useGusGdpAnnual`: BDL var 458272 to PKB w CENACH BIEŻĄCYCH (podgrupa „PKB (ceny bieżące)"),
+    // więc hero pisał „dynamika PKB 7,0%" za 2024, gdy realny wzrost wyniósł ~3%.
+    const gdpQ = useGDPQuarterly();
     const indQ = useGusIndustrialProduction();
     const retQ = useGusRetailSales();
     const conQ = useGusConstructionOutput();
     const cpiQ = useCpiFull();
-    const unempQ = useGusUnemploymentNational();
+    // Oficjalna krajowa stopa bezrobocia rejestrowanego (BDL P3559) — ta sama co na Przeglądzie.
+    // NIE średnia z 16 województw: nieważona średnia stóp regionalnych ≠ stopa krajowa (6,6% vs 5,8%).
+    const unempQ = useGusRegisteredUnemployment();
     const konQ = useKoniunktura();
 
     const gdp = useMemo(() => plSeries(gdpQ.data), [gdpQ.data]);
-    const gdp10 = useMemo(() => gdp.slice(-10), [gdp]);
     const ind = useMemo(() => plSeries(indQ.data), [indQ.data]);
     const ret = useMemo(() => plSeries(retQ.data), [retQ.data]);
     const con = useMemo(() => plSeries(conQ.data), [conQ.data]);
@@ -60,7 +68,10 @@ export function GospodarkaAktywnosc() {
         () => (cpiQ.data?.headline ?? []).filter((h) => h.yoy != null).map((h) => ({ date: h.date, value: h.yoy as number })),
         [cpiQ.data],
     );
-    const unemp = useMemo(() => plSeries(unempQ.data), [unempQ.data]);
+    const unemp = useMemo(
+        () => (unempQ.data?.series ?? []).map((d) => ({ date: d.date, value: d.value })),
+        [unempQ.data],
+    );
 
     const konSectors = konQ.data?.sectors ?? [];
     const konLatest = konQ.data?.latest ?? null;
@@ -83,12 +94,12 @@ export function GospodarkaAktywnosc() {
 
     const gdpLast = gdp.length ? gdp[gdp.length - 1] : null;
 
-    // ── Hero „redakcyjny" — WYŁĄCZNIE realne dane GUS. Metryka wiodąca: PKB r/r, a gdy brak → produkcja przemysłowa r/r. ──
+    // ── Hero „redakcyjny". Metryka wiodąca: realny PKB r/r (kwartał), a gdy brak → produkcja przemysłowa r/r. ──
     const heroHasGdp = gdpLast != null;
     const heroPrimaryVal = heroHasGdp ? gdpLast!.value : lastOf(ind);
     const heroPrimaryDelta = heroHasGdp ? ppDeltaAnnual(gdp) : deltaOf(ind);
     const heroPeriod = heroHasGdp
-        ? (gdpLast ? String(gdpLast.date) : null)
+        ? (gdpLast ? formatDataPeriod(gdpLast.date) : null)
         : (ind.length ? formatDataPeriod(ind[ind.length - 1].date) : null);
     const heroHeadline = heroPrimaryVal == null ? 'Aktywność gospodarcza'
         : heroPrimaryVal > 0 ? (heroHasGdp ? 'Gospodarka rośnie' : 'Produkcja rośnie')
@@ -99,12 +110,14 @@ export function GospodarkaAktywnosc() {
         const items: CompactKpiItem[] = [
             {
                 key: 'gdp',
-                label: 'PKB (r/r)',
+                label: 'PKB realny (r/r)',
                 value: fmtPL(lastOf(gdp)),
                 unit: '%',
                 icon: TrendingUp,
                 delta: ppDeltaAnnual(gdp) != null ? { value: ppDeltaAnnual(gdp)!, unit: 'pp' } : undefined,
-                footnote: gdpLast?.date ?? '',
+                footnote: gdpLast ? formatDataPeriod(gdpLast.date) : '',
+                spark: gdp.slice(-8),
+                sparkFormat: pct1,
                 loading: gdpQ.isLoading,
                 error: gdpQ.isError,
                 onRetry: () => { void gdpQ.refetch(); },
@@ -117,6 +130,8 @@ export function GospodarkaAktywnosc() {
                 icon: Factory,
                 delta: deltaOf(ind) != null ? { value: deltaOf(ind)!, unit: 'pp' } : undefined,
                 footnote: ind.length ? ind[ind.length - 1].date : '',
+                spark: ind.slice(-SPARK),
+                sparkFormat: pct1,
                 loading: indQ.isLoading,
                 error: indQ.isError,
                 onRetry: () => { void indQ.refetch(); },
@@ -129,6 +144,8 @@ export function GospodarkaAktywnosc() {
                 icon: ShoppingCart,
                 delta: deltaOf(ret) != null ? { value: deltaOf(ret)!, unit: 'pp' } : undefined,
                 footnote: ret.length ? ret[ret.length - 1].date : '',
+                spark: ret.slice(-SPARK),
+                sparkFormat: pct1,
                 loading: retQ.isLoading,
                 error: retQ.isError,
                 onRetry: () => { void retQ.refetch(); },
@@ -141,18 +158,22 @@ export function GospodarkaAktywnosc() {
                 icon: Percent,
                 delta: deltaOf(cpi) != null ? { value: deltaOf(cpi)!, unit: 'pp', invert: true } : undefined,
                 footnote: cpi.length ? cpi[cpi.length - 1].date : '',
+                spark: cpi.slice(-SPARK),
+                sparkFormat: pct1,
                 loading: cpiQ.isLoading,
                 error: cpiQ.isError,
                 onRetry: () => { void cpiQ.refetch(); },
             },
             {
                 key: 'unemp',
-                label: 'Bezrobocie',
+                label: 'Bezrobocie rej.',
                 value: fmtPL(lastOf(unemp)),
                 unit: '%',
                 icon: Users,
                 delta: deltaOf(unemp) != null ? { value: deltaOf(unemp)!, unit: 'pp', invert: true } : undefined,
                 footnote: unemp.length ? unemp[unemp.length - 1].date : '',
+                spark: unemp.slice(-SPARK),
+                sparkFormat: pct1,
                 loading: unempQ.isLoading,
                 error: unempQ.isError,
                 onRetry: () => { void unempQ.refetch(); },
@@ -165,6 +186,8 @@ export function GospodarkaAktywnosc() {
                 icon: HardHat,
                 delta: deltaOf(con) != null ? { value: deltaOf(con)!, unit: 'pp' } : undefined,
                 footnote: con.length ? con[con.length - 1].date : '',
+                spark: con.slice(-SPARK),
+                sparkFormat: pct1,
                 loading: conQ.isLoading,
                 error: conQ.isError,
                 onRetry: () => { void conQ.refetch(); },
@@ -178,21 +201,21 @@ export function GospodarkaAktywnosc() {
             <EditorialHero
                 ariaLabel="Gospodarka — najważniejszy odczyt"
                 period={heroPeriod}
-                source="GUS · aktywność gospodarcza"
+                source={heroHasGdp ? 'GUS / Eurostat · PKB w cenach stałych' : 'GUS · aktywność gospodarcza'}
                 headline={heroHeadline}
                 description={
                     <>
-                        Dynamika {heroHasGdp ? 'PKB' : 'produkcji przemysłowej'} wynosi {heroPrimaryVal != null ? fmtPL(heroPrimaryVal) : '—'}% {heroHasGdp ? 'rocznie' : 'r/r'} wg GUS.
+                        Dynamika {heroHasGdp ? 'realnego PKB' : 'produkcji przemysłowej'} wynosi {heroPrimaryVal != null ? fmtPL(heroPrimaryVal) : '—'}% r/r{heroHasGdp && heroPeriod ? ` (${heroPeriod}, ceny stałe)` : ''}.
                         {heroHasGdp && lastOf(ind) != null && ` Produkcja przemysłowa: ${fmtPL(lastOf(ind))}% r/r.`}
                     </>
                 }
                 value={heroPrimaryVal != null ? fmtPL(heroPrimaryVal) : '—'}
                 unit="%"
                 delta={heroPrimaryDelta}
-                valueCaption={heroHasGdp ? 'PKB · dynamika roczna (r/r)' : 'Produkcja przemysłowa · r/r'}
+                valueCaption={heroHasGdp ? 'PKB realny · r/r · kwartalnie' : 'Produkcja przemysłowa · r/r'}
                 panelTitle="Aktywność — skrót"
                 rows={[
-                    { label: 'PKB r/r', value: lastOf(gdp) != null ? `${lastOf(gdp)! > 0 ? '+' : ''}${fmtPL(lastOf(gdp))}%` : '—' },
+                    { label: 'PKB realny r/r', value: lastOf(gdp) != null ? `${lastOf(gdp)! > 0 ? '+' : ''}${fmtPL(lastOf(gdp))}%` : '—' },
                     { label: 'Produkcja przemysłowa', value: lastOf(ind) != null ? `${lastOf(ind)! > 0 ? '+' : ''}${fmtPL(lastOf(ind))}%` : '—' },
                     { label: 'Sprzedaż detaliczna', value: lastOf(ret) != null ? `${lastOf(ret)! > 0 ? '+' : ''}${fmtPL(lastOf(ret))}%` : '—' },
                     { label: 'Budownictwo', value: lastOf(con) != null ? `${lastOf(con)! > 0 ? '+' : ''}${fmtPL(lastOf(con))}%` : '—', divider: true },
@@ -208,23 +231,25 @@ export function GospodarkaAktywnosc() {
                         <SectionCard
                             editorial
                             titleVariant="label"
-                            title="PKB — dynamika roczna"
-                            subtitle="GUS BDL · ostatnie 10 lat (r/r %)"
+                            title="PKB — dynamika realna"
+                            subtitle="r/r % · kwartalnie · ceny stałe · Eurostat (dane GUS)"
                             actions={
-                                <StaleBadge date={gdpLast?.date ?? null} label="GUS do" warnAfterMonths={18} />
+                                // Kwartał → wydanie flash ~45 dni po końcu kwartału; 8 mies. = spóźniony o jeden odczyt.
+                                <StaleBadge date={gdpLast?.date ?? null} label="dane do" warnAfterMonths={8} />
                             }
                         >
                             <QueryState
                                 isLoading={gdpQ.isLoading}
                                 isError={gdpQ.isError}
-                                isEmpty={gdp10.length === 0}
+                                isEmpty={gdp.length === 0}
                                 onRetry={() => { void gdpQ.refetch(); }}
                                 height={200}
-                                emptyTitle="Brak danych PKB w GUS BDL."
+                                emptyTitle="Brak danych PKB."
                             >
                                 <InteractiveChart
-                                    data={gdp10}
+                                    data={gdp}
                                     xKey="date"
+                                    xTickFormatter={quarterTick}
                                     height={200}
                                     unit="%"
                                     showRange={false}

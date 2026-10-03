@@ -1,4 +1,13 @@
-// NBP API Proxy — tables, single-currency history, gold. Weekend/holiday fallback + Firestore cache.
+// NBP API Proxy — tables, single-currency history, gold. Firestore cache.
+//
+// UWAGA — dwie pułapki, przez które produkcja serwowała tabelę A z 24.09 jeszcze 02.10:
+// 1. `exchangerates/tables/a/today` to RUCHOMY cel pod STAŁYM URL-em. Każda warstwa cache'u
+//    kluczowana URL-em trzyma „dzisiejszą" tabelę z dnia, w którym ją zapisała. Pytamy więc
+//    o `tables/{t}/` — NBP zwraca wtedy ostatnią opublikowaną tabelę (dziś albo poprzednią).
+// 2. `fetch(..., { next: { revalidate } })` to Data Cache Next.js w trybie stale-while-revalidate:
+//    pierwsze żądanie po wygaśnięciu dostaje STARĄ odpowiedź. Fetcher `withCache` zapisywał ją
+//    do Firestore ze świeżym `updatedAt`, więc stare dane udawały świeże — także w cronie
+//    z `?refresh=1`. Cache'em jest Firestore (TTL z `nbpCacheTtlMs`), upstream zawsze `no-store`.
 import { NextRequest, NextResponse } from 'next/server';
 import { withCache } from '@/lib/server-cache';
 import { nbpCacheTtlMs } from '@/lib/market-hours';
@@ -6,11 +15,11 @@ import { nbpCacheTtlMs } from '@/lib/market-hours';
 const NBP_BASE = 'https://api.nbp.pl/api';
 
 async function fetchNBP(endpoint: string, fallback?: string): Promise<unknown> {
-    const res = await fetch(`${NBP_BASE}/${endpoint}/?format=json`, { next: { revalidate: 300 } });
+    const res = await fetch(`${NBP_BASE}/${endpoint}/?format=json`, { cache: 'no-store' });
     if (res.ok) return res.json();
 
     if (res.status === 404 && fallback) {
-        const fb = await fetch(`${NBP_BASE}/${fallback}/?format=json`, { next: { revalidate: 300 } });
+        const fb = await fetch(`${NBP_BASE}/${fallback}/?format=json`, { cache: 'no-store' });
         if (fb.ok) return fb.json();
     }
     throw new Error(`NBP API error: ${res.status}`);
@@ -42,13 +51,13 @@ export async function GET(request: NextRequest) {
         cacheKey = `hist_${t}_${code.toLowerCase()}_${n}`;
         mode = 'history';
     } else if (table) {
-        endpoint = `exchangerates/tables/${table}/today`;
-        fallback = `exchangerates/tables/${table}/last/1`;
+        // Ostatnia opublikowana tabela — NIE `/today` (patrz komentarz na górze pliku).
+        endpoint = `exchangerates/tables/${table}`;
         cacheKey = `table_${table}`;
         mode = 'table';
     } else {
         // Backward-compatible endpoint/fallback form
-        endpoint = sp.get('endpoint') || 'exchangerates/tables/a/today';
+        endpoint = sp.get('endpoint') || 'exchangerates/tables/a';
         fallback = sp.get('fallback') || 'exchangerates/tables/a/last/1';
         cacheKey = endpoint.replace(/\//g, '_');
         mode = 'raw';

@@ -60,7 +60,7 @@ export function SummaryCard({ summary, staleDate, href, compact = false }: Summa
                     {staleDate ? `O czym pisano ${formatDate(staleDate)}` : 'O czym dziś pisano'}
                 </h2>
                 {href && (
-                    <Link href={href} className="inline-flex items-center gap-1 text-xs font-medium text-mk-brand hover:underline">
+                    <Link href={href} className="inline-flex min-h-6 items-center gap-1 text-xs font-medium text-mk-brand hover:underline">
                         Całe podsumowanie <ArrowRight size={13} aria-hidden />
                     </Link>
                 )}

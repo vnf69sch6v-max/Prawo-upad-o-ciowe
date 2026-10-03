@@ -3,12 +3,19 @@
 import Link from 'next/link';
 import { Search, CalendarClock, BarChart3 } from 'lucide-react';
 import { rememberOpener } from '@/lib/use-focus-trap';
+import { useHideOnScroll } from '@/lib/use-hide-on-scroll';
 import { TopNav } from './TopNav';
 import { UserMenu } from './UserMenu';
 
 export function AppHeader() {
+    // Poniżej `lg` nagłówek (logo + rząd zakładek) chowa się przy przewijaniu w dół i wraca przy ruchu
+    // w górę; fokus klawiatury w środku zawsze go pokazuje. Od `lg` zostaje stały — tam przyklejone
+    // panele (`lg:top-20`) liczą na jego obecność.
+    const hidden = useHideOnScroll();
     return (
-        <header className="sticky top-0 z-40 border-b border-mk-border bg-mk-surface">
+        <header
+            className={`sticky top-0 z-40 border-b border-mk-border bg-mk-surface transition-transform duration-200 ease-out focus-within:translate-y-0 motion-reduce:transition-none ${hidden ? 'max-lg:-translate-y-full' : ''}`}
+        >
             <div className="mx-auto flex h-16 max-w-[1440px] items-center gap-3 px-4 md:px-6">
                 <Link href="/" className="flex shrink-0 items-center gap-2.5">
                     <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-mk-brand text-white shadow-sm">

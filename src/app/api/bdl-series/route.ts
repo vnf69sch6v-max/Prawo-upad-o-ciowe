@@ -35,7 +35,12 @@ export async function GET(request: NextRequest) {
 
     const apiKey = process.env.GUS_BDL_KEY || process.env.GUS_API_KEY;
     const years = [year - 1, year];
-    const cacheKey = `bdl_series_${start}_${count}_${year}_${freq}_s${step}_v2`;
+    // Jedna zmienna BDL = jeden miesiąc (12) albo kwartał (4); kolejne ID to już INNE zmienne.
+    // Przegląd, Praca i Gospodarka prosiły o count=24 („24 miesiące"), więc do serii bezrobocia
+    // wpadały m.in. „2025-13: 193 936 590" i „2025-21: 9011,5" — sparkline pokazywał skok o 8 rzędów
+    // wielkości, a w styczniu delta kafla wyszłaby „−9005 p.p.". Dwa lata danych daje i tak `years`.
+    const periods = Math.min(count, freq === 'q' ? 4 : 12);
+    const cacheKey = `bdl_series_${start}_${periods}_${year}_${freq}_s${step}_v3`;
 
     try {
         const result = await withCache(
@@ -43,13 +48,13 @@ export async function GET(request: NextRequest) {
             cacheKey,
             async () => {
                 const perVar: Record<string, number | null>[] = [];
-                for (let i = 0; i < count; i++) {
+                for (let i = 0; i < periods; i++) {
                     perVar[i] = await fetchVarYears(start + i * step, years, apiKey);
                     await sleep(120);
                 }
                 const series: { date: string; value: number }[] = [];
                 for (const y of years) {
-                    for (let i = 0; i < count; i++) {
+                    for (let i = 0; i < periods; i++) {
                         const v = perVar[i]?.[String(y)];
                         if (v == null) continue;
                         const date = freq === 'q' ? `${y}-Q${i + 1}` : `${y}-${String(i + 1).padStart(2, '0')}`;

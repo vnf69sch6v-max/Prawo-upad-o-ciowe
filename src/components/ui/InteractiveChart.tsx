@@ -7,6 +7,8 @@ import {
 } from 'recharts';
 import { ResponsiveContainer, usePlotWidth } from '@/components/ui/ChartContainer';
 import { AXIS_INK, AXIS_LINE, CHART_SM, CURSOR, GRID, TICK_FONT, mobilePlotHeight, xTickStep } from '@/lib/chart-theme';
+import { RANGE_MONTHS, formatPeriodLabel, sliceByMonths, usefulRanges, type RangeKey } from '@/lib/chart-range';
+import { useCanHover } from '@/lib/use-can-hover';
 
 export interface ChartSeries {
     key: string;
@@ -17,9 +19,6 @@ export interface ChartSeries {
     dashed?: boolean;
     strokeWidth?: number;
 }
-
-type RangeKey = '3M' | '6M' | '1R' | '3L' | '5L' | 'ALL';
-const RANGE_MONTHS: Record<RangeKey, number | null> = { '3M': 3, '6M': 6, '1R': 12, '3L': 36, '5L': 60, ALL: null };
 
 interface InteractiveChartProps {
     data: Record<string, unknown>[];
@@ -33,7 +32,8 @@ interface InteractiveChartProps {
     /** Show the built-in range picker */
     showRange?: boolean;
     initialRange?: RangeKey;
-    /** Custom set of range buttons (default 3M/6M/1R/ALL); use ['1R','3L','5L','ALL'] for long series */
+    /** Custom set of range buttons (default 3M/6M/1R/ALL); use ['1R','3L','5L','ALL'] for long series.
+     *  Zakres liczony po datach osi X; przyciski, które niczego nie przycinają, są ukrywane. */
     ranges?: RangeKey[];
     legend?: boolean;
     /** Right controls slot (e.g. M/M vs R/R toggle) rendered next to range */
@@ -49,10 +49,12 @@ function LightTooltip({ active, payload, label, valueFormatter, unit }: {
     if (!active || !payload?.length) return null;
     return (
         <div style={{ background: '#fff', border: '1px solid #E7EAF0', borderRadius: 10, padding: '8px 12px', boxShadow: '0 6px 16px rgba(16,24,40,.12)', fontSize: 13, minWidth: 130 }}>
-            <div style={{ color: '#64748B', fontSize: 11, marginBottom: 5, fontWeight: 600 }}>{label}</div>
+            {/* „30.09.2026" / „sierpień 2026" / „II kwartał 2026" zamiast surowego klucza osi. */}
+            <div style={{ color: '#64748B', fontSize: 11, marginBottom: 5, fontWeight: 600 }}>{formatPeriodLabel(label)}</div>
             {payload.map((p, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 3 }}>
-                    <span style={{ width: 8, height: 8, borderRadius: 2, background: p.color, flexShrink: 0 }} />
+                    {/* Klucz serii jako krótka kreska (jak linia na wykresie), nie pełny kwadrat. */}
+                    <span style={{ width: 12, height: 2, borderRadius: 1, background: p.color, flexShrink: 0 }} />
                     <span style={{ color: '#64748B' }}>{p.name}</span>
                     <span style={{ color: '#0F172A', fontWeight: 600, marginLeft: 'auto', fontVariantNumeric: 'tabular-nums' }}>
                         {p.value == null ? '—' : (valueFormatter ? valueFormatter(p.value) : p.value)}{unit ?? ''}
@@ -100,12 +102,18 @@ export function InteractiveChart({
     const rangeButtons = ranges ?? DEFAULT_RANGES;
     const { ref: rootRef, width: boxW } = usePlotWidth();
     const [forceHide, setForceHide] = useState(false);
+    const canHover = useCanHover();
+
+    // Tylko zakresy, które realnie coś przycinają — przy 60 sesjach „1R" i „ALL" to ten sam widok.
+    const shownRanges = useMemo(() => usefulRanges(data, xKey, rangeButtons), [data, xKey, rangeButtons]);
+    const activeRange: RangeKey = shownRanges.includes(range) ? range : 'ALL';
+    const rangeControl = showRange && shownRanges.length > 1;
 
     const view = useMemo(() => {
-        if (!showRange || range === 'ALL') return data;
-        const n = RANGE_MONTHS[range];
-        return n ? data.slice(-n) : data;
-    }, [data, range, showRange]);
+        if (!showRange || activeRange === 'ALL') return data;
+        const months = RANGE_MONTHS[activeRange];
+        return months ? sliceByMonths(data, xKey, months) : data;
+    }, [data, xKey, activeRange, showRange]);
 
     // Bez tej osłony wykres po awarii źródła rysował kompletną ramę z osiami i legendą, tylko bez
     // linii — a to czyta się jako „zjawiska nie ma", nie jako „danych nie dostaliśmy". Przy zasadzie
@@ -122,8 +130,8 @@ export function InteractiveChart({
     const tickInterval = xTickStep(boxW || 309, view.length);
     const legendBelow = Boolean(legend && isNarrow);
 
-    // Tooltip: na telefonie nie ma hover. `trigger="click"` pokazuje i ZOSTAJE.
-    // `active={false}` od startu BLOKUJE tap (Recharts nie otworzy tooltipa) —
+    // Tooltip: mysz → najechanie (celownik + wartości bez klikania); dotyk → stuknięcie, które ZOSTAJE.
+    // W trybie dotykowym `active={false}` od startu BLOKUJE tap (Recharts nie otworzy tooltipa) —
     // gasimy dopiero po tapie poza wykresem; kolejny tap w plot zdejmuje blokadę.
     useEffect(() => {
         const hide = (e: PointerEvent) => {
@@ -135,19 +143,19 @@ export function InteractiveChart({
 
     return (
         <div ref={rootRef}>
-            {(showRange || controls) && (
+            {(rangeControl || controls) && (
                 <div className="mb-3 flex items-center justify-between gap-3">
                     <div>{controls}</div>
-                    {showRange && (
+                    {rangeControl && (
                         <div className="mk-seg" role="tablist" aria-label="Zakres">
-                            {rangeButtons.map((r) => (
+                            {shownRanges.map((r) => (
                                 <button
                                     key={r}
                                     type="button"
                                     role="tab"
-                                    aria-selected={range === r}
+                                    aria-selected={activeRange === r}
                                     onClick={() => setRange(r)}
-                                    className={`mk-seg-btn ${range === r ? 'mk-seg-btn-active' : ''}`}
+                                    className={`mk-seg-btn ${activeRange === r ? 'mk-seg-btn-active' : ''}`}
                                     style={RANGE_BTN}
                                 >
                                     {r}
@@ -196,10 +204,10 @@ export function InteractiveChart({
                     <YAxis yAxisId="left" domain={yDomain} tick={{ fill: AXIS_INK, fontSize: TICK_FONT }} axisLine={false} tickLine={false} width={44} tickFormatter={valueFormatter} />
                     {hasRight && <YAxis yAxisId="right" orientation="right" domain={['auto', 'auto']} tick={{ fill: AXIS_INK, fontSize: TICK_FONT }} axisLine={false} tickLine={false} width={44} />}
                     <Tooltip
-                        trigger="click"
-                        active={forceHide ? false : undefined}
+                        trigger={canHover ? 'hover' : 'click'}
+                        active={!canHover && forceHide ? false : undefined}
                         content={<LightTooltip valueFormatter={valueFormatter} unit={unit} />}
-                        cursor={{ stroke: CURSOR, strokeWidth: 1, strokeDasharray: '3 3' }}
+                        cursor={{ stroke: CURSOR, strokeWidth: 1 }}
                         isAnimationActive={false}
                     />
                     {legend && !legendBelow && <Legend wrapperStyle={{ fontSize: 12, paddingTop: 8 }} iconType="circle" iconSize={8} />}

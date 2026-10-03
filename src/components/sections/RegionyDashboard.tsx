@@ -168,7 +168,9 @@ export function RegionyDashboard() {
                             height={200}
                             emptyTitle="Brak danych regionalnych"
                         >
-                            <div className="max-h-[220px] [&_svg]:max-h-[210px]">
+                            {/* Jak mapa na /praca: skalujemy szerokością. `max-h-[220px]` nie ograniczał SVG
+                                (inline `maxHeight: 62vh` wygrywa z klasą), więc południe Polski wychodziło poza kartę. */}
+                            <div className="mx-auto w-full max-w-[460px]">
                                 <Choropleth
                                     items={mapItems}
                                     scheme={isPkb ? 'blue' : 'violet'}

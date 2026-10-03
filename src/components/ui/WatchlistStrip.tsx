@@ -5,6 +5,7 @@ import type { LucideIcon } from 'lucide-react';
 import { useWatchlist, type WatchKind } from '@/lib/watchlist';
 import { CompactKpi } from '@/components/ui/CompactKpi';
 import type { AccentKey } from '@/components/ui/KpiCard';
+import type { SparkPoint } from '@/components/ui/KpiSparkline';
 
 export interface WatchableKpi {
     /** `wskaznik` (domyślnie) albo `spolka` — ten sam rodzaj co w `lib/watchlist.ts`. */
@@ -21,6 +22,8 @@ export interface WatchableKpi {
     loading?: boolean;
     error?: boolean;
     onRetry?: () => void;
+    spark?: SparkPoint[];
+    sparkFormat?: (v: number) => string;
 }
 
 /**

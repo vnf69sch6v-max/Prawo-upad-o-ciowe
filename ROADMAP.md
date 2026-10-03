@@ -44,6 +44,73 @@ przy podejmowaniu.
 
 ## ZROBIONE
 
+- **UI: interaktywne wykresy i kafle, responsywność** — 2026-10-03
+  Zlecone przez właściciela („bardziej interaktywne i responsywne"). Audyt: 17 widoków × 5 szerokości
+  (320/375/768/1024/1440) + testy interakcji (mysz, dotyk, klawiatura) w Playwright.
+  - **Tooltip wykresów działał tylko po KLIKNIĘCIU** (`trigger="click"` dla wszystkich) — na komputerze
+    najechanie nie pokazywało żadnej wartości. Teraz `useCanHover()`: mysz → najechanie, dotyk → stuknięcie.
+    Nagłówek tooltipa: „30.09.2026" / „sierpień 2026" / „II kwartał 2026" zamiast surowego klucza osi.
+  - **Zakresy 3M/1R… cięły LICZBĘ PUNKTÓW, nie czas** (`data.slice(-N)`): na serii dziennej (WIG20, kurs
+    spółki) „3M" pokazywało 3 sesje. `lib/chart-range.ts` tnie po datach osi X (dzień/miesiąc/kwartał/rok)
+    i ukrywa przyciski, które niczego nie przycinają. WIG20 i strony spółek mają rok notowań (Yahoo `1y`),
+    więc 1M/3M/6M/ALL coś zmieniają; na stronie spółki kafel „Zakres 52 tygodni".
+  - **Kafle KPI z trendem** (Przegląd, Rynki, Gospodarka) — `KpiSparkline`: linia wyciszona, bieżący okres
+    w akcencie, dymek po najechaniu. Seria o mieszanej ziarnistości (CPI GUS: kwartały do IV kw. 2025,
+    miesiące od 01.2026) jest przycinana do końcowego odcinka jednej ziarnistości. Na wąskim kaflu trend
+    zawija się pod deltę.
+  - **BŁĄD DANYCH wyłapany przez sparkline:** `useGusRegisteredUnemployment(24)` → `/api/bdl-series?count=24`,
+    a BDL ma 12 zmiennych miesięcznych — ID 13–24 to INNE zmienne, więc w serii bezrobocia siedziały
+    „2025-13: 193 936 590" i „2025-21: 9011,5". Ostatnia wartość akurat była dobra; w styczniu delta kafla
+    wyszłaby „−9005 p.p.". Route przycina `count` do 12 (mies.) / 4 (kw.); klucz cache `_v3`.
+    Przy okazji użytkownicy czytają teraz dokument ogrzewany przez cron (cron wołał `count=12`).
+  - /regiony: mapa wylewała się z karty (ten sam błąd co na /praca), ranking ucinał wartości przy 1024 px
+    („158" zamiast „158 473") — sztywne szerokości kolumn ≥ 348 px w kolumnie ~275 px.
+  - Cele dotyku: wiersze rankingów 20 → 28 px, „ponów"/„Całe podsumowanie" ≥ 24 px (WCAG 2.2).
+  - Telefon/tablet (< lg): nagłówek (2 rzędy, ~108 px) chowa się przy przewijaniu w dół, wraca w górę
+    i przy fokusie klawiatury. Od `lg` stały (przyklejone panele `lg:top-20`).
+  - **Zweryfikowane:** 23 testy Playwright (zakresy WIG20 = 29/90/176/361 dni, hover bez kliknięcia,
+    stuknięcie na dotyku, strzałki na wykresie z klawiatury, chowanie nagłówka, 0 uciętych wartości
+    i mapa w karcie przy 1024); audyt 320/768/1024 — 0 przepełnień, 0 przyciętych, 0 za małych celów;
+    hydratacja czysta na buildzie z zegarem +7 tyg.; `tsc`, testy 65/65, `build`; lint bez nowych błędów.
+
+- **Rekonesans produkcji: nieaktualne i błędne liczby + błędy UI** — 2026-10-02
+  Audyt savori.space: wszystkie endpointy API (status, czas, data danych vs źródło) + Playwright
+  na 14 stronach × desktop/375 px. **Najgorsze były liczby, nie wygląd** — kilka kafli kłamało.
+  - **Kursy NBP z 24.09 serwowane 02.10.** `tables/a/today` to ruchomy cel pod STAŁYM URL-em —
+    każda warstwa cache'u trzyma „dzisiejszą" tabelę z dnia zapisu. Teraz `tables/{t}/` (ostatnia
+    opublikowana).
+  - **ZASADA NA PRZYSZŁOŚĆ — nie usuwać:** fetcher w `withCache` pobiera upstream z `cache: 'no-store'`.
+    `next: { revalidate }` to Data Cache w trybie stale-while-revalidate: pierwsze żądanie po
+    wygaśnięciu dostaje STARĄ odpowiedź, a `withCache` zapisuje ją do Firestore ze świeżym
+    `updatedAt` — także w cronie z `?refresh=1`, który miał to naprawiać. Dowód: `/api/wig20`
+    (`no-store`) był świeży, `/api/stooq` (`revalidate`) — mWIG40 i Brent z 11.09, a WIG20 pokazywał
+    wczorajsze −2,0% przy dzisiejszym +0,2% (ta sama strona /rynki: „+0,16%" u góry, „WIG20 spada" niżej).
+    Poprawione dla NBP, Yahoo i Eurostatu. **GUS BDL/DBW świadomie NIE ruszone** (limit ~100 żądań/15 min).
+  - Skalowanie ETF→indeks (WIG20/mWIG40/sWIG80) liczone po TEJ SAMEJ sesji, nie „ostatni punkt ETF".
+  - **Eurostat wycofał HICP w lutym 2026** (ECOICOP ver. 2): `prc_hicp_manr/midx/aind` stoją na 2025-12.
+    Nowe: `prc_hicp_minr` / `prc_hicp_ainr`, wymiar `coicop18` (ogółem `TOTAL`), `unit` obowiązkowy
+    (kilka jednostek naraz łamie `parseJsonStat`).
+  - **Rentowność 10Y = „Błąd źródła" na Przeglądzie i Rynkach** — stooq.pl zrywa połączenie z serwera,
+    Yahoo nie ma PL10Y (`PL10YT=RR`, `^PL10Y` → Not Found). Kafel pokazuje średnią miesięczną Eurostatu
+    (MCBY) z podpisem „śr. mies.". Dzienne źródło — do znalezienia (NIE wracać do Stooq bez testu z serwera).
+  - **WIBOR nie ma źródła fixingu:** `/api/wibor` liczy „stopa ref. + stały spread" i stempluje dzisiejszą
+    datą. Kafel na /rynki mówi teraz „WIBOR 3M (szac.)" i jak jest liczony. Prawdziwy fixing = otwarte.
+  - **PKB „7,0%" na /gospodarka był NOMINALNY:** BDL var 458272 leży w podgrupie „PKB (CENY BIEŻĄCE)".
+    Hero, kafel i wykres → realny PKB r/r kwartalnie (Eurostat `namq_10_gdp`, dane GUS: II kw. 2026 = 3,7%).
+    Widok „Rządy a gospodarka" liczył średnie rządów z nominalnego PKB (2022: 16,5% zamiast 5,3%) →
+    realny roczny (`nama_10_gdp`).
+  - **„Bezrobocie 6,6%" to była nieważona średnia 16 województw** (oficjalnie 5,8%) → krajowa stopa BDL.
+  - **React #418 na /praca, /regiony, /publikacje:** panele „nadchodzące publikacje" liczyły daty w
+    renderze strony prerenderowanej przy BUILDZIE — do hydratacji widać było daty z dnia builda.
+    `useIsClient()` (`lib/use-is-client.ts`, `useSyncExternalStore`) — używać dla wszystkiego, co zależy od „teraz".
+  - Mapa bezrobocia na /praca ucięta w pół (`max-h` + `overflow-hidden` vs inline `maxHeight` SVG).
+  - /podsumowanie było puste do ~18:00 → pokazuje wczorajszy digest z datą. `/api/news/daily` zwraca 200
+    z `empty: true` zamiast 404 (czerwony błąd w konsoli każdej strony z pasem newsów).
+  - **Zweryfikowane:** endpointy lokalnie vs źródło (NBP 191/A z 01.10, WIG20/mWIG40/Brent z 02.10,
+    HICP do 2026-08); Playwright: 0 nieudanych żądań API na 28 widokach (prod: 404/500 na większości);
+    build produkcyjny oglądany z zegarem przesuniętym o 7 tygodni — 0 błędów hydratacji.
+    `tsc`, `npm test` (65/65), `build` zielone; lint 36 → 34 błędy (reszta sprzed zmiany).
+
 - **Klasyfikator tematów AI — ZMIERZONY I ODRZUCONY przez właściciela** — 2026-08-23
   Kod działa i jest przetestowany (gałąź `feature/klasyfikator-tematow`, commity `9748dd0`,
   `897cb22`), ale NIE jest wpięty i produkcja nie wydaje na niego nic. **Nie wpinać bez

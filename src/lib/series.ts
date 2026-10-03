@@ -11,12 +11,40 @@ export function plSeries(res?: EurostatResult, geo = 'PL'): Point[] {
 }
 
 export const lastOf = (s: Point[]): number | null => (s.length ? s[s.length - 1].value : null);
+
+/** Historia kursu NBP (`/api/nbp?code=…` → `[{ effectiveDate, mid }]`) jako punkty serii. */
+export function nbpHistorySeries(data: unknown): Point[] {
+    const arr = Array.isArray(data) ? data : (data as { rates?: unknown[] } | undefined)?.rates;
+    if (!Array.isArray(arr)) return [];
+    return arr.flatMap((r) => {
+        const row = r as { effectiveDate?: string; mid?: number };
+        return row.effectiveDate && typeof row.mid === 'number' ? [{ date: row.effectiveDate, value: row.mid }] : [];
+    });
+}
+
+/** Świece dzienne (`/api/stooq`) → zamknięcia jako punkty serii. */
+export function closeSeries(bars: { date: string; close: number }[] | undefined): Point[] {
+    return (bars ?? []).map((b) => ({ date: b.date, value: b.close }));
+}
 export const prevOf = (s: Point[]): number | null => (s.length > 1 ? s[s.length - 2].value : null);
 
 /** Compact axis tick for "YYYY-MM" → "MM.YY" (quarters/other pass through). */
 export const monthTick = (d: string): string => {
     const [y, m] = d.split('-');
     return m && /^\d{2}$/.test(m) ? `${m}.${y.slice(2)}` : d;
+};
+
+/** Oś serii DZIENNYCH: "YYYY-MM-DD" → "DD.MM". `monthTick` dawał tu „07.26 07.26 07.26…" (ten sam miesiąc co sesję). */
+export const dayTick = (d: string): string => {
+    const m = d.match(/^\d{4}-(\d{2})-(\d{2})$/);
+    return m ? `${m[2]}.${m[1]}` : monthTick(d);
+};
+
+const QUARTER_ROMAN = ['I', 'II', 'III', 'IV'];
+/** Oś serii KWARTALNYCH: "YYYY-Qn" → "II kw. 26". */
+export const quarterTick = (d: string): string => {
+    const m = d.match(/^(\d{4})-Q([1-4])$/);
+    return m ? `${QUARTER_ROMAN[+m[2] - 1]} kw. ${m[1].slice(2)}` : d;
 };
 
 /** Format a number (or "—" for null) with a Polish decimal comma. */

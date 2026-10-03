@@ -3,6 +3,7 @@
 import { useMemo } from 'react';
 import { getUpcomingEvents, EVENT_COLORS } from '@/lib/calendar';
 import { formatDate } from '@/lib/formatters';
+import { useIsClient } from '@/lib/use-is-client';
 
 export function PublicationDatesPanel({
     count = 5,
@@ -15,7 +16,9 @@ export function PublicationDatesPanel({
     variant?: 'default' | 'overview';
     compact?: boolean;
 }) {
-    const events = useMemo(() => getUpcomingEvents(count), [count]);
+    // Daty liczone od „dziś" — dopiero po hydratacji (strona jest prerenderowana przy buildzie).
+    const isClient = useIsClient();
+    const events = useMemo(() => (isClient ? getUpcomingEvents(count) : null), [isClient, count]);
     const heading = variant === 'overview' ? 'Daty publikacji' : title;
     const padClass = compact ? 'mk-card-pad-compact' : 'mk-card-pad';
 
@@ -26,8 +29,13 @@ export function PublicationDatesPanel({
             ) : (
                 <h3 className={`mk-section-title ${compact ? 'mb-2' : 'mb-4'}`}>{heading}</h3>
             )}
-            <ul className="divide-y divide-mk-border">
-                {events.map((e, i) => (
+            <ul className="divide-y divide-mk-border" aria-busy={events == null}>
+                {events == null && Array.from({ length: count }, (_, i) => (
+                    <li key={i} className={`first:pt-0 last:pb-0 ${compact ? 'py-2' : 'py-3.5'}`}>
+                        <div className="mk-skeleton h-4 w-full" />
+                    </li>
+                ))}
+                {events?.map((e, i) => (
                     <li key={i} className={`flex items-start gap-2.5 first:pt-0 last:pb-0 ${compact ? 'py-2' : 'py-3.5'}`}>
                         {variant === 'overview' ? (
                             <span className="mt-0.5 shrink-0 text-[11px] font-semibold tabular-nums text-mk-faint">{formatDate(e.date)}</span>

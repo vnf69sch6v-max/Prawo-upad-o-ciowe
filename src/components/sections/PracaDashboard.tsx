@@ -35,7 +35,7 @@ const woj = (name: string) => name.replace(/^województwo /i, '');
  * Bez czerwonego hero; bez duplikacji liczb.
  */
 export function PracaDashboard() {
-    const unempQ = useGusRegisteredUnemployment(24);
+    const unempQ = useGusRegisteredUnemployment();
     const monthlyQ = useGusMonthly();
     const cpiQ = useCpiFull(); // cache React Query — bez refresh=1 (limit DBW)
     const zatrQ = useBdlSeries(154348, 12);
@@ -298,7 +298,9 @@ export function PracaDashboard() {
                             height={240}
                             emptyTitle="Brak danych regionalnych"
                         >
-                            <div className="max-h-[280px] overflow-hidden [&_svg]:max-h-[270px]">
+                            {/* Skalujemy szerokością, NIE przycinamy wysokością: dawne `max-h-[280px] overflow-hidden`
+                                ucinało południową połowę mapy (inline `maxHeight: 65vh` na SVG wygrywa z klasą). */}
+                            <div className="mx-auto w-full max-w-[460px]">
                                 <PolandMap
                                     regions={regions}
                                     national={national}

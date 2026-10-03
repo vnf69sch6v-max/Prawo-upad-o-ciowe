@@ -7,6 +7,7 @@ import type { WatchKind } from '@/lib/watchlist';
 import { WatchStar } from './WatchStar';
 import { DeltaChip } from './DeltaChip';
 import { AnimatedNumber } from './AnimatedNumber';
+import { KpiSparkline, type SparkPoint } from './KpiSparkline';
 
 /**
  * @deprecated Kolor akcentu nie jest już rysowany — patrz komentarz przy `KpiCard`.
@@ -41,6 +42,13 @@ export interface KpiCardProps {
     watchKind?: WatchKind;
     /** Gęstszy wariant — mniejszy padding (siatka 6 KPI). */
     compact?: boolean;
+    /**
+     * Trend do sparkline'a (≈12 ostatnich okresów, chronologicznie). Kafel pokazuje go obok delty;
+     * mniej niż 2 punkty = brak trendu (bez pustej ramki).
+     */
+    spark?: SparkPoint[];
+    /** Format wartości w dymku sparkline'a, np. `v => formatDecimalPL(v, 1) + '%'`. */
+    sparkFormat?: (v: number) => string;
 }
 
 /**
@@ -66,8 +74,9 @@ export interface KpiCardProps {
  * Gwiazdka watchlisty idzie przez `WatchStar` — nie wołamy `useWatchlist()` w każdym kaflu
  * (dziesiątki listenerów na stronie), tylko w komponentach, które naprawdę pokazują stan.
  */
-export function KpiCard({ label, value, unit, delta, icon: Icon, footnote, loading, error, onRetry, href, watchId, watchKind = 'wskaznik', compact }: KpiCardProps) {
+export function KpiCard({ label, value, unit, delta, icon: Icon, footnote, loading, error, onRetry, href, watchId, watchKind = 'wskaznik', compact, spark, sparkFormat }: KpiCardProps) {
     const footnoteText = footnote?.trim() || undefined;
+    const hasSpark = (spark?.length ?? 0) > 1;
     const wrap = (node: ReactNode, extra = '') => (
         <div className={`mk-kpi${compact ? ' mk-kpi-compact' : ''} ${extra}`.trim()}>{node}</div>
     );
@@ -100,7 +109,7 @@ export function KpiCard({ label, value, unit, delta, icon: Icon, footnote, loadi
                             <button
                                 type="button"
                                 onClick={onRetry}
-                                className="text-left text-[11px] font-medium text-mk-primary hover:underline"
+                                className="inline-flex min-h-6 items-center text-left text-[11px] font-medium text-mk-primary hover:underline"
                             >
                                 Błąd źródła · ponów
                             </button>
@@ -126,7 +135,12 @@ export function KpiCard({ label, value, unit, delta, icon: Icon, footnote, loadi
                 <span className="mk-kpi-value min-w-0"><AnimatedNumber value={value} /></span>
                 {unit && <span className="mk-kpi-unit shrink-0">{unit}</span>}
             </div>
-            {delta && <div className="mk-kpi-delta"><DeltaChip value={delta.value} unit={delta.unit} note={delta.note} invert={delta.invert} /></div>}
+            {(delta || hasSpark) && (
+                <div className="mk-kpi-delta mk-kpi-trend">
+                    {delta && <DeltaChip value={delta.value} unit={delta.unit} note={delta.note} invert={delta.invert} />}
+                    {hasSpark && <KpiSparkline points={spark!} format={sparkFormat} />}
+                </div>
+            )}
             {footnoteText && <div className="mk-kpi-foot">{footnoteText}</div>}
         </div>
     );

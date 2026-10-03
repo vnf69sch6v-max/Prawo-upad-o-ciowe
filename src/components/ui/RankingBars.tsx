@@ -19,8 +19,10 @@ interface RankingBarsProps<T extends RankingRow> {
 const shortName = (name: string) => name.replace(/^województwo /i, '');
 
 /**
- * Poziome paski rankingu. `w-40` na etykiecie zjada flex-1 pasek poniżej ~378px
- * (mierzony 0px przy 320/375). Etykieta: `w-24 sm:w-40`.
+ * Poziome paski rankingu. Kolumny nie mają sztywnych szerokości: nazwa ma bazę `w-24 sm:w-40`,
+ * ale może się skurczyć (truncate + title), pasek bierze resztę, a wartość nigdy nie jest ucinana.
+ * Sztywne `w-40` + `w-24` + `min-w-12` dawały ≥ 348 px — przy 1024 px w kolumnie ~275 px
+ * wartości „158 473" ucinały się do „158".
  */
 export function RankingBars<T extends RankingRow>({
     rows,
@@ -50,7 +52,7 @@ export function RankingBars<T extends RankingRow>({
                         <button
                             type="button"
                             onClick={() => onSelect?.(r.slug)}
-                            className={`flex w-full min-w-0 items-center gap-2 text-left text-sm ${
+                            className={`flex min-h-7 w-full min-w-0 items-center gap-2 rounded-md text-left text-sm transition-colors hover:bg-mk-surface-alt ${
                                 selected === r.slug ? 'font-semibold text-mk-text' : 'text-mk-text'
                             }`}
                         >
@@ -58,20 +60,20 @@ export function RankingBars<T extends RankingRow>({
                             <span
                                 data-ranking-name
                                 title={label}
-                                className="w-24 shrink-0 truncate sm:w-40"
+                                className="min-w-0 shrink basis-24 truncate sm:basis-40"
                             >
                                 {label}
                             </span>
                             <span
                                 data-ranking-bar
-                                className="h-3 min-w-12 flex-1 rounded-full bg-mk-surface-alt"
+                                className="h-3 min-w-8 flex-1 rounded-full bg-mk-surface-alt"
                             >
                                 <span
                                     className="block h-3 rounded-full"
                                     style={{ width: `${(v / max) * 100}%`, background: colorAt(v) }}
                                 />
                             </span>
-                            <span className="w-16 shrink-0 text-right font-semibold tnum sm:w-24">
+                            <span className="min-w-[4.5rem] shrink-0 whitespace-nowrap pr-1 text-right font-semibold tnum">
                                 {format(v)}
                             </span>
                         </button>
