@@ -78,7 +78,7 @@ export function KpiCard({ label, value, unit, delta, icon: Icon, footnote, loadi
     const footnoteText = footnote?.trim() || undefined;
     const hasSpark = (spark?.length ?? 0) > 1;
     const wrap = (node: ReactNode, extra = '') => (
-        <div className={`mk-kpi${compact ? ' mk-kpi-compact' : ''} ${extra}`.trim()}>{node}</div>
+        <div className={`mk-kpi${compact ? ' mk-kpi-compact' : ''}${watchId ? ' mk-kpi-has-star' : ''} ${extra}`.trim()}>{node}</div>
     );
     if (loading) {
         // Skeleton ma tę samą strukturę co kafel z danymi — inaczej rząd skacze, gdy każde
@@ -86,9 +86,11 @@ export function KpiCard({ label, value, unit, delta, icon: Icon, footnote, loadi
         return wrap(
             <div className="mk-card overflow-hidden">
                 <div className="mk-kpi-body">
-                    <div className="mk-kpi-label"><span className="mk-skeleton h-3 w-24 rounded" /></div>
-                    <div className="mk-kpi-figure"><span className="mk-skeleton h-8 w-28 rounded" /></div>
-                    <div className="mk-kpi-foot"><span className="mk-skeleton h-2.5 w-20 rounded" /></div>
+                    <div className="mk-kpi-label"><span className="mk-skeleton h-3 w-24 max-w-full rounded" /></div>
+                    <div className="mk-kpi-figure"><span className="mk-skeleton h-8 w-28 max-w-full rounded" /></div>
+                    {/* Rząd delty/trendu — większość kafli go ma; bez niego kafel „rósł" po załadowaniu. */}
+                    <div className="mk-kpi-delta"><span className="mk-skeleton block h-5 w-16 rounded-full" /></div>
+                    <div className="mk-kpi-foot"><span className="mk-skeleton block h-2.5 w-20 max-w-full rounded" /></div>
                 </div>
             </div>,
         );
@@ -109,7 +111,7 @@ export function KpiCard({ label, value, unit, delta, icon: Icon, footnote, loadi
                             <button
                                 type="button"
                                 onClick={onRetry}
-                                className="inline-flex min-h-6 items-center text-left text-[11px] font-medium text-mk-primary hover:underline"
+                                className="mk-press inline-flex min-h-6 items-center text-left text-[11px] font-medium text-mk-primary hover:underline pointer-coarse:min-h-11"
                             >
                                 Błąd źródła · ponów
                             </button>

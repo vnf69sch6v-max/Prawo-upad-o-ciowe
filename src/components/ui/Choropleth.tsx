@@ -2,6 +2,12 @@
 
 import { useState } from 'react';
 import { VOIVODESHIP_PATHS, LABEL_POS, SLUG_TO_PATH } from '@/lib/poland-geo';
+import { usePlotWidth } from '@/components/ui/ChartContainer';
+
+const VB_W = 580;
+/** Etykieta województwa ma mieć na ekranie ~11 px niezależnie od skali mapy (viewBox 580 → 326 px
+ *  na telefonie dawał 5,6 px — nieczytelne). Jednostki viewBoxa, zaciśnięte 10–20. */
+const labelSize = (w: number) => (w > 0 ? Math.min(20, Math.max(10, (11 * VB_W) / w)) : 10);
 
 const SCHEMES: Record<string, string[]> = {
     blue: ['#EFF6FF', '#DBEAFE', '#BFDBFE', '#93C5FD', '#60A5FA', '#3B82F6', '#2563EB', '#1D4ED8'],
@@ -29,6 +35,7 @@ interface ChoroplethProps {
 export function Choropleth({ items, format, labelFormat, scheme = 'blue', reverse, unit, selected, onSelect }: ChoroplethProps) {
     const [hovered, setHovered] = useState<string | null>(null);
     const [pos, setPos] = useState({ x: 0, y: 0 });
+    const { ref, width } = usePlotWidth();
 
     const bySlug = new Map(items.map((i) => [i.slug, i]));
     const vals = items.map((i) => i.value).filter((v): v is number => v != null);
@@ -43,8 +50,8 @@ export function Choropleth({ items, format, labelFormat, scheme = 'blue', revers
     const hov = hovered ? bySlug.get(hovered) : null;
 
     return (
-        <div data-choropleth className="relative" onMouseMove={(e) => { const r = e.currentTarget.getBoundingClientRect(); setPos({ x: e.clientX - r.left, y: e.clientY - r.top }); }}>
-            <svg viewBox="0 0 580 550" className="h-auto w-full" style={{ maxHeight: '62vh' }}>
+        <div ref={ref} data-choropleth className="relative w-full" onMouseMove={(e) => { const r = e.currentTarget.getBoundingClientRect(); setPos({ x: e.clientX - r.left, y: e.clientY - r.top }); }}>
+            <svg viewBox={`0 0 ${VB_W} 550`} className="h-auto w-full" style={{ maxHeight: '62vh' }}>
                 {Object.entries(SLUG_TO_PATH).map(([slug, pathKey]) => {
                     const d = VOIVODESHIP_PATHS[pathKey];
                     if (!d) return null;
@@ -55,12 +62,12 @@ export function Choropleth({ items, format, labelFormat, scheme = 'blue', revers
                     return (
                         <g key={slug}>
                             <path d={d} fill={colorAt(v)} stroke={isSel ? '#0F172A' : '#ffffff'} strokeWidth={isSel ? 2.5 : 1}
-                                className={onSelect ? 'cursor-pointer transition-opacity duration-150' : 'transition-opacity duration-150'}
+                                className={onSelect ? 'cursor-pointer transition-opacity duration-150 [-webkit-tap-highlight-color:transparent]' : 'transition-opacity duration-150'}
                                 opacity={isHov || isSel ? 1 : 0.92}
                                 onMouseEnter={() => setHovered(slug)} onMouseLeave={() => setHovered(null)}
                                 onClick={() => onSelect?.(selected === slug ? null : slug)} />
                             {lp && v != null && (
-                                <text x={lp[0]} y={lp[1]} textAnchor="middle" dominantBaseline="middle" fontSize="10" fontWeight="700"
+                                <text x={lp[0]} y={lp[1]} textAnchor="middle" dominantBaseline="middle" fontSize={labelSize(width)} fontWeight="700"
                                     className="pointer-events-none select-none" fill={norm(v) > 0.5 ? '#ffffff' : '#0F172A'}>
                                     {(labelFormat ?? format)(v)}
                                 </text>
@@ -69,9 +76,18 @@ export function Choropleth({ items, format, labelFormat, scheme = 'blue', revers
                     );
                 })}
             </svg>
+            {/* Dymek przy krawędzi wyrównany do niej — wyśrodkowany przy prawym brzegu wychodził poza
+                kartę i poszerzał stronę na telefonie. */}
             {hov && (
-                <div className="pointer-events-none absolute z-50" style={{ left: pos.x, top: pos.y, transform: 'translate(-50%,-115%)' }}>
-                    <div className="rounded-lg border border-mk-border bg-mk-surface px-3 py-2 shadow-xl">
+                <div
+                    className="pointer-events-none absolute z-50"
+                    style={{
+                        left: pos.x,
+                        top: pos.y,
+                        transform: `translate(${width && pos.x > width * 0.7 ? '-100%' : width && pos.x < width * 0.3 ? '0%' : '-50%'},-115%)`,
+                    }}
+                >
+                    <div className="whitespace-nowrap rounded-lg border border-mk-border bg-mk-surface px-3 py-2 shadow-xl">
                         <div className="text-sm font-semibold text-mk-text">{hov.name}</div>
                         <div className="text-xs text-mk-muted">{hov.value != null ? `${format(hov.value)}${unit ?? ''}` : '—'}</div>
                     </div>

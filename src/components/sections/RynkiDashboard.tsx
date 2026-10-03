@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { DollarSign, Percent, LineChart, Landmark, Gem, BarChart3, Fuel } from 'lucide-react';
+import { DollarSign, Percent, Landmark, Gem, BarChart3, Fuel } from 'lucide-react';
 import {
     useNBPTable, useEURPLN, useUSDPLN, useGold, useStooq, useNBPInterestRates, useWibor, useBondYield10Y,
     type NBPTable,
@@ -10,7 +10,6 @@ import { lastOf, prevOf, dayTick, plSeries, nbpHistorySeries, closeSeries } from
 import { formatDecimalPL, formatNumber, formatDate, formatDataPeriod, percentChange } from '@/lib/formatters';
 import { PageHeroBand, type HeroKpiItem } from '@/components/ui/PageHeroBand';
 import { CompactKpiGrid, type CompactKpiItem } from '@/components/ui/CompactKpiGrid';
-import { DenseTwoCol } from '@/components/ui/DensePageLayout';
 import { RelatedNews } from '@/components/ui/RelatedNews';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { InteractiveChart } from '@/components/ui/InteractiveChart';
@@ -65,7 +64,7 @@ export function RynkiDashboard() {
     const wiborRow = wiborQ.data?.rates?.[0];
     const wiborEstimated = wiborRow?.source?.startsWith('estimated') ?? false;
 
-    const wigBars = useMemo(() => barsOf(wig20Q), [wig20Q.data]);
+    const wigBars = useMemo<QBar[]>(() => wig20Q.data?.data ?? [], [wig20Q.data]);
     const wigLast = lastCloseOf(wig20Q);
     const wigDelta = pctDelta(wigBars);
 
@@ -201,14 +200,18 @@ export function RynkiDashboard() {
         <div className="space-y-4">
             <PageHeroBand items={heroItems} />
             <CompactKpiGrid items={gridItems} label="Rynek — więcej wskaźników" columns={6} />
-            <DenseTwoCol
-                left={<RelatedNews topic="rynki" limit={5} title="Newsy rynkowe" />}
-                right={
+            {/* Desktop: newsy | wykres. Poniżej `lg` sam wykres — newsy strona stawia na końcu
+                (hierarchia na telefonie: liczby → wykres → notowania → newsy). */}
+            <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-2">
+                <div className="hidden min-w-0 lg:block">
+                    <RelatedNews topic="rynki" limit={5} title="Newsy rynkowe" />
+                </div>
+                <div className="min-w-0">
                     <SectionCard
                         editorial
                         titleVariant="label"
                         title="WIG20 — notowania dzienne"
-                        subtitle="poziom indeksu · Yahoo Finance"
+                        subtitle={wigBars.length ? `poziom indeksu · ostatnia sesja ${formatDate(wigBars[wigBars.length - 1].date)} · Yahoo Finance` : 'poziom indeksu · Yahoo Finance'}
                     >
                         <QueryState
                             isLoading={wig20Q.isLoading}
@@ -225,14 +228,15 @@ export function RynkiDashboard() {
                                 showRange
                                 initialRange="3M"
                                 ranges={['1M', '3M', '6M', 'ALL']}
+                                unit=" pkt"
                                 valueFormatter={(v) => formatNumber(Math.round(v))}
                                 xTickFormatter={dayTick}
                                 series={[{ key: 'value', name: 'WIG20', color: '#2563EB', type: 'area', strokeWidth: 2.5 }]}
                             />
                         </QueryState>
                     </SectionCard>
-                }
-            />
+                </div>
+            </div>
         </div>
     );
 }

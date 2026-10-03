@@ -35,7 +35,7 @@ export function InsightBar({ items, label = 'Auto-analiza' }: { items: Observati
                 const c = TONE[tone];
                 const Icon = iconFor(o.kind, tone);
                 return (
-                    <span key={i} className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium"
+                    <span key={i} className="inline-flex max-w-full items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium"
                         style={{ color: c.fg, background: c.bg }}>
                         <Icon size={13} className="shrink-0" />
                         {o.text}

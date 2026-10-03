@@ -30,9 +30,13 @@ export function WatchStar({ kind, id, label, variant = 'floating', size = 14 }: 
     const { has, toggle } = useWatchlist();
     const on = has(kind, id);
 
-    const base = 'flex items-center justify-center rounded-lg text-mk-faint transition-colors hover:bg-mk-surface-alt hover:text-mk-text focus:outline-none focus-visible:ring-2 focus-visible:ring-mk-primary/50';
-    // 28px = minimum celu dotykowego z WCAG 2.2 (24px) z zapasem.
-    const box = variant === 'floating' ? 'absolute right-2 top-2 z-10 h-7 w-7' : 'h-7 w-7';
+    const base = 'mk-press flex shrink-0 items-center justify-center rounded-lg text-mk-faint transition-colors hover:bg-mk-surface-alt hover:text-mk-text active:bg-mk-surface-alt focus:outline-none focus-visible:ring-2 focus-visible:ring-mk-primary/50';
+    // Mysz: 28 px (WCAG 2.2 Target Size z zapasem). Dotyk: 44 px (Apple HIG) — na telefonie gwiazdka
+    // 28 px w rogu kafla była łatwa do chybienia, a pudło otwierało kafel zamiast go obserwować.
+    // Wersja `floating` rośnie w stronę rogu (right-0/top-0), więc ikona zostaje tam, gdzie była.
+    const box = variant === 'floating'
+        ? 'absolute right-2 top-2 z-10 h-7 w-7 pointer-coarse:right-0 pointer-coarse:top-0 pointer-coarse:h-11 pointer-coarse:w-11'
+        : 'h-7 w-7 pointer-coarse:h-11 pointer-coarse:w-11';
 
     return (
         <button

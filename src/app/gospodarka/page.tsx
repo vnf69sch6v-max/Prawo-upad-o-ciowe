@@ -2,9 +2,9 @@
 
 import { useState, useMemo, useCallback } from 'react';
 import { useInitialTab, useTabScrollReset } from '@/lib/use-initial-tab';
-import { Factory, HardHat, ShoppingCart, Truck, Radio, Info, Grid3x3 } from 'lucide-react';
+import { Factory, HardHat, ShoppingCart, Truck, Radio, Info, Grid3x3, ChevronRight } from 'lucide-react';
 import { useKoniunktura } from '@/lib/hooks';
-import { formatDecimalPL } from '@/lib/formatters';
+import { formatDecimalPL, formatDataPeriod } from '@/lib/formatters';
 import { Segmented } from '@/components/ui/Segmented';
 import { KpiCard, type AccentKey } from '@/components/ui/KpiCard';
 import { InteractiveChart } from '@/components/ui/InteractiveChart';
@@ -18,6 +18,7 @@ import { GospodarkaAktywnosc } from '@/components/sections/GospodarkaAktywnosc';
 import { RzadyGospodarka } from '@/components/sections/RzadyGospodarka';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { QueryState } from '@/components/ui/QueryState';
+import { MobileTabs } from '@/components/sections/mobile-layout';
 
 type Tab = 'aktywnosc' | 'koniunktura' | 'finanse';
 const TABS: { value: Tab; label: string }[] = [
@@ -25,6 +26,7 @@ const TABS: { value: Tab; label: string }[] = [
     { value: 'koniunktura', label: 'Koniunktura' },
     { value: 'finanse', label: 'Finanse publiczne' },
 ];
+const signed = (v: number) => `${v > 0 ? '+' : ''}${formatDecimalPL(v, 1)}`;
 
 const monthTick = (d: string) => { const [y, m] = d.split('-'); return m ? `${m}.${y.slice(2)}` : d; };
 const SECTOR_META: Record<string, { color: string; accent: AccentKey; icon: typeof Factory }> = {
@@ -77,6 +79,12 @@ function KoniunkturaSection() {
     const selColor = sel ? SECTOR_META[sel.key]?.color ?? '#2563EB' : '#2563EB';
     const selChart = useMemo(() => (sel ? trend.map((t) => ({ date: t.date as string, value: typeof t[sel.key] === 'number' ? (t[sel.key] as number) : null })) : []), [sel, trend]);
 
+    // Wniosek na górę ekranu — wyłącznie z realnych sald GUS (bez sztucznej „średniej" sektorów).
+    const ranked = rows.filter((r) => r.latest != null).sort((a, b) => (b.latest as number) - (a.latest as number));
+    const positive = ranked.filter((r) => (r.latest as number) > 0).length;
+    const best = ranked[0] ?? null;
+    const worst = ranked.length > 1 ? ranked[ranked.length - 1] : null;
+
     const cols: Column<SectorRow>[] = [
         { key: 'name', header: 'Sektor', sortable: true, sortValue: (r) => r.name, render: (r) => <span className="font-medium text-mk-text">{r.name}</span> },
         { key: 'latest', header: 'Saldo', align: 'right', sortable: true, sortValue: (r) => r.latest ?? -999, render: (r) => <span style={{ color: (r.latest ?? 0) >= 0 ? '#16A34A' : '#DC2626', fontWeight: 600 }}>{r.latest != null ? `${r.latest > 0 ? '+' : ''}${formatDecimalPL(r.latest, 1)}` : '—'}</span> },
@@ -85,8 +93,78 @@ function KoniunkturaSection() {
     ];
 
     return (
-        <div className="space-y-6">
-            <section>
+        // Kolumna flex zamiast space-y: na telefonie kolejność wniosek → KPI → trend + sektory → mapa ciepła;
+        // od `lg` mapa ciepła wraca nad wykres (jak wcześniej).
+        <div className="flex flex-col gap-6">
+            <section className="rounded-[14px] border border-mk-border bg-mk-surface p-5 sm:p-6" aria-label="Koniunktura — wniosek">
+                {q.isLoading ? (
+                    <div className="space-y-3" role="status" aria-busy="true" aria-label="Ładowanie koniunktury">
+                        <div className="mk-skeleton h-3 w-40 rounded" />
+                        <div className="mk-skeleton h-10 w-56 rounded" />
+                        <div className="mk-skeleton h-4 w-full max-w-xl rounded" />
+                    </div>
+                ) : ranked.length === 0 ? (
+                    <p className="text-sm text-mk-muted">Brak bieżącego odczytu koniunktury GUS.</p>
+                ) : (
+                    <>
+                        <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-mk-muted">
+                            {dataDate && (
+                                <span className="inline-flex items-center rounded-full bg-mk-surface-alt px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-mk-text-soft tnum">
+                                    {formatDataPeriod(dataDate)}
+                                </span>
+                            )}
+                            <span>GUS · koniunktura · saldo ocen</span>
+                        </div>
+                        <div className="mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                            <span className="mk-kpi-value text-mk-text">{positive}<span className="text-mk-muted"> z {ranked.length}</span></span>
+                            <span className="text-base font-semibold text-mk-muted">sektorów na plusie</span>
+                        </div>
+                        <p className="mt-2 max-w-[60ch] text-[15px] leading-relaxed text-mk-text-soft">
+                            {best && <>Najlepsze nastroje: {best.name.toLowerCase()} ({signed(best.latest as number)} pkt).</>}
+                            {worst && <> Najsłabsze: {worst.name.toLowerCase()} ({signed(worst.latest as number)} pkt).</>}
+                        </p>
+                    </>
+                )}
+            </section>
+
+            {/* Telefon: pięć sektorów jako lista wierszy 56 px (saldo po prawej, stuknięcie → arkusz z trendem).
+                Kafle KPI i tabela „Sektory" powtarzały te same pięć liczb trzy razy na jednym ekranie. */}
+            <section className="lg:hidden" aria-label="Nastroje sektorów">
+                <h2 className="mk-section-label mb-2">Nastroje sektorów · saldo (pkt)</h2>
+                <div className="mk-card mk-card-editorial px-3 py-1">
+                    <QueryState
+                        isLoading={q.isLoading}
+                        isError={q.isError}
+                        isEmpty={rows.length === 0}
+                        onRetry={() => { void q.refetch(); }}
+                        height={280}
+                        emptyTitle="Brak danych sektorów"
+                    >
+                        <ul className="divide-y divide-mk-border">
+                            {ranked.concat(rows.filter((r) => r.latest == null)).map((r) => (
+                                <li key={r.key}>
+                                    <button type="button" onClick={() => openSector(r.key)}
+                                        className="-mx-1 flex min-h-14 w-[calc(100%+0.5rem)] items-center gap-3 rounded-lg px-1 py-2 text-left transition-colors duration-100 [-webkit-tap-highlight-color:transparent] active:bg-mk-surface-alt">
+                                        <span className="h-8 w-1 shrink-0 rounded-full" style={{ background: SECTOR_META[r.key]?.color ?? '#64748B' }} aria-hidden />
+                                        <span className="min-w-0 flex-1">
+                                            <span className="block truncate text-sm font-medium text-mk-text">{r.name}</span>
+                                            <span className="block text-xs text-mk-muted tnum">
+                                                {r.delta != null ? <>m/m <span style={{ color: r.delta >= 0 ? '#16A34A' : '#DC2626' }}>{signed(r.delta)} pkt</span></> : 'm/m —'}
+                                            </span>
+                                        </span>
+                                        <span className="shrink-0 text-right text-lg font-bold tnum" style={{ color: (r.latest ?? 0) >= 0 ? '#16A34A' : '#DC2626' }}>
+                                            {r.latest != null ? signed(r.latest) : '—'}<span className="ml-0.5 text-xs font-semibold text-mk-muted">pkt</span>
+                                        </span>
+                                        <ChevronRight size={16} className="shrink-0 text-mk-faint" aria-hidden />
+                                    </button>
+                                </li>
+                            ))}
+                        </ul>
+                    </QueryState>
+                </div>
+            </section>
+
+            <section className="hidden lg:block">
                 <h2 className="mk-section-label mb-3">Nastroje sektorów</h2>
                 <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
                 {sectors.map((s) => {
@@ -98,7 +176,7 @@ function KoniunkturaSection() {
                         <KpiCard key={s.key} label={s.name} value={v != null ? `${v > 0 ? '+' : ''}${formatDecimalPL(v, 1)}` : '—'} unit="pkt"
                             accent={v != null && v >= 0 ? 'green' : 'rose'} icon={meta.icon}
                             delta={d != null ? { value: d, unit: 'none' } : undefined}
-                            footnote={latest?.date ?? ''} loading={q.isLoading}
+                            footnote={latest?.date ? formatDataPeriod(latest.date) : ''} loading={q.isLoading}
                             error={q.isError} onRetry={() => { void q.refetch(); }} />
                     );
                 })}
@@ -106,7 +184,7 @@ function KoniunkturaSection() {
             </section>
 
             {/* Mapa ciepła nastrojów (sektor × miesiąc) — klik wiersza → drawer */}
-            <SectionCard editorial titleVariant="label" title="Mapa ciepła nastrojów" subtitle="saldo koniunktury · sektor × miesiąc · zielony = optymizm, czerwony = pesymizm · kliknij wiersz"
+            <SectionCard editorial titleVariant="label" className="max-lg:order-1" title="Mapa ciepła nastrojów" subtitle="saldo (pkt) · sektor × miesiąc · zielony = optymizm, czerwony = pesymizm"
                 actions={<Grid3x3 size={15} className="text-mk-faint" />}>
                 <QueryState
                     isLoading={q.isLoading}
@@ -139,7 +217,7 @@ function KoniunkturaSection() {
                     </QueryState>
                 </SectionCard>
 
-                <SectionCard editorial titleVariant="label" title="Sektory" subtitle="kliknij sektor, aby zobaczyć trend i opis">
+                <SectionCard editorial titleVariant="label" className="hidden lg:block" title="Sektory" subtitle="kliknij sektor, aby zobaczyć trend i opis">
                     <QueryState
                         isLoading={q.isLoading}
                         isError={q.isError}
@@ -153,7 +231,7 @@ function KoniunkturaSection() {
                 </SectionCard>
             </div>
 
-            <div className="mk-card mk-card-editorial mk-card-pad text-sm text-mk-text-soft">
+            <div className="mk-card mk-card-editorial mk-card-pad text-sm text-mk-text-soft max-lg:order-2">
                 <span className="font-semibold text-mk-text">Wskaźnik ogólnego klimatu koniunktury (GUS): </span>
                 saldo ocen przedsiębiorców (dodatnie = przewaga optymizmu). Darmowy, terminowy wskaźnik wyprzedzający — odpowiednik PMI, ale z podziałem na sektory.
             </div>
@@ -170,7 +248,7 @@ function KoniunkturaSection() {
                             ].map((x) => (
                                 <div key={x.l} className="rounded-xl border border-mk-border p-2.5 text-center">
                                     <div className="text-[11px] text-mk-muted">{x.l}</div>
-                                    <div className="mt-0.5 text-lg font-bold tnum text-mk-text">{x.v}</div>
+                                    <div className="mt-0.5 text-lg font-bold tnum text-mk-text">{x.v}<span className="ml-0.5 text-xs font-semibold text-mk-muted">pkt</span></div>
                                 </div>
                             ))}
                         </div>
@@ -203,8 +281,9 @@ export default function GospodarkaPage() {
         <div className="mk-fade-in space-y-5">
             <PageHeader
                 title="Gospodarka"
-                actions={<Segmented value={tab} onChange={setTab} options={TABS} aria-label="Sekcja gospodarki" />}
+                actions={<div className="hidden lg:block"><Segmented value={tab} onChange={setTab} options={TABS} aria-label="Sekcja gospodarki" /></div>}
             />
+            <MobileTabs value={tab} onChange={setTab} options={TABS} ariaLabel="Sekcja gospodarki" className="-mt-2" />
 
             <div key={tab} className="mk-tab-panel mk-fade-in">
                 {tab === 'aktywnosc' && <GospodarkaAktywnosc />}

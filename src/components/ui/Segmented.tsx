@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { scrollChildInline } from '@/lib/tab-scroll';
+import { useScrollFade } from '@/lib/use-scroll-fade';
 
 interface SegmentedProps<T extends string> {
     options: { value: T; label: string }[];
@@ -11,9 +12,16 @@ interface SegmentedProps<T extends string> {
     'aria-label'?: string;
 }
 
-/** Light segmented control — used for M/M vs R/R, range pickers, etc. */
+/**
+ * Light segmented control — used for M/M vs R/R, range pickers, etc.
+ *
+ * Telefon: cel dotykowy 44 px (`@media (pointer: coarse)` w globals.css), pasek przewija się
+ * w bok, a niemieszcząca się krawędź jest wygaszona (`useScrollFade`) — bez tego np. czwarta
+ * zakładka „Budowlano-montażowe" wyglądała na uciętą błędem.
+ */
 export function Segmented<T extends string>({ options, value, onChange, size = 'md', ...rest }: SegmentedProps<T>) {
     const listRef = useRef<HTMLDivElement>(null);
+    const fade = useScrollFade(listRef);
 
     useEffect(() => {
         const list = listRef.current;
@@ -30,7 +38,8 @@ export function Segmented<T extends string>({ options, value, onChange, size = '
     return (
         <div
             ref={listRef}
-            className="mk-seg"
+            className="mk-seg mk-fade-x"
+            data-fade={fade}
             role="tablist"
             aria-label={rest['aria-label']}
             onKeyDown={(e) => {
@@ -48,8 +57,7 @@ export function Segmented<T extends string>({ options, value, onChange, size = '
                         aria-selected={selected}
                         tabIndex={selected ? 0 : -1}
                         onClick={() => onChange(o.value)}
-                        className={`mk-seg-btn ${selected ? 'mk-seg-btn-active' : ''}`}
-                        style={size === 'sm' ? { padding: '4px 9px', fontSize: 12, minHeight: 28 } : undefined}
+                        className={`mk-seg-btn ${size === 'sm' ? 'mk-seg-sm' : ''} ${selected ? 'mk-seg-btn-active' : ''}`}
                     >
                         {o.label}
                     </button>

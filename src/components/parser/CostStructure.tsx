@@ -2,6 +2,7 @@
 
 import { DocSection } from "@/components/parser/DocSection";
 import { CostBars } from "@/components/parser/CostBars";
+import { ScrollTable } from "@/components/parser/ScrollTable";
 import { fmtPct } from "@/lib/parser/format";
 import { metricLabelPl } from "@/lib/parser/copy.pl";
 import type { MetricKey, ParseResult, Period } from "@/lib/parser/types";
@@ -65,11 +66,11 @@ export function CostStructure({
       <div className="mt-4 mb-6">
         <CostBars rows={rows} periods={periods} />
       </div>
-      <div className="mk-table-wrap">
+      <ScrollTable>
         <table className="w-full min-w-[480px] border-collapse tnum">
           <thead>
             <tr>
-              <th className="border-b border-mk-border py-2.5 pr-3 text-left text-[11px] font-semibold uppercase tracking-[0.04em] text-mk-muted">
+              <th className="sticky left-0 z-[1] border-b border-mk-border bg-rp-surface py-2.5 pr-3 text-left text-[11px] font-semibold uppercase tracking-[0.04em] text-mk-muted">
                 Pozycja
               </th>
               {periods.map((p) => (
@@ -88,7 +89,7 @@ export function CostStructure({
           <tbody>
             {rows.map((r) => (
               <tr key={r.key}>
-                <td className="border-b border-mk-surface-alt py-2.5 pr-3 text-[14px] text-mk-text-soft">
+                <td className="sticky left-0 z-[1] border-b border-mk-surface-alt bg-rp-surface py-2.5 pr-3 text-[14px] text-mk-text-soft">
                   {r.label}
                 </td>
                 {r.shares.map((s, i) => {
@@ -112,7 +113,7 @@ export function CostStructure({
             ))}
           </tbody>
         </table>
-      </div>
+      </ScrollTable>
       <p className="mt-2.5 text-[12px] text-mk-faint">
         Wartość powyżej 100% oznacza pozycję kosztową większą niż przychody okresu.
       </p>

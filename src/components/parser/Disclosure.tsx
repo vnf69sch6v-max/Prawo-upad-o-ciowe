@@ -32,14 +32,14 @@ export function Disclosure({
       {open ? (
         <div className="mt-4">{children}</div>
       ) : (
-        <div className="mt-4 flex flex-wrap items-center gap-4">
+        <div className="mt-4 flex flex-wrap items-center gap-3 sm:gap-4">
           <p className="text-[14px] text-mk-muted">{summary}</p>
           <button
             type="button"
             onClick={() => setOpen(true)}
             aria-expanded={false}
             aria-controls={`${id}-tresc`}
-            className="mk-btn ml-auto"
+            className="mk-btn min-h-11 w-full active:bg-mk-surface-alt sm:ml-auto sm:w-auto lg:min-h-0"
           >
             {openLabel}
             <ChevronDown className="h-4 w-4" aria-hidden />

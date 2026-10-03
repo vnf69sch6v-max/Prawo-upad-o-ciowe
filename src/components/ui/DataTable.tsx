@@ -1,7 +1,8 @@
 'use client';
 
-import { useMemo, useState, type KeyboardEvent, type ReactNode } from 'react';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
+import { ChevronDown, ChevronRight, ChevronUp } from 'lucide-react';
+import { useScrollFade } from '@/lib/use-scroll-fade';
 
 export interface Column<T> {
     key: string;
@@ -39,7 +40,17 @@ interface DataTableProps<T> {
      * Kept outside the row button so we never nest <button> in <button>.
      */
     cardAction?: (row: T) => ReactNode;
+    /**
+     * Układ poniżej `sm`, gdy nie ma `mobileAsCards`:
+     * `auto` (domyślnie) — ≤ 4 kolumn → lista (nazwa po lewej, wartość po prawej), więcej → tabela
+     * przewijana w karcie z przyklejoną pierwszą kolumną i wygaszoną krawędzią;
+     * `table` — zawsze tabela.
+     */
+    mobileLayout?: 'auto' | 'table';
 }
+
+/** Wiersze listy mobilnej widoczne przed „Pokaż wszystkie" — liczone z `maxHeight` tabeli. */
+const LIST_ROW_PX = 52;
 
 export function DataTable<T>({
     columns,
@@ -54,9 +65,16 @@ export function DataTable<T>({
     cardTitle,
     cardMeta,
     cardAction,
+    mobileLayout = 'auto',
 }: DataTableProps<T>) {
     const [sortKey, setSortKey] = useState<string | undefined>(initialSort);
     const [dir, setDir] = useState<'asc' | 'desc'>(initialDir);
+    const [expanded, setExpanded] = useState(false);
+    const wrapRef = useRef<HTMLDivElement>(null);
+    const sortRef = useRef<HTMLDivElement>(null);
+    const wrapFade = useScrollFade(wrapRef);
+    const asList = !mobileAsCards && mobileLayout === 'auto' && columns.length <= 4;
+    const sortFade = useScrollFade(sortRef, asList);
 
     const sorted = useMemo(() => {
         if (!sortKey) return rows;
@@ -99,8 +117,14 @@ export function DataTable<T>({
 
     const wrapStyle = maxHeight ? { maxHeight, overflow: 'auto' as const } : undefined;
 
+    // Wygaszamy tylko PRAWĄ krawędź: lewą zajmuje przyklejona pierwsza kolumna, maska by ją zjadła.
     const table = (
-        <div className="mk-table-wrap" style={wrapStyle}>
+        <div
+            ref={wrapRef}
+            className="mk-table-wrap mk-fade-x"
+            data-fade={wrapFade === 'end' || wrapFade === 'both' ? 'end' : 'none'}
+            style={wrapStyle}
+        >
             <table className="mk-table">
                 <thead>
                     <tr>
@@ -163,6 +187,105 @@ export function DataTable<T>({
         </div>
     );
 
+    if (asList) {
+        const [primary, ...restCols] = columns;
+        const leftCols = restCols.filter((c) => c.align !== 'right');
+        const rightCols = restCols.filter((c) => c.align === 'right');
+        const sortable = columns.filter((c) => c.sortable && c.sortValue);
+        const limit = maxHeight ? Math.max(6, Math.floor(maxHeight / LIST_ROW_PX)) : Infinity;
+        const shown = expanded ? sorted : sorted.slice(0, limit);
+        const hidden = sorted.length - shown.length;
+
+        const rowInner = (row: T) => (
+            <>
+                <span className="min-w-0 flex-1">
+                    <span className="block break-words text-sm font-medium leading-snug text-mk-text">{primary ? cell(primary, row) : null}</span>
+                    {leftCols.length > 0 && (
+                        <span className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-mk-muted">
+                            {leftCols.map((c) => (
+                                <span key={c.key} className="inline-flex min-w-0 items-center gap-1.5">
+                                    <span className="text-mk-faint">{c.header}</span>
+                                    {cell(c, row)}
+                                </span>
+                            ))}
+                        </span>
+                    )}
+                </span>
+                {rightCols.length > 0 && (
+                    <span className="shrink-0 text-right tnum">
+                        <span className="block text-sm font-semibold text-mk-text">{cell(rightCols[0], row)}</span>
+                        {rightCols.slice(1).map((c) => (
+                            <span key={c.key} className="mt-0.5 block text-xs text-mk-muted">
+                                <span className="mr-1 text-mk-faint">{c.header}</span>
+                                {cell(c, row)}
+                            </span>
+                        ))}
+                    </span>
+                )}
+                {onRowClick && <ChevronRight size={16} className="-mr-1 shrink-0 text-mk-faint" aria-hidden />}
+            </>
+        );
+
+        return (
+            <>
+                <div className="sm:hidden">
+                    {sortable.length > 1 && (
+                        <div className="mb-2 flex min-w-0 items-center gap-2">
+                            <span className="shrink-0 text-xs font-medium text-mk-muted">Sortuj</span>
+                            <div ref={sortRef} className="mk-seg mk-fade-x" data-fade={sortFade} role="group" aria-label="Sortowanie listy">
+                                {sortable.map((c) => {
+                                    const active = sortKey === c.key;
+                                    return (
+                                        <button
+                                            key={c.key}
+                                            type="button"
+                                            aria-pressed={active}
+                                            onClick={() => toggle(c.key)}
+                                            className={`mk-seg-btn mk-seg-sm gap-1 ${active ? 'mk-seg-btn-active' : ''}`}
+                                        >
+                                            {c.header}
+                                            {active && (dir === 'asc' ? <ChevronUp size={13} aria-hidden /> : <ChevronDown size={13} aria-hidden />)}
+                                            {active && <span className="sr-only">{dir === 'asc' ? ' (rosnąco)' : ' (malejąco)'}</span>}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
+                    {sorted.length === 0 ? (
+                        <p className="py-6 text-center text-sm text-mk-faint">{emptyText}</p>
+                    ) : (
+                        <ul className="mk-table-list">
+                            {shown.map((row, i) => (
+                                <li key={rowKey ? rowKey(row, i) : i}>
+                                    {onRowClick ? (
+                                        <button type="button" onClick={() => onRowClick(row)} className="mk-table-row mk-press-row">
+                                            {rowInner(row)}
+                                        </button>
+                                    ) : (
+                                        <div className="mk-table-row">{rowInner(row)}</div>
+                                    )}
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                    {(hidden > 0 || (expanded && sorted.length > limit)) && (
+                        <button
+                            type="button"
+                            onClick={() => setExpanded((v) => !v)}
+                            aria-expanded={expanded}
+                            className="mk-press mt-1 flex min-h-11 w-full items-center justify-center gap-1 rounded-lg border border-mk-border text-sm font-medium text-mk-text-soft hover:bg-mk-surface-alt"
+                        >
+                            {expanded ? 'Zwiń' : `Pokaż wszystkie (${sorted.length})`}
+                            {expanded ? <ChevronUp size={15} aria-hidden /> : <ChevronDown size={15} aria-hidden />}
+                        </button>
+                    )}
+                </div>
+                <div className="hidden sm:block">{table}</div>
+            </>
+        );
+    }
+
     if (!mobileAsCards) return table;
 
     const titleOf = (row: T) =>
@@ -201,7 +324,7 @@ export function DataTable<T>({
                             <button
                                 type="button"
                                 onClick={() => onRowClick(row)}
-                                className="mk-table-card min-w-0 flex-1"
+                                className="mk-table-card min-w-0 flex-1 transition-transform duration-100"
                             >
                                 {inner}
                             </button>

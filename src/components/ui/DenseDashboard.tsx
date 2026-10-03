@@ -91,13 +91,13 @@ export function DenseKpiGrid({
     columns?: 5 | 6;
 }) {
     const colClass = columns === 5
-        ? 'sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5'
-        : 'sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6';
+        ? 'sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 lg:[&>*:last-child:nth-child(odd)]:col-span-1'
+        : 'sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 md:[&>*:last-child:nth-child(odd)]:col-span-1';
 
     return (
         <section>
             {label && <h2 className="mk-section-label mb-2.5">{label}</h2>}
-            <div className={`grid grid-cols-2 gap-3 ${colClass}`}>
+            <div className={`grid grid-cols-2 gap-3 [&>*:last-child:nth-child(odd)]:col-span-2 ${colClass}`}>
                 {items.map(({ key, ...k }) => (
                     <CompactKpi key={key} {...k} />
                 ))}

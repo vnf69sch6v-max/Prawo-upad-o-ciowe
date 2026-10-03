@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { AlertTriangle } from 'lucide-react';
 import { formatDataPeriod } from '@/lib/formatters';
+import { useIsClient } from '@/lib/use-is-client';
 
 /** Months between a data period (YYYY-MM / YYYY-Qn / YYYY-MM-DD / YYYY) and now. */
 function monthsAgo(dateStr: string): number | null {
@@ -19,16 +19,16 @@ function monthsAgo(dateStr: string): number | null {
 
 /** Amber "nieaktualne" pill shown only when the data period is older than the threshold. */
 export function StaleBadge({ date, warnAfterMonths = 2, label = 'dane' }: { date?: string | null; warnAfterMonths?: number; label?: string }) {
-    const [mounted, setMounted] = useState(false);
-    useEffect(() => setMounted(true), []);
+    // „Ile miesięcy temu" zależy od dziś — dopiero po hydratacji (AGENTS.md, React #418).
+    const mounted = useIsClient();
     if (!mounted || !date) return null;
 
     const ago = monthsAgo(date);
     if (ago == null || ago < warnAfterMonths) return null;
 
     return (
-        <span className="inline-flex items-center gap-1 rounded-full bg-mk-warn-soft px-2 py-0.5 text-[11px] font-semibold text-mk-warn">
-            <AlertTriangle size={12} /> nieaktualne · {label} {formatDataPeriod(date)}
+        <span className="inline-flex max-w-full items-center gap-1 rounded-full bg-mk-warn-soft px-2 py-0.5 text-[11px] font-semibold text-mk-warn">
+            <AlertTriangle size={12} className="shrink-0" aria-hidden /> nieaktualne · {label} {formatDataPeriod(date)}
         </span>
     );
 }

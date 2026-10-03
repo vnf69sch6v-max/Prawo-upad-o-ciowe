@@ -7,7 +7,7 @@ import {
     useGusCpiHeadline, useGusRegional, useGusMonthly, useNBPInterestRates, useWibor, useYieldCurve, useCpiFull,
 } from '@/lib/hooks';
 import { plSeries, lastOf, deltaOf, monthTick, fmtPL, type Point } from '@/lib/series';
-import { formatDecimalPL, formatNumber, formatDate } from '@/lib/formatters';
+import { formatDecimalPL, formatNumber } from '@/lib/formatters';
 import { KpiCard, type AccentKey } from '@/components/ui/KpiCard';
 import { InteractiveChart } from '@/components/ui/InteractiveChart';
 import { SectionCard } from '@/components/ui/SectionCard';
@@ -155,7 +155,7 @@ export function RynekPracySection() {
 
     const regions = regQ.data?.regions ?? [];
     const national = regQ.data?.national ?? { avgUnemployment: null, avgWages: null };
-    const wages = monthlyQ.data?.wages ?? [];
+    const wages = useMemo(() => monthlyQ.data?.wages ?? [], [monthlyQ.data?.wages]);
     const lastWage = wages.length ? wages[wages.length - 1] : null;
 
     // Płace realne = wzrost płac nominalnych (r/r) − inflacja CPI (r/r) = zmiana siły nabywczej

@@ -1,14 +1,15 @@
 'use client';
 
-import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import {
     ComposedChart, Line, Bar, Area,
     XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine, Legend,
 } from 'recharts';
-import { ResponsiveContainer, usePlotWidth } from '@/components/ui/ChartContainer';
-import { AXIS_INK, AXIS_LINE, CHART_SM, CURSOR, GRID, TICK_FONT, mobilePlotHeight, xTickStep } from '@/lib/chart-theme';
+import { ResponsiveContainer, mobileChartHeight, usePlotWidth } from '@/components/ui/ChartContainer';
+import { AXIS_INK, AXIS_LINE, CHART_SM, CURSOR, GRID, TICK_FONT, xTickStep } from '@/lib/chart-theme';
 import { RANGE_MONTHS, formatPeriodLabel, sliceByMonths, usefulRanges, type RangeKey } from '@/lib/chart-range';
 import { useCanHover } from '@/lib/use-can-hover';
+import { useScrollFade } from '@/lib/use-scroll-fade';
 
 export interface ChartSeries {
     key: string;
@@ -42,21 +43,23 @@ interface InteractiveChartProps {
 
 interface TooltipEntry { name?: string; value?: number; color?: string }
 
-function LightTooltip({ active, payload, label, valueFormatter, unit }: {
+function LightTooltip({ active, payload, label, valueFormatter, unit, maxWidth }: {
     active?: boolean; payload?: TooltipEntry[]; label?: string;
     valueFormatter?: (v: number) => string; unit?: string;
+    /** Szerokość karty minus margines — dymek nigdy nie wychodzi poza wykres (telefon, długie nazwy serii). */
+    maxWidth?: number;
 }) {
     if (!active || !payload?.length) return null;
     return (
-        <div style={{ background: '#fff', border: '1px solid #E7EAF0', borderRadius: 10, padding: '8px 12px', boxShadow: '0 6px 16px rgba(16,24,40,.12)', fontSize: 13, minWidth: 130 }}>
+        <div style={{ background: '#fff', border: '1px solid #E7EAF0', borderRadius: 10, padding: '8px 12px', boxShadow: '0 6px 16px rgba(16,24,40,.12)', fontSize: 13, minWidth: 130, maxWidth }}>
             {/* „30.09.2026" / „sierpień 2026" / „II kwartał 2026" zamiast surowego klucza osi. */}
             <div style={{ color: '#64748B', fontSize: 11, marginBottom: 5, fontWeight: 600 }}>{formatPeriodLabel(label)}</div>
             {payload.map((p, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 3 }}>
                     {/* Klucz serii jako krótka kreska (jak linia na wykresie), nie pełny kwadrat. */}
                     <span style={{ width: 12, height: 2, borderRadius: 1, background: p.color, flexShrink: 0 }} />
-                    <span style={{ color: '#64748B' }}>{p.name}</span>
-                    <span style={{ color: '#0F172A', fontWeight: 600, marginLeft: 'auto', fontVariantNumeric: 'tabular-nums' }}>
+                    <span style={{ color: '#64748B', minWidth: 0, overflowWrap: 'anywhere' }}>{p.name}</span>
+                    <span style={{ color: '#0F172A', fontWeight: 600, marginLeft: 'auto', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>
                         {p.value == null ? '—' : (valueFormatter ? valueFormatter(p.value) : p.value)}{unit ?? ''}
                     </span>
                 </div>
@@ -85,14 +88,85 @@ function BelowLegend({ series }: { series: ChartSeries[] }) {
 
 const DEFAULT_RANGES: RangeKey[] = ['3M', '6M', '1R', 'ALL'];
 
-const RANGE_BTN: CSSProperties = {
-    minWidth: 28,
-    minHeight: 28,
-    padding: '4px 10px',
-    fontSize: 12,
-    lineHeight: 1.2,
-    touchAction: 'manipulation',
-};
+// Rozmiar przycisków zakresu mieszka w CSS (`.mk-seg-sm`): 28 px dla myszy, 44 px dla dotyku
+// (`@media (pointer: coarse)`). Styl inline wygrywał z każdą regułą i blokował cel dotykowy.
+const RANGE_BTN: CSSProperties = { touchAction: 'manipulation' };
+
+/** Szerokość plotu, poniżej której wykres jest „telefonowy” (portret: 320–430 px okna → 256–366 px plotu). */
+const PHONE_PLOT = 480;
+
+/** Szacowana szerokość etykiety 11 px (Inter): wąskie znaki — spacja, kropka — liczą się mniej. */
+function labelPx(text: string): number {
+    let w = 0;
+    for (const ch of text) w += ch === ' ' ? 3.2 : ch === '.' || ch === ',' ? 3 : 6.4;
+    return w;
+}
+
+interface PhoneTicks { ticks: unknown[]; start: unknown; end: unknown }
+
+/**
+ * Etykiety osi X na telefonie: ≤ 5, w RÓWNYM kroku liczonym wstecz od ostatniego punktu (najnowszy
+ * okres zawsze podpisany, odstępy równe także w czasie), krok dobrany do szerokości etykiet.
+ * Skrajne są dosunięte do brzegów (`start`/`end`), więc między sąsiadami musi zmieścić się 1,5
+ * etykiety + odstęp — inaczej „II kw. 24II kw. 26” sklejały się przy prawym brzegu.
+ */
+function phoneTicks(rows: Record<string, unknown>[], xKey: string, width: number, fmt?: (v: string) => string): PhoneTicks {
+    const n = rows.length;
+    if (n === 0) return { ticks: [], start: undefined, end: undefined };
+    const label = (r: Record<string, unknown>) => (fmt ? fmt(String(r[xKey])) : String(r[xKey] ?? ''));
+    let maxL = 0;
+    for (const r of rows) maxL = Math.max(maxL, labelPx(label(r)));
+    const plotW = Math.max(64, width - 40);
+    const perIdx = n > 1 ? plotW / (n - 1) : plotW;
+    const step = Math.max(1, Math.ceil((1.5 * maxL + 10) / perIdx), Math.ceil((n - 1) / 4));
+    const idx: number[] = [];
+    for (let i = n - 1; i >= 0; i -= step) idx.unshift(i);
+    const first = idx[0];
+    return {
+        ticks: idx.map((i) => rows[i][xKey]),
+        // Pierwsza etykieta tuż przy lewym brzegu — kotwica `start`, żeby jej nie ucięło.
+        start: first * perIdx < maxL / 2 + 2 ? rows[first][xKey] : undefined,
+        end: rows[n - 1][xKey],
+    };
+}
+
+const plNum = new Intl.NumberFormat('pl-PL', { maximumFractionDigits: 1 });
+
+/**
+ * Oś Y na telefonie: „158 tys.” zamiast „158 473”, „20” zamiast „20,0” — oś ma być wąska, a dokładna
+ * wartość i tak jest w dymku. Na desktopie bez zmian (formatter strony).
+ */
+function compactAxis(valueFormatter?: (v: number) => string) {
+    return (v: number) => {
+        const a = Math.abs(v);
+        if (a >= 1e6) return `${plNum.format(v / 1e6)} mln`;
+        if (a >= 1e4) return `${plNum.format(v / 1e3)} tys.`;
+        const s = valueFormatter ? valueFormatter(v) : plNum.format(v);
+        return s.replace(/,0+(?=\D*$)/, '');
+    };
+}
+
+interface EdgeTickProps {
+    x?: number | string; y?: number | string;
+    payload?: { value?: unknown };
+    first: unknown; last: unknown;
+    format?: (v: string) => string;
+}
+
+/**
+ * Etykieta osi X kotwiczona do krawędzi: pierwsza od lewej (`start`), ostatnia do prawej (`end`).
+ * Wyśrodkowana ostatnia etykieta przy prawym brzegu plotu była ucinana do „08.2”.
+ */
+function EdgeTick({ x, y, payload, first, last, format }: EdgeTickProps) {
+    const v = payload?.value;
+    const anchor = v === first ? 'start' : v === last ? 'end' : 'middle';
+    const text = format ? format(String(v)) : String(v ?? '');
+    return (
+        <text x={Number(x)} y={Number(y)} dy="0.71em" textAnchor={anchor} fill={AXIS_INK} fontSize={TICK_FONT}>
+            {text}
+        </text>
+    );
+}
 
 export function InteractiveChart({
     data, xKey, series, height = 300, unit = '', valueFormatter, xTickFormatter,
@@ -103,11 +177,13 @@ export function InteractiveChart({
     const { ref: rootRef, width: boxW } = usePlotWidth();
     const [forceHide, setForceHide] = useState(false);
     const canHover = useCanHover();
+    const rangeRef = useRef<HTMLDivElement>(null);
 
     // Tylko zakresy, które realnie coś przycinają — przy 60 sesjach „1R" i „ALL" to ten sam widok.
     const shownRanges = useMemo(() => usefulRanges(data, xKey, rangeButtons), [data, xKey, rangeButtons]);
     const activeRange: RangeKey = shownRanges.includes(range) ? range : 'ALL';
     const rangeControl = showRange && shownRanges.length > 1;
+    const rangeFade = useScrollFade(rangeRef, rangeControl);
 
     const view = useMemo(() => {
         if (!showRange || activeRange === 'ALL') return data;
@@ -126,9 +202,18 @@ export function InteractiveChart({
     const yDomain: [number | string, number | string] = hasBar ? [0, 'auto'] : ['auto', 'auto'];
 
     const isNarrow = boxW === 0 || boxW < CHART_SM;
-    const plotH = mobilePlotHeight(boxW || 375, height);
+    const plotH = mobileChartHeight(boxW || 375, height);
     const tickInterval = xTickStep(boxW || 309, view.length);
     const legendBelow = Boolean(legend && isNarrow);
+    // Telefon (plot < 480 px — także gdy jeszcze nie zmierzony): ≤ 5 etykiet osi X, skrajne dosunięte
+    // do krawędzi, wąska oś Y. Desktop — także w wąskiej kolumnie — bez zmian (interwał z pomiaru).
+    const isPhone = boxW === 0 || boxW < PHONE_PLOT;
+    const narrowTicks = useMemo(
+        () => (isPhone ? phoneTicks(view, xKey, boxW || 326, xTickFormatter) : undefined),
+        [isPhone, view, xKey, boxW, xTickFormatter],
+    );
+    const yTick = isPhone ? compactAxis(valueFormatter) : valueFormatter;
+    const yRightTick = isPhone ? compactAxis() : undefined;
 
     // Tooltip: mysz → najechanie (celownik + wartości bez klikania); dotyk → stuknięcie, które ZOSTAJE.
     // W trybie dotykowym `active={false}` od startu BLOKUJE tap (Recharts nie otworzy tooltipa) —
@@ -144,10 +229,10 @@ export function InteractiveChart({
     return (
         <div ref={rootRef}>
             {(rangeControl || controls) && (
-                <div className="mb-3 flex items-center justify-between gap-3">
-                    <div>{controls}</div>
+                <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                    <div className="min-w-0 max-w-full">{controls}</div>
                     {rangeControl && (
-                        <div className="mk-seg" role="tablist" aria-label="Zakres">
+                        <div ref={rangeRef} className="mk-seg mk-fade-x ml-auto" data-fade={rangeFade} role="tablist" aria-label="Zakres">
                             {shownRanges.map((r) => (
                                 <button
                                     key={r}
@@ -155,7 +240,7 @@ export function InteractiveChart({
                                     role="tab"
                                     aria-selected={activeRange === r}
                                     onClick={() => setRange(r)}
-                                    className={`mk-seg-btn ${activeRange === r ? 'mk-seg-btn-active' : ''}`}
+                                    className={`mk-seg-btn mk-seg-sm ${activeRange === r ? 'mk-seg-btn-active' : ''}`}
                                     style={RANGE_BTN}
                                 >
                                     {r}
@@ -179,7 +264,9 @@ export function InteractiveChart({
             <ResponsiveContainer width="100%" height={height}>
                 <ComposedChart
                     data={view}
-                    margin={{ top: 6, right: hasRight ? 6 : 12, left: -6, bottom: legendBelow ? 2 : 0 }}
+                    margin={isPhone
+                        ? { top: 6, right: 6, left: 0, bottom: legendBelow ? 2 : 0 }
+                        : { top: 6, right: hasRight ? 6 : 12, left: -6, bottom: legendBelow ? 2 : 0 }}
                     onClick={() => setForceHide(false)}
                 >
                     <defs>
@@ -191,22 +278,34 @@ export function InteractiveChart({
                         ))}
                     </defs>
                     <CartesianGrid stroke={GRID} vertical={false} />
-                    <XAxis
-                        dataKey={xKey}
-                        tick={{ fill: AXIS_INK, fontSize: TICK_FONT }}
-                        tickFormatter={xTickFormatter}
-                        axisLine={{ stroke: AXIS_LINE }}
-                        tickLine={false}
-                        interval={tickInterval}
-                        minTickGap={36}
-                        angle={0}
-                    />
-                    <YAxis yAxisId="left" domain={yDomain} tick={{ fill: AXIS_INK, fontSize: TICK_FONT }} axisLine={false} tickLine={false} width={44} tickFormatter={valueFormatter} />
-                    {hasRight && <YAxis yAxisId="right" orientation="right" domain={['auto', 'auto']} tick={{ fill: AXIS_INK, fontSize: TICK_FONT }} axisLine={false} tickLine={false} width={44} />}
+                    {narrowTicks ? (
+                        <XAxis
+                            dataKey={xKey}
+                            ticks={narrowTicks.ticks as (string | number)[]}
+                            interval={0}
+                            tick={<EdgeTick first={narrowTicks.start} last={narrowTicks.end} format={xTickFormatter} />}
+                            axisLine={{ stroke: AXIS_LINE }}
+                            tickLine={false}
+                        />
+                    ) : (
+                        <XAxis
+                            dataKey={xKey}
+                            tick={{ fill: AXIS_INK, fontSize: TICK_FONT }}
+                            tickFormatter={xTickFormatter}
+                            axisLine={{ stroke: AXIS_LINE }}
+                            tickLine={false}
+                            interval={tickInterval}
+                            minTickGap={36}
+                            angle={0}
+                        />
+                    )}
+                    {/* Telefon: szerokość osi z etykiet (`auto`), format kompaktowy — więcej miejsca na dane. */}
+                    <YAxis yAxisId="left" domain={yDomain} tick={{ fill: AXIS_INK, fontSize: TICK_FONT }} axisLine={false} tickLine={false} width={isPhone ? 'auto' : 44} tickFormatter={yTick} />
+                    {hasRight && <YAxis yAxisId="right" orientation="right" domain={['auto', 'auto']} tick={{ fill: AXIS_INK, fontSize: TICK_FONT }} axisLine={false} tickLine={false} width={isPhone ? 'auto' : 44} tickFormatter={yRightTick} />}
                     <Tooltip
                         trigger={canHover ? 'hover' : 'click'}
                         active={!canHover && forceHide ? false : undefined}
-                        content={<LightTooltip valueFormatter={valueFormatter} unit={unit} />}
+                        content={<LightTooltip valueFormatter={valueFormatter} unit={unit} maxWidth={boxW ? Math.max(160, boxW - 16) : undefined} />}
                         cursor={{ stroke: CURSOR, strokeWidth: 1 }}
                         isAnimationActive={false}
                     />

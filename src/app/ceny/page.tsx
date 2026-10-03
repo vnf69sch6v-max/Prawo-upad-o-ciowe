@@ -8,6 +8,7 @@ import { InflacjaFull } from '@/components/sections/InflacjaFull';
 import { PpiFull } from '@/components/sections/PpiFull';
 import { DbwPriceSection } from '@/components/sections/DbwPriceSection';
 import { PageHeader } from '@/components/ui/PageHeader';
+import { MobileTabs } from '@/components/sections/mobile-layout';
 
 type Tab = 'inflacja' | 'ppi' | 'nieruchomosci' | 'budowlane' | 'rolne';
 const TABS: { value: Tab; label: string }[] = [
@@ -15,6 +16,14 @@ const TABS: { value: Tab; label: string }[] = [
     { value: 'ppi', label: 'PPI' },
     { value: 'nieruchomosci', label: 'Nieruchomości' },
     { value: 'budowlane', label: 'Budowlano-montażowe' },
+    { value: 'rolne', label: 'Rolne' },
+];
+// Telefon: krótsze etykiety w przyklejonym rzędzie (pełne nazwy są w nagłówku hero sekcji).
+const TABS_MOBILE: { value: Tab; label: string }[] = [
+    { value: 'inflacja', label: 'Inflacja CPI' },
+    { value: 'ppi', label: 'PPI' },
+    { value: 'nieruchomosci', label: 'Mieszkania' },
+    { value: 'budowlane', label: 'Budownictwo' },
     { value: 'rolne', label: 'Rolne' },
 ];
 
@@ -26,8 +35,9 @@ export default function CenyPage() {
         <div className="mk-fade-in space-y-5">
             <PageHeader
                 title="Ceny"
-                actions={<Segmented value={tab} onChange={setTab} options={TABS} aria-label="Sekcja cen" />}
+                actions={<div className="hidden lg:block"><Segmented value={tab} onChange={setTab} options={TABS} aria-label="Sekcja cen" /></div>}
             />
+            <MobileTabs value={tab} onChange={setTab} options={TABS_MOBILE} ariaLabel="Sekcja cen" className="-mt-2" />
 
             <div key={tab} className="mk-tab-panel mk-fade-in">
             {tab === 'inflacja' && <InflacjaFull />}
@@ -40,8 +50,7 @@ export default function CenyPage() {
                     series={[
                         { poz: 4801795, name: 'Rynek pierwotny', color: '#16A34A', accent: 'green', icon: Home },
                         { poz: 4801796, name: 'Rynek wtórny', color: '#D97706', accent: 'amber', icon: Home },
-                    ]}
-                    note="Wskaźnik cen nieruchomości mieszkaniowych GUS — dynamika r/r dla rynku pierwotnego i wtórnego." />
+                    ]} />
             )}
             {tab === 'budowlane' && (
                 <DbwPriceSection title="Ceny robót budowlano-montażowych" subtitle="GUS · r/r (%)" refline={0}
@@ -61,8 +70,7 @@ export default function CenyPage() {
                         { poz: 7124724, name: 'Żywiec — trzoda', color: '#E11D48', accent: 'rose' },
                         { poz: 7189791, name: 'Żywiec — bydło', color: '#7C3AED', accent: 'violet' },
                         { poz: 7121981, name: 'Mleko', color: '#0891B2', accent: 'cyan' },
-                    ]}
-                    note="Dynamika cen skupu podstawowych produktów rolnych." />
+                    ]} />
             )}
             </div>
         </div>

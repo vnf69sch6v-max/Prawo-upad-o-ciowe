@@ -1,9 +1,8 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { BarChart3, TrendingUp, TrendingDown, Search, ExternalLink, Newspaper, ArrowUpRight } from 'lucide-react';
+import { BarChart3, TrendingUp, TrendingDown, Search, ExternalLink, Newspaper, ArrowUpRight, ChevronDown, X } from 'lucide-react';
 import {
     useStooq, useWig20, useNews, useNBPTable,
     type Wig20Quote, type NewsItem, type NBPTable, type NBPRate,
@@ -12,12 +11,14 @@ import { DataTable, type Column } from '@/components/ui/DataTable';
 import { WIG20, type Wig20Company } from '@/lib/wig20';
 import { matchCompanyNews } from '@/lib/news/match';
 import { formatDecimalPL, formatNumber, formatDate, formatRelativeTime, formatTime, percentChange } from '@/lib/formatters';
+import { scrollChildInline } from '@/lib/tab-scroll';
+import { useScrollFade } from '@/lib/use-scroll-fade';
 import { KpiCard } from '@/components/ui/KpiCard';
 import { EditorialHero } from '@/components/ui/EditorialHero';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { Segmented } from '@/components/ui/Segmented';
 import { RynkiDashboard } from '@/components/sections/RynkiDashboard';
-import { DensePageLayout } from '@/components/ui/DensePageLayout';
+import { RelatedNews } from '@/components/ui/RelatedNews';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { QueryState } from '@/components/ui/QueryState';
 import { WatchStar } from '@/components/ui/WatchStar';
@@ -44,6 +45,132 @@ function fmtPct(v: number | null | undefined): string {
     if (v == null) return '—';
     return `${v > 0 ? '+' : ''}${formatDecimalPL(v, 2)}%`;
 }
+/** Kurs z separatorem tysięcy — „24 740,00", nie „24740,00". */
+function fmtPrice(v: number | null | undefined): string {
+    return v != null ? formatNumber(v, 2) : '—';
+}
+
+/** Zmiana dzienna jako wypełniona pigułka (wzorzec aplikacji giełdowych): biały tekst na zieleni/czerwieni. */
+function ChangePill({ value }: { value: number | null | undefined }) {
+    const bg = value == null || value === 0 ? '#64748B' : value > 0 ? CHANGE_UP : CHANGE_DOWN;
+    return (
+        <span
+            className="inline-flex min-w-[4.75rem] shrink-0 items-center justify-center rounded-lg px-2 py-1.5 text-sm font-bold leading-none text-white tnum"
+            style={{ background: bg }}
+        >
+            {fmtPct(value)}
+        </span>
+    );
+}
+
+type QuoteRow = { company: Wig20Company; quote: Wig20Quote | null };
+
+/**
+ * Telefon: lista notowań jak w aplikacji giełdowej — nazwa i ticker po lewej, kurs i pigułka zmiany
+ * po prawej, cały wiersz (≥60 px) jest linkiem do karty spółki. Od `sm` zostają karty z opisem i newsami.
+ */
+function QuoteList({ rows }: { rows: QuoteRow[] }) {
+    return (
+        <div className="mk-card mk-card-editorial overflow-hidden">
+            <div className="flex items-center gap-3 border-b border-mk-border px-4 py-2 text-[11px] font-semibold uppercase tracking-wide text-mk-faint">
+                <span className="flex-1">Spółka</span>
+                <span>Kurs (zł)</span>
+                <span className="w-[4.75rem] text-center">Zmiana</span>
+            </div>
+            <ul className="divide-y divide-mk-border" aria-label="Notowania spółek WIG20">
+                {rows.map(({ company, quote }) => (
+                    <li key={company.ticker}>
+                        <Link
+                            href={`/spolki/${company.ticker}`}
+                            className="flex min-h-[60px] items-center gap-3 px-4 py-2.5 transition-colors [-webkit-tap-highlight-color:transparent] active:bg-mk-surface-alt focus:outline-none focus-visible:bg-mk-surface-alt"
+                        >
+                            <span className="min-w-0 flex-1">
+                                <span className="block truncate text-[15px] font-semibold leading-snug text-mk-text" title={company.name}>{company.name}</span>
+                                <span className="mt-0.5 block truncate text-xs text-mk-muted" title={company.sector}>
+                                    <span className="font-semibold text-mk-text-soft">{company.ticker}</span> · {company.sector}
+                                </span>
+                            </span>
+                            <span className="shrink-0 text-right text-[15px] font-semibold text-mk-text tnum">{fmtPrice(quote?.price)}</span>
+                            <ChangePill value={quote?.changePct} />
+                        </Link>
+                    </li>
+                ))}
+            </ul>
+        </div>
+    );
+}
+
+function QuoteListSkeleton() {
+    return (
+        <div className="mk-card mk-card-editorial divide-y divide-mk-border overflow-hidden" role="status" aria-busy="true" aria-label="Ładowanie spółek">
+            {Array.from({ length: 8 }, (_, i) => (
+                <div key={i} className="flex min-h-[60px] items-center gap-3 px-4 py-2.5">
+                    <div className="flex-1 space-y-1.5">
+                        <div className="mk-skeleton h-4 w-28 rounded" />
+                        <div className="mk-skeleton h-3 w-36 rounded" />
+                    </div>
+                    <div className="mk-skeleton h-4 w-14 rounded" />
+                    <div className="mk-skeleton h-7 w-[4.75rem] rounded-lg" />
+                </div>
+            ))}
+        </div>
+    );
+}
+
+/** Telefon: szerokość rynku w jednym pasku zamiast drugiego hero i czterech kafli. */
+function BreadthCard({ up, down, n, avg, date }: { up: number; down: number; n: number; avg: number | null; date: string | null }) {
+    if (!n) return null;
+    return (
+        <div className="mk-card mk-card-editorial p-4">
+            <div className="flex items-baseline justify-between gap-3">
+                <h3 className="mk-section-label">Szerokość rynku</h3>
+                {date && <span className="text-xs text-mk-muted tnum">sesja {formatDate(date)}</span>}
+            </div>
+            <div className="mt-3 flex h-2 overflow-hidden rounded-full bg-mk-surface-alt" aria-hidden>
+                <span style={{ width: `${(up / n) * 100}%`, background: CHANGE_UP }} />
+                <span className="ml-auto" style={{ width: `${(down / n) * 100}%`, background: CHANGE_DOWN }} />
+            </div>
+            <div className="mt-2.5 flex items-center justify-between gap-2 text-sm tnum">
+                <span className="font-semibold" style={{ color: CHANGE_UP }}>▲ {up} rośnie</span>
+                <span className="text-mk-muted">śr. <strong className="text-mk-text">{fmtPct(avg)}</strong></span>
+                <span className="font-semibold" style={{ color: CHANGE_DOWN }}>{down} spada ▼</span>
+            </div>
+            <p className="mt-1 text-xs text-mk-muted">z {n} spółek WIG20 z notowaniem</p>
+        </div>
+    );
+}
+
+/**
+ * Rząd chipów filtra: na telefonie jeden przewijany wiersz (wychodzi pod krawędź ekranu — ucięty
+ * ostatni chip mówi „przewiń"), od `sm` zawija się. Aktywny chip zostaje w kadrze.
+ */
+function ChipRow({ label, children, activeKey }: { label: string; children: ReactNode; activeKey: string }) {
+    const ref = useRef<HTMLDivElement>(null);
+    const fade = useScrollFade(ref);
+    useEffect(() => {
+        const box = ref.current;
+        const active = box?.querySelector<HTMLElement>('[aria-pressed="true"]');
+        if (box && active) scrollChildInline(box, active);
+    }, [activeKey]);
+    return (
+        <div
+            ref={ref}
+            role="group"
+            aria-label={label}
+            data-fade={fade}
+            className="mk-fade-x -mx-4 overflow-x-auto overscroll-x-contain px-4 [scrollbar-width:none] sm:mx-0 sm:overflow-visible sm:px-0 [&::-webkit-scrollbar]:hidden"
+        >
+            <div className="flex w-max gap-2 sm:w-auto sm:flex-wrap">{children}</div>
+        </div>
+    );
+}
+
+const chipClass = (active: boolean) =>
+    `inline-flex min-h-11 shrink-0 items-center rounded-full border px-4 text-sm font-medium transition-colors [-webkit-tap-highlight-color:transparent] lg:min-h-8 lg:px-3 lg:text-xs ${
+        active
+            ? 'border-mk-primary bg-mk-primary text-white'
+            : 'border-mk-border bg-mk-surface text-mk-muted hover:border-mk-primary/40 hover:text-mk-text active:bg-mk-surface-alt'
+    }`;
 
 function CompanyNewsList({ items }: { items: NewsItem[] }) {
     if (items.length === 0) {
@@ -78,7 +205,7 @@ function CompanyCard({ company, quote, news }: { company: Wig20Company; quote: W
             <div className="flex items-start gap-2 pr-8">
                 <span className="mt-0.5 inline-flex shrink-0 items-center rounded-md bg-mk-surface-alt px-1.5 py-0.5 text-xs font-bold text-mk-text">{company.ticker}</span>
                 <div className="min-w-0">
-                    <Link href={`/spolki/${company.ticker}`} className="block min-h-6 truncate text-base font-bold leading-tight text-mk-text transition-colors hover:text-mk-primary">
+                    <Link href={`/spolki/${company.ticker}`} className="flex min-h-11 items-center truncate text-base lg:block lg:min-h-6 font-bold leading-tight text-mk-text transition-colors hover:text-mk-primary">
                         {company.name}
                     </Link>
                     <span className="mt-0.5 inline-block rounded-full bg-mk-surface-alt px-2 py-0.5 text-[11px] font-medium text-mk-muted">{company.sector}</span>
@@ -87,7 +214,7 @@ function CompanyCard({ company, quote, news }: { company: Wig20Company; quote: W
 
             <div className="mt-3 flex items-baseline justify-between gap-2">
                 <span className="text-2xl font-extrabold tnum text-mk-text">
-                    {quote?.price != null ? formatDecimalPL(quote.price, 2) : '—'}
+                    {fmtPrice(quote?.price)}
                     <span className="ml-1 text-sm font-semibold text-mk-muted">zł</span>
                 </span>
                 <span className="text-sm font-bold tnum" style={{ color: changeColor(change) }}>{fmtPct(change)}</span>
@@ -104,20 +231,33 @@ function CompanyCard({ company, quote, news }: { company: Wig20Company; quote: W
                 <CompanyNewsList items={news} />
             </div>
 
-            <Link href={`/spolki/${company.ticker}`} className="mt-3 inline-flex min-h-6 items-center gap-1 text-sm font-medium text-mk-primary transition-colors hover:underline">
+            <Link href={`/spolki/${company.ticker}`} className="mt-3 inline-flex min-h-11 items-center lg:min-h-6 gap-1 text-sm font-medium text-mk-primary transition-colors hover:underline">
                 Szczegóły i wykres <ArrowUpRight size={14} aria-hidden />
             </Link>
         </div>
     );
 }
 
+/** Na telefonie najpierw waluty, o które ludzie pytają najczęściej; reszta po „Pokaż wszystkie". */
+const FX_FIRST = ['EUR', 'USD', 'CHF', 'GBP', 'JPY', 'CZK'];
+const FX_COLLAPSED = FX_FIRST.length;
+
 function NbpFxTable() {
     const fxQ = useNBPTable('a');
+    const [showAll, setShowAll] = useState(false);
     const table = useMemo(() => {
         const raw = fxQ.data as NBPTable | NBPTable[] | undefined;
         return Array.isArray(raw) ? raw[0] : raw;
     }, [fxQ.data]);
-    const rates: NBPRate[] = table?.rates ?? [];
+    const rates: NBPRate[] = useMemo(() => table?.rates ?? [], [table]);
+    const mobileRates = useMemo(() => {
+        const rank = (code: string) => {
+            const i = FX_FIRST.indexOf(code);
+            return i === -1 ? FX_FIRST.length : i;
+        };
+        return [...rates].sort((a, b) => rank(a.code) - rank(b.code) || a.code.localeCompare(b.code));
+    }, [rates]);
+    const shownMobile = showAll ? mobileRates : mobileRates.slice(0, FX_COLLAPSED);
 
     const cols: Column<NBPRate>[] = [
         { key: 'currency', header: 'Waluta', sortable: true, sortValue: (r) => r.currency, render: (r) => <span className="capitalize">{r.currency}</span> },
@@ -130,21 +270,51 @@ function NbpFxTable() {
             editorial
             titleVariant="label"
             title="Tabela kursów NBP (tab. A)"
-            subtitle={table?.effectiveDate ? `stan na ${formatDate(table.effectiveDate)}` : 'NBP'}
+            subtitle={table?.effectiveDate ? `kurs średni · stan na ${formatDate(table.effectiveDate)}` : 'NBP'}
         >
             {fxQ.isLoading ? (
                 <div className="mk-skeleton h-[200px] w-full" />
+            ) : fxQ.isError ? (
+                <QueryState isError onRetry={() => { void fxQ.refetch(); }} height={160} />
             ) : (
-                <DataTable columns={cols} rows={rates} initialSort="code" initialDir="asc" rowKey={(r) => r.code} maxHeight={360} />
+                <>
+                    {/* Telefon: lista (kod + nazwa po lewej, kurs po prawej) zamiast tabeli z kursem za krawędzią. */}
+                    <div className="sm:hidden">
+                        <div className="flex items-center justify-between border-b border-mk-border pb-2 text-[11px] font-semibold uppercase tracking-wide text-mk-faint">
+                            <span>Waluta</span>
+                            <span>Kurs (zł)</span>
+                        </div>
+                        <ul className="divide-y divide-mk-border">
+                            {shownMobile.map((r) => (
+                                <li key={r.code} className="flex min-h-12 items-center gap-3 py-2">
+                                    <span className="w-11 shrink-0 text-[15px] font-bold text-mk-text">{r.code}</span>
+                                    <span className="min-w-0 flex-1 truncate text-sm capitalize text-mk-muted" title={r.currency}>{r.currency}</span>
+                                    <span className="shrink-0 text-[15px] font-semibold text-mk-text tnum">{r.mid != null ? formatDecimalPL(r.mid, 4) : '—'}</span>
+                                </li>
+                            ))}
+                        </ul>
+                        {mobileRates.length > FX_COLLAPSED && (
+                            <button
+                                type="button"
+                                onClick={() => setShowAll((v) => !v)}
+                                aria-expanded={showAll}
+                                className="mk-btn mt-3 min-h-11 w-full active:bg-mk-surface-alt"
+                            >
+                                {showAll ? 'Pokaż mniej' : `Pokaż wszystkie waluty (${mobileRates.length})`}
+                                <ChevronDown size={16} className={`transition-transform ${showAll ? 'rotate-180' : ''}`} aria-hidden />
+                            </button>
+                        )}
+                    </div>
+                    <div className="hidden sm:block">
+                        <DataTable columns={cols} rows={rates} initialSort="code" initialDir="asc" rowKey={(r) => r.code} maxHeight={360} />
+                    </div>
+                </>
             )}
         </SectionCard>
     );
 }
 
-type CompanyRow = { ticker: string; name: string; price: number | null; changePct: number | null };
-
 function SpolkiSection() {
-    const router = useRouter();
     const spolki = useWig20();
     const wigIndex = useStooq('wig20', 30);
     const news = useNews();
@@ -199,43 +369,20 @@ function SpolkiSection() {
         return list;
     }, [query, sector, sort, quoteByTicker, newsByTicker]);
 
-    const companyRows: CompanyRow[] = useMemo(
-        () => cards.map((c) => ({
-            ticker: c.company.ticker,
-            name: c.company.name,
-            price: c.quote?.price ?? null,
-            changePct: c.quote?.changePct ?? null,
-        })),
-        [cards],
-    );
-
-    const companyCols: Column<CompanyRow>[] = [
-        {
-            key: 'watch',
-            header: '★',
-            align: 'center',
-            width: 40,
-            // stopPropagation w WatchStar — wiersz jest klikalny (nawigacja do /spolki).
-            render: (r) => <WatchStar kind="spolka" id={r.ticker} label={r.name} variant="inline" />,
-        },
-        { key: 'ticker', header: 'Ticker', sortable: true, sortValue: (r) => r.ticker, render: (r) => <span className="font-semibold text-mk-text">{r.ticker}</span> },
-        { key: 'name', header: 'Spółka', sortable: true, sortValue: (r) => r.name, render: (r) => <span className="text-mk-text">{r.name}</span> },
-        { key: 'price', header: 'Kurs (zł)', align: 'right', sortable: true, sortValue: (r) => r.price ?? -1, render: (r) => r.price != null ? formatDecimalPL(r.price, 2) : '—' },
-        {
-            key: 'changePct', header: 'Zmiana', align: 'right', sortable: true, sortValue: (r) => r.changePct ?? -999,
-            render: (r) => r.changePct == null ? '—' : (
-                <span style={{ color: changeColor(r.changePct), fontWeight: 600 }}>
-                    {r.changePct > 0 ? '+' : ''}{formatDecimalPL(r.changePct, 2)}%
-                </span>
-            ),
-        },
-    ];
-
-    const pill = (active: boolean) =>
-        `rounded-full border px-3 py-1 text-xs font-medium transition-colors ${active ? 'border-mk-primary bg-mk-primary text-white' : 'border-mk-border bg-mk-surface text-mk-muted hover:border-mk-primary/40 hover:text-mk-text'}`;
+    const hasQuery = query.trim().length > 0;
 
     return (
-        <div className="space-y-6">
+        <section className="space-y-4 sm:space-y-6" aria-labelledby="spolki-wig20">
+            <h2 id="spolki-wig20" className="mk-section-label">Spółki WIG20</h2>
+
+            {/* Telefon: WIG20 jest już w pasie na górze strony — tu tylko szerokość rynku. */}
+            <div className="sm:hidden">
+                {spolki.isLoading
+                    ? <div className="mk-skeleton h-[118px] w-full rounded-2xl" />
+                    : <BreadthCard up={summary.up} down={summary.down} n={summary.n} avg={summary.avg} date={wigDate} />}
+            </div>
+
+            <div className="hidden sm:block">
             <EditorialHero
                 ariaLabel="WIG20 — najważniejszy odczyt"
                 period={wigDate ? formatDate(wigDate) : null}
@@ -259,8 +406,9 @@ function SpolkiSection() {
                     { label: 'Średnia zmiana', value: summary.avg != null ? fmtPct(summary.avg) : '—', divider: true },
                 ]}
             />
+            </div>
 
-            <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+            <div className="hidden grid-cols-2 gap-4 sm:grid lg:grid-cols-4">
                 <KpiCard label="WIG20" value={wigLast != null ? formatNumber(Math.round(wigLast)) : '—'} unit="pkt" icon={BarChart3}
                     delta={wigDelta != null ? { value: wigDelta, unit: 'pct' } : undefined}                     footnote="indeks 20 największych spółek" loading={wigIndex.isLoading} watchId="wig20"
                     error={wigIndex.isError} onRetry={() => { void wigIndex.refetch(); }} />
@@ -276,67 +424,71 @@ function SpolkiSection() {
             </div>
 
             <div className="space-y-3">
-                <div className="flex flex-wrap items-center gap-3">
+                <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
                     <div className="relative min-w-0 flex-1 sm:min-w-[220px]">
                         <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-mk-faint" aria-hidden />
                         <input
+                            type="search"
+                            inputMode="search"
+                            enterKeyHint="search"
+                            autoComplete="off"
+                            autoCorrect="off"
+                            spellCheck={false}
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
-                            placeholder="Szukaj spółki (nazwa, ticker, branża)…"
+                            placeholder="Szukaj: nazwa, ticker, branża"
                             aria-label="Szukaj spółki"
-                            className="h-10 w-full rounded-xl border border-mk-border bg-mk-surface pl-9 pr-3 text-sm text-mk-text outline-none transition-colors placeholder:text-mk-faint focus:border-mk-primary/60"
+                            className="h-11 w-full rounded-xl border border-mk-border bg-mk-surface pl-9 pr-11 text-base text-mk-text outline-none transition-colors placeholder:text-mk-faint focus:border-mk-primary/60 sm:h-10 sm:text-sm [&::-webkit-search-cancel-button]:hidden"
                         />
+                        {hasQuery && (
+                            <button
+                                type="button"
+                                onClick={() => setQuery('')}
+                                aria-label="Wyczyść wyszukiwanie"
+                                className="absolute right-0 top-0 flex h-11 w-11 items-center justify-center rounded-xl text-mk-faint transition-colors hover:text-mk-text active:bg-mk-surface-alt sm:h-10 sm:w-10"
+                            >
+                                <X size={16} />
+                            </button>
+                        )}
                     </div>
-                    <Segmented value={sort} onChange={setSort} aria-label="Sortowanie"
-                        options={[{ value: 'zmiana', label: 'Zmiana %' }, { value: 'nazwa', label: 'A–Z' }, { value: 'kurs', label: 'Kurs' }]} />
+                    {/* Telefon: przełącznik na pełną szerokość (44 px na dotyku daje sam `.mk-seg`). */}
+                    <div className="max-sm:[&_.mk-seg]:w-full! max-sm:[&_.mk-seg-btn]:flex-1">
+                        <Segmented value={sort} onChange={setSort} aria-label="Sortowanie"
+                            options={[{ value: 'zmiana', label: 'Zmiana %' }, { value: 'nazwa', label: 'A–Z' }, { value: 'kurs', label: 'Kurs' }]} />
+                    </div>
                 </div>
-                <div className="flex flex-wrap gap-2">
-                    <button type="button" className={pill(sector === 'all')} onClick={() => setSector('all')}>Wszystkie</button>
+                <ChipRow label="Branża" activeKey={sector}>
+                    <button type="button" aria-pressed={sector === 'all'} className={chipClass(sector === 'all')} onClick={() => setSector('all')}>Wszystkie</button>
                     {sectors.map((s) => (
-                        <button key={s} type="button" className={pill(sector === s)} onClick={() => setSector(s)}>{s}</button>
+                        <button key={s} type="button" aria-pressed={sector === s} className={chipClass(sector === s)} onClick={() => setSector(s)}>{s}</button>
                     ))}
-                </div>
+                </ChipRow>
             </div>
 
             {spolki.isLoading ? (
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3" role="status" aria-busy="true" aria-label="Ładowanie spółek">
-                    {Array.from({ length: 6 }, (_, i) => <div key={i} className="mk-skeleton h-64 w-full rounded-2xl" />)}
-                </div>
+                <>
+                    <div className="sm:hidden"><QuoteListSkeleton /></div>
+                    <div className="hidden grid-cols-1 gap-4 sm:grid sm:grid-cols-2 lg:grid-cols-3" role="status" aria-busy="true" aria-label="Ładowanie spółek">
+                        {Array.from({ length: 6 }, (_, i) => <div key={i} className="mk-skeleton h-64 w-full rounded-2xl" />)}
+                    </div>
+                </>
             ) : spolki.isError ? (
                 <SectionCard editorial titleVariant="label">
                     <QueryState isError onRetry={() => { void spolki.refetch(); }} height={160} />
                 </SectionCard>
             ) : cards.length === 0 ? (
-                <SectionCard editorial titleVariant="label"><p className="py-8 text-center text-sm text-mk-muted">Brak spółek dla wybranego filtra.</p></SectionCard>
+                <SectionCard editorial titleVariant="label">
+                    <div className="py-8 text-center">
+                        <p className="text-sm text-mk-muted">Brak spółek dla wybranego filtra.</p>
+                        <button type="button" onClick={() => { setQuery(''); setSector('all'); }} className="mk-btn mt-3 min-h-11">
+                            Pokaż wszystkie spółki
+                        </button>
+                    </div>
+                </SectionCard>
             ) : (
                 <>
                     <div className="sm:hidden">
-                        <DataTable
-                            columns={companyCols}
-                            rows={companyRows}
-                            initialSort="changePct"
-                            initialDir="desc"
-                            rowKey={(r) => r.ticker}
-                            onRowClick={(r) => router.push(`/spolki/${r.ticker}`)}
-                            mobileAsCards
-                            cardAction={(r) => (
-                                <WatchStar kind="spolka" id={r.ticker} label={r.name} variant="inline" />
-                            )}
-                            cardTitle={(r) => (
-                                <>
-                                    <span className="font-bold text-mk-text">{r.ticker}</span>
-                                    <span className="truncate font-medium text-mk-text">{r.name}</span>
-                                </>
-                            )}
-                            cardMeta={(r) => (
-                                <>
-                                    <span className="tnum font-semibold text-mk-text">
-                                        {r.price != null ? `${formatDecimalPL(r.price, 2)} zł` : '—'}
-                                    </span>
-                                    <span className="tnum font-bold" style={{ color: changeColor(r.changePct) }}>{fmtPct(r.changePct)}</span>
-                                </>
-                            )}
-                        />
+                        <QuoteList rows={cards} />
                     </div>
                     <div className="hidden grid-cols-1 gap-4 sm:grid sm:grid-cols-2 lg:grid-cols-3">
                         {cards.map((c) => <CompanyCard key={c.company.ticker} company={c.company} quote={c.quote} news={c.news} />)}
@@ -348,20 +500,30 @@ function SpolkiSection() {
                 Kursy i zmiana dzienna: Yahoo Finance (GPW){spolki.data ? ` · ${spolki.data.ok}/${spolki.data.count} spółek z notowaniem` : ''}. Newsy: agregator RSS
                 dopasowany po nazwie spółki. Opisy branż mają charakter informacyjny — to nie rekomendacja inwestycyjna.
             </p>
-        </div>
+        </section>
     );
 }
 
 export default function RynkiPage() {
+    // Kolejność na telefonie (< lg): indeksy i KPI → wykres WIG20 → notowania spółek → kursy NBP → newsy.
+    // Desktop bez zmian: dashboard (z newsami obok wykresu) → tabela NBP → spółki.
     return (
-        <DensePageLayout>
+        <div className="mk-fade-in flex flex-col gap-4 md:gap-5">
             <PageHeader title="Rynki" />
 
             <RynkiDashboard />
 
-            <NbpFxTable />
+            <div className="min-w-0 max-lg:order-2">
+                <NbpFxTable />
+            </div>
 
-            <SpolkiSection />
-        </DensePageLayout>
+            <div className="min-w-0 max-lg:order-1">
+                <SpolkiSection />
+            </div>
+
+            <div className="min-w-0 max-lg:order-3 lg:hidden">
+                <RelatedNews topic="rynki" limit={5} title="Newsy rynkowe" />
+            </div>
+        </div>
     );
 }

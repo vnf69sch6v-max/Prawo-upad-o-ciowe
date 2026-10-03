@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import Link from 'next/link';
 import { ExternalLink, ArrowRight, Layers, Copy, Megaphone } from 'lucide-react';
 import { useNews, type NewsItem } from '@/lib/hooks';
@@ -9,6 +9,7 @@ import { formatRelativeTime, formatTime } from '@/lib/formatters';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { CategoryNewsPanel } from '@/components/ui/CategoryNews';
 import { QueryState } from '@/components/ui/QueryState';
+import { useIsClient } from '@/lib/use-is-client';
 
 const TOPIC_LINKS: { topic: NewsTopic; label: string; href: string }[] = [
     { topic: 'ceny', label: 'Inflacja CPI', href: '/ceny?tab=inflacja' },
@@ -42,11 +43,12 @@ export function CategoryTag({ section, filled = false }: { section: string; fill
     return <span className="mk-tag-brand">{label}</span>;
 }
 
-// `py-1` daje 26px wysokości — poniżej ~24px cel dotykowy jest zbyt mały (WCAG 2.2 Target Size).
+// Mysz: `py-1` = 26 px (WCAG 2.2 Target Size). Dotyk: 44 px z ujemnym marginesem pionowym,
+// żeby większy cel nie rozpychał rzędu nagłówka.
 const AllNewsLink = ({ brand = false }: { brand?: boolean }) => (
     <Link
         href="/newsy"
-        className={`-mr-1.5 flex items-center gap-1 rounded px-1.5 py-1 text-sm font-medium transition-colors hover:underline ${brand ? 'text-mk-brand hover:bg-mk-brand-soft' : 'text-mk-primary hover:bg-mk-primary/5'}`}
+        className={`mk-press -mr-1.5 flex items-center gap-1 rounded px-1.5 py-1 text-sm font-medium transition-colors hover:underline pointer-coarse:-my-2.5 pointer-coarse:min-h-11 ${brand ? 'text-mk-brand hover:bg-mk-brand-soft active:bg-mk-brand-soft' : 'text-mk-primary hover:bg-mk-primary/5 active:bg-mk-primary/5'}`}
     >
         Wszystkie <ArrowRight size={14} />
     </Link>
@@ -151,7 +153,7 @@ function RelatedIndicators({ item }: { item: NewsItem }) {
                     <Link
                         key={t.topic}
                         href={t.href}
-                        className="rounded-full border border-mk-border bg-mk-surface px-3 py-1 text-xs font-semibold text-mk-text-soft transition-colors hover:border-mk-brand/40 hover:bg-mk-brand-soft hover:text-mk-brand"
+                        className="mk-press inline-flex items-center rounded-full border border-mk-border bg-mk-surface px-3 py-1 text-xs font-semibold text-mk-text-soft transition-colors hover:border-mk-brand/40 hover:bg-mk-brand-soft hover:text-mk-brand pointer-coarse:min-h-11 pointer-coarse:px-4 pointer-coarse:text-sm"
                     >
                         {t.label}
                     </Link>
@@ -165,8 +167,8 @@ function RelatedIndicators({ item }: { item: NewsItem }) {
  * Układ Przeglądu z sidebar „Dlaczego to ważne" + tagi kategorii.
  */
 function OverviewNewsLayout({ items }: { items: NewsItem[] }) {
-    const [mounted, setMounted] = useState(false);
-    useEffect(() => setMounted(true), []);
+    // Czas względny zależy od „teraz" — dopiero po hydratacji (AGENTS.md).
+    const mounted = useIsClient();
     const [lead, ...rest] = items;
 
     return (
@@ -210,7 +212,7 @@ function OverviewNewsLayout({ items }: { items: NewsItem[] }) {
                                     href={it.link}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="group flex items-start gap-3 py-3.5 first:pt-4"
+                                    className="mk-press-row group -mx-2 flex min-h-12 items-start gap-3 rounded-lg px-2 py-3.5"
                                 >
                                     <time
                                         dateTime={it.publishedAt}
@@ -236,7 +238,7 @@ function OverviewNewsLayout({ items }: { items: NewsItem[] }) {
             </div>
 
             <aside className="lg:col-span-4">
-                <div className="rounded-xl border border-mk-border bg-mk-surface-alt p-5 lg:sticky lg:top-24">
+                <div className="rounded-xl border border-mk-border bg-mk-surface-alt p-5 lg:sticky lg:top-[var(--mk-sticky-top)]">
                     <h4 className="text-[11px] font-bold uppercase tracking-wide text-mk-brand">Dlaczego to ważne</h4>
                     <p className="mt-3 text-sm leading-relaxed text-mk-text-soft">
                         {lead.description
@@ -256,8 +258,7 @@ function OverviewNewsLayout({ items }: { items: NewsItem[] }) {
  * Układ pasa „Najważniejsze newsy" (domyślny): LEAD + kompaktowy indeks pozostałych.
  */
 function LatestNewsLayout({ items }: { items: NewsItem[] }) {
-    const [mounted, setMounted] = useState(false);
-    useEffect(() => setMounted(true), []);
+    const mounted = useIsClient();
     const [lead, ...rest] = items; // items.length ≥ 1 — guard w LatestNews
 
     return (
@@ -296,7 +297,7 @@ function LatestNewsLayout({ items }: { items: NewsItem[] }) {
                                 href={it.link}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="group flex items-start gap-3 py-2.5 first:pt-3"
+                                className="mk-press-row group -mx-2 flex min-h-12 items-start gap-3 rounded-lg px-2 py-2.5"
                             >
                                 <div className="min-w-0 flex-1">
                                     <div className="text-sm font-medium leading-snug text-mk-text transition-colors group-hover:text-mk-primary">

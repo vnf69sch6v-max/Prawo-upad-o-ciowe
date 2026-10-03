@@ -21,7 +21,7 @@ export default function DanePage() {
                     <div className="min-w-0 flex-1">
                         <h2 className="mk-section-label">Wybierz sekcję</h2>
                         <p className="mt-2 text-sm leading-relaxed text-mk-text-soft">
-                            Dawna zakładka „Dane makro" została podzielona na Ceny, Gospodarkę i Rynek pracy — każda z własnymi wskaźnikami i wykresami.
+                            Dawna zakładka „Dane makro” została podzielona na Ceny, Gospodarkę i Rynek pracy — każda z własnymi wskaźnikami i wykresami.
                         </p>
                         <ul className="mt-4 divide-y divide-mk-border border-t border-mk-border">
                             {SECTIONS.map((s) => (

@@ -15,6 +15,7 @@ import { SectionCard } from '@/components/ui/SectionCard';
 import { Segmented } from '@/components/ui/Segmented';
 import { PL_GOVERNMENTS, govForYear } from '@/lib/pl-governments';
 import { AXIS_INK } from '@/lib/chart-theme';
+import { useCanHover } from '@/lib/use-can-hover';
 
 type Metric = 'gdp' | 'cpi';
 const METRICS: { value: Metric; label: string; color: string }[] = [
@@ -27,6 +28,7 @@ export function RzadyGospodarka() {
     const gdpQ = useGDPAnnual();
     const cpiQ = useGusCpiAnnual();
     const [metric, setMetric] = useState<Metric>('gdp');
+    const tooltipTrigger = useCanHover() ? 'hover' : 'click';
 
     const merged = useMemo(() => {
         const toMap = (d: Parameters<typeof plSeries>[0]) => new Map(plSeries(d).map((p) => [parseInt(p.date), p.value]));
@@ -49,7 +51,7 @@ export function RzadyGospodarka() {
 
     return (
         <div className="space-y-6">
-            <SectionCard editorial titleVariant="label" title="Rządy a gospodarka" subtitle="realny wzrost PKB i inflacja CPI, rocznie — tło pokazuje ekipę rządzącą w danym okresie"
+            <SectionCard editorial titleVariant="label" title="Rządy a gospodarka" subtitle={`${metric === 'gdp' ? 'realny wzrost PKB' : 'inflacja CPI'} (%), rocznie · tło = ekipa rządząca`}
                 actions={<Segmented value={metric} onChange={setMetric} aria-label="Wskaźnik" options={METRICS.map((m) => ({ value: m.value, label: m.label }))} />}>
                 <ResponsiveContainer width="100%" height={340}>
                     <ComposedChart data={merged} margin={{ top: 8, right: 14, left: -6, bottom: 4 }}>
@@ -60,7 +62,7 @@ export function RzadyGospodarka() {
                         <ReferenceLine y={0} stroke="#CBD5E1" />
                         <XAxis dataKey="year" type="number" domain={[minY - 0.5, maxY + 0.5]} tick={{ fill: AXIS_INK, fontSize: 11 }} axisLine={{ stroke: '#E7EAF0' }} tickLine={false} tickCount={8} allowDecimals={false} />
                         <YAxis tick={{ fill: AXIS_INK, fontSize: 12 }} axisLine={false} tickLine={false} width={42} tickFormatter={(v) => formatDecimalPL(v, 0)} unit="%" />
-                        <Tooltip trigger="click" isAnimationActive={false} content={({ active, payload, label }) => {
+                        <Tooltip trigger={tooltipTrigger} isAnimationActive={false} content={({ active, payload, label }) => {
                             if (!active || !payload?.length) return null;
                             const g = govForYear(Number(label));
                             const v = payload[0]?.value as number | undefined;
@@ -75,13 +77,36 @@ export function RzadyGospodarka() {
                 </ResponsiveContainer>
                 <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5">
                     {PL_GOVERNMENTS.filter((g) => g.from <= maxY).map((g, i) => (
-                        <span key={i} className="inline-flex items-center gap-1.5 text-[11px] text-mk-muted"><span className="h-2.5 w-2.5 rounded-sm" style={{ background: g.color }} /> {g.label} <span className="text-mk-faint">{g.from}–{yr(g.to)}</span></span>
+                        <span key={i} className="inline-flex min-w-0 items-center gap-1.5 text-xs text-mk-muted sm:text-[11px]"><span className="h-2.5 w-2.5 shrink-0 rounded-sm" style={{ background: g.color }} /> {g.label} <span className="text-mk-faint tnum">{g.from}–{yr(g.to)}</span></span>
                     ))}
                 </div>
             </SectionCard>
 
             <SectionCard editorial titleVariant="label" title="Bilans gospodarczy rządów" subtitle="średnie roczne w okresie rządzenia · PKB: ceny stałe (Eurostat/GUS) · CPI: GUS BDL">
-                <div className="overflow-x-auto">
+                {/* Telefon: karta na rząd (4 kolumny tabeli → lista z wartościami po prawej). */}
+                <ul className="divide-y divide-mk-border/60 md:hidden">
+                    {govStats.map((g, i) => (
+                        <li key={i} className="flex items-center gap-3 py-3">
+                            <span className="h-10 w-1 shrink-0 rounded-full" style={{ background: g.color }} aria-hidden />
+                            <div className="min-w-0 flex-1">
+                                <div className="truncate text-sm font-semibold text-mk-text">{g.label}</div>
+                                <div className="truncate text-xs text-mk-faint">{g.pm}</div>
+                                <div className="text-xs text-mk-muted tnum">{g.from}–{yr(g.toClamped)}</div>
+                            </div>
+                            <dl className="shrink-0 space-y-0.5 text-right text-sm tnum">
+                                <div className="flex items-baseline justify-end gap-1.5">
+                                    <dt className="text-[11px] text-mk-faint">PKB</dt>
+                                    <dd className="font-semibold" style={{ color: '#16A34A' }}>{g.avgGdp != null ? `${g.avgGdp > 0 ? '+' : ''}${formatDecimalPL(g.avgGdp, 1)}%` : '—'}</dd>
+                                </div>
+                                <div className="flex items-baseline justify-end gap-1.5">
+                                    <dt className="text-[11px] text-mk-faint">CPI</dt>
+                                    <dd style={{ color: '#D97706' }}>{g.avgCpi != null ? `${formatDecimalPL(g.avgCpi, 1)}%` : '—'}</dd>
+                                </div>
+                            </dl>
+                        </li>
+                    ))}
+                </ul>
+                <div className="hidden overflow-x-auto md:block">
                     <table className="w-full min-w-[420px] text-sm">
                         <thead>
                             <tr className="border-b border-mk-border text-left text-[11px] uppercase tracking-wide text-mk-faint">

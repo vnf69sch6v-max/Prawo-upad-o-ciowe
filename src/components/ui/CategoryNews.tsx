@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import Link from 'next/link';
 import { ArrowRight, ExternalLink } from 'lucide-react';
 import { useDailyDigest, useNews, type NewsItem } from '@/lib/hooks';
@@ -10,6 +10,7 @@ import { prevCalendarDate, warsawDateKey } from '@/lib/news/warsaw-date';
 import { formatRelativeTime, formatTime } from '@/lib/formatters';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { QueryState } from '@/components/ui/QueryState';
+import { useIsClient } from '@/lib/use-is-client';
 
 /** Nagłówki sekcji per temat — zgodnie z mockupami redakcyjnymi. */
 export const CATEGORY_LABELS: Record<NewsTopic, string> = {
@@ -122,33 +123,33 @@ function groupTimelineEntries(entries: TimelineEntry[], todayKey: string) {
     }));
 }
 
+// Dotyk: 44 px wysokości; ujemny margines pionowy, żeby większy cel nie rozpychał nagłówka karty.
 const AllNewsLink = () => (
     <Link
         href="/newsy"
-        className="-mr-1.5 flex items-center gap-1 rounded px-1.5 py-1 text-sm font-medium text-mk-brand transition-colors hover:bg-mk-brand-soft hover:underline"
+        className="mk-press -mr-1.5 flex items-center gap-1 rounded px-1.5 py-1 text-sm font-medium text-mk-brand transition-colors hover:bg-mk-brand-soft hover:underline active:bg-mk-brand-soft pointer-coarse:-my-2.5 pointer-coarse:min-h-11"
     >
         Wszystkie <ArrowRight size={14} />
     </Link>
 );
 
-function useMounted() {
-    const [mounted, setMounted] = useState(false);
-    useEffect(() => setMounted(true), []);
-    return mounted;
-}
+/** `formatRelativeTime` zależy od „teraz" — dopiero po hydratacji (AGENTS.md, React #418). */
+const useMounted = useIsClient;
 
 function NewsyList({ items }: { items: NewsItem[] }) {
     const mounted = useMounted();
 
     return (
+        // Odstęp na <li>, nie na <a>: `first:`/`last:` na linku łapały KAŻDY wiersz (link jest jedynym
+        // dzieckiem swojego <li>), więc wszystkie wiersze miały zerowy padding i sklejały się ze sobą.
         <ul className="divide-y divide-mk-border">
             {items.map((it) => (
-                <li key={it.link}>
+                <li key={it.link} className="py-1 first:pt-0 last:pb-0">
                     <a
                         href={it.link}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="group flex items-start gap-3 py-3.5 first:pt-0 last:pb-0"
+                        className="mk-press-row group -mx-2 flex min-h-12 items-start gap-3 rounded-lg px-2 py-2.5"
                     >
                         <div className="min-w-0 flex-1">
                             <div className="text-sm font-bold leading-snug text-mk-text transition-colors group-hover:text-mk-brand">
@@ -182,7 +183,7 @@ function TimelineEntryRow({ entry, mounted }: { entry: TimelineEntry; mounted: b
                 href={it.link}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group block min-w-0"
+                className="mk-press-row group -mx-2 -my-1 block min-w-0 rounded-lg px-2 py-1"
             >
                 <div className="text-sm font-bold leading-snug text-mk-text transition-colors group-hover:text-mk-brand">
                     {it.title}
@@ -212,7 +213,7 @@ function TimelineEntryRow({ entry, mounted }: { entry: TimelineEntry; mounted: b
 
     if (row.href) {
         return (
-            <Link href={row.href} className="group block min-w-0 transition-opacity hover:opacity-90">
+            <Link href={row.href} className="mk-press-row group -mx-2 -my-1 block min-w-0 rounded-lg px-2 py-1 transition-opacity hover:opacity-90">
                 {inner}
             </Link>
         );
@@ -427,7 +428,9 @@ export function CategoryNewsPanel({
             <Kalendarium
                 topic={topic}
                 newsLimit={Math.min(limit + 2, 7)}
-                className={`max-h-[min(28rem,70vh)] overflow-y-auto ${className}`.trim()}
+                // Limit wysokości tylko obok wykresu (lg, dwie kolumny). Na telefonie kolumny są jedna pod
+                // drugą — przewijanie w przewijaniu łapało kciuk i blokowało przewijanie strony.
+                className={`lg:max-h-[min(28rem,70vh)] lg:overflow-y-auto ${className}`.trim()}
                 matchTier={matchTier}
                 excludeOpinion={excludeOpinion}
             />

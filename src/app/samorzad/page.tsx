@@ -19,7 +19,7 @@ export default function SamorzadPage() {
                         </p>
                         <Link
                             href="/regiony?tab=samorzad"
-                            className="mk-btn mk-btn-primary mt-4 inline-flex items-center gap-1.5 bg-mk-brand hover:bg-mk-brand-strong"
+                            className="mk-btn mk-btn-primary mt-4 inline-flex min-h-11 items-center gap-1.5 bg-mk-brand hover:bg-mk-brand-strong active:bg-mk-brand-strong"
                         >
                             Otwórz Samorząd (SMUP) <ArrowRight size={15} />
                         </Link>

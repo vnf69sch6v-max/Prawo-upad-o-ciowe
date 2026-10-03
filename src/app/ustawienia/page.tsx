@@ -23,30 +23,31 @@ export default function UstawieniaPage() {
 
             <SectionCard title="Konto" titleVariant="label" editorial>
                 <div className="flex flex-wrap items-center justify-between gap-4">
-                    <div className="flex items-center gap-3">
+                    <div className="flex min-w-0 items-center gap-3">
                         <span className="flex h-11 w-11 items-center justify-center rounded-full bg-mk-brand-soft text-sm font-semibold text-mk-brand">
                             {user?.initials ?? 'MD'}
                         </span>
-                        <div>
-                            <div className="text-sm font-semibold text-mk-text">{user?.displayName ?? 'Użytkownik'}</div>
-                            <div className="text-xs text-mk-muted">{user?.email}</div>
+                        <div className="min-w-0">
+                            <div className="truncate text-[15px] font-semibold text-mk-text sm:text-sm">{user?.displayName ?? 'Użytkownik'}</div>
+                            <div className="truncate text-sm text-mk-muted sm:text-xs">{user?.email}</div>
                         </div>
                     </div>
-                    <button onClick={onSignOut} className="mk-btn">
+                    <button type="button" onClick={onSignOut} className="mk-btn min-h-12 w-full active:bg-mk-surface-alt sm:min-h-0 sm:w-auto">
                         <LogOut size={15} /> {enabled ? 'Wyloguj' : 'Ekran logowania'}
                     </button>
                 </div>
                 {!enabled && (
-                    <p className="mt-3 rounded-lg bg-mk-warn-soft px-3 py-2 text-xs text-mk-warn">
+                    <p className="mt-3 rounded-lg bg-mk-warn-soft px-3 py-2 text-sm text-mk-warn sm:text-xs">
                         Tryb demo — logowanie aktywuje się po dodaniu konfiguracji Firebase i ustawieniu flagi <code>NEXT_PUBLIC_AUTH_ENABLED=true</code>.
                     </p>
                 )}
             </SectionCard>
 
             <SectionCard title="Motyw" titleVariant="label" editorial>
-                <div className="flex flex-wrap items-center gap-2">
-                    <span className="mk-btn mk-btn-primary cursor-default bg-mk-brand hover:bg-mk-brand"><Sun size={15} /> Jasny</span>
-                    <span className="mk-btn cursor-not-allowed opacity-60"><Moon size={15} /> Ciemny (wkrótce)</span>
+                {/* Stan, nie przełącznik — ciemny motyw jeszcze nie istnieje. Na telefonie dwa równe pola. */}
+                <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center" role="group" aria-label="Motyw">
+                    <span className="mk-btn mk-btn-primary min-h-12 cursor-default bg-mk-brand hover:bg-mk-brand sm:min-h-0" aria-current="true"><Sun size={15} aria-hidden /> Jasny</span>
+                    <span className="mk-btn min-h-12 cursor-not-allowed opacity-60 sm:min-h-0" aria-disabled="true"><Moon size={15} aria-hidden /> Ciemny <span className="font-normal">(wkrótce)</span></span>
                 </div>
             </SectionCard>
 

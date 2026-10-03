@@ -32,9 +32,10 @@ export function DeltaChip({ value, unit = 'pp', decimals = 1, note, invert = fal
     const sign = value > 0 ? '+' : value < 0 ? '−' : '';
 
     return (
-        <span className={cls}>
+        <span className={`${cls} max-w-full`}>
             <span aria-hidden>{arrow}</span>
-            <span>{sign}{formatDecimalPL(Math.abs(value), decimals)}{unitStr}</span>
+            {/* „+0,4 p.p." nigdy nie łamie się w środku liczby; notka może się zawinąć. */}
+            <span className="whitespace-nowrap">{sign}{formatDecimalPL(Math.abs(value), decimals)}{unitStr}</span>
             {note && <span className="font-normal opacity-70">{note}</span>}
         </span>
     );

@@ -19,11 +19,13 @@ export function DocSection({
   className?: string;
 }) {
   return (
-    <section id={id} className={`scroll-mt-24 ${className}`}>
-      <header className="flex items-baseline justify-between gap-4 border-b-2 border-mk-text pb-2.5">
-        <h2 className="text-[20px] font-bold leading-tight tracking-[-0.01em] text-mk-text">{title}</h2>
+    <section id={id} className={`scroll-mt-32 lg:scroll-mt-[var(--mk-sticky-top)] ${className}`}>
+      {/* Telefon: długi dopisek („PLN · jednostki (jak w raporcie)") schodzi pod tytuł zamiast
+          ściskać go do trzech linii i wypychać stronę w bok. */}
+      <header className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-b-2 border-mk-text pb-2.5">
+        <h2 className="min-w-0 text-[20px] font-bold leading-tight tracking-[-0.01em] text-mk-text">{title}</h2>
         {aside && (
-          <span className="shrink-0 text-[11px] font-semibold uppercase tracking-[0.06em] text-mk-muted">
+          <span className="min-w-0 text-[11px] font-semibold uppercase tracking-[0.06em] text-mk-muted sm:shrink-0">
             {aside}
           </span>
         )}

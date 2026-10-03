@@ -26,6 +26,17 @@ import { Drawer } from '@/components/ui/Drawer';
 import { RankingBars } from '@/components/ui/RankingBars';
 import PolandMap from '@/components/PolandMap';
 import { QueryState } from '@/components/ui/QueryState';
+import { MobileListClamp, MobileOnly } from '@/components/sections/mobile-layout';
+
+/** Kotwice sekcji — spis treści na telefonie (`MobileAnchorNav` na /praca). */
+export const PRACA_SECTIONS = [
+    { id: 'praca-place', label: 'Płace realne' },
+    { id: 'praca-wskazniki', label: 'Wskaźniki' },
+    { id: 'praca-regiony', label: 'Województwa' },
+    { id: 'praca-zatrudnienie', label: 'Zatrudnienie' },
+    { id: 'praca-publikacje', label: 'Publikacje' },
+    { id: 'praca-newsy', label: 'Newsy' },
+];
 
 const woj = (name: string) => name.replace(/^województwo /i, '');
 
@@ -188,7 +199,8 @@ export function PracaDashboard() {
         <DensePageLayout>
             {/* Lead: płace realne — mk-surface, kolor tylko na DeltaChip */}
             <section
-                className="rounded-[14px] border border-mk-border bg-mk-surface p-5 sm:p-6"
+                id="praca-place"
+                className="scroll-mt-16 rounded-[14px] border border-mk-border bg-mk-surface p-5 sm:p-6"
                 aria-label="Płace realne — siła nabywcza"
             >
                 {leadLoading ? (
@@ -230,10 +242,13 @@ export function PracaDashboard() {
                 )}
             </section>
 
-            <CompactKpiGrid items={compactKpis} columns={4} label="Wskaźniki" />
+            <div id="praca-wskazniki" className="scroll-mt-16">
+                <CompactKpiGrid items={compactKpis} columns={4} label="Wskaźniki" />
+            </div>
 
-            <DenseTwoCol
-                left={
+            {/* Desktop: wykres | newsy. Telefon: sam wykres — newsy na końcu strony. */}
+            <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-2">
+                <div className="min-w-0">
                     <SectionCard
                         editorial
                         titleVariant="label"
@@ -269,8 +284,8 @@ export function PracaDashboard() {
                             />
                         </QueryState>
                     </SectionCard>
-                }
-                right={
+                </div>
+                <div className="hidden min-w-0 lg:block">
                     <RelatedNews
                         topic="praca"
                         limit={5}
@@ -278,16 +293,16 @@ export function PracaDashboard() {
                         matchTier="strong"
                         excludeOpinion
                     />
-                }
-            />
+                </div>
+            </div>
 
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <div id="praca-regiony" className="grid scroll-mt-16 grid-cols-1 gap-4 lg:grid-cols-2">
                 <div className="order-2 min-w-0 lg:order-1" data-region-map>
                     <SectionCard
                         editorial
                         titleVariant="label"
                         title="Bezrobocie rejestrowane — mapa"
-                        subtitle="GUS BDL · kliknij województwo"
+                        subtitle="stopa (%) · GUS BDL · wybierz województwo"
                         actions={<StaleBadge date={mapDate} label="GUS do" warnAfterMonths={4} />}
                     >
                         <QueryState
@@ -371,7 +386,7 @@ export function PracaDashboard() {
                         editorial
                         titleVariant="label"
                         title="Ranking województw"
-                        subtitle="bezrobocie · płace"
+                        subtitle="stopa bezrobocia rejestrowanego (%)"
                         padded
                         className="min-w-0"
                     >
@@ -384,14 +399,16 @@ export function PracaDashboard() {
                                 height={180}
                                 emptyTitle="Brak danych województw"
                             >
-                                <RankingBars
-                                    rows={regions}
-                                    valueOf={(r) => r.unemployment}
-                                    format={(v) => `${formatDecimalPL(v, 1)}%`}
-                                    colors={RANK_AMBER}
-                                    selected={selected}
-                                    onSelect={openRegion}
-                                />
+                                <MobileListClamp total={regions.length} noun="województwa">
+                                    <RankingBars
+                                        rows={regions}
+                                        valueOf={(r) => r.unemployment}
+                                        format={(v) => `${formatDecimalPL(v, 1)}%`}
+                                        colors={RANK_AMBER}
+                                        selected={selected}
+                                        onSelect={openRegion}
+                                    />
+                                </MobileListClamp>
                             </QueryState>
                         </div>
                     </SectionCard>
@@ -400,41 +417,47 @@ export function PracaDashboard() {
 
             <DenseTwoCol
                 left={
-                    <SectionCard editorial titleVariant="label" title="Zatrudnienie i wakaty" padded>
-                        <dl className="space-y-3 text-sm">
-                            <div className="flex justify-between gap-2">
-                                <dt className="flex items-center gap-1.5 text-mk-muted">
-                                    <Briefcase size={13} /> Zatrudnienie
-                                </dt>
-                                <dd className="text-right font-semibold tnum">
-                                    {zLast ? `${formatDecimalPL(zLast.value / 1e3, 1)} tys. etatów` : '—'}
-                                    {zatrDeltaTys != null && (
-                                        <span className="mt-0.5 block text-xs font-medium text-mk-muted">
-                                            {zatrDeltaTys > 0 ? '+' : ''}{formatDecimalPL(zatrDeltaTys, 1)} tys. m/m
-                                        </span>
-                                    )}
-                                </dd>
-                            </div>
-                            <div className="flex justify-between gap-2 border-t border-mk-border pt-3">
-                                <dt className="flex items-center gap-1.5 text-mk-muted">
-                                    <DoorOpen size={13} /> Wakaty
-                                </dt>
-                                <dd className="font-semibold tnum">
-                                    {wLast ? `${formatDecimalPL(wLast.value, 1)} tys.` : '—'}
-                                </dd>
-                            </div>
-                            {(zLast || wLast) && (
-                                <p className="text-[11px] text-mk-faint">
-                                    Sektor przedsiębiorstw
-                                    {zLast ? ` · ${formatDataPeriod(zLast.date)}` : ''}
-                                    {wLast ? ` · wakaty ${formatDataPeriod(wLast.date)}` : ''}
-                                </p>
-                            )}
-                        </dl>
-                    </SectionCard>
+                    <div id="praca-zatrudnienie" className="scroll-mt-16">
+                        <SectionCard editorial titleVariant="label" title="Zatrudnienie i wakaty" padded>
+                            <dl className="space-y-3 text-sm">
+                                <div className="flex justify-between gap-2">
+                                    <dt className="flex items-center gap-1.5 text-mk-muted">
+                                        <Briefcase size={13} /> Zatrudnienie
+                                    </dt>
+                                    <dd className="text-right font-semibold tnum">
+                                        {zLast ? `${formatDecimalPL(zLast.value / 1e3, 1)} tys. etatów` : '—'}
+                                        {zatrDeltaTys != null && (
+                                            <span className="mt-0.5 block text-xs font-medium text-mk-muted">
+                                                {zatrDeltaTys > 0 ? '+' : ''}{formatDecimalPL(zatrDeltaTys, 1)} tys. m/m
+                                            </span>
+                                        )}
+                                    </dd>
+                                </div>
+                                <div className="flex justify-between gap-2 border-t border-mk-border pt-3">
+                                    <dt className="flex items-center gap-1.5 text-mk-muted">
+                                        <DoorOpen size={13} /> Wakaty
+                                    </dt>
+                                    <dd className="font-semibold tnum">
+                                        {wLast ? `${formatDecimalPL(wLast.value, 1)} tys.` : '—'}
+                                    </dd>
+                                </div>
+                                {(zLast || wLast) && (
+                                    <p className="text-[11px] text-mk-faint">
+                                        Sektor przedsiębiorstw
+                                        {zLast ? ` · ${formatDataPeriod(zLast.date)}` : ''}
+                                        {wLast ? ` · wakaty ${formatDataPeriod(wLast.date)}` : ''}
+                                    </p>
+                                )}
+                            </dl>
+                        </SectionCard>
+                    </div>
                 }
-                right={<PublicationDatesPanel count={4} variant="overview" />}
+                right={<div id="praca-publikacje" className="scroll-mt-16"><PublicationDatesPanel count={4} variant="overview" /></div>}
             />
+
+            <MobileOnly id="praca-newsy">
+                <RelatedNews topic="praca" limit={3} title="Powiązane newsy" matchTier="strong" excludeOpinion variant="rail" />
+            </MobileOnly>
 
             <Drawer
                 open={regionDrawer && !!selectedRegion}

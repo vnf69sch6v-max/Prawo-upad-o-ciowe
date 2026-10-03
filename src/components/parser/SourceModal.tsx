@@ -6,7 +6,11 @@ import { Badge } from "@/components/parser/ui/badge";
 import { metricLabelPl, pl } from "@/lib/parser/copy.pl";
 import type { Metric } from "@/lib/parser/types";
 
-/** Provenance: show the exact extracted line(s) a metric was read from. */
+/**
+ * Provenance: show the exact extracted line(s) a metric was read from.
+ * Telefon: arkusz od dołu (uchwyt, safe area, zamknięcie tłem / Esc / przyciskiem 44 px),
+ * od `sm` — okno na środku jak dotąd.
+ */
 export function SourceModal({
   metric,
   rawText,
@@ -31,23 +35,37 @@ export function SourceModal({
   for (let i = from; i <= to; i++) snippet.push({ n: i + 1, text: lines[i] ?? "" });
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
+    <div
+      className="fixed inset-0 z-[60] flex items-end justify-center bg-black/60 sm:items-center sm:p-4"
+      onClick={onClose}
+    >
       <div
-        className="w-full max-w-2xl rounded-xl border border-rp-hairline bg-rp-surface-raised shadow-xl"
+        role="dialog"
+        aria-modal="true"
+        aria-label={metricLabelPl(metric.key, metric.label)}
+        className="max-h-[85dvh] w-full max-w-2xl overflow-y-auto overscroll-contain rounded-t-2xl border border-rp-hairline bg-rp-surface-raised pb-[env(safe-area-inset-bottom)] shadow-xl sm:max-h-[80vh] sm:rounded-xl sm:pb-0"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between border-b border-rp-hairline p-4">
-          <div className="flex items-center gap-2">
-            <FileSearch className="h-4 w-4 text-rp-data-muted" />
-            <div>
+        <div className="flex justify-center pt-2 sm:hidden" aria-hidden>
+          <span className="h-1 w-10 rounded-full bg-rp-hairline" />
+        </div>
+        <div className="flex items-center justify-between gap-3 border-b border-rp-hairline py-2 pl-4 pr-2">
+          <div className="flex min-w-0 items-center gap-2">
+            <FileSearch className="h-4 w-4 shrink-0 text-rp-data-muted" aria-hidden />
+            <div className="min-w-0">
               <p className="text-sm font-semibold">{metricLabelPl(metric.key, metric.label)}</p>
-              <p className="text-[11px] text-rp-data-muted">
+              <p className="text-xs text-rp-data-muted sm:text-[11px]">
                 {pl.source.sourceLine(idx >= 0 ? String(idx + 1) : "?")}
               </p>
             </div>
           </div>
-          <button onClick={onClose} className="text-rp-data-muted hover:text-rp-data">
-            <X className="h-4 w-4" />
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Zamknij"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-rp-data-muted hover:text-rp-data active:bg-rp-secondary"
+          >
+            <X className="h-5 w-5" aria-hidden />
           </button>
         </div>
         <div className="space-y-2 p-4">
@@ -60,7 +78,7 @@ export function SourceModal({
             )}
             <Badge variant="accent">{metric.confidence}</Badge>
           </div>
-          <pre className="num overflow-x-auto rounded-lg border border-rp-hairline bg-rp-surface p-3 text-[11px] leading-relaxed">
+          <pre className="num overflow-x-auto overscroll-x-contain rounded-lg border border-rp-hairline bg-rp-surface p-3 text-xs leading-relaxed sm:text-[11px]">
             {snippet.map((s) => (
               <div key={s.n} className={s.n === idx + 1 ? "rounded bg-rp-data/10 px-1 text-rp-data" : "px-1 text-rp-data-muted"}>
                 <span className="mr-3 select-none text-rp-data-dim">{s.n}</span>

@@ -23,7 +23,24 @@
 // (wyścig flex/grid), a rAF ponawia, zanim oddamy 0 Rechartsowi.
 
 import { Children, cloneElement, isValidElement, useEffect, useLayoutEffect, useRef, useState, type ReactElement, type RefObject } from 'react';
-import { mobilePlotHeight } from '@/lib/chart-theme';
+import { CHART_SM } from '@/lib/chart-theme';
+
+/** Minimalna wysokość plotu na wąskim kontenerze (standard mobilny: 200–260 px). */
+export const MOBILE_CHART_MIN = 200;
+
+/**
+ * Wysokość plotu przy szerokości `width` (pomiar kontenera, nie okna).
+ *
+ * Poprzednio (`mobilePlotHeight`, 16:9, min 168) plot 326 px dostawał 183 px — przy kilku seriach
+ * linie zlewały się w pasek, a tap trafiał „w tłum” punktów. Teraz ~0,68 szerokości, min 200 px:
+ * telefon 320 → 200, 390 → 222, 430 → 249 (mieści się w 200–260). Nigdy ponad wysokość desktopową,
+ * więc wąskie kolumny na desktopie (np. 600 px → 300) wyglądają jak dotąd; małe wykresy
+ * (< 200, np. sparkline) zostają jak są.
+ */
+export function mobileChartHeight(width: number, desktopHeight: number): number {
+    if (width <= 0 || width >= CHART_SM || desktopHeight < MOBILE_CHART_MIN) return desktopHeight;
+    return Math.min(desktopHeight, Math.max(MOBILE_CHART_MIN, Math.round(width * 0.68)));
+}
 
 // useLayoutEffect ostrzega przy renderze serwerowym — na serwerze i tak nie ma czego mierzyć.
 const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect;
@@ -78,7 +95,7 @@ interface ChartContainerProps {
 
 export function ResponsiveContainer({ height, children, className }: ChartContainerProps) {
     const { ref, width } = usePlotWidth();
-    const plotH = mobilePlotHeight(width, height);
+    const plotH = mobileChartHeight(width, height);
 
     const child = Children.only(children);
 
