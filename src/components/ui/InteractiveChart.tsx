@@ -290,7 +290,10 @@ export function InteractiveChart({
                     ) : (
                         <XAxis
                             dataKey={xKey}
-                            tick={{ fill: AXIS_INK, fontSize: TICK_FONT }}
+                            // Ta sama kotwica krawędziowa co na telefonie: ostatnia data przy prawym
+                            // brzegu („02.10") nie jest już ucinana do „02.1".
+                            tick={<EdgeTick first={view[0]?.[xKey]} last={view[view.length - 1]?.[xKey]} format={xTickFormatter} />}
+                            // Zostaje dla pomiaru odstępów (minTickGap liczy szerokość sformatowanej etykiety).
                             tickFormatter={xTickFormatter}
                             axisLine={{ stroke: AXIS_LINE }}
                             tickLine={false}

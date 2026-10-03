@@ -98,7 +98,9 @@ export function Drawer({ open, onClose, title, subtitle, accent = '#2563EB', wid
                 className={`absolute inset-0 bg-slate-900/40 backdrop-blur-[1px] transition-opacity duration-300 motion-reduce:transition-none md:bg-slate-900/30 ${open ? 'opacity-100' : 'opacity-0'}`}
                 style={dragY ? { opacity: Math.max(0.2, 1 - dragY / 400) } : undefined}
             />
-            <div className="absolute inset-0 overflow-hidden">
+            {/* `pointer-events-none`: ta warstwa przykrywała tło, więc stuknięcie obok panelu nigdy
+                nie trafiało w backdrop (zamykanie tłem nie działało). Panel ma `pointer-events-auto`. */}
+            <div className="pointer-events-none absolute inset-0 overflow-hidden">
                 <aside
                     ref={panelRef}
                     role="dialog"

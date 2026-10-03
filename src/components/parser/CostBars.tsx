@@ -47,7 +47,7 @@ export function CostBars({
   const BAR_H = narrow ? 16 : 26;
   const TEXT_H = narrow ? 20 : 0;
   const GAP = narrow ? 14 : 10;
-  const TOP = 24;
+  const TOP = narrow ? 24 : 30; // szeroko: miejsce na podpis „PRZYCHODY 100%" nad linią (wcześniej ucięty u góry)
   const plotW = narrow ? W - 2 : W - LABEL_W - 24;
   const H = TOP + data.length * (TEXT_H + BAR_H + GAP) + 14;
   const x = (v: number) => (v / scaleMax) * plotW;

@@ -293,7 +293,7 @@ function ParserView() {
                 {data?.fileName}
               </span>
               {/* Na desktopie „Wczytaj inny raport" jest pod spisem treści — tu jedyne wyjście na telefonie. */}
-              <button type="button" onClick={reset} className="mk-btn min-h-11 shrink-0 px-3 text-sm active:bg-mk-surface-alt lg:hidden">
+              <button type="button" onClick={reset} className="mk-btn min-h-11 shrink-0 px-3 text-sm active:bg-mk-surface-alt lg:hidden!">
                 Nowy raport
               </button>
               <div className="flex basis-full flex-wrap items-center gap-x-4 gap-y-2 lg:ml-auto lg:basis-auto lg:gap-3">

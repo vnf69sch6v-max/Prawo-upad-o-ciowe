@@ -1069,6 +1069,13 @@ button.mk-table-row {
   .mk-table-sort {
     min-height: 44px;
   }
+
+  /* Recharts 3 robi z plotu element fokusowalny (tabindex=0); stuknięcie w wykres zostawiało wokół
+     plotu ramkę fokusu przez cały czas czytania dymka. Klawiatura (desktop) zachowuje ramkę. */
+  .recharts-surface:focus,
+  .recharts-wrapper:focus {
+    outline: none;
+  }
 }
 
 .mk-table-card:focus-visible {
