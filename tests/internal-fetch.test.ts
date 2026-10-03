@@ -9,22 +9,30 @@ afterEach(() => {
 });
 
 describe("internalOrigin", () => {
-  it("uses the public production domain instead of the protected *.vercel.app deployment URL", () => {
+  it("uses the canonical public domain in production, not the protected *.vercel.app deployment URL", () => {
     vi.stubEnv("VERCEL_ENV", "production");
-    vi.stubEnv("VERCEL_PROJECT_PRODUCTION_URL", "savori.space");
     expect(internalOrigin(req("https://prawo-upad-o-ciowe-abc123-team.vercel.app/api/cron/dbw-4"))).toBe("https://savori.space");
+  });
+
+  it("ignores VERCEL_PROJECT_PRODUCTION_URL — it picked savori.com, whose DNS is not on Vercel", () => {
+    vi.stubEnv("VERCEL_ENV", "production");
+    vi.stubEnv("VERCEL_PROJECT_PRODUCTION_URL", "savori.com");
+    expect(internalOrigin(req("https://x.vercel.app/api/cron/bdl"))).toBe("https://savori.space");
+  });
+
+  it("normalises www and other production hosts to the canonical domain", () => {
+    vi.stubEnv("VERCEL_ENV", "production");
+    expect(internalOrigin(req("https://www.savori.space/api/health/freshness"))).toBe("https://savori.space");
   });
 
   it("lets INTERNAL_BASE_URL override everything", () => {
     vi.stubEnv("VERCEL_ENV", "production");
-    vi.stubEnv("VERCEL_PROJECT_PRODUCTION_URL", "savori.space");
-    vi.stubEnv("INTERNAL_BASE_URL", "https://www.savori.space/");
-    expect(internalOrigin(req("https://x.vercel.app/api/cron/bdl"))).toBe("https://www.savori.space");
+    vi.stubEnv("INTERNAL_BASE_URL", "https://staging.savori.space/");
+    expect(internalOrigin(req("https://x.vercel.app/api/cron/bdl"))).toBe("https://staging.savori.space");
   });
 
   it("keeps the request origin outside production (local dev, previews)", () => {
     vi.stubEnv("VERCEL_ENV", "preview");
-    vi.stubEnv("VERCEL_PROJECT_PRODUCTION_URL", "savori.space");
     expect(internalOrigin(req("http://localhost:3000/api/cron/refresh"))).toBe("http://localhost:3000");
   });
 });

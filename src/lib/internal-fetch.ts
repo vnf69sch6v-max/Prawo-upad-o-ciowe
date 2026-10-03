@@ -5,19 +5,23 @@
 // 302 na vercel.com/sso-api, szedł za przekierowaniem i kończył na stronie logowania z HTTP 200.
 // Cron raportował „ok", a niczego nie odświeżał — dane zmieniały się tylko wtedy, gdy wszedł
 // użytkownik (stąd wieloletnie „zielone crony, stare dane"). Dlatego:
-//   1. bazowy adres = publiczna domena produkcyjna (savori.space), nie adres wdrożenia,
+//   1. bazowy adres = kanoniczna domena publiczna (savori.space), nie adres wdrożenia,
 //   2. bez podążania za przekierowaniami,
 //   3. „ok" tylko dla odpowiedzi 2xx z JSON-em — strona logowania to błąd, nie sukces.
 
+/** Kanoniczny adres serwisu. Nie `VERCEL_PROJECT_PRODUCTION_URL`: Vercel wybiera najkrótszą domenę
+ *  produkcyjną, a do projektu jest przypięte też savori.com, którego DNS nie wskazuje na Vercel
+ *  (wywołania kończyły się „fetch failed"). */
+export const SITE_URL = 'https://savori.space';
+
 /**
- * `INTERNAL_BASE_URL` (ręczne nadpisanie) → na produkcji `VERCEL_PROJECT_PRODUCTION_URL` (zmienna
- * systemowa Vercela: najkrótsza domena produkcyjna, tu savori.space) → lokalnie origin żądania.
+ * `INTERNAL_BASE_URL` (ręczne nadpisanie) → na produkcji kanoniczny `SITE_URL` (nie adres wdrożenia
+ * `*.vercel.app` za logowaniem ani www z przekierowaniem) → poza produkcją origin żądania.
  */
 export function internalOrigin(request: Request): string {
     const explicit = process.env.INTERNAL_BASE_URL?.trim();
     if (explicit) return explicit.replace(/\/+$/, '');
-    const prod = process.env.VERCEL_ENV === 'production' ? process.env.VERCEL_PROJECT_PRODUCTION_URL?.trim() : undefined;
-    if (prod) return `https://${prod.replace(/^https?:\/\//, '').replace(/\/+$/, '')}`;
+    if (process.env.VERCEL_ENV === 'production') return SITE_URL;
     return new URL(request.url).origin;
 }
 
