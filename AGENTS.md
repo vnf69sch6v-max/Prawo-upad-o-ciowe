@@ -42,8 +42,31 @@ Standard scripts in `package.json`:
   so the first request after expiry gets an old response that `withCache` then
   stores in Firestore with a fresh timestamp — even on cron `?refresh=1`. This
   froze NBP rates and Yahoo quotes for weeks in production. GUS BDL/DBW routes
-  keep `revalidate` on purpose (shared rate limit). Never cache NBP `.../today`
-  under a fixed key; use `exchangerates/tables/{t}/` (latest table).
+  pass `gusFetchInit(force)` (`src/lib/upstream-fetch.ts`): the user path keeps
+  `revalidate` (shared DBW limit), the cron path `?refresh=1` is `no-store` —
+  otherwise a fresh GUS release reached the site a day or two late. Never cache
+  NBP `.../today` under a fixed key; use `exchangerates/tables/{t}/` (latest table).
+- `withCache` never overwrites a good entry with a failure: if the fetcher
+  throws it returns the last stored payload (any age), and an empty payload
+  (`looksEmpty`: every top-level array empty) does not replace a non-empty one.
+  An API can therefore answer 200 with old data — staleness is detected by the
+  freshness check, not by HTTP errors.
+- Data freshness: `/api/health/freshness` compares the latest period each page
+  endpoint serves with the period the publication calendar says should exist
+  (`src/lib/freshness.ts`, tests in `tests/freshness.test.ts`). 200 = no
+  `stale`/`error` (`lag` = one period behind, e.g. BDL after a GUS release, is
+  a warning); 503 otherwise; CDN 5 min. `/status` renders it. `cron/freshness`
+  (07:20 UTC) re-checks, self-heals NBP/Yahoo/Eurostat with `refresh=1` (never
+  GUS DBW/BDL), stores `health/freshness_latest|history` in Firestore and posts
+  to `ALERT_WEBHOOK_URL` (optional; Slack `text` / Discord `content`). A new
+  indicator on a page needs a `DatasetSpec` in `FRESHNESS_DATASETS` whose
+  endpoint matches the hook exactly (DBW: `dbwSeriesPath(...)`).
+- Warm crons: `dbw-1..4` (03:00–04:30 UTC, one 15-min DBW window each, ≤~80
+  calls), `bdl` (05:00, sequential, BDL allows ~5 req/s without a key),
+  `refresh` (06:00, everything non-GUS in parallel). `vercel.json` has
+  `src/app/api/**/*.ts → maxDuration 30`; every long-running route also needs
+  its own explicit `functions` entry, or it is cut at 30 s regardless of the
+  `export const maxDuration` in code.
 - GUS DBW short-term indicators (industrial production, construction output,
   retail sales — y/y, constant prices, unadjusted = the GUS press-release
   number) are configured once in `src/lib/gus-dbw-series.ts` and requested via

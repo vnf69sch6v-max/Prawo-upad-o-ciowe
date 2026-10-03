@@ -23,6 +23,10 @@
             "schedule": "30 4 * * *"
         },
         {
+            "path": "/api/cron/bdl",
+            "schedule": "0 5 * * *"
+        },
+        {
             "path": "/api/cron/nbp",
             "schedule": "0 13 * * 1-5"
         },
@@ -41,6 +45,10 @@
         {
             "path": "/api/cron/refresh",
             "schedule": "0 6 * * *"
+        },
+        {
+            "path": "/api/cron/freshness",
+            "schedule": "20 7 * * *"
         },
         {
             "path": "/api/cron/news-archive",
@@ -82,6 +90,42 @@
         },
         "src/app/api/cron/news-archive/route.ts": {
             "maxDuration": 60
+        },
+        "src/app/api/cron/refresh/route.ts": {
+            "maxDuration": 120
+        },
+        "src/app/api/cron/dbw-1/route.ts": {
+            "maxDuration": 120
+        },
+        "src/app/api/cron/dbw-2/route.ts": {
+            "maxDuration": 120
+        },
+        "src/app/api/cron/dbw-3/route.ts": {
+            "maxDuration": 120
+        },
+        "src/app/api/cron/dbw-4/route.ts": {
+            "maxDuration": 120
+        },
+        "src/app/api/cron/bdl/route.ts": {
+            "maxDuration": 120
+        },
+        "src/app/api/cron/freshness/route.ts": {
+            "maxDuration": 120
+        },
+        "src/app/api/cron/nbp/route.ts": {
+            "maxDuration": 120
+        },
+        "src/app/api/cron/stooq/route.ts": {
+            "maxDuration": 120
+        },
+        "src/app/api/cron/stooq-intraday/route.ts": {
+            "maxDuration": 120
+        },
+        "src/app/api/gus-cpi-full/route.ts": {
+            "maxDuration": 120
+        },
+        "src/app/api/gus-ppi-full/route.ts": {
+            "maxDuration": 120
         }
     }
 }
