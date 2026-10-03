@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { createPortal } from "react-dom";
 import { X, FileSearch } from "lucide-react";
 import { Badge } from "@/components/parser/ui/badge";
 import { metricLabelPl, pl } from "@/lib/parser/copy.pl";
@@ -10,6 +11,10 @@ import type { Metric } from "@/lib/parser/types";
  * Provenance: show the exact extracted line(s) a metric was read from.
  * Telefon: arkusz od dołu (uchwyt, safe area, zamknięcie tłem / Esc / przyciskiem 44 px),
  * od `sm` — okno na środku jak dotąd.
+ *
+ * Portal do <body>: strona parsera siedzi w `.mk-fade-in`, którego animacja zostawia `transform`
+ * (fill-mode `both`), a to robi z niej blok zawierający dla `position: fixed` — bez portalu „okno"
+ * lądowało na dole dokumentu, kilka ekranów pod palcem. `rp-root` wraca typografię parsera (`.num`).
  */
 export function SourceModal({
   metric,
@@ -34,9 +39,9 @@ export function SourceModal({
   const snippet: { n: number; text: string }[] = [];
   for (let i = from; i <= to; i++) snippet.push({ n: i + 1, text: lines[i] ?? "" });
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-[60] flex items-end justify-center bg-black/60 sm:items-center sm:p-4"
+      className="rp-root fixed inset-0 z-[60] flex items-end justify-center bg-black/60 sm:items-center sm:p-4"
       onClick={onClose}
     >
       <div
@@ -88,6 +93,7 @@ export function SourceModal({
           </pre>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
