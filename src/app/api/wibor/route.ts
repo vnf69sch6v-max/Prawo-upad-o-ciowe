@@ -39,9 +39,8 @@ const WIBOR_SPREADS_VS_REF: Record<string, { wiborSpread: number; wibidSpread: n
 
 async function getCurrentRefRate(): Promise<number> {
     try {
-        const res = await fetch('https://static.nbp.pl/dane/stopy/stopy_procentowe.xml', {
-            next: { revalidate: 86400 },
-        });
+        // no-store: wewnątrz withCache (AGENTS.md) — Data Cache podsunąłby cronowi starą stopę po decyzji RPP.
+        const res = await fetch('https://static.nbp.pl/dane/stopy/stopy_procentowe.xml', { cache: 'no-store' });
         if (res.ok) {
             const xml = await res.text();
             const match = xml.match(/id="ref"[^>]*oprocentowanie="([^"]+)"/);

@@ -76,22 +76,73 @@ export async function setServerCache<T>(
     }
 }
 
+/** Ostatni zapisany wpis bez względu na wiek — rezerwa, gdy źródło akurat nie odpowiada. */
+async function getStaleServerCache<T>(collection: string, docId: string): Promise<T | null> {
+    const db = getAdminDb();
+    if (!db) return null;
+    try {
+        const snap = await db.collection(collection).doc(docId).get();
+        return snap.exists ? ((snap.data()!.payload as T) ?? null) : null;
+    } catch {
+        return null;
+    }
+}
+
+/**
+ * „Pusta" odpowiedź źródła: brak danych albo obiekt, którego wszystkie tablice najwyższego poziomu są
+ * puste (np. `{ series: [], source }` z `/api/dbw-series`, gdy DBW odpowiedział 429 na każdy miesiąc).
+ */
+export function looksEmpty(payload: unknown): boolean {
+    if (payload == null) return true;
+    if (Array.isArray(payload)) return payload.length === 0;
+    if (typeof payload !== 'object') return false;
+    const arrays = Object.values(payload as Record<string, unknown>).filter(Array.isArray) as unknown[][];
+    return arrays.length > 0 && arrays.every((a) => a.length === 0);
+}
+
 /**
  * Cache-through helper: read from cache, if miss → fetch → cache → return.
+ *
+ * Odporność na awarie źródła (to one, nie cron, decydują, czy dane „same się aktualizują"):
+ * - fetcher rzucił wyjątek → oddajemy ostatni zapisany wpis (nawet przeterminowany), zamiast 500;
+ * - fetcher zwrócił pustkę (`isEmpty`, domyślnie `looksEmpty`) → NIE nadpisujemy dobrego wpisu;
+ *   oddajemy poprzedni, a jeśli go nie ma — świeżą (pustą) odpowiedź.
+ * Wymuszone odświeżenie (`maxAgeMs < 0`, cron `?refresh=1`) korzysta z tych samych reguł, więc
+ * chwilowy limit GUS nie wyczyści danych na dobę.
  */
 export async function withCache<T>(
     collection: string,
     docId: string,
     fetcher: () => Promise<T>,
     source: string,
-    maxAgeMs?: number
+    maxAgeMs?: number,
+    opts: { isEmpty?: (payload: T) => boolean } = {},
 ): Promise<T> {
     // Try cache
     const cached = await getServerCache<T>(collection, docId, maxAgeMs);
     if (cached !== null) return cached;
 
     // Fetch fresh data
-    const fresh = await fetcher();
+    let fresh: T;
+    try {
+        fresh = await fetcher();
+    } catch (err) {
+        const stale = await getStaleServerCache<T>(collection, docId);
+        if (stale !== null) {
+            console.warn(`[Cache STALE] ${collection}/${docId}: źródło zawiodło, oddaję ostatni wpis —`, String(err).slice(0, 200));
+            return stale;
+        }
+        throw err;
+    }
+
+    const isEmpty = opts.isEmpty ?? looksEmpty;
+    if (isEmpty(fresh)) {
+        const stale = await getStaleServerCache<T>(collection, docId);
+        if (stale !== null && !isEmpty(stale)) {
+            console.warn(`[Cache KEEP] ${collection}/${docId}: pusta odpowiedź źródła, zostawiam poprzedni wpis`);
+            return stale;
+        }
+    }
 
     // Write to cache (fire-and-forget)
     setServerCache(collection, docId, fresh, source).catch(() => { });

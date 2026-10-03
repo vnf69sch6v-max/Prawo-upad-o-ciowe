@@ -2,16 +2,17 @@
 // Reusable for PPI, construction, agri, real-estate prices (any DBW variable/position).
 import { NextRequest, NextResponse } from 'next/server';
 import { withCache } from '@/lib/server-cache';
+import { gusFetchInit } from '@/lib/upstream-fetch';
 
 const DBW = 'https://api-dbw.stat.gov.pl/api/1.1.0/variable/variable-data-section';
 
 interface DbwRow { 'id-pozycja-1': number; 'id-pozycja-2': number; 'id-sposob-prezentacji-miara': number; wartosc: number }
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-async function fetchPeriod(varId: string, przekroj: string, rok: number, okres: number): Promise<DbwRow[] | null> {
+async function fetchPeriod(varId: string, przekroj: string, rok: number, okres: number, force: boolean): Promise<DbwRow[] | null> {
     const url = `${DBW}?id-zmienna=${varId}&id-przekroj=${przekroj}&id-rok=${rok}&id-okres=${okres}&ile-na-stronie=9000&numer-strony=0&lang=pl`;
     for (let attempt = 0; attempt < 2; attempt++) {
-        const res = await fetch(url, { headers: { Accept: 'application/json' }, next: { revalidate: 86400 } });
+        const res = await fetch(url, { headers: { Accept: 'application/json' }, ...gusFetchInit(force) });
         if (res.status === 429) { await sleep(3500); continue; }
         if (!res.ok) return null;
         const json = await res.json();
@@ -49,7 +50,7 @@ export async function GET(request: NextRequest) {
                 for (const y of years) {
                     for (let i = 1; i <= count; i++) {
                         const okres = freq === 'q' ? 269 + i : 246 + i; // Q1=270, M01=247
-                        const rows = await fetchPeriod(varId, przekroj, y, okres);
+                        const rows = await fetchPeriod(varId, przekroj, y, okres, force);
                         await sleep(120);
                         if (!rows) continue;
                         const date = freq === 'q' ? `${y}-Q${i}` : `${y}-${String(i).padStart(2, '0')}`;

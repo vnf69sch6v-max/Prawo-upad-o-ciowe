@@ -4,6 +4,7 @@
 // Household-group dimension: prefer "Ogółem" (poz-3 6902025), else first match. presentation 5 = y/y.
 import { NextRequest, NextResponse } from 'next/server';
 import { withCache } from '@/lib/server-cache';
+import { gusFetchInit } from '@/lib/upstream-fetch';
 
 const DBW = 'https://api-dbw.stat.gov.pl/api/1.1.0/variable/variable-data-section';
 const POLSKA = 33617;
@@ -33,10 +34,10 @@ function cpiClass(y: number) {
     };
 }
 
-async function fetchMonth(rok: number, okres: number, przekroj: number): Promise<DbwRow[] | null> {
+async function fetchMonth(rok: number, okres: number, przekroj: number, force: boolean): Promise<DbwRow[] | null> {
     const url = `${DBW}?id-zmienna=305&id-przekroj=${przekroj}&id-rok=${rok}&id-okres=${okres}&ile-na-stronie=9000&numer-strony=0&lang=pl`;
     for (let attempt = 0; attempt < 2; attempt++) {
-        const res = await fetch(url, { headers: { Accept: 'application/json' }, next: { revalidate: 86400 } });
+        const res = await fetch(url, { headers: { Accept: 'application/json' }, ...gusFetchInit(force) });
         if (res.status === 429) { await sleep(3500); continue; }
         if (!res.ok) return null;
         const json = await res.json();
@@ -68,7 +69,7 @@ export async function GET(request: NextRequest) {
                 for (const y of years) {
                     const cfg = cpiClass(y);
                     for (let m = 1; m <= 12; m++) {
-                        const rows = await fetchMonth(y, 246 + m, cfg.przekroj);
+                        const rows = await fetchMonth(y, 246 + m, cfg.przekroj, force);
                         await sleep(120);
                         if (!rows) continue;
                         const ogolem = yoy(rows, cfg.ogolem);

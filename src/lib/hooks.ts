@@ -242,7 +242,6 @@ export function useGusRegional() {
 // Sibling mean from same survey: P4609 (≠ P2687 enterprise przeciętne).
 
 interface GusMonthlyData {
-    retail: { date: string; value: number; raw: number }[];
     wages: { date: string; value: number; raw: number }[];
     source: string;
     timestamp: string;

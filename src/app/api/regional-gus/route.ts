@@ -2,6 +2,7 @@
 // Mazowieckie: łączymy Warszawski stołeczny + Mazowiecki regionalny (jak w Eurostat PL91+PL92).
 import { NextRequest, NextResponse } from 'next/server';
 import { withCache } from '@/lib/server-cache';
+import { gusFetchInit } from '@/lib/upstream-fetch';
 
 const GUS_BASE = 'https://bdl.stat.gov.pl/api/v1';
 
@@ -49,10 +50,10 @@ interface BdlUnitRow {
     values: Array<{ year: string; val: number | null }>;
 }
 
-async function fetchBDL(endpoint: string, apiKey?: string): Promise<unknown> {
+async function fetchBDL(endpoint: string, apiKey: string | undefined, force: boolean): Promise<unknown> {
     const headers: Record<string, string> = { Accept: 'application/json' };
     if (apiKey) headers['X-ClientId'] = apiKey;
-    const res = await fetch(`${GUS_BASE}/${endpoint}`, { headers, next: { revalidate: 86400 } });
+    const res = await fetch(`${GUS_BASE}/${endpoint}`, { headers, ...gusFetchInit(force) });
     if (res.status === 429) {
         await new Promise((r) => setTimeout(r, 5000));
         const retry = await fetch(`${GUS_BASE}/${endpoint}`, { headers });
@@ -69,9 +70,9 @@ function latestVal(row: BdlUnitRow): { year: string; val: number } | null {
     return top ? { year: top.year, val: top.val as number } : null;
 }
 
-async function fetchByVariable(varId: number, unitLevel: number, years: number[], apiKey?: string): Promise<BdlUnitRow[]> {
+async function fetchByVariable(varId: number, unitLevel: number, years: number[], apiKey: string | undefined, force: boolean): Promise<BdlUnitRow[]> {
     const yq = years.map((y) => `year=${y}`).join('&');
-    const data = await fetchBDL(`data/by-variable/${varId}?unit-level=${unitLevel}&format=json&page-size=100&${yq}`, apiKey) as { results?: BdlUnitRow[] };
+    const data = await fetchBDL(`data/by-variable/${varId}?unit-level=${unitLevel}&format=json&page-size=100&${yq}`, apiKey, force) as { results?: BdlUnitRow[] };
     return data?.results ?? [];
 }
 
@@ -88,8 +89,8 @@ export async function GET(request: NextRequest) {
                 const years = [currentYear, currentYear - 1, currentYear - 2];
 
                 const [gdpRows, popRows] = await Promise.all([
-                    fetchByVariable(GDP_TOTAL, 3, years, apiKey),
-                    fetchByVariable(POPULATION, 2, years, apiKey),
+                    fetchByVariable(GDP_TOTAL, 3, years, apiKey, force),
+                    fetchByVariable(POPULATION, 2, years, apiKey, force),
                 ]);
 
                 // PKB wg województw (agregacja NUTS-2 → slug)

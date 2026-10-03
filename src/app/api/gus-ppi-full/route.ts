@@ -74,7 +74,7 @@ export async function GET(request: NextRequest) {
                     const months = y >= now - 1 ? [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] : [3, 6, 9, 12];
                     for (const m of months) periods.push({ rok: y, okres: monthOkres(m), przekroj: 657, key: `${y}-${mm(m)}` });
                 }
-                const rowsMap = await dbwFetchMany(314, periods, 3);
+                const rowsMap = await dbwFetchMany(314, periods, 3, force);
 
                 const monthsWithData: { key: string; rows: DbwRow[] }[] = [];
                 for (const p of periods) {
