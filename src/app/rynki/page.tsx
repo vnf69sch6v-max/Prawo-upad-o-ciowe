@@ -438,14 +438,14 @@ function SpolkiSection() {
                             onChange={(e) => setQuery(e.target.value)}
                             placeholder="Szukaj: nazwa, ticker, branża"
                             aria-label="Szukaj spółki"
-                            className="h-11 w-full rounded-xl border border-mk-border bg-mk-surface pl-9 pr-11 text-base text-mk-text outline-none transition-colors placeholder:text-mk-faint focus:border-mk-primary/60 sm:h-10 sm:text-sm [&::-webkit-search-cancel-button]:hidden"
+                            className="h-11 w-full rounded-xl border border-mk-border bg-mk-surface pl-9 pr-11 text-base text-mk-text outline-none transition-colors placeholder:text-mk-faint focus:border-mk-primary/60 lg:h-10 lg:text-sm [&::-webkit-search-cancel-button]:hidden"
                         />
                         {hasQuery && (
                             <button
                                 type="button"
                                 onClick={() => setQuery('')}
                                 aria-label="Wyczyść wyszukiwanie"
-                                className="absolute right-0 top-0 flex h-11 w-11 items-center justify-center rounded-xl text-mk-faint transition-colors hover:text-mk-text active:bg-mk-surface-alt sm:h-10 sm:w-10"
+                                className="absolute right-0 top-0 flex h-11 w-11 items-center justify-center rounded-xl text-mk-faint transition-colors hover:text-mk-text active:bg-mk-surface-alt lg:h-10 lg:w-10"
                             >
                                 <X size={16} />
                             </button>

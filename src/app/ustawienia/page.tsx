@@ -32,7 +32,7 @@ export default function UstawieniaPage() {
                             <div className="truncate text-sm text-mk-muted sm:text-xs">{user?.email}</div>
                         </div>
                     </div>
-                    <button type="button" onClick={onSignOut} className="mk-btn min-h-12 w-full active:bg-mk-surface-alt sm:min-h-0 sm:w-auto">
+                    <button type="button" onClick={onSignOut} className="mk-btn min-h-12 w-full active:bg-mk-surface-alt sm:min-h-11 sm:w-auto lg:min-h-0">
                         <LogOut size={15} /> {enabled ? 'Wyloguj' : 'Ekran logowania'}
                     </button>
                 </div>

@@ -83,7 +83,7 @@ export function UploadZone({
                       e.stopPropagation();
                       onSample(s.file, s.name);
                     }}
-                    className="mk-btn min-h-11 px-3 py-1 text-sm active:bg-mk-surface-alt sm:min-h-0 sm:px-2 sm:text-[11px]"
+                    className="mk-btn min-h-11 px-3 py-1 text-sm active:bg-mk-surface-alt sm:px-2.5 sm:text-xs lg:min-h-0 lg:px-2 lg:text-[11px]"
                   >
                     {s.label}
                   </button>
@@ -117,7 +117,7 @@ export function UploadZone({
               onReset();
             }}
             type="button"
-            className="mt-3 inline-flex min-h-11 items-center px-3 text-sm text-rp-data-muted underline-offset-2 hover:text-rp-data hover:underline sm:min-h-0 sm:px-0 sm:text-xs"
+            className="mt-3 inline-flex min-h-11 items-center px-3 text-sm text-rp-data-muted underline-offset-2 hover:text-rp-data hover:underline lg:min-h-0 lg:px-0 lg:text-xs"
           >
             {pl.upload.uploadAnother}
           </button>
@@ -132,7 +132,7 @@ export function UploadZone({
               onReset();
             }}
             type="button"
-            className="mt-2 inline-flex min-h-11 items-center px-3 text-sm text-rp-data-muted underline-offset-2 hover:text-rp-data hover:underline sm:min-h-0 sm:px-0 sm:text-xs"
+            className="mt-2 inline-flex min-h-11 items-center px-3 text-sm text-rp-data-muted underline-offset-2 hover:text-rp-data hover:underline lg:min-h-0 lg:px-0 lg:text-xs"
           >
             {pl.upload.tryAgain}
           </button>

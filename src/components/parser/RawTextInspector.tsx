@@ -29,7 +29,7 @@ export function RawTextInspector({ text }: { text: string }) {
             onChange={(e) => setQ(e.target.value)}
             placeholder={pl.raw.search}
             aria-label={pl.raw.search}
-            className="h-11 w-full rounded-lg border border-rp-hairline bg-rp-surface-raised pl-9 pr-3 text-base outline-none focus:ring-2 focus:ring-rp-data/30 sm:h-9 sm:text-sm"
+            className="h-11 w-full rounded-lg border border-rp-hairline bg-rp-surface-raised pl-9 pr-3 text-base outline-none focus:ring-2 focus:ring-rp-data/30 lg:h-9 lg:text-sm"
           />
         </div>
         <span className="shrink-0 text-xs text-rp-data-muted">
