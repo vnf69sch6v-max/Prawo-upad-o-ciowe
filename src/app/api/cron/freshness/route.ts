@@ -1,4 +1,4 @@
-// Dzienna kontrola świeżości (vercel.json: 07:20 UTC — po cronach DBW 03:00–04:30 i refresh 06:00).
+// Dzienna kontrola świeżości (vercel.json: 16:40 UTC — po cronach GUS 09:40–15:40, NBP 13:00 i giełdy 16:20).
 //  1. Sprawdza wszystkie zbiory jak /api/health/freshness.
 //  2. Samonaprawa: zbiory `stale`/`error` spoza GUS (NBP, Yahoo, Eurostat) woła z `?refresh=1`
 //     i sprawdza ponownie. GUS DBW/BDL NIGDY z refresh — wspólny limit ~100 żądań/15 min, mają własne crony.
@@ -10,6 +10,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAdminDb } from '@/lib/firebase/admin';
 import type { FreshnessReport } from '@/lib/freshness';
 import { runFreshnessCheck, selfHeal, sendFreshnessAlert, type HealAttempt } from '@/lib/freshness-check';
+import { recordCronRun } from '@/lib/cron-log';
 
 export const maxDuration = 120;
 
@@ -55,12 +56,22 @@ export async function GET(request: NextRequest) {
     }
 
     const origin = new URL(request.url).origin;
+    const startedAt = Date.now();
     const initial = await runFreshnessCheck(origin);
     const { report, attempts } = await selfHeal(origin, initial);
     const [persisted, alerted] = await Promise.all([
         persist(report, attempts),
         sendFreshnessAlert(process.env.ALERT_WEBHOOK_URL, origin, report),
     ]);
+
+    const problems = report.items.filter((i) => i.status === 'stale' || i.status === 'error');
+    await recordCronRun('freshness', {
+        at: new Date().toISOString(),
+        ok: report.items.length - problems.length,
+        total: report.items.length,
+        ms: Date.now() - startedAt,
+        failed: problems.map((i) => `${i.id} → ${i.status}`).slice(0, 10),
+    });
 
     return NextResponse.json({
         ...report,

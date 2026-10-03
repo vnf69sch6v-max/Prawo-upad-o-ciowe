@@ -1,4 +1,4 @@
-// Cron DBW grupa 1 (harmonogram 03:00) — ~72 wywołania DBW, samotnie w swoim oknie 15-min.
+// Cron DBW grupa 1 (harmonogram 09:40 UTC — po komunikatach GUS o 10:00 czasu PL) — ~72 wywołania DBW, samotnie w swoim oknie 15-min.
 //  • gus-cpi-full  (64: COICOP 1999 kwartalnie 2016–2025 + COICOP 2018 miesięcznie 2026)
 //  • dbw-series var 310 / przekrój 484 (8: budownictwo kwartalnie, 2 lata)
 import { NextRequest } from 'next/server';

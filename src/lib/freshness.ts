@@ -7,6 +7,7 @@
 // `/api/cron/freshness` i strona `/status` korzystają z tych samych reguł.
 //
 // Wszystkie funkcje przyjmują `now` → testowalne (tests/freshness.test.ts). Strefa: Europe/Warsaw.
+import type { CronRunReport } from '@/lib/cron-runs';
 import {
     cpiPreliminaryDate,
     industrialDate,
@@ -71,6 +72,8 @@ export interface FreshnessReport {
     checkedAt: string;
     overall: FreshnessStatus;
     items: FreshnessItem[];
+    /** Ostatnie przebiegi cronów (Firestore). `available: false` = brak Firestore (tryb demo). */
+    crons?: { available: boolean; items: CronRunReport[] };
 }
 
 // ─── Czas warszawski ────────────────────────────────────

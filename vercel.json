@@ -8,19 +8,19 @@
     "crons": [
         {
             "path": "/api/cron/dbw-1",
-            "schedule": "0 3 * * *"
+            "schedule": "40 9 * * *"
         },
         {
             "path": "/api/cron/dbw-2",
-            "schedule": "30 3 * * *"
+            "schedule": "40 13 * * *"
         },
         {
             "path": "/api/cron/dbw-3",
-            "schedule": "0 4 * * *"
+            "schedule": "40 15 * * *"
         },
         {
             "path": "/api/cron/dbw-4",
-            "schedule": "30 4 * * *"
+            "schedule": "40 11 * * *"
         },
         {
             "path": "/api/cron/bdl",
@@ -32,7 +32,7 @@
         },
         {
             "path": "/api/cron/stooq",
-            "schedule": "20 15 * * 1-5"
+            "schedule": "20 16 * * 1-5"
         },
         {
             "path": "/api/cron/stooq-intraday",
@@ -48,7 +48,7 @@
         },
         {
             "path": "/api/cron/freshness",
-            "schedule": "20 7 * * *"
+            "schedule": "40 16 * * *"
         },
         {
             "path": "/api/cron/news-archive",

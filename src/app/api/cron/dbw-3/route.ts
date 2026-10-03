@@ -1,4 +1,4 @@
-// Cron DBW grupa 3 (harmonogram 04:00) — ~72 wywołania DBW, samotnie w swoim oknie 15-min.
+// Cron DBW grupa 3 (harmonogram 15:40 UTC) — ~72 wywołania DBW, samotnie w swoim oknie 15-min.
 //  • gus-cpi          (24: krajowy CPI headline, miesięcznie, 2 lata)
 //  • gus-koniunktura  (24: badanie koniunktury GUS, miesięcznie, 2 lata)
 //  • dbw-series var 324 / przekrój 775 (24: ceny produktów rolnych miesięcznie — /ceny, 2 lata)

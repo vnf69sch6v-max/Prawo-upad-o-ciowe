@@ -44,15 +44,18 @@ Digital i raport kwartalny NewConnect po polsku.
 
 Crony Vercela (`vercel.json`) rozgrzewają cache, żeby użytkownik nigdy nie czekał na zimne pobranie:
 
-- `cron/dbw-1|2|3|4` — 03:00 / 03:30 / 04:00 / 04:30, **rozłączne okna**. GUS DBW ma globalny limit
-  ~100 żądań/15 min wspólny dla całej aplikacji, więc ciężkie pobrania są rozbite na grupy
-  (≤77 żądań każda). **Nie łącz ich z powrotem w jedno** — to gwarantowany sztorm 429.
-  `dbw-4` to wskaźniki z Przeglądu: produkcja przemysłowa, budowlanka, sprzedaż detaliczna.
+- `cron/dbw-1|4|2|3` — 09:40 / 11:40 / 13:40 / 15:40 UTC, czyli **po** komunikatach GUS (10:00 czasu PL),
+  więc nowy odczyt trafia na stronę tego samego dnia. GUS DBW ma globalny limit ~100 żądań/15 min
+  wspólny dla całej aplikacji, więc ciężkie pobrania są rozbite na grupy (≤77 żądań każda) co 2 h
+  (odstęp wytrzymuje godzinną tolerancję startu cronów na Hobby). **Nie łącz ich w jedno** — to
+  gwarantowany sztorm 429. `dbw-1` = CPI, `dbw-4` = produkcja, budowlanka, sprzedaż detaliczna.
 - `cron/bdl` — 05:00, GUS BDL (bezrobocie, płace, regiony) **sekwencyjnie** (BDL bez klucza ~5 żądań/s)
 - `cron/refresh` — 06:00, źródła spoza GUS (Eurostat, NBP, Yahoo, newsy; osobne limity, równolegle)
-- `cron/freshness` — 07:20, kontrola świeżości wszystkich zbiorów + samonaprawa NBP/Yahoo/Eurostat
+- `cron/freshness` — 16:40 UTC, kontrola świeżości wszystkich zbiorów + samonaprawa NBP/Yahoo/Eurostat
   i alert na `ALERT_WEBHOOK_URL`; wynik na stronie `/status` i pod `/api/health/freshness`
-- `cron/nbp`, `cron/stooq` — w dni robocze po sesji
+- każdy cron zapisuje swój przebieg w Firestore (`health/cron_runs`); `/status` pokazuje, kiedy
+  który działał ostatnio i ile źródeł odświeżył — dowód, że dane aktualizują się same
+- `cron/nbp` (13:00 UTC), `cron/stooq` (16:20 UTC, po zamknięciu GPW także zimą) — w dni robocze
 
 Endpointy GUS przyjmują `?refresh=1` (wymusza pobranie z `no-store`, pomija Firestore i Data Cache
 Next.js) — używa tego wyłącznie cron; użytkownik czyta 48-godzinny cache. Nieudane albo puste pobranie
