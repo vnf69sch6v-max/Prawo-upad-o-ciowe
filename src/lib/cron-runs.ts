@@ -10,6 +10,8 @@ export interface CronRun {
     ms: number;
     /** „endpoint → status" dla nieudanych wywołań (maks. 10). */
     failed: string[];
+    /** Host, pod który cron wołał własne endpointy (diagnostyka: adres wdrożenia za logowaniem = 0 odświeżeń). */
+    origin?: string;
 }
 
 export type CronRunStatus = 'ok' | 'late' | 'failing' | 'never';
@@ -52,8 +54,8 @@ export function evaluateCronRuns(runs: Record<string, CronRun>, now: Date): Cron
     });
 }
 
-/** Skrót wyników `warmEndpoints`/crona do zapisu. */
-export function summarizeResults(results: Record<string, number | string>, startedAt: number): CronRun {
+/** Skrót wyników `warmEndpoints`/crona do zapisu. Sukces = dokładnie 200 (patrz `internalCall`). */
+export function summarizeResults(results: Record<string, number | string>, startedAt: number, origin?: string): CronRun {
     const entries = Object.entries(results);
     const failed = entries.filter(([, s]) => s !== 200).map(([ep, s]) => `${ep.split('?')[0]}${ep.includes('?') ? '?…' : ''} → ${s}`);
     return {
@@ -62,5 +64,6 @@ export function summarizeResults(results: Record<string, number | string>, start
         total: entries.length,
         ms: Date.now() - startedAt,
         failed: failed.slice(0, 10),
+        ...(origin ? { origin: origin.replace(/^https?:\/\//, '') } : {}),
     };
 }

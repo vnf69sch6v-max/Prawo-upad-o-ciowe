@@ -3,6 +3,7 @@
 // które odpytują strony (fetch do własnego originu, bez `refresh=1`), z timeoutem per sprawdzenie.
 // Tu też samonaprawa i alert crona (eksportowane, bo plik `route.ts` w App Routerze nie może
 // eksportować nic poza handlerami i konfiguracją).
+import { internalInit, redirectLabel } from '@/lib/internal-fetch';
 import {
     datasetById,
     errorItem,
@@ -32,8 +33,13 @@ export async function fetchJsonWithTimeout(url: string, timeoutMs = CHECK_TIMEOU
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), timeoutMs);
     try {
-        const res = await fetch(url, { cache: 'no-store', signal: ctrl.signal, headers: { Accept: 'application/json' } });
+        const res = await fetch(url, internalInit({ signal: ctrl.signal }));
         const ms = Date.now() - started;
+        if (res.status >= 300 && res.status < 400) {
+            // Np. adres wdrożenia za logowaniem Vercela — bez `redirect: 'manual'` kończyło się na
+            // stronie logowania z HTTP 200 (patrz src/lib/internal-fetch.ts).
+            return { ok: false, status: res.status, error: `Przekierowanie zamiast danych (${redirectLabel(res, url)}).`, ms };
+        }
         let json: unknown = null;
         try {
             json = await res.json();

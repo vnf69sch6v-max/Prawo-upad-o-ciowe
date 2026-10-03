@@ -17,6 +17,7 @@ import { buildAndSaveDigest } from '@/lib/news/build-digest';
 import { fetchMacroChangesWithDiagnostics } from '@/lib/news/daily-macro';
 import { refreshAndMergeTodayArchive } from '@/lib/news/feed';
 import { warsawDateKey } from '@/lib/news/warsaw-date';
+import { internalCall, internalOrigin } from '@/lib/internal-fetch';
 
 export const maxDuration = 60;
 
@@ -32,14 +33,7 @@ const MACRO_WARM = [
 
 async function warmMacroSources(origin: string): Promise<Record<string, number | string>> {
     const entries = await Promise.all(
-        MACRO_WARM.map(async (ep) => {
-            try {
-                const res = await fetch(origin + ep, { cache: 'no-store' });
-                return [ep, res.status] as const;
-            } catch (e) {
-                return [ep, `error: ${String(e).slice(0, 80)}`] as const;
-            }
-        }),
+        MACRO_WARM.map(async (ep) => [ep, await internalCall(origin + ep)] as const),
     );
     return Object.fromEntries(entries);
 }
@@ -52,7 +46,7 @@ export async function GET(request: NextRequest) {
     }
 
     const date = warsawDateKey();
-    const origin = new URL(request.url).origin;
+    const origin = internalOrigin(request); // nie adres wdrożenia za logowaniem Vercela
     try {
         const { feed, archiveCount, sameDayCount, archiveItems } = await refreshAndMergeTodayArchive();
         const macroWarm = await warmMacroSources(origin);
