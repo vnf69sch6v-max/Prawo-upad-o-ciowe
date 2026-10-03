@@ -94,6 +94,20 @@ Standard scripts in `package.json`:
   publication dates, "today") must wait for `useIsClient()`
   (`src/lib/use-is-client.ts`), otherwise React throws hydration error #418
   and visitors see build-day dates until hydration.
+- Mobile is a first-class target (standard and workflow:
+  `.claude/agents/mobile-designer.md`). Below `lg` the shell is a single 56 px
+  header plus a fixed bottom tab bar (`MobileTabBar`, `MoreSheet`); the footer
+  reserves `var(--mk-bottom-chrome)` so nothing hides under the bar — anything
+  `fixed bottom-*` must add it too, and sticky panels use
+  `lg:top-[var(--mk-sticky-top)]` (header is two rows between lg and xl).
+  Touch targets are ≥44 px via the `touch:` variant (`pointer: coarse` OR
+  `max-width: 1023px`). `.mk-btn`, `.mk-seg*`, `.mk-input` live in
+  `@layer components`, so Tailwind utilities override them; `.mk-input` is
+  16 px below lg (iOS zooms on focus under 16 px). `.mk-fade-in` uses
+  `animation-fill-mode: backwards` — a lingering `transform` would make the
+  wrapper the containing block for `position: fixed` children. Pickers and
+  filters on phones open as bottom sheets (`Drawer`). PWA: manifest + icons
+  only, deliberately no service worker (stale data/JS after deploys).
 - `/parser` is the only route that takes user input instead of an external
   source. Its components use their own semantic colour tokens (`rp-*`), defined
   at the bottom of `src/app/globals.css` and mapped onto the light `mk-*`
