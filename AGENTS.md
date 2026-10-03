@@ -71,8 +71,9 @@ Standard scripts in `package.json`:
   project sits behind Vercel login (Deployment Protection); a plain
   `fetch(new URL(request.url).origin + ep)` followed the 302 to the login
   page, got HTTP 200 and the cron reported "ok" while refreshing nothing.
-  `internalOrigin()` uses the public production domain
-  (`VERCEL_PROJECT_PRODUCTION_URL`, override `INTERNAL_BASE_URL`),
+  `internalOrigin()` uses the canonical `SITE_URL` (https://savori.space,
+  override `INTERNAL_BASE_URL`) — not `VERCEL_PROJECT_PRODUCTION_URL`, which
+  picks the shortest production domain: savori.com, whose DNS is not on Vercel,
   `redirect: 'manual'`, and only a 2xx JSON answer counts as success.
   Every cron records its run in Firestore `health/cron_runs`
   (`src/lib/cron-log.ts`; evaluation in `src/lib/cron-runs.ts`), shown on
