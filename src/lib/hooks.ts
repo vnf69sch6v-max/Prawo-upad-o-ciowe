@@ -310,9 +310,11 @@ export function useUnemploymentMonthly(geo = 'PL') {
     return useEurostat('unemployment', geo);
 }
 
-/** Stopa bezrobocia rejestrowanego (GUS BDL P3559) — miesięczna, krajowa */
-export function useGusRegisteredUnemployment(months = 12) {
-    return useBdlSeries(461680, months);
+/** Stopa bezrobocia rejestrowanego (GUS BDL P3559) — miesięczna, krajowa.
+ *  `/api/bdl-series` zwraca ~24 miesiące (rok poprzedni + bieżący) przy 12 zmiennych miesięcznych;
+ *  `count` > 12 dokładał INNE zmienne BDL jako „miesiące 13–24". */
+export function useGusRegisteredUnemployment() {
+    return useBdlSeries(461680, 12);
 }
 
 export function useGDPQuarterly(geo = 'PL') {

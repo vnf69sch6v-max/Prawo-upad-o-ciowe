@@ -11,6 +11,21 @@ export function plSeries(res?: EurostatResult, geo = 'PL'): Point[] {
 }
 
 export const lastOf = (s: Point[]): number | null => (s.length ? s[s.length - 1].value : null);
+
+/** Historia kursu NBP (`/api/nbp?code=…` → `[{ effectiveDate, mid }]`) jako punkty serii. */
+export function nbpHistorySeries(data: unknown): Point[] {
+    const arr = Array.isArray(data) ? data : (data as { rates?: unknown[] } | undefined)?.rates;
+    if (!Array.isArray(arr)) return [];
+    return arr.flatMap((r) => {
+        const row = r as { effectiveDate?: string; mid?: number };
+        return row.effectiveDate && typeof row.mid === 'number' ? [{ date: row.effectiveDate, value: row.mid }] : [];
+    });
+}
+
+/** Świece dzienne (`/api/stooq`) → zamknięcia jako punkty serii. */
+export function closeSeries(bars: { date: string; close: number }[] | undefined): Point[] {
+    return (bars ?? []).map((b) => ({ date: b.date, value: b.close }));
+}
 export const prevOf = (s: Point[]): number | null => (s.length > 1 ? s[s.length - 2].value : null);
 
 /** Compact axis tick for "YYYY-MM" → "MM.YY" (quarters/other pass through). */

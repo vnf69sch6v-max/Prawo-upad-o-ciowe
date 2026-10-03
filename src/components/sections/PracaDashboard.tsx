@@ -35,7 +35,7 @@ const woj = (name: string) => name.replace(/^województwo /i, '');
  * Bez czerwonego hero; bez duplikacji liczb.
  */
 export function PracaDashboard() {
-    const unempQ = useGusRegisteredUnemployment(24);
+    const unempQ = useGusRegisteredUnemployment();
     const monthlyQ = useGusMonthly();
     const cpiQ = useCpiFull(); // cache React Query — bez refresh=1 (limit DBW)
     const zatrQ = useBdlSeries(154348, 12);

@@ -9,7 +9,7 @@ import {
     type NBPTable,
 } from '@/lib/hooks';
 import { WIG20 } from '@/lib/wig20';
-import { plSeries, lastOf, prevOf } from '@/lib/series';
+import { plSeries, lastOf, prevOf, nbpHistorySeries, closeSeries } from '@/lib/series';
 import { formatDecimalPL, formatNumber, formatDate, percentChange, formatDataPeriod, formatDataPeriodLabel } from '@/lib/formatters';
 import type { AccentKey } from '@/components/ui/KpiCard';
 import { CompactKpiGrid } from '@/components/ui/CompactKpiGrid';
@@ -33,6 +33,15 @@ import { WatchlistStrip, type WatchableKpi } from '@/components/ui/WatchlistStri
 
 type Point = { date: string; value: number };
 const fmt1 = (n: number | null | undefined) => (n == null ? '—' : formatDecimalPL(n, 1));
+// Formaty dymka sparkline'a (KpiSparkline) — ta sama precyzja co wartość na kaflu.
+const pct1 = (v: number) => `${formatDecimalPL(v, 1)}%`;
+const pct2 = (v: number) => `${formatDecimalPL(v, 2)}%`;
+const zl3 = (v: number) => `${formatDecimalPL(v, 3)} zł`;
+const pkt = (v: number) => `${formatNumber(v, 0)} pkt`;
+const zlg = (v: number) => `${formatDecimalPL(v, 2)} zł/g`;
+/** Trend kafla: 12 okresów makro, ~6 tygodni sesji dla rynków. */
+const SPARK_MACRO = 12;
+const SPARK_MARKET = 30;
 const ppDelta = (s: Point[]) => (lastOf(s) != null && prevOf(s) != null ? +(lastOf(s)! - prevOf(s)!).toFixed(1) : null);
 
 function fxDelta(data: unknown): number | null {
@@ -46,7 +55,7 @@ function fxDelta(data: unknown): number | null {
 
 export default function OverviewPage() {
     const cpiQ = useCpiFull();
-    const unempQ = useGusRegisteredUnemployment(24);
+    const unempQ = useGusRegisteredUnemployment();
     const retailQ = useGusRetailSales();
     const indQ = useGusIndustrialProduction();
     const ratesQ = useNBPInterestRates();
@@ -84,20 +93,20 @@ export default function OverviewPage() {
     }, [spolkiQ.data]);
 
     const macro = useMemo(() => [
-        { watchId: 'cpi', label: 'Inflacja CPI (r/r)', href: '/ceny?tab=inflacja', value: fmt1(lastOf(cpi)), unit: '%', accent: 'amber' as AccentKey, icon: TrendingUp, delta: ppDelta(cpi) != null ? { value: ppDelta(cpi)!, unit: 'pp' as const, invert: true } : undefined, footnote: cpi.length ? formatDataPeriodLabel(cpi[cpi.length - 1].date) : 'cel NBP 2,5%', loading: cpiQ.isLoading, error: cpiQ.isError, onRetry: () => { void cpiQ.refetch(); } },
-        { watchId: 'unemployment', label: 'Stopa bezrobocia', href: '/praca?tab=bezrobocie', value: fmt1(lastOf(unemp)), unit: '%', accent: 'blue' as AccentKey, icon: Users, delta: ppDelta(unemp) != null ? { value: ppDelta(unemp)!, unit: 'pp' as const, invert: true } : undefined, footnote: unemp.length ? `rejestrowane · ${formatDataPeriodLabel(unemp[unemp.length - 1].date)}` : 'rejestrowane', loading: unempQ.isLoading, error: unempQ.isError, onRetry: () => { void unempQ.refetch(); } },
+        { watchId: 'cpi', label: 'Inflacja CPI (r/r)', href: '/ceny?tab=inflacja', value: fmt1(lastOf(cpi)), unit: '%', accent: 'amber' as AccentKey, icon: TrendingUp, delta: ppDelta(cpi) != null ? { value: ppDelta(cpi)!, unit: 'pp' as const, invert: true } : undefined, footnote: cpi.length ? formatDataPeriodLabel(cpi[cpi.length - 1].date) : 'cel NBP 2,5%', spark: cpi.slice(-SPARK_MACRO), sparkFormat: pct1, loading: cpiQ.isLoading, error: cpiQ.isError, onRetry: () => { void cpiQ.refetch(); } },
+        { watchId: 'unemployment', label: 'Stopa bezrobocia', href: '/praca?tab=bezrobocie', value: fmt1(lastOf(unemp)), unit: '%', accent: 'blue' as AccentKey, icon: Users, delta: ppDelta(unemp) != null ? { value: ppDelta(unemp)!, unit: 'pp' as const, invert: true } : undefined, footnote: unemp.length ? `rejestrowane · ${formatDataPeriodLabel(unemp[unemp.length - 1].date)}` : 'rejestrowane', spark: unemp.slice(-SPARK_MACRO), sparkFormat: pct1, loading: unempQ.isLoading, error: unempQ.isError, onRetry: () => { void unempQ.refetch(); } },
         { watchId: 'ref-rate', label: 'Stopa referencyjna NBP', href: '/rynki', value: refRate ? formatDecimalPL(refRate.value, 2) : '—', unit: '%', accent: 'violet' as AccentKey, icon: Percent, footnote: refRate ? `od ${formatDate(refRate.validFrom)}` : undefined, loading: ratesQ.isLoading, error: ratesQ.isError, onRetry: () => { void ratesQ.refetch(); } },
-        { watchId: 'industrial', label: 'Produkcja przemysłowa (r/r)', href: '/gospodarka?tab=aktywnosc', value: fmt1(lastOf(industrial)), unit: '%', accent: 'rose' as AccentKey, icon: Factory, delta: ppDelta(industrial) != null ? { value: ppDelta(industrial)!, unit: 'pp' as const } : undefined, footnote: industrial.length ? formatDataPeriodLabel(industrial[industrial.length - 1].date) : undefined, loading: indQ.isLoading, error: indQ.isError, onRetry: () => { void indQ.refetch(); } },
-        { watchId: 'retail', label: 'Sprzedaż detaliczna (r/r)', href: '/gospodarka?tab=aktywnosc', value: fmt1(lastOf(retail)), unit: '%', accent: 'cyan' as AccentKey, icon: ShoppingCart, delta: ppDelta(retail) != null ? { value: ppDelta(retail)!, unit: 'pp' as const } : undefined, footnote: retail.length ? formatDataPeriodLabel(retail[retail.length - 1].date) : undefined, loading: retailQ.isLoading, error: retailQ.isError, onRetry: () => { void retailQ.refetch(); } },
+        { watchId: 'industrial', label: 'Produkcja przemysłowa (r/r)', href: '/gospodarka?tab=aktywnosc', value: fmt1(lastOf(industrial)), unit: '%', accent: 'rose' as AccentKey, icon: Factory, delta: ppDelta(industrial) != null ? { value: ppDelta(industrial)!, unit: 'pp' as const } : undefined, footnote: industrial.length ? formatDataPeriodLabel(industrial[industrial.length - 1].date) : undefined, spark: industrial.slice(-SPARK_MACRO), sparkFormat: pct1, loading: indQ.isLoading, error: indQ.isError, onRetry: () => { void indQ.refetch(); } },
+        { watchId: 'retail', label: 'Sprzedaż detaliczna (r/r)', href: '/gospodarka?tab=aktywnosc', value: fmt1(lastOf(retail)), unit: '%', accent: 'cyan' as AccentKey, icon: ShoppingCart, delta: ppDelta(retail) != null ? { value: ppDelta(retail)!, unit: 'pp' as const } : undefined, footnote: retail.length ? formatDataPeriodLabel(retail[retail.length - 1].date) : undefined, spark: retail.slice(-SPARK_MACRO), sparkFormat: pct1, loading: retailQ.isLoading, error: retailQ.isError, onRetry: () => { void retailQ.refetch(); } },
     ], [cpi, unemp, industrial, retail, refRate, cpiQ.isLoading, cpiQ.isError, unempQ.isLoading, unempQ.isError, ratesQ.isLoading, ratesQ.isError, indQ.isLoading, indQ.isError, retailQ.isLoading, retailQ.isError]);
 
     const markets = useMemo(() => [
-        { watchId: 'wig20', label: 'WIG20', href: '/rynki', value: wigLast != null ? formatNumber(wigLast, 0) : '—', unit: 'pkt', accent: 'blue' as AccentKey, icon: LineChart, delta: wigDelta != null ? { value: wigDelta, unit: 'pct' as const } : undefined, loading: wig20Q.isLoading, error: wig20Q.isError, onRetry: () => { void wig20Q.refetch(); } },
-        { watchId: 'eur-pln', label: 'EUR / PLN', href: '/rynki', value: mid('EUR') != null ? formatDecimalPL(mid('EUR')!, 3) : '—', unit: 'zł', accent: 'cyan' as AccentKey, icon: Euro, delta: fxDelta(eurHQ.data) != null ? { value: fxDelta(eurHQ.data)!, unit: 'pct' as const, invert: true } : undefined, footnote: fxTable?.effectiveDate ? formatDate(fxTable.effectiveDate) : undefined, loading: fxQ.isLoading, error: fxQ.isError, onRetry: () => { void fxQ.refetch(); } },
-        { watchId: 'usd-pln', label: 'USD / PLN', href: '/rynki', value: mid('USD') != null ? formatDecimalPL(mid('USD')!, 3) : '—', unit: 'zł', accent: 'green' as AccentKey, icon: DollarSign, delta: fxDelta(usdHQ.data) != null ? { value: fxDelta(usdHQ.data)!, unit: 'pct' as const, invert: true } : undefined, footnote: fxTable?.effectiveDate ? formatDate(fxTable.effectiveDate) : undefined, loading: fxQ.isLoading, error: fxQ.isError, onRetry: () => { void fxQ.refetch(); } },
-        { watchId: 'yield-10y', label: 'Rentowność 10Y', href: '/gospodarka?tab=finanse', value: lastOf(yield10) != null ? formatDecimalPL(lastOf(yield10)!, 2) : '—', unit: '%', accent: 'violet' as AccentKey, icon: Landmark, delta: lastOf(yield10) != null && prevOf(yield10) != null ? { value: +(lastOf(yield10)! - prevOf(yield10)!).toFixed(2), unit: 'pp' as const, invert: true } : undefined, footnote: yield10.length ? `śr. mies. · ${formatDataPeriod(yield10[yield10.length - 1].date)}` : 'średnia miesięczna', loading: yieldQ.isLoading, error: yieldQ.isError, onRetry: () => { void yieldQ.refetch(); } },
-        { watchId: 'gold', label: 'Złoto (NBP)', href: '/rynki', value: goldLast != null ? formatDecimalPL(goldLast, 2) : '—', unit: 'zł/g', accent: 'amber' as AccentKey, icon: Gem, delta: goldDelta != null ? { value: goldDelta, unit: 'pct' as const } : undefined, footnote: 'cena złota', loading: goldQ.isLoading, error: goldQ.isError, onRetry: () => { void goldQ.refetch(); } },
-    ], [wigLast, wigDelta, wig20Q.isLoading, wig20Q.isError, fxTable, eurHQ.data, usdHQ.data, fxQ.isLoading, fxQ.isError, yield10, yieldQ.isLoading, yieldQ.isError, goldLast, goldDelta, goldQ.isLoading, goldQ.isError]);
+        { watchId: 'wig20', label: 'WIG20', href: '/rynki', value: wigLast != null ? formatNumber(wigLast, 0) : '—', unit: 'pkt', accent: 'blue' as AccentKey, icon: LineChart, delta: wigDelta != null ? { value: wigDelta, unit: 'pct' as const } : undefined, spark: closeSeries(wigBars).slice(-SPARK_MARKET), sparkFormat: pkt, loading: wig20Q.isLoading, error: wig20Q.isError, onRetry: () => { void wig20Q.refetch(); } },
+        { watchId: 'eur-pln', label: 'EUR / PLN', href: '/rynki', value: mid('EUR') != null ? formatDecimalPL(mid('EUR')!, 3) : '—', unit: 'zł', accent: 'cyan' as AccentKey, icon: Euro, delta: fxDelta(eurHQ.data) != null ? { value: fxDelta(eurHQ.data)!, unit: 'pct' as const, invert: true } : undefined, footnote: fxTable?.effectiveDate ? formatDate(fxTable.effectiveDate) : undefined, spark: nbpHistorySeries(eurHQ.data).slice(-SPARK_MARKET), sparkFormat: zl3, loading: fxQ.isLoading, error: fxQ.isError, onRetry: () => { void fxQ.refetch(); } },
+        { watchId: 'usd-pln', label: 'USD / PLN', href: '/rynki', value: mid('USD') != null ? formatDecimalPL(mid('USD')!, 3) : '—', unit: 'zł', accent: 'green' as AccentKey, icon: DollarSign, delta: fxDelta(usdHQ.data) != null ? { value: fxDelta(usdHQ.data)!, unit: 'pct' as const, invert: true } : undefined, footnote: fxTable?.effectiveDate ? formatDate(fxTable.effectiveDate) : undefined, spark: nbpHistorySeries(usdHQ.data).slice(-SPARK_MARKET), sparkFormat: zl3, loading: fxQ.isLoading, error: fxQ.isError, onRetry: () => { void fxQ.refetch(); } },
+        { watchId: 'yield-10y', label: 'Rentowność 10Y', href: '/gospodarka?tab=finanse', value: lastOf(yield10) != null ? formatDecimalPL(lastOf(yield10)!, 2) : '—', unit: '%', accent: 'violet' as AccentKey, icon: Landmark, delta: lastOf(yield10) != null && prevOf(yield10) != null ? { value: +(lastOf(yield10)! - prevOf(yield10)!).toFixed(2), unit: 'pp' as const, invert: true } : undefined, footnote: yield10.length ? `śr. mies. · ${formatDataPeriod(yield10[yield10.length - 1].date)}` : 'średnia miesięczna', spark: yield10.slice(-SPARK_MACRO), sparkFormat: pct2, loading: yieldQ.isLoading, error: yieldQ.isError, onRetry: () => { void yieldQ.refetch(); } },
+        { watchId: 'gold', label: 'Złoto (NBP)', href: '/rynki', value: goldLast != null ? formatDecimalPL(goldLast, 2) : '—', unit: 'zł/g', accent: 'amber' as AccentKey, icon: Gem, delta: goldDelta != null ? { value: goldDelta, unit: 'pct' as const } : undefined, footnote: 'cena złota', spark: gold.slice(-SPARK_MARKET), sparkFormat: zlg, loading: goldQ.isLoading, error: goldQ.isError, onRetry: () => { void goldQ.refetch(); } },
+    ], [wigLast, wigDelta, wigBars, wig20Q.isLoading, wig20Q.isError, fxTable, eurHQ.data, usdHQ.data, fxQ.isLoading, fxQ.isError, yield10, yieldQ.isLoading, yieldQ.isError, gold, goldLast, goldDelta, goldQ.isLoading, goldQ.isError]);
 
     const companies: WatchableKpi[] = useMemo(
         () => WIG20.map((c) => {

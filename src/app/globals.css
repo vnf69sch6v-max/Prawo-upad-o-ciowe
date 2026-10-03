@@ -277,6 +277,93 @@ button.mk-card,
   }
 }
 
+/* Wiersz „delta + trend" w kaflu KPI: chip kierunku i sparkline obok siebie; na wąskim kaflu
+   (2 w rzędzie na 320 px) sparkline zawija się pod chip, zamiast wystawać poza kartę. */
+.mk-kpi-trend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  min-width: 0;
+}
+
+.mk-kpi-trend .mk-chip {
+  flex-shrink: 0;
+}
+
+/* Sparkline kafla (KpiSparkline): linia wyciszona, bieżący okres w akcencie serii (#2563EB —
+   pierwszy kolor zwalidowanej palety wykresów). Kolor NIE koduje kierunku — robi to DeltaChip. */
+.mk-spark {
+  position: relative;
+  display: block;
+  flex: 1 1 64px;
+  min-width: 64px;
+  height: 26px;
+  /* Miejsce na połowę kropki bieżącego okresu (3,5 px + 2 px obwódki) — karta ma overflow-hidden. */
+  margin-right: 6px;
+}
+
+.mk-kpi-compact .mk-spark {
+  height: 22px;
+}
+
+.mk-spark svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.mk-spark-line {
+  fill: none;
+  stroke: #94A3B8;
+  stroke-width: 1.5px;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.mk-spark-cursor {
+  stroke: #CBD2DD;
+  stroke-width: 1px;
+}
+
+.mk-spark-dot {
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  border-radius: 9999px;
+  background: #2563EB;
+  box-shadow: 0 0 0 2px var(--color-mk-surface);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.mk-spark-tip {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 5px 8px;
+  border: 1px solid var(--color-mk-border);
+  border-radius: 8px;
+  background: var(--color-mk-surface);
+  box-shadow: 0 6px 16px rgba(16, 24, 40, 0.12);
+  font-size: 11px;
+  line-height: 1.3;
+  white-space: nowrap;
+  color: var(--color-mk-faint);
+  pointer-events: none;
+}
+
+.mk-spark-tip strong {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-mk-text);
+}
+
 /* Przegląd — ciaśniejszy rytm pionowy */
 .mk-overview {
   --mk-overview-gap: 1rem;

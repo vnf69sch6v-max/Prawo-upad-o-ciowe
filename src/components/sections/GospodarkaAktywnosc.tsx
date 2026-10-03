@@ -35,6 +35,10 @@ const SECTOR_COLORS: Record<string, string> = {
     ikt: '#7C3AED',
 };
 
+/** Trend kafli KPI (KpiSparkline): 12 miesięcy; PKB — 8 kwartałów. */
+const SPARK = 12;
+const pct1 = (v: number) => `${formatDecimalPL(v, 1)}%`;
+
 function ppDeltaAnnual(series: Point[]) {
     const last = lastOf(series);
     const prev = series.length > 1 ? series[series.length - 2].value : null;
@@ -53,7 +57,7 @@ export function GospodarkaAktywnosc() {
     const cpiQ = useCpiFull();
     // Oficjalna krajowa stopa bezrobocia rejestrowanego (BDL P3559) — ta sama co na Przeglądzie.
     // NIE średnia z 16 województw: nieważona średnia stóp regionalnych ≠ stopa krajowa (6,6% vs 5,8%).
-    const unempQ = useGusRegisteredUnemployment(24);
+    const unempQ = useGusRegisteredUnemployment();
     const konQ = useKoniunktura();
 
     const gdp = useMemo(() => plSeries(gdpQ.data), [gdpQ.data]);
@@ -112,6 +116,8 @@ export function GospodarkaAktywnosc() {
                 icon: TrendingUp,
                 delta: ppDeltaAnnual(gdp) != null ? { value: ppDeltaAnnual(gdp)!, unit: 'pp' } : undefined,
                 footnote: gdpLast ? formatDataPeriod(gdpLast.date) : '',
+                spark: gdp.slice(-8),
+                sparkFormat: pct1,
                 loading: gdpQ.isLoading,
                 error: gdpQ.isError,
                 onRetry: () => { void gdpQ.refetch(); },
@@ -124,6 +130,8 @@ export function GospodarkaAktywnosc() {
                 icon: Factory,
                 delta: deltaOf(ind) != null ? { value: deltaOf(ind)!, unit: 'pp' } : undefined,
                 footnote: ind.length ? ind[ind.length - 1].date : '',
+                spark: ind.slice(-SPARK),
+                sparkFormat: pct1,
                 loading: indQ.isLoading,
                 error: indQ.isError,
                 onRetry: () => { void indQ.refetch(); },
@@ -136,6 +144,8 @@ export function GospodarkaAktywnosc() {
                 icon: ShoppingCart,
                 delta: deltaOf(ret) != null ? { value: deltaOf(ret)!, unit: 'pp' } : undefined,
                 footnote: ret.length ? ret[ret.length - 1].date : '',
+                spark: ret.slice(-SPARK),
+                sparkFormat: pct1,
                 loading: retQ.isLoading,
                 error: retQ.isError,
                 onRetry: () => { void retQ.refetch(); },
@@ -148,6 +158,8 @@ export function GospodarkaAktywnosc() {
                 icon: Percent,
                 delta: deltaOf(cpi) != null ? { value: deltaOf(cpi)!, unit: 'pp', invert: true } : undefined,
                 footnote: cpi.length ? cpi[cpi.length - 1].date : '',
+                spark: cpi.slice(-SPARK),
+                sparkFormat: pct1,
                 loading: cpiQ.isLoading,
                 error: cpiQ.isError,
                 onRetry: () => { void cpiQ.refetch(); },
@@ -160,6 +172,8 @@ export function GospodarkaAktywnosc() {
                 icon: Users,
                 delta: deltaOf(unemp) != null ? { value: deltaOf(unemp)!, unit: 'pp', invert: true } : undefined,
                 footnote: unemp.length ? unemp[unemp.length - 1].date : '',
+                spark: unemp.slice(-SPARK),
+                sparkFormat: pct1,
                 loading: unempQ.isLoading,
                 error: unempQ.isError,
                 onRetry: () => { void unempQ.refetch(); },
@@ -172,6 +186,8 @@ export function GospodarkaAktywnosc() {
                 icon: HardHat,
                 delta: deltaOf(con) != null ? { value: deltaOf(con)!, unit: 'pp' } : undefined,
                 footnote: con.length ? con[con.length - 1].date : '',
+                spark: con.slice(-SPARK),
+                sparkFormat: pct1,
                 loading: conQ.isLoading,
                 error: conQ.isError,
                 onRetry: () => { void conQ.refetch(); },
