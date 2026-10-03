@@ -15,9 +15,10 @@ Standard scripts in `package.json`:
 - `npm run build` — production build (used to validate compilation).
 - `npm run lint` — ESLint (`eslint-config-next`).
 
-- `npm test` — vitest, wyłącznie testy parsera raportów (`tests/parser.test.ts`
-  wobec utrwalonych sprawozdań w `tests/fixtures/`). Reszta serwisu nie ma
-  testów, więc zielony `npm test` nie mówi nic o stronach z danymi makro.
+- `npm test` — vitest: parser raportów (`tests/parser.test.ts` wobec utrwalonych
+  sprawozdań w `tests/fixtures/`), reguły świeżości danych (`tests/freshness.test.ts`)
+  i ranking sygnałów hero na Przeglądzie (`tests/hero-signals.test.ts`). Strony
+  i trasy API nie mają testów — zielony `npm test` nie mówi nic o ich renderze.
 
 ### Non-obvious caveats
 
@@ -43,6 +44,23 @@ Standard scripts in `package.json`:
   froze NBP rates and Yahoo quotes for weeks in production. GUS BDL/DBW routes
   keep `revalidate` on purpose (shared rate limit). Never cache NBP `.../today`
   under a fixed key; use `exchangerates/tables/{t}/` (latest table).
+- GUS DBW short-term indicators (industrial production, construction output,
+  retail sales — y/y, constant prices, unadjusted = the GUS press-release
+  number) are configured once in `src/lib/gus-dbw-series.ts` and requested via
+  `dbwSeriesPath()` / `dbwSeriesParams()`, so hooks, the `dbw-4` warm cron and
+  the freshness check hit the same `/api/dbw-series` cache key. DBW variable 312
+  is the construction **price** index (used only on `/ceny`) — until Oct 2026 it
+  was mislabelled as industrial production. BDL P3860 retail lags GUS releases
+  by weeks and is in current prices; don't use it for the headline number.
+  Before wiring a new DBW id, confirm its name in the catalogue
+  (`variable/variable-section-periods?ile-na-stronie=5000&numer-strony=N`) and
+  positions (`variable/variable-section-position?id-przekroj=`); the
+  presentation-measure dictionary pages with `?page=N`, not `numer-strony`.
+- The Przegląd hero is not fixed: `rankHeroSignals()` (`src/lib/hero-signals.ts`)
+  orders CPI / industry / retail / unemployment by publication recency (GUS
+  calendar in `src/lib/calendar-schedules.ts`) × size of the latest change in
+  σ of its own history; WIG20 and EUR/PLN enter only on a ≥2σ move. Keep the
+  publication calendar current — stale dates make fresh readings look old.
 - `/api/bdl-series?count=N` counts consecutive BDL **variable ids** (one per
   month, or per quarter), not months — max 12 (monthly) / 4 (quarterly); the
   route clamps it. The route already returns two years (previous + current).

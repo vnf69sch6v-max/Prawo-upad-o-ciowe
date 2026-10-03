@@ -16,14 +16,19 @@ import { CompactKpiGrid } from '@/components/ui/CompactKpiGrid';
 import { LatestNews } from '@/components/ui/RelatedNews';
 import { DailyDigestCard } from '@/components/ui/DailyDigestCard';
 import { OverviewHero } from '@/components/ui/OverviewHero';
+import { rankHeroSignals, type HeroCandidate } from '@/lib/hero-signals';
+import { useIsClient } from '@/lib/use-is-client';
+import { warsawDateKey } from '@/lib/news/warsaw-date';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { WatchlistStrip, type WatchableKpi } from '@/components/ui/WatchlistStrip';
 
 // ── Źródła KPI (Przegląd) ───────────────────────────────────
 // CPI            → useCpiFull              → /api/gus-cpi-full (GUS DBW)
 // Bezrobocie     → useGusRegisteredUnemployment → /api/bdl-series P3559 (GUS BDL)
-// Sprzedaż detal.→ useGusRetailSales       → /api/gus-monthly P3860 (GUS BDL)
-// Produkcja      → useGusIndustrialProduction → /api/dbw-series var 312 (GUS DBW)
+// Sprzedaż detal.→ useGusRetailSales       → /api/dbw-series zm. 109 (GUS DBW, r/r ceny stałe)
+// Produkcja      → useGusIndustrialProduction → /api/dbw-series zm. 814 (GUS DBW, r/r ceny stałe)
+// Hero           → rankHeroSignals (src/lib/hero-signals.ts) — 2 najważniejsze sygnały wg świeżości
+//                  publikacji (kalendarz GUS) i skali zmiany; rynek tylko przy ruchu ≥2σ
 // Stopa NBP      → useNBPInterestRates     → /api/nbp-rates (NBP)
 // WIG20 / FX / złoto → Stooq / NBP
 // Rentowność 10Y → useBondYield10Y         → /api/eurostat bond_yield_10y (średnia miesięczna;
@@ -108,6 +113,25 @@ export default function OverviewPage() {
         { watchId: 'gold', label: 'Złoto (NBP)', href: '/rynki', value: goldLast != null ? formatDecimalPL(goldLast, 2) : '—', unit: 'zł/g', accent: 'amber' as AccentKey, icon: Gem, delta: goldDelta != null ? { value: goldDelta, unit: 'pct' as const } : undefined, footnote: 'cena złota', spark: gold.slice(-SPARK_MARKET), sparkFormat: zlg, loading: goldQ.isLoading, error: goldQ.isError, onRetry: () => { void goldQ.refetch(); } },
     ], [wigLast, wigDelta, wigBars, wig20Q.isLoading, wig20Q.isError, fxTable, eurHQ.data, usdHQ.data, fxQ.isLoading, fxQ.isError, yield10, yieldQ.isLoading, yieldQ.isError, gold, goldLast, goldDelta, goldQ.isLoading, goldQ.isError]);
 
+    // Hero: kandydaci w kolejności domyślnej (remis → CPI pierwsze). „Dziś" dopiero po hydratacji —
+    // strona jest prerenderowana przy buildzie (AGENTS.md: useIsClient).
+    const isClient = useIsClient();
+    const today = isClient ? warsawDateKey() : null;
+    const eurSeries = useMemo(() => nbpHistorySeries(eurHQ.data), [eurHQ.data]);
+    const wigSeries = useMemo(() => closeSeries(wigBars), [wigBars]);
+    const heroRanked = useMemo(() => {
+        const candidates: HeroCandidate[] = [
+            { id: 'cpi', kind: 'cpi', label: 'Inflacja CPI', series: cpi, unit: '%', decimals: 1, deltaMode: 'pp', invert: true, weight: 1.3, href: '/ceny?tab=inflacja' },
+            { id: 'industrial', kind: 'industrial', label: 'Produkcja przemysłowa', series: industrial, unit: '%', decimals: 1, deltaMode: 'pp', href: '/gospodarka?tab=aktywnosc' },
+            { id: 'retail', kind: 'retail', label: 'Sprzedaż detaliczna', series: retail, unit: '%', decimals: 1, deltaMode: 'pp', href: '/gospodarka?tab=aktywnosc' },
+            { id: 'unemployment', kind: 'employment', label: 'Stopa bezrobocia', series: unemp, unit: '%', decimals: 1, deltaMode: 'pp', invert: true, weight: 0.8, href: '/praca?tab=bezrobocie' },
+            { id: 'wig20', kind: 'market', label: 'WIG20', series: wigSeries, unit: 'pkt', decimals: 0, deltaMode: 'pct', href: '/rynki' },
+            { id: 'eur-pln', kind: 'market', label: 'EUR/PLN', series: eurSeries, unit: 'zł', decimals: 3, deltaMode: 'pct', invert: true, href: '/rynki' },
+        ];
+        return rankHeroSignals(candidates, today);
+    }, [cpi, industrial, retail, unemp, wigSeries, eurSeries, today]);
+    const freshIds = useMemo(() => new Set(heroRanked.filter((r) => r.fresh).map((r) => r.candidate.id)), [heroRanked]);
+
     const companies: WatchableKpi[] = useMemo(
         () => WIG20.map((c) => {
             const q = quoteByTicker.get(c.ticker);
@@ -141,12 +165,12 @@ export default function OverviewPage() {
         <div className="mk-fade-in mk-overview">
             <PageHeader compact title="Przegląd" />
 
-            <OverviewHero cpi={cpi} retail={retail} cpiLoading={cpiQ.isLoading} retailLoading={retailQ.isLoading} />
+            <OverviewHero ranked={heroRanked} loading={cpiQ.isLoading || retailQ.isLoading || indQ.isLoading || unempQ.isLoading} />
 
             <WatchlistStrip items={watchlistItems} compact />
 
             <div className="space-y-2">
-                <CompactKpiGrid label="Wskaźniki makro" columns={5} dense items={macro.map((k) => ({ key: k.watchId, ...k, watchId: k.watchId }))} />
+                <CompactKpiGrid label="Wskaźniki makro" columns={5} dense items={macro.map((k) => ({ key: k.watchId, ...k, watchId: k.watchId, footnote: freshIds.has(k.watchId) && k.footnote ? `nowe · ${k.footnote}` : k.footnote }))} />
                 <CompactKpiGrid label="Rynki finansowe" columns={5} dense items={markets.map((k) => ({ key: k.watchId, ...k, watchId: k.watchId }))} />
             </div>
 
