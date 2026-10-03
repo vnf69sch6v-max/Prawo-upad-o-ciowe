@@ -106,8 +106,22 @@ export const formatPP = (n: number, decimals = 1): string =>
 /**
  * Format a plain number with Polish decimal comma (4,2)
  */
-export const formatDecimalPL = (n: number, decimals = 1): string =>
-    n.toFixed(decimals).replace('.', ',');
+const decimalFormatters = new Map<number, Intl.NumberFormat>();
+
+/**
+ * Liczba po polsku z ustaloną liczbą miejsc: przecinek dziesiętny i spacja tysięcy od 5 cyfr
+ * („3,4", „4105", „24 740,00" — reguła pl-PL: 4-cyfrowe bez separatora). Wcześniej `toFixed`
+ * dawało „24740,00", nieczytelne przy kursach i indeksach.
+ */
+export const formatDecimalPL = (n: number, decimals = 1): string => {
+    let f = decimalFormatters.get(decimals);
+    if (!f) {
+        f = new Intl.NumberFormat('pl-PL', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+        decimalFormatters.set(decimals, f);
+    }
+    // −0,0 → 0,0 (toFixed też nie pokazywał minusa przy zerze po zaokrągleniu)
+    return f.format(Object.is(n, -0) ? 0 : n).replace(/^-(0(?:,0+)?)$/, '$1');
+};
 
 /**
  * Okres referencyjny danych makro (GUS/Eurostat): YYYY-MM → „lipiec 2026", YYYY-Qn → „III kwartał 2025".
