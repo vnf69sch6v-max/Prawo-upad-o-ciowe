@@ -44,6 +44,35 @@ przy podejmowaniu.
 
 ## ZROBIONE
 
+- **UI: interaktywne wykresy i kafle, responsywność** — 2026-10-03
+  Zlecone przez właściciela („bardziej interaktywne i responsywne"). Audyt: 17 widoków × 5 szerokości
+  (320/375/768/1024/1440) + testy interakcji (mysz, dotyk, klawiatura) w Playwright.
+  - **Tooltip wykresów działał tylko po KLIKNIĘCIU** (`trigger="click"` dla wszystkich) — na komputerze
+    najechanie nie pokazywało żadnej wartości. Teraz `useCanHover()`: mysz → najechanie, dotyk → stuknięcie.
+    Nagłówek tooltipa: „30.09.2026" / „sierpień 2026" / „II kwartał 2026" zamiast surowego klucza osi.
+  - **Zakresy 3M/1R… cięły LICZBĘ PUNKTÓW, nie czas** (`data.slice(-N)`): na serii dziennej (WIG20, kurs
+    spółki) „3M" pokazywało 3 sesje. `lib/chart-range.ts` tnie po datach osi X (dzień/miesiąc/kwartał/rok)
+    i ukrywa przyciski, które niczego nie przycinają. WIG20 i strony spółek mają rok notowań (Yahoo `1y`),
+    więc 1M/3M/6M/ALL coś zmieniają; na stronie spółki kafel „Zakres 52 tygodni".
+  - **Kafle KPI z trendem** (Przegląd, Rynki, Gospodarka) — `KpiSparkline`: linia wyciszona, bieżący okres
+    w akcencie, dymek po najechaniu. Seria o mieszanej ziarnistości (CPI GUS: kwartały do IV kw. 2025,
+    miesiące od 01.2026) jest przycinana do końcowego odcinka jednej ziarnistości. Na wąskim kaflu trend
+    zawija się pod deltę.
+  - **BŁĄD DANYCH wyłapany przez sparkline:** `useGusRegisteredUnemployment(24)` → `/api/bdl-series?count=24`,
+    a BDL ma 12 zmiennych miesięcznych — ID 13–24 to INNE zmienne, więc w serii bezrobocia siedziały
+    „2025-13: 193 936 590" i „2025-21: 9011,5". Ostatnia wartość akurat była dobra; w styczniu delta kafla
+    wyszłaby „−9005 p.p.". Route przycina `count` do 12 (mies.) / 4 (kw.); klucz cache `_v3`.
+    Przy okazji użytkownicy czytają teraz dokument ogrzewany przez cron (cron wołał `count=12`).
+  - /regiony: mapa wylewała się z karty (ten sam błąd co na /praca), ranking ucinał wartości przy 1024 px
+    („158" zamiast „158 473") — sztywne szerokości kolumn ≥ 348 px w kolumnie ~275 px.
+  - Cele dotyku: wiersze rankingów 20 → 28 px, „ponów"/„Całe podsumowanie" ≥ 24 px (WCAG 2.2).
+  - Telefon/tablet (< lg): nagłówek (2 rzędy, ~108 px) chowa się przy przewijaniu w dół, wraca w górę
+    i przy fokusie klawiatury. Od `lg` stały (przyklejone panele `lg:top-20`).
+  - **Zweryfikowane:** 23 testy Playwright (zakresy WIG20 = 29/90/176/361 dni, hover bez kliknięcia,
+    stuknięcie na dotyku, strzałki na wykresie z klawiatury, chowanie nagłówka, 0 uciętych wartości
+    i mapa w karcie przy 1024); audyt 320/768/1024 — 0 przepełnień, 0 przyciętych, 0 za małych celów;
+    hydratacja czysta na buildzie z zegarem +7 tyg.; `tsc`, testy 65/65, `build`; lint bez nowych błędów.
+
 - **Rekonesans produkcji: nieaktualne i błędne liczby + błędy UI** — 2026-10-02
   Audyt savori.space: wszystkie endpointy API (status, czas, data danych vs źródło) + Playwright
   na 14 stronach × desktop/375 px. **Najgorsze były liczby, nie wygląd** — kilka kafli kłamało.

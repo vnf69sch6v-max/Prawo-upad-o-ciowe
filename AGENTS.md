@@ -43,6 +43,12 @@ Standard scripts in `package.json`:
   froze NBP rates and Yahoo quotes for weeks in production. GUS BDL/DBW routes
   keep `revalidate` on purpose (shared rate limit). Never cache NBP `.../today`
   under a fixed key; use `exchangerates/tables/{t}/` (latest table).
+- `/api/bdl-series?count=N` counts consecutive BDL **variable ids** (one per
+  month, or per quarter), not months — max 12 (monthly) / 4 (quarterly); the
+  route clamps it. The route already returns two years (previous + current).
+- Chart ranges (`3M`, `1R`, …) are time-based (`src/lib/chart-range.ts`) and
+  tooltips open on hover only for fine pointers (`useCanHover()`); touch keeps
+  tap-to-show.
 - Pages are prerendered at build time. Anything derived from "now" (upcoming
   publication dates, "today") must wait for `useIsClient()`
   (`src/lib/use-is-client.ts`), otherwise React throws hydration error #418
