@@ -54,9 +54,9 @@ export async function GET(request: NextRequest) {
                 for (let m = 1; m <= 12; m++) dPeriods.push({ rok: 2026, okres: monthOkres(m), przekroj: 1698, key: `2026-${mm(m)}` });
 
                 const [qRows, hRows, dRows] = await Promise.all([
-                    dbwFetchMany(305, qPeriods, 3),
-                    dbwFetchMany(305, hPeriods, 2),
-                    dbwFetchMany(305, dPeriods, 2),
+                    dbwFetchMany(305, qPeriods, 3, force),
+                    dbwFetchMany(305, hPeriods, 2, force),
+                    dbwFetchMany(305, dPeriods, 2, force),
                 ]);
 
                 // ── Headline: kwartalnie (Ogółem 1999) + miesięcznie 2026 (Ogółem 2018) ──

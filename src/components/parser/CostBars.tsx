@@ -3,6 +3,7 @@
 import * as React from "react";
 import { fmtPct } from "@/lib/parser/format";
 import type { Period } from "@/lib/parser/types";
+import { useBoxWidth } from "@/components/parser/useBoxWidth";
 
 /**
  * Koszty jako udział w przychodach, z przychodami jako linią odniesienia 100%.
@@ -27,6 +28,7 @@ export function CostBars({
   const currentIdx = Math.max(0, periods.findIndex((p) => p.current));
   const [periodIdx, setPeriodIdx] = React.useState(currentIdx);
   const [hover, setHover] = React.useState<string | null>(null);
+  const { ref: boxRef, width: boxW } = useBoxWidth<HTMLDivElement>(860);
 
   const data = rows
     .map((r) => ({ key: r.key, label: r.label, value: r.shares[periodIdx] }))
@@ -37,13 +39,17 @@ export function CostBars({
   // Skala zostawia margines za linią 100%, żeby przebicie było widoczne, a nie ucięte.
   const scaleMax = maxValue * 1.06;
 
-  const LABEL_W = 190;
-  const BAR_H = 26;
-  const GAP = 10;
-  const W = 860;
-  const TOP = 24;
-  const plotW = W - LABEL_W - 24;
-  const H = TOP + data.length * (BAR_H + GAP) + 14;
+  // Rysujemy w rzeczywistej szerokości kontenera (1:1), nie w skalowanym viewBoxie 860 px.
+  // Wąsko (telefon): etykieta i wartość w linii nad słupkiem, słupek na całą szerokość.
+  const W = boxW;
+  const narrow = W < 560;
+  const LABEL_W = narrow ? 0 : 190;
+  const BAR_H = narrow ? 16 : 26;
+  const TEXT_H = narrow ? 20 : 0;
+  const GAP = narrow ? 14 : 10;
+  const TOP = narrow ? 24 : 30; // szeroko: miejsce na podpis „PRZYCHODY 100%" nad linią (wcześniej ucięty u góry)
+  const plotW = narrow ? W - 2 : W - LABEL_W - 24;
+  const H = TOP + data.length * (TEXT_H + BAR_H + GAP) + 14;
   const x = (v: number) => (v / scaleMax) * plotW;
   const hundredX = LABEL_W + x(100);
 
@@ -69,6 +75,7 @@ export function CostBars({
         )}
       </div>
 
+      <div ref={boxRef} className="w-full min-w-0">
       <svg
         viewBox={`0 0 ${W} ${H}`}
         className="w-full"
@@ -78,47 +85,81 @@ export function CostBars({
         onMouseLeave={() => setHover(null)}
       >
         {/* Linia 100% — przychody okresu */}
-        <line x1={hundredX} y1={TOP - 14} x2={hundredX} y2={H - 8} stroke="#0F172A" strokeWidth={1.5} strokeDasharray="4 3" />
-        <text x={hundredX} y={TOP - 20} textAnchor="middle" fill="#0F172A" style={{ fontSize: 10, fontWeight: 700 }}>
+        {/* Wąsko linia 100% idzie tylko przez pasy słupków (niżej, w wierszach) — ciągła przecinałaby
+            wartości wyrównane do prawej krawędzi. */}
+        {!narrow && (
+          <line x1={hundredX} y1={TOP - 14} x2={hundredX} y2={H - 8} stroke="#0F172A" strokeWidth={1.5} strokeDasharray="4 3" />
+        )}
+        <text
+          x={narrow ? hundredX + 4 : hundredX}
+          y={TOP - 20 + (narrow ? 10 : 0)}
+          textAnchor={narrow ? "end" : "middle"}
+          fill="#0F172A"
+          style={{ fontSize: narrow ? 11 : 10, fontWeight: 700 }}
+        >
           PRZYCHODY 100%
         </text>
 
         {data.map((d, i) => {
-          const yTop = TOP + i * (BAR_H + GAP);
+          const rowTop = TOP + i * (TEXT_H + BAR_H + GAP);
+          const yTop = rowTop + TEXT_H;
           const over = d.value > 100;
           const active = hover === null || hover === d.key;
           return (
             <g key={d.key} onMouseEnter={() => setHover(d.key)} opacity={active ? 1 : 0.4} style={{ transition: "opacity .15s ease" }}>
-              <rect x={0} y={yTop} width={W} height={BAR_H} fill={hover === d.key ? "#F7F8FA" : "transparent"} />
-              <text
-                x={LABEL_W - 12}
-                y={yTop + BAR_H / 2 + 4}
-                textAnchor="end"
-                fill="#334155"
-                style={{ fontSize: 12.5 }}
-              >
-                {d.label}
-              </text>
+              <rect x={0} y={rowTop} width={W} height={TEXT_H + BAR_H} fill={hover === d.key ? "#F7F8FA" : "transparent"} />
+              {narrow ? (
+                <>
+                  <text x={0} y={rowTop + 14} className="fill-rp-data" style={{ fontSize: 13 }}>
+                    {d.label}
+                  </text>
+                  <text
+                    x={W - 2}
+                    y={rowTop + 14}
+                    textAnchor="end"
+                    className={over ? "fill-rp-dir-down" : "fill-rp-data-muted"}
+                    style={{ fontSize: 13, fontWeight: over ? 700 : 600, fontVariantNumeric: "tabular-nums" }}
+                  >
+                    {fmtPct(d.value)}
+                  </text>
+                </>
+              ) : (
+                <text
+                  x={LABEL_W - 12}
+                  y={yTop + BAR_H / 2 + 4}
+                  textAnchor="end"
+                  fill="#334155"
+                  style={{ fontSize: 12.5 }}
+                >
+                  {d.label}
+                </text>
+              )}
               <rect
                 x={LABEL_W}
-                y={yTop + 4}
+                y={narrow ? yTop + 2 : yTop + 4}
                 width={Math.max(2, x(d.value))}
-                height={BAR_H - 8}
+                height={narrow ? BAR_H - 4 : BAR_H - 8}
                 rx={3}
                 fill={over ? "#DC2626" : "#64748B"}
               />
-              <text
-                x={LABEL_W + x(d.value) + 8}
-                y={yTop + BAR_H / 2 + 4}
-                fill={over ? "#DC2626" : "#475569"}
-                style={{ fontSize: 12, fontWeight: over ? 700 : 600, fontVariantNumeric: "tabular-nums" }}
-              >
-                {fmtPct(d.value)}
-              </text>
+              {narrow && (
+                <line x1={hundredX} y1={yTop - 1} x2={hundredX} y2={yTop + BAR_H + 1} className="stroke-rp-data" strokeWidth={1.5} strokeDasharray="3 2" />
+              )}
+              {!narrow && (
+                <text
+                  x={LABEL_W + x(d.value) + 8}
+                  y={yTop + BAR_H / 2 + 4}
+                  fill={over ? "#DC2626" : "#475569"}
+                  style={{ fontSize: 12, fontWeight: over ? 700 : 600, fontVariantNumeric: "tabular-nums" }}
+                >
+                  {fmtPct(d.value)}
+                </text>
+              )}
             </g>
           );
         })}
       </svg>
+      </div>
 
       {data.some((d) => d.value > 100) && (
         <p className="mt-1 text-[12px] leading-relaxed text-mk-negative">

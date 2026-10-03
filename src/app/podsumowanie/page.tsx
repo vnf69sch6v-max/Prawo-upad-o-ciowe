@@ -16,6 +16,26 @@ import { SummaryCard } from '@/components/ui/DigestSummaryCard';
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
+/**
+ * Wartości w `dane` przychodzą jako gotowe napisy z kropką dziesiętną („4105", „+0.16%").
+ * Wyświetlamy je po polsku: przecinek i spacja tysięcy („10 414", „+0,16%"). Inne napisy bez zmian.
+ */
+function plNumber(raw: string): string {
+    const m = raw.trim().match(/^([+\-−]?)(\d+)(?:[.,](\d+))?(\s*(?:%|pp|p\.p\.|pkt|zł)?)$/);
+    if (!m) return raw;
+    const [, sign, int, frac = '', rest] = m;
+    const body = new Intl.NumberFormat('pl-PL', { minimumFractionDigits: frac.length, maximumFractionDigits: frac.length })
+        .format(Number(frac ? `${int}.${frac}` : int));
+    return `${sign}${body}${rest}`;
+}
+
+function deltaArrow(raw: string): string {
+    const t = raw.trim();
+    if (/^[\-−]/.test(t)) return '▼';
+    if (/^\+/.test(t) && /[1-9]/.test(t)) return '▲';
+    return '';
+}
+
 const TOPIC_LABELS: Record<NewsTopic, string> = {
     ceny: 'Ceny',
     gospodarka: 'Gospodarka',
@@ -71,24 +91,24 @@ function DailyDigestFull({ digest, isLoading, isError, staleDate }: { digest: Da
     }
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-6 sm:space-y-8">
             {digest.podsumowanie && <SummaryCard summary={digest.podsumowanie} staleDate={staleDate} />}
 
             <section>
-                <h2 className="mk-section-label mb-4">Najważniejsze tematy dnia</h2>
+                <h2 className="mk-section-label mb-3 sm:mb-4">Najważniejsze tematy dnia</h2>
                 <div className="mk-card mk-card-editorial mk-card-pad">
                     <ul className="list-none divide-y divide-mk-border">
                         {digest.punkty.map((p) => (
-                            <li key={p.link} className="flex gap-4 py-5 first:pt-0 last:pb-0">
-                                <span className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-mk-brand" aria-hidden />
-                                <div className="min-w-0 flex-1">
-                                    <a
-                                        href={p.link}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="group block"
-                                    >
-                                        <h3 className="text-base font-bold leading-snug text-mk-text transition-colors group-hover:text-mk-brand sm:text-lg">
+                            <li key={p.link} className="py-4 first:pt-0 last:pb-0 sm:py-5">
+                                <a
+                                    href={p.link}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="group -mx-2 flex gap-3 rounded-lg px-2 py-1 transition-colors [-webkit-tap-highlight-color:transparent] active:bg-mk-surface-alt sm:gap-4"
+                                >
+                                    <span className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-mk-brand" aria-hidden />
+                                    <div className="min-w-0 flex-1">
+                                        <h3 className="text-[17px] font-bold leading-snug text-mk-text transition-colors group-hover:text-mk-brand sm:text-lg">
                                             {p.title}
                                         </h3>
                                         {p.description && (
@@ -99,10 +119,10 @@ function DailyDigestFull({ digest, isLoading, isError, staleDate }: { digest: Da
                                             <CategoryTag section={p.section} filled />
                                             <span className="text-mk-muted">{p.source}</span>
                                             <CorroborationTag n={p.corroboration} />
-                                            <ExternalLink size={14} className="ml-auto shrink-0 text-mk-faint group-hover:text-mk-brand" aria-hidden />
                                         </div>
-                                    </a>
-                                </div>
+                                    </div>
+                                    <ExternalLink size={15} className="mt-1 shrink-0 text-mk-faint group-hover:text-mk-brand" aria-hidden />
+                                </a>
                             </li>
                         ))}
                     </ul>
@@ -111,25 +131,47 @@ function DailyDigestFull({ digest, isLoading, isError, staleDate }: { digest: Da
 
             {digest.dane.length > 0 && (
                 <section>
-                    <h2 className="mk-section-label mb-4">Co się zmieniło w liczbach</h2>
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                        {digest.dane.map((row) => (
-                            <div key={row.id} className="mk-card mk-card-editorial mk-card-pad">
-                                <p className="text-xs font-semibold uppercase tracking-wide text-mk-muted">{row.label}</p>
-                                <p className="mt-2 text-2xl font-bold tabular-nums text-mk-text">
-                                    {row.value}
-                                    {row.unit && <span className="ml-1 text-base font-medium text-mk-muted">{row.unit}</span>}
-                                </p>
-                                {row.delta && (
-                                    <p className="mt-1 text-sm font-medium text-mk-brand">{row.delta}</p>
-                                )}
-                                {row.href && (
-                                    <Link href={row.href} className="mt-2 inline-block text-xs font-medium text-mk-brand hover:underline">
-                                        Zobacz wskaźnik →
-                                    </Link>
-                                )}
-                            </div>
-                        ))}
+                    <h2 className="mk-section-label mb-3 sm:mb-4">Co się zmieniło w liczbach</h2>
+                    {/* Telefon: 2 kolumny; data odczytu przy każdej liczbie; cały kafel prowadzi do wskaźnika. */}
+                    <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
+                        {digest.dane.map((row) => {
+                            const arrow = row.delta ? deltaArrow(row.delta) : '';
+                            const body = (
+                                <>
+                                    <p className="text-xs font-semibold uppercase tracking-wide text-mk-muted">{row.label}</p>
+                                    <p className="mt-2 flex flex-wrap items-baseline gap-x-1 text-2xl font-bold tabular-nums text-mk-text">
+                                        <span className="break-all">{plNumber(row.value)}</span>
+                                        {row.unit && <span className="text-sm font-medium text-mk-muted sm:text-base">{row.unit}</span>}
+                                    </p>
+                                    {row.delta && (
+                                        <p className="mt-1 text-sm font-semibold tabular-nums text-mk-text-soft">
+                                            {arrow && <span className="mr-1 text-[11px]" aria-hidden>{arrow}</span>}
+                                            {plNumber(row.delta)}
+                                            <span className="font-normal text-mk-muted"> vs poprz.</span>
+                                        </p>
+                                    )}
+                                    <p className="mt-2 text-xs text-mk-muted">
+                                        odczyt <time dateTime={row.readingDate} className="tabular-nums">{formatDate(row.readingDate)}</time>
+                                    </p>
+                                    {row.href && (
+                                        <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-mk-brand group-hover:underline">
+                                            Zobacz wskaźnik <ArrowRight size={13} aria-hidden />
+                                        </span>
+                                    )}
+                                </>
+                            );
+                            return row.href ? (
+                                <Link
+                                    key={row.id}
+                                    href={row.href}
+                                    className="mk-card mk-card-editorial mk-card-interactive group block p-3.5 transition-colors [-webkit-tap-highlight-color:transparent] active:bg-mk-surface-alt sm:p-5"
+                                >
+                                    {body}
+                                </Link>
+                            ) : (
+                                <div key={row.id} className="mk-card mk-card-editorial p-3.5 sm:p-5">{body}</div>
+                            );
+                        })}
                     </div>
                 </section>
             )}
@@ -152,8 +194,8 @@ function DailyDigestFull({ digest, isLoading, isError, staleDate }: { digest: Da
                                         style={{ backgroundColor: EVENT_COLORS[ev.type] }}
                                         aria-hidden
                                     />
-                                    <div>
-                                        <p className="text-sm font-medium text-mk-text">{ev.name}</p>
+                                    <div className="min-w-0">
+                                        <p className="text-[15px] font-medium leading-snug text-mk-text sm:text-sm">{ev.name}</p>
                                         {ev.importance === 'high' && (
                                             <span className="mt-1 inline-block text-[11px] font-semibold uppercase tracking-wide text-mk-brand">
                                                 Wysoka ważność
@@ -163,7 +205,7 @@ function DailyDigestFull({ digest, isLoading, isError, staleDate }: { digest: Da
                                 </li>
                             ))}
                         </ul>
-                        <Link href="/publikacje" className="mt-5 inline-flex items-center gap-1 text-sm font-medium text-mk-brand hover:underline">
+                        <Link href="/publikacje" className="mt-3 inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-mk-brand hover:underline">
                             Pełny kalendarz <ArrowRight size={14} />
                         </Link>
                     </div>

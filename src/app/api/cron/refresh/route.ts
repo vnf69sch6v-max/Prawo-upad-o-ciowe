@@ -1,4 +1,4 @@
-// Dzienny warm cache dla źródeł SPOZA DBW (Eurostat, NBP, Stooq, BDL, SMUP, regiony).
+// Dzienny warm cache dla źródeł SPOZA GUS DBW/BDL (Eurostat, NBP, Yahoo, SMUP, newsy).
 // Każde z nich ma osobny limit → bezpiecznie równolegle.
 // Ciężkie DBW (CPI/PPI/koniunktura/serie) dzielą globalny limit ~100 żądań/15 min, więc mają
 // WŁASNE crony dbw-1/2/3 rozłożone na osobne okna 15-min (03:00 / 03:30 / 04:00) — patrz vercel.json.
@@ -8,14 +8,8 @@ import { NextRequest, NextResponse } from 'next/server';
 export const maxDuration = 120;
 
 const ENDPOINTS = [
-    // Rynek pracy + regiony (BDL — osobny limit, wszystkie lata w 1 wywołaniu)
-    '/api/bdl-series?start=154348&count=12',
-    '/api/bdl-series?start=1615281&count=1',
-    '/api/bdl-series?start=461680&count=12',                 // bezrobocie rejestrowane (miesięczne, kraj)
-    '/api/bdl-series?start=1615673&count=4&freq=q&step=6',   // BAEL stopa bezrobocia (P3982)
-    '/api/bdl-series?start=1750141&count=12&step=6',         // mediana wynagrodzeń (P4610)
-    '/api/gus-regional',
-    '/api/gus-monthly',
+    // GUS BDL (rynek pracy, płace, regiony) → osobny, sekwencyjny cron `bdl` (05:00): równolegle
+    // z resztą tej listy przekraczał limit BDL (~5 żądań/s bez klucza) i serie wracały z dziurami.
     // Eurostat — `refresh=1` WYMUSZA pobranie u źródła. Bez tego warm tylko czytał cache
     // i, gdy wpis wyglądał na świeży, nie odświeżał niczego (produkcja potrafiła stać
     // tygodniami na starych danych mimo „zielonego" crona).
@@ -42,7 +36,6 @@ const ENDPOINTS = [
     '/api/eurostat?indicator=gdp_annual&geo=PL&refresh=1',
     '/api/eurostat?indicator=cpi_annual&geo=PL&refresh=1',
     '/api/eurostat?indicator=hicp_food_yoy&geo=PL&refresh=1',
-    '/api/regional-gus?refresh=1',                             // PKB regionalne + demografia (GUS BDL)
     // NBP + rynki — dublują crony nbp/stooq (pn–pt); tu codziennie, więc dane nie stoją w weekend
     '/api/nbp?table=a&refresh=1',
     '/api/nbp-rates',

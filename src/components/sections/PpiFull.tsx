@@ -7,6 +7,7 @@ import { formatDecimalPL, formatDataPeriodLabel } from '@/lib/formatters';
 import { CompactKpiGrid, type CompactKpiItem } from '@/components/ui/CompactKpiGrid';
 import { EditorialHero } from '@/components/ui/EditorialHero';
 import { DensePageLayout, DenseTwoCol } from '@/components/ui/DensePageLayout';
+import { MobileMore, MobileOnly } from '@/components/sections/mobile-layout';
 import { InteractiveChart } from '@/components/ui/InteractiveChart';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { Segmented } from '@/components/ui/Segmented';
@@ -195,9 +196,10 @@ export function PpiFull() {
 
             <CompactKpiGrid items={compactKpis} label="Wskaźniki uzupełniające" dense />
 
-            <DenseTwoCol
-                left={<RelatedNews topic="ceny" limit={5} title="Newsy — ceny i inflacja" variant="rail" />}
-                right={
+            {/* Telefon: wykres zaraz po KPI, newsy na końcu strony. Desktop: newsy | wykres. */}
+            <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-2">
+                <div className="hidden min-w-0 lg:block"><RelatedNews topic="ceny" limit={5} title="Newsy — ceny i inflacja" variant="rail" /></div>
+                <div className="min-w-0">
                     <SectionCard editorial titleVariant="label" title="PPI — trend" subtitle={`${freq === 'yoy' ? 'rok do roku' : 'miesiąc do miesiąca'} (%) · GUS`}
                         actions={<div className="flex flex-wrap items-center gap-2">
                             <Segmented value={freq} onChange={setFreq} aria-label="Częstotliwość PPI" options={[{ value: 'yoy', label: 'r/r' }, { value: 'mom', label: 'm/m' }]} />
@@ -209,8 +211,8 @@ export function PpiFull() {
                             valueFormatter={(v) => formatDecimalPL(v, 1)} xTickFormatter={monthTick} referenceLines={[{ y: 0, color: '#CBD2DD' }]}
                             series={[{ key: 'value', name: freq === 'yoy' ? 'PPI r/r' : 'PPI m/m', color: '#E11D48', type: 'area', strokeWidth: 2.5 }]} />
                     </SectionCard>
-                }
-            />
+                </div>
+            </div>
 
             <DenseTwoCol
                 left={
@@ -224,20 +226,20 @@ export function PpiFull() {
                     </SectionCard>
                 }
                 right={
-                    <SectionCard editorial titleVariant="label" title="Sekcje przemysłu" subtitle="4 kategorie PKD · kliknij">
+                    <SectionCard editorial titleVariant="label" title="Sekcje przemysłu" subtitle="4 sekcje PKD · r/r (%) · wybierz sekcję">
                         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                             {sections.map((s) => {
                                 const meta = SEC_META[s.code] ?? { color: '#64748B', icon: Factory };
                                 const Icon = meta.icon;
                                 return (
-                                    <button key={s.code} onClick={() => openSec(s.code)} className="group flex items-center gap-2 rounded-lg border border-mk-border p-2.5 text-left transition-colors hover:bg-mk-surface-alt">
+                                    <button key={s.code} type="button" onClick={() => openSec(s.code)} className="group flex min-h-14 items-center gap-2 rounded-lg border border-mk-border p-2.5 text-left transition-colors duration-100 hover:bg-mk-surface-alt active:bg-mk-surface-alt">
                                         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg" style={{ background: `${meta.color}18`, color: meta.color }}><Icon size={16} /></span>
                                         <div className="min-w-0 flex-1">
                                             <div className="flex items-center justify-between gap-1">
-                                                <span className="truncate text-xs font-semibold text-mk-text"><span className="text-mk-faint">{s.code}</span> {s.name}</span>
+                                                <span className="truncate text-[13px] font-semibold text-mk-text sm:text-xs" title={s.name}><span className="text-mk-faint">{s.code}</span> {s.name}</span>
                                                 <span className="shrink-0 text-sm font-bold tnum" style={{ color: (s.yoy ?? 0) >= 0 ? '#DC2626' : '#16A34A' }}>{s.yoy != null ? `${s.yoy > 0 ? '+' : ''}${formatDecimalPL(s.yoy, 1)}%` : '—'}</span>
                                             </div>
-                                            <div className="text-[10px] text-mk-faint">{s.divisions.length} działów · kliknij</div>
+                                            <div className="text-[11px] text-mk-faint">{s.divisions.length} działów · szczegóły</div>
                                         </div>
                                     </button>
                                 );
@@ -248,18 +250,18 @@ export function PpiFull() {
             />
 
             {/* Pełna szerokość: wysoka mapa ciepła obok krótkich „ruchów” zostawiała ~½ pustej kolumny. */}
-            <SectionCard editorial titleVariant="label" title="Największe ruchy cen" subtitle="działy PKD u producenta"
+            <SectionCard editorial titleVariant="label" title="Największe ruchy cen" subtitle={`działy PKD u producenta · ${moverMetric === 'yoy' ? 'r/r' : 'm/m'} (%)`}
                 actions={<Segmented value={moverMetric} onChange={setMoverMetric} aria-label="Metryka zmian" options={[{ value: 'yoy', label: 'r/r' }, { value: 'mom', label: 'm/m' }]} />}>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     {[{ t: 'Zdrożało', arr: movers.risers, up: true }, { t: 'Staniało', arr: movers.fallers, up: false }].map((col) => (
                         <div key={col.t}>
-                            <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide" style={{ color: col.up ? '#DC2626' : '#16A34A' }}>{col.up ? '▲' : '▼'} {col.t}</div>
-                            <div className="space-y-1">
+                            <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide" style={{ color: col.up ? '#DC2626' : '#16A34A' }}>{col.up ? '▲' : '▼'} {col.t}</div>
+                            <div className="space-y-1.5 sm:space-y-1">
                                 {col.arr.slice(0, 6).map((m) => (
-                                    <div key={m.code} className="flex items-center gap-1.5 text-[11px]">
-                                        <span className="w-24 shrink-0 truncate text-mk-text-soft" title={m.name}><span className="text-mk-faint">{m.code}</span> {m.name}</span>
-                                        <span className="h-2 flex-1 rounded-full bg-mk-surface-alt"><span className="block h-2 rounded-full" style={{ width: `${(Math.abs(m.v) / movers.maxV) * 100}%`, marginLeft: m.v < 0 ? 'auto' : undefined, background: m.v >= 0 ? '#DC2626' : '#16A34A' }} /></span>
-                                        <span className="w-10 shrink-0 text-right font-semibold tnum" style={{ color: m.v >= 0 ? '#DC2626' : '#16A34A' }}>{m.v > 0 ? '+' : ''}{formatDecimalPL(m.v, 1)}</span>
+                                    <div key={m.code} className="flex items-center gap-1.5 text-xs sm:text-[11px]">
+                                        <span className="w-[46%] shrink-0 truncate text-mk-text-soft sm:w-24" title={m.name}><span className="text-mk-faint">{m.code}</span> {m.name}</span>
+                                        <span className="h-2 min-w-0 flex-1 rounded-full bg-mk-surface-alt"><span className="block h-2 rounded-full" style={{ width: `${(Math.abs(m.v) / movers.maxV) * 100}%`, marginLeft: m.v < 0 ? 'auto' : undefined, background: m.v >= 0 ? '#DC2626' : '#16A34A' }} /></span>
+                                        <span className="w-11 shrink-0 text-right font-semibold tnum sm:w-10" style={{ color: m.v >= 0 ? '#DC2626' : '#16A34A' }}>{m.v > 0 ? '+' : ''}{formatDecimalPL(m.v, 1)}</span>
                                     </div>
                                 ))}
                             </div>
@@ -268,13 +270,19 @@ export function PpiFull() {
                 </div>
             </SectionCard>
 
-            <SectionCard editorial titleVariant="label" title="Mapa ciepła — działy PKD" subtitle="dynamika cen producenta"
-                actions={<Segmented value={heatMetric} onChange={setHeatMetric} aria-label="Metryka mapy ciepła" options={[{ value: 'yoy', label: 'r/r' }, { value: 'mom', label: 'm/m' }]} />}>
-                {heat.dates.length < 2 ? <QueryEmpty title="Brak danych" height={220} /> : (
-                    <Heatmap rows={heatRows} cols={heat.dates} valueAt={heatValue} unit="%" colTickFormatter={monthTick} valueFormatter={(v) => formatDecimalPL(v, 1)} cellHeight={14}
-                        onRowClick={(code) => { const d = allDivs.find((x) => x.code === code); if (d) openSec(d.sec); }} />
-                )}
-            </SectionCard>
+            <MobileMore label="Pokaż mapę ciepła" hint={`${allDivs.length} działów PKD × miesiąc`}>
+                <SectionCard editorial titleVariant="label" title="Mapa ciepła — działy PKD" subtitle={`dynamika cen producenta · ${heatMetric === 'yoy' ? 'r/r' : 'm/m'} (%)`}
+                    actions={<Segmented value={heatMetric} onChange={setHeatMetric} aria-label="Metryka mapy ciepła" options={[{ value: 'yoy', label: 'r/r' }, { value: 'mom', label: 'm/m' }]} />}>
+                    {heat.dates.length < 2 ? <QueryEmpty title="Brak danych" height={220} /> : (
+                        <Heatmap rows={heatRows} cols={heat.dates} valueAt={heatValue} unit="%" colTickFormatter={monthTick} valueFormatter={(v) => formatDecimalPL(v, 1)} cellHeight={14}
+                            onRowClick={(code) => { const d = allDivs.find((x) => x.code === code); if (d) openSec(d.sec); }} />
+                    )}
+                </SectionCard>
+            </MobileMore>
+
+            <MobileOnly>
+                <RelatedNews topic="ceny" limit={3} title="Newsy — ceny i inflacja" variant="rail" />
+            </MobileOnly>
 
             {/* Drawer sekcji */}
             <Drawer open={open && !!sel} onClose={() => setOpen(false)} accent={selColor}
@@ -310,14 +318,14 @@ export function PpiFull() {
                                         const w = (Math.abs(d.mv) / maxDivAbs) * 100;
                                         return (
                                             <div key={d.code}>
-                                                <button onClick={() => setExpDiv(isExp ? null : d.code)} className={`flex w-full items-center gap-2 rounded-md px-1.5 py-1 text-left text-xs transition-colors ${isExp ? 'bg-mk-surface-alt' : 'hover:bg-mk-surface-alt'}`}>
+                                                <button type="button" aria-expanded={isExp} onClick={() => setExpDiv(isExp ? null : d.code)} className={`flex min-h-11 w-full items-center gap-2 rounded-md px-1.5 text-left text-xs transition-colors duration-100 active:bg-mk-surface-alt lg:min-h-0 lg:py-1 ${isExp ? 'bg-mk-surface-alt' : 'hover:bg-mk-surface-alt'}`}>
                                                     <ChevronRight size={12} className="shrink-0 text-mk-faint transition-transform" style={{ transform: isExp ? 'rotate(90deg)' : undefined }} />
-                                                    <span className="w-[9rem] shrink-0 truncate text-mk-text-soft" title={d.name}><span className="text-mk-faint">{d.code}</span> {d.name}</span>
-                                                    <span className="h-2.5 flex-1 rounded-full bg-mk-surface-alt"><span className="block h-2.5 rounded-full" style={{ width: `${w}%`, marginLeft: d.mv < 0 ? 'auto' : undefined, background: d.mv >= 0 ? selColor : '#16A34A' }} /></span>
+                                                    <span className="w-[42%] max-w-[9rem] shrink-0 truncate text-mk-text-soft sm:w-[9rem]" title={d.name}><span className="text-mk-faint">{d.code}</span> {d.name}</span>
+                                                    <span className="h-2.5 min-w-0 flex-1 rounded-full bg-mk-surface-alt"><span className="block h-2.5 rounded-full" style={{ width: `${w}%`, marginLeft: d.mv < 0 ? 'auto' : undefined, background: d.mv >= 0 ? selColor : '#16A34A' }} /></span>
                                                     <span className="w-12 shrink-0 text-right font-semibold tnum" style={{ color: d.mv >= 0 ? '#DC2626' : '#16A34A' }}>{d.mv > 0 ? '+' : ''}{formatDecimalPL(d.mv, 1)}%</span>
                                                 </button>
                                                 {isExp && (
-                                                    <div className="mb-1.5 ml-5 mt-1 rounded-lg border border-mk-border p-3">
+                                                    <div className="mb-1.5 mt-1 rounded-lg border border-mk-border p-3 sm:ml-5">
                                                         <p className="text-xs font-semibold leading-snug text-mk-text">{d.name}</p>
                                                         <p className="mb-2 mt-0.5 text-xs leading-relaxed text-mk-text-soft">{DIV_INFO[d.code] ?? divFallback(sel.name)}</p>
                                                         {expDivChange.length > 1 && (

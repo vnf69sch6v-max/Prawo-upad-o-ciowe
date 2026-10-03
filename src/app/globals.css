@@ -1,5 +1,19 @@
 @import "tailwindcss";
 
+/* `touch:` — cele dotykowe ≥ 44 px: urządzenia dotykowe ORAZ wszystko poniżej `lg` (tam działa
+   mobilna powłoka z dolnym paskiem). Sam `pointer: coarse` nie łapał wąskiego okna z myszą ani
+   części emulacji; desktop ≥ lg z myszą zostaje przy gęstych rozmiarach. Reguły CSS niżej używają
+   tego samego warunku. */
+@custom-variant touch {
+  @media (pointer: coarse) {
+    @slot;
+  }
+
+  @media (max-width: 1023px) {
+    @slot;
+  }
+}
+
 /* ═══════════════════════════════════════════════════════════════
    MAKRO DATA PLATFORM — LIGHT THEME
    White surfaces, soft shadows, Inter, tabular numerals.
@@ -136,6 +150,39 @@ button.mk-card,
 .mk-card-interactive:hover {
   box-shadow: var(--shadow-mk-lg);
   border-color: var(--color-mk-border-strong);
+}
+
+/* ── Dotyk: widoczne wciśnięcie zamiast szarego błysku WebKit ──
+   `-webkit-tap-highlight-color: transparent` zawsze w parze z własnym `:active` (~100 ms).
+   .mk-press      — przyciski, chipy, karty-linki: lekkie wciśnięcie (scale).
+   .mk-press-row  — wiersze list na całą szerokość: tło (skalowanie szerokiego wiersza wygląda jak drgnięcie). */
+a.mk-card,
+button.mk-card,
+.mk-press,
+.mk-press-row,
+.mk-table-card,
+.mk-seg-btn {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.mk-press {
+  transition: transform .1s ease, background-color .1s ease, color .1s ease;
+}
+
+a.mk-card:active,
+button.mk-card:active,
+.mk-press:active,
+.mk-table-card:active {
+  transform: scale(.98);
+}
+
+.mk-press-row {
+  transition: background-color .1s ease;
+}
+
+.mk-press-row:active {
+  background-color: var(--color-mk-surface-alt);
 }
 
 /* KPI big number */
@@ -454,6 +501,22 @@ button.mk-card,
   .mk-kpi-compact .mk-kpi-body {
     padding: 12px;
   }
+
+  /* Standard mobilny: nic poniżej 11 px. Desktop zostaje przy 10 px (6 kafli w rzędzie). */
+  .mk-kpi-compact .mk-kpi-label,
+  .mk-kpi-compact .mk-kpi-foot {
+    font-size: 11px;
+  }
+
+  .mk-kpi-compact .mk-kpi-label {
+    min-height: 28px;
+  }
+}
+
+/* Kafel z gwiazdką „obserwuj": etykieta nie może wchodzić pod przycisk w prawym górnym rogu
+   (na telefonie „STOPA BEZROBOCIA" dotykała gwiazdki). */
+.mk-kpi-has-star .mk-kpi-label {
+  padding-right: 26px;
 }
 
 /* Tag kategorii newsów — czerwony obrys */
@@ -483,6 +546,14 @@ button.mk-card,
   background: var(--color-mk-brand);
   color: #fff;
   line-height: 1.4;
+}
+
+/* Standard mobilny: nic poniżej 11 px. */
+@media (max-width: 767px) {
+  .mk-tag-brand,
+  .mk-tag-brand-fill {
+    font-size: 11px;
+  }
 }
 
 /* Numer obserwacji (01, 02…) */
@@ -545,6 +616,8 @@ button.mk-card,
   /* Bez tego „Rynek pracy" łamał się na dwie linie i rozpychał cały pasek nawigacji
      z 45px do 72px — jedna pozycja psuła wysokość nagłówka na telefonie. */
   white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 /* Przewijany pasek nawigacji (telefon/tablet): chowamy surowy pasek przewijania i zaznaczamy
@@ -566,6 +639,11 @@ button.mk-card,
   background: var(--color-mk-surface-alt);
 }
 
+/* Własny stan wciśnięcia zamiast szarego błysku WebKit (tap-highlight wyłączony w .mk-tab). */
+.mk-tab:active {
+  background: var(--color-mk-border);
+}
+
 .mk-tab-active {
   color: var(--color-mk-brand);
   background: transparent;
@@ -583,40 +661,45 @@ button.mk-card,
   background: var(--color-mk-brand);
 }
 
-/* Buttons */
-.mk-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 9px 16px;
-  border-radius: 10px;
-  font-size: 14px;
-  font-weight: 600;
-  border: 1px solid var(--color-mk-border-strong);
-  background: var(--color-mk-surface);
-  color: var(--color-mk-text-soft);
-  cursor: pointer;
-  transition: background .12s ease, border-color .12s ease, box-shadow .12s ease;
-}
+/* `@layer components`: klasy komponentów muszą PRZEGRYWAĆ z utilities Tailwinda. Poza warstwą
+   wygrywały z każdą — `lg:hidden` na .mk-btn nie działało, a `text-base` na .mk-input zostawało
+   przy 14 px (iOS powiększa stronę przy fokusie pola < 16 px). */
+@layer components {
+  /* Buttons */
+  .mk-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 9px 16px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    border: 1px solid var(--color-mk-border-strong);
+    background: var(--color-mk-surface);
+    color: var(--color-mk-text-soft);
+    cursor: pointer;
+    transition: background .12s ease, border-color .12s ease, box-shadow .12s ease;
+  }
 
-.mk-btn:hover {
-  background: var(--color-mk-surface-alt);
-}
+  .mk-btn:hover {
+    background: var(--color-mk-surface-alt);
+  }
 
-.mk-btn-primary {
-  background: var(--color-mk-primary);
-  border-color: var(--color-mk-primary);
-  color: #fff;
-}
+  .mk-btn-primary {
+    background: var(--color-mk-primary);
+    border-color: var(--color-mk-primary);
+    color: #fff;
+  }
 
-.mk-btn-primary:hover {
-  background: var(--color-mk-primary-strong);
-}
+  .mk-btn-primary:hover {
+    background: var(--color-mk-primary-strong);
+  }
 
-.mk-btn:disabled {
-  opacity: .55;
-  cursor: not-allowed;
+  .mk-btn:disabled {
+    opacity: .55;
+    cursor: not-allowed;
+  }
 }
 
 /* Panel zakładki strony: nowa treść (hero zamiast krótkiego skeletonu) nie może
@@ -626,75 +709,116 @@ button.mk-card,
   overflow-anchor: none;
 }
 
-/* Segmented control (toggles) — poziomy pasek, bez zawijania.
-   Na wąskim ekranie przełączniki się przewijają; aktywny zostaje w kadrze
-   przez scrollLeft kontenera (nie scrollIntoView). min-height 28px = WCAG 2.2 Target Size. */
-.mk-seg {
-  display: inline-flex;
-  flex-wrap: nowrap;
-  min-width: 0;
-  width: max-content;
-  max-width: 100%;
-  overflow-x: auto;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-  padding: 3px;
-  gap: 2px;
-  border-radius: 10px;
-  background: var(--color-mk-surface-alt);
-  border: 1px solid var(--color-mk-border);
+@layer components {
+  /* Segmented control (toggles) — poziomy pasek, bez zawijania.
+     Na wąskim ekranie przełączniki się przewijają; aktywny zostaje w kadrze
+     przez scrollLeft kontenera (nie scrollIntoView). min-height 28px = WCAG 2.2 Target Size. */
+  .mk-seg {
+    display: inline-flex;
+    flex-wrap: nowrap;
+    min-width: 0;
+    width: max-content;
+    max-width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    padding: 3px;
+    gap: 2px;
+    border-radius: 10px;
+    background: var(--color-mk-surface-alt);
+    border: 1px solid var(--color-mk-border);
+  }
+
+  .mk-seg::-webkit-scrollbar {
+    display: none;
+  }
+
+  .mk-seg-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    white-space: nowrap;
+    min-height: 28px;
+    padding: 5px 12px;
+    border-radius: 7px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-mk-muted);
+    cursor: pointer;
+    transition: all .12s ease;
+  }
+
+  .mk-seg-btn:hover {
+    color: var(--color-mk-text);
+  }
+
+  .mk-seg-btn-active {
+    background: var(--color-mk-surface);
+    color: var(--color-mk-primary);
+    box-shadow: var(--shadow-mk);
+  }
+
+  .mk-seg-btn:active {
+    color: var(--color-mk-text);
+  }
+
+  /* Mały wariant (zakresy wykresu, `Segmented size="sm"`) — klasa zamiast stylu inline,
+     żeby reguła dotykowa niżej mogła go podnieść do 44 px. */
+  .mk-seg-sm {
+    min-height: 28px;
+    padding: 4px 10px;
+    font-size: 12px;
+    line-height: 1.2;
+  }
 }
 
-.mk-seg::-webkit-scrollbar {
-  display: none;
+/* Poziomy pasek, który się nie mieści: wygaszona krawędź mówi „przewiń dalej".
+   `data-fade` ustawia hook useScrollFade (src/lib/use-scroll-fade.ts). */
+.mk-fade-x[data-fade='end'] {
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
+  mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
 }
 
-.mk-seg-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  white-space: nowrap;
-  min-height: 28px;
-  padding: 5px 12px;
-  border-radius: 7px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--color-mk-muted);
-  cursor: pointer;
-  transition: all .12s ease;
+.mk-fade-x[data-fade='start'] {
+  -webkit-mask-image: linear-gradient(to left, #000 calc(100% - 28px), transparent);
+  mask-image: linear-gradient(to left, #000 calc(100% - 28px), transparent);
 }
 
-.mk-seg-btn:hover {
-  color: var(--color-mk-text);
+.mk-fade-x[data-fade='both'] {
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 28px, #000 calc(100% - 28px), transparent);
+  mask-image: linear-gradient(to right, transparent, #000 28px, #000 calc(100% - 28px), transparent);
 }
 
-.mk-seg-btn-active {
-  background: var(--color-mk-surface);
-  color: var(--color-mk-primary);
-  box-shadow: var(--shadow-mk);
-}
+@layer components {
+  /* Inputs */
+  .mk-input {
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--color-mk-border-strong);
+    background: var(--color-mk-surface);
+    color: var(--color-mk-text);
+    font-size: 14px;
+    outline: none;
+    transition: border-color .12s ease, box-shadow .12s ease;
+  }
 
-/* Inputs */
-.mk-input {
-  width: 100%;
-  padding: 10px 14px;
-  border-radius: 10px;
-  border: 1px solid var(--color-mk-border-strong);
-  background: var(--color-mk-surface);
-  color: var(--color-mk-text);
-  font-size: 14px;
-  outline: none;
-  transition: border-color .12s ease, box-shadow .12s ease;
-}
+  .mk-input::placeholder {
+    color: var(--color-mk-faint);
+  }
 
-.mk-input::placeholder {
-  color: var(--color-mk-faint);
-}
+  .mk-input:focus {
+    border-color: var(--color-mk-primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, .15);
+  }
 
-.mk-input:focus {
-  border-color: var(--color-mk-primary);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, .15);
+  /* Telefon/tablet: 16 px — mniejsze pole powoduje automatyczny zoom iOS Safari przy fokusie. */
+  @media (max-width: 1023px) {
+    .mk-input {
+      font-size: 16px;
+    }
+  }
 }
 
 /* Section title inside cards */
@@ -754,6 +878,51 @@ button.mk-card,
   min-height: 24px;
   display: inline-flex;
   align-items: center;
+}
+
+/* Telefon: krótka akcja („Wszystkie →") zostaje w rzędzie tytułu zamiast spadać do osobnej linii
+   (przy 14rem tytułu nie mieściła się już przy 390 px). Szerokie przełączniki nadal się zawijają. */
+@media (max-width: 639px) {
+  .mk-section-head {
+    gap: 8px 12px;
+    margin-bottom: 12px;
+  }
+
+  .mk-section-head-text {
+    flex-basis: 9rem;
+    min-width: min(100%, 9rem);
+  }
+}
+
+/* Dotyk (telefon, tablet, < lg): przełączniki segmentowe mają cel ≥ 44 px. Przycisk wypełnia całą wysokość
+   paska, a „pigułka" aktywnej opcji jest pseudo-elementem z wcięciem — wygląd jak dotąd, cel większy.
+   Specyficzność .mk-seg .mk-seg-btn (0,2,0) + pozycja w pliku wygrywa z .mk-section-head-actions. */
+@media (pointer: coarse), (max-width: 1023px) {
+  .mk-seg {
+    padding: 0;
+    gap: 0;
+    border-radius: 12px;
+  }
+
+  .mk-seg .mk-seg-btn {
+    position: relative;
+    z-index: 0;
+    min-height: 44px;
+    min-width: 44px;
+    padding: 0 14px;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .mk-seg .mk-seg-btn-active::before {
+    content: '';
+    position: absolute;
+    inset: 4px;
+    z-index: -1;
+    border-radius: 8px;
+    background: var(--color-mk-surface);
+    box-shadow: var(--shadow-mk);
+  }
 }
 
 /* Light table — scroll stays inside the wrap so the document never grows sideways.
@@ -877,6 +1046,70 @@ button.mk-card,
   outline: none;
 }
 
+/* Telefon, tabela ≤ 4 kolumn → lista (DataTable `mobileLayout="auto"`): wiersz ≥ 48 px,
+   nazwa po lewej (zawija się), kluczowa wartość po prawej. */
+.mk-table-list > li + li {
+  border-top: 1px solid var(--color-mk-border);
+}
+
+.mk-table-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 48px;
+  padding: 8px 4px;
+  text-align: left;
+  color: inherit;
+  font: inherit;
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+}
+
+button.mk-table-row {
+  cursor: pointer;
+}
+
+.mk-table-row:focus {
+  outline: none;
+}
+
+.mk-table-row:focus-visible {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-mk-primary) 50%, transparent);
+}
+
+/* Telefon, tabela szeroka (> 4 kolumn): przewijanie w karcie, przyklejona pierwsza kolumna nie może
+   zjeść ekranu — zawija się i ma limit szerokości (tabela NBP: „Specjalne prawa ciągnienia" = 252 px). */
+@media (max-width: 639px) {
+  .mk-table th,
+  .mk-table td {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  .mk-table td:first-child {
+    min-width: 6.5rem;
+    max-width: 42vw;
+    white-space: normal;
+  }
+}
+
+@media (pointer: coarse), (max-width: 1023px) {
+  .mk-table-sort {
+    min-height: 44px;
+  }
+}
+
+@media (pointer: coarse) {
+  /* Recharts 3 robi z plotu element fokusowalny (tabindex=0); stuknięcie w wykres zostawiało wokół
+     plotu ramkę fokusu przez cały czas czytania dymka. Klawiatura (desktop) zachowuje ramkę. */
+  .recharts-surface:focus,
+  .recharts-wrapper:focus {
+    outline: none;
+  }
+}
+
 .mk-table-card:focus-visible {
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-mk-primary) 50%, transparent);
 }
@@ -917,12 +1150,14 @@ button.mk-card,
 }
 
 .mk-fade-in {
-  animation: mk-fade-in .34s cubic-bezier(.22, 1, .36, 1) both;
+  /* `backwards`, nie `both`: po animacji wrapper nie może zostać z `transform` — inaczej każdy
+     `position: fixed` w środku (arkusz, modal bez portalu) liczy się od wrappera, nie od ekranu. */
+  animation: mk-fade-in .34s cubic-bezier(.22, 1, .36, 1) backwards;
 }
 
 /* Staggered entrance — bezpośrednie dzieci kaskadowo wjeżdżają (klaryfikuje układ, np. karty KPI) */
 .mk-stagger>* {
-  animation: mk-fade-in .44s cubic-bezier(.22, 1, .36, 1) both;
+  animation: mk-fade-in .44s cubic-bezier(.22, 1, .36, 1) backwards;
 }
 
 .mk-stagger>*:nth-child(1) { animation-delay: .02s; }
@@ -975,9 +1210,151 @@ button.mk-card,
   border-radius: 6px;
 }
 
+/* Skeleton wykresu ma wysokość docelowego plotu, także na telefonie (mobileChartHeight w
+   ChartContainer: 0,68 × szerokość plotu, min 200 px, max wysokość desktopowa) — bez skoku układu.
+   Szerokość plotu ≈ okno − 64 px (gutter powłoki 2×16 + padding karty 2×16). */
+.mk-chart-skel {
+  height: var(--skel-h, 280px);
+}
+
+/* Stan błędu/pustki w miejscu wykresu — ta sama wysokość co plot, ale jako minimum. */
+.mk-chart-skel-min {
+  min-height: var(--skel-h, 0px);
+}
+
+@media (max-width: 703px) {
+  .mk-chart-skel {
+    height: min(var(--skel-h, 280px), max(200px, calc((100vw - 64px) * .68)));
+  }
+
+  .mk-chart-skel-min {
+    min-height: min(var(--skel-h, 0px), max(200px, calc((100vw - 64px) * .68)));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  a.mk-card:active,
+  button.mk-card:active,
+  .mk-press:active,
+  .mk-table-card:active {
+    transform: none;
+  }
+}
+
+/* Suwak (Slider): kciuk 28 px, cel dotykowy 44 px wysokości, wypełnienie toru do wartości (`--pct`). */
+.mk-range {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 44px;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: pan-y;
+}
+
+.mk-range:focus {
+  outline: none;
+}
+
+.mk-range::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(to right, var(--color-mk-primary) var(--pct, 50%), var(--color-mk-border-strong) var(--pct, 50%));
+}
+
+.mk-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 28px;
+  height: 28px;
+  margin-top: -11px;
+  border-radius: 50%;
+  background: var(--color-mk-surface);
+  border: 2px solid var(--color-mk-primary);
+  box-shadow: 0 1px 3px rgba(16, 24, 40, .2);
+  transition: transform .1s ease;
+}
+
+.mk-range:active::-webkit-slider-thumb {
+  transform: scale(1.08);
+}
+
+.mk-range:focus-visible::-webkit-slider-thumb {
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-mk-primary) 25%, transparent);
+}
+
+.mk-range::-moz-range-track {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--color-mk-border-strong);
+}
+
+.mk-range::-moz-range-progress {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--color-mk-primary);
+}
+
+.mk-range::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--color-mk-surface);
+  border: 2px solid var(--color-mk-primary);
+  box-shadow: 0 1px 3px rgba(16, 24, 40, .2);
+}
+
+.mk-range:focus-visible::-moz-range-thumb {
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-mk-primary) 25%, transparent);
+}
+
 /* ── Mobile ────────────────────────────────────────────────── */
 .safe-area-bottom {
   padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* ── Powłoka mobilna (src/components/shell) ─────────────────
+   Poniżej `lg` dolna krawędź ekranu należy do paska zakładek (MobileTabBar). `--mk-bottom-chrome`
+   to wysokość zajęta przez powłokę od dołu: pasek + wskaźnik home (< lg) albo sama safe area (≥ lg).
+   Stopka dostaje ją jako padding (cała treść kończy się nad paskiem); własne elementy przyklejone
+   do dołu (np. toasty) liczą `bottom` od niej, nie od 0.
+   `--mk-sticky-top` — `top` dla paneli przyklejonych pod nagłówkiem od `lg`: nagłówek ma 2 rzędy
+   (~106 px) w przedziale lg–xl i 1 rząd (65 px) od xl; samo `lg:top-20` (80 px) w lg–xl wchodzi pod
+   nagłówek. Użycie: `lg:sticky lg:top-[var(--mk-sticky-top)]`. */
+:root {
+  --mk-tabbar-h: 56px;
+  --mk-bottom-chrome: env(safe-area-inset-bottom, 0px);
+  --mk-sticky-top: 120px;
+}
+
+@media (width >= 80rem) {
+  :root {
+    --mk-sticky-top: 80px;
+  }
+}
+
+@media (width < 64rem) {
+  :root {
+    --mk-bottom-chrome: calc(var(--mk-tabbar-h) + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* Fokus z klawiatury / scrollIntoView nie może zostawić elementu pod paskiem. */
+  html {
+    scroll-padding-bottom: var(--mk-bottom-chrome);
+  }
+}
+
+/* Zainstalowana aplikacja (ekran główny): przytrzymanie zakładki nie otwiera podglądu linku
+   Safari — w aplikacji natywnej takiego dymku nie ma. */
+@media (display-mode: standalone) {
+  .mk-tabbar a,
+  .mk-tabbar button,
+  .mk-sheet a,
+  .mk-shell-header a {
+    -webkit-touch-callout: none;
+  }
 }
 
 @media (max-width: 767px) {

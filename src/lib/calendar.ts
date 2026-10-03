@@ -99,20 +99,21 @@ export function generateMacroCalendar(year: number): MacroEvent[] {
         });
     }
 
-    // Produkcja przemysłowa + sprzedaż detaliczna (GUS)
-    for (let publishM = 2; publishM <= 12; publishM++) {
-        const dataM = publishM - 1;
-        const dataPeriod = `${year}-${String(dataM).padStart(2, '0')}`;
+    // Produkcja przemysłowa + sprzedaż detaliczna (GUS) — w styczniu dane za grudzień poprzedniego roku
+    for (let publishM = 1; publishM <= 12; publishM++) {
+        const dataM = publishM === 1 ? 12 : publishM - 1;
+        const dataYear = publishM === 1 ? year - 1 : year;
+        const dataPeriod = `${dataYear}-${String(dataM).padStart(2, '0')}`;
         events.push({
             date: industrialDate(year, publishM),
-            name: `Produkcja przemysłowa — dane za ${monthNamePl(dataM)} ${year}`,
+            name: `Produkcja przemysłowa — dane za ${monthNamePl(dataM)} ${dataYear}`,
             type: 'industrial',
             importance: 'medium',
             dataPeriod,
         });
         events.push({
             date: retailDate(year, publishM),
-            name: `Sprzedaż detaliczna — dane za ${monthNamePl(dataM)} ${year}`,
+            name: `Sprzedaż detaliczna — dane za ${monthNamePl(dataM)} ${dataYear}`,
             type: 'retail',
             importance: 'medium',
             dataPeriod,

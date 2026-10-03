@@ -76,7 +76,7 @@ export function HeroMetricCard({
                             {delta != null && <DeltaChip value={delta} unit="pp" invert={invertDelta} />}
                         </div>
                         {text && <p className="mt-2 text-xs leading-relaxed text-mk-text-soft">{text}</p>}
-                        {footnote && <p className="mt-2.5 text-[10px] font-semibold uppercase tracking-wide text-mk-faint">{footnote}</p>}
+                        {footnote && <p className="mt-2.5 text-[11px] font-semibold uppercase tracking-wide text-mk-faint">{footnote}</p>}
                     </>
                 )}
             </div>
@@ -93,19 +93,19 @@ export function HeroMetricCard({
                 </div>
             ) : children ? (
                 <>
-                    <p className="text-[10px] font-semibold uppercase tracking-wide text-white/80 sm:text-xs">{headline}</p>
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-white/80 sm:text-xs">{headline}</p>
                     <div className="mt-1.5">{children}</div>
                 </>
             ) : (
                 <>
-                    <p className="text-[10px] font-semibold uppercase tracking-wide text-white/80 sm:text-xs">{headline}</p>
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-white/80 sm:text-xs">{headline}</p>
                     <div className="mt-2 flex flex-wrap items-baseline gap-2">
                         {value != null && <span className={valueClass}>{value}</span>}
                         {delta != null && <span className="mk-hero-chip">{formatPP(delta)}</span>}
                     </div>
                     {text && <p className="mk-hero-muted mt-2 max-w-md text-xs leading-relaxed sm:text-sm">{text}</p>}
                     {footnote && (
-                        <p className="mk-hero-muted mt-2.5 text-[10px] font-semibold uppercase tracking-wide">{footnote}</p>
+                        <p className="mk-hero-muted mt-2.5 text-[11px] font-semibold uppercase tracking-wide">{footnote}</p>
                     )}
                 </>
             )}

@@ -2,6 +2,7 @@
 
 import { DocSection } from "@/components/parser/DocSection";
 import { MarginsChart } from "@/components/parser/MarginsChart";
+import { ScrollTable } from "@/components/parser/ScrollTable";
 import { useScale } from "@/components/parser/ScaleContext";
 import { fmtPct } from "@/lib/parser/format";
 import { pl } from "@/lib/parser/copy.pl";
@@ -47,7 +48,7 @@ export function Profitability({
 
   const headerCells = (
     <tr>
-      <th className="border-b border-mk-border py-2.5 pr-3 text-left text-[11px] font-semibold uppercase tracking-[0.04em] text-mk-muted">
+      <th className="sticky left-0 z-[1] border-b border-mk-border bg-rp-surface py-2.5 pr-3 text-left text-[11px] font-semibold uppercase tracking-[0.04em] text-mk-muted">
         Miara
       </th>
       {periods.map((p) => (
@@ -73,13 +74,13 @@ export function Profitability({
       )}
 
       {hasRatios && (
-        <div className="mk-table-wrap">
+        <ScrollTable>
           <table className="w-full min-w-[480px] border-collapse tnum">
             <thead>{headerCells}</thead>
             <tbody>
               {marginRows.map((row) => (
                 <tr key={row.label}>
-                  <td className="border-b border-mk-surface-alt py-2.5 pr-3 text-[14px] font-medium text-mk-text">
+                  <td className="sticky left-0 z-[1] border-b border-mk-surface-alt bg-rp-surface py-2.5 pr-3 text-[14px] font-medium text-mk-text">
                     {row.label}
                   </td>
                   {periods.map((p) => {
@@ -103,21 +104,22 @@ export function Profitability({
               ))}
             </tbody>
           </table>
-        </div>
+        </ScrollTable>
       )}
 
       {hasFcf && (
-        <div className="mk-table-wrap mt-7">
+        <div className="mt-7">
           <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.08em] text-mk-muted">
             Przepływy i wolne przepływy
           </p>
+          <ScrollTable>
           <table className="w-full min-w-[480px] border-collapse tnum">
             <thead>{headerCells}</thead>
             <tbody>
               {cashRows.map((row, i) => (
                 <tr key={row.label}>
                   <td
-                    className={`border-b border-mk-surface-alt py-2.5 pr-3 text-[14px] ${
+                    className={`sticky left-0 z-[1] border-b border-mk-surface-alt bg-rp-surface py-2.5 pr-3 text-[14px] ${
                       i === cashRows.length - 1 ? "font-semibold text-mk-text" : "text-mk-text-soft"
                     }`}
                   >
@@ -144,6 +146,7 @@ export function Profitability({
               ))}
             </tbody>
           </table>
+          </ScrollTable>
         </div>
       )}
 

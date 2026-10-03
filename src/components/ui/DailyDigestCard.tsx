@@ -80,7 +80,7 @@ export function DailyDigestCard({
             actions={
                 <Link
                     href={`/podsumowanie?date=${digest.date}`}
-                    className="-mr-1.5 flex items-center gap-1 rounded px-1.5 py-1 text-sm font-medium text-mk-brand transition-colors hover:bg-mk-brand-soft hover:underline"
+                    className="mk-press -mr-1.5 flex items-center gap-1 rounded px-1.5 py-1 text-sm font-medium text-mk-brand transition-colors hover:bg-mk-brand-soft hover:underline active:bg-mk-brand-soft touch:-my-2.5 touch:min-h-11"
                 >
                     Całe podsumowanie <ArrowRight size={14} />
                 </Link>
@@ -94,16 +94,16 @@ export function DailyDigestCard({
                 </div>
             )}
 
-            <ul className="list-none space-y-4">
+            <ul className="list-none space-y-2">
                 {shown.map((p) => (
                     <li key={p.link} className="flex gap-3">
-                        <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-mk-brand" aria-hidden />
+                        <span className="mt-3.5 h-1.5 w-1.5 shrink-0 rounded-full bg-mk-brand" aria-hidden />
                         <div className="min-w-0 flex-1">
                             <a
                                 href={p.link}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="group block"
+                                className="mk-press-row group -mx-2 block rounded-lg px-2 py-1.5"
                             >
                                 <div className="text-sm font-semibold leading-snug text-mk-text transition-colors group-hover:text-mk-brand">
                                     {p.title}

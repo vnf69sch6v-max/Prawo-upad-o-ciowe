@@ -48,7 +48,7 @@ export function PublicationDatesPanel({
                         </div>
                         {e.importance === 'high' && (
                             <span
-                                className={variant === 'overview' ? 'mt-0.5 shrink-0 rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-mk-brand' : 'mt-0.5 rounded-full bg-mk-primary-soft px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-mk-primary'}
+                                className={variant === 'overview' ? 'mt-0.5 shrink-0 rounded px-1.5 py-0.5 text-[11px] font-bold uppercase leading-none tracking-wide text-mk-brand' : 'mt-0.5 shrink-0 rounded-full bg-mk-primary-soft px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-mk-primary'}
                                 style={variant === 'overview' ? { border: '1px solid var(--color-mk-brand)' } : undefined}
                             >
                                 kluczowe

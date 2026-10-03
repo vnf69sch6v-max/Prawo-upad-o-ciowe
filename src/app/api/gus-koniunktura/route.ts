@@ -3,6 +3,7 @@
 // Stitched across the last ~2 years to the latest published month.
 import { NextRequest, NextResponse } from 'next/server';
 import { withCache } from '@/lib/server-cache';
+import { gusFetchInit } from '@/lib/upstream-fetch';
 
 const DBW = 'https://api-dbw.stat.gov.pl/api/1.1.0/variable/variable-data-section';
 const POLSKA = 33617;
@@ -18,10 +19,10 @@ const SECTORS = [
 interface DbwRow { 'id-pozycja-1': number; 'id-pozycja-2': number; 'id-sposob-prezentacji-miara': number; wartosc: number }
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-async function fetchMonth(rok: number, okres: number): Promise<DbwRow[] | null> {
+async function fetchMonth(rok: number, okres: number, force: boolean): Promise<DbwRow[] | null> {
     const url = `${DBW}?id-zmienna=184&id-przekroj=803&id-rok=${rok}&id-okres=${okres}&ile-na-stronie=9000&numer-strony=0&lang=pl`;
     for (let attempt = 0; attempt < 2; attempt++) {
-        const res = await fetch(url, { headers: { Accept: 'application/json' }, next: { revalidate: 86400 } });
+        const res = await fetch(url, { headers: { Accept: 'application/json' }, ...gusFetchInit(force) });
         if (res.status === 429) { await sleep(3500); continue; }
         if (!res.ok) return null;
         const json = await res.json();
@@ -45,7 +46,7 @@ export async function GET(request: NextRequest) {
 
                 for (const y of years) {
                     for (let m = 1; m <= 12; m++) {
-                        const rows = await fetchMonth(y, 246 + m);
+                        const rows = await fetchMonth(y, 246 + m, force);
                         await sleep(120);
                         if (!rows) continue;
                         const val = (poz: number) => {

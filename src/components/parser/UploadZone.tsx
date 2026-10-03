@@ -46,7 +46,7 @@ export function UploadZone({
       onDrop={busy ? (e) => e.preventDefault() : handleDrop}
       onClick={() => !busy && inputRef.current?.click()}
       className={cn(
-        "group relative flex cursor-pointer flex-col items-center justify-center rounded-[var(--radius-mk)] border border-dashed bg-rp-surface-raised px-4 py-8 text-center transition-colors",
+        "group relative flex cursor-pointer flex-col items-center justify-center rounded-[var(--radius-mk)] border border-dashed bg-rp-surface-raised px-4 py-8 text-center transition-colors [-webkit-tap-highlight-color:transparent] active:bg-mk-surface-alt",
         drag ? "border-mk-primary bg-mk-primary-soft" : "border-mk-border-strong hover:border-mk-primary hover:bg-mk-surface-alt",
         busy && "cursor-default",
         status === "error" && "border-rp-warn/40 bg-rp-warn/5",
@@ -69,12 +69,12 @@ export function UploadZone({
           <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-mk-primary-soft text-mk-primary">
             <UploadCloud className="h-5 w-5" />
           </div>
-          <p className="text-sm font-medium text-rp-data">{pl.upload.drop}</p>
-          <p className="mt-1 text-xs text-rp-data-muted">{pl.upload.browse}</p>
+          <p className="text-[15px] font-medium text-rp-data sm:text-sm">{pl.upload.drop}</p>
+          <p className="mt-1 text-sm text-rp-data-muted sm:text-xs">{pl.upload.browse}</p>
           {onSample && samples && samples.length > 0 && (
             <div className="mt-4 w-full" onClick={(e) => e.stopPropagation()}>
               <p className="overline mb-2 text-center">{pl.upload.sampleHint}</p>
-              <div className="flex flex-wrap justify-center gap-1.5">
+              <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-center sm:gap-1.5">
                 {samples.map((s) => (
                   <button
                     key={s.file}
@@ -83,7 +83,7 @@ export function UploadZone({
                       e.stopPropagation();
                       onSample(s.file, s.name);
                     }}
-                    className="mk-btn px-2 py-1 text-[11px]"
+                    className="mk-btn min-h-11 px-3 py-1 text-sm active:bg-mk-surface-alt sm:px-2.5 sm:text-xs lg:min-h-10 lg:px-3 lg:text-sm"
                   >
                     {s.label}
                   </button>
@@ -116,7 +116,8 @@ export function UploadZone({
               e.stopPropagation();
               onReset();
             }}
-            className="mt-3 text-xs text-rp-data-muted underline-offset-2 hover:text-rp-data hover:underline"
+            type="button"
+            className="mt-3 inline-flex min-h-11 items-center px-3 text-sm text-rp-data-muted underline-offset-2 hover:text-rp-data hover:underline lg:min-h-0 lg:px-0 lg:text-xs"
           >
             {pl.upload.uploadAnother}
           </button>
@@ -130,7 +131,8 @@ export function UploadZone({
               e.stopPropagation();
               onReset();
             }}
-            className="mt-2 text-xs text-rp-data-muted underline-offset-2 hover:text-rp-data hover:underline"
+            type="button"
+            className="mt-2 inline-flex min-h-11 items-center px-3 text-sm text-rp-data-muted underline-offset-2 hover:text-rp-data hover:underline lg:min-h-0 lg:px-0 lg:text-xs"
           >
             {pl.upload.tryAgain}
           </button>

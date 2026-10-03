@@ -270,10 +270,10 @@ function ParserView() {
         currency={result.detection.currency}
         revenueAbs={revenueAbs}
       >
-        <div className="grid grid-cols-1 gap-10 lg:grid-cols-[248px_minmax(0,1fr)]">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[248px_minmax(0,1fr)] lg:gap-10">
 
           {/* ── Spis treści ─────────────────────────────────────── */}
-          <aside className="hidden lg:sticky lg:top-20 lg:block lg:self-start">
+          <aside className="hidden lg:sticky lg:top-[var(--mk-sticky-top)] lg:block lg:self-start">
             <DocumentToc sections={sections} />
             <div className="my-5 h-px bg-mk-border" />
             <button type="button" onClick={reset} className="mk-btn w-full">
@@ -282,14 +282,21 @@ function ParserView() {
           </aside>
 
           {/* ── Dokument ────────────────────────────────────────── */}
-          <div className="min-w-0 max-w-[860px] space-y-10">
+          <div className="min-w-0 max-w-[860px] space-y-8 lg:space-y-10">
 
-            <div className="flex flex-wrap items-center gap-3 rounded-[10px] border border-mk-border bg-mk-surface px-3.5 py-2.5">
+            {/* Telefon/tablet: spis treści jako jeden przyklejony rząd chipów (56 px), nie kolumna. */}
+            <DocumentToc sections={sections} variant="bar" />
+
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2.5 rounded-[10px] border border-mk-border bg-mk-surface px-3.5 py-2.5">
               <FileText className="h-4 w-4 shrink-0 text-mk-faint" aria-hidden />
-              <span className="min-w-0 truncate text-[13px] font-medium text-mk-text">
+              <span className="min-w-0 flex-1 truncate text-[13px] font-medium text-mk-text lg:flex-none" title={data?.fileName}>
                 {data?.fileName}
               </span>
-              <div className="ml-auto flex flex-wrap items-center gap-3">
+              {/* Na desktopie „Wczytaj inny raport" jest pod spisem treści — tu jedyne wyjście na telefonie. */}
+              <button type="button" onClick={reset} className="mk-btn min-h-11 shrink-0 px-3 text-sm active:bg-mk-surface-alt lg:hidden!">
+                Nowy raport
+              </button>
+              <div className="flex basis-full flex-wrap items-center gap-x-4 gap-y-2 lg:ml-auto lg:basis-auto lg:gap-3">
                 <ScaleToggle />
                 <ExportMenu result={result} />
               </div>

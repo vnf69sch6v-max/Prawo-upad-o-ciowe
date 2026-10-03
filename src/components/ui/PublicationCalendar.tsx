@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { generateMacroCalendar, getUpcomingEvents, EVENT_COLORS, type MacroEvent } from '@/lib/calendar';
 import { formatDate } from '@/lib/formatters';
@@ -39,12 +39,13 @@ export function UpcomingEventsInline({ count = 6, className = '' }: { count?: nu
                 {events?.map((e, i) => (
                     <li key={i} className="flex items-center gap-2 px-2.5 py-2 text-sm">
                         <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: EVENT_COLORS[e.type] }} />
-                        <time dateTime={e.date} className="w-14 shrink-0 text-[11px] font-semibold tabular-nums text-mk-brand">
+                        {/* „15.10.2026" w 11 px semibold ≈ 60 px — `w-14` (56) wchodził na nazwę na wąskich ekranach. */}
+                        <time dateTime={e.date} className="w-[4.5rem] shrink-0 whitespace-nowrap text-[11px] font-semibold tabular-nums text-mk-brand">
                             {formatDate(e.date)}
                         </time>
                         <span className="min-w-0 flex-1 truncate text-xs leading-snug text-mk-text">{e.name}</span>
                         {e.importance === 'high' && (
-                            <span className="shrink-0 rounded bg-mk-brand/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-mk-brand">
+                            <span className="shrink-0 rounded bg-mk-brand/10 px-1.5 py-0.5 text-[11px] font-bold uppercase leading-none tracking-wide text-mk-brand">
                                 kluczowe
                             </span>
                         )}
@@ -75,14 +76,18 @@ export function PublicationCalendar({
     compact?: boolean;
     showMonthList?: boolean;
 }) {
-    const [view, setView] = useState<{ y: number; m: number } | null>(null); // m: 0–11
-    const [todayISO, setTodayISO] = useState<string | null>(null);
-
-    useEffect(() => {
-        const now = new Date();
-        setView({ y: now.getFullYear(), m: now.getMonth() });
-        setTodayISO(warsawDateKey(now)); // „dziś" w Warszawie — toISOString() to UTC (00:00–02:00 = wczoraj)
-    }, []);
+    // Bieżący miesiąc i „dziś" dopiero po hydratacji (useIsClient) — strona jest prerenderowana
+    // przy buildzie. Nawigacja to przesunięcie w miesiącach względem bieżącego.
+    const isClient = useIsClient();
+    const [offset, setOffset] = useState(0);
+    const now = useMemo(() => (isClient ? new Date() : null), [isClient]);
+    const view = useMemo<{ y: number; m: number } | null>(() => {
+        if (!now) return null;
+        const idx = now.getFullYear() * 12 + now.getMonth() + offset;
+        return { y: Math.floor(idx / 12), m: idx % 12 }; // m: 0–11
+    }, [now, offset]);
+    // „dziś" w Warszawie — toISOString() to UTC (00:00–02:00 = wczoraj)
+    const todayISO = useMemo(() => (now ? warsawDateKey(now) : null), [now]);
 
     const byDate = useMemo(() => {
         const map = new Map<string, MacroEvent[]>();
@@ -114,8 +119,8 @@ export function PublicationCalendar({
         return arr;
     }, [view]);
 
-    const prev = () => setView((s) => (s ? (s.m === 0 ? { y: s.y - 1, m: 11 } : { y: s.y, m: s.m - 1 }) : s));
-    const next = () => setView((s) => (s ? (s.m === 11 ? { y: s.y + 1, m: 0 } : { y: s.y, m: s.m + 1 }) : s));
+    const prev = () => setOffset((o) => o - 1);
+    const next = () => setOffset((o) => o + 1);
 
     const cellGap = compact ? 'gap-px' : 'gap-1';
     const cellHeight = compact ? 'h-7' : 'aspect-square';
@@ -125,7 +130,7 @@ export function PublicationCalendar({
         <div className={`mk-skeleton w-full rounded-lg ${compact ? 'h-[200px]' : 'h-[320px]'}`} />
     ) : (
         <>
-            <div className={`grid grid-cols-7 ${cellGap} text-center text-[10px] font-medium text-mk-faint`}>
+            <div className={`grid grid-cols-7 ${cellGap} text-center text-[11px] font-medium text-mk-faint`}>
                 {WEEKDAYS.map((d) => <div key={d} className="py-0.5">{d}</div>)}
             </div>
             <div className={`mt-0.5 grid grid-cols-7 ${cellGap}`}>
@@ -164,7 +169,7 @@ export function PublicationCalendar({
             </div>
 
             {legendTypes.length > 0 && (
-                <div className={`mt-2 flex flex-wrap gap-x-2.5 gap-y-0.5 border-t border-mk-border pt-2 text-[10px] text-mk-muted`}>
+                <div className={`mt-2 flex flex-wrap gap-x-3 gap-y-1 border-t border-mk-border pt-2 text-[11px] text-mk-muted`}>
                     {legendTypes.map((t) => (
                         <span key={t} className="inline-flex items-center gap-1">
                             <span className="h-1.5 w-1.5 rounded-full" style={{ background: EVENT_COLORS[t] }} />
@@ -184,7 +189,7 @@ export function PublicationCalendar({
                                 <span className="w-12 shrink-0 tabular-nums text-[11px] text-mk-muted">{e.date.slice(8, 10)}.{e.date.slice(5, 7)}</span>
                                 <span className="min-w-0 flex-1 truncate text-xs text-mk-text">{e.name}</span>
                                 {e.importance === 'high' && (
-                                    <span className="shrink-0 rounded bg-mk-brand/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-mk-brand">kluczowe</span>
+                                    <span className="shrink-0 rounded bg-mk-brand/10 px-1.5 py-0.5 text-[11px] font-semibold uppercase leading-none tracking-wide text-mk-brand">kluczowe</span>
                                 )}
                             </li>
                         );
@@ -199,11 +204,11 @@ export function PublicationCalendar({
 
     const nav = view && (
         <div className="flex items-center gap-0.5">
-            <button type="button" onClick={prev} aria-label="Poprzedni miesiąc" className="flex h-7 w-7 items-center justify-center rounded-md text-mk-muted transition-colors hover:bg-mk-surface-alt hover:text-mk-text">
+            <button type="button" onClick={prev} aria-label="Poprzedni miesiąc" className="mk-press flex h-7 w-7 items-center justify-center rounded-md text-mk-muted transition-colors hover:bg-mk-surface-alt hover:text-mk-text active:bg-mk-surface-alt touch:h-11 touch:w-11">
                 <ChevronLeft size={16} />
             </button>
             <span className="w-28 text-center text-xs font-semibold capitalize text-mk-text">{MONTHS[view.m]} {view.y}</span>
-            <button type="button" onClick={next} aria-label="Następny miesiąc" className="flex h-7 w-7 items-center justify-center rounded-md text-mk-muted transition-colors hover:bg-mk-surface-alt hover:text-mk-text">
+            <button type="button" onClick={next} aria-label="Następny miesiąc" className="mk-press flex h-7 w-7 items-center justify-center rounded-md text-mk-muted transition-colors hover:bg-mk-surface-alt hover:text-mk-text active:bg-mk-surface-alt touch:h-11 touch:w-11">
                 <ChevronRight size={16} />
             </button>
         </div>

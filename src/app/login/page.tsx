@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, type FormEvent } from 'react';
+import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { BarChart3, Loader2, ShieldCheck } from 'lucide-react';
 import { useAuth } from '@/lib/auth/use-auth';
@@ -12,11 +12,11 @@ export default function LoginPage() {
     const [password, setPassword] = useState('');
     const [error, setError] = useState<string | null>(null);
     const [busy, setBusy] = useState(false);
-    const [from, setFrom] = useState('/');
-    useEffect(() => {
+    // `?from=` czytamy w chwili przejścia (bez stanu i efektu); tylko ścieżki wewnętrzne.
+    const target = () => {
         const q = new URLSearchParams(window.location.search).get('from');
-        if (q) setFrom(q);
-    }, []);
+        return q && q.startsWith('/') && !q.startsWith('//') ? q : '/';
+    };
 
     const onSubmit = async (e: FormEvent) => {
         e.preventDefault();
@@ -24,17 +24,17 @@ export default function LoginPage() {
         setBusy(true);
         try {
             await signIn(email, password);
-            router.push(from);
+            router.push(target());
         } catch {
             setError('Nieprawidłowy e-mail lub hasło.');
             setBusy(false);
         }
     };
 
-    const enterDemo = () => router.push(from);
+    const enterDemo = () => router.push(target());
 
     return (
-        <div className="flex min-h-screen items-center justify-center bg-mk-bg px-4"
+        <div className="flex min-h-dvh items-center justify-center bg-mk-bg px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-[max(1.5rem,env(safe-area-inset-top))]"
             style={{ backgroundImage: 'radial-gradient(60% 50% at 50% 0%, #EEF3FF 0%, transparent 70%)' }}>
             <div className="w-full max-w-[400px]">
                 <div className="mb-6 flex flex-col items-center text-center">
@@ -45,21 +45,25 @@ export default function LoginPage() {
                     <p className="mt-1 text-sm text-mk-muted">Zaloguj się, aby przejść do platformy</p>
                 </div>
 
+                {/* Pola 16 px na telefonie (mniejsze iOS Safari powiększa przy fokusie), właściwa klawiatura
+                    i podpowiedzi menedżera haseł; przyciski na całą szerokość, min. 48 px. */}
                 <form onSubmit={onSubmit} className="mk-card mk-card-pad space-y-4">
                     <div>
                         <label className="mk-label mb-1.5 block" htmlFor="email">E-mail</label>
-                        <input id="email" type="email" autoComplete="email" required className="mk-input"
+                        <input id="email" name="email" type="email" inputMode="email" autoComplete="username email" autoCapitalize="none"
+                            autoCorrect="off" spellCheck={false} enterKeyHint="next" required className="mk-input min-h-12 max-lg:text-base!"
                             value={email} onChange={(e) => setEmail(e.target.value)} placeholder="jan.kowalski@firma.pl" />
                     </div>
                     <div>
                         <label className="mk-label mb-1.5 block" htmlFor="password">Hasło</label>
-                        <input id="password" type="password" autoComplete="current-password" required className="mk-input"
+                        <input id="password" name="password" type="password" autoComplete="current-password" autoCapitalize="none"
+                            autoCorrect="off" spellCheck={false} enterKeyHint="go" required className="mk-input min-h-12 max-lg:text-base!"
                             value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
                     </div>
 
                     {error && <p role="alert" className="text-sm font-medium text-mk-negative">{error}</p>}
 
-                    <button type="submit" className="mk-btn mk-btn-primary w-full" disabled={busy}>
+                    <button type="submit" className="mk-btn mk-btn-primary min-h-12 w-full text-base sm:text-sm" disabled={busy}>
                         {busy ? <Loader2 size={16} className="animate-spin" /> : null}
                         Zaloguj się
                     </button>
@@ -69,10 +73,10 @@ export default function LoginPage() {
                             <div className="mb-2 flex items-center justify-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-mk-warn">
                                 <ShieldCheck size={14} /> Tryb demo
                             </div>
-                            <p className="mb-3 text-xs text-mk-muted">
+                            <p className="mb-3 text-sm text-mk-muted sm:text-xs">
                                 Logowanie nieaktywne — brak konfiguracji Firebase. Możesz wejść bez logowania.
                             </p>
-                            <button type="button" onClick={enterDemo} className="mk-btn w-full">Wejdź do platformy</button>
+                            <button type="button" onClick={enterDemo} className="mk-btn min-h-12 w-full text-base active:bg-mk-surface-alt sm:text-sm">Wejdź do platformy</button>
                         </div>
                     )}
                 </form>

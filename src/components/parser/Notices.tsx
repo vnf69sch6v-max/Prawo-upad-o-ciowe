@@ -47,28 +47,28 @@ export function NoticeProvider({ children }: { children: React.ReactNode }) {
     <Ctx.Provider value={value}>
       {children}
       <div
-        className="pointer-events-none fixed inset-x-3 bottom-3 z-50 flex flex-col items-end gap-2 sm:inset-x-auto sm:right-5 sm:bottom-5"
+        className="pointer-events-none fixed inset-x-3 bottom-[calc(var(--mk-bottom-chrome)+12px)] z-50 flex flex-col items-end gap-2 sm:inset-x-auto sm:right-5 sm:bottom-[calc(var(--mk-bottom-chrome)+20px)]"
         role="status"
         aria-live="polite"
       >
         {items.map((n) => (
           <div
             key={n.id}
-            className="mk-card mk-fade-in pointer-events-auto flex max-w-sm items-start gap-2 px-3 py-2 text-[13px]"
+            className="mk-card mk-fade-in pointer-events-auto flex w-full max-w-sm items-start gap-2 py-1 pl-3 pr-1 text-sm sm:w-auto sm:text-[13px]"
           >
             {n.kind === "success" ? (
-              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-mk-positive" aria-hidden />
+              <CheckCircle2 className="mt-2 h-4 w-4 shrink-0 text-mk-positive" aria-hidden />
             ) : (
-              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-mk-warn" aria-hidden />
+              <AlertTriangle className="mt-2 h-4 w-4 shrink-0 text-mk-warn" aria-hidden />
             )}
-            <span className="min-w-0 flex-1 text-mk-text">{n.text}</span>
+            <span className="min-w-0 flex-1 py-1.5 text-mk-text">{n.text}</span>
             <button
               type="button"
               onClick={() => dismiss(n.id)}
-              className="shrink-0 text-mk-faint transition-colors hover:text-mk-text"
+              className="-my-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-mk-faint transition-colors hover:text-mk-text active:bg-mk-surface-alt sm:h-8 sm:w-8"
               aria-label="Zamknij powiadomienie"
             >
-              <X className="h-3.5 w-3.5" />
+              <X className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
             </button>
           </div>
         ))}

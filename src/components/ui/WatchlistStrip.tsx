@@ -51,7 +51,7 @@ export function WatchlistStrip({ items, compact = false }: { items: WatchableKpi
                 <Star size={13} className="fill-mk-brand text-mk-brand" aria-hidden />
                 Obserwowane
             </h2>
-            <div className={`grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 ${compact ? 'gap-2' : 'gap-4'}`}>
+            <div className={`grid grid-cols-2 [&>*:last-child:nth-child(odd)]:col-span-2 sm:grid-cols-3 sm:[&>*:last-child:nth-child(odd)]:col-span-1 lg:grid-cols-4 xl:grid-cols-6 ${compact ? 'gap-2' : 'gap-3 sm:gap-4'}`}>
                 {watched.map((k) => (
                     <CompactKpi
                         key={`${k.kind ?? 'wskaznik'}:${k.watchId}`}

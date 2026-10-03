@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { VOIVODESHIP_PATHS, LABEL_POS, SLUG_TO_PATH } from '@/lib/poland-geo';
 import { formatDecimalPL } from '@/lib/formatters';
+import { useCanHover } from '@/lib/use-can-hover';
 
 // ═══════════════════════════════════════════════════════════════
 // TYPES
@@ -83,10 +84,10 @@ function Tooltip({ region, avgWages, x, y }: {
                     <div className="flex justify-between gap-4">
                         <span className="text-mk-muted">Bezrobocie:</span>
                         <span className="tabular-nums font-bold" style={{ color: getUnemploymentColor(region.unemployment) }}>
-                            {region.unemployment !== null ? `${region.unemployment}%` : 'N/A'}
+                            {region.unemployment !== null ? `${formatDecimalPL(region.unemployment, 1)}%` : '—'}
                             {unempChange !== null && (
                                 <span className={`ml-1 text-[10px] ${unempChange > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                                    ({unempChange > 0 ? '+' : ''}{unempChange}pp)
+                                    ({unempChange > 0 ? '+' : ''}{formatDecimalPL(unempChange, 1)} pp)
                                 </span>
                             )}
                         </span>
@@ -94,14 +95,14 @@ function Tooltip({ region, avgWages, x, y }: {
                     <div className="flex justify-between gap-4">
                         <span className="text-mk-muted">Wynagrodzenie:</span>
                         <span className="tabular-nums text-mk-text">
-                            {region.wages ? `${Math.round(region.wages).toLocaleString()} PLN` : 'N/A'}
+                            {region.wages ? `${Math.round(region.wages).toLocaleString('pl-PL')} zł` : '—'}
                         </span>
                     </div>
                     {wageVsAvg !== null && (
                         <div className="flex justify-between gap-4">
                             <span className="text-mk-muted">vs średnia:</span>
                             <span className={`tabular-nums ${wageVsAvg >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                {wageVsAvg >= 0 ? '+' : ''}{wageVsAvg}%
+                                {wageVsAvg >= 0 ? '+' : ''}{formatDecimalPL(wageVsAvg, 1)}%
                             </span>
                         </div>
                     )}
@@ -118,6 +119,9 @@ function Tooltip({ region, avgWages, x, y }: {
 export default function PolandMap({ regions, national, selectedRegion, onRegionSelect, overrideRates }: PolandMapProps) {
     const [hovered, setHovered] = useState<string | null>(null);
     const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
+    // Dotyk emuluje mouseenter przy stuknięciu — dymek zostawał wtedy „przyklejony" nad mapą,
+    // a stuknięcie i tak otwiera szczegóły województwa. Dymek tylko dla myszy/touchpada.
+    const canHover = useCanHover();
 
     const getRegion = (slug: string) => regions.find(r => r.slug === slug);
     const getRate = (slug: string): number | null => {
@@ -130,7 +134,7 @@ export default function PolandMap({ regions, national, selectedRegion, onRegionS
         setTooltipPos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
     };
 
-    const hoveredData = hovered ? getRegion(hovered) : null;
+    const hoveredData = canHover && hovered ? getRegion(hovered) : null;
 
     return (
         <div data-poland-map className="relative" onMouseMove={handleMouseMove}>
@@ -139,7 +143,7 @@ export default function PolandMap({ regions, national, selectedRegion, onRegionS
                     const path = VOIVODESHIP_PATHS[pathKey];
                     if (!path) return null;
                     const rate = getRate(slug);
-                    const isHovered = hovered === slug;
+                    const isHovered = canHover && hovered === slug;
                     const isSelected = selectedRegion === slug;
 
                     return (
@@ -160,12 +164,12 @@ export default function PolandMap({ regions, national, selectedRegion, onRegionS
                                     x={LABEL_POS[pathKey][0]}
                                     y={LABEL_POS[pathKey][1]}
                                     fill="white"
-                                    fontSize="11"
                                     fontWeight="bold"
-                                    fontFamily="monospace"
                                     textAnchor="middle"
                                     dominantBaseline="middle"
-                                    className="pointer-events-none select-none"
+                                    // viewBox 580 px → na telefonie mapa ma ~330 px, więc 11 jednostek dawało ~6 px tekstu.
+                                    // 20 jednostek ≈ 11–12 px na 360–390 px; od sm (mapa ≥460 px) mniejsze.
+                                    className="pointer-events-none select-none text-[20px] tabular-nums sm:text-[15px] lg:text-[13px]"
                                     style={{ textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}
                                 >
                                     {rate !== null ? `${formatDecimalPL(rate, 1)}%` : ''}

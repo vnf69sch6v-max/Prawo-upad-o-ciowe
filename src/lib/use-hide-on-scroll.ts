@@ -4,8 +4,9 @@ import { useEffect, useRef, useState } from 'react';
 
 /**
  * `true`, gdy użytkownik przewija w dół (poniżej `minY`), `false` przy przewijaniu w górę i przy
- * samej górze strony. Nagłówek na telefonie ma dwa rzędy (~108 px, 13% ekranu 812 px) — chowanie go
- * w trakcie czytania i przywracanie ruchem w górę to wzorzec znany z aplikacji i przeglądarek.
+ * samej górze strony. Nagłówek na telefonie (jeden rząd, 56 px + safe area) chowa się w trakcie
+ * czytania i wraca ruchem w górę — wzorzec znany z aplikacji i przeglądarek. Dolny pasek zakładek
+ * zostaje zawsze widoczny, więc nawigacja jest pod kciukiem także przy schowanym nagłówku.
  *
  * Stan zmienia się tylko po przekroczeniu `threshold` (bez migotania przy drobnych ruchach), a pomiar
  * jest w `requestAnimationFrame` (jedna aktualizacja na klatkę). `setHidden` z tą samą wartością

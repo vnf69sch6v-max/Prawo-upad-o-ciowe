@@ -64,7 +64,9 @@ export function DbwPriceSection({ title, subtitle, config, series, unit = '%', r
 
             <section>
                 <h2 className="mk-section-label mb-3">Ostatnie odczyty</h2>
-                <div className={`grid grid-cols-1 gap-4 sm:grid-cols-2 ${series.length >= 3 ? 'lg:grid-cols-4' : 'lg:grid-cols-2'}`}>
+                {/* Telefon: 2 kolumny (5 kafli × 1 kolumna = ~900 px przewijania). Nieparzystego ostatniego kafla
+                    nie rozciągamy — wartość skaluje się do szerokości kafla (cqi) i wychodziła 2× większa od reszty. */}
+                <div className={`grid grid-cols-2 gap-3 sm:gap-4 ${series.length >= 3 ? 'lg:grid-cols-4' : 'lg:grid-cols-2'}`}>
                 {series.map((s) => {
                     // Ostatnia DOSTĘPNA wartość tej serii (serie mogą kończyć się w różnych okresach —
                     // np. GUS publikuje „bydło" później niż pszenicę → nie pokazuj „—", tylko ostatni odczyt z jego datą).
@@ -78,7 +80,7 @@ export function DbwPriceSection({ title, subtitle, config, series, unit = '%', r
                     return (
                         <KpiCard key={s.poz} label={s.name} value={fmtPL(v)} unit={unit} accent={s.accent} icon={s.icon}
                             delta={d != null ? { value: d, unit: 'pp', invert: invertKpi } : undefined}
-                            footnote={last ? String(last.date) : ''} loading={q.isLoading}
+                            footnote={last ? formatDataPeriod(String(last.date)) : ''} loading={q.isLoading}
                             error={q.isError} onRetry={() => { void q.refetch(); }} />
                     );
                 })}

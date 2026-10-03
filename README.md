@@ -37,21 +37,26 @@ Digital i raport kwartalny NewConnect po polsku.
 
 - Nic nie jest zapisywane: plik żyje tylko w pamięci żądania, w cache nie ląduje.
 - Eksport (CSV / XLSX / JSON) idzie przez `/api/parser/export` — klient odsyła wynik, który już ma.
-- `npm test` (vitest) sprawdza parser wobec czterech utrwalonych sprawozdań w `tests/fixtures/`.
+- `npm test` (vitest) sprawdza parser wobec czterech utrwalonych sprawozdań w `tests/fixtures/`, reguły świeżości danych (`tests/freshness.test.ts`) i ranking sygnałów hero na Przeglądzie (`tests/hero-signals.test.ts`).
   To jedyne testy w repozytorium; uruchamiaj je po każdej zmianie w `src/lib/parser/`.
 
 ## Automatyczne odświeżanie
 
 Crony Vercela (`vercel.json`) rozgrzewają cache, żeby użytkownik nigdy nie czekał na zimne pobranie:
 
-- `cron/dbw-1|2|3` — 03:00 / 03:30 / 04:00, **rozłączne okna**. GUS DBW ma globalny limit
-  ~100 żądań/15 min wspólny dla całej aplikacji, więc ciężkie pobrania są rozbite na trzy grupy
+- `cron/dbw-1|2|3|4` — 03:00 / 03:30 / 04:00 / 04:30, **rozłączne okna**. GUS DBW ma globalny limit
+  ~100 żądań/15 min wspólny dla całej aplikacji, więc ciężkie pobrania są rozbite na grupy
   (≤77 żądań każda). **Nie łącz ich z powrotem w jedno** — to gwarantowany sztorm 429.
-- `cron/refresh` — 06:00, źródła spoza DBW (osobne limity, równolegle)
+  `dbw-4` to wskaźniki z Przeglądu: produkcja przemysłowa, budowlanka, sprzedaż detaliczna.
+- `cron/bdl` — 05:00, GUS BDL (bezrobocie, płace, regiony) **sekwencyjnie** (BDL bez klucza ~5 żądań/s)
+- `cron/refresh` — 06:00, źródła spoza GUS (Eurostat, NBP, Yahoo, newsy; osobne limity, równolegle)
+- `cron/freshness` — 07:20, kontrola świeżości wszystkich zbiorów + samonaprawa NBP/Yahoo/Eurostat
+  i alert na `ALERT_WEBHOOK_URL`; wynik na stronie `/status` i pod `/api/health/freshness`
 - `cron/nbp`, `cron/stooq` — w dni robocze po sesji
 
-Endpointy DBW przyjmują `?refresh=1` (wymusza pobranie, pomija cache) — używa tego wyłącznie cron;
-użytkownik czyta 48-godzinny cache.
+Endpointy GUS przyjmują `?refresh=1` (wymusza pobranie z `no-store`, pomija Firestore i Data Cache
+Next.js) — używa tego wyłącznie cron; użytkownik czyta 48-godzinny cache. Nieudane albo puste pobranie
+nie nadpisuje poprzednich danych (`withCache`).
 
 ## Stack
 
@@ -63,7 +68,7 @@ Recharts · React Query · Firebase Auth (opcjonalny) · cache w Firestore · Ve
 ```bash
 npm install
 npm run dev
-npm test        # testy parsera raportów (jedyne w repo)
+npm test        # parser raportów, świeżość danych, ranking hero
 ```
 
 Klucze API (`SMUP_API_KEY`, `SDP_API_KEY`, konfiguracja Firebase) trzymaj w `.env.local` —

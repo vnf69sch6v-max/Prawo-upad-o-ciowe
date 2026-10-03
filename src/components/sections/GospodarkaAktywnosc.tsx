@@ -15,7 +15,8 @@ import { plSeries, lastOf, deltaOf, fmtPL, quarterTick, type Point } from '@/lib
 import { formatDecimalPL, formatDataPeriod } from '@/lib/formatters';
 import { EditorialHero } from '@/components/ui/EditorialHero';
 import { CompactKpiGrid, type CompactKpiItem } from '@/components/ui/CompactKpiGrid';
-import { DensePageLayout, DenseThreeCol } from '@/components/ui/DensePageLayout';
+import { DensePageLayout } from '@/components/ui/DensePageLayout';
+import { MobileOnly } from '@/components/sections/mobile-layout';
 import { InteractiveChart } from '@/components/ui/InteractiveChart';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { RelatedNews } from '@/components/ui/RelatedNews';
@@ -73,7 +74,7 @@ export function GospodarkaAktywnosc() {
         [unempQ.data],
     );
 
-    const konSectors = konQ.data?.sectors ?? [];
+    const konSectors = useMemo(() => konQ.data?.sectors ?? [], [konQ.data?.sectors]);
     const konLatest = konQ.data?.latest ?? null;
     const sectorBars = useMemo(() => {
         if (!konLatest) return [];
@@ -129,7 +130,7 @@ export function GospodarkaAktywnosc() {
                 unit: '%',
                 icon: Factory,
                 delta: deltaOf(ind) != null ? { value: deltaOf(ind)!, unit: 'pp' } : undefined,
-                footnote: ind.length ? ind[ind.length - 1].date : '',
+                footnote: ind.length ? formatDataPeriod(ind[ind.length - 1].date) : '',
                 spark: ind.slice(-SPARK),
                 sparkFormat: pct1,
                 loading: indQ.isLoading,
@@ -143,7 +144,7 @@ export function GospodarkaAktywnosc() {
                 unit: '%',
                 icon: ShoppingCart,
                 delta: deltaOf(ret) != null ? { value: deltaOf(ret)!, unit: 'pp' } : undefined,
-                footnote: ret.length ? ret[ret.length - 1].date : '',
+                footnote: ret.length ? formatDataPeriod(ret[ret.length - 1].date) : '',
                 spark: ret.slice(-SPARK),
                 sparkFormat: pct1,
                 loading: retQ.isLoading,
@@ -157,7 +158,7 @@ export function GospodarkaAktywnosc() {
                 unit: '%',
                 icon: Percent,
                 delta: deltaOf(cpi) != null ? { value: deltaOf(cpi)!, unit: 'pp', invert: true } : undefined,
-                footnote: cpi.length ? cpi[cpi.length - 1].date : '',
+                footnote: cpi.length ? formatDataPeriod(cpi[cpi.length - 1].date) : '',
                 spark: cpi.slice(-SPARK),
                 sparkFormat: pct1,
                 loading: cpiQ.isLoading,
@@ -171,7 +172,7 @@ export function GospodarkaAktywnosc() {
                 unit: '%',
                 icon: Users,
                 delta: deltaOf(unemp) != null ? { value: deltaOf(unemp)!, unit: 'pp', invert: true } : undefined,
-                footnote: unemp.length ? unemp[unemp.length - 1].date : '',
+                footnote: unemp.length ? formatDataPeriod(unemp[unemp.length - 1].date) : '',
                 spark: unemp.slice(-SPARK),
                 sparkFormat: pct1,
                 loading: unempQ.isLoading,
@@ -185,7 +186,7 @@ export function GospodarkaAktywnosc() {
                 unit: '%',
                 icon: HardHat,
                 delta: deltaOf(con) != null ? { value: deltaOf(con)!, unit: 'pp' } : undefined,
-                footnote: con.length ? con[con.length - 1].date : '',
+                footnote: con.length ? formatDataPeriod(con[con.length - 1].date) : '',
                 spark: con.slice(-SPARK),
                 sparkFormat: pct1,
                 loading: conQ.isLoading,
@@ -224,75 +225,75 @@ export function GospodarkaAktywnosc() {
 
             <CompactKpiGrid items={compactKpis} label="Wskaźniki aktywności" />
 
-            <DenseThreeCol
-                left={<RelatedNews topic="gospodarka" limit={3} title="Powiązane newsy" />}
-                center={
-                    <>
+            {/* Desktop: newsy | wykresy | klimat sektorów (jak DenseThreeCol). Telefon: wykresy → klimat,
+                newsy dopiero na końcu strony — wcześniej ~900 px nagłówków przed pierwszym wykresem. */}
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-12 lg:items-start">
+                <div className="hidden min-w-0 lg:col-span-3 lg:block"><RelatedNews topic="gospodarka" limit={3} title="Powiązane newsy" /></div>
+                <div className="min-w-0 space-y-4 lg:col-span-5">
+                    <SectionCard
+                        editorial
+                        titleVariant="label"
+                        title="PKB — dynamika realna"
+                        subtitle="r/r % · kwartalnie · ceny stałe · Eurostat (dane GUS)"
+                        actions={
+                            // Kwartał → wydanie flash ~45 dni po końcu kwartału; 8 mies. = spóźniony o jeden odczyt.
+                            <StaleBadge date={gdpLast?.date ?? null} label="dane do" warnAfterMonths={8} />
+                        }
+                    >
+                        <QueryState
+                            isLoading={gdpQ.isLoading}
+                            isError={gdpQ.isError}
+                            isEmpty={gdp.length === 0}
+                            onRetry={() => { void gdpQ.refetch(); }}
+                            height={200}
+                            emptyTitle="Brak danych PKB."
+                        >
+                            <InteractiveChart
+                                data={gdp}
+                                xKey="date"
+                                xTickFormatter={quarterTick}
+                                height={200}
+                                unit="%"
+                                showRange={false}
+                                valueFormatter={(v) => formatDecimalPL(v, 1)}
+                                referenceLines={[{ y: 0, color: '#CBD2DD' }]}
+                                series={[{ key: 'value', name: 'PKB r/r', color: '#16A34A', type: 'area', strokeWidth: 2.5 }]}
+                            />
+                        </QueryState>
+                    </SectionCard>
+
+                    {activity.length > 1 && (
                         <SectionCard
                             editorial
                             titleVariant="label"
-                            title="PKB — dynamika realna"
-                            subtitle="r/r % · kwartalnie · ceny stałe · Eurostat (dane GUS)"
-                            actions={
-                                // Kwartał → wydanie flash ~45 dni po końcu kwartału; 8 mies. = spóźniony o jeden odczyt.
-                                <StaleBadge date={gdpLast?.date ?? null} label="dane do" warnAfterMonths={8} />
-                            }
+                            title="Aktywność — produkcja, sprzedaż, budownictwo"
+                            subtitle="GUS · miesięcznie (r/r %)"
                         >
-                            <QueryState
-                                isLoading={gdpQ.isLoading}
-                                isError={gdpQ.isError}
-                                isEmpty={gdp.length === 0}
-                                onRetry={() => { void gdpQ.refetch(); }}
+                            <InteractiveChart
+                                data={activity}
+                                xKey="date"
                                 height={200}
-                                emptyTitle="Brak danych PKB."
-                            >
-                                <InteractiveChart
-                                    data={gdp}
-                                    xKey="date"
-                                    xTickFormatter={quarterTick}
-                                    height={200}
-                                    unit="%"
-                                    showRange={false}
-                                    valueFormatter={(v) => formatDecimalPL(v, 1)}
-                                    referenceLines={[{ y: 0, color: '#CBD2DD' }]}
-                                    series={[{ key: 'value', name: 'PKB r/r', color: '#16A34A', type: 'area', strokeWidth: 2.5 }]}
-                                />
-                            </QueryState>
+                                unit="%"
+                                legend
+                                showRange
+                                initialRange="1R"
+                                valueFormatter={(v) => formatDecimalPL(v, 1)}
+                                xTickFormatter={monthTick}
+                                series={[
+                                    { key: 'ind', name: 'Produkcja', color: '#2563EB', type: 'line' },
+                                    { key: 'ret', name: 'Sprzedaż', color: '#D97706', type: 'line' },
+                                    { key: 'con', name: 'Budownictwo', color: '#0891B2', type: 'line' },
+                                ]}
+                            />
                         </SectionCard>
-
-                        {activity.length > 1 && (
-                            <SectionCard
-                                editorial
-                                titleVariant="label"
-                                title="Aktywność — produkcja, sprzedaż, budownictwo"
-                                subtitle="GUS · miesięcznie (r/r %)"
-                            >
-                                <InteractiveChart
-                                    data={activity}
-                                    xKey="date"
-                                    height={200}
-                                    unit="%"
-                                    legend
-                                    showRange
-                                    initialRange="1R"
-                                    valueFormatter={(v) => formatDecimalPL(v, 1)}
-                                    xTickFormatter={monthTick}
-                                    series={[
-                                        { key: 'ind', name: 'Produkcja', color: '#2563EB', type: 'line' },
-                                        { key: 'ret', name: 'Sprzedaż', color: '#D97706', type: 'line' },
-                                        { key: 'con', name: 'Budownictwo', color: '#0891B2', type: 'line' },
-                                    ]}
-                                />
-                            </SectionCard>
-                        )}
-                    </>
-                }
-                right={
+                    )}
+                </div>
+                <div className="min-w-0 space-y-4 lg:col-span-4">
                     <SectionCard
                         editorial
                         titleVariant="label"
                         title="Klimat sektorów"
-                        subtitle="GUS koniunktura · saldo ocen przedsiębiorców"
+                        subtitle="GUS koniunktura · saldo ocen przedsiębiorców (pkt)"
                         actions={<StaleBadge date={konLatest?.date ?? null} label="GUS do" warnAfterMonths={3} />}
                     >
                         <QueryState
@@ -306,7 +307,7 @@ export function GospodarkaAktywnosc() {
                             <div className="space-y-2.5">
                                 {sectorBars.map((s) => (
                                     <div key={s.key} className="flex items-center gap-2 text-xs">
-                                        <span className="w-[7.5rem] shrink-0 truncate text-mk-text-soft" title={s.name}>
+                                        <span className="w-[38%] max-w-[7.5rem] shrink-0 truncate text-mk-text-soft lg:w-[7.5rem]" title={s.name}>
                                             {s.name.replace(' przemysłowe', '').replace(' detaliczny', '')}
                                         </span>
                                         <span className="h-2.5 min-w-0 flex-1 rounded-full bg-mk-surface-alt">
@@ -333,9 +334,12 @@ export function GospodarkaAktywnosc() {
                             </p>
                         </QueryState>
                     </SectionCard>
-                }
-            />
+                </div>
+            </div>
 
+            <MobileOnly>
+                <RelatedNews topic="gospodarka" limit={3} title="Powiązane newsy" variant="rail" />
+            </MobileOnly>
         </DensePageLayout>
     );
 }

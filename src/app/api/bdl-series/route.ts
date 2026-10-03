@@ -3,16 +3,17 @@
 // fetch the previous + current year at once and assemble a rolling series to the latest.
 import { NextRequest, NextResponse } from 'next/server';
 import { withCache } from '@/lib/server-cache';
+import { gusFetchInit } from '@/lib/upstream-fetch';
 
 const BDL = 'https://bdl.stat.gov.pl/api/v1/data/by-variable';
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-async function fetchVarYears(id: number, years: number[], apiKey?: string): Promise<Record<string, number | null>> {
+async function fetchVarYears(id: number, years: number[], apiKey: string | undefined, force: boolean): Promise<Record<string, number | null>> {
     const headers: Record<string, string> = { Accept: 'application/json' };
     if (apiKey) headers['X-ClientId'] = apiKey;
     const yq = years.map((y) => `year=${y}`).join('&');
     for (let attempt = 0; attempt < 2; attempt++) {
-        const res = await fetch(`${BDL}/${id}?unit-level=0&format=json&${yq}`, { headers, next: { revalidate: 86400 } });
+        const res = await fetch(`${BDL}/${id}?unit-level=0&format=json&${yq}`, { headers, ...gusFetchInit(force) });
         if (res.status === 429) { await sleep(12000); continue; }
         if (!res.ok) return {};
         const json = await res.json();
@@ -31,6 +32,7 @@ export async function GET(request: NextRequest) {
     const step = Math.max(1, parseInt(sp.get('step') || '1') || 1);
     const year = parseInt(sp.get('year') || String(new Date().getFullYear()));
     const freq = sp.get('freq') === 'q' ? 'q' : 'm';
+    const force = sp.get('refresh') === '1'; // cron warm → pobierz u źródła, pomiń oba cache
     if (!start) return NextResponse.json({ error: 'Wymagane: start (id zmiennej)' }, { status: 400 });
 
     const apiKey = process.env.GUS_BDL_KEY || process.env.GUS_API_KEY;
@@ -49,8 +51,8 @@ export async function GET(request: NextRequest) {
             async () => {
                 const perVar: Record<string, number | null>[] = [];
                 for (let i = 0; i < periods; i++) {
-                    perVar[i] = await fetchVarYears(start + i * step, years, apiKey);
-                    await sleep(120);
+                    perVar[i] = await fetchVarYears(start + i * step, years, apiKey, force);
+                    await sleep(250); // BDL bez klucza: ~5 żądań/s
                 }
                 const series: { date: string; value: number }[] = [];
                 for (const y of years) {
@@ -64,7 +66,7 @@ export async function GET(request: NextRequest) {
                 return { series, source: 'GUS BDL' };
             },
             'GUS BDL',
-            24 * 3600 * 1000,
+            force ? -1 : 24 * 3600 * 1000,
         );
         return NextResponse.json(result);
     } catch (error) {

@@ -4,6 +4,7 @@ import * as React from "react";
 import { fmtPct } from "@/lib/parser/format";
 import { pl } from "@/lib/parser/copy.pl";
 import type { DerivedResult, Period } from "@/lib/parser/types";
+import { useBoxWidth } from "@/components/parser/useBoxWidth";
 
 /**
  * Marże we wszystkich wykrytych okresach — słupki grupowane, nie linia.
@@ -19,11 +20,7 @@ interface Series {
   pick: (periodKey: string) => number | null;
 }
 
-const W = 860;
-const H = 260;
 const PAD_TOP = 26;
-const PAD_BOTTOM = 46;
-const PAD_LEFT = 52;
 const PAD_RIGHT = 12;
 
 export function MarginsChart({
@@ -35,6 +32,13 @@ export function MarginsChart({
 }) {
   const [hidden, setHidden] = React.useState<Set<string>>(new Set());
   const [hoverIdx, setHoverIdx] = React.useState<number | null>(null);
+  // Rysujemy w rzeczywistej szerokości (1:1). Stały viewBox 860×260 na telefonie skalował podpisy
+  // do ~4 px i zostawiał pusty pas nad i pod wykresem (proporcje `meet`).
+  const { ref: boxRef, width: W } = useBoxWidth<HTMLDivElement>(860);
+  const narrow = W < 560;
+  const H = narrow ? 220 : 260;
+  const PAD_BOTTOM = narrow ? 36 : 46;
+  const PAD_LEFT = narrow ? 40 : 52;
 
   const ratioFor = React.useCallback(
     (periodKey: string) => derived.ratios.find((r) => r.periodKey === periodKey),
@@ -106,7 +110,7 @@ export function MarginsChart({
                 type="button"
                 onClick={() => toggle(s.key)}
                 aria-pressed={!off}
-                className={`flex items-center gap-1.5 rounded-md px-2 py-1 text-[12px] font-medium transition-colors ${
+                className={`flex min-h-11 items-center gap-1.5 rounded-md px-2 py-1 text-[13px] font-medium transition-colors [-webkit-tap-highlight-color:transparent] lg:min-h-0 lg:text-[12px] ${
                   off ? "text-mk-faint" : "text-mk-text-soft hover:bg-mk-surface-alt"
                 }`}
               >
@@ -121,7 +125,7 @@ export function MarginsChart({
         </div>
       </div>
 
-      <div className="relative">
+      <div ref={boxRef} className="relative min-w-0">
         <svg
           viewBox={`0 0 ${W} ${H}`}
           className="w-full"
@@ -145,7 +149,7 @@ export function MarginsChart({
                 y={y(v) + 3.5}
                 textAnchor="end"
                 fill="#64748B"
-                style={{ fontSize: 10, fontVariantNumeric: "tabular-nums" }}
+                style={{ fontSize: 11, fontVariantNumeric: "tabular-nums" }}
               >
                 {v}%
               </text>

@@ -1,13 +1,18 @@
 'use client';
 
-import type { ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import { RefreshCw } from 'lucide-react';
 
+/** `--skel-h` = wysokość desktopowa; na telefonie CSS (`.mk-chart-skel*`) liczy wysokość plotu. */
+const skelVar = (height?: number): CSSProperties | undefined =>
+    height ? ({ ['--skel-h' as string]: `${height}px` } as CSSProperties) : undefined;
+
+/** Skeleton wykresu o wysokości docelowego plotu (także na telefonie — bez skoku układu). */
 export function ChartSkeleton({ height = 280 }: { height?: number }) {
     return (
         <div
-            className="mk-skeleton w-full rounded-xl"
-            style={{ height }}
+            className="mk-skeleton mk-chart-skel w-full rounded-xl"
+            style={skelVar(height)}
             role="status"
             aria-busy="true"
             aria-label="Ładowanie danych"
@@ -28,8 +33,8 @@ export function QueryError({
 }) {
     return (
         <div
-            className="flex flex-col items-center justify-center gap-2 rounded-xl bg-mk-surface-alt px-4 py-8 text-center"
-            style={height ? { minHeight: height } : undefined}
+            className="mk-chart-skel-min flex flex-col items-center justify-center gap-2 rounded-xl bg-mk-surface-alt px-4 py-8 text-center"
+            style={skelVar(height)}
             role="alert"
         >
             <p className="text-sm font-medium text-mk-text">{title}</p>
@@ -38,7 +43,7 @@ export function QueryError({
                 <button
                     type="button"
                     onClick={onRetry}
-                    className="mt-1 inline-flex min-h-6 items-center gap-1.5 rounded-lg border border-mk-border bg-mk-surface px-2.5 py-1.5 text-xs font-medium text-mk-text transition-colors hover:bg-mk-surface-alt"
+                    className="mk-press mt-1 inline-flex min-h-6 items-center gap-1.5 rounded-lg border border-mk-border bg-mk-surface px-2.5 py-1.5 text-xs font-medium text-mk-text transition-colors hover:bg-mk-surface-alt active:bg-mk-surface-alt touch:min-h-11 touch:px-4 touch:text-sm"
                 >
                     <RefreshCw size={13} aria-hidden />
                     Spróbuj ponownie
@@ -59,8 +64,8 @@ export function QueryEmpty({
 }) {
     return (
         <div
-            className="flex flex-col items-center justify-center gap-1.5 rounded-xl bg-mk-surface-alt px-4 py-8 text-center"
-            style={height ? { minHeight: height } : undefined}
+            className="mk-chart-skel-min flex flex-col items-center justify-center gap-1.5 rounded-xl bg-mk-surface-alt px-4 py-8 text-center"
+            style={skelVar(height)}
         >
             <p className="text-sm font-medium text-mk-text">{title}</p>
             {detail && <p className="max-w-[42ch] text-xs text-mk-muted">{detail}</p>}

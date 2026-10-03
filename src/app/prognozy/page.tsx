@@ -8,8 +8,13 @@ import { Slider } from '@/components/ui/Slider';
 import { useWibor } from '@/lib/hooks';
 import { calculateMonthlyPayment, type MortgageParams } from '@/lib/calculations/mortgage';
 import { formatDecimalPL, formatPLN } from '@/lib/formatters';
+import { MobileTabs } from '@/components/sections/mobile-layout';
 
 type Tenor = '3M' | '6M';
+const TENORS: { value: Tenor; label: string }[] = [
+    { value: '3M', label: 'WIBOR 3M' },
+    { value: '6M', label: 'WIBOR 6M' },
+];
 
 export default function PrognozyPage() {
     const wiborQ = useWibor();
@@ -32,20 +37,18 @@ export default function PrognozyPage() {
             <PageHeader
                 title="Prognozy"
                 actions={
-                    <Segmented
-                        value={tenor}
-                        onChange={setTenor}
-                        aria-label="Tenor WIBOR"
-                        options={[
-                            { value: '3M', label: 'WIBOR 3M' },
-                            { value: '6M', label: 'WIBOR 6M' },
-                        ]}
-                    />
+                    <div className="hidden lg:block">
+                        <Segmented value={tenor} onChange={setTenor} aria-label="Tenor WIBOR" options={TENORS} />
+                    </div>
                 }
             />
 
             <SectionCard editorial titleVariant="label" title="Symulator raty kredytu" subtitle="NBP · WIBOR + marża · rata równa">
-                <div className="space-y-5">
+                {/* Telefon: wynik na górze (zmienia się na oczach przy przesuwaniu suwaków), pod nim tenor
+                    jako rząd przełączników 44 px, potem suwaki. Desktop: suwaki, potem wynik — jak wcześniej
+                    (tenor zostaje w nagłówku strony). */}
+                <div className="flex flex-col gap-5">
+                    <MobileTabs value={tenor} onChange={setTenor} options={TENORS} ariaLabel="Tenor WIBOR" sticky={false} className="-my-1.5" />
                     <Slider
                         label="Kwota kredytu"
                         value={principal}
@@ -77,9 +80,9 @@ export default function PrognozyPage() {
                         valueText={`${formatDecimalPL(margin, 1)} procent`}
                     />
 
-                    <div className="rounded-xl border border-mk-border bg-mk-surface-alt px-4 py-3">
+                    <div className="order-first rounded-xl border border-mk-border bg-mk-surface-alt px-4 py-3 lg:order-last">
                         <p className="mk-label">Rata miesięczna</p>
-                        <p className="mt-1 text-2xl font-extrabold tnum text-mk-text">
+                        <p className="mt-1 text-3xl font-extrabold tnum text-mk-text lg:text-2xl">
                             {payment != null ? formatPLN(payment) : '—'}
                         </p>
                         <p className="mt-1 text-xs text-mk-muted">

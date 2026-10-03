@@ -1,5 +1,7 @@
 // Shared DBW fetch helpers. DBW returns ONE period per call, so long histories need
 // many calls — done with bounded concurrency + 429 backoff, then cached upstream.
+import { gusFetchInit } from '@/lib/upstream-fetch';
+
 const BASE = 'https://api-dbw.stat.gov.pl/api/1.1.0/variable/variable-data-section';
 const GRUPA_OGOLEM = 6902025;
 const POLSKA = 33617;
@@ -14,10 +16,10 @@ export interface DbwRow {
 
 export interface DbwPeriod { rok: number; okres: number; przekroj: number; key: string }
 
-async function fetchOne(varId: number, p: DbwPeriod): Promise<DbwRow[] | null> {
+async function fetchOne(varId: number, p: DbwPeriod, force: boolean): Promise<DbwRow[] | null> {
     const url = `${BASE}?id-zmienna=${varId}&id-przekroj=${p.przekroj}&id-rok=${p.rok}&id-okres=${p.okres}&ile-na-stronie=9000&numer-strony=0&lang=pl`;
     for (let attempt = 0; attempt < 3; attempt++) {
-        const res = await fetch(url, { headers: { Accept: 'application/json' }, next: { revalidate: 86400 } });
+        const res = await fetch(url, { headers: { Accept: 'application/json' }, ...gusFetchInit(force) });
         if (res.status === 429) { await sleep(2000 + attempt * 1500); continue; }
         if (!res.ok) return null;
         const json = await res.json();
@@ -26,14 +28,15 @@ async function fetchOne(varId: number, p: DbwPeriod): Promise<DbwRow[] | null> {
     return null;
 }
 
-/** Fetch many periods with bounded concurrency. Returns a map keyed by period.key. */
-export async function dbwFetchMany(varId: number, periods: DbwPeriod[], concurrency = 5): Promise<Map<string, DbwRow[]>> {
+/** Fetch many periods with bounded concurrency. Returns a map keyed by period.key.
+ *  `force` (cron `?refresh=1`) → `no-store`, patrz src/lib/upstream-fetch.ts. */
+export async function dbwFetchMany(varId: number, periods: DbwPeriod[], concurrency = 5, force = false): Promise<Map<string, DbwRow[]>> {
     const out = new Map<string, DbwRow[]>();
     let idx = 0;
     async function worker() {
         while (idx < periods.length) {
             const p = periods[idx++];
-            const rows = await fetchOne(varId, p);
+            const rows = await fetchOne(varId, p, force);
             if (rows) out.set(p.key, rows);
             await sleep(50);
         }

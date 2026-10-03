@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useCallback } from 'react';
 import { Cell, Tooltip, BarChart, Bar, XAxis, YAxis, AreaChart, Area, CartesianGrid } from 'recharts';
-import { ResponsiveContainer } from '@/components/ui/ChartContainer';
+import { ResponsiveContainer, usePlotWidth } from '@/components/ui/ChartContainer';
 import { Activity, Factory, Info, ChevronRight, Home, Wheat, Car, Scale } from 'lucide-react';
 import { useCpiFull, useGusPpiHeadline, usePpiFull, type CpiDivision, type CpiHistPoint } from '@/lib/hooks';
 import { plSeries, fmtPL } from '@/lib/series';
@@ -10,6 +10,8 @@ import { formatDecimalPL, formatDataPeriodLabel } from '@/lib/formatters';
 import { CompactKpiGrid, type CompactKpiItem } from '@/components/ui/CompactKpiGrid';
 import { EditorialHero } from '@/components/ui/EditorialHero';
 import { DensePageLayout, DenseTwoCol } from '@/components/ui/DensePageLayout';
+import { MobileMore, MobileListClamp, MobileOnly } from '@/components/sections/mobile-layout';
+import { useCanHover } from '@/lib/use-can-hover';
 import { InteractiveChart } from '@/components/ui/InteractiveChart';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { Segmented } from '@/components/ui/Segmented';
@@ -84,10 +86,43 @@ const SUB_INFO: Record<string, string> = {
 const subFallback = (name: string): string =>
     /pozostał|gdzie indziej|niesklasyfikowan/i.test(name) ? 'Kategoria zbiorcza — obejmuje pozycje nieujęte w pozostałych klasach tego działu.' : '';
 
+type WaterfallRow = { name: string; base: number; value: number; c: number; up: boolean; total: boolean };
+
+/** Wodospad wkładów: wysokość z liczby słupków (24 px/dział), nie z proporcji 16:9 — na telefonie
+ *  14 słupków w ~180 px było nieczytelne. Węższa oś kategorii poniżej 480 px szerokości karty. */
+function WaterfallChart({ rows, trigger }: { rows: WaterfallRow[]; trigger: 'hover' | 'click' }) {
+    const { ref, width } = usePlotWidth();
+    const narrow = width > 0 && width < 480;
+    const height = Math.min(narrow ? 360 : 280, Math.max(200, rows.length * 24));
+    return (
+        <div ref={ref} style={{ width: '100%', height, minWidth: 0 }}>
+            {width >= 32 && (
+                <BarChart width={width} height={height} data={rows} layout="vertical" margin={{ top: 4, right: narrow ? 12 : 36, left: 4, bottom: 4 }} barCategoryGap={4}>
+                    <CartesianGrid stroke="#EDF0F5" horizontal={false} />
+                    <XAxis type="number" tick={{ fill: AXIS_INK, fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => formatDecimalPL(v, 1)} />
+                    <YAxis type="category" dataKey="name" width={narrow ? 104 : 120} tick={{ fill: '#475569', fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <Tooltip trigger={trigger} isAnimationActive={false} cursor={{ fill: 'rgba(0,0,0,0.03)' }} content={({ active, payload }) => {
+                        if (!active || !payload?.length) return null;
+                        const p = payload[0].payload as { name: string; c: number };
+                        return <div style={{ background: '#fff', border: '1px solid #E7EAF0', borderRadius: 10, padding: '6px 10px', fontSize: 12, boxShadow: '0 6px 16px rgba(16,24,40,.12)' }}>
+                            <div style={{ fontWeight: 600, color: '#0F172A' }}>{p.name}</div><div style={{ color: '#64748B' }}>wkład {p.c > 0 ? '+' : ''}{formatDecimalPL(p.c, 2)} pp</div>
+                        </div>;
+                    }} />
+                    <Bar dataKey="base" stackId="a" fill="transparent" />
+                    <Bar dataKey="value" stackId="a" radius={[0, 3, 3, 0]}>
+                        {rows.map((r, i) => <Cell key={i} fill={r.total ? '#0F172A' : r.up ? '#DC2626' : '#16A34A'} />)}
+                    </Bar>
+                </BarChart>
+            )}
+        </div>
+    );
+}
+
 export function InflacjaFull() {
     const { data, isLoading, isError, isFetching, refetch, refreshFromSource } = useCpiFull();
     const ppiHeadQ = useGusPpiHeadline();
     const ppiFullQ = usePpiFull();
+    const tooltipTrigger = useCanHover() ? 'hover' : 'click';
 
     const headline = useMemo(() => data?.headline ?? [], [data]);
     const divisions = useMemo(() => data?.divisions ?? [], [data]);
@@ -137,7 +172,7 @@ export function InflacjaFull() {
     const waterfall = useMemo(() => {
         const sorted = [...divisions].filter((d) => d.contribution != null).sort((a, b) => (b.contribution ?? 0) - (a.contribution ?? 0));
         let cum = 0;
-        const rows = sorted.map((d) => {
+        const rows: WaterfallRow[] = sorted.map((d) => {
             const c = d.contribution as number;
             const base = c >= 0 ? cum : cum + c;
             cum += c;
@@ -286,9 +321,10 @@ export function InflacjaFull() {
 
             <CompactKpiGrid items={compactKpis} label="Wskaźniki uzupełniające" dense />
 
-            <DenseTwoCol
-                left={<RelatedNews topic="ceny" limit={5} title="Newsy — ceny i inflacja" variant="rail" />}
-                right={
+            {/* Telefon: wykres zaraz po KPI, newsy na końcu strony (MobileOnly). Desktop: newsy | wykres. */}
+            <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-2">
+                <div className="hidden min-w-0 lg:block"><RelatedNews topic="ceny" limit={5} title="Newsy — ceny i inflacja" variant="rail" /></div>
+                <div className="min-w-0">
                     <SectionCard editorial titleVariant="label" title="Inflacja CPI — trend (10 lat)" subtitle={`${freq === 'yoy' ? 'rok do roku' : 'miesiąc do miesiąca'} (%) · GUS`}
                         actions={<div className="flex flex-wrap items-center gap-2">
                             <Segmented value={freq} onChange={setFreq} aria-label="Częstotliwość CPI" options={[{ value: 'yoy', label: 'r/r' }, { value: 'mom', label: 'm/m' }]} />
@@ -301,8 +337,8 @@ export function InflacjaFull() {
                             referenceLines={freq === 'yoy' ? [{ y: 2.5, label: 'Cel NBP', color: AXIS_INK }] : [{ y: 0, color: '#CBD2DD' }]}
                             series={[{ key: 'value', name: freq === 'yoy' ? 'CPI r/r' : 'CPI m/m', color: '#D97706', type: 'area', strokeWidth: 2.5 }]} />
                     </SectionCard>
-                }
-            />
+                </div>
+            </div>
 
             <DenseTwoCol
                 left={
@@ -318,61 +354,44 @@ export function InflacjaFull() {
                     </SectionCard>
                 }
                 right={
-                    <SectionCard editorial titleVariant="label" title="Kontrybucje do inflacji" subtitle="waga × dynamika = wkład (pp) · kliknij dział">
-                        <div className="max-h-[240px] space-y-0.5 overflow-y-auto">
-                            {contrib.map((d) => {
-                                const c = d.contribution ?? 0;
-                                const w = (Math.abs(c) / maxAbs) * 100;
-                                return (
-                                    <button key={d.code} onClick={() => openDiv(d.code)}
-                                        className="group flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-mk-surface-alt">
-                                        <span className="w-[9rem] shrink-0 truncate text-xs font-medium text-mk-text" title={d.name}><span className="mr-1 text-mk-faint">{d.code}</span>{d.name}</span>
-                                        <span className="h-2.5 flex-1 rounded-full bg-mk-surface-alt"><span className="block h-2.5 rounded-full" style={{ width: `${w}%`, background: d.color }} /></span>
-                                        <span className="w-12 shrink-0 text-right text-xs font-semibold tnum" style={{ color: c >= 0 ? '#0F172A' : '#16A34A' }}>{c > 0 ? '+' : ''}{formatDecimalPL(c, 2)}</span>
-                                        <ChevronRight size={14} className="shrink-0 text-mk-faint opacity-0 group-hover:opacity-100" />
-                                    </button>
-                                );
-                            })}
-                        </div>
+                    <SectionCard editorial titleVariant="label" title="Kontrybucje do inflacji" subtitle="wkład = waga × dynamika (pp) · wybierz dział">
+                        {/* Telefon: 5 największych + „Pokaż wszystkie", wiersze 44 px, bez przewijania w przewijaniu.
+                            Desktop: pełna lista w oknie 240 px jak wcześniej. */}
+                        <MobileListClamp total={contrib.length} noun="działy">
+                            <ul className="space-y-0.5 lg:max-h-[240px] lg:overflow-y-auto">
+                                {contrib.map((d) => {
+                                    const c = d.contribution ?? 0;
+                                    const w = (Math.abs(c) / maxAbs) * 100;
+                                    return (
+                                        <li key={d.code}>
+                                            <button type="button" onClick={() => openDiv(d.code)}
+                                                className="group flex min-h-11 w-full items-center gap-2 rounded-lg px-2 text-left transition-colors duration-100 hover:bg-mk-surface-alt active:bg-mk-surface-alt lg:min-h-0 lg:py-1.5">
+                                                <span className="w-[44%] max-w-[9rem] shrink-0 truncate text-[13px] font-medium text-mk-text lg:w-[9rem] lg:text-xs" title={d.name}><span className="mr-1 text-mk-faint">{d.code}</span>{d.name}</span>
+                                                <span className="h-2.5 min-w-0 flex-1 rounded-full bg-mk-surface-alt"><span className="block h-2.5 rounded-full" style={{ width: `${w}%`, background: d.color }} /></span>
+                                                <span className="w-12 shrink-0 text-right text-[13px] font-semibold tnum lg:text-xs" style={{ color: c >= 0 ? '#0F172A' : '#16A34A' }}>{c > 0 ? '+' : ''}{formatDecimalPL(c, 2)}</span>
+                                                <ChevronRight size={14} aria-hidden className="shrink-0 text-mk-faint lg:opacity-0 lg:group-hover:opacity-100" />
+                                            </button>
+                                        </li>
+                                    );
+                                })}
+                            </ul>
+                        </MobileListClamp>
                     </SectionCard>
                 }
             />
 
-            {/* Pełna szerokość zamiast DenseTwoCol: wodospad vs krótkie „ruchy” / mapa ciepła
-                vs wkłady zostawiały pustą kolumnę obok niższej karty („pół strony”). */}
-            <SectionCard editorial titleVariant="label" title="Dekompozycja CPI" subtitle={`wkłady działów (pp)${dataDate ? ` · ${formatDataPeriodLabel(dataDate)}` : ''}`}>
-                <ResponsiveContainer width="100%" height={Math.min(280, Math.max(200, waterfall.length * 24))}>
-                    <BarChart data={waterfall} layout="vertical" margin={{ top: 4, right: 36, left: 4, bottom: 4 }} barCategoryGap={4}>
-                        <CartesianGrid stroke="#EDF0F5" horizontal={false} />
-                        <XAxis type="number" tick={{ fill: AXIS_INK, fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => formatDecimalPL(v, 1)} />
-                        <YAxis type="category" dataKey="name" width={120} tick={{ fill: '#475569', fontSize: 11 }} axisLine={false} tickLine={false} />
-                        <Tooltip trigger="click" isAnimationActive={false} cursor={{ fill: 'rgba(0,0,0,0.03)' }} content={({ active, payload }) => {
-                            if (!active || !payload?.length) return null;
-                            const p = payload[0].payload as { name: string; c: number };
-                            return <div style={{ background: '#fff', border: '1px solid #E7EAF0', borderRadius: 10, padding: '6px 10px', fontSize: 12, boxShadow: '0 6px 16px rgba(16,24,40,.12)' }}>
-                                <div style={{ fontWeight: 600, color: '#0F172A' }}>{p.name}</div><div style={{ color: '#64748B' }}>wkład {p.c > 0 ? '+' : ''}{formatDecimalPL(p.c, 2)} pp</div>
-                            </div>;
-                        }} />
-                        <Bar dataKey="base" stackId="a" fill="transparent" />
-                        <Bar dataKey="value" stackId="a" radius={[0, 3, 3, 0]}>
-                            {waterfall.map((r, i) => <Cell key={i} fill={r.total ? '#0F172A' : r.up ? '#DC2626' : '#16A34A'} />)}
-                        </Bar>
-                    </BarChart>
-                </ResponsiveContainer>
-            </SectionCard>
-
-            <SectionCard editorial titleVariant="label" title="Największe ruchy cen" subtitle="podkategorie COICOP"
+            <SectionCard editorial titleVariant="label" title="Największe ruchy cen" subtitle={`podkategorie COICOP · ${moverMetric === 'yoy' ? 'r/r' : 'm/m'} (%)`}
                 actions={<Segmented value={moverMetric} onChange={setMoverMetric} aria-label="Metryka zmian" options={[{ value: 'yoy', label: 'r/r' }, { value: 'mom', label: 'm/m' }]} />}>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     {[{ t: 'Zdrożało', arr: movers.risers, up: true }, { t: 'Staniało', arr: movers.fallers, up: false }].map((col) => (
                         <div key={col.t}>
-                            <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide" style={{ color: col.up ? '#DC2626' : '#16A34A' }}>{col.up ? '▲' : '▼'} {col.t}</div>
-                            <div className="space-y-1">
+                            <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide" style={{ color: col.up ? '#DC2626' : '#16A34A' }}>{col.up ? '▲' : '▼'} {col.t}</div>
+                            <div className="space-y-1.5 sm:space-y-1">
                                 {col.arr.slice(0, 6).map((m, i) => (
-                                    <div key={i} className="flex items-center gap-1.5 text-[11px]">
-                                        <span className="w-24 shrink-0 truncate text-mk-text-soft" title={`${m.name} · ${m.div}`}>{m.name}</span>
-                                        <span className="h-2 flex-1 rounded-full bg-mk-surface-alt"><span className="block h-2 rounded-full" style={{ width: `${(Math.abs(m.v) / movers.maxV) * 100}%`, marginLeft: m.v < 0 ? 'auto' : undefined, background: m.v >= 0 ? '#DC2626' : '#16A34A' }} /></span>
-                                        <span className="w-10 shrink-0 text-right font-semibold tnum" style={{ color: m.v >= 0 ? '#DC2626' : '#16A34A' }}>{m.v > 0 ? '+' : ''}{formatDecimalPL(m.v, 1)}</span>
+                                    <div key={i} className="flex items-center gap-1.5 text-xs sm:text-[11px]">
+                                        <span className="w-[46%] shrink-0 truncate text-mk-text-soft sm:w-24" title={`${m.name} · ${m.div}`}>{m.name}</span>
+                                        <span className="h-2 min-w-0 flex-1 rounded-full bg-mk-surface-alt"><span className="block h-2 rounded-full" style={{ width: `${(Math.abs(m.v) / movers.maxV) * 100}%`, marginLeft: m.v < 0 ? 'auto' : undefined, background: m.v >= 0 ? '#DC2626' : '#16A34A' }} /></span>
+                                        <span className="w-11 shrink-0 text-right font-semibold tnum sm:w-10" style={{ color: m.v >= 0 ? '#DC2626' : '#16A34A' }}>{m.v > 0 ? '+' : ''}{formatDecimalPL(m.v, 1)}</span>
                                     </div>
                                 ))}
                             </div>
@@ -381,47 +400,58 @@ export function InflacjaFull() {
                 </div>
             </SectionCard>
 
-            <SectionCard editorial titleVariant="label" title="Wkłady w czasie" subtitle="waga × r/r każdego działu (pp)">
-                {contribTime.length < 2 ? <QueryEmpty title="Brak danych" height={220} /> : (
-                    <ResponsiveContainer width="100%" height={220}>
-                        <AreaChart data={contribTime} margin={{ top: 4, right: 8, left: -8, bottom: 0 }}>
-                            <CartesianGrid stroke="#EDF0F5" vertical={false} />
-                            <XAxis dataKey="date" tick={{ fill: AXIS_INK, fontSize: 11 }} tickFormatter={monthTick} axisLine={{ stroke: '#E7EAF0' }} tickLine={false} minTickGap={36} interval="preserveStartEnd" />
-                            <YAxis tick={{ fill: AXIS_INK, fontSize: 11 }} axisLine={false} tickLine={false} width={36} tickFormatter={(v) => formatDecimalPL(v, 0)} />
-                            <Tooltip trigger="click" isAnimationActive={false} content={({ active, payload, label }) => {
-                                if (!active || !payload?.length) return null;
-                                const nums = payload.filter((p) => typeof p.value === 'number') as { value: number; color?: string; name?: string }[];
-                                const total = nums.reduce((s, p) => s + p.value, 0);
-                                const top = [...nums].filter((p) => Math.abs(p.value) > 0.01).sort((a, b) => Math.abs(b.value) - Math.abs(a.value)).slice(0, 4);
-                                return <div style={{ background: '#fff', border: '1px solid #E7EAF0', borderRadius: 10, padding: '6px 10px', fontSize: 11, boxShadow: '0 6px 16px rgba(16,24,40,.12)', minWidth: 170 }}>
-                                    <div style={{ fontWeight: 600, color: '#0F172A', marginBottom: 4 }}>{monthTick(String(label))} · ≈ {formatDecimalPL(total, 1)} pp</div>
-                                    {top.map((p, i) => <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#64748B', marginTop: 2 }}><span style={{ width: 7, height: 7, borderRadius: 2, background: p.color, flexShrink: 0 }} /><span style={{ flex: 1 }}>{p.name}</span><span style={{ fontWeight: 600, color: '#0F172A' }}>{formatDecimalPL(p.value, 2)}</span></div>)}
-                                </div>;
-                            }} />
-                            {divisions.map((d, i) => <Area key={d.code} type="monotone" dataKey={d.code} name={d.name} stackId="1" stroke="none" fill={colorFor(i)} fillOpacity={0.88} />)}
-                        </AreaChart>
-                    </ResponsiveContainer>
-                )}
-            </SectionCard>
+            {/* Analizy drugorzędne — na telefonie zwinięte (strona miała ~4,6 tys. px). */}
+            <MobileMore label="Pokaż więcej analiz (3)" hint="dekompozycja · wkłady w czasie · mapa ciepła">
+                <SectionCard editorial titleVariant="label" title="Dekompozycja CPI" subtitle={`wkłady działów (pp)${dataDate ? ` · ${formatDataPeriodLabel(dataDate)}` : ''}`}>
+                    <WaterfallChart rows={waterfall} trigger={tooltipTrigger} />
+                </SectionCard>
 
-            <SectionCard editorial titleVariant="label" title="Mapa ciepła" subtitle={heatMetric === 'yoy' ? 'r/r · 10 lat' : 'm/m · 2026'}
-                actions={<Segmented value={heatMetric} onChange={setHeatMetric} aria-label="Metryka mapy ciepła" options={[{ value: 'yoy', label: 'r/r' }, { value: 'mom', label: 'm/m' }]} />}>
-                {heatCols.length < 2 ? <QueryEmpty title="Brak danych" height={220} /> : (
-                    <Heatmap rows={heatRows} cols={heatCols} valueAt={heatValue} unit="%" colTickFormatter={monthTick} valueFormatter={(v) => formatDecimalPL(v, 1)} onRowClick={openDiv} cellHeight={heatMetric === 'yoy' ? 16 : 20} />
-                )}
-            </SectionCard>
+                <SectionCard editorial titleVariant="label" title="Wkłady w czasie" subtitle="waga × r/r każdego działu (pp)">
+                    {contribTime.length < 2 ? <QueryEmpty title="Brak danych" height={220} /> : (
+                        <ResponsiveContainer width="100%" height={220}>
+                            <AreaChart data={contribTime} margin={{ top: 4, right: 8, left: -8, bottom: 0 }}>
+                                <CartesianGrid stroke="#EDF0F5" vertical={false} />
+                                <XAxis dataKey="date" tick={{ fill: AXIS_INK, fontSize: 11 }} tickFormatter={monthTick} axisLine={{ stroke: '#E7EAF0' }} tickLine={false} minTickGap={36} interval="preserveStartEnd" />
+                                <YAxis tick={{ fill: AXIS_INK, fontSize: 11 }} axisLine={false} tickLine={false} width={36} tickFormatter={(v) => formatDecimalPL(v, 0)} />
+                                <Tooltip trigger={tooltipTrigger} isAnimationActive={false} content={({ active, payload, label }) => {
+                                    if (!active || !payload?.length) return null;
+                                    const nums = payload.filter((p) => typeof p.value === 'number') as { value: number; color?: string; name?: string }[];
+                                    const total = nums.reduce((s, p) => s + p.value, 0);
+                                    const top = [...nums].filter((p) => Math.abs(p.value) > 0.01).sort((a, b) => Math.abs(b.value) - Math.abs(a.value)).slice(0, 4);
+                                    return <div style={{ background: '#fff', border: '1px solid #E7EAF0', borderRadius: 10, padding: '6px 10px', fontSize: 11, boxShadow: '0 6px 16px rgba(16,24,40,.12)', minWidth: 170, maxWidth: 240 }}>
+                                        <div style={{ fontWeight: 600, color: '#0F172A', marginBottom: 4 }}>{monthTick(String(label))} · ≈ {formatDecimalPL(total, 1)} pp</div>
+                                        {top.map((p, i) => <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#64748B', marginTop: 2 }}><span style={{ width: 7, height: 7, borderRadius: 2, background: p.color, flexShrink: 0 }} /><span style={{ flex: 1 }}>{p.name}</span><span style={{ fontWeight: 600, color: '#0F172A' }}>{formatDecimalPL(p.value, 2)}</span></div>)}
+                                    </div>;
+                                }} />
+                                {divisions.map((d, i) => <Area key={d.code} type="monotone" dataKey={d.code} name={d.name} stackId="1" stroke="none" fill={colorFor(i)} fillOpacity={0.88} />)}
+                            </AreaChart>
+                        </ResponsiveContainer>
+                    )}
+                </SectionCard>
+
+                <SectionCard editorial titleVariant="label" title="Mapa ciepła" subtitle={heatMetric === 'yoy' ? 'dział × okres · r/r (%) · 10 lat' : 'dział × miesiąc · m/m (%) · 2026'}
+                    actions={<Segmented value={heatMetric} onChange={setHeatMetric} aria-label="Metryka mapy ciepła" options={[{ value: 'yoy', label: 'r/r' }, { value: 'mom', label: 'm/m' }]} />}>
+                    {heatCols.length < 2 ? <QueryEmpty title="Brak danych" height={220} /> : (
+                        <Heatmap rows={heatRows} cols={heatCols} valueAt={heatValue} unit="%" colTickFormatter={monthTick} valueFormatter={(v) => formatDecimalPL(v, 1)} onRowClick={openDiv} cellHeight={heatMetric === 'yoy' ? 16 : 20} />
+                    )}
+                </SectionCard>
+            </MobileMore>
+
+            <MobileOnly>
+                <RelatedNews topic="ceny" limit={3} title="Newsy — ceny i inflacja" variant="rail" />
+            </MobileOnly>
 
             {/* ── Drawer: szczegóły klikniętego działu ── */}
             <Drawer open={drawerOpen && !!sel} onClose={() => setDrawerOpen(false)} accent={selColor}
                 title={sel ? `${sel.code} · ${sel.name}` : ''} subtitle={sel ? `waga ${formatDecimalPL(sel.weight, 1)}% koszyka inflacyjnego` : ''}>
                 {sel && (
                     <div className="space-y-5">
-                        <div className="grid grid-cols-4 gap-2">
+                        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                             {[
                                 { l: 'r/r', v: sel.yoy != null ? `${sel.yoy > 0 ? '+' : ''}${formatDecimalPL(sel.yoy, 1)}%` : '—' },
                                 { l: 'm/m', v: sel.mom != null ? `${sel.mom > 0 ? '+' : ''}${formatDecimalPL(sel.mom, 1)}%` : '—' },
                                 { l: 'waga', v: `${formatDecimalPL(sel.weight, 1)}%` },
-                                { l: 'wkład', v: sel.contribution != null ? `${sel.contribution > 0 ? '+' : ''}${formatDecimalPL(sel.contribution, 2)}` : '—' },
+                                { l: 'wkład w CPI', v: sel.contribution != null ? `${sel.contribution > 0 ? '+' : ''}${formatDecimalPL(sel.contribution, 2)} pp` : '—' },
                             ].map((x) => (
                                 <div key={x.l} className="rounded-xl border border-mk-border p-2 text-center">
                                     <div className="text-[11px] text-mk-muted">{x.l}</div>
@@ -458,18 +488,18 @@ export function InflacjaFull() {
                                         const isExp = expandedSub === s.code;
                                         return (
                                             <div key={s.code}>
-                                                <button onClick={() => setExpandedSub(isExp ? null : s.code)}
-                                                    className={`flex w-full items-center gap-2 rounded-md px-1.5 py-1 text-left text-xs transition-colors ${isExp ? 'bg-mk-surface-alt' : 'hover:bg-mk-surface-alt'}`}>
+                                                <button type="button" aria-expanded={isExp} onClick={() => setExpandedSub(isExp ? null : s.code)}
+                                                    className={`flex min-h-11 w-full items-center gap-2 rounded-md px-1.5 text-left text-xs transition-colors duration-100 active:bg-mk-surface-alt lg:min-h-0 lg:py-1 ${isExp ? 'bg-mk-surface-alt' : 'hover:bg-mk-surface-alt'}`}>
                                                     <ChevronRight size={12} className="shrink-0 text-mk-faint transition-transform" style={{ transform: isExp ? 'rotate(90deg)' : undefined }} />
-                                                    <span className="w-[8.5rem] shrink-0 truncate text-mk-text-soft" title={s.name}>{s.name}</span>
-                                                    <span className="h-2.5 flex-1 rounded-full bg-mk-surface-alt"><span className="block h-2.5 rounded-full" style={{ width: `${w}%`, marginLeft: y < 0 ? 'auto' : undefined, background: y >= 0 ? selColor : '#16A34A' }} /></span>
+                                                    <span className="w-[40%] max-w-[8.5rem] shrink-0 truncate text-mk-text-soft sm:w-[8.5rem]" title={s.name}>{s.name}</span>
+                                                    <span className="h-2.5 min-w-0 flex-1 rounded-full bg-mk-surface-alt"><span className="block h-2.5 rounded-full" style={{ width: `${w}%`, marginLeft: y < 0 ? 'auto' : undefined, background: y >= 0 ? selColor : '#16A34A' }} /></span>
                                                     <span className="w-12 shrink-0 text-right font-semibold tnum" style={{ color: y >= 0 ? '#DC2626' : '#16A34A' }}>{y > 0 ? '+' : ''}{formatDecimalPL(y, 1)}%</span>
                                                 </button>
                                                 {isExp && (
-                                                    <div className="mb-1.5 ml-5 mt-1 rounded-lg border border-mk-border p-3">
+                                                    <div className="mb-1.5 mt-1 rounded-lg border border-mk-border p-3 sm:ml-5">
                                                         <p className="text-xs font-semibold leading-snug text-mk-text">{s.name}</p>
                                                         {(SUB_INFO[s.code] || subFallback(s.name)) && <p className="mb-2 mt-0.5 text-xs leading-relaxed text-mk-text-soft">{SUB_INFO[s.code] ?? subFallback(s.name)}</p>}
-                                                        <div className="mb-1 mt-2 text-[10px] font-semibold uppercase tracking-wide text-mk-faint">Trend cen — {METRIC_LABEL[divMetric]} · GUS (miesięcznie od 2026)</div>
+                                                        <div className="mb-1 mt-2 text-[11px] font-semibold uppercase tracking-wide text-mk-faint">Trend cen — {METRIC_LABEL[divMetric]} · GUS (miesięcznie od 2026)</div>
                                                         {subChange.length > 1 ? (
                                                             <InteractiveChart data={subChange} xKey="date" height={150} unit="%" showRange initialRange="ALL" ranges={['1R', '5L', 'ALL']}
                                                                 valueFormatter={(v) => formatDecimalPL(v, 1)} xTickFormatter={monthTick} referenceLines={[{ y: 0, color: '#CBD2DD' }]}

@@ -2,7 +2,9 @@
 
 // Globalna paleta poleceń (⌘K / Ctrl+K) — nowoczesny mechanizm nawigacji „napisz czego szukasz".
 // Fuzzy-search bez diakrytyków po zakładkach, wskaźnikach i działach inflacji; deep-linki do
-// pod-zakładek przez ?tab=. Otwierana skrótem ⌘K lub zdarzeniem `mk:palette` (z przycisku w headerze).
+// pod-zakładek przez ?tab=. Otwierana skrótem ⌘K lub zdarzeniem `mk:palette` (z przycisku w headerze,
+// z arkusza „Więcej”). Poniżej `sm` — pełny ekran jak wyszukiwarka w aplikacji: pole 16 px (iOS nie
+// zoomuje), wyniki ≥ 48 px, wysokość = visual viewport (klawiatura nie zasłania listy).
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
@@ -44,7 +46,6 @@ const COMMANDS: Cmd[] = [
     { id: 'ind-regpkb', group: 'Wskaźniki', label: 'PKB regionalne', sub: 'Regiony', keywords: 'województwa pkb per capita mapa', href: '/regiony?tab=pkb', icon: Map },
     { id: 'ind-demo', group: 'Wskaźniki', label: 'Demografia', sub: 'Regiony', keywords: 'ludność demografia województwa', href: '/regiony?tab=demografia', icon: Users },
     { id: 'ind-regpraca', group: 'Wskaźniki', label: 'Bezrobocie i płace wg województw', sub: 'Regiony', keywords: 'bezrobocie regionalne województwa mapa płace wynagrodzenia', href: '/regiony?tab=praca', icon: Briefcase },
-    { id: 'ind-smup', group: 'Wskaźniki', label: 'Samorząd (SMUP)', sub: 'Regiony', keywords: 'samorząd usługi publiczne smup jst', href: '/regiony?tab=samorzad', icon: Landmark },
 
     // ── Działy inflacji (COICOP) → /ceny ──
     ...[
@@ -57,6 +58,22 @@ const COMMANDS: Cmd[] = [
         ['Restauracje i hotele', 'restauracje hotele gastronomia zakwaterowanie'],
     ].map(([label, kw], i) => ({ id: `div-${i}`, group: 'Działy inflacji', label: label as string, sub: 'Ceny', keywords: kw as string, href: '/ceny?tab=inflacja', icon: Fuel })),
 ];
+
+/**
+ * iOS otwiera klawiaturę tylko dla `focus()` wywołanego synchronicznie w geście użytkownika, a pole
+ * palety powstaje dopiero po renderze. Fokus na tymczasowym, niewidocznym polu w samym geście
+ * otwiera klawiaturę; przeniesienie fokusu na właściwe pole już jej nie zamyka.
+ */
+function primeTouchKeyboard() {
+    if (!window.matchMedia('(pointer: coarse)').matches) return;
+    const proxy = document.createElement('input');
+    proxy.setAttribute('aria-hidden', 'true');
+    proxy.tabIndex = -1;
+    proxy.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;font-size:16px;border:0;padding:0;pointer-events:none;';
+    document.body.appendChild(proxy);
+    proxy.focus({ preventScroll: true });
+    window.setTimeout(() => proxy.remove(), 600);
+}
 
 // Normalizacja bez diakrytyków + lowercase (żeby „zywnosc" trafiało „Żywność").
 const norm = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[łŁ]/g, 'l').toLowerCase();
@@ -82,6 +99,7 @@ export function CommandPalette() {
     const inputRef = useRef<HTMLInputElement>(null);
     const listRef = useRef<HTMLDivElement>(null);
     const panelRef = useRef<HTMLDivElement>(null);
+    const rootRef = useRef<HTMLDivElement>(null);
     const close = useCallback(() => setOpen(false), []);
     useFocusTrap(open, panelRef, close);
 
@@ -94,7 +112,7 @@ export function CommandPalette() {
                 setOpen((o) => !o);
             }
         };
-        const onEvt = () => { rememberOpener(); setOpen(true); };
+        const onEvt = () => { rememberOpener(); primeTouchKeyboard(); setOpen(true); };
         window.addEventListener('keydown', onKey);
         window.addEventListener('mk:palette', onEvt);
         return () => { window.removeEventListener('keydown', onKey); window.removeEventListener('mk:palette', onEvt); };
@@ -115,6 +133,38 @@ export function CommandPalette() {
         document.body.style.overflow = 'hidden';
         return () => { document.body.style.overflow = prev; };
     }, [open]);
+
+    // Telefon (< sm): pełny ekran o wysokości visual viewport. Gdy klawiatura jest otwarta, layout
+    // viewport się nie zmienia (iOS, Chrome Android) — bez tego dół listy wyników leżałby pod klawiaturą.
+    useEffect(() => {
+        const root = rootRef.current;
+        const vv = window.visualViewport;
+        if (!open || !root || !vv) return;
+        const sm = window.matchMedia('(min-width: 640px)');
+        const apply = () => {
+            if (sm.matches) {
+                root.style.removeProperty('height');
+                root.style.removeProperty('top');
+                return;
+            }
+            root.style.height = `${vv.height}px`;
+            root.style.top = `${vv.offsetTop}px`;
+        };
+        apply();
+        vv.addEventListener('resize', apply);
+        vv.addEventListener('scroll', apply);
+        sm.addEventListener('change', apply);
+        return () => {
+            vv.removeEventListener('resize', apply);
+            vv.removeEventListener('scroll', apply);
+            sm.removeEventListener('change', apply);
+        };
+    }, [open]);
+
+    // Przewinięcie listy palcem chowa klawiaturę (jak wyszukiwarki w iOS/Android) — więcej wyników.
+    const onListTouchMove = () => {
+        if (document.activeElement === inputRef.current) inputRef.current?.blur();
+    };
 
     const results = useMemo(() => {
         const query = norm(q.trim());
@@ -153,37 +203,85 @@ export function CommandPalette() {
         if (g) g.items.push(entry); else groups.push({ name: c.group, items: [entry] });
     }
 
+    const activeId = results[active] ? `mk-cmd-${results[active].id}` : undefined;
+    // Paleta renderuje się tylko po otwarciu (nigdy w SSR), więc odczyt szerokości tutaj jest bezpieczny.
+    // Na telefonie obok pola jest „Anuluj” — pełny placeholder byłby ucięty w pół słowa.
+    const compact = window.matchMedia('(max-width: 639px)').matches;
+
     return createPortal(
-        <div className="fixed inset-0 z-[70] flex items-start justify-center p-3 pt-[8vh] sm:px-4 sm:pt-[12vh]" role="dialog" aria-modal="true" aria-label="Paleta poleceń">
-            <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-[2px]" onClick={close} />
-            <div ref={panelRef} className="relative w-full max-w-xl overflow-hidden rounded-2xl border border-mk-border bg-mk-surface shadow-2xl" onKeyDown={onKeyDown}>
-                <div className="flex items-center gap-2.5 border-b border-mk-border px-4">
-                    <Search size={18} className="shrink-0 text-mk-faint" />
-                    <input ref={inputRef} value={q} onChange={(e) => { setQ(e.target.value); setActive(0); }} placeholder="Szukaj wskaźnika, zakładki, działu…"
-                        className="h-14 flex-1 bg-transparent text-[15px] text-mk-text outline-none placeholder:text-mk-faint" />
+        <div
+            ref={rootRef}
+            className="fixed inset-x-0 top-0 z-[70] flex h-dvh items-stretch justify-center sm:inset-0 sm:h-auto sm:items-start sm:p-3 sm:px-4 sm:pt-[12vh]"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Paleta poleceń"
+        >
+            <div className="absolute inset-0 hidden bg-slate-900/40 backdrop-blur-[2px] sm:block" onClick={close} />
+            <div
+                ref={panelRef}
+                className="relative flex w-full flex-col overflow-hidden bg-mk-surface pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)] pt-[env(safe-area-inset-top)] [-webkit-tap-highlight-color:transparent] sm:max-w-xl sm:rounded-2xl sm:border sm:border-mk-border sm:p-0 sm:shadow-2xl"
+                onKeyDown={onKeyDown}
+            >
+                <div className="flex shrink-0 items-center gap-2.5 border-b border-mk-border pl-4 pr-1 sm:pr-4">
+                    <Search size={18} className="shrink-0 text-mk-faint" aria-hidden />
+                    <input
+                        ref={inputRef}
+                        value={q}
+                        onChange={(e) => { setQ(e.target.value); setActive(0); }}
+                        placeholder={compact ? 'Szukaj wskaźnika…' : 'Szukaj wskaźnika, zakładki, działu…'}
+                        type="search"
+                        inputMode="search"
+                        enterKeyHint="go"
+                        autoComplete="off"
+                        autoCorrect="off"
+                        autoCapitalize="none"
+                        spellCheck={false}
+                        role="combobox"
+                        aria-label="Szukaj wskaźnika, zakładki, działu"
+                        aria-expanded={results.length > 0}
+                        aria-controls="mk-palette-list"
+                        aria-autocomplete="list"
+                        aria-activedescendant={activeId}
+                        className="h-14 min-w-0 flex-1 bg-transparent text-base text-mk-text outline-none placeholder:text-mk-faint sm:text-[15px] [&::-webkit-search-cancel-button]:hidden"
+                    />
                     <kbd className="hidden shrink-0 rounded-md border border-mk-border px-1.5 py-0.5 text-[11px] text-mk-faint sm:block">ESC</kbd>
+                    <button
+                        type="button"
+                        onClick={close}
+                        className="flex h-11 shrink-0 items-center rounded-lg px-3 text-[15px] font-medium text-mk-primary active:bg-mk-surface-alt sm:hidden"
+                    >
+                        Anuluj
+                    </button>
                 </div>
 
-                <div ref={listRef} className="max-h-[52vh] overflow-y-auto py-2">
+                <div
+                    ref={listRef}
+                    id="mk-palette-list"
+                    role="listbox"
+                    aria-label="Wyniki"
+                    onTouchMove={onListTouchMove}
+                    className="min-h-0 flex-1 overflow-y-auto overscroll-contain py-2 pb-[calc(8px+env(safe-area-inset-bottom))] sm:max-h-[52vh] sm:flex-none sm:pb-2"
+                >
                     {results.length === 0 ? (
                         <div className="px-4 py-10 text-center text-sm text-mk-faint">Brak wyników dla „{q}”</div>
                     ) : groups.map((g) => (
-                        <div key={g.name} className="mb-1">
-                            <div className="px-4 py-1 text-[11px] font-semibold uppercase tracking-wide text-mk-faint">{g.name}</div>
+                        <div key={g.name} role="group" aria-label={g.name} className="mb-1">
+                            <div aria-hidden className="px-4 py-1 text-[11px] font-semibold uppercase tracking-wide text-mk-faint">{g.name}</div>
                             {g.items.map(({ cmd, i }) => {
                                 const Icon = cmd.icon;
                                 const on = i === active;
                                 return (
-                                    <button key={cmd.id} type="button" data-idx={i} onMouseMove={() => setActive(i)} onClick={() => go(cmd)}
-                                        className={`flex min-h-10 w-full items-center gap-3 px-4 py-2 text-left transition-colors ${on ? 'bg-mk-primary/10' : ''}`}>
-                                        <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${on ? 'bg-mk-primary text-white' : 'bg-mk-surface-alt text-mk-muted'}`}>
-                                            <Icon size={15} />
+                                    <button key={cmd.id} id={`mk-cmd-${cmd.id}`} type="button" role="option" aria-selected={on} tabIndex={-1} data-idx={i}
+                                        onMouseMove={() => setActive(i)} onClick={() => go(cmd)}
+                                        className={`flex min-h-12 w-full items-center gap-3 px-4 py-2 text-left transition-colors active:bg-mk-primary/10 sm:min-h-10 ${on ? 'bg-mk-primary/10' : ''}`}>
+                                        <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg sm:h-7 sm:w-7 ${on ? 'bg-mk-primary text-white' : 'bg-mk-surface-alt text-mk-muted'}`}>
+                                            <Icon size={15} aria-hidden />
                                         </span>
                                         <span className="min-w-0 flex-1">
-                                            <span className="block truncate text-sm font-medium text-mk-text">{cmd.label}</span>
+                                            <span className="block truncate text-[15px] font-medium text-mk-text sm:text-sm">{cmd.label}</span>
                                             {cmd.sub && <span className="block truncate text-xs text-mk-faint">{cmd.sub}</span>}
                                         </span>
-                                        {on && <CornerDownLeft size={14} className="shrink-0 text-mk-faint" />}
+                                        {on && <CornerDownLeft size={14} className="hidden shrink-0 text-mk-faint sm:block" aria-hidden />}
                                     </button>
                                 );
                             })}
@@ -191,7 +289,7 @@ export function CommandPalette() {
                     ))}
                 </div>
 
-                <div className="flex items-center justify-between border-t border-mk-border px-4 py-2 text-[11px] text-mk-faint">
+                <div className="hidden items-center justify-between border-t border-mk-border px-4 py-2 text-[11px] text-mk-faint sm:flex">
                     <span className="flex items-center gap-2">
                         <kbd className="rounded border border-mk-border px-1">↑</kbd><kbd className="rounded border border-mk-border px-1">↓</kbd> nawigacja
                         <kbd className="ml-1 rounded border border-mk-border px-1">↵</kbd> wybór

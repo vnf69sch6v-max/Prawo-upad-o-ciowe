@@ -14,12 +14,19 @@ interface SliderProps {
     valueText: string;
 }
 
-/** Zakres z etykietą i `aria-valuetext` (WCAG 1.3.1 / 4.1.2). */
+/**
+ * Zakres z etykietą i `aria-valuetext` (WCAG 1.3.1 / 4.1.2).
+ *
+ * Telefon: natywny suwak Chrome/Safari ma kciuk ~16–20 px i cel ~28 px — palcem trafia się
+ * w tor, nie w kciuk. `.mk-range` (globals.css) daje kciuk 28 px, wysokość celu 44 px
+ * i wypełnienie toru do bieżącej wartości (`--pct`).
+ */
 export function Slider({ id, label, value, min, max, step, onChange, display, valueText }: SliderProps) {
     const inputId = id ?? `slider-${label.replace(/\s+/g, '-').toLowerCase()}`;
+    const pct = max > min ? ((value - min) / (max - min)) * 100 : 0;
     return (
         <div>
-            <div className="mb-1.5 flex items-baseline justify-between gap-3">
+            <div className="mb-0.5 flex items-baseline justify-between gap-3">
                 <label className="mk-label" htmlFor={inputId}>{label}</label>
                 <span className="text-lg font-bold tnum text-mk-text" aria-hidden>{display}</span>
             </div>
@@ -35,8 +42,8 @@ export function Slider({ id, label, value, min, max, step, onChange, display, va
                 aria-valuemax={max}
                 aria-valuenow={value}
                 aria-valuetext={valueText}
-                className="h-7 w-full"
-                style={{ accentColor: 'var(--color-mk-primary)' }}
+                className="mk-range"
+                style={{ ['--pct' as string]: `${pct}%` }}
             />
         </div>
     );

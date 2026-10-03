@@ -3,6 +3,7 @@
 import * as React from "react";
 import type { ExtractedRow, Period } from "@/lib/parser/types";
 import { SectionHeader, DataCell } from "@/components/parser/ui/primitives";
+import { ScrollTable } from "@/components/parser/ScrollTable";
 import { useScale } from "@/components/parser/ScaleContext";
 import { pl } from "@/lib/parser/copy.pl";
 import { cn } from "@/lib/utils/cn";
@@ -51,7 +52,7 @@ function RowTable({
   }
 
   return (
-    <div className="mk-table-wrap">
+    <ScrollTable>
       <table className="w-full min-w-[560px] border-collapse text-left">
         <thead className="sticky top-0 z-10 bg-rp-surface-raised">
           <tr className="border-b border-rp-hairline">
@@ -85,7 +86,7 @@ function RowTable({
               >
                 <td
                   className={cn(
-                    "sticky left-0 max-w-[280px] bg-rp-surface-raised py-1.5 pr-3 text-[13px] sm:max-w-[360px]",
+                    "sticky left-0 max-w-[160px] bg-rp-surface-raised py-1.5 pr-3 text-[13px] sm:max-w-[360px]",
                     major ? "font-medium text-rp-data" : "text-rp-data",
                   )}
                 >
@@ -111,7 +112,7 @@ function RowTable({
           })}
         </tbody>
       </table>
-    </div>
+    </ScrollTable>
   );
 }
 
@@ -182,23 +183,28 @@ export function AllRowsView({
     <div className="space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <span className="mk-section-label">{pl.allRows.unit(shown)}</span>
-        <div className="flex flex-wrap items-center gap-2">
-          <label className="flex cursor-pointer items-center gap-1.5 text-[11px] text-rp-data-muted">
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
+          <input
+            type="search"
+            inputMode="search"
+            enterKeyHint="search"
+            autoComplete="off"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder={pl.allRows.filterPlaceholder}
+            aria-label={pl.allRows.filterPlaceholder}
+            className="mk-input h-11 w-full py-0 max-lg:text-base! sm:max-w-xs lg:h-8 lg:text-xs"
+          />
+          {/* Cały podpis jest celem dotyku (44 px), nie tylko 12-pikselowy checkbox. */}
+          <label className="flex min-h-11 cursor-pointer items-center gap-2 text-sm text-rp-data-muted sm:order-first lg:min-h-0 lg:gap-1.5 lg:text-[11px]">
             <input
               type="checkbox"
               checked={moneyOnly}
               onChange={(e) => setMoneyOnly(e.target.checked)}
-              className="h-3 w-3 accent-mk-primary"
+              className="h-5 w-5 accent-mk-primary lg:h-3 lg:w-3"
             />
             {pl.allRows.moneyOnly}
           </label>
-          <input
-            type="search"
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder={pl.allRows.filterPlaceholder}
-            className="mk-input h-8 w-full max-w-xs py-0 text-xs"
-          />
         </div>
       </div>
 
@@ -216,7 +222,7 @@ export function AllRowsView({
             </button>
           ))}
         </div>
-        <span className="ml-auto overline">{active.unitLabel}</span>
+        <span className="overline sm:ml-auto">{active.unitLabel}</span>
       </div>
 
       {sections.length === 0 ? (

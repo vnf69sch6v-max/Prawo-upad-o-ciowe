@@ -21,7 +21,9 @@ async function fetchNBPRates(): Promise<{ rates: NBPRate[]; publishDate: string 
     const res = await fetch(
         'https://static.nbp.pl/dane/stopy/stopy_procentowe.xml',
         {
-            next: { revalidate: 86400 },
+            // Bez Data Cache (stale-while-revalidate): po decyzji RPP stara stopa wisiała do doby.
+            // Plik statyczny NBP, bez limitu — świeżość trzyma CDN (`s-maxage` w odpowiedzi poniżej).
+            cache: 'no-store',
             headers: {
                 'User-Agent': 'Mozilla/5.0 (compatible; EcoDashboard/1.0)',
                 'Accept': 'application/xml, text/xml',
@@ -87,7 +89,7 @@ export async function GET() {
             source: 'static.nbp.pl/dane/stopy/stopy_procentowe.xml',
             publishDate,
             rates,
-        });
+        }, { headers: { 'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=600' } });
     } catch (error) {
         return NextResponse.json({ error: String(error) }, { status: 500 });
     }

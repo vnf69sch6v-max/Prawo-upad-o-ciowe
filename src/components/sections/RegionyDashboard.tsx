@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react';
 import { MapPin, Users, Award, Scale, TrendingDown } from 'lucide-react';
 import { useRegionalGus } from '@/lib/hooks';
-import { formatNumber } from '@/lib/formatters';
+import { formatDecimalPL, formatNumber } from '@/lib/formatters';
 import { Segmented } from '@/components/ui/Segmented';
 import { EditorialHero } from '@/components/ui/EditorialHero';
 import { CompactKpiGrid, type CompactKpiItem } from '@/components/ui/CompactKpiGrid';
@@ -14,12 +14,22 @@ import { PublicationDatesPanel } from '@/components/ui/PublicationDatesPanel';
 import { Choropleth, type ChoroItem } from '@/components/ui/Choropleth';
 import { RankingBars } from '@/components/ui/RankingBars';
 import { QueryState } from '@/components/ui/QueryState';
+import { MobileListClamp, MobileOnly, MobileTabs } from '@/components/sections/mobile-layout';
 
 type MapView = 'pkb' | 'ludnosc';
+const VIEW_OPTIONS: { value: MapView; label: string }[] = [
+    { value: 'pkb', label: 'PKB' },
+    { value: 'ludnosc', label: 'Ludność' },
+];
+const VIEW_OPTIONS_MOBILE: { value: MapView; label: string }[] = [
+    { value: 'pkb', label: 'PKB na mieszkańca' },
+    { value: 'ludnosc', label: 'Ludność' },
+];
 
 const pln = (v: number) => `${formatNumber(v, 0)} zł`;
-const mln = (v: number) => `${(v / 1e6).toFixed(2)} mln`;
-const mln1 = (v: number) => `${(v / 1e6).toFixed(1)}`;
+// Polski separator dziesiętny (było `toFixed` → „37.33 mln", „2.3×").
+const mln = (v: number) => `${formatDecimalPL(v / 1e6, 2)} mln`;
+const mln1 = (v: number) => formatDecimalPL(v / 1e6, 1);
 const woj = (name: string) => name.replace(/^województwo /i, '');
 
 /** Gęsty dashboard regionów — PKB i ludność GUS BDL, mapa + ranking. */
@@ -36,8 +46,8 @@ export function RegionyDashboard() {
     const botGdp = byGdp.length ? byGdp[byGdp.length - 1] : null;
     const topPop = byPop[0] ?? null;
     const botPop = byPop.length ? byPop[byPop.length - 1] : null;
-    const gdpRatio = topGdp?.gdpPerCapita && botGdp?.gdpPerCapita ? (topGdp.gdpPerCapita / botGdp.gdpPerCapita).toFixed(1) : null;
-    const popRatio = topPop?.population && botPop?.population ? (topPop.population / botPop.population).toFixed(1) : null;
+    const gdpRatio = topGdp?.gdpPerCapita && botGdp?.gdpPerCapita ? formatDecimalPL(topGdp.gdpPerCapita / botGdp.gdpPerCapita, 1) : null;
+    const popRatio = topPop?.population && botPop?.population ? formatDecimalPL(topPop.population / botPop.population, 1) : null;
 
     const selected = regions.find((r) => r.slug === sel) ?? null;
     const isPkb = view === 'pkb';
@@ -137,9 +147,15 @@ export function RegionyDashboard() {
 
             <CompactKpiGrid items={compactKpis} label="Wskaźniki uzupełniające" />
 
-            {/* Poniżej lg: ranking przed mapą (16 woj. ≈ 40px — etykiety nieczytelne). Desktop: news | mapa | ranking. */}
+            {/* Telefon: przełącznik widoku nad rankingiem i mapą (w karcie mapy był pod 16-wierszowym rankingiem). */}
+            <section aria-label="Widok województw" className="lg:hidden">
+                <h2 className="mk-section-label mb-1">Województwa według</h2>
+                <MobileTabs value={view} onChange={setView} options={VIEW_OPTIONS_MOBILE} ariaLabel="Widok rankingu i mapy" sticky={false} />
+            </section>
+
+            {/* Poniżej lg: ranking (5 + „Pokaż wszystkie") przed mapą; newsy na końcu strony. Desktop: news | mapa | ranking. */}
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-12 lg:items-start">
-                <div className="order-1 min-w-0 lg:order-1 lg:col-span-3">
+                <div className="hidden min-w-0 lg:order-1 lg:col-span-3 lg:block">
                     <RelatedNews topic="gospodarka" limit={3} title="Powiązane newsy" />
                 </div>
                 <div className="order-3 min-w-0 space-y-4 lg:order-2 lg:col-span-5" data-region-map>
@@ -149,15 +165,9 @@ export function RegionyDashboard() {
                         title={isPkb ? 'PKB na mieszkańca — mapa' : 'Ludność — mapa województw'}
                         subtitle={isPkb ? `GUS BDL · zł/mieszkańca · ${data?.gdpYear ?? ''}` : `GUS BDL · mln · ${data?.popYear ?? ''}`}
                         actions={
-                            <Segmented
-                                value={view}
-                                onChange={setView}
-                                options={[
-                                    { value: 'pkb', label: 'PKB' },
-                                    { value: 'ludnosc', label: 'Ludność' },
-                                ]}
-                                aria-label="Widok mapy"
-                            />
+                            <div className="hidden lg:block">
+                                <Segmented value={view} onChange={setView} options={VIEW_OPTIONS} aria-label="Widok mapy" />
+                            </div>
                         }
                     >
                         <QueryState
@@ -211,7 +221,7 @@ export function RegionyDashboard() {
                         editorial
                         titleVariant="label"
                         title="Ranking województw"
-                        subtitle={isPkb ? 'PKB na mieszkańca (zł)' : 'Liczba ludności'}
+                        subtitle={isPkb ? `PKB na mieszkańca (zł) · ${data?.gdpYear ?? ''}` : `liczba ludności · ${data?.popYear ?? ''}`}
                         padded
                         className="min-w-0"
                     >
@@ -224,14 +234,16 @@ export function RegionyDashboard() {
                                 height={160}
                                 emptyTitle="Brak danych województw"
                             >
-                                <RankingBars
-                                    rows={isPkb ? byGdp : byPop}
-                                    valueOf={(r) => (isPkb ? r.gdpPerCapita : r.population)}
-                                    format={isPkb ? (v) => formatNumber(v, 0) : mln}
-                                    colors={isPkb ? RANK_BLUE : RANK_VIOLET}
-                                    selected={sel}
-                                    onSelect={setSel}
-                                />
+                                <MobileListClamp total={regions.length} noun="województwa">
+                                    <RankingBars
+                                        rows={isPkb ? byGdp : byPop}
+                                        valueOf={(r) => (isPkb ? r.gdpPerCapita : r.population)}
+                                        format={isPkb ? (v) => formatNumber(v, 0) : mln}
+                                        colors={isPkb ? RANK_BLUE : RANK_VIOLET}
+                                        selected={sel}
+                                        onSelect={setSel}
+                                    />
+                                </MobileListClamp>
                             </QueryState>
                         </div>
                     </SectionCard>
@@ -239,6 +251,10 @@ export function RegionyDashboard() {
             </div>
 
             <PublicationDatesPanel count={4} variant="overview" />
+
+            <MobileOnly>
+                <RelatedNews topic="gospodarka" limit={3} title="Powiązane newsy" variant="rail" />
+            </MobileOnly>
 
             <p className="text-center text-[11px] text-mk-faint">
                 Źródło: GUS BDL · PKB {data?.gdpYear ?? '—'} · ludność {data?.popYear ?? '—'}

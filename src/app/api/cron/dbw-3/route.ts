@@ -1,7 +1,7 @@
 // Cron DBW grupa 3 (harmonogram 04:00) — ~72 wywołania DBW, samotnie w swoim oknie 15-min.
 //  • gus-cpi          (24: krajowy CPI headline, miesięcznie, 2 lata)
 //  • gus-koniunktura  (24: badanie koniunktury GUS, miesięcznie, 2 lata)
-//  • dbw-series var 324 / przekrój 775 (24: sprzedaż detaliczna miesięcznie, 2 lata)
+//  • dbw-series var 324 / przekrój 775 (24: ceny produktów rolnych miesięcznie — /ceny, 2 lata)
 import { NextRequest } from 'next/server';
 import { warmEndpoints } from '@/lib/cron-warm';
 
