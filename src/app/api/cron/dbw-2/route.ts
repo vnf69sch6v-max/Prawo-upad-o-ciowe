@@ -1,4 +1,4 @@
-// Cron DBW grupa 2 (harmonogram 03:30) — ~77 wywołań DBW, samotnie w swoim oknie 15-min.
+// Cron DBW grupa 2 (harmonogram 13:40 UTC) — ~77 wywołań DBW, samotnie w swoim oknie 15-min.
 //  • gus-ppi-full  (53: PPI, 33 pozycje PKD, 10 lat)
 //  • dbw-series var 312 / przekrój 93 (24: wskaźniki cen robót budowlano-montażowych — /ceny, 2 lata)
 import { NextRequest } from 'next/server';

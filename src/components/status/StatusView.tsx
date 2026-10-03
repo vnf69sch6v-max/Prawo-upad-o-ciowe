@@ -8,6 +8,7 @@ import { QueryError } from '@/components/ui/QueryState';
 import { datasetById, pluralPl, STATUS_LABELS, type FreshnessItem, type FreshnessReport, type FreshnessStatus } from '@/lib/freshness';
 import { useIsClient } from '@/lib/use-is-client';
 import { DatasetCard, DatasetCardSkeleton } from './DatasetCard';
+import { CronRuns } from './CronRuns';
 import { STATUS_STYLE } from './StatusPill';
 
 const QUERY_KEY = ['health-freshness'] as const;
@@ -60,7 +61,7 @@ function headline(items: FreshnessItem[]): { title: string; detail: string } {
     if (stale) parts.push(`${stale} ${pluralPl(stale, 'zbiór nieaktualny', 'zbiory nieaktualne', 'zbiorów nieaktualnych')}`);
     if (error) parts.push(`${error} ${pluralPl(error, 'źródło nie odpowiada', 'źródła nie odpowiadają', 'źródeł nie odpowiada')}`);
     if (lag) parts.push(`${lag} ${pluralPl(lag, 'opóźniony', 'opóźnione', 'opóźnionych')}`);
-    return { title: parts.join(' · '), detail: 'Automatyczna kontrola próbuje odświeżyć NBP, giełdę i Eurostat; dane GUS odświeżają nocne crony.' };
+    return { title: parts.join(' · '), detail: 'Automatyczna kontrola próbuje odświeżyć NBP, giełdę i Eurostat; dane GUS odświeżają crony po publikacjach GUS.' };
 }
 
 const CHECKED_AT_FMT = new Intl.DateTimeFormat('pl-PL', {
@@ -144,7 +145,8 @@ export function StatusView() {
 
             <p className="max-w-[68ch] text-sm leading-relaxed text-mk-text-soft">
                 Porównujemy najnowszy okres w danych serwisu z harmonogramem publikacji GUS, NBP, Eurostatu i giełdy.
-                Kontrola działa automatycznie codziennie rano; ta strona sprawdza na bieżąco (wynik do 5 minut).
+                Crony odświeżają dane codziennie (GUS tuż po porannych publikacjach), a kontrola świeżości sprawdza
+                wynik każdego popołudnia; ta strona sprawdza na bieżąco (wynik do 5 minut).
             </p>
 
             {q.isError && !report ? (
@@ -172,6 +174,8 @@ export function StatusView() {
                             </section>
                         );
                     })}
+
+                    {report && <CronRuns crons={report.crons} />}
                 </>
             )}
 

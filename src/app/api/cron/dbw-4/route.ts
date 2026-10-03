@@ -1,4 +1,4 @@
-// Cron DBW grupa 4 (harmonogram 04:30) — ~72 wywołania DBW, samotnie w swoim oknie 15-min.
+// Cron DBW grupa 4 (harmonogram 11:40 UTC) — ~72 wywołania DBW, samotnie w swoim oknie 15-min.
 // Wskaźniki krótkookresowe z Przeglądu i Gospodarki (r/r, ceny stałe, 2 lata × 12 miesięcy):
 //  • produkcja sprzedana przemysłu (zm. 814)        — 24
 //  • produkcja budowlano-montażowa (zm. 392)        — 24

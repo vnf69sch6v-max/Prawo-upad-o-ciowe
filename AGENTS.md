@@ -56,14 +56,19 @@ Standard scripts in `package.json`:
   (`src/lib/freshness.ts`, tests in `tests/freshness.test.ts`). 200 = no
   `stale`/`error` (`lag` = one period behind, e.g. BDL after a GUS release, is
   a warning); 503 otherwise; CDN 5 min. `/status` renders it. `cron/freshness`
-  (07:20 UTC) re-checks, self-heals NBP/Yahoo/Eurostat with `refresh=1` (never
+  (16:40 UTC) re-checks, self-heals NBP/Yahoo/Eurostat with `refresh=1` (never
   GUS DBW/BDL), stores `health/freshness_latest|history` in Firestore and posts
   to `ALERT_WEBHOOK_URL` (optional; Slack `text` / Discord `content`). A new
   indicator on a page needs a `DatasetSpec` in `FRESHNESS_DATASETS` whose
   endpoint matches the hook exactly (DBW: `dbwSeriesPath(...)`).
-- Warm crons: `dbw-1..4` (03:00–04:30 UTC, one 15-min DBW window each, ≤~80
-  calls), `bdl` (05:00, sequential, BDL allows ~5 req/s without a key),
-  `refresh` (06:00, everything non-GUS in parallel). `vercel.json` has
+- Warm crons: `dbw-1|4|2|3` (09:40 / 11:40 / 13:40 / 15:40 UTC — after the
+  10:00 Warsaw GUS releases, so a release reaches the site the same day; 2 h
+  apart so Hobby's ±1 h start jitter can't put two in one 15-min DBW window;
+  ≤~80 calls each), `bdl` (05:00, sequential, BDL allows ~5 req/s without a
+  key), `refresh` (06:00, everything non-GUS in parallel), `freshness` (16:40).
+  Every cron records its run in Firestore `health/cron_runs`
+  (`src/lib/cron-log.ts`; evaluation in `src/lib/cron-runs.ts`), shown on
+  `/status` — the only proof the automation actually ran. `vercel.json` has
   `src/app/api/**/*.ts → maxDuration 30`; every long-running route also needs
   its own explicit `functions` entry, or it is cut at 30 s regardless of the
   `export const maxDuration` in code.

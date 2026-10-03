@@ -1,9 +1,11 @@
 // Dzienny warm cache dla źródeł SPOZA GUS DBW/BDL (Eurostat, NBP, Yahoo, SMUP, newsy).
 // Każde z nich ma osobny limit → bezpiecznie równolegle.
 // Ciężkie DBW (CPI/PPI/koniunktura/serie) dzielą globalny limit ~100 żądań/15 min, więc mają
-// WŁASNE crony dbw-1/2/3 rozłożone na osobne okna 15-min (03:00 / 03:30 / 04:00) — patrz vercel.json.
+// WŁASNE crony dbw-1..4 co 2 h po komunikatach GUS (09:40–15:40 UTC) — patrz vercel.json.
 // Vercel dołącza `Authorization: Bearer ${CRON_SECRET}` automatycznie, gdy CRON_SECRET jest ustawiony.
 import { NextRequest, NextResponse } from 'next/server';
+import { recordCronRun } from '@/lib/cron-log';
+import { summarizeResults } from '@/lib/cron-runs';
 
 export const maxDuration = 120;
 
@@ -65,6 +67,7 @@ export async function GET(request: NextRequest) {
     }
 
     const origin = new URL(request.url).origin;
+    const startedAt = Date.now();
     const results: Record<string, number | string> = {};
     let ok = 0;
     await Promise.allSettled(
@@ -79,5 +82,6 @@ export async function GET(request: NextRequest) {
         }),
     );
 
+    await recordCronRun('refresh', summarizeResults(results, startedAt));
     return NextResponse.json({ ok, total: ENDPOINTS.length, timestamp: new Date().toISOString(), results });
 }
