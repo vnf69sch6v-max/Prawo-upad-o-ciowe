@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { recordCronRun } from '@/lib/cron-log';
 import { summarizeResults } from '@/lib/cron-runs';
+import { internalCall, internalOrigin } from '@/lib/internal-fetch';
 
 export const maxDuration = 120;
 
@@ -66,22 +67,18 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
     }
 
-    const origin = new URL(request.url).origin;
+    // Publiczna domena, nie adres wdrożenia `*.vercel.app` (za logowaniem Vercela) — src/lib/internal-fetch.ts.
+    const origin = internalOrigin(request);
     const startedAt = Date.now();
     const results: Record<string, number | string> = {};
     let ok = 0;
     await Promise.allSettled(
         ENDPOINTS.map(async (ep) => {
-            try {
-                const res = await fetch(origin + ep, { cache: 'no-store' });
-                results[ep] = res.status;
-                if (res.status === 200) ok++;
-            } catch (e) {
-                results[ep] = `error: ${String(e).slice(0, 60)}`;
-            }
+            results[ep] = await internalCall(origin + ep);
+            if (results[ep] === 200) ok++;
         }),
     );
 
-    await recordCronRun('refresh', summarizeResults(results, startedAt));
-    return NextResponse.json({ ok, total: ENDPOINTS.length, timestamp: new Date().toISOString(), results });
+    await recordCronRun('refresh', summarizeResults(results, startedAt, origin));
+    return NextResponse.json({ origin, ok, total: ENDPOINTS.length, timestamp: new Date().toISOString(), results });
 }

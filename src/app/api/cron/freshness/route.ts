@@ -11,6 +11,7 @@ import { getAdminDb } from '@/lib/firebase/admin';
 import type { FreshnessReport } from '@/lib/freshness';
 import { runFreshnessCheck, selfHeal, sendFreshnessAlert, type HealAttempt } from '@/lib/freshness-check';
 import { recordCronRun } from '@/lib/cron-log';
+import { internalOrigin } from '@/lib/internal-fetch';
 
 export const maxDuration = 120;
 
@@ -55,7 +56,7 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
     }
 
-    const origin = new URL(request.url).origin;
+    const origin = internalOrigin(request); // nie adres wdrożenia za logowaniem Vercela
     const startedAt = Date.now();
     const initial = await runFreshnessCheck(origin);
     const { report, attempts } = await selfHeal(origin, initial);
@@ -71,6 +72,7 @@ export async function GET(request: NextRequest) {
         total: report.items.length,
         ms: Date.now() - startedAt,
         failed: problems.map((i) => `${i.id} → ${i.status}`).slice(0, 10),
+        origin: origin.replace(/^https?:\/\//, ''),
     });
 
     return NextResponse.json({

@@ -9,11 +9,12 @@ import { httpStatusFor } from '@/lib/freshness';
 import { runFreshnessCheck } from '@/lib/freshness-check';
 import { readCronRuns } from '@/lib/cron-log';
 import { evaluateCronRuns } from '@/lib/cron-runs';
+import { internalOrigin } from '@/lib/internal-fetch';
 
 export const maxDuration = 30;
 
 export async function GET(request: NextRequest) {
-    const origin = new URL(request.url).origin;
+    const origin = internalOrigin(request);
     const [report, runs] = await Promise.all([runFreshnessCheck(origin), readCronRuns()]);
     // Przebiegi cronów są informacją (dowód automatu), nie zmieniają kodu HTTP — ten zależy od danych.
     const crons = runs ? { available: true, items: evaluateCronRuns(runs, new Date()) } : { available: false, items: [] };

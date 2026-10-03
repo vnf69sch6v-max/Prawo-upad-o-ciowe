@@ -55,6 +55,10 @@ Crony Vercela (`vercel.json`) rozgrzewają cache, żeby użytkownik nigdy nie cz
   i alert na `ALERT_WEBHOOK_URL`; wynik na stronie `/status` i pod `/api/health/freshness`
 - każdy cron zapisuje swój przebieg w Firestore (`health/cron_runs`); `/status` pokazuje, kiedy
   który działał ostatnio i ile źródeł odświeżył — dowód, że dane aktualizują się same
+- crony wołają własne endpointy pod **publiczną domeną** (`src/lib/internal-fetch.ts`), bo Vercel
+  uruchamia je pod adresem `*.vercel.app`, który jest za logowaniem Vercela — wcześniej trafiały na
+  stronę logowania (HTTP 200) i raportowały sukces, nie odświeżając niczego
+- **ustaw `CRON_SECRET` w Vercelu** — bez niego każdy może wywołać `/api/cron/*` i spalić limit GUS DBW
 - `cron/nbp` (13:00 UTC), `cron/stooq` (16:20 UTC, po zamknięciu GPW także zimą) — w dni robocze
 
 Endpointy GUS przyjmują `?refresh=1` (wymusza pobranie z `no-store`, pomija Firestore i Data Cache
