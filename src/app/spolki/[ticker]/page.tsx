@@ -8,7 +8,7 @@ import { useWig20, useStooq, useNews } from '@/lib/hooks';
 import { WIG20 } from '@/lib/wig20';
 import { matchCompanyNews } from '@/lib/news/match';
 import { formatDecimalPL, formatRelativeTime, formatTime } from '@/lib/formatters';
-import { monthTick } from '@/lib/series';
+import { dayTick } from '@/lib/series';
 import { KpiCard } from '@/components/ui/KpiCard';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { InteractiveChart } from '@/components/ui/InteractiveChart';
@@ -23,7 +23,8 @@ export default function SpolkaPage() {
     const quotes = useWig20();
     // Pojedyncze spółki GPW mają na Yahoo pełną historię dzienną (inaczej niż same indeksy) —
     // route obsługuje sufiks `.WA` i idzie prosto do Yahoo.
-    const hist = useStooq(company ? `${ticker}.WA` : '', 120);
+    // Rok sesji (Yahoo `range=1y`): zakres 52 tygodni + przełączniki 1M/3M/6M/ALL, które coś zmieniają.
+    const hist = useStooq(company ? `${ticker}.WA` : '', 250);
     const news = useNews();
 
     const quote = quotes.data?.items.find((q) => q.ticker === ticker) ?? null;
@@ -31,6 +32,12 @@ export default function SpolkaPage() {
         () => (hist.data?.data ?? []).map((b) => ({ date: b.date, value: b.close })),
         [hist.data],
     );
+    // Zakres 52 tygodni (min–max zamknięć z ostatniego roku) — standard kart spółek.
+    const range52w = useMemo(() => {
+        if (chart.length < 2) return null;
+        const vals = chart.map((c) => c.value);
+        return { min: Math.min(...vals), max: Math.max(...vals) };
+    }, [chart]);
     const companyNews = useMemo(
         () => (company ? matchCompanyNews(news.data?.items ?? [], company.aliases, 8) : []),
         [news.data, company],
@@ -71,13 +78,13 @@ export default function SpolkaPage() {
                 <KpiCard label="Kurs" value={quote?.price != null ? formatDecimalPL(quote.price, 2) : '—'} unit="zł"
                     delta={quote?.changePct != null ? { value: quote.changePct, unit: 'pct' } : undefined}
                     footnote={quote?.date ? `Yahoo · ${quote.date}` : 'Yahoo Finance (GPW)'} loading={quotes.isLoading} />
-                <KpiCard label="Zakres 120 sesji" value={chart.length ? `${formatDecimalPL(Math.min(...chart.map((c) => c.value)), 2)}–${formatDecimalPL(Math.max(...chart.map((c) => c.value)), 2)}` : '—'} unit="zł"
-                    footnote="min–max z historii" loading={hist.isLoading} />
+                <KpiCard label="Zakres 52 tygodni" value={range52w ? `${formatDecimalPL(range52w.min, 2)}–${formatDecimalPL(range52w.max, 2)}` : '—'} unit="zł"
+                    footnote={`min–max zamknięć · ${chart.length} sesji`} loading={hist.isLoading} />
                 <KpiCard label="Wiadomości o spółce" value={String(companyNews.length)} unit={companyNews.length === 1 ? 'news' : 'newsy'}
                     footnote="z naszego agregatora RSS" loading={news.isLoading} />
             </div>
 
-            <SectionCard title={`${company.name} — kurs (120 sesji)`} subtitle="zamknięcie dzienne · Yahoo Finance (GPW)">
+            <SectionCard title={`${company.name} — kurs dzienny`} subtitle="zamknięcie dzienne · Yahoo Finance (GPW)">
                 <QueryState
                     isLoading={hist.isLoading}
                     isError={hist.isError}
@@ -86,8 +93,9 @@ export default function SpolkaPage() {
                     height={300}
                     emptyTitle="Brak historii notowań dla tego tickera."
                 >
-                    <InteractiveChart data={chart} xKey="date" height={300} unit=" zł" showRange initialRange="ALL"
-                        valueFormatter={(v) => formatDecimalPL(v, 2)} xTickFormatter={monthTick}
+                    <InteractiveChart data={chart} xKey="date" height={300} unit=" zł" showRange initialRange="6M"
+                        ranges={['1M', '3M', '6M', 'ALL']}
+                        valueFormatter={(v) => formatDecimalPL(v, 2)} xTickFormatter={dayTick}
                         series={[{ key: 'value', name: company.name, color: '#2563EB', type: 'area', strokeWidth: 2.5 }]} />
                 </QueryState>
             </SectionCard>
