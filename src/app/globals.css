@@ -647,40 +647,45 @@ button.mk-card:active,
   background: var(--color-mk-brand);
 }
 
-/* Buttons */
-.mk-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 9px 16px;
-  border-radius: 10px;
-  font-size: 14px;
-  font-weight: 600;
-  border: 1px solid var(--color-mk-border-strong);
-  background: var(--color-mk-surface);
-  color: var(--color-mk-text-soft);
-  cursor: pointer;
-  transition: background .12s ease, border-color .12s ease, box-shadow .12s ease;
-}
+/* `@layer components`: klasy komponentów muszą PRZEGRYWAĆ z utilities Tailwinda. Poza warstwą
+   wygrywały z każdą — `lg:hidden` na .mk-btn nie działało, a `text-base` na .mk-input zostawało
+   przy 14 px (iOS powiększa stronę przy fokusie pola < 16 px). */
+@layer components {
+  /* Buttons */
+  .mk-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 9px 16px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    border: 1px solid var(--color-mk-border-strong);
+    background: var(--color-mk-surface);
+    color: var(--color-mk-text-soft);
+    cursor: pointer;
+    transition: background .12s ease, border-color .12s ease, box-shadow .12s ease;
+  }
 
-.mk-btn:hover {
-  background: var(--color-mk-surface-alt);
-}
+  .mk-btn:hover {
+    background: var(--color-mk-surface-alt);
+  }
 
-.mk-btn-primary {
-  background: var(--color-mk-primary);
-  border-color: var(--color-mk-primary);
-  color: #fff;
-}
+  .mk-btn-primary {
+    background: var(--color-mk-primary);
+    border-color: var(--color-mk-primary);
+    color: #fff;
+  }
 
-.mk-btn-primary:hover {
-  background: var(--color-mk-primary-strong);
-}
+  .mk-btn-primary:hover {
+    background: var(--color-mk-primary-strong);
+  }
 
-.mk-btn:disabled {
-  opacity: .55;
-  cursor: not-allowed;
+  .mk-btn:disabled {
+    opacity: .55;
+    cursor: not-allowed;
+  }
 }
 
 /* Panel zakładki strony: nowa treść (hero zamiast krótkiego skeletonu) nie może
@@ -690,66 +695,68 @@ button.mk-card:active,
   overflow-anchor: none;
 }
 
-/* Segmented control (toggles) — poziomy pasek, bez zawijania.
-   Na wąskim ekranie przełączniki się przewijają; aktywny zostaje w kadrze
-   przez scrollLeft kontenera (nie scrollIntoView). min-height 28px = WCAG 2.2 Target Size. */
-.mk-seg {
-  display: inline-flex;
-  flex-wrap: nowrap;
-  min-width: 0;
-  width: max-content;
-  max-width: 100%;
-  overflow-x: auto;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-  padding: 3px;
-  gap: 2px;
-  border-radius: 10px;
-  background: var(--color-mk-surface-alt);
-  border: 1px solid var(--color-mk-border);
-}
+@layer components {
+  /* Segmented control (toggles) — poziomy pasek, bez zawijania.
+     Na wąskim ekranie przełączniki się przewijają; aktywny zostaje w kadrze
+     przez scrollLeft kontenera (nie scrollIntoView). min-height 28px = WCAG 2.2 Target Size. */
+  .mk-seg {
+    display: inline-flex;
+    flex-wrap: nowrap;
+    min-width: 0;
+    width: max-content;
+    max-width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    padding: 3px;
+    gap: 2px;
+    border-radius: 10px;
+    background: var(--color-mk-surface-alt);
+    border: 1px solid var(--color-mk-border);
+  }
 
-.mk-seg::-webkit-scrollbar {
-  display: none;
-}
+  .mk-seg::-webkit-scrollbar {
+    display: none;
+  }
 
-.mk-seg-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  white-space: nowrap;
-  min-height: 28px;
-  padding: 5px 12px;
-  border-radius: 7px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--color-mk-muted);
-  cursor: pointer;
-  transition: all .12s ease;
-}
+  .mk-seg-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    white-space: nowrap;
+    min-height: 28px;
+    padding: 5px 12px;
+    border-radius: 7px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-mk-muted);
+    cursor: pointer;
+    transition: all .12s ease;
+  }
 
-.mk-seg-btn:hover {
-  color: var(--color-mk-text);
-}
+  .mk-seg-btn:hover {
+    color: var(--color-mk-text);
+  }
 
-.mk-seg-btn-active {
-  background: var(--color-mk-surface);
-  color: var(--color-mk-primary);
-  box-shadow: var(--shadow-mk);
-}
+  .mk-seg-btn-active {
+    background: var(--color-mk-surface);
+    color: var(--color-mk-primary);
+    box-shadow: var(--shadow-mk);
+  }
 
-.mk-seg-btn:active {
-  color: var(--color-mk-text);
-}
+  .mk-seg-btn:active {
+    color: var(--color-mk-text);
+  }
 
-/* Mały wariant (zakresy wykresu, `Segmented size="sm"`) — klasa zamiast stylu inline,
-   żeby reguła dotykowa niżej mogła go podnieść do 44 px. */
-.mk-seg-sm {
-  min-height: 28px;
-  padding: 4px 10px;
-  font-size: 12px;
-  line-height: 1.2;
+  /* Mały wariant (zakresy wykresu, `Segmented size="sm"`) — klasa zamiast stylu inline,
+     żeby reguła dotykowa niżej mogła go podnieść do 44 px. */
+  .mk-seg-sm {
+    min-height: 28px;
+    padding: 4px 10px;
+    font-size: 12px;
+    line-height: 1.2;
+  }
 }
 
 /* Poziomy pasek, który się nie mieści: wygaszona krawędź mówi „przewiń dalej".
@@ -769,26 +776,35 @@ button.mk-card:active,
   mask-image: linear-gradient(to right, transparent, #000 28px, #000 calc(100% - 28px), transparent);
 }
 
-/* Inputs */
-.mk-input {
-  width: 100%;
-  padding: 10px 14px;
-  border-radius: 10px;
-  border: 1px solid var(--color-mk-border-strong);
-  background: var(--color-mk-surface);
-  color: var(--color-mk-text);
-  font-size: 14px;
-  outline: none;
-  transition: border-color .12s ease, box-shadow .12s ease;
-}
+@layer components {
+  /* Inputs */
+  .mk-input {
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--color-mk-border-strong);
+    background: var(--color-mk-surface);
+    color: var(--color-mk-text);
+    font-size: 14px;
+    outline: none;
+    transition: border-color .12s ease, box-shadow .12s ease;
+  }
 
-.mk-input::placeholder {
-  color: var(--color-mk-faint);
-}
+  .mk-input::placeholder {
+    color: var(--color-mk-faint);
+  }
 
-.mk-input:focus {
-  border-color: var(--color-mk-primary);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, .15);
+  .mk-input:focus {
+    border-color: var(--color-mk-primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, .15);
+  }
+
+  /* Telefon/tablet: 16 px — mniejsze pole powoduje automatyczny zoom iOS Safari przy fokusie. */
+  @media (max-width: 1023px) {
+    .mk-input {
+      font-size: 16px;
+    }
+  }
 }
 
 /* Section title inside cards */
@@ -1118,12 +1134,14 @@ button.mk-table-row {
 }
 
 .mk-fade-in {
-  animation: mk-fade-in .34s cubic-bezier(.22, 1, .36, 1) both;
+  /* `backwards`, nie `both`: po animacji wrapper nie może zostać z `transform` — inaczej każdy
+     `position: fixed` w środku (arkusz, modal bez portalu) liczy się od wrappera, nie od ekranu. */
+  animation: mk-fade-in .34s cubic-bezier(.22, 1, .36, 1) backwards;
 }
 
 /* Staggered entrance — bezpośrednie dzieci kaskadowo wjeżdżają (klaryfikuje układ, np. karty KPI) */
 .mk-stagger>* {
-  animation: mk-fade-in .44s cubic-bezier(.22, 1, .36, 1) both;
+  animation: mk-fade-in .44s cubic-bezier(.22, 1, .36, 1) backwards;
 }
 
 .mk-stagger>*:nth-child(1) { animation-delay: .02s; }

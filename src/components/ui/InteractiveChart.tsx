@@ -29,6 +29,12 @@ interface InteractiveChartProps {
     unit?: string;
     valueFormatter?: (v: number) => string;
     xTickFormatter?: (v: string) => string;
+    /**
+     * Format etykiet osi Y (domyślnie: telefon — kompaktowy z `valueFormatter`, desktop — `valueFormatter`).
+     * Dla długich wartości (kurs „24 740,00") podaj krótszy, np. `v => formatDecimalPL(v / 1000, 1) + ' tys.'`;
+     * dymek dalej pokazuje pełną wartość z `valueFormatter`.
+     */
+    yTickFormatter?: (v: number) => string;
     referenceLines?: { y: number; label?: string; color?: string; axis?: 'left' | 'right' }[];
     /** Show the built-in range picker */
     showRange?: boolean;
@@ -169,7 +175,7 @@ function EdgeTick({ x, y, payload, first, last, format }: EdgeTickProps) {
 }
 
 export function InteractiveChart({
-    data, xKey, series, height = 300, unit = '', valueFormatter, xTickFormatter,
+    data, xKey, series, height = 300, unit = '', valueFormatter, xTickFormatter, yTickFormatter,
     referenceLines, showRange = false, initialRange = 'ALL', ranges, legend = false, controls,
 }: InteractiveChartProps) {
     const [range, setRange] = useState<RangeKey>(initialRange);
@@ -212,8 +218,31 @@ export function InteractiveChart({
         () => (isPhone ? phoneTicks(view, xKey, boxW || 326, xTickFormatter) : undefined),
         [isPhone, view, xKey, boxW, xTickFormatter],
     );
-    const yTick = isPhone ? compactAxis(valueFormatter) : valueFormatter;
+    const yTick = yTickFormatter ?? (isPhone ? compactAxis(valueFormatter) : valueFormatter);
     const yRightTick = isPhone ? compactAxis() : undefined;
+    // Desktop: oś Y miała sztywne 44 px, więc „24 740,00" ucinało się do „740,00". Szerokość z najdłuższej
+    // etykiety skrajnych wartości (min 44 — krótkie osie wyglądają jak dotąd). Telefon: `auto` Rechartsa.
+    const axisWidths = useMemo(() => {
+        if (isPhone) return { left: 44, right: 44 };
+        const ext = (side: 'left' | 'right') => {
+            let lo = Infinity, hi = -Infinity;
+            for (const s of series) {
+                if ((s.yAxis ?? 'left') !== side) continue;
+                for (const row of view) {
+                    const v = row[s.key];
+                    if (typeof v === 'number' && Number.isFinite(v)) { lo = Math.min(lo, v); hi = Math.max(hi, v); }
+                }
+            }
+            return Number.isFinite(lo) ? [lo, hi] : null;
+        };
+        const widthFor = (side: 'left' | 'right', fmt?: (v: number) => string) => {
+            const e = ext(side);
+            if (!e) return 44;
+            const f = fmt ?? ((v: number) => String(Math.round(v)));
+            return Math.max(44, Math.ceil(Math.max(labelPx(f(e[0])), labelPx(f(e[1])))) + 12);
+        };
+        return { left: widthFor('left', yTick), right: widthFor('right') };
+    }, [isPhone, series, view, yTick]);
 
     // Tooltip: mysz → najechanie (celownik + wartości bez klikania); dotyk → stuknięcie, które ZOSTAJE.
     // W trybie dotykowym `active={false}` od startu BLOKUJE tap (Recharts nie otworzy tooltipa) —
@@ -303,8 +332,8 @@ export function InteractiveChart({
                         />
                     )}
                     {/* Telefon: szerokość osi z etykiet (`auto`), format kompaktowy — więcej miejsca na dane. */}
-                    <YAxis yAxisId="left" domain={yDomain} tick={{ fill: AXIS_INK, fontSize: TICK_FONT }} axisLine={false} tickLine={false} width={isPhone ? 'auto' : 44} tickFormatter={yTick} />
-                    {hasRight && <YAxis yAxisId="right" orientation="right" domain={['auto', 'auto']} tick={{ fill: AXIS_INK, fontSize: TICK_FONT }} axisLine={false} tickLine={false} width={isPhone ? 'auto' : 44} tickFormatter={yRightTick} />}
+                    <YAxis yAxisId="left" domain={yDomain} tick={{ fill: AXIS_INK, fontSize: TICK_FONT }} axisLine={false} tickLine={false} width={isPhone ? 'auto' : axisWidths.left} tickFormatter={yTick} />
+                    {hasRight && <YAxis yAxisId="right" orientation="right" domain={['auto', 'auto']} tick={{ fill: AXIS_INK, fontSize: TICK_FONT }} axisLine={false} tickLine={false} width={isPhone ? 'auto' : axisWidths.right} tickFormatter={yRightTick} />}
                     <Tooltip
                         trigger={canHover ? 'hover' : 'click'}
                         active={!canHover && forceHide ? false : undefined}

@@ -39,7 +39,8 @@ export function UpcomingEventsInline({ count = 6, className = '' }: { count?: nu
                 {events?.map((e, i) => (
                     <li key={i} className="flex items-center gap-2 px-2.5 py-2 text-sm">
                         <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: EVENT_COLORS[e.type] }} />
-                        <time dateTime={e.date} className="w-14 shrink-0 text-[11px] font-semibold tabular-nums text-mk-brand">
+                        {/* „15.10.2026" w 11 px semibold ≈ 60 px — `w-14` (56) wchodził na nazwę na wąskich ekranach. */}
+                        <time dateTime={e.date} className="w-[4.5rem] shrink-0 whitespace-nowrap text-[11px] font-semibold tabular-nums text-mk-brand">
                             {formatDate(e.date)}
                         </time>
                         <span className="min-w-0 flex-1 truncate text-xs leading-snug text-mk-text">{e.name}</span>
