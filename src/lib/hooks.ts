@@ -3,6 +3,10 @@
 import { useCallback, useMemo } from 'react';
 import { useQuery, useQueries, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
 import type { NewsResult } from '@/lib/news/types';
+import {
+    dbwSeriesParams, GUS_CONSTRUCTION_SERIES, GUS_INDUSTRY_SERIES, GUS_RETAIL_SERIES,
+    type DbwSeriesConfig,
+} from '@/lib/gus-dbw-series';
 import type { DailyDigest } from '@/lib/news/daily';
 import { refreshOptions } from '@/lib/query-refresh';
 
@@ -587,15 +591,11 @@ export function useBaelUnemploymentRate(year = new Date().getFullYear()) {
 
 // ─── Generic DBW series (PPI, ceny nieruchomości/budowlane/rolne) ───
 
-export interface DbwSeriesConfig {
-    var: number; przekroj: number; poz: number[];
-    year?: number; freq?: 'm' | 'q'; prez?: number; poz1?: number; sub100?: boolean;
-}
+export type { DbwSeriesConfig } from '@/lib/gus-dbw-series';
 
 export function useDbwSeries(config: DbwSeriesConfig) {
-    const { var: v, przekroj, poz, year = new Date().getFullYear(), freq = 'm', prez = 5, poz1 = 33617, sub100 = true } = config;
-    const qs = new URLSearchParams({ var: String(v), przekroj: String(przekroj), year: String(year), freq, prez: String(prez), poz1: String(poz1), sub100: sub100 ? '1' : '0' });
-    poz.forEach((p) => qs.append('poz', String(p)));
+    const { var: v, przekroj, poz, year = new Date().getFullYear(), freq = 'm', prez = 5, sub100 = true } = config;
+    const qs = dbwSeriesParams(config, year);
     return useQuery<{ series: Record<string, number | string>[]; source: string }>({
         queryKey: ['dbw-series', v, przekroj, poz.join('-'), year, freq, prez, sub100],
         queryFn: () => fetchJSON(`/api/dbw-series?${qs}`),
@@ -626,10 +626,6 @@ interface GusBdlVariableResponse {
     results?: Array<{ values: Array<{ year: number | string; val: number | null }> }>;
 }
 
-/** DBW short-term stats: var 312 / przekrój 93 — poz 6661771 = produkcja przemysłowa ogółem (r/r). */
-const GUS_INDUSTRIAL_POZ = 6661771;
-/** DBW short-term stats: var 312 / przekrój 93 — poz 6661787 = produkcja budowlano-montażowa (r/r). */
-const GUS_CONSTRUCTION_POZ = 6661787;
 
 function useDbwSeriesAsEurostat(
     q: UseQueryResult<{ series: Record<string, number | string>[]; source: string }>,
@@ -666,34 +662,23 @@ function useBdlPrevYearAsEurostat(
     return { ...q, data } as unknown as UseQueryResult<EurostatResult>;
 }
 
-/** Sprzedaż detaliczna (r/r) — GUS BDL P3860, ogółem. */
+/** Sprzedaż detaliczna (r/r, ceny stałe) — GUS DBW zm. 109, „ogółem". Wcześniej BDL P3860, który
+ *  dostaje miesiąc kilka tygodni po komunikacie GUS (i w cenach bieżących) — patrz `GUS_RETAIL_SERIES`. */
 export function useGusRetailSales(): UseQueryResult<EurostatResult> {
-    const q = useGusMonthly();
-    const data = useMemo((): EurostatResult | undefined => {
-        if (!q.data?.retail?.length) return undefined;
-        const PL = q.data.retail.map((r) => ({ date: r.date, value: r.value }));
-        return {
-            dataset: 'gus-bdl',
-            label: 'Sprzedaż detaliczna (r/r)',
-            geo: ['PL'],
-            updated: q.data.timestamp,
-            data: { PL },
-            source: q.data.source,
-        };
-    }, [q.data]);
-    return { ...q, data } as unknown as UseQueryResult<EurostatResult>;
+    const q = useDbwSeries(GUS_RETAIL_SERIES);
+    return useDbwSeriesAsEurostat(q, GUS_RETAIL_SERIES.poz[0], 'Sprzedaż detaliczna (r/r)');
 }
 
-/** Produkcja przemysłowa (r/r) — GUS DBW var 312. */
+/** Produkcja sprzedana przemysłu (r/r, ceny stałe) — GUS DBW zm. 814. */
 export function useGusIndustrialProduction(): UseQueryResult<EurostatResult> {
-    const q = useDbwSeries({ var: 312, przekroj: 93, poz: [GUS_INDUSTRIAL_POZ] });
-    return useDbwSeriesAsEurostat(q, GUS_INDUSTRIAL_POZ, 'Produkcja przemysłowa (r/r)');
+    const q = useDbwSeries(GUS_INDUSTRY_SERIES);
+    return useDbwSeriesAsEurostat(q, GUS_INDUSTRY_SERIES.poz[0], 'Produkcja przemysłowa (r/r)');
 }
 
-/** Produkcja budowlano-montażowa (r/r) — GUS DBW var 312. */
+/** Produkcja budowlano-montażowa (r/r, ceny stałe) — GUS DBW zm. 392. */
 export function useGusConstructionOutput(): UseQueryResult<EurostatResult> {
-    const q = useDbwSeries({ var: 312, przekroj: 93, poz: [GUS_CONSTRUCTION_POZ] });
-    return useDbwSeriesAsEurostat(q, GUS_CONSTRUCTION_POZ, 'Produkcja budowlano-montażowa (r/r)');
+    const q = useDbwSeries(GUS_CONSTRUCTION_SERIES);
+    return useDbwSeriesAsEurostat(q, GUS_CONSTRUCTION_SERIES.poz[0], 'Produkcja budowlano-montażowa (r/r)');
 }
 
 /** PKB (r/r) rocznie — GUS BDL var 458272 (rok poprzedni = 100).
