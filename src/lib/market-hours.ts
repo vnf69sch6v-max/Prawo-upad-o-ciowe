@@ -1,4 +1,5 @@
 // Godziny sesji i okien publikacji w strefie Europe/Warsaw — współdzielone przez klienta i API.
+import { warsawDateKey } from '@/lib/news/warsaw-date';
 
 const TZ = 'Europe/Warsaw';
 
@@ -35,6 +36,16 @@ export function isNbpPublishWindow(date = new Date()): boolean {
     if (!isWeekdayInWarsaw(date)) return false;
     const mins = warsawMinutes(date);
     return mins >= 12 * 60 + 15 && mins < 14 * 60;
+}
+
+/**
+ * Dane NBP sprzed dzisiejszej publikacji: dzień roboczy, po 12:15, a najnowsza data w danych < dziś.
+ * Sam TTL tego nie łapie — wpis zapisany rano ma 6 h ważności, a okno 12:15–14:00 pomaga tylko, gdy
+ * ktoś akurat wtedy wejdzie. Przy małym ruchu wczorajsza tabela A wisiała do crona nbp (~15:30).
+ */
+export function nbpBehindToday(latestDate: string | null, date = new Date()): boolean {
+    if (!latestDate || !isWeekdayInWarsaw(date) || warsawMinutes(date) < 12 * 60 + 15) return false;
+    return latestDate.slice(0, 10) < warsawDateKey(date);
 }
 
 /** TTL cache serwera dla notowań GPW — krótszy w trakcie sesji. */

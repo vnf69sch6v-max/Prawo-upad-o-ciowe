@@ -20,6 +20,8 @@ export interface MacroEvent {
     importance: 'high' | 'medium' | 'low';
     /** Okres, którego dotyczą dane (np. „2026-07" = lipiec 2026). */
     dataPeriod?: string;
+    /** Szybki szacunek (CPI flash). Nie trafia do DBW, więc nie zmienia liczb na stronie — patrz hero-signals. */
+    flash?: boolean;
 }
 
 export function generateMacroCalendar(year: number): MacroEvent[] {
@@ -35,6 +37,7 @@ export function generateMacroCalendar(year: number): MacroEvent[] {
             type: 'cpi',
             importance: 'high',
             dataPeriod,
+            flash: true,
         });
     }
     for (let publishM = 2; publishM <= 12; publishM++) {

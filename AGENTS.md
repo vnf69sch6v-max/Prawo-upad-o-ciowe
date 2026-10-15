@@ -46,6 +46,9 @@ Standard scripts in `package.json`:
   `revalidate` (shared DBW limit), the cron path `?refresh=1` is `no-store` —
   otherwise a fresh GUS release reached the site a day or two late. Never cache
   NBP `.../today` under a fixed key; use `exchangerates/tables/{t}/` (latest table).
+  After 12:15 on a working day `/api/nbp` re-checks an entry dated before today
+  (`nbpBehindToday`, at most every 10 min): the 6 h TTL alone kept yesterday's
+  table until the afternoon `nbp` cron whenever nobody visited 12:15–14:00.
 - `withCache` never overwrites a good entry with a failure: if the fetcher
   throws it returns the last stored payload (any age), and an empty payload
   (`looksEmpty`: every top-level array empty) does not replace a non-empty one.
@@ -98,6 +101,10 @@ Standard scripts in `package.json`:
   calendar in `src/lib/calendar-schedules.ts`) × size of the latest change in
   σ of its own history; WIG20 and EUR/PLN enter only on a ≥2σ move. Keep the
   publication calendar current — stale dates make fresh readings look old.
+  Recency counts from the release that puts the number on the site: for CPI
+  the full mid-month GUS release, not the end-of-month flash (events with
+  `flash: true` are skipped — DBW never gets the flash, so dating CPI by it made
+  a reading published today look 15 days old and it never got "Nowy odczyt").
 - `/api/bdl-series?count=N` counts consecutive BDL **variable ids** (one per
   month, or per quarter), not months — max 12 (monthly) / 4 (quarterly); the
   route clamps it. The route already returns two years (previous + current).
