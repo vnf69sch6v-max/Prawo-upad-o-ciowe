@@ -31,18 +31,20 @@ const macro = (over: Partial<HeroCandidate> & Pick<HeroCandidate, "id" | "kind" 
 const calm = [3.0, 3.1, 3.0, 3.2, 3.1, 3.0, 3.1, 3.2, 3.1, 3.0, 3.1];
 
 describe("calendar lookups", () => {
-  it("dates the first publication of a period from the GUS calendar", () => {
+  it("dates the release that puts a period on the site, from the GUS calendar", () => {
     expect(publicationDate("retail", "2026-08")).toBe("2026-09-21");
     expect(publicationDate("industrial", "2026-08")).toBe("2026-09-21");
     expect(publicationDate("employment", "2026-08")).toBe("2026-09-24");
-    // CPI: pierwsza publikacja = flash z ostatniego dnia roboczego miesiąca
-    expect(publicationDate("cpi", "2026-09")).toBe("2026-09-30");
+    // CPI: pełne dane z połowy M+1 (DBW) — nie flash z 30.09, którego strona nie pokazuje
+    expect(publicationDate("cpi", "2026-09")).toBe("2026-10-15");
     expect(publicationDate("market", "2026-08")).toBeNull();
   });
 
   it("finds the next scheduled release, across the year boundary", () => {
     expect(nextPublication("retail", "2026-10-03")?.date).toBe("2026-10-20");
     expect(nextPublication("cpi", "2026-10-03")?.date).toBe("2026-10-15");
+    // po pełnym CPI za wrzesień kolejna zmiana liczby na stronie to CPI za październik, nie flash 30.10
+    expect(nextPublication("cpi", "2026-10-15")?.date).toBe("2026-11-13");
     // grudzień publikowany w styczniu kolejnego roku (~20.)
     expect(nextPublication("industrial", "2026-12-28")?.date.startsWith("2027-01-")).toBe(true);
     expect(publicationDate("retail", "2026-12")?.startsWith("2027-01-")).toBe(true);
@@ -106,11 +108,20 @@ describe("rankHeroSignals", () => {
     expect(rankHeroSignals([a, b], null).map((r) => r.candidate.id)).toEqual(["a", "b"]);
   });
 
-  it("lets a fresh CPI flash that crosses the target lead", () => {
-    const flash = macro({ id: "cpi", kind: "cpi", weight: 1.3, series: monthly("2025-10", [...calm.map((v) => v - 0.5), 2.3]) });
-    const ranked = rankHeroSignals([flash, retailBig, unemp], "2026-10-01");
+  it("lets a fresh CPI release that crosses the target lead", () => {
+    const cpi = macro({ id: "cpi", kind: "cpi", weight: 1.3, series: monthly("2025-10", [...calm.map((v) => v - 0.5), 2.3]) });
+    const ranked = rankHeroSignals([cpi, retailBig, unemp], "2026-10-15");
     expect(ranked[0].candidate.id).toBe("cpi");
     expect(ranked[0].crossedTarget).toBe(true);
+  });
+
+  it("badges CPI as new on the day the full data reach the site (15.10), not 15 days after the flash", () => {
+    const r = evaluateSignal(macro({ id: "cpi", kind: "cpi", series: monthly("2025-10", [...calm, 4.1]) }), "2026-10-15")!;
+    expect(r.period).toBe("2026-09");
+    expect(r.publishedOn).toBe("2026-10-15");
+    expect(r.ageDays).toBe(0);
+    expect(r.fresh).toBe(true);
+    expect(r.next?.date).toBe("2026-11-13");
   });
 
   it("skips empty series", () => {

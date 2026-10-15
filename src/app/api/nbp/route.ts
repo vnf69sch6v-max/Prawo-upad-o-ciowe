@@ -8,11 +8,28 @@
 //    pierwsze żądanie po wygaśnięciu dostaje STARĄ odpowiedź. Fetcher `withCache` zapisywał ją
 //    do Firestore ze świeżym `updatedAt`, więc stare dane udawały świeże — także w cronie
 //    z `?refresh=1`. Cache'em jest Firestore (TTL z `nbpCacheTtlMs`), upstream zawsze `no-store`.
+// 3. Wpis zapisany rano jest ważny 6 h, więc po publikacji (12:15) dalej oddawał wczorajszą tabelę,
+//    dopóki ktoś nie trafił w okno 12:15–14:00 albo nie przyszedł cron nbp. Dlatego po 12:15 wpis
+//    z datą sprzed dziś jest sprawdzany u źródła (`nbpBehindToday`), najwyżej co 10 min.
 import { NextRequest, NextResponse } from 'next/server';
 import { withCache } from '@/lib/server-cache';
-import { nbpCacheTtlMs } from '@/lib/market-hours';
+import { nbpBehindToday, nbpCacheTtlMs } from '@/lib/market-hours';
 
 const NBP_BASE = 'https://api.nbp.pl/api';
+/** Ponowne sprawdzenie u źródła, gdy NBP się spóźnia albo jest święto (tabeli dziś nie będzie). */
+const NBP_RECHECK_MS = 10 * 60 * 1000;
+
+type Mode = 'gold' | 'history' | 'table' | 'raw';
+
+/** Najnowsza data notowania w odpowiedzi (tabela: `effectiveDate`; złoto: `data`). */
+function latestNbpDate(data: unknown, mode: Mode): string | null {
+    if (!Array.isArray(data) || !data.length) return null;
+    if (mode === 'table') return (data[0] as { effectiveDate?: string })?.effectiveDate ?? null;
+    const last = data[data.length - 1] as { effectiveDate?: string; data?: string } | null;
+    if (mode === 'gold') return last?.data ?? null;
+    if (mode === 'history') return last?.effectiveDate ?? null;
+    return null;
+}
 
 async function fetchNBP(endpoint: string, fallback?: string): Promise<unknown> {
     const res = await fetch(`${NBP_BASE}/${endpoint}/?format=json`, { cache: 'no-store' });
@@ -36,7 +53,7 @@ export async function GET(request: NextRequest) {
     let endpoint: string;
     let fallback: string | undefined;
     let cacheKey: string;
-    let mode: 'gold' | 'history' | 'table' | 'raw';
+    let mode: Mode;
 
     if (gold === 'true') {
         const n = last || '30';
@@ -63,22 +80,21 @@ export async function GET(request: NextRequest) {
         mode = 'raw';
     }
 
+    const fetcher = async () => {
+        const raw = await fetchNBP(endpoint, fallback);
+        // Normalise currency history to a flat [{ no, effectiveDate, mid }] array
+        if (mode === 'history') {
+            const rates = (raw as { rates?: unknown[] })?.rates;
+            return Array.isArray(rates) ? rates : [];
+        }
+        return raw; // table → [{ rates, ... }]; gold → [{ data, cena }]; raw → as-is
+    };
+
     try {
-        const data = await withCache(
-            'exchange_rates',
-            cacheKey,
-            async () => {
-                const raw = await fetchNBP(endpoint, fallback);
-                // Normalise currency history to a flat [{ no, effectiveDate, mid }] array
-                if (mode === 'history') {
-                    const rates = (raw as { rates?: unknown[] })?.rates;
-                    return Array.isArray(rates) ? rates : [];
-                }
-                return raw; // table → [{ rates, ... }]; gold → [{ data, cena }]; raw → as-is
-            },
-            'NBP API',
-            force ? -1 : nbpCacheTtlMs()
-        );
+        let data = await withCache('exchange_rates', cacheKey, fetcher, 'NBP API', force ? -1 : nbpCacheTtlMs());
+        if (!force && nbpBehindToday(latestNbpDate(data, mode))) {
+            data = await withCache('exchange_rates', cacheKey, fetcher, 'NBP API', NBP_RECHECK_MS);
+        }
         return NextResponse.json(data);
     } catch (error) {
         console.error('NBP API error:', error);

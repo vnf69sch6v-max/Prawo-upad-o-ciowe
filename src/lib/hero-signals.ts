@@ -38,7 +38,7 @@ export interface RankedSignal {
     /** Ile poprzednich zmian z rzędu było mniejszych co do modułu (≥6 = „największa od…"). */
     biggestSince: number;
     period: string;
-    /** Dzień, w którym ten okres pierwszy raz trafił do publikacji (kalendarz GUS / data sesji). */
+    /** Dzień, w którym ten okres trafił na stronę (kalendarz GUS / data sesji). */
     publishedOn: string | null;
     ageDays: number | null;
     /** Opublikowane w ostatnich 7 dniach. */
@@ -76,21 +76,29 @@ export function daysBetween(fromIso: string, toIso: string): number {
     return Math.round((Date.UTC(y2, m2 - 1, d2) - Date.UTC(y1, m1 - 1, d1)) / 86_400_000);
 }
 
-/** Pierwsza publikacja danego okresu (dla CPI — flash z końca miesiąca). */
+/**
+ * Publikacje, z którymi liczba trafia NA STRONĘ. CPI na Przeglądzie pochodzi z DBW, a tam trafiają
+ * dopiero pełne dane z połowy M+1 — szybki szacunek z końca M nie zmienia wyświetlanej liczby.
+ * Liczenie wieku od flasha robiło z odczytu opublikowanego dziś odczyt „sprzed 15 dni": CPI nigdy
+ * nie dostawał plakietki „Nowy odczyt", a stopka zapowiadała flash, po którym na stronie nic się nie zmienia.
+ */
+function releases(type: MacroEvent['type'], year: number): MacroEvent[] {
+    return eventsAround(year).filter((e) => e.type === type && !e.flash);
+}
+
+/** Dzień, w którym dane za `period` pojawiają się na stronie (kalendarz GUS). */
 export function publicationDate(kind: SignalKind, period: string): string | null {
     const type = CALENDAR_TYPE[kind];
     if (!type || !/^\d{4}-\d{2}$/.test(period)) return null;
-    const year = Number(period.slice(0, 4));
-    const hit = eventsAround(year).find((e) => e.type === type && e.dataPeriod === period);
+    const hit = releases(type, Number(period.slice(0, 4))).find((e) => e.dataPeriod === period);
     return hit?.date ?? null;
 }
 
-/** Najbliższa publikacja wskaźnika ściśle po `today`. */
+/** Najbliższa publikacja, która zmieni liczbę na stronie, ściśle po `today`. */
 export function nextPublication(kind: SignalKind, today: string): MacroEvent | null {
     const type = CALENDAR_TYPE[kind];
     if (!type) return null;
-    const year = Number(today.slice(0, 4));
-    return eventsAround(year).find((e) => e.type === type && e.date > today) ?? null;
+    return releases(type, Number(today.slice(0, 4))).find((e) => e.date > today) ?? null;
 }
 
 function changes(series: Point[], mode: 'pp' | 'pct'): number[] {
