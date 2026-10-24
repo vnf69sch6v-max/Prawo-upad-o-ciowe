@@ -1,11 +1,21 @@
 # Savori — backlog autonomicznego rozwoju
 
-Rutyna co 5 h (zgoda właściciela z 24.10.2026) bierze **jedno** zadanie z góry listy „Do zrobienia”,
-które nie jest zablokowane, dowozi je do produkcji (PR → zielony podgląd Vercela → merge → weryfikacja
-na savori.space) i przenosi do „Zrobione”. Awaria danych lub cronów ma zawsze pierwszeństwo.
-Rzeczy, których nie da się zrobić z kodu, trafiają do „Wymaga właściciela”.
+Rutyna co 5 h (zgoda właściciela z 24.10.2026) dowozi **jeden** krok na przebieg. Każdy krok przechodzi
+przez agenta PM (`.claude/agents/product-manager.md`): PLAN → specyfikacja w `docs/specs/` z kryteriami
+akceptacji i sprawdzonym źródłem danych → wdrożenie → REVIEW PM (SHIP / FIX / BLOCK) → produkcja.
+Zasady produktu i definicja „zrobione”: `docs/PRODUCT.md`. Awaria danych lub cronów ma zawsze
+pierwszeństwo. Rzeczy, których nie da się zrobić z kodu, trafiają do „Wymaga właściciela”.
 
 ## Do zrobienia (od najważniejszego)
+
+### Prośby właściciela
+0. **Rozbicie inflacji w Japonii — „ładne”** (prośba z 24.10.2026). Co napędza CPI: świeża żywność,
+   energia, żywność bez świeżej, usługi/towary, kategorie koszyka; wkłady w p.p. tam, gdzie da się je
+   policzyć uczciwie. Ustalone: Statistics Dashboard ma kategorie koszyka **tylko rocznie** — miesięcznie
+   są tylko miary zbiorcze (ogółem, bez świeżej żywności, bez świeżej żywności i energii, bez żywności
+   i energii). Pierwszy krok bez klucza: rozbicie z różnic tych miar (wpływ świeżej żywności, energii,
+   żywności przetworzonej — opisane jako różnice miar, nie wagi). Pełne kategorie miesięczne: e-Stat API
+   (`ESTAT_APP_ID`, darmowa rejestracja — właściciel) albo pliki Statistics Bureau — PM ustala w specyfikacji.
 
 ### Bezpieczeństwo i niezawodność
 1. **`?refresh=1` jest publiczne.** Każdy może wymusić pobranie z GUS i wyczerpać wspólny limit DBW
