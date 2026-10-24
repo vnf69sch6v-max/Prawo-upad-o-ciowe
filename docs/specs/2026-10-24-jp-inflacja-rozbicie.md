@@ -300,6 +300,9 @@ Indeksy (…090xxx) i m/m (…040…) nie są potrzebne w tym kroku.
    i przypadku syntetycznego „S puste”. Do tego R < 0 („spadają o …”) i brak M−1 (bez nawiasu).
 7. **Hero:** opis zawiera zdanie-wniosek za najnowszy wspólny miesiąc. Zrzut 390 px; w produkcji `curl` HTML
    z `/japonia` zawiera „obniża inflację o 0,3 p.p.”, dopóki najnowszy jest 09.2026.
+   *Poprawka po REVIEW 24.10.2026:* w hero zdanie pojawia się tylko wtedy, gdy miesiąc rozbicia jest taki sam
+   jak miesiąc CPI ogółem. Hero nie ma etykiety okresu dla zdania, więc w przeciwnym razie wraca dotychczasowy
+   opis (bazowa, bez energii). Sekcja rozbicia pokazuje wtedy starszy miesiąc z własną etykietą. Wymagany test.
 8. **Telefon 390 i 320 px** (Playwright, zrzuty):
    - kolejność: hero → kafle → „Co napędza inflację” (zdanie, schody, wykres) → trend;
    - 0 przewijania w bok;

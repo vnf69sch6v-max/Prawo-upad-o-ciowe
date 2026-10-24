@@ -12,7 +12,7 @@ import { useCanHover } from '@/lib/use-can-hover';
 import { BOJ_TARGET, type JpCpiPayload } from '@/lib/jp/cpi';
 import {
     NEUTRAL_MAX_TENTHS, STEP_LABEL, STEP_ORDER, breakdownPeriodLabel, breakdownRows, breakdownSentence,
-    formatLevel, formatStep, latestBreakdown, stepQualifier, type BreakdownRow, type StepId,
+    formatLevel, formatStep, heroSentence, latestBreakdown, stepQualifier, type BreakdownRow, type StepId,
 } from '@/lib/jp/breakdown';
 
 // Kolory jak w polskiej „Dekompozycji CPI”: podnosi — czerwony, obniża — zielony, poziomy — granat.
@@ -20,7 +20,9 @@ const UP = '#DC2626';
 const DOWN = '#16A34A';
 const LEVEL = '#1E3A5F';
 const NEUTRAL = '#94A3B8';
-const STEP_COLOR: Record<StepId, string> = { food: '#D97706', energy: '#7C3AED', fresh: '#0891B2' };
+// Barwy spoza kolorów serii na tej stronie (JP_CPI_SERIES: niebieski, czerwony, fiolet, cyjan Tokio)
+// i spoza czerwieni/zieleni schodów — jeden kolor nie może znaczyć dwóch rzeczy (recenzja PM, FIX 1).
+const STEP_COLOR: Record<StepId, string> = { food: '#D97706', energy: '#DB2777', fresh: '#0D9488' };
 const TOTAL_COLOR = '#2563EB'; // jak linia CPI ogółem na wykresie trendu
 
 const monthTick = (d: string) => { const [y, m] = d.split('-'); return m ? `${m}.${y.slice(2)}` : d; };
@@ -116,7 +118,8 @@ function BreakdownChart({ rows }: { rows: BreakdownRow[] }) {
                         <XAxis dataKey="date" tick={{ fill: AXIS_INK, fontSize: TICK_FONT }} tickFormatter={monthTick} interval={Math.max(0, step - 1)} axisLine={false} tickLine={false} />
                         <YAxis tick={{ fill: AXIS_INK, fontSize: TICK_FONT }} tickFormatter={(v) => formatDecimalPL(v, 0)} axisLine={false} tickLine={false} width={40} />
                         <ReferenceLine y={0} stroke="#CBD2DD" />
-                        <ReferenceLine y={BOJ_TARGET} stroke={AXIS_INK} strokeDasharray="4 4" label={{ value: `Cel BOJ ${BOJ_TARGET}%`, position: 'insideTopLeft', fill: AXIS_INK, fontSize: 10 }} />
+                        {/* Bez podpisu na wykresie — szary tekst na szarych słupkach był nieczytelny; opis jest w legendzie. */}
+                        <ReferenceLine y={BOJ_TARGET} stroke={AXIS_INK} strokeDasharray="4 4" />
                         <Tooltip trigger={trigger} isAnimationActive={false} cursor={{ fill: 'rgba(0,0,0,0.04)' }} content={<BreakdownTooltip maxWidth={Math.max(180, width - 16)} />} />
                         <Bar dataKey="R" name="Bez żywności i energii (%)" stackId="s" fill={NEUTRAL} isAnimationActive={false} />
                         {STEP_ORDER.map((id) => (
@@ -132,15 +135,15 @@ function BreakdownChart({ rows }: { rows: BreakdownRow[] }) {
                     <li key={id} className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm" style={{ background: STEP_COLOR[id] }} />{STEP_LABEL[id]} (p.p.)</li>
                 ))}
                 <li className="flex items-center gap-1.5"><span className="h-0.5 w-3.5 rounded" style={{ background: TOTAL_COLOR }} />CPI ogółem (%)</li>
+                <li className="flex items-center gap-1.5"><span className="w-3.5 border-t-2 border-dashed" style={{ borderColor: AXIS_INK }} />Cel BOJ {formatDecimalPL(BOJ_TARGET, 0)}% (linia przerywana)</li>
             </ul>
         </div>
     );
 }
 
-/** Zdanie-wniosek do opisu hero (null, gdy nie ma kompletu czterech miar). */
+/** Zdanie-wniosek do opisu hero — null, gdy brak kompletu albo miesiąc rozbicia ≠ miesiąc CPI ogółem. */
 export function jpBreakdownSentence(series: JpCpiPayload['series'] | undefined): string | null {
-    const b = latestBreakdown(series);
-    return b ? breakdownSentence(b.row, b.prevR) : null;
+    return heroSentence(series);
 }
 
 /** „Co napędza inflację” — rozbicie na różnice oficjalnych miar (docs/specs/2026-10-24-jp-inflacja-rozbicie.md). */

@@ -122,6 +122,16 @@ export function breakdownSentence(row: BreakdownRow, prevR: number | null): stri
     return `${first}, ${second}; ${rFull}.`;
 }
 
+/**
+ * Zdanie do hero — tylko gdy miesiąc rozbicia = miesiąc CPI ogółem w hero. Gdy jedna miara się spóźni,
+ * hero nie może stawiać CPI za październik obok zdania z wrześniowymi liczbami (recenzja PM, FIX 3).
+ */
+export function heroSentence(series: Partial<JpCpiPayload['series']> | undefined): string | null {
+    const b = latestBreakdown(series);
+    const head = series?.headline?.length ? series.headline[series.headline.length - 1] : null;
+    return b && head && b.row.date === head.date ? breakdownSentence(b.row, b.prevR) : null;
+}
+
 /** „dane za wrzesień 2026” dla miesiąca rozbicia. */
 export function breakdownPeriodLabel(row: BreakdownRow): string {
     return `dane za ${formatDataPeriod(row.date)}`;

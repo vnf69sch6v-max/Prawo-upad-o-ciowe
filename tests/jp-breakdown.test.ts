@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { parseDashboardData } from "@/lib/jp/stat-dashboard";
 import { JP_CPI_SERIES, type JpCpiPayload } from "@/lib/jp/cpi";
-import { breakdownRows, breakdownSentence, formatStep, latestBreakdown, latestCommonPeriod } from "@/lib/jp/breakdown";
+import { breakdownRows, breakdownSentence, formatStep, heroSentence, latestBreakdown, latestCommonPeriod } from "@/lib/jp/breakdown";
 import { datasetById, evaluateDataset, extractJpCpiBreakdown } from "@/lib/freshness";
 
 // Utrwalone odpowiedzi Statistics Dashboard API z 24.10.2026 (TimeFrom=202501) — specyfikacja PM
@@ -81,6 +81,12 @@ describe("misaligned months and freshness", () => {
     expect(latestCommonPeriod(lagging)).toBe("2026-08");
     expect(latestBreakdown({ ...series, exFoodEnergy: [] })).toBeNull();
     expect(breakdownRows({ ...series, exFoodEnergy: undefined as never })).toEqual([]);
+  });
+
+  it("puts the sentence into the hero only when its month equals the hero CPI month", () => {
+    expect(heroSentence(series)).toBe("Energia obniża inflację o 0,3 p.p.; ceny bez żywności i energii rosną 2,2% r/r (miesiąc wcześniej 1,6%).");
+    expect(heroSentence(lagging)).toBeNull(); // hero: CPI za wrzesień, rozbicie tylko za sierpień
+    expect(heroSentence({ ...series, exFoodEnergy: [] })).toBeNull();
   });
 
   it("is checked as jp-cpi-breakdown: ok for a full set, lag when one measure is behind", () => {
