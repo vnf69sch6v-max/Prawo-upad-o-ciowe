@@ -10,12 +10,13 @@ import { QueryState } from '@/components/ui/QueryState';
 import { AXIS_INK } from '@/lib/chart-theme';
 import { formatDataPeriod, formatDecimalPL } from '@/lib/formatters';
 import { useIsClient } from '@/lib/use-is-client';
-import { BOJ_TARGET, JP_CPI_SERIES, changePp, chartRows, lastPoint, type JpCpiId, type JpCpiPayload } from '@/lib/jp/cpi';
+import { BOJ_TARGET, JP_CPI_DISPLAY_SERIES, JP_CPI_SERIES, changePp, chartRows, lastPoint, type JpCpiId, type JpCpiPayload } from '@/lib/jp/cpi';
+import { JpBreakdown, jpBreakdownSentence } from './JpBreakdown';
 import { jstDateKey, nextRelease, publishedOn, releaseInstant } from '@/lib/jp/calendar';
 import { DASHBOARD_CREDIT_JA, DASHBOARD_CREDIT_PL } from '@/lib/jp/stat-dashboard';
 import { useJpCpi } from '@/lib/jp/use-jp-cpi';
 
-const ICONS: Record<JpCpiId, LucideIcon> = { headline: Tag, core: Gauge, coreCore: Zap, tokyo: Building2 };
+const ICONS: Record<JpCpiId, LucideIcon> = { headline: Tag, core: Gauge, coreCore: Zap, exFoodEnergy: Zap, tokyo: Building2 };
 /** Odczyt z ostatnich 7 dni dostaje plakietkę „Nowy odczyt” (jak na Przeglądzie). */
 const FRESH_DAYS = 7;
 
@@ -76,7 +77,7 @@ export function JpInflation({ initial }: { initial: JpCpiPayload | null }) {
     // Wstępne Tokio za nowszy miesiąc niż dane krajowe = najświeższy sygnał, zanim przyjdą dane krajowe.
     const tokyoAhead = tokyo && head && tokyo.date > head.date ? tokyo : null;
 
-    const kpis: CompactKpiItem[] = JP_CPI_SERIES.map((cfg) => {
+    const kpis: CompactKpiItem[] = JP_CPI_DISPLAY_SERIES.map((cfg) => {
         const p = latest[cfg.id];
         const ch = changePp(data.series[cfg.id]);
         const age = ageOf(cfg.id);
@@ -92,6 +93,9 @@ export function JpInflation({ initial }: { initial: JpCpiPayload | null }) {
         };
     });
 
+    // Zdanie-wniosek z rozbicia (najnowszy miesiąc wspólny czterem miarom) — liczby, nie „dziś”, więc w HTML z serwera.
+    const sentence = jpBreakdownSentence(data.series);
+
     const upcoming = todayJst
         ? (['tokyo', 'national'] as const).map((kind) => ({ kind, next: nextRelease(kind, new Date()) }))
         : [];
@@ -106,8 +110,8 @@ export function JpInflation({ initial }: { initial: JpCpiPayload | null }) {
                 headline={headline}
                 description={
                     <>
-                        CPI ogółem wynosi {pct(head?.value)}% r/r przy celu BOJ {BOJ_TARGET}%. Bazowa (bez świeżej żywności) — {pct(latest.core?.value)}%,
-                        bez świeżej żywności i energii — {pct(latest.coreCore?.value)}%.
+                        CPI ogółem wynosi {pct(head?.value)}% r/r przy celu BOJ {BOJ_TARGET}%.{' '}
+                        {sentence ?? `Bazowa (bez świeżej żywności) — ${pct(latest.core?.value)}%, bez świeżej żywności i energii — ${pct(latest.coreCore?.value)}%.`}
                         {tokyoAhead && ` Wstępny odczyt z Tokio za ${formatDataPeriod(tokyoAhead.date).split(' ')[0]}: ${pct(tokyoAhead.value)}%.`}
                     </>
                 }
@@ -126,13 +130,15 @@ export function JpInflation({ initial }: { initial: JpCpiPayload | null }) {
 
             <CompactKpiGrid items={kpis} label="Miary inflacji (r/r)" columns={4} dense />
 
+            <JpBreakdown series={data.series} />
+
             <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
                 <SectionCard editorial titleVariant="label" title="Inflacja w Japonii — trend" subtitle="rok do roku (%) · Statistics Bureau of Japan, baza 2025">
                     <InteractiveChart
                         data={rows} xKey="date" height={300} unit="%" showRange initialRange="5L" ranges={['1R', '3L', '5L', 'ALL']} legend
                         valueFormatter={(v) => formatDecimalPL(v, 1)} xTickFormatter={monthTick}
                         referenceLines={[{ y: BOJ_TARGET, label: `Cel BOJ ${BOJ_TARGET}%`, color: AXIS_INK }, { y: 0, color: '#CBD2DD' }]}
-                        series={JP_CPI_SERIES.map((cfg) => ({
+                        series={JP_CPI_DISPLAY_SERIES.map((cfg) => ({
                             key: cfg.id, name: cfg.short, color: cfg.color, type: 'line' as const,
                             strokeWidth: cfg.id === 'headline' ? 2.5 : cfg.id === 'tokyo' ? 1.5 : 2, dashed: cfg.id === 'tokyo',
                         }))}
@@ -164,16 +170,23 @@ export function JpInflation({ initial }: { initial: JpCpiPayload | null }) {
 
                     <SectionCard titleVariant="label" title="Jak czytać">
                         <ul className="space-y-2.5 text-sm leading-relaxed text-mk-text-soft">
-                            {JP_CPI_SERIES.map((cfg) => (
+                            {JP_CPI_DISPLAY_SERIES.map((cfg) => (
                                 <li key={cfg.id} className="flex gap-2">
                                     <span className="mt-[7px] h-2 w-2 shrink-0 rounded-full" style={{ background: cfg.color }} aria-hidden />
                                     <span><strong className="font-semibold text-mk-text">{cfg.label}</strong> — {cfg.hint}</span>
                                 </li>
                             ))}
-                            <li className="flex gap-2 text-mk-muted">
-                                <Info size={15} className="mt-0.5 shrink-0" aria-hidden />
-                                <span>Od sierpnia 2026 r. Japonia liczy CPI w bazie 2025. Pokazujemy tylko nową bazę — historię przeliczył Statistics Bureau.</span>
-                            </li>
+                            {[
+                                'Rozbicie to różnice między oficjalnymi miarami: o ile zmienia się stopa inflacji, gdy do koszyka dołączamy kolejno żywność poza świeżą, energię i świeżą żywność. Kolejność wynika z miar, które publikuje Statistics Bureau.',
+                                'To nie są wkłady (寄与度) z komunikatu. Grupa, która drożeje w tym samym tempie co reszta koszyka, ma różnicę 0,0 p.p., nawet jeśli jej ceny rosną. Oficjalne wkłady pokażemy w kolejnym kroku.',
+                                'Bez żywności i energii: alkohol zostaje w koszyku, a gastronomia nie. To miara bliska inflacji bazowej NBP, ale nie identyczna. Różnice stóp zaokrąglonych do 0,1 mają dokładność ±0,1 p.p.',
+                                'Od sierpnia 2026 r. Japonia liczy CPI w bazie 2025. Pokazujemy tylko nową bazę — historię przeliczył Statistics Bureau.',
+                            ].map((t) => (
+                                <li key={t.slice(0, 24)} className="flex gap-2 text-mk-muted">
+                                    <Info size={15} className="mt-0.5 shrink-0" aria-hidden />
+                                    <span>{t}</span>
+                                </li>
+                            ))}
                         </ul>
                     </SectionCard>
                 </div>

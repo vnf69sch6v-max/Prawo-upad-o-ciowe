@@ -4,7 +4,7 @@
 import { formatDataPeriod, formatDecimalPL } from '@/lib/formatters';
 import type { DashboardPoint, DashboardQuery } from './stat-dashboard';
 
-export type JpCpiId = 'headline' | 'core' | 'coreCore' | 'tokyo';
+export type JpCpiId = 'headline' | 'core' | 'coreCore' | 'exFoodEnergy' | 'tokyo';
 
 /** Cel BOJ: 2% r/r dla CPI ogółem. */
 export const BOJ_TARGET = 2;
@@ -26,6 +26,8 @@ export interface JpCpiSeriesConfig {
     hint: string;
     color: string;
     query: DashboardQuery;
+    /** `false` — seria tylko do obliczeń (rozbicie), bez kafla, linii trendu i opisu w „Jak czytać”. */
+    display?: boolean;
 }
 
 export const JP_CPI_SERIES: JpCpiSeriesConfig[] = [
@@ -45,11 +47,22 @@ export const JP_CPI_SERIES: JpCpiSeriesConfig[] = [
         query: { indicator: '0703010601010030040', rank: 2, region: '00000', from: JP_CPI_FROM, mustInclude: [YOY, '（生鮮食品及びエネルギーを除く総合）', BASE] },
     },
     {
+        // Punkt wyjścia rozbicia (docs/specs/2026-10-24-jp-inflacja-rozbicie.md): alkohol zostaje w koszyku,
+        // gastronomia nie — bliska, ale nie identyczna z inflacją bazową NBP. Nie nazywać jej „bazową”.
+        id: 'exFoodEnergy', label: 'Bez żywności i energii', short: 'Bez żywności i energii', color: '#475569',
+        hint: 'Bez żywności (poza alkoholem) i energii — punkt wyjścia rozbicia.',
+        query: { indicator: '0703010601010030020', rank: 2, region: '00000', from: JP_CPI_FROM, mustInclude: [YOY, '（食料（酒類を除く）及びエネルギーを除く総合）', BASE] },
+        display: false,
+    },
+    {
         id: 'tokyo', label: 'Tokio', short: 'Tokio', color: '#0891B2',
         hint: '23 dzielnice Tokio — odczyt wstępny wychodzi pod koniec miesiąca, ok. 3 tygodnie przed danymi krajowymi.',
         query: { indicator: '0703010601010030000', rank: 4, region: '13100', from: JP_CPI_FROM, mustInclude: [YOY, '（総合）', BASE] },
     },
 ];
+
+/** Serie pokazywane jako kafle, linie trendu i w „Jak czytać” (bez serii tylko do obliczeń). */
+export const JP_CPI_DISPLAY_SERIES = JP_CPI_SERIES.filter((s) => s.display !== false);
 
 export const JP_CPI_SOURCE = 'Statistics Bureau of Japan · Statistics Dashboard';
 
@@ -80,7 +93,7 @@ export function changePp(points: DashboardPoint[] | undefined): number | null {
 /** Wiersze wykresu: jedna data, wszystkie serie (brakujące = undefined, linia się nie łączy na siłę). */
 export function chartRows(series: JpCpiPayload['series']): Array<{ date: string } & Partial<Record<JpCpiId, number>>> {
     const byDate = new Map<string, { date: string } & Partial<Record<JpCpiId, number>>>();
-    for (const cfg of JP_CPI_SERIES) {
+    for (const cfg of JP_CPI_DISPLAY_SERIES) {
         for (const p of series[cfg.id] ?? []) {
             const row = byDate.get(p.date) ?? { date: p.date };
             row[cfg.id] = p.value;

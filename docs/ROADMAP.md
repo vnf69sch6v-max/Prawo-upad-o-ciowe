@@ -16,6 +16,8 @@ pierwszeństwo. Rzeczy, których nie da się zrobić z kodu, trafiają do „Wym
    i energii). Pierwszy krok bez klucza: rozbicie z różnic tych miar (wpływ świeżej żywności, energii,
    żywności przetworzonej — opisane jako różnice miar, nie wagi). Pełne kategorie miesięczne: e-Stat API
    (`ESTAT_APP_ID`, darmowa rejestracja — właściciel) albo pliki Statistics Bureau — PM ustala w specyfikacji.
+   **Krok 1 (różnice miar, bez klucza)** — specyfikacja `docs/specs/2026-10-24-jp-inflacja-rozbicie.md`,
+   wdrożenie w recenzji PM. Krok 2 (oficjalne wkłady 寄与度 i kategorie koszyka) czeka na `ESTAT_APP_ID`.
 
 ### Bezpieczeństwo i niezawodność
 1. **`?refresh=1` jest publiczne.** Każdy może wymusić pobranie z GUS i wyczerpać wspólny limit DBW

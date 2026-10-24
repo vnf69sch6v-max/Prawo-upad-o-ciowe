@@ -98,6 +98,7 @@ describe("payload helpers and freshness", () => {
       headline: [{ date: "2026-08", value: 1.9 }, { date: "2026-09", value: 2.1 }],
       core: [{ date: "2026-08", value: 1.7 }, { date: "2026-09", value: 1.8 }],
       coreCore: [{ date: "2026-09", value: 1.9 }],
+      exFoodEnergy: [],
       tokyo: [{ date: "2026-09", value: 2.7 }, { date: "2026-10", value: 2.4, provisional: true }],
     },
     source: "test",
@@ -117,7 +118,7 @@ describe("payload helpers and freshness", () => {
 
   it("treats a payload with only empty series as empty", () => {
     expect(jpCpiIsEmpty(payload)).toBe(false);
-    expect(jpCpiIsEmpty({ ...payload, series: { headline: [], core: [], coreCore: [], tokyo: [] } })).toBe(true);
+    expect(jpCpiIsEmpty({ ...payload, series: { headline: [], core: [], coreCore: [], exFoodEnergy: [], tokyo: [] } })).toBe(true);
   });
 
   it("is checked by the freshness monitor against the JST calendar", () => {

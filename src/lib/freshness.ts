@@ -21,6 +21,7 @@ import { dbwSeriesPath, GUS_INDUSTRY_SERIES, GUS_RETAIL_SERIES, type DbwSeriesCo
 import { warsawMinutes } from '@/lib/market-hours';
 import { warsawDateKey } from '@/lib/news/warsaw-date';
 import { expectedJpCpi } from '@/lib/jp/calendar';
+import { latestCommonPeriod } from '@/lib/jp/breakdown';
 
 // ─── Typy ───────────────────────────────────────────────
 
@@ -319,6 +320,13 @@ const LAG_NOTES: Record<SourceKind, string> = {
     'jp-dashboard': 'Komunikat Statistics Bureau (8:30 JST) już jest, ale Statistics Dashboard albo nasze odświeżenie (9:30 i 15:00 JST) jeszcze go nie objęły.',
 };
 
+/** `/api/jp/cpi` → najnowszy miesiąc wspólny czterem miarom rozbicia (ogółem, bazowa, bez świeżej
+ *  żywności i energii, bez żywności i energii) — rozbicie nigdy nie miesza miesięcy. */
+export function extractJpCpiBreakdown(json: unknown): string | null {
+    const series = asObj(asObj(json)?.series);
+    return series ? latestCommonPeriod(series as Parameters<typeof latestCommonPeriod>[0]) : null;
+}
+
 /** `/api/jp/cpi` → { series: { headline: [{ date: 'YYYY-MM' }] } } — najnowszy miesiąc CPI ogółem. */
 export function extractJpCpi(json: unknown): string | null {
     const headline = asObj(asObj(json)?.series)?.headline;
@@ -427,6 +435,15 @@ export const FRESHNESS_DATASETS: DatasetSpec[] = [
         endpoint: () => '/api/jp/cpi',
         extract: extractJpCpi,
         // Kalendarz Statistics Bureau (src/lib/jp/calendar.ts); po jego końcu — heurystyka.
+        expected: (now) => expectedJpCpi(now).period,
+        tolerance: MONTHLY, maxAgeDays: 70, lagNote: LAG_NOTES['jp-dashboard'], selfHeal: true,
+    },
+    {
+        id: 'jp-cpi-breakdown', label: 'Japonia — rozbicie inflacji', source: 'Statistics Dashboard', kind: 'jp-dashboard',
+        group: 'jp', frequency: 'monthly',
+        // Ten sam klucz cache co strona i cron; okres = najnowszy miesiąc wspólny czterem miarom.
+        endpoint: () => '/api/jp/cpi',
+        extract: extractJpCpiBreakdown,
         expected: (now) => expectedJpCpi(now).period,
         tolerance: MONTHLY, maxAgeDays: 70, lagNote: LAG_NOTES['jp-dashboard'], selfHeal: true,
     },

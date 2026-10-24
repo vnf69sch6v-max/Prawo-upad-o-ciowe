@@ -6,10 +6,10 @@
 
 import { formatDataPeriod } from '@/lib/formatters';
 
-export type RangeKey = '1M' | '3M' | '6M' | '1R' | '3L' | '5L' | 'ALL';
+export type RangeKey = '1M' | '3M' | '6M' | '1R' | '2L' | '3L' | '5L' | 'ALL';
 
 export const RANGE_MONTHS: Record<RangeKey, number | null> = {
-    '1M': 1, '3M': 3, '6M': 6, '1R': 12, '3L': 36, '5L': 60, ALL: null,
+    '1M': 1, '3M': 3, '6M': 6, '1R': 12, '2L': 24, '3L': 36, '5L': 60, ALL: null,
 };
 
 type Period =
