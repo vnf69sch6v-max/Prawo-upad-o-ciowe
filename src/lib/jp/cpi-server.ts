@@ -3,7 +3,9 @@ import { peekServerCache, withCache } from '@/lib/server-cache';
 import { fetchDashboardSeries, type DashboardPoint } from './stat-dashboard';
 import { JP_CPI_SERIES, JP_CPI_SOURCE, jpCpiIsEmpty, type JpCpiId, type JpCpiPayload } from './cpi';
 
-const CACHE = { collection: 'jp_data', doc: 'cpi_v1' } as const;
+// v2: komplet z serią `exFoodEnergy` (rozbicie). Nowy klucz zamiast łatania starego wpisu — strona nigdy
+// nie dostaje kompletu bez serii potrzebnej do rozbicia.
+const CACHE = { collection: 'jp_data', doc: 'cpi_v2' } as const;
 
 /** Odczyt użytkownika: wpis młodszy niż 6 h; crony i tak odświeżają po każdej publikacji. */
 const USER_TTL_MS = 6 * 3_600_000;
@@ -16,7 +18,9 @@ export const FORCED_REFRESH_MIN_AGE_MS = 10 * 60_000;
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-/** Wszystkie serie po kolei (z odstępem — API prosi o niewielki ruch). Błąd którejkolwiek = błąd całości:
+/** Wszystkie serie po kolei (z odstępem — API prosi o niewielki ruch). Najgorszy przypadek:
+ *  5 serii × 10 s (`DASHBOARD_TIMEOUT_MS`) + 4 × 0,3 s = 51,2 s < maxDuration 60 s tras
+ *  /api/jp/cpi i /api/cron/jp (kod + vercel.json). Przy kolejnej serii — przeliczyć. Błąd którejkolwiek = błąd całości:
  *  `withCache` zostawia wtedy poprzedni, spójny komplet zamiast mieszać stare serie z nowymi. */
 export async function fetchJpCpi(): Promise<JpCpiPayload> {
     const series = {} as Record<JpCpiId, DashboardPoint[]>;

@@ -114,12 +114,15 @@ export function parseDashboardData(json: unknown, q: DashboardQuery): DashboardS
     return { indicator: q.indicator, name, points };
 }
 
-/** Jedna seria z API; `no-store`, limit czasu 20 s. */
+/** Limit na jedno zapytanie — budżet całego kompletu liczy `fetchJpCpi` (cpi-server.ts). */
+export const DASHBOARD_TIMEOUT_MS = 10_000;
+
+/** Jedna seria z API; `no-store`, limit czasu `DASHBOARD_TIMEOUT_MS`. */
 export async function fetchDashboardSeries(q: DashboardQuery): Promise<DashboardSeries> {
     const res = await fetch(dashboardUrl(q), {
         cache: 'no-store',
         headers: { Accept: 'application/json' },
-        signal: AbortSignal.timeout(20_000),
+        signal: AbortSignal.timeout(DASHBOARD_TIMEOUT_MS),
     });
     if (!res.ok) throw new Error(`Statistics Dashboard: HTTP ${res.status} dla serii ${q.indicator}`);
     return parseDashboardData(await res.json(), q);
