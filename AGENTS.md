@@ -37,6 +37,15 @@ Standard scripts in `package.json`:
   unavailable, so a missing data value is not necessarily a bug.
 - The `middleware`-file deprecation warning from Next.js at startup is
   expected and harmless.
+- Security headers (CSP, HSTS, `X-Frame-Options`, …) are set for every route in
+  `next.config.ts` (`SECURITY_HEADERS`; CSP only in production builds — check
+  with `next start`, not `next dev`). The CSP allows only what the browser
+  actually loads: own scripts (`'unsafe-inline'`, pages are prerendered so no
+  nonce), Google Fonts, Firebase (`*.googleapis.com`, `*.firebaseio.com`,
+  `*.firebaseapp.com` frames), https images, the `/pdfjs` worker. Any new
+  browser-side script, iframe, font or `fetch` to another origin needs a CSP
+  entry, or it is silently blocked (`securitypolicyviolation` in the console).
+- Autonomous work follows `docs/ROADMAP.md` (backlog, owner-only actions, log).
 - Inside a `withCache(...)` fetcher, fetch upstream with `cache: 'no-store'`,
   not `next: { revalidate }`. The Next.js Data Cache is stale-while-revalidate,
   so the first request after expiry gets an old response that `withCache` then
