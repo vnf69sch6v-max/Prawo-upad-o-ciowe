@@ -60,7 +60,7 @@ Standard scripts in `package.json`:
   `mustInclude` name fragments, so a wrong series or the old base throws instead
   of showing someone else's numbers); fetch + Firestore cache in
   `src/lib/jp/cpi-server.ts` (`?refresh=1` reaches the source at most every
-  10 min — the pattern the PL routes still lack). Release calendar
+  10 min — the shared `withCache` limit, same as the PL routes). Release calendar
   `src/lib/jp/calendar.ts` (8:30 JST = 23:30/00:30 UTC; extend it before
   03.2027, after that freshness falls back to a heuristic). The page is ISR
   (`revalidate = 1800`) and reads Firestore only (`peekJpCpi`) — never fetch an
@@ -85,7 +85,14 @@ Standard scripts in `package.json`:
   throws it returns the last stored payload (any age), and an empty payload
   (`looksEmpty`: every top-level array empty) does not replace a non-empty one.
   An API can therefore answer 200 with old data — staleness is detected by the
-  freshness check, not by HTTP errors.
+  freshness check, not by HTTP errors. `?refresh=1` is public (no secret), so a
+  forced refresh (`maxAgeMs < 0`) reaches the source at most once per 10 min per
+  cache key (`FORCED_REFRESH_MIN_AGE_MS`); a younger entry is served from cache.
+  Routes pass `force ? -1 : ttl` — never `0`, which bypasses the limit.
+  The per-key limit is not a GUS budget. A loop over one `gus-cpi-full` key still
+  makes 64–128 DBW calls / 15 min, and all DBW keys together ~440–590 / 15 min
+  against a limit of ~100. So GUS routes must never build a cache key or a period
+  list from unvalidated query params (ROADMAP 1a/1b).
 - Data freshness: `/api/health/freshness` compares the latest period each page
   endpoint serves with the period the publication calendar says should exist
   (`src/lib/freshness.ts`, tests in `tests/freshness.test.ts`). 200 = no

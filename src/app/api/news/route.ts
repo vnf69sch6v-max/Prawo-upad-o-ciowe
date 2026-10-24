@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
             'rss_pl',
             buildNewsFeed,
             'RSS: Bankier, Money.pl, BI PL, Interia, PB, wnp.pl, ISBnews, GUS, 300Gospodarka',
-            refresh ? 0 : TTL_MS,
+            refresh ? -1 : TTL_MS, // -1: do RSS najwyżej raz na 10 min (FORCED_REFRESH_MIN_AGE_MS w withCache)
         );
 
         // Hobby: Vercel pozwala tylko 1 cron/dzień — archiwum dzienne budujemy przy każdym
