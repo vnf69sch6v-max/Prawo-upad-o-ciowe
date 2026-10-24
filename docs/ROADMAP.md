@@ -16,8 +16,8 @@ pierwszeństwo. Rzeczy, których nie da się zrobić z kodu, trafiają do „Wym
    i energii). Pierwszy krok bez klucza: rozbicie z różnic tych miar (wpływ świeżej żywności, energii,
    żywności przetworzonej — opisane jako różnice miar, nie wagi). Pełne kategorie miesięczne: e-Stat API
    (`ESTAT_APP_ID`, darmowa rejestracja — właściciel) albo pliki Statistics Bureau — PM ustala w specyfikacji.
-   **Krok 1 (różnice miar, bez klucza)** — specyfikacja `docs/specs/2026-10-24-jp-inflacja-rozbicie.md`,
-   wdrożenie w recenzji PM. Krok 2 (oficjalne wkłady 寄与度 i kategorie koszyka) czeka na `ESTAT_APP_ID`.
+   **Krok 1 zrobiony 24.10** (różnice miar, PM: SHIP). **Krok 2** — oficjalne wkłady 寄与度 i kategorie
+   koszyka miesięcznie — czeka na `ESTAT_APP_ID` (właściciel).
 
 ### Bezpieczeństwo i niezawodność
 1. **`?refresh=1` jest publiczne.** Każdy może wymusić pobranie z GUS i wyczerpać wspólny limit DBW
@@ -44,6 +44,8 @@ pierwszeństwo. Rzeczy, których nie da się zrobić z kodu, trafiają do „Wym
 12. **Wydajność:** Lighthouse mobile, rozmiar bundla, leniwe ładowanie wykresów.
 
 ### Japonia (krok po kroku, każdy krok porządnie od początku)
+J0. **20.11.2026 (CPI za październik):** do 15:00 JST `jp-cpi` i `jp-cpi-breakdown` = ok z okresem 2026-10,
+    cron `jp` z wpisem (kryterium 17 specyfikacji rozbicia) — wynik dopisać tutaj.
 J1. **30.10.2026 (Tokio, wstępne za październik):** sprawdzić, czy Statistics Dashboard dostaje odczyt
     wstępny (`@isProvisional = 1`) tego samego dnia. Jeśli nie — wstępne Tokio z e-Stat API
     (wymaga `ESTAT_APP_ID`, darmowa rejestracja — właściciel) albo z komunikatu Statistics Bureau.
@@ -61,6 +63,9 @@ J3. **Przegląd Japonii** (hero jak w PL), gdy będą ≥3 wskaźniki.
 - **`GUS_BDL_KEY`** — wyższy limit BDL (rejestracja na api.stat.gov.pl).
 
 ## Zrobione
+- **24.10.2026 — Japonia: „Co napędza inflację”** (krok 1 rozbicia, PM: FIX → SHIP): schody od miary bez
+  żywności i energii do CPI ogółem (różnice oficjalnych miar, nie wkłady), zdanie-wniosek w sekcji i hero,
+  wykres 2L/5L, seria `exFoodEnergy`, świeżość `jp-cpi-breakdown`, limit czasu 51,2 s < 60 s.
 - **24.10.2026 — Japonia: inflacja CPI** (`/japonia`): przełącznik PL/JP w nagłówku, 4 miary (ogółem,
   bazowa, bez energii, Tokio), cel BOJ 2%, kalendarz publikacji 8:30 JST, kontrola świeżości `jp-cpi`,
   cron `jp`, walidacja serii, refresh=1 z limitem 10 min, liczby w HTML (ISR). Przy okazji naprawiony
