@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { scrollChildInline } from '@/lib/tab-scroll';
+import { countryOf, type Country } from './country';
 import { LayoutDashboard, Tag, Factory, Users, TrendingUp, Map, Newspaper, FileBarChart2, type LucideIcon } from 'lucide-react';
 
 /** `hint` — jedno zdanie o zawartości sekcji; pokazywane pod nazwą w arkuszu „Więcej” na telefonie. */
@@ -19,6 +20,15 @@ export const NAV_ITEMS: NavItem[] = [
     { label: 'Regiony', href: '/regiony', icon: Map, hint: 'Województwa: PKB, ludność' },
     { label: 'Parser', href: '/parser', icon: FileBarChart2, hint: 'Liczby ze sprawozdań spółek' },
 ];
+
+/** Japonia — sekcje dochodzą krok po kroku (na start inflacja). */
+export const JP_NAV_ITEMS: NavItem[] = [
+    { label: 'Inflacja', href: '/japonia', icon: Tag, hint: 'CPI, bazowa, Tokio, cel BOJ 2%' },
+];
+
+export function navItemsFor(country: Country): NavItem[] {
+    return country === 'jp' ? JP_NAV_ITEMS : NAV_ITEMS;
+}
 
 /** Podstrony spoza ścieżki sekcji, które do niej należą (karta spółki WIG20 → Rynki). */
 const SECTION_ALIASES: Record<string, string[]> = { '/rynki': ['/spolki'] };
@@ -42,7 +52,7 @@ export function TopNav({ className = '' }: { className?: string }) {
 
     return (
         <nav ref={navRef} aria-label="Sekcje serwisu" className={`flex items-center gap-1 ${className}`}>
-            {NAV_ITEMS.map((it) => {
+            {navItemsFor(countryOf(pathname)).map((it) => {
                 const Icon = it.icon;
                 const active = isActive(pathname, it.href);
                 return (

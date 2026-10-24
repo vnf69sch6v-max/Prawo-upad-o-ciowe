@@ -20,6 +20,7 @@ import { formatDataPeriod } from '@/lib/formatters';
 import { dbwSeriesPath, GUS_INDUSTRY_SERIES, GUS_RETAIL_SERIES, type DbwSeriesConfig } from '@/lib/gus-dbw-series';
 import { warsawMinutes } from '@/lib/market-hours';
 import { warsawDateKey } from '@/lib/news/warsaw-date';
+import { expectedJpCpi } from '@/lib/jp/calendar';
 
 // ─── Typy ───────────────────────────────────────────────
 
@@ -27,7 +28,7 @@ import { warsawDateKey } from '@/lib/news/warsaw-date';
  *  źródła, ostrzeżenie); stale = ≥2 okresy za nim albo przekroczony maks. wiek; error = brak odpowiedzi/danych. */
 export type FreshnessStatus = 'ok' | 'lag' | 'stale' | 'error';
 export type Frequency = 'daily' | 'monthly' | 'quarterly';
-export type SourceKind = 'gus-dbw' | 'gus-bdl' | 'eurostat' | 'nbp' | 'yahoo';
+export type SourceKind = 'gus-dbw' | 'gus-bdl' | 'eurostat' | 'nbp' | 'yahoo' | 'jp-dashboard';
 
 export interface DatasetSpec {
     id: string;
@@ -36,7 +37,7 @@ export interface DatasetSpec {
     source: string;
     kind: SourceKind;
     /** Grupa na stronie /status. */
-    group: 'gus' | 'eurostat' | 'markets';
+    group: 'gus' | 'eurostat' | 'markets' | 'jp';
     frequency: Frequency;
     /** Ścieżka API dokładnie taka, jaką woła strona (ten sam klucz cache) — BEZ `refresh=1`. */
     endpoint: (now: Date) => string;
@@ -315,7 +316,14 @@ const LAG_NOTES: Record<SourceKind, string> = {
     eurostat: 'Eurostat publikuje dane krajowe z opóźnieniem względem GUS i własnego kalendarza.',
     nbp: 'Tabela z poprzedniego dnia roboczego — cache odświeża się po publikacji NBP (ok. 12:15).',
     yahoo: 'Brak notowania z ostatnich sesji — możliwe święto giełdowe albo opóźnienie Yahoo.',
+    'jp-dashboard': 'Komunikat Statistics Bureau (8:30 JST) już jest, ale Statistics Dashboard albo nasze odświeżenie (9:30 i 15:00 JST) jeszcze go nie objęły.',
 };
+
+/** `/api/jp/cpi` → { series: { headline: [{ date: 'YYYY-MM' }] } } — najnowszy miesiąc CPI ogółem. */
+export function extractJpCpi(json: unknown): string | null {
+    const headline = asObj(asObj(json)?.series)?.headline;
+    return maxPeriod(Array.isArray(headline) ? headline.map((p) => asObj(p)?.date) : [], 'monthly');
+}
 
 const MONTHLY = { ok: 0, lag: 1 } as const;
 
@@ -412,6 +420,16 @@ export const FRESHNESS_DATASETS: DatasetSpec[] = [
     yahooSpec('wig20', 'WIG20', 'wig20', 30),
     yahooSpec('mwig40', 'mWIG40', 'mwig40', 30),
     yahooSpec('brent', 'Ropa Brent', 'cb.c', 30),
+    {
+        id: 'jp-cpi', label: 'Japonia — inflacja CPI', source: 'Statistics Dashboard', kind: 'jp-dashboard', group: 'jp',
+        frequency: 'monthly',
+        // useJpCpi() na /japonia (ten sam klucz cache co strona i cron `jp`).
+        endpoint: () => '/api/jp/cpi',
+        extract: extractJpCpi,
+        // Kalendarz Statistics Bureau (src/lib/jp/calendar.ts); po jego końcu — heurystyka.
+        expected: (now) => expectedJpCpi(now).period,
+        tolerance: MONTHLY, maxAgeDays: 70, lagNote: LAG_NOTES['jp-dashboard'], selfHeal: true,
+    },
 ];
 
 export function datasetById(id: string): DatasetSpec | undefined {
