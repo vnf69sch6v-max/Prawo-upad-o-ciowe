@@ -20,10 +20,6 @@ pierwszeństwo. Rzeczy, których nie da się zrobić z kodu, trafiają do „Wym
    koszyka miesięcznie — czeka na `ESTAT_APP_ID` (właściciel).
 
 ### Bezpieczeństwo i niezawodność
-1. **`?refresh=1` jest publiczne.** Każdy może wymusić pobranie z GUS i wyczerpać wspólny limit DBW
-   (~100 żądań / 15 min) — wtedy crony dostają 429 i dane przestają się odświeżać. Wymuszone
-   odświeżenie honorować najwyżej raz na N minut na klucz cache (bez sekretu), a bez limitu tylko
-   z nagłówkiem crona, gdy `CRON_SECRET` jest ustawiony (`internalInit` dokłada `Authorization`).
 2. **CORS na `/api/*`:** `Access-Control-Allow-Origin: *` z metodami POST/PUT/DELETE/PATCH
    (`vercel.json`). Zawęzić do GET/OPTIONS; POST tylko dla parsera z własnej domeny.
 3. **`news-digest` nie zapisuje przebiegu** w `health/cron_runs` — `/status` nie pokazuje, czy działa.
@@ -63,6 +59,10 @@ J3. **Przegląd Japonii** (hero jak w PL), gdy będą ≥3 wskaźniki.
 - **`GUS_BDL_KEY`** — wyższy limit BDL (rejestracja na api.stat.gov.pl).
 
 ## Zrobione
+- **24.10.2026 — `?refresh=1` z limitem** (`docs/specs/2026-10-24-refresh-limit.md`): wymuszone odświeżenie
+  w `withCache` idzie do źródła najwyżej raz na 10 min na klucz cache (`FORCED_REFRESH_MIN_AGE_MS`),
+  bez sekretu — publiczne wołanie nie wyczerpie już limitu GUS DBW. Dotyczy wszystkich tras z `refresh=1`
+  (także `/api/news`); testy `tests/server-cache.test.ts`.
 - **24.10.2026 — Japonia: „Co napędza inflację”** (krok 1 rozbicia, PM: FIX → SHIP): schody od miary bez
   żywności i energii do CPI ogółem (różnice oficjalnych miar, nie wkłady), zdanie-wniosek w sekcji i hero,
   wykres 2L/5L, seria `exFoodEnergy`, świeżość `jp-cpi-breakdown`, limit czasu 51,2 s < 60 s.

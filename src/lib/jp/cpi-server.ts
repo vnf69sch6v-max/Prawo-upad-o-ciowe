@@ -10,12 +10,6 @@ const CACHE = { collection: 'jp_data', doc: 'cpi_v2' } as const;
 /** Odczyt użytkownika: wpis młodszy niż 6 h; crony i tak odświeżają po każdej publikacji. */
 const USER_TTL_MS = 6 * 3_600_000;
 
-/**
- * Wymuszone odświeżenie (`?refresh=1`) trafia do źródła najwyżej raz na 10 min. W PL `refresh=1` było
- * publiczne bez limitu — każdy mógł wyczerpać wspólny limit GUS i zatrzymać crony.
- */
-export const FORCED_REFRESH_MIN_AGE_MS = 10 * 60_000;
-
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 /** Wszystkie serie po kolei (z odstępem — API prosi o niewielki ruch). Najgorszy przypadek:
@@ -33,7 +27,8 @@ export async function fetchJpCpi(): Promise<JpCpiPayload> {
 
 export function getJpCpi({ force = false }: { force?: boolean } = {}): Promise<JpCpiPayload> {
     return withCache(CACHE.collection, CACHE.doc, fetchJpCpi, 'Statistics Dashboard',
-        force ? FORCED_REFRESH_MIN_AGE_MS : USER_TTL_MS, { isEmpty: jpCpiIsEmpty });
+        // force → -1: `withCache` idzie do źródła najwyżej raz na 10 min (FORCED_REFRESH_MIN_AGE_MS).
+        force ? -1 : USER_TTL_MS, { isEmpty: jpCpiIsEmpty });
 }
 
 /** Ostatnie zapisane dane bez wołania źródła — dla strony renderowanej na serwerze (ISR). */

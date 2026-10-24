@@ -108,6 +108,9 @@ export function looksEmpty(payload: unknown): boolean {
     return arrays.length > 0 && arrays.every((a) => a.length === 0);
 }
 
+/** Wymuszone odświeżenie (`?refresh=1`, `maxAgeMs < 0`) idzie do źródła najwyżej raz na 10 min na klucz cache. */
+export const FORCED_REFRESH_MIN_AGE_MS = 10 * 60_000;
+
 /**
  * Cache-through helper: read from cache, if miss → fetch → cache → return.
  *
@@ -117,6 +120,12 @@ export function looksEmpty(payload: unknown): boolean {
  *   oddajemy poprzedni, a jeśli go nie ma — świeżą (pustą) odpowiedź.
  * Wymuszone odświeżenie (`maxAgeMs < 0`, cron `?refresh=1`) korzysta z tych samych reguł, więc
  * chwilowy limit GUS nie wyczyści danych na dobę.
+ *
+ * Limit wymuszonego odświeżenia: `?refresh=1` jest publiczne (bez sekretu), więc `maxAgeMs < 0` trafia do
+ * źródła tylko, gdy wpis jest starszy niż `FORCED_REFRESH_MIN_AGE_MS` — młodszy oddajemy z cache.
+ * Inaczej każdy mógł w pętli wyczerpać wspólny limit GUS DBW (~100 żądań / 15 min) i crony dostawały 429.
+ * Crony wołają ten sam klucz co najwyżej co ~2 h, więc ich to nie dotyka; samonaprawa świeżości
+ * (`selfHeal`) przy wpisie młodszym niż 10 min dostaje cache — to dane, które źródło dało przed chwilą.
  */
 export async function withCache<T>(
     collection: string,
@@ -126,8 +135,9 @@ export async function withCache<T>(
     maxAgeMs?: number,
     opts: { isEmpty?: (payload: T) => boolean } = {},
 ): Promise<T> {
-    // Try cache
-    const cached = await getServerCache<T>(collection, docId, maxAgeMs);
+    // Try cache (wymuszone odświeżenie: wpis młodszy niż FORCED_REFRESH_MIN_AGE_MS nadal wygrywa)
+    const forced = maxAgeMs !== undefined && maxAgeMs < 0;
+    const cached = await getServerCache<T>(collection, docId, forced ? FORCED_REFRESH_MIN_AGE_MS : maxAgeMs);
     if (cached !== null) return cached;
 
     // Fetch fresh data
