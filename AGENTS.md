@@ -45,7 +45,12 @@ Standard scripts in `package.json`:
   `*.firebaseapp.com` frames), https images, the `/pdfjs` worker. Any new
   browser-side script, iframe, font or `fetch` to another origin needs a CSP
   entry, or it is silently blocked (`securitypolicyviolation` in the console).
-- Autonomous work follows `docs/ROADMAP.md` (backlog, owner-only actions, log).
+- Autonomous work follows `docs/ROADMAP.md` (backlog, owner-only actions, log)
+  and goes through the product-manager agent (`.claude/agents/product-manager.md`):
+  PLAN → spec in `docs/specs/` (verified data source, acceptance criteria) →
+  implement → REVIEW (SHIP / FIX / BLOCK) → production. Product principles,
+  the per-country indicator blueprint and the definition of done live in
+  `docs/PRODUCT.md`.
 - Japan (`/japonia`, Polish UI). The country comes only from the URL
   (`countryOf()` in `src/components/shell/country.ts`); header switch
   `CountrySwitch` (segment from `lg`, 44 px button + sheet below), nav per
