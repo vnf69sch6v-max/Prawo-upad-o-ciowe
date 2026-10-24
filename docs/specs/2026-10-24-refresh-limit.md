@@ -12,6 +12,9 @@ wywołanie szło do GUS DBW, który ma wspólny limit około 100 żądań na 15 
 dostawały 429 i dane na stronie przestawały się odświeżać. Ten sam wektor dotyczył BDL, NBP, Yahoo/Stooq,
 Eurostatu i RSS.
 
+Ten krok usuwa tylko powtórzenia na jednym kluczu. Limitu GUS jako całości nie chroni: patrz
+„Ryzyko, które zostaje” w §3 i kroki 1a/1b w `docs/ROADMAP.md`.
+
 ## 2. Rozwiązanie
 
 - `withCache`: przy `maxAgeMs < 0` (wymuszone odświeżenie) wpis młodszy niż
@@ -23,8 +26,8 @@ Eurostatu i RSS.
 - `/api/news` przekazywało przy `refresh=1` wartość `0`, która omija limit. Teraz przekazuje `-1`.
   Scalanie archiwum dziennego przy `refresh=1` działa dalej. Przy wpisie młodszym niż 10 min scala
   te same pozycje, a scalanie jest idempotentne.
-- Nie wprowadzamy sekretu. Ścieżka „bez limitu z `CRON_SECRET`” z backlogu wypada, bo crony jej nie
-  potrzebują (patrz §3). Sam `CRON_SECRET` nadal czeka na właściciela, bo chroni wywołania `/api/cron/*`.
+- W tym kroku nie wprowadzamy sekretu. Wymuszone odświeżenie GUS tylko z `CRON_SECRET` to osobny krok 1b
+  w `docs/ROADMAP.md` i czeka, aż właściciel ustawi `CRON_SECRET`.
 
 ## 3. Trasy z wymuszonym odświeżeniem: przegląd
 
@@ -43,6 +46,15 @@ i `jp/cpi`. Po zmianie dochodzi do nich `news`.
   nie dałoby nowszego okresu, więc to zachowanie jest akceptowalne.
 - **NBP po 12:15** (`nbpBehindToday`): drugi `withCache` z `NBP_RECHECK_MS` to zwykły dodatni TTL.
   Nie dotyczy go ta zmiana.
+
+**Ryzyko, które zostaje.** Limit na klucz nie jest budżetem GUS. Pętla po jednym kluczu `gus-cpi-full`
+z `refresh=1` nadal daje 64–128 wywołań DBW na 15 min. Pętla po wszystkich kluczach DBW daje ~440–590
+na 15 min, przy limicie ~100. Bez `refresh=1` też da się wyczerpać limit: `/api/gus-cpi-full?year=1` buduje
+~8140 okresów, czyli jedno GET to setki wywołań DBW. Dowolne `var`/`przekroj` w `dbw-series` tworzą
+dowolne klucze cache. Naprawiają to kroki w `docs/ROADMAP.md`:
+- **1a**, najpierw i bez klucza: walidacja `year` (tylko bieżący i poprzedni rok) oraz lista dozwolonych
+  serii w `dbw-series`;
+- **1b**: wymuszone odświeżenie GUS DBW/BDL tylko z `CRON_SECRET`.
 
 ## 4. Kryteria akceptacji
 

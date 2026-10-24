@@ -89,6 +89,10 @@ Standard scripts in `package.json`:
   forced refresh (`maxAgeMs < 0`) reaches the source at most once per 10 min per
   cache key (`FORCED_REFRESH_MIN_AGE_MS`); a younger entry is served from cache.
   Routes pass `force ? -1 : ttl` — never `0`, which bypasses the limit.
+  The per-key limit is not a GUS budget. A loop over one `gus-cpi-full` key still
+  makes 64–128 DBW calls / 15 min, and all DBW keys together ~440–590 / 15 min
+  against a limit of ~100. So GUS routes must never build a cache key or a period
+  list from unvalidated query params (ROADMAP 1a/1b).
 - Data freshness: `/api/health/freshness` compares the latest period each page
   endpoint serves with the period the publication calendar says should exist
   (`src/lib/freshness.ts`, tests in `tests/freshness.test.ts`). 200 = no
