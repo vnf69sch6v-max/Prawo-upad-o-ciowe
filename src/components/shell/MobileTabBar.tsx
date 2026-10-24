@@ -5,7 +5,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Menu } from 'lucide-react';
 import { isActive } from './TopNav';
-import { TAB_ITEMS, isMoreActive } from './mobile-nav';
+import { isMoreActive, tabItemsFor } from './mobile-nav';
+import { countryOf } from './country';
 import { MoreSheet } from './MoreSheet';
 
 const ITEM =
@@ -60,7 +61,7 @@ export function MobileTabBar() {
                 {/* Komórki `flex-auto`: podstawa = szerokość treści, nadwyżka dzielona po równo. Przy 320 px
                     „Gospodarka” dostaje kilka px więcej niż „Ceny”, zamiast ucięcia etykiety (siatka 5×64 px ucinała). */}
                 <ul className="mx-auto flex h-[var(--mk-tabbar-h)] max-w-lg">
-                    {TAB_ITEMS.map((it) => {
+                    {tabItemsFor(countryOf(pathname)).map((it) => {
                         const Icon = it.icon;
                         const active = isActive(pathname, it.href);
                         return (

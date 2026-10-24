@@ -46,6 +46,24 @@ Standard scripts in `package.json`:
   browser-side script, iframe, font or `fetch` to another origin needs a CSP
   entry, or it is silently blocked (`securitypolicyviolation` in the console).
 - Autonomous work follows `docs/ROADMAP.md` (backlog, owner-only actions, log).
+- Japan (`/japonia`, Polish UI). The country comes only from the URL
+  (`countryOf()` in `src/components/shell/country.ts`); header switch
+  `CountrySwitch` (segment from `lg`, 44 px button + sheet below), nav per
+  country (`navItemsFor`, `tabItemsFor`, `moreGroupsFor`). Data: Statistics
+  Dashboard API (no key) — series configured once in `src/lib/jp/cpi.ts`
+  (official **2025 base** since 21.08.2026; every response is validated against
+  `mustInclude` name fragments, so a wrong series or the old base throws instead
+  of showing someone else's numbers); fetch + Firestore cache in
+  `src/lib/jp/cpi-server.ts` (`?refresh=1` reaches the source at most every
+  10 min — the pattern the PL routes still lack). Release calendar
+  `src/lib/jp/calendar.ts` (8:30 JST = 23:30/00:30 UTC; extend it before
+  03.2027, after that freshness falls back to a heuristic). The page is ISR
+  (`revalidate = 1800`) and reads Firestore only (`peekJpCpi`) — never fetch an
+  upstream source in a page render (Data Cache trap above). Cron `jp`
+  00:30 UTC (9:30 JST) plus a second pass in `refresh`; freshness id `jp-cpi`.
+  The Statistics Dashboard credit text must stay visible on the page.
+- Header from `xl`: sections inline, search is an icon (⌘K still works) — with
+  the 220 px field the row did not fit the 1440 px container.
 - Inside a `withCache(...)` fetcher, fetch upstream with `cache: 'no-store'`,
   not `next: { revalidate }`. The Next.js Data Cache is stale-while-revalidate,
   so the first request after expiry gets an old response that `withCache` then

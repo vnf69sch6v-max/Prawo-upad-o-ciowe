@@ -40,6 +40,7 @@ export const CRON_SPECS: Record<string, CronSpec> = {
     'rynki-intraday': { label: 'Giełda — w trakcie sesji', schedule: 'pn–pt 14:00 UTC', maxAgeHours: 74 },
     'news-archive': { label: 'Archiwum newsów', schedule: 'codziennie 20:00 UTC', maxAgeHours: 26 },
     freshness: { label: 'Kontrola świeżości', schedule: 'codziennie 16:40 UTC', maxAgeHours: 26 },
+    jp: { label: 'Japonia — inflacja CPI', schedule: 'codziennie 00:30 UTC (9:30 JST)', maxAgeHours: 26 },
 };
 
 export function evaluateCronRuns(runs: Record<string, CronRun>, now: Date): CronRunReport[] {

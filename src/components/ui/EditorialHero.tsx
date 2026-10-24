@@ -13,6 +13,8 @@ export interface EditorialHeroRow {
 
 export interface EditorialHeroProps {
     period?: string | null;
+    /** Druga plakietka obok okresu, np. „Nowy odczyt · dziś” — liczona po hydratacji (zależy od „dziś”). */
+    badge?: string | null;
     source?: string;
     headline: string;
     description?: React.ReactNode;
@@ -40,6 +42,7 @@ export interface EditorialHeroProps {
  */
 export function EditorialHero({
     period,
+    badge,
     source,
     headline,
     description,
@@ -65,6 +68,7 @@ export function EditorialHero({
                 <div>
                     <div className="flex flex-wrap items-center gap-2">
                         {period && <span className="inline-flex items-center rounded-full bg-white px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-mk-brand-strong tnum">{period}</span>}
+                        {badge && <span className="inline-flex items-center rounded-full bg-mk-brand-strong px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-white ring-1 ring-inset ring-white/40">{badge}</span>}
                         {source && <span className="text-xs font-semibold text-white/70">{source}</span>}
                     </div>
                     {/* Telefon: 22 px / 44 px zamiast 26 / 56 — hero nie może zabierać całego pierwszego ekranu. */}

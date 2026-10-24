@@ -6,7 +6,8 @@ import { usePathname } from 'next/navigation';
 import { ChevronRight } from 'lucide-react';
 import { rememberOpener } from '@/lib/use-focus-trap';
 import { isActive } from './TopNav';
-import { MORE_GROUPS, type MoreEntry } from './mobile-nav';
+import { moreGroupsFor, type MoreEntry } from './mobile-nav';
+import { countryOf } from './country';
 import { SHEET_ROW, ShellSheet } from './ShellSheet';
 
 interface MoreSheetProps {
@@ -65,7 +66,7 @@ export function MoreSheet({ open, onClose, returnFocusRef }: MoreSheetProps) {
     return (
         <ShellSheet id="mk-more-sheet" open={open} onClose={onClose} title="Więcej" returnFocusRef={returnFocusRef} className="lg:hidden">
             <nav aria-label="Więcej sekcji i narzędzi">
-                {MORE_GROUPS.map((g) => (
+                {moreGroupsFor(countryOf(pathname)).map((g) => (
                     <section key={g.title} aria-labelledby={`mk-more-${g.title}`} className="mt-2 first:mt-0">
                         <h3 id={`mk-more-${g.title}`} className="px-1 pb-1.5 pt-2 text-xs font-semibold uppercase tracking-wide text-mk-faint">
                             {g.title}

@@ -76,7 +76,15 @@ export async function setServerCache<T>(
     }
 }
 
-/** Ostatni zapisany wpis bez względu na wiek — rezerwa, gdy źródło akurat nie odpowiada. */
+/**
+ * Ostatni zapisany wpis bez względu na wiek — rezerwa, gdy źródło akurat nie odpowiada, oraz odczyt
+ * dla stron renderowanych na serwerze (ISR), które NIE mogą same wołać źródła: w renderze strony
+ * `fetch` trafiałby do Data Cache Next.js (stale-while-revalidate) — patrz AGENTS.md.
+ */
+export async function peekServerCache<T>(collection: string, docId: string): Promise<T | null> {
+    return getStaleServerCache<T>(collection, docId);
+}
+
 async function getStaleServerCache<T>(collection: string, docId: string): Promise<T | null> {
     const db = getAdminDb();
     if (!db) return null;
