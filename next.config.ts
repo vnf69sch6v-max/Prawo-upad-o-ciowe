@@ -28,8 +28,10 @@ const CONTENT_SECURITY_POLICY = [
   "default-src 'self'",
   // apis.google.com: biblioteka gapi, przez którą Firebase otwiera okno logowania Google (signInWithPopup).
   "script-src 'self' 'unsafe-inline' https://apis.google.com",
-  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-  "font-src 'self' data: https://fonts.gstatic.com",
+  // Czcionka Inter z next/font — z naszej domeny, więc bez fonts.googleapis.com / fonts.gstatic.com
+  // (każda wizyta wysyłała Google adres IP odwiedzającego).
+  "style-src 'self' 'unsafe-inline'",
+  "font-src 'self' data:",
   "img-src 'self' data: blob: https:",
   // Przeglądarka łączy się tylko z logowaniem Firebase (e-mail + hasło). Nie `*.googleapis.com`: pod tą
   // domeną każdy może mieć własny bucket (storage.googleapis.com), czyli kanał wycieku dla wstrzykniętego skryptu.

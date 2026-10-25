@@ -25,9 +25,14 @@ export function internalOrigin(request: Request): string {
     return new URL(request.url).origin;
 }
 
-/** `no-store`, bez przekierowań; nagłówek obejścia ochrony, jeśli w Vercelu włączono „Protection Bypass for Automation". */
+/**
+ * `no-store`, bez przekierowań; nagłówek obejścia ochrony, jeśli w Vercelu włączono „Protection Bypass for
+ * Automation"; `Authorization: Bearer CRON_SECRET`, gdy sekret jest ustawiony — z nim middleware wpuszcza
+ * wywołania wewnętrzne do API za bramką płatnej platformy (src/middleware.ts).
+ */
 export function internalInit(init: RequestInit = {}): RequestInit {
     const bypass = process.env.VERCEL_AUTOMATION_BYPASS_SECRET;
+    const secret = process.env.CRON_SECRET;
     return {
         cache: 'no-store',
         redirect: 'manual',
@@ -35,6 +40,7 @@ export function internalInit(init: RequestInit = {}): RequestInit {
         headers: {
             Accept: 'application/json',
             ...(bypass ? { 'x-vercel-protection-bypass': bypass } : {}),
+            ...(secret ? { Authorization: `Bearer ${secret}` } : {}),
             ...(init.headers as Record<string, string> | undefined),
         },
     };
