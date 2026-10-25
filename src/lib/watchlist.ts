@@ -1,81 +1,66 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useSyncExternalStore } from 'react';
+import { useAuth } from '@/lib/auth/use-auth';
+import { EMPTY_SNAPSHOT, createWatchlistStore } from '@/lib/watchlist-store';
+import type { WatchItem, WatchKind } from '@/lib/user-data';
+
+export type { WatchItem, WatchKind };
 
 /**
- * Watchlista — wskaźniki i spółki obserwowane przez użytkownika, trzymane w `localStorage`.
+ * Watchlista — wskaźniki i spółki obserwowane przez użytkownika.
  *
- * Hydration-safe: `localStorage` NIE istnieje po stronie serwera, więc render serwerowy zawsze
- * dostaje pustą listę, a realny stan wczytujemy dopiero po zamontowaniu. Stąd flaga `ready` —
- * komponenty mają jej używać zamiast zgadywać (bez tego React zgłosiłby mismatch, a gwiazdki
- * mrugałyby przy każdym wejściu).
+ * Zalogowany: lista należy do KONTA (`/api/me/watchlist` → `savori_users/{uid}`, zapis tylko przez serwer),
+ * więc jest ta sama na telefonie i na komputerze, a dwa konta w jednej przeglądarce nie widzą swoich list.
+ * `localStorage` jest wtedy tylko kopią per `uid`. Niezalogowany / tryb demo: jak dawniej, wyłącznie `localStorage`.
+ * Reguły synchronizacji i ich testy: `src/lib/watchlist-store.ts`.
  *
- * Zmiany rozsyłamy zdarzeniem `mk:watchlist`, żeby kilka instancji hooka na jednej stronie
- * (np. kafle KPI + pas „Obserwowane") widziało to samo bez przeładowania.
+ * Hydration-safe: snapshot serwerowy jest pusty (`ready: false`), prawdziwy stan wchodzi po zamontowaniu —
+ * komponenty mają używać `ready` zamiast zgadywać. Jeden magazyn na kartę obsługuje wszystkie instancje hooka
+ * (kafle KPI, pas „Obserwowane”, gwiazdki), więc widzą to samo bez przeładowania.
  */
 
-export type WatchKind = 'wskaznik' | 'spolka';
-export interface WatchItem { kind: WatchKind; id: string }
-
-const KEY = 'mk:watchlist:v1';
-const EVENT = 'mk:watchlist';
-
-function read(): WatchItem[] {
-    if (typeof window === 'undefined') return [];
+/** Sam getter `window.localStorage` rzuca `SecurityError` przy zablokowanej pamięci (Safari „Blokuj wszystkie”). */
+function browserStorage(): Storage | null {
+    if (typeof window === 'undefined') return null;
     try {
-        const raw = window.localStorage.getItem(KEY);
-        if (!raw) return [];
-        const parsed = JSON.parse(raw);
-        if (!Array.isArray(parsed)) return [];
-        // Walidujemy kształt — w localStorage może siedzieć cokolwiek (stara wersja, ręczna edycja).
-        return parsed.filter(
-            (x): x is WatchItem =>
-                x && typeof x.id === 'string' && (x.kind === 'wskaznik' || x.kind === 'spolka'),
-        );
+        return window.localStorage;
     } catch {
-        return [];
+        return null;
     }
 }
 
-function write(items: WatchItem[]) {
-    try {
-        window.localStorage.setItem(KEY, JSON.stringify(items));
-    } catch { /* prywatny tryb / brak miejsca — watchlista jest dodatkiem, nie blokujemy UI */ }
-    window.dispatchEvent(new Event(EVENT));
+const store = createWatchlistStore({
+    fetch: (input, init) => fetch(input, init),
+    storage: browserStorage(),
+});
+
+if (typeof window !== 'undefined') {
+    window.addEventListener('storage', (e) => store.onStorage(e.key));
+    window.addEventListener('online', () => store.onOnline());
 }
 
+const getServerSnapshot = () => EMPTY_SNAPSHOT;
+
 export function useWatchlist() {
-    const [items, setItems] = useState<WatchItem[]>([]);
-    const [ready, setReady] = useState(false);
+    const { user, enabled, loading } = useAuth();
+    // Z włączonym logowaniem czekamy, aż Firebase powie, kto patrzy — inaczej na ułamek sekundy pokazalibyśmy
+    // listę anonimową, a potem listę konta (mignięcie), albo zapisali kliknięcie pod złym kluczem.
+    const pending = enabled && loading;
+    const activeUid = enabled ? user?.uid ?? null : null;
 
     useEffect(() => {
-        setItems(read());
-        setReady(true);
-        const sync = () => setItems(read());
-        window.addEventListener(EVENT, sync);
-        // `storage` łapie zmianę z INNEJ karty tej samej witryny.
-        window.addEventListener('storage', sync);
-        return () => {
-            window.removeEventListener(EVENT, sync);
-            window.removeEventListener('storage', sync);
-        };
-    }, []);
+        if (!pending) store.activate(activeUid);
+    }, [pending, activeUid]);
+
+    const snap = useSyncExternalStore(store.subscribe, store.getSnapshot, getServerSnapshot);
 
     const has = useCallback(
-        (kind: WatchKind, id: string) => items.some((i) => i.kind === kind && i.id === id),
-        [items],
+        (kind: WatchKind, id: string) => snap.items.some((i) => i.kind === kind && i.id === id),
+        [snap.items],
     );
+    const toggle = useCallback((kind: WatchKind, id: string) => store.toggle(kind, id), []);
+    const clear = useCallback(() => store.set([]), []);
 
-    const toggle = useCallback((kind: WatchKind, id: string) => {
-        const next = read();
-        const idx = next.findIndex((i) => i.kind === kind && i.id === id);
-        if (idx >= 0) next.splice(idx, 1);
-        else next.push({ kind, id });
-        write(next);
-        setItems(next);
-    }, []);
-
-    const clear = useCallback(() => { write([]); setItems([]); }, []);
-
-    return { items, ready, has, toggle, clear };
+    return { items: snap.items, ready: snap.ready, has, toggle, clear };
 }

@@ -42,6 +42,11 @@ export default function PrivacyPage() {
                         da się odtworzyć adresu. Podstawa: prawnie uzasadniony interes w zapobieganiu nadużyciom (lit. f).
                     </li>
                     <li>
+                        <strong>Ustawienia konta</strong>: lista obserwowanych wskaźników i spółek. Przechowujemy ją przy Twoim
+                        koncie (zaszyfrowaną), żeby była ta sama na każdym urządzeniu; inne konta jej nie widzą. Cel: działanie
+                        funkcji, którą włączasz gwiazdką. Podstawa: umowa (lit. b). Usuwamy ją razem z kontem.
+                    </li>
+                    <li>
                         <strong>Dane techniczne</strong>: adres IP, typ przeglądarki, czas żądania w logach serwera. Cel:
                         bezpieczeństwo, wykrywanie nadużyć i awarii. Podstawa: prawnie uzasadniony interes (lit. f).
                     </li>
@@ -69,7 +74,10 @@ export default function PrivacyPage() {
                 <ul className="list-disc space-y-2 pl-5">
                     <li><code>__session</code> — ciasteczko sesji (httpOnly, szyfrowane połączenie), ważne do 5 dni; usuwamy je przy wylogowaniu.</li>
                     <li>Pamięć przeglądarki (IndexedDB) biblioteki logowania Firebase — utrzymuje zalogowanie.</li>
-                    <li>Lista obserwowanych wskaźników (localStorage) — zostaje w Twojej przeglądarce i nigdy do nas nie trafia.</li>
+                    <li>
+                        Kopia listy obserwowanych (localStorage) — po zalogowaniu lista jest zapisana przy koncie, a przeglądarka
+                        trzyma tylko jej kopię do szybkiego wyświetlenia; bez logowania lista zostaje wyłącznie w przeglądarce.
+                    </li>
                 </ul>
             </Section>
 

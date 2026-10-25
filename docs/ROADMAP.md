@@ -85,6 +85,13 @@ P-3. **Konto**: strona „Mój dostęp” (plan, do kiedy, przedłuż), usunięc
 P-4. **Dostęp zamrożony w ciasteczku sesji (do 5 dni)**: po blokadzie konta nowy stan widać dopiero po
      ponownym zalogowaniu albo wygaśnięciu ciasteczka (Edge nie sprawdza revoke). Po płatności ciasteczko odświeża
      `/api/stripe/confirm`. Blokada konta = `revokeRefreshTokens` + krótsza sesja — jeszcze nie.
+P-5. **Watchlista — drobiazgi z recenzji PM 25.10** (niewstrzymujące). Zrobione w tym samym PR: `localStorage`
+     w `try` (getter rzuca `SecurityError` przy zablokowanej pamięci), ścieżka `dirty` przy koncie bez dokumentu bierze
+     listę sprzed logowania (`account ?? legacy`, test), wspólny `sameOrigin` dla `/api/auth/session` i `/api/me/*`;
+     „istnieje, nie otwiera się” loguje już `fromStored` (`[data-seal] savori_users/…`). Zostaje: `activate` ma wysłać
+     zaległe kliknięcia także, gdy zapis właśnie trwa (wymaga kolejki per konto). Po wdrożeniu: kryterium 7
+     specyfikacji (konsola Firebase → `savori_users/{uid}` z `sealed`; drugie urządzenie = ta sama lista; drugie
+     konto = pusta) — wynik dopisać tutaj.
 
 ### Produkt
 7. **Szybki szacunek CPI** (ostatni dzień roboczy miesiąca) na Przeglądzie w dniu publikacji —
@@ -149,7 +156,8 @@ J3. **Przegląd Japonii** (hero jak w PL), gdy będą ≥3 wskaźniki.
   1. **Jeden projekt Firebase na aplikację — przed kluczem.** Produkcja Savori używa `aplikacja-prawnicy`
      (sprawdzone w kodzie strony 25.10). Repo wdraża się też do projektu Vercela `lexcapital-pro`: sprawdzić, czy ma
      te same `FIREBASE_*`. Jeśli tak — rozdzielić projekty albo dać mu ten sam klucz z kroku 3 (inaczej obie
-     aplikacje nadpisują sobie cache). Migracja dotyka wyłącznie kolekcji Savori (`CACHE_COLLECTIONS` + `health`).
+     aplikacje nadpisują sobie cache). Migracja dotyka wyłącznie kolekcji Savori (`CACHE_COLLECTIONS`, `health/*`
+     i od 25.10 `savori_users` — kolekcja z przedrostkiem, więc cała jest nasza).
   2. **Konto serwisowe** (Google Cloud → IAM): zamiast Editor/Owner dwie role — „Cloud Datastore User” i
      „Firebase Authentication Admin” (bez tej drugiej `/api/auth/session` zawsze zwróci 401: `verifyIdToken` z
      `checkRevoked` i `createSessionCookie` jej wymagają). `FIREBASE_PRIVATE_KEY` jako *Sensitive*.
@@ -169,6 +177,11 @@ J3. **Przegląd Japonii** (hero jak w PL), gdy będą ≥3 wskaźniki.
      (Firebase), u rejestratora domeny (Name.com) i na skrzynce do resetów haseł; menedżer haseł; bez SMS.
   7. **Przed otwarciem rejestracji:** Identity Platform (MFA TOTP), App Check, klucz API ograniczony do
      savori.space (Google Cloud Console → Credentials).
+- **Usunięcie konta na prośbę użytkownika (RODO art. 17)** — do czasu P-3 ręcznie, w tej kolejności: konsola Firebase
+  (`aplikacja-prawnicy`) → Authentication → Users → użytkownik → „Delete account” (skopiować wcześniej jego **UID**),
+  potem Firestore Database → kolekcja `savori_users` → dokument o tym UID → usuń (to lista obserwowanych; `/prywatnosc`
+  obiecuje „usuwamy ją razem z kontem”). Dokument `trials/{HMAC(e-mail)}` zostaje celowo (okres próbny raz na adres —
+  tak opisuje go `/prywatnosc`). Pomocnik w kodzie: `deleteUserData()` w `src/lib/user-data-server.ts`.
 - **`CRON_SECRET`** w Vercelu (projekt → Settings → Environment Variables → Production, losowy ciąg
   ≥ 32 znaków; Vercel sam dołącza go do wywołań cronów). Bez niego crony może wywołać każdy, a krok 1b
   (wymuszone odświeżenie GUS tylko dla cronów) nie ruszy. Po 1a publiczne `refresh=1` nadal może dać
@@ -188,6 +201,12 @@ J3. **Przegląd Japonii** (hero jak w PL), gdy będą ≥3 wskaźniki.
   zapis `payments/{session}` przez `toStored`), przedłużenie `accessUntil` od późniejszej z dat, odświeżenie
   ciasteczka po powrocie (`/api/stripe/confirm`). Pokwitowanie z informacją o odstąpieniu idzie przez Stripe
   (`receipt_email`). Zostało właścicielowi: `STRIPE_WEBHOOK_SECRET` i metody płatności (punkt 4 wyżej).
+- **25.10.2026 — dane użytkownika na koncie** (`docs/specs/2026-10-25-dane-uzytkownika.md`, prośba właściciela;
+  **PM: SHIP** po jednej rundzie FIX — PUT dopiero po udanym odczycie konta, `tests/watchlist-store.test.ts`):
+  watchlista należy do konta (`savori_users/{uid}`, zapis tylko przez serwer po weryfikacji ciasteczka sesji,
+  treść szyfrowana jak reszta bazy), ta sama na każdym urządzeniu; dwa konta w jednej przeglądarce nie widzą swoich
+  list; lista sprzed logowania przenosi się na konto przy pierwszym logowaniu. `localStorage` tylko jako kopia.
+  Przy usuwaniu konta na prośbę użytkownika usunąć też `savori_users/{uid}`.
 - **25.10.2026 — płatna platforma, etap 1** (prośba właściciela): strona startowa `/start` z logowaniem i cennikiem
   10/20/30 zł (1/3/6 mies., jednorazowo), bramka z kryptograficzną weryfikacją sesji (podrobione ciasteczko nie
   przechodzi), okres próbny i dostęp administratora w claims, `/prywatnosc` (RODO) i `/regulamin`, czcionka z własnej
