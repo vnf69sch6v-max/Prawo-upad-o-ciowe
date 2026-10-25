@@ -44,12 +44,16 @@ export function grantDecision(t: TokenFacts, admins: Set<string>): GrantDecision
     return verified ? { kind: 'trial' } : { kind: 'no-trial' };
 }
 
-/** Identyfikator wpisu okresu próbnego: HMAC(DATA_ENCRYPTION_KEY, e-mail), bez klucza — SHA-256 z solą. */
+/**
+ * Identyfikator wpisu okresu próbnego: HMAC(TRIAL_ID_KEY, e-mail). TRIAL_ID_KEY to osobny, stały sekret —
+ * nie klucz szyfrowania, bo jego rotacja zmieniłaby wszystkie identyfikatory i dała drugi okres próbny.
+ * Bez niego — DATA_ENCRYPTION_KEY, a bez obu SHA-256 z solą.
+ */
 export function trialId(email: string, env: Record<string, string | undefined> = process.env): string {
     const norm = email.trim().toLowerCase();
-    const key = env.DATA_ENCRYPTION_KEY?.trim();
+    const key = env.TRIAL_ID_KEY?.trim() || env.DATA_ENCRYPTION_KEY?.trim();
     return key
-        ? createHmac('sha256', Buffer.from(key, 'base64')).update(`trial:${norm}`).digest('hex')
+        ? createHmac('sha256', key).update(`trial:${norm}`).digest('hex')
         : createHash('sha256').update(`savori-trial-v1:${norm}`).digest('hex');
 }
 

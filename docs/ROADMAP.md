@@ -118,7 +118,9 @@ J3. **Przegląd Japonii** (hero jak w PL), gdy będą ≥3 wskaźniki.
   1. Vercel → Environment Variables (Production): `NEXT_PUBLIC_OWNER_NAME` (imię i nazwisko / firma),
      `NEXT_PUBLIC_OWNER_ADDRESS`, `NEXT_PUBLIC_CONTACT_EMAIL`, opcjonalnie `NEXT_PUBLIC_OWNER_NIP` — trafiają do
      `/prywatnosc` i `/regulamin` (bez nich strony pokazują „wersja robocza”). Przegląd obu dokumentów przez prawnika.
-  2. `ADMIN_EMAILS` = Twój e-mail Google (stały dostęp), opcjonalnie `TRIAL_DAYS` (domyślnie 7).
+  2. `ADMIN_EMAILS` = Twój e-mail Google (stały dostęp), opcjonalnie `TRIAL_DAYS` (domyślnie 7) i `TRIAL_ID_KEY`
+     (`openssl rand -base64 32`, stały — identyfikuje wykorzystane okresy próbne; bez niego używany jest klucz
+     szyfrowania, a jego rotacja dałaby wszystkim drugi okres próbny).
   3. `NEXT_PUBLIC_AUTH_ENABLED=true` i `NEXT_PUBLIC_AUTH_REQUIRED=true` → Redeploy. Od tej chwili niezalogowani
      widzą stronę startową z cennikiem. **`CRON_SECRET`** zamyka też API (bez niego `/api/*` zostaje publiczne,
      bo crony wołają własne endpointy — z sekretem podpisują się nim).

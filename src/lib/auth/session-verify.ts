@@ -48,6 +48,7 @@ export const googleSessionKeys: KeyResolver = async (kid) => {
             if (!certCache?.keys.has(kid)) throw err;
         }
     }
+    // Nieznany kid ≤ 60 s po pobraniu kluczy = brak klucza (Google publikuje klucze, zanim nimi podpisuje).
     return certCache?.keys.get(kid) ?? null;
 };
 
