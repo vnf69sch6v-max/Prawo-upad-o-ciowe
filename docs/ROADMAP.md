@@ -147,7 +147,8 @@ J3. **Przegląd Japonii** (hero jak w PL), gdy będą ≥3 wskaźniki.
   1. **Jeden projekt Firebase na aplikację — przed kluczem.** Produkcja Savori używa `aplikacja-prawnicy`
      (sprawdzone w kodzie strony 25.10). Repo wdraża się też do projektu Vercela `lexcapital-pro`: sprawdzić, czy ma
      te same `FIREBASE_*`. Jeśli tak — rozdzielić projekty albo dać mu ten sam klucz z kroku 3 (inaczej obie
-     aplikacje nadpisują sobie cache). Migracja dotyka wyłącznie kolekcji Savori (`CACHE_COLLECTIONS` + `health`).
+     aplikacje nadpisują sobie cache). Migracja dotyka wyłącznie kolekcji Savori (`CACHE_COLLECTIONS`, `health/*`
+     i od 25.10 `savori_users` — kolekcja z przedrostkiem, więc cała jest nasza).
   2. **Konto serwisowe** (Google Cloud → IAM): zamiast Editor/Owner dwie role — „Cloud Datastore User” i
      „Firebase Authentication Admin” (bez tej drugiej `/api/auth/session` zawsze zwróci 401: `verifyIdToken` z
      `checkRevoked` i `createSessionCookie` jej wymagają). `FIREBASE_PRIVATE_KEY` jako *Sensitive*.
@@ -167,6 +168,11 @@ J3. **Przegląd Japonii** (hero jak w PL), gdy będą ≥3 wskaźniki.
      (Firebase), u rejestratora domeny (Name.com) i na skrzynce do resetów haseł; menedżer haseł; bez SMS.
   7. **Przed otwarciem rejestracji:** Identity Platform (MFA TOTP), App Check, klucz API ograniczony do
      savori.space (Google Cloud Console → Credentials).
+- **Usunięcie konta na prośbę użytkownika (RODO art. 17)** — do czasu P-3 ręcznie, w tej kolejności: konsola Firebase
+  (`aplikacja-prawnicy`) → Authentication → Users → użytkownik → „Delete account” (skopiować wcześniej jego **UID**),
+  potem Firestore Database → kolekcja `savori_users` → dokument o tym UID → usuń (to lista obserwowanych; `/prywatnosc`
+  obiecuje „usuwamy ją razem z kontem”). Dokument `trials/{HMAC(e-mail)}` zostaje celowo (okres próbny raz na adres —
+  tak opisuje go `/prywatnosc`). Pomocnik w kodzie: `deleteUserData()` w `src/lib/user-data-server.ts`.
 - **`CRON_SECRET`** w Vercelu (projekt → Settings → Environment Variables → Production, losowy ciąg
   ≥ 32 znaków; Vercel sam dołącza go do wywołań cronów). Bez niego crony może wywołać każdy, a krok 1b
   (wymuszone odświeżenie GUS tylko dla cronów) nie ruszy. Po 1a publiczne `refresh=1` nadal może dać

@@ -60,6 +60,35 @@ Przed zmianą watchlista żyła w `localStorage` pod jednym kluczem `mk:watchlis
    jako kopię.
 7. Produkcja (po wdrożeniu): zalogowany klika gwiazdkę → w konsoli Firebase pojawia się `savori_users/{uid}` z polem
    `sealed`; drugie urządzenie po odświeżeniu pokazuje tę samą listę; drugie konto w tej samej przeglądarce — pustą.
+8. *(z recenzji PM 25.10)* **Nieudany odczyt konta nie może skończyć się nadpisaniem konta.** Gdy `GET /api/me/watchlist`
+   nie wróci 200 (brak sieci, 5xx, 429), klient: (a) ponawia odczyt jak zapis (15 s, zdarzenie `online`), (b) **nie wysyła
+   `PUT`**, dopóki dla bieżącego konta nie udał się żaden odczyt — kliknięcia zostają w lokalnej kopii jako `dirty`
+   i idą na konto przez istniejącą ścieżkę scalania po udanym odczycie. Dowód: test w `tests/` (store z podstawionym
+   `fetch`/`localStorage`, bez jsdom — `vi.stubGlobal`) albo nagranie: DevTools → Offline → wejście zalogowanym na nowe
+   urządzenie → gwiazdka → Online → w Firestore lista konta zawiera stare pozycje **i** nową.
+
+## Recenzja PM (25.10.2026) — werdykt: FIX
+
+Kryteria 1–6 spełnione (dowody: `npx vitest run tests/user-data.test.ts` 12/12, `npm test` 221/221, `tsc` czysto;
+`/prywatnosc` l. 44–48 i 77–80). Do poprawy przed wdrożeniem — kryterium 8 (`src/lib/watchlist.ts`, `pullFromAccount`
+l. 100–108 i `push` l. 143–155): nieudany odczyt konta jest cichy i nieponawiany, a następne kliknięcie wysyła lokalną
+listę jako całą listę konta. Na nowym telefonie (pusta kopia lokalna, słaba sieć) jedna gwiazdka kasuje listę
+z komputera — jedyne dane użytkownika, które przechowujemy. Ścieżka scalania przy `dirty` (l. 114–122) obejmuje tylko
+okno, w którym odczyt jeszcze trwa, nie odczyt nieudany.
+
+Uwagi niewstrzymujące (do zrobienia przy okazji, nie w tym PR):
+- `activate()` (l. 86–98) przy wylogowaniu kasuje oczekujący zapis (`clearTimers`, `dirty = false`) — gwiazdka kliknięta
+  <400 ms przed „Wyloguj” ginie. Rozwiązanie: wysłać zaległy zapis przed zmianą konta.
+- `readUserData` (`user-data-server.ts` l. 9–12, 29–33) zwraca `null` zarówno dla braku dokumentu, jak i dla dokumentu
+  nie do odczytania (zły klucz / tryb ścisły) → klient widzi `account: false` i nadpisuje szyfrogram lokalną kopią.
+  Samonaprawa jest zamierzona, ale maskuje złą konfigurację klucza — warto `console.warn` dla „istnieje, nie otwiera się”.
+- Scalanie przy `dirty` dodaje tylko nowe pozycje; odznaczenie w oknie odczytu wraca po scaleniu z kontem.
+- Kopia `mk:watchlist:u:{uid}` zostaje w `localStorage` po wylogowaniu (współdzielony komputer) — `/prywatnosc` nazywa
+  ją kopią, więc zgodne z opisem; czyszczenie przy wylogowaniu byłoby czystsze.
+- `sameOrigin` jest zdublowane (`api/auth/session/route.ts` l. 41 i `auth/require-session.ts` l. 29) — trasa sesji
+  powinna importować wspólną.
+- `verifySessionCookie(cookie, true)` = jedno zapytanie do Firebase Auth na każdy GET/PUT (montaż strony + zapis co
+  400 ms po serii kliknięć). Przy obecnej skali bez znaczenia; przy wzroście — cache weryfikacji na kilka minut.
 
 ## Działania właściciela
 
