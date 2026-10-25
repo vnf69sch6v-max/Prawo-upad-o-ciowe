@@ -38,7 +38,7 @@ export default function UstawieniaPage() {
                 </div>
                 {!enabled && (
                     <p className="mt-3 rounded-lg bg-mk-warn-soft px-3 py-2 text-sm text-mk-warn sm:text-xs">
-                        Tryb demo — logowanie aktywuje się po dodaniu konfiguracji Firebase i ustawieniu flagi <code>NEXT_PUBLIC_AUTH_ENABLED=true</code>.
+                        Tryb demo — logowanie jest wyłączone: brak konfiguracji Firebase albo <code>NEXT_PUBLIC_AUTH_ENABLED=false</code>.
                     </p>
                 )}
             </SectionCard>

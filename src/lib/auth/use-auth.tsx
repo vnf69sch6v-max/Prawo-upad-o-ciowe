@@ -1,7 +1,8 @@
 'use client';
 
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { getFirebaseAuth, isFirebaseConfigured } from '@/lib/firebase/config';
+import { getFirebaseAuth } from '@/lib/firebase/config';
+import { AUTH_FLAGS } from '@/lib/auth/flags';
 import {
     GoogleAuthProvider,
     onAuthStateChanged,
@@ -13,12 +14,12 @@ import {
 } from 'firebase/auth';
 
 /**
- * Logowanie działa, gdy NEXT_PUBLIC_AUTH_ENABLED === 'true' i jest konfiguracja Firebase; inaczej tryb demo
- * (bez logowania). Strona pozostaje publiczna — zamknięcie całej platformy za logowaniem to osobna flaga
- * NEXT_PUBLIC_AUTH_REQUIRED (src/middleware.ts). Obie wartości wstawia build, więc SSR i przeglądarka
- * renderują to samo (bez błędu hydratacji).
+ * Logowanie działa, gdy jest konfiguracja Firebase, a NEXT_PUBLIC_AUTH_ENABLED nie jest `false`; inaczej tryb
+ * demo (bez logowania). Zamknięcie strony za logowaniem to osobna flaga NEXT_PUBLIC_AUTH_REQUIRED
+ * (src/middleware.ts). Obie są domyślnie włączone i wstawia je build (src/lib/auth/flags.ts), więc SSR
+ * i przeglądarka renderują to samo (bez błędu hydratacji).
  */
-const AUTH_ACTIVE = process.env.NEXT_PUBLIC_AUTH_ENABLED === 'true' && isFirebaseConfigured();
+const AUTH_ACTIVE = AUTH_FLAGS.enabled;
 
 export interface AppUser {
     email: string | null;

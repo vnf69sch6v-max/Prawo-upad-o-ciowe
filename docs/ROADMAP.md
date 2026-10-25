@@ -121,8 +121,9 @@ J3. **Przegląd Japonii** (hero jak w PL), gdy będą ≥3 wskaźniki.
   2. `ADMIN_EMAILS` = Twój e-mail Google (stały dostęp), opcjonalnie `TRIAL_DAYS` (domyślnie 7) i `TRIAL_ID_KEY`
      (`openssl rand -base64 32`, stały — identyfikuje wykorzystane okresy próbne; bez niego używany jest klucz
      szyfrowania, a jego rotacja dałaby wszystkim drugi okres próbny).
-  3. `NEXT_PUBLIC_AUTH_ENABLED=true` i `NEXT_PUBLIC_AUTH_REQUIRED=true` → Redeploy. Od tej chwili niezalogowani
-     widzą stronę startową z cennikiem. **`CRON_SECRET`** zamyka też API (bez niego `/api/*` zostaje publiczne,
+  3. ~~Flagi~~ — od 25.10.2026 logowanie i bramka są domyślnie włączone w kodzie (`src/lib/auth/flags.ts`):
+     niezalogowani widzą stronę startową z cennikiem. Awaryjne wyłączenie bez zmiany kodu:
+     `NEXT_PUBLIC_AUTH_REQUIRED=false` (strona publiczna, logowanie zostaje) → Redeploy. **`CRON_SECRET`** zamyka też API (bez niego `/api/*` zostaje publiczne,
      bo crony wołają własne endpointy — z sekretem podpisują się nim).
   3a. Firebase → Authentication → Settings → User actions: wyłączyć zakładanie kont e-mail/hasło przez API
      („Enable create (sign-up)”), skoro na stronie nie ma rejestracji e-mailem — konta tylko przez Google.
@@ -132,8 +133,7 @@ J3. **Przegląd Japonii** (hero jak w PL), gdy będą ≥3 wskaźniki.
 - **Logowanie przez Google — włączenie** (kod gotowy, strona zostaje publiczna):
   1. Konsola Firebase (`aplikacja-prawnicy`) → Authentication → Sign-in method → Google → Enable, e-mail pomocy → Save.
   2. Authentication → Settings → Authorized domains: dodać `savori.space` (i `www.savori.space`, jeśli używany).
-  3. Vercel → Environment Variables → `NEXT_PUBLIC_AUTH_ENABLED=true` (Production) → Redeploy.
-     NIE ustawiać `NEXT_PUBLIC_AUTH_REQUIRED` — ona zamyka całą stronę za logowaniem.
+  3. ~~Flaga~~ — logowanie jest domyślnie włączone w kodzie (25.10.2026), razem z bramką (patrz „Płatna platforma”).
   4. Konto serwisowe musi mieć rolę „Firebase Authentication Admin” (punkt 2 niżej), inaczej sesja = 401.
   5. **Przed ustawieniem flagi** (Google = otwarta rejestracja: każde konto Google tworzy użytkownika):
      informacja o prywatności (RODO art. 13: Firebase/Google jako podmiot przetwarzający; na Safari i telefonach
@@ -141,9 +141,8 @@ J3. **Przegląd Japonii** (hero jak w PL), gdy będą ≥3 wskaźniki.
      ale trzeba to napisać), klucz API ograniczony po Referer do `savori.space/*` **i** `aplikacja-prawnicy.firebaseapp.com/*` (handler okna
      Google na authDomain używa tego klucza — bez niego logowanie Google przestanie działać), App Check,
      z Authorized domains usunąć `localhost` i nieużywane domeny.
-  6. `NEXT_PUBLIC_AUTH_REQUIRED` (cała strona za logowaniem) ma sens dopiero z listą dozwolonych kont w
-     `/api/auth/session` (custom claim albo lista e-maili) i weryfikacją podpisu sesji — inaczej wejdzie każdy
-     z kontem Google.
+  6. ~~Bramka~~ — zrobione w PR #34 (claims `accessUntil` + weryfikacja podpisu sesji na Edge); włączona
+     domyślnie 25.10.2026.
 - **Ochrona danych — po kolei** (specyfikacja `docs/specs/2026-10-25-ochrona-danych.md`; recenzja bezpieczeństwa):
   1. **Jeden projekt Firebase na aplikację — przed kluczem.** Produkcja Savori używa `aplikacja-prawnicy`
      (sprawdzone w kodzie strony 25.10). Repo wdraża się też do projektu Vercela `lexcapital-pro`: sprawdzić, czy ma

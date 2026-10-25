@@ -3,6 +3,7 @@ import { SignJWT, generateKeyPair } from 'jose';
 import { PLANS, gate, hasAccess, isPublicPath, monthlyPrice, sameSecret, savingsPct, trialClaims, trialDays } from '@/lib/access';
 import { KeysUnavailable, verifySessionCookie } from '@/lib/auth/session-verify';
 import { ADMIN_UNTIL, grantDecision, trialId } from '@/lib/auth/grant';
+import { authFlags } from '@/lib/auth/flags';
 
 const NOW = 1_792_900_000; // 25.10.2026, sekundy
 
@@ -148,5 +149,19 @@ describe('nadawanie dostępu przy logowaniu', () => {
         expect(trialId('a@b.pl', k1)).not.toBe(trialId('a@b.pl', k2));
         expect(trialId('a@b.pl', k1)).not.toBe(trialId('a@b.pl', {}));
         expect(trialId('a@b.pl', k1)).toMatch(/^[0-9a-f]{64}$/);
+    });
+});
+
+describe('flagi logowania', () => {
+    it('domyślnie: logowanie i bramka włączone, `false` wyłącza', () => {
+        expect(authFlags(undefined, undefined, true)).toEqual({ enabled: true, required: true });
+        expect(authFlags('true', 'true', true)).toEqual({ enabled: true, required: true });
+        expect(authFlags(undefined, 'false', true)).toEqual({ enabled: true, required: false });
+        expect(authFlags(' FALSE ', undefined, true)).toEqual({ enabled: false, required: false });
+    });
+
+    it('bez konfiguracji Firebase wszystko wyłączone — bramka bez logowania zamknęłaby stronę', () => {
+        expect(authFlags('true', 'true', false)).toEqual({ enabled: false, required: false });
+        expect(authFlags(undefined, undefined, false)).toEqual({ enabled: false, required: false });
     });
 });

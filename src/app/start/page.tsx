@@ -9,8 +9,8 @@ import { LoginPanel } from '@/components/auth/LoginPanel';
 import { AccessNotice, PricingCards, StartCta } from '@/components/landing/LandingClient';
 import { SITE_URL } from '@/lib/internal-fetch';
 
-// Strona startowa płatnej platformy: dla niezalogowanych pod `/` (rewrite w middleware, gdy
-// NEXT_PUBLIC_AUTH_REQUIRED=true) i zawsze pod /start. ISR jak /japonia: liczby z cache w Firestore
+// Strona startowa płatnej platformy pod /start: niezalogowanych przekierowuje tu bramka (src/middleware.ts,
+// domyślnie włączona — src/lib/auth/flags.ts) z każdej strony platformy, także z `/`. ISR jak /japonia: liczby z cache w Firestore
 // (peekServerCache), nigdy ze źródła w renderze strony.
 export const revalidate = 1800;
 
