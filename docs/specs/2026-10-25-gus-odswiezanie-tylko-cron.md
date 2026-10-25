@@ -32,7 +32,8 @@ dla automatyki. Użytkownik niczego nie traci poza przyciskiem, który i tak mó
   rutyny („nie usuwaj funkcji”) nie pozwala usunąć funkcji bez zgody właściciela, więc: `refreshFromSource` usunięty
   z `useCpiFull`/`usePpiFull`, przycisk woła `refetch()` (ponowny odczyt cache, który odświeża cron) i nigdzie
   w przeglądarce nie ma `refresh=1`. Przycisk niczego już nie obiecuje (komentarz komponentu; brak tekstu „z GUS”).
-  Usunięcie — decyzja właściciela (ROADMAP, „Wymaga właściciela”).
+  PM w recenzji: SHIP, przycisk zostaje — zapytania GUS mają `staleTime` 24 h, więc bez `refetch()` otwarta karta
+  nie zobaczy odczytu z crona do przeładowania strony.
 - **R5 Poza GUS bez zmian:** NBP, Yahoo/Stooq, Eurostat, news, `jp/cpi` mają własne limity, a samonaprawa kontroli
   świeżości (`selfHeal`, z `internalInit`) nadal ich potrzebuje.
 

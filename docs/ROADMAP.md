@@ -169,9 +169,6 @@ J3. **Przegląd Japonii** (hero jak w PL), gdy będą ≥3 wskaźniki.
   potem Firestore Database → kolekcja `savori_users` → dokument o tym UID → usuń (to lista obserwowanych; `/prywatnosc`
   obiecuje „usuwamy ją razem z kontem”). Dokument `trials/{HMAC(e-mail)}` zostaje celowo (okres próbny raz na adres —
   tak opisuje go `/prywatnosc`). Pomocnik w kodzie: `deleteUserData()` w `src/lib/user-data-server.ts`.
-- **Decyzja: przycisk „Aktualizuj” na CPI/PPI** — po 1b tylko ponownie czyta cache (nowe dane przynosi cron).
-  PM proponuje go usunąć (uczciwość: nie pobiera już z GUS); rutyna nie usuwa funkcji bez zgody. Wyjście awaryjne
-  przy spóźnionej publikacji: Vercel → Settings → Cron Jobs → `dbw-1` → Run.
 - **`ALERT_WEBHOOK_URL`** (Slack/Discord) — alert, gdy kontrola świeżości wykryje problem.
 - **savori.com:** przypięte do projektu w Vercelu, ale DNS wskazuje na inny serwer (Linode) —
   usunąć z projektu albo przepiąć DNS na Vercel (wtedy dostanie też certyfikat).
@@ -183,12 +180,13 @@ J3. **Przegląd Japonii** (hero jak w PL), gdy będą ≥3 wskaźniki.
 
 ## Zrobione
 - **25.10.2026 — 1b: wymuszone pobranie z GUS DBW/BDL tylko z `CRON_SECRET`**
-  (`docs/specs/2026-10-25-gus-odswiezanie-tylko-cron.md`). `canForceUpstream` (`src/lib/access.ts`) w 8 trasach
+  (PR #39, `docs/specs/2026-10-25-gus-odswiezanie-tylko-cron.md`). `canForceUpstream` (`src/lib/access.ts`) w 8 trasach
   (`gus-cpi-full`, `gus-ppi-full`, `gus-koniunktura`, `dbw-series`, `gus-cpi`, `gus-monthly`, `bdl-series`,
   `regional-gus`): publiczne `refresh=1` = zwykły TTL i ten sam klucz, crony (`internalInit`) dalej wymuszają.
   Przycisk „Aktualizuj” na CPI/PPI **został** (granica rutyny: nie usuwać funkcji) — czyta już tylko cache
-  odświeżany przez crony, bez `refresh=1`. Decyzja właściciela: zostawić go czy usunąć (propozycja PM: usunąć,
-  bo obiecuje więcej, niż robi) — w „Wymaga właściciela”.
+  odświeżany przez crony, bez `refresh=1`. PM w recenzji: **SHIP**, przycisk zostaje (zapytania GUS mają
+  `staleTime` 24 h, więc bez niego otwarta karta nie zobaczy odczytu z crona do przeładowania). Propozycja usunięcia
+  wycofana. Wyjście awaryjne przy spóźnionej publikacji: Vercel → Settings → Cron Jobs → `dbw-1` → Run.
 - **25.10.2026 — `CRON_SECRET` ustawiony przez właściciela** (`/api/*` bez sesji odpowiada 401, crony przechodzą
   bramkę z `Authorization: Bearer`). Krok 1b odblokowany.
 - **25.10.2026 — 1a: trasy GUS DBW przyjmują tylko znane parametry, crony CPI mieszczą się w czasie**
