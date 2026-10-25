@@ -13,7 +13,7 @@ import { FieldPath, type DocumentReference, type Firestore, type QueryDocumentSn
 import { docLegacy, fromStored, open, seal, sealConfig, sealedWithActiveKey, storedUpdatedAt, toStored } from '@/lib/data-seal';
 import { CACHE_COLLECTIONS, SEALED_CACHE_EXTRA } from '@/lib/server-cache';
 import { USER_COLLECTION } from '@/lib/user-data';
-import { ACCESS_COLLECTION } from '@/lib/stripe/fulfill';
+import { ACCESS_COLLECTION } from '@/lib/user-data';
 
 export const SEAL_STATE = { collection: 'health', id: 'seal_state' } as const;
 /** Dokumenty `health/*`, które zapisuje aplikacja (cron-log, cron/freshness, webhook Stripe, ta migracja). */

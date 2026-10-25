@@ -76,14 +76,17 @@ describe('etykiety po polsku', () => {
         expect(formatAccessUntil(JAN)).toBe('25 stycznia 2027, 12:00');
     });
 
-    it('okres próbny z godziną, plan z samą datą, poniżej 48 h — „jutro o”', () => {
+    it('okres próbny z godziną, plan z samą datą, poniżej 48 h — dziś / jutro / pojutrze według dni kalendarzowych', () => {
         const far = NOV - H48;
         expect(accessLabel(session({ accessUntil: NOV, plan: 'trial', iat: far }), far)).toBe('Okres próbny do 1 listopada 2026, 09:40');
         expect(accessLabel(session({ accessUntil: JAN, plan: 'm6' }), JAN - H48)).toBe('Dostęp do 25 stycznia 2027');
         expect(accessLabel(session({ accessUntil: JAN, plan: 'm1' }), JAN - 49 * 3600)).toBe('Dostęp do 25 stycznia 2027');
         expect(accessLabel(session({ accessUntil: JAN, plan: 'm3' }), JAN - 49 * 3600)).toBe('Dostęp do 25 stycznia 2027');
-        expect(accessLabel(session({ accessUntil: NOV, plan: 'trial' }), NOV - (H48 - 1))).toBe('Kończy się jutro o 09:40');
-        expect(accessLabel(session({ accessUntil: NOV, plan: 'm1' }), NOV - 3600)).toBe('Kończy się jutro o 09:40');
+        expect(accessLabel(session({ accessUntil: NOV, plan: 'trial' }), NOV - (H48 - 1))).toBe('Kończy się pojutrze o 09:40');
+        expect(accessLabel(session({ accessUntil: NOV, plan: 'trial' }), NOV - 30 * 3600)).toBe('Kończy się jutro o 09:40');
+        expect(accessLabel(session({ accessUntil: NOV, plan: 'm1' }), NOV - 3600)).toBe('Kończy się dziś o 09:40');
+        // Minuta po północy w Warszawie, koniec o 09:40 tego samego dnia — „dziś”, nie „jutro”.
+        expect(accessLabel(session({ accessUntil: NOV, plan: 'm1' }), NOV - (8 * 3600 + 39 * 60))).toBe('Kończy się dziś o 09:40');
     });
 
     it('administrator, wygasły, demo i brak sesji — bez etykiety albo sam status admina', () => {

@@ -15,6 +15,8 @@ export interface UserData {
 }
 
 export const USER_COLLECTION = 'savori_users';
+/** Koniec dostępu i plan przypięte do konta (zapisuje `fulfillPaidSession`). Ten sam przedrostek — projekt Firebase ma też cudze kolekcje. */
+export const ACCESS_COLLECTION = 'savori_access';
 export const userDocPath = (uid: string) => `${USER_COLLECTION}/${uid}`;
 
 /** Górny limit — watchlista to kilkadziesiąt pozycji, nie magazyn; dokument Firestore ma 1 MiB. */

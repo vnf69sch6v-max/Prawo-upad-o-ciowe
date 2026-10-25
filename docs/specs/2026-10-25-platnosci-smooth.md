@@ -35,8 +35,8 @@ z `max(teraz, koniec)`, admin nietykalny, `PUBLIC_API` z trzema trasami Stripe, 
    aplikacja odnawia po cichu (ważne ciasteczko + świeży token tej samej osoby). Po ponad 5 dniach nieobecności
    widzi na `/start` „Sesja wygasła — zaloguj się ponownie” z przyciskiem Google, nie pętlę „Przejdź do platformy”.
 2. **Wie, do kiedy ma dostęp.** W menu konta (desktop i arkusz na telefonie) i w `/ustawienia`: „Okres próbny do
-   1 listopada 2026, 09:40” / „Dostęp do 25 stycznia 2027” + „Przedłuż” → `/start#cennik`. Poniżej 48 h: „Kończy się
-   jutro o 09:40”. Administrator: „Dostęp administratora”, bez „Przedłuż” i bez przycisków „Zapłać”.
+   1 listopada 2026, 09:40” / „Dostęp do 25 stycznia 2027” + „Przedłuż” → `/start#cennik`. Poniżej 48 h — według dni
+   kalendarzowych w Warszawie: „Kończy się dziś / jutro / pojutrze o 09:40”. Administrator: „Dostęp administratora”, bez „Przedłuż” i bez przycisków „Zapłać”.
 3. **Po wygaśnięciu wraca tam, skąd wyszedł.** Bramka zachowuje `from`; komunikat: „Zalogowano jako {email}. Dostęp
    się skończył — wybierz plan, a po płatności wrócisz do {strony}”. Jeśli w międzyczasie webhook nadał dostęp
    (np. BLIK doszedł w nocy), strona sama odnawia ciasteczko i wraca na `from` — bez cennika.
@@ -66,7 +66,8 @@ Pliki: `src/app/api/auth/session/route.ts`, `src/lib/auth/use-auth.tsx`, nowy `s
   (`verifySessionCookie(…, true)`) i tokenu `verifyIdToken(…, true)` **tej samej osoby** z `freshToken(iat)`
   (≤ 5 min, import z `@/lib/stripe/billing`). Bez `accessToGrant`, bez zapisu claims. Wystawia nowe `__session`
   (5 dni) z bieżącymi claims tokenu i odpowiada `{ ok: true, accessUntil, plan }`. Brak/zepsute ciasteczko → 401;
-  inny uid → 403; stary `iat` → `{ refresh: true }` (klient woła `getIdToken(true)` i ponawia raz).
+  inny uid → 403; stary `iat` → `{ refresh: true }` (klient woła `getIdToken(true)` i ponawia raz). Wyjątek od „bez zapisu claims”:
+  `revoke-admin` (adres zdjęty z `ADMIN_EMAILS`) ustawia `accessUntil = teraz` i odpowiada `{ refresh: true }` — bez nadawania okresu próbnego.
   Uzasadnienie bezpieczeństwa: odnowienie wymaga posiadania ważnego ciasteczka httpOnly **i** świeżego tokenu —
   stary przechwycony token nadal nie wyrobi sesji (`POST` zostaje przy `auth_time` ≤ 5 min).
 - `POST /api/auth/session` dodatkowo zwraca `{ ok: true, accessUntil, plan }` (z claims tokenu), żeby klient nie
@@ -74,7 +75,7 @@ Pliki: `src/app/api/auth/session/route.ts`, `src/lib/auth/use-auth.tsx`, nowy `s
 - `src/lib/auth/session-info.ts` (czyste, bez React/`window`): `type SessionInfo = { status: 'unknown' | 'none' | 'ok'; accessUntil: number | null; plan: 'trial' | PlanId | null; iat: number | null }`,
   `accessState(info, nowS)` → `'unknown' | 'none' | 'active' | 'expired' | 'admin'`, `secondsLeft`, `endsSoon(…, 48 h)`,
   `formatAccessUntil(unixS)` → `Intl.DateTimeFormat('pl-PL', { timeZone: 'Europe/Warsaw', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })`,
-  `accessLabel(info, nowS)` → „Okres próbny do …” / „Dostęp do …” / „Kończy się jutro o …” / „Dostęp administratora” / `null`,
+  `accessLabel(info, nowS)` → „Okres próbny do …” / „Dostęp do …” / „Kończy się dziś|jutro|pojutrze o …” (dni kalendarzowe, Warszawa) / „Dostęp administratora” / `null`,
   `needsRenewal(iat, nowS)` → `true`, gdy ciasteczko starsze niż 24 h.
 - `AuthProvider` (`use-auth.tsx`) — kontrakt dla UI:
   ```ts
@@ -173,11 +174,14 @@ Pliki: `src/lib/stripe/fulfill.ts`, `src/lib/stripe/billing.ts`, `src/lib/stripe
 - Webhook: `console.error` z `event.id` i `cs_` (bez e-maila i payloadu) dla `bad-signature`, `stripe-not-configured`, `livemode`, `ignored`, `user-missing`, `fulfill-failed`.
   Nowy `src/lib/stripe/health.ts`: `recordPaymentEvent({ at, kind: 'ok' | 'already' | 'pending' | 'bad-signature' | 'not-configured' | 'livemode' | 'ignored' | 'user-missing' | 'failed', sessionId?, eventType? })`
   → `health/stripe_webhook` (sealed, transakcja jak `recordCronRun`; pola: `last`, `lastOk`, liczniki od początku); `readPaymentHealth()`.
-  Zapis także przy 400/501 (żeby zły sekret był widoczny). `/api/health/freshness` dodaje `payments` do raportu; `/status` pokazuje wiersz
+  Zapis także przy 400/501 (żeby zły sekret był widoczny), ale zdarzenia bez podpisu (`bad-signature`, `not-configured`) najwyżej raz na 10 min
+  tego samego rodzaju, a 413 wcale — anonimowy POST nie ma palić zapisów ani przełączać karty na błąd. `pending` to zielona pigułka (normalny przebieg BLIK/P24).
+  `deleteUserData()` usuwa też `savori_access/{uid}` (`/prywatnosc` §7); `payments/{cs}` zostaje (dokument sprzedaży). `/api/health/freshness` dodaje `payments` do raportu; `/status` pokazuje wiersz
   „Płatności (webhook Stripe)”: ostatnie zdarzenie, wynik po polsku, ostatnie udane księgowanie, „brak zdarzeń” gdy pusto. Stan `bad-signature`/`not-configured`
   w ostatnim zdarzeniu podnosi `warn` (nie `stale`/503 — to nie dane).
 - `withdrawalNote`: dopisać „Dostęp od razu po zaksięgowaniu.”
-- `/prywatnosc`: zdanie, że koniec dostępu i plan są zapisane przy koncie (`savori_access`) i w dzienniku webhooka nie ma danych osobowych.
+- `/prywatnosc`: koniec dostępu i plan przy koncie (`savori_access`); dziennik webhooka = rodzaj zdarzenia, czas i identyfikator sesji Stripe (bez e-maila i kwoty);
+  `__session` odnawiane po cichu; sessionStorage także ze stroną powrotu i identyfikatorem sesji płatności.
 
 ## Kryteria akceptacji
 
@@ -200,6 +204,12 @@ Pliki: `src/lib/stripe/fulfill.ts`, `src/lib/stripe/billing.ts`, `src/lib/stripe
    i `?platnosc=ok&session_id=zly`; lista cech raz; brak `min-h-13`; przyciski ≥ 44 px; `/status` ma wiersz „Płatności” („brak zdarzeń” w demo);
    `/ustawienia` i menu konta renderują się bez błędów hydratacji (w demo wiersz dostępu ukryty).
 8. **Regresja z poprzedniego specu** (`2026-10-25-platnosci-stripe.md`, kryteria 2–4) nadal zielona.
+
+## Recenzja PM (25.10.2026)
+
+FIX → SHIP. Poprawione w tym samym PR: etykieta „jutro” liczona z dni kalendarzowych (godzina przed końcem = „dziś”), `/prywatnosc`
+(odnawiane ciasteczko, nowe klucze sessionStorage, treść dziennika webhooka), `savori_access` usuwany z kontem, `revoke-admin` w `PUT`,
+limit zapisów dziennika dla zdarzeń bez podpisu, `pending` jako stan normalny na `/status`, jedna etykieta karty „Webhook Stripe”.
 
 ## Zostaje właścicielowi
 

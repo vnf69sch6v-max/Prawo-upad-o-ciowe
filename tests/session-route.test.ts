@@ -227,6 +227,27 @@ describe('PUT /api/auth/session', () => {
         expect(names()).not.toContain('setCustomUserClaims');
     });
 
+    it('adres zdjęty z ADMIN_EMAILS traci „rok 2100” także przy cichym odnowieniu — { refresh } bez ciasteczka', async () => {
+        vi.stubEnv('ADMIN_EMAILS', 'ktos-inny@b.pl');
+        h.tokens.set('ex-admin', token({ accessUntil: 4_102_444_800, plan: 'm6' }));
+        h.users.set('user_1', { customClaims: { accessUntil: 4_102_444_800, plan: 'm6', other: 1 } });
+        const res = await PUT(call('PUT', { idToken: 'ex-admin' }, { cookie: 'good' }));
+        expect(res.status).toBe(200);
+        expect(await res.json()).toEqual({ refresh: true });
+        expect(setCookie(res)).toHaveLength(0);
+        expect(h.users.get('user_1')?.customClaims).toEqual({ accessUntil: NOW_S, plan: 'm6', other: 1 });
+        expect(names()).not.toContain('createSessionCookie');
+    });
+
+    it('administrator nadal na liście odnawia się normalnie, bez zapisu claims', async () => {
+        vi.stubEnv('ADMIN_EMAILS', 'a@b.pl');
+        h.tokens.set('admin', token({ accessUntil: 4_102_444_800, plan: 'm6' }));
+        const res = await PUT(call('PUT', { idToken: 'admin' }, { cookie: 'good' }));
+        expect(res.status).toBe(200);
+        expect(await res.json()).toEqual({ ok: true, accessUntil: 4_102_444_800, plan: 'm6' });
+        expect(names()).not.toContain('setCustomUserClaims');
+    });
+
     it('granica freshToken: 5 min przechodzi, 60 s do przodu też', async () => {
         const boundary = await PUT(call('PUT', { idToken: 'boundary' }, { cookie: 'good' }));
         expect(boundary.status).toBe(200);

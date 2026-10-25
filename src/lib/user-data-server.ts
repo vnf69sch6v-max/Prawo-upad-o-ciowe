@@ -3,7 +3,7 @@
 // Dokument jest jednym szyfrogramem, więc zmiana pola to odczyt + zapis całości w transakcji.
 import type { Firestore } from 'firebase-admin/firestore';
 import { docLegacy, fromStored, toStored } from '@/lib/data-seal';
-import { USER_COLLECTION, parseWatchItems, userDocPath, type UserData } from '@/lib/user-data';
+import { ACCESS_COLLECTION, USER_COLLECTION, parseWatchItems, userDocPath, type UserData } from '@/lib/user-data';
 
 /** `null` = konto nie ma jeszcze dokumentu (pierwsze logowanie) albo wpis jest nie do odczytania (zły klucz). */
 export async function readUserData(db: Firestore, uid: string): Promise<UserData | null> {
@@ -22,8 +22,15 @@ export async function writeUserData(db: Firestore, uid: string, patch: Partial<U
     });
 }
 
+/**
+ * Dane konta do usunięcia z kontem: lista obserwowanych i koniec dostępu (`/prywatnosc` §7). Dokumenty
+ * `payments/{cs_…}` zostają — to dokumenty sprzedaży (obowiązek podatkowy), nie dane konta.
+ */
 export async function deleteUserData(db: Firestore, uid: string): Promise<void> {
-    await db.collection(USER_COLLECTION).doc(uid).delete();
+    await Promise.all([
+        db.collection(USER_COLLECTION).doc(uid).delete(),
+        db.collection(ACCESS_COLLECTION).doc(uid).delete(),
+    ]);
 }
 
 function decode(uid: string, data: Record<string, unknown> | undefined): UserData | null {

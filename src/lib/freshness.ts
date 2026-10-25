@@ -100,7 +100,7 @@ export interface PaymentHealth {
 export const PAYMENT_KIND_LABELS: Record<PaymentEventKind, string> = {
     ok: 'zaksięgowano',
     already: 'powtórka (bez zmian)',
-    pending: 'oczekuje na zaksięgowanie',
+    pending: 'oczekuje na zaksięgowanie (BLIK/P24)',
     'bad-signature': 'zły podpis — sprawdź STRIPE_WEBHOOK_SECRET',
     'not-configured': 'brak sekretu webhooka',
     livemode: 'tryb test/live niezgodny z kluczem',

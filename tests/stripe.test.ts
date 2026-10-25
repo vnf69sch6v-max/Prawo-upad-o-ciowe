@@ -660,6 +660,29 @@ describe('dziennik webhooka', () => {
         expect(raw).not.toContain('a@b.pl');
     });
 
+    it('zdarzenia bez podpisu zapisuje najwyżej raz na 10 min; podpisane bez limitu', async () => {
+        await recordPaymentEvent({ at: '2026-10-25T09:00:00.000Z', kind: 'bad-signature' });
+        await recordPaymentEvent({ at: '2026-10-25T09:04:00.000Z', kind: 'bad-signature' });
+        expect((await readPaymentHealth())?.counts['bad-signature']).toBe(1);
+        await recordPaymentEvent({ at: '2026-10-25T09:10:00.000Z', kind: 'bad-signature' });
+        expect((await readPaymentHealth())?.counts['bad-signature']).toBe(2);
+        // Inny rodzaj przerywa serię — zły sekret po poprawnym księgowaniu widać od razu.
+        await recordPaymentEvent({ at: '2026-10-25T09:11:00.000Z', kind: 'ok', sessionId: SESSION });
+        await recordPaymentEvent({ at: '2026-10-25T09:12:00.000Z', kind: 'bad-signature' });
+        expect((await readPaymentHealth())?.counts['bad-signature']).toBe(3);
+        await recordPaymentEvent({ at: '2026-10-25T09:12:30.000Z', kind: 'ignored' });
+        await recordPaymentEvent({ at: '2026-10-25T09:12:40.000Z', kind: 'ignored' });
+        expect((await readPaymentHealth())?.counts.ignored).toBe(2);
+    });
+
+    it('za duże body → 413 bez śladu w dzienniku', async () => {
+        vi.stubEnv('STRIPE_SECRET_KEY', SECRET);
+        vi.stubEnv('STRIPE_WEBHOOK_SECRET', WHSEC);
+        const res = await webhookPost(new NextRequest('https://savori.space/api/stripe/webhook', { method: 'POST', body: 'x'.repeat(200_001) }));
+        expect(res.status).toBe(413);
+        expect(await readPaymentHealth()).toEqual(expect.objectContaining({ last: null }));
+    });
+
     it('bez Firestore zapis zdrowia nic nie robi', async () => {
         h.flags.auth = false;
         await expect(recordPaymentEvent({ at: '2026-10-25T00:00:00.000Z', kind: 'ok', sessionId: SESSION })).resolves.toBeUndefined();

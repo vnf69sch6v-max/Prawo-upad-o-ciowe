@@ -69,9 +69,8 @@ export async function POST(request: NextRequest) {
         logWebhook('stripe-not-configured', meta);
         return finish(jsonError('stripe-not-configured', 501), 'not-configured', meta);
     }
-    if (payload.length > MAX_BODY) {
-        return finish(jsonError('too-large', 413), 'failed', {});
-    }
+    // Za duże body nie trafia do dziennika: anonimowy POST nie ma przełączać karty „Płatności” na błąd.
+    if (payload.length > MAX_BODY) return jsonError('too-large', 413);
 
     const meta = peekIds(payload);
     const nowS = Math.floor(Date.now() / 1000);

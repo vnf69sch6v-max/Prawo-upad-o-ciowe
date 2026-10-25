@@ -85,6 +85,9 @@ function compact(event: { at: string; kind: PaymentEventKind; sessionId?: string
  * Dopisuje wynik webhooka. Bez Firestore (tryb demo) nic nie robi.
  * Błąd odczytu albo zapisu jest logowany i połykany — wołający i tak zwraca już wybrany status.
  */
+const UNSIGNED_KINDS = new Set<PaymentEventKind>(['bad-signature', 'not-configured']);
+const UNSIGNED_MIN_GAP_MS = 10 * 60 * 1000;
+
 export async function recordPaymentEvent(event: {
     at: string;
     kind: PaymentEventKind;
@@ -99,6 +102,9 @@ export async function recordPaymentEvent(event: {
         await db.runTransaction(async (tx) => {
             const snap = await tx.get(ref);
             const cur = healthOf(snap.exists ? snap.data() : undefined);
+            // Zdarzenia bez podpisu może wysłać każdy — ten sam rodzaj zapisujemy najwyżej raz na 10 min,
+            // żeby anonimowe POST-y nie paliły zapisów Firestore. Właściciel i tak zobaczy zły sekret.
+            if (UNSIGNED_KINDS.has(event.kind) && cur.last?.kind === event.kind && Date.parse(event.at) - Date.parse(cur.last.at) < UNSIGNED_MIN_GAP_MS) return;
             const counts = { ...cur.counts, [event.kind]: cur.counts[event.kind] + 1 };
             const last = compact(event);
             const lastOk = event.kind === 'ok'

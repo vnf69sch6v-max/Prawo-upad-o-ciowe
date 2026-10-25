@@ -5,6 +5,7 @@ import type { Auth } from 'firebase-admin/auth';
 import type { Firestore } from 'firebase-admin/firestore';
 import type { PlanId } from '@/lib/access';
 import { ADMIN_UNTIL } from '@/lib/auth/grant';
+import { ACCESS_COLLECTION } from '@/lib/user-data';
 import { getAdminAuth, getAdminDb } from '@/lib/firebase/admin';
 import { docLegacy, fromStored, toStored } from '@/lib/data-seal';
 import { addCalendarMonths, planById, extendAccess, type PaidSession } from '@/lib/stripe/billing';
@@ -16,8 +17,7 @@ export class PaymentError extends Error {
     }
 }
 
-/** Koniec dostępu przypięty do konta. Przedrostek jak `savori_users` — w projekcie Firebase są też cudze kolekcje. */
-export const ACCESS_COLLECTION = 'savori_access';
+export { ACCESS_COLLECTION };
 
 export interface AccessGrant {
     accessUntil: number;

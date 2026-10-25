@@ -55,6 +55,24 @@ function formatAccessTime(unixS: number): string {
     return `${p.hour}:${p.minute}`;
 }
 
+const WARSAW_DAY = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Warsaw', year: 'numeric', month: '2-digit', day: '2-digit' });
+
+/** Różnica dni kalendarzowych w Warszawie (0 = dziś, 1 = jutro, 2 = pojutrze). */
+function warsawDaysBetween(fromS: number, toS: number): number {
+    const dayUtc = (s: number) => {
+        const [y, m, d] = WARSAW_DAY.format(new Date(s * 1000)).split('-').map(Number);
+        return Date.UTC(y, m - 1, d);
+    };
+    return Math.round((dayUtc(toS) - dayUtc(fromS)) / 86_400_000);
+}
+
+/** „dziś / jutro / pojutrze” według dni kalendarzowych, nie 24-godzinnych okien — godzina przed końcem to „dziś”. */
+function soonPhrase(nowS: number, untilS: number): string {
+    const days = warsawDaysBetween(nowS, untilS);
+    const when = days <= 0 ? 'dziś' : days === 1 ? 'jutro' : 'pojutrze';
+    return `Kończy się ${when} o ${formatAccessTime(untilS)}`;
+}
+
 /** `unknown` zanim znamy ciasteczko (albo demo bez daty); `none` bez sesji; `admin` od `ADMIN_UNTIL` wzwyż. */
 export function accessState(info: SessionInfo, nowS: number): AccessState {
     if (info.status === 'unknown') return 'unknown';
@@ -79,7 +97,7 @@ export function endsSoon(info: SessionInfo, nowS: number, withinS = ENDS_SOON_S)
 }
 
 /**
- * Tekst do menu i ustawień. Poniżej 48 h zegar ma znaczenie („Kończy się jutro o 09:40”);
+ * Tekst do menu i ustawień. Poniżej 48 h zegar ma znaczenie („Kończy się dziś / jutro / pojutrze o 09:40”);
  * okres próbny niesie godzinę, dłuższy plan — samą datę („Dostęp do 25 stycznia 2027”).
  * Brak sesji, demo i wygasły dostęp → `null` (nic nie pokazujemy).
  */
@@ -87,7 +105,7 @@ export function accessLabel(info: SessionInfo, nowS: number): string | null {
     const state = accessState(info, nowS);
     if (state === 'admin') return 'Dostęp administratora';
     if (state !== 'active' || info.accessUntil == null) return null;
-    if (endsSoon(info, nowS)) return `Kończy się jutro o ${formatAccessTime(info.accessUntil)}`;
+    if (endsSoon(info, nowS)) return soonPhrase(nowS, info.accessUntil);
     if (info.plan === 'trial') return `Okres próbny do ${formatAccessUntil(info.accessUntil)}`;
     return `Dostęp do ${formatAccessDate(info.accessUntil)}`;
 }

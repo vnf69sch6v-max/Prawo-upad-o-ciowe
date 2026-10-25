@@ -162,7 +162,7 @@ export async function PUT(request: NextRequest) {
         return deny('unauthorized', 401);
     }
 
-    let decoded: { uid: string; iat?: unknown; accessUntil?: unknown; plan?: unknown };
+    let decoded: { uid: string; iat?: unknown; accessUntil?: unknown; plan?: unknown; email?: string; email_verified?: boolean };
     try {
         decoded = await auth.verifyIdToken(idToken, true);
     } catch (err) {
@@ -175,6 +175,13 @@ export async function PUT(request: NextRequest) {
     if (!freshToken(decoded.iat, nowS)) return NextResponse.json({ refresh: true }, { headers: noStore });
 
     try {
+        // Adres zdjęty z ADMIN_EMAILS traci „rok 2100” także przy cichym odnowieniu, nie dopiero przy ponownym
+        // logowaniu. Bez nadawania okresu próbnego — to robi tylko POST.
+        if (grantDecision(decoded, adminEmails()).kind === 'revoke-admin') {
+            const { customClaims } = await auth.getUser(decoded.uid);
+            await auth.setCustomUserClaims(decoded.uid, { ...customClaims, accessUntil: nowS });
+            return NextResponse.json({ refresh: true }, { headers: noStore });
+        }
         const sessionCookie = await auth.createSessionCookie(idToken, { expiresIn: MAX_AGE_S * 1000 });
         return withSessionCookie({ ok: true, accessUntil: readUntil(decoded.accessUntil), plan: readPlan(decoded.plan) }, sessionCookie);
     } catch (err) {

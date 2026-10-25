@@ -3,12 +3,12 @@ import { formatStatusWhen } from './CronRuns';
 import { StatusPill } from './StatusPill';
 
 /**
- * Zielona pigułka tylko po udanym księgowaniu albo nieszkodliwej powtórce.
- * Każdy inny wynik (zły podpis, brak sekretu, zły tryb, błąd zapisu, odrzut, oczekiwanie)
+ * Zielona pigułka po udanym księgowaniu, nieszkodliwej powtórce i BLIK-u/przelewie w drodze (to normalny
+ * przebieg, nie usterka). Każdy inny wynik (zły podpis, brak sekretu, zły tryb, błąd zapisu, odrzut)
  * to ostrzeżenie w stylu `lag` — nie `stale` i nie `error`, więc nie podnosi HTTP 503.
  */
 function pillStatus(kind: PaymentEventKind): FreshnessStatus {
-    return kind === 'ok' || kind === 'already' ? 'ok' : 'lag';
+    return kind === 'ok' || kind === 'already' || kind === 'pending' ? 'ok' : 'lag';
 }
 
 /** Ostatni webhook Stripe. W demo (`null`) i przy pustym dzienniku: „brak zdarzeń”. */
@@ -20,7 +20,7 @@ export function PaymentsHealth({ payments }: { payments: FreshnessReport['paymen
             <h2 id="status-payments" className="mk-section-label">Płatności</h2>
             <ul className="grid grid-cols-1 gap-2">
                 <li className="flex min-h-12 flex-col gap-2 rounded-xl border border-mk-border bg-mk-surface px-3.5 py-3">
-                    <h3 className="text-sm font-semibold leading-snug text-mk-text">Płatności (webhook Stripe)</h3>
+                    <h3 className="text-sm font-semibold leading-snug text-mk-text">Webhook Stripe</h3>
                     {last ? (
                         <>
                             <StatusPill status={pillStatus(last.kind)} label={PAYMENT_KIND_LABELS[last.kind]} />
