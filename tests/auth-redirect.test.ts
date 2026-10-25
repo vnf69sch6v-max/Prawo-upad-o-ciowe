@@ -17,4 +17,12 @@ describe('safeRedirectTarget — powrót po logowaniu tylko na własną domenę'
             expect(safeRedirectTarget(evil, O), evil).toBe('/');
         }
     });
+
+    it('segmenty kropkowe nie dają ścieżki „//host” (router.push czyta ją jako obcy adres)', () => {
+        for (const evil of ['/.//evil.com', '/a/..//evil.com', '/%2e//evil.com', '/.\\/evil.com', '/./\\evil.com']) {
+            const out = safeRedirectTarget(evil, O);
+            expect(out.startsWith('//'), `${evil} → ${out}`).toBe(false);
+            expect(new URL(out, O).origin, evil).toBe(O);
+        }
+    });
 });

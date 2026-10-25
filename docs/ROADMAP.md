@@ -111,7 +111,8 @@ J3. **Przegląd Japonii** (hero jak w PL), gdy będą ≥3 wskaźniki.
   5. **Przed ustawieniem flagi** (Google = otwarta rejestracja: każde konto Google tworzy użytkownika):
      informacja o prywatności (RODO art. 13: Firebase/Google jako podmiot przetwarzający; na Safari i telefonach
      przy włączonym logowaniu każda strona ładuje `apis.google.com` i ukryty iframe authDomain — jak Google Fonts,
-     ale trzeba to napisać), klucz API ograniczony do savori.space (Google Cloud → Credentials), App Check,
+     ale trzeba to napisać), klucz API ograniczony po Referer do `savori.space/*` **i** `aplikacja-prawnicy.firebaseapp.com/*` (handler okna
+     Google na authDomain używa tego klucza — bez niego logowanie Google przestanie działać), App Check,
      z Authorized domains usunąć `localhost` i nieużywane domeny.
   6. `NEXT_PUBLIC_AUTH_REQUIRED` (cała strona za logowaniem) ma sens dopiero z listą dozwolonych kont w
      `/api/auth/session` (custom claim albo lista e-maili) i weryfikacją podpisu sesji — inaczej wejdzie każdy
