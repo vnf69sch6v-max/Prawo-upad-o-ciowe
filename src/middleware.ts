@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-// Route protection is only active when auth is explicitly enabled. In demo mode
-// (flag unset / Firebase not configured) the app is fully open. Middleware runs
-// on the Edge runtime, so it only checks for the session cookie's presence —
-// the cookie is minted & verified server-side in /api/auth/session.
-const AUTH_ENABLED = process.env.NEXT_PUBLIC_AUTH_ENABLED === 'true';
+// Bramka „cała platforma tylko po zalogowaniu” — osobna flaga NEXT_PUBLIC_AUTH_REQUIRED, domyślnie wyłączona.
+// Samo logowanie (NEXT_PUBLIC_AUTH_ENABLED, src/lib/auth/use-auth.tsx) zostawia stronę publiczną: Savori to
+// dane publiczne, konto jest dodatkiem. Middleware działa na Edge, więc sprawdza tylko obecność ciasteczka —
+// wydaje je i weryfikuje /api/auth/session (przed funkcjami dla zalogowanych: weryfikacja podpisu, ROADMAP).
+const AUTH_ENABLED = process.env.NEXT_PUBLIC_AUTH_REQUIRED === 'true' && process.env.NEXT_PUBLIC_AUTH_ENABLED === 'true';
 const COOKIE = '__session';
 
 export function middleware(request: NextRequest) {

@@ -53,6 +53,15 @@ Standard scripts in `package.json`:
   - Status: `/api/health/freshness` → `encryption`.
   - Merge-writes (`set(..., { merge: true })`) can't work on sealed docs. Do read-modify-write in a
     transaction, like `recordCronRun`.
+- Auth flags: `NEXT_PUBLIC_AUTH_ENABLED=true` turns on sign-in (Google popup + e-mail/password,
+  `src/lib/auth/use-auth.tsx`). The site stays public. `NEXT_PUBLIC_AUTH_REQUIRED=true` (on top of it) puts the
+  whole site behind login (`src/middleware.ts`). Until 10.2026 one flag did both, so production ran in demo mode.
+  Both are inlined at build time: the SSR and the browser render agree, and changing them needs a redeploy.
+  Google sign-in uses `signInWithPopup`, not redirect: redirect breaks with third-party storage blocking
+  because the authDomain (`*.firebaseapp.com`) differs from savori.space. The popup needs:
+  - `script-src https://apis.google.com` (gapi);
+  - `frame-src https://<authDomain>`;
+  - COOP `same-origin-allow-popups`.
 - Security headers (CSP, HSTS, `X-Frame-Options`, …) are set for every route in
   `next.config.ts` (`SECURITY_HEADERS`; CSP only in production builds — check
   with `next start`, not `next dev`). The CSP allows only what the browser

@@ -205,6 +205,12 @@ describe('przeglądarka nie ma dostępu do bazy ani plików', () => {
         expect(offenders).toEqual([]);
     });
 
+    it('logowanie Google: gapi tylko z apis.google.com, COOP pozwala oknu Google oddać wynik', () => {
+        const cfg = readFileSync('next.config.ts', 'utf8');
+        expect(cfg.match(/"script-src ([^"]+)"/)![1].split(' ')).toEqual(["'self'", "'unsafe-inline'", 'https://apis.google.com']);
+        expect(cfg).toMatch(/Cross-Origin-Opener-Policy', value: 'same-origin-allow-popups'/);
+    });
+
     it('CSP: przeglądarka łączy się tylko z własną domeną i logowaniem Firebase', () => {
         const cfg = readFileSync('next.config.ts', 'utf8');
         const connect = cfg.match(/"connect-src ([^"]+)"/)![1].split(' ');

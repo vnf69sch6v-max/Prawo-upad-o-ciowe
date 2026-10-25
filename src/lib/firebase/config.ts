@@ -56,7 +56,7 @@ export function getFirebaseAuth(): Auth | null {
     return _auth;
 }
 
-export function isFirebaseAvailable(): boolean {
-    return isConfigValid() && typeof window !== 'undefined';
+/** Konfiguracja klienta z env (wstawiana przy buildzie) — ta sama wartość na serwerze i w przeglądarce. */
+export function isFirebaseConfigured(): boolean {
+    return isConfigValid();
 }
-

@@ -1,15 +1,24 @@
 'use client';
 
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { getFirebaseAuth, isFirebaseAvailable } from '@/lib/firebase/config';
-import { onAuthStateChanged, signInWithEmailAndPassword, signOut as fbSignOut, type User } from 'firebase/auth';
+import { getFirebaseAuth, isFirebaseConfigured } from '@/lib/firebase/config';
+import {
+    GoogleAuthProvider,
+    onAuthStateChanged,
+    signInWithEmailAndPassword,
+    signInWithPopup,
+    signOut as fbSignOut,
+    type Auth,
+    type User,
+} from 'firebase/auth';
 
 /**
- * Auth is only enforced when NEXT_PUBLIC_AUTH_ENABLED === 'true' AND Firebase
- * is configured. Otherwise the app runs in "demo" mode (no gating) so it stays
- * fully usable locally before Firebase credentials are provisioned.
+ * Logowanie działa, gdy NEXT_PUBLIC_AUTH_ENABLED === 'true' i jest konfiguracja Firebase; inaczej tryb demo
+ * (bez logowania). Strona pozostaje publiczna — zamknięcie całej platformy za logowaniem to osobna flaga
+ * NEXT_PUBLIC_AUTH_REQUIRED (src/middleware.ts). Obie wartości wstawia build, więc SSR i przeglądarka
+ * renderują to samo (bez błędu hydratacji).
  */
-const AUTH_ENABLED = process.env.NEXT_PUBLIC_AUTH_ENABLED === 'true';
+const AUTH_ACTIVE = process.env.NEXT_PUBLIC_AUTH_ENABLED === 'true' && isFirebaseConfigured();
 
 export interface AppUser {
     email: string | null;
@@ -24,6 +33,8 @@ interface AuthContextValue {
     /** True when real Firebase auth is active (not demo mode). */
     enabled: boolean;
     signIn: (email: string, password: string) => Promise<void>;
+    /** Okno Google (popup). `false`, gdy użytkownik zamknął okno (bez błędu). */
+    signInWithGoogle: () => Promise<boolean>;
     signOut: () => Promise<void>;
 }
 
@@ -36,58 +47,85 @@ function computeInitials(name?: string | null, email?: string | null): string {
 
 const DEMO_USER: AppUser = { email: 'demo@makro.pl', displayName: 'Konto demo', photoURL: null, initials: 'MD' };
 
+const toAppUser = (u: User): AppUser => ({
+    email: u.email,
+    displayName: u.displayName,
+    photoURL: u.photoURL,
+    initials: computeInitials(u.displayName, u.email),
+});
+
+function requireAuth(): Auth {
+    const auth = getFirebaseAuth();
+    if (!auth) throw new Error('Firebase Auth niedostępny — sprawdź konfigurację.');
+    return auth;
+}
+
+/** Wymiana świeżego ID tokenu na ciasteczko sesji (httpOnly) — weryfikacja po stronie serwera. */
+async function createSession(auth: Auth, user: User): Promise<void> {
+    let ok = false;
+    try {
+        const res = await fetch('/api/auth/session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ idToken: await user.getIdToken() }),
+        });
+        ok = res.ok;
+    } catch {
+        ok = false; // brak sieci — ten sam komunikat, nie angielskie „Failed to fetch”
+    }
+    // Bez sesji na serwerze bramka (gdy włączona) odesłałaby z powrotem na /login — lepiej powiedzieć to wprost.
+    if (!ok) {
+        await fbSignOut(auth);
+        throw new Error('Nie udało się utworzyć sesji. Spróbuj zalogować się ponownie.');
+    }
+}
+
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-    const [user, setUser] = useState<AppUser | null>(null);
-    const [loading, setLoading] = useState(true);
+    const [user, setUser] = useState<AppUser | null>(AUTH_ACTIVE ? null : DEMO_USER);
+    const [loading, setLoading] = useState(AUTH_ACTIVE);
 
     useEffect(() => {
-        if (!AUTH_ENABLED || !isFirebaseAvailable()) {
-            setUser(DEMO_USER);
-            setLoading(false);
-            return;
-        }
+        if (!AUTH_ACTIVE) return;
         const auth = getFirebaseAuth();
-        if (!auth) {
-            setUser(DEMO_USER);
-            setLoading(false);
-            return;
-        }
-        const unsub = onAuthStateChanged(auth, (u: User | null) => {
-            setUser(u ? { email: u.email, displayName: u.displayName, photoURL: u.photoURL, initials: computeInitials(u.displayName, u.email) } : null);
+        if (!auth) return;
+        return onAuthStateChanged(auth, (u: User | null) => {
+            setUser(u ? toAppUser(u) : null);
             setLoading(false);
         });
-        return () => unsub();
     }, []);
 
     const value = useMemo<AuthContextValue>(() => ({
         user,
         loading,
-        enabled: AUTH_ENABLED && isFirebaseAvailable(),
+        enabled: AUTH_ACTIVE,
         signIn: async (email, password) => {
-            if (!AUTH_ENABLED || !isFirebaseAvailable()) return; // demo — succeed silently
-            const auth = getFirebaseAuth();
-            if (!auth) throw new Error('Firebase Auth niedostępny — sprawdź konfigurację.');
+            if (!AUTH_ACTIVE) return; // demo — succeed silently
+            const auth = requireAuth();
             const cred = await signInWithEmailAndPassword(auth, email, password);
-            const idToken = await cred.user.getIdToken();
-            const res = await fetch('/api/auth/session', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ idToken }),
-            });
-            // Bez sesji na serwerze middleware odesłałby z powrotem na /login — lepiej powiedzieć to wprost.
-            if (!res.ok) {
-                await fbSignOut(auth);
-                throw new Error('Nie udało się utworzyć sesji. Spróbuj zalogować się ponownie.');
+            await createSession(auth, cred.user);
+        },
+        signInWithGoogle: async () => {
+            if (!AUTH_ACTIVE) return false;
+            const auth = requireAuth();
+            const provider = new GoogleAuthProvider();
+            provider.setCustomParameters({ prompt: 'select_account' });
+            try {
+                const cred = await signInWithPopup(auth, provider);
+                await createSession(auth, cred.user);
+                return true;
+            } catch (err) {
+                const code = (err as { code?: string }).code;
+                if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') return false;
+                throw err;
             }
         },
         signOut: async () => {
-            if (AUTH_ENABLED && isFirebaseAvailable()) {
-                const auth = getFirebaseAuth();
-                if (auth) await fbSignOut(auth);
-                await fetch('/api/auth/session', { method: 'DELETE' });
-            }
+            if (!AUTH_ACTIVE) return;
+            const auth = getFirebaseAuth();
+            if (auth) await fbSignOut(auth);
+            await fetch('/api/auth/session', { method: 'DELETE' });
         },
     }), [user, loading]);
 

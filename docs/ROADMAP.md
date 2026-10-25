@@ -102,6 +102,13 @@ J2. **Kolejne wskaźniki Japonii** (po jednym na krok): stopa BOJ i USD/JPY (API
 J3. **Przegląd Japonii** (hero jak w PL), gdy będą ≥3 wskaźniki.
 
 ## Wymaga właściciela (nie da się z kodu)
+- **Logowanie przez Google — włączenie** (kod gotowy, strona zostaje publiczna):
+  1. Konsola Firebase (`aplikacja-prawnicy`) → Authentication → Sign-in method → Google → Enable, e-mail pomocy → Save.
+  2. Authentication → Settings → Authorized domains: dodać `savori.space` (i `www.savori.space`, jeśli używany).
+  3. Vercel → Environment Variables → `NEXT_PUBLIC_AUTH_ENABLED=true` (Production) → Redeploy.
+     NIE ustawiać `NEXT_PUBLIC_AUTH_REQUIRED` — ona zamyka całą stronę za logowaniem.
+  4. Konto serwisowe musi mieć rolę „Firebase Authentication Admin” (punkt 2 niżej), inaczej sesja = 401.
+  5. Przed funkcjami dla zalogowanych: polityka prywatności (RODO) i weryfikacja podpisu sesji (backlog).
 - **Ochrona danych — po kolei** (specyfikacja `docs/specs/2026-10-25-ochrona-danych.md`; recenzja bezpieczeństwa):
   1. **Jeden projekt Firebase na aplikację — przed kluczem.** Produkcja Savori używa `aplikacja-prawnicy`
      (sprawdzone w kodzie strony 25.10). Repo wdraża się też do projektu Vercela `lexcapital-pro`: sprawdzić, czy ma
