@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useReducer, useState, useSyncExternalStore, type ReactNode } from 'react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { Check, Loader2 } from 'lucide-react';
 import { PLANS, monthlyPrice, savingsPct, type PlanId } from '@/lib/access';
 import { safeRedirectTarget } from '@/lib/auth/redirect';
@@ -242,27 +242,15 @@ function safeFrom(search: string): string {
  * Firebase bez ciasteczka (sesja `none`) nie udaje wejścia na platformę.
  */
 export function StartCta({ label, className }: { label: string; className: string }) {
-    const { user, enabled, loading, session, signInWithGoogle } = useAuth();
+    const { user, enabled, loading, session } = useAuth();
     const access = useAccess();
     const paying = usePaymentFlag();
-    const router = useRouter();
 
     if (paying) {
         return <button type="button" onClick={scrollToStatus} className={className}>Dokańczamy płatność…</button>;
     }
     if (enabled && !loading && user && session.status === 'none') {
-        const again = () => {
-            void (async () => {
-                try {
-                    const ok = await signInWithGoogle();
-                    if (!ok) return;
-                    router.push(safeFrom(window.location.search));
-                } catch {
-                    scrollToLogin();
-                }
-            })();
-        };
-        return <button type="button" onClick={again} className={className}>Zaloguj się ponownie</button>;
+        return <button type="button" onClick={scrollToLogin} className={className}>Zaloguj się ponownie</button>;
     }
     if (access.state === 'expired') {
         return <a href="#cennik" className={className}>Wybierz plan</a>;

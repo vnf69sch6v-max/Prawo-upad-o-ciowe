@@ -117,7 +117,8 @@ export function gate({ pathname, search, session, nowS, protectApi, internal }: 
     if (session === 'unavailable') return { kind: 'unavailable' };
     if (!session) {
         if (pathname === '/' && !search) return { kind: 'redirect', to: '/start' };
-        return { kind: 'redirect', to: `/start?from=${encodeURIComponent(pathname + search)}` };
+        // Hash zostaje w przeglądarce: od razu sekcja logowania, nie hero kilka ekranów wyżej.
+        return { kind: 'redirect', to: `/start?from=${encodeURIComponent(pathname + search)}#logowanie` };
     }
     if (!hasAccess(session, nowS)) {
         if (pathname === '/' && !search) return { kind: 'redirect', to: '/start?dostep=wygasl#cennik' };

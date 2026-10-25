@@ -47,7 +47,7 @@ describe('bramka', () => {
     it('niezalogowany → strona startowa (z powrotem na podstronę po zalogowaniu)', () => {
         expect(g('/', null)).toEqual({ kind: 'redirect', to: '/start' });
         expect(gate({ pathname: '/ceny', search: '?zakres=1R', session: null, nowS: NOW, protectApi: true, internal: false }))
-            .toEqual({ kind: 'redirect', to: '/start?from=%2Fceny%3Fzakres%3D1R' });
+            .toEqual({ kind: 'redirect', to: '/start?from=%2Fceny%3Fzakres%3D1R#logowanie' });
         expect(g('/start', null)).toEqual({ kind: 'pass' });
     });
 

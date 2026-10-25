@@ -43,11 +43,12 @@ function googleError(err: unknown): string {
  * „Zacznij za darmo z Google”).
  */
 export function LoginPanel({ googleLabel = 'Zaloguj się przez Google' }: { googleLabel?: string }) {
-    const { signIn, signInWithGoogle, enabled } = useAuth();
+    const { signIn, signInWithGoogle, resetPassword, enabled, authNotice } = useAuth();
     const router = useRouter();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState<string | null>(null);
+    const [info, setInfo] = useState<string | null>(null);
     const [busy, setBusy] = useState(false);
     // `?from=` czytamy w chwili przejścia (bez stanu i efektu); tylko ścieżki na tej samej domenie.
     const target = () => safeRedirectTarget(new URLSearchParams(window.location.search).get('from'), window.location.origin);
@@ -64,12 +65,36 @@ export function LoginPanel({ googleLabel = 'Zaloguj się przez Google' }: { goog
             const code = (err as { code?: string }).code;
             setError(code === 'auth/too-many-requests' ? 'Za dużo prób logowania. Spróbuj ponownie za kilka minut.'
                 : code === 'auth/network-request-failed' ? 'Brak połączenia. Sprawdź internet i spróbuj ponownie.'
-                    : code || !(err instanceof Error) ? 'Nieprawidłowy e-mail lub hasło.' : err.message);
+                    : code || !(err instanceof Error) ? 'Nieprawidłowy e-mail lub hasło. Nowe konto zakładasz przez Google.' : err.message);
             setBusy(false);
         }
     };
 
     const enterDemo = () => router.push(target());
+
+    const onReset = async () => {
+        setError(null);
+        setInfo(null);
+        if (!email.trim()) {
+            setError('Wpisz e-mail, na który wyślemy link do zmiany hasła.');
+            return;
+        }
+        setBusy(true);
+        try {
+            await resetPassword(email);
+            setInfo('Jeśli jest konto z tym adresem, wysłaliśmy link do zmiany hasła.');
+        } catch (err) {
+            const code = (err as { code?: string }).code;
+            // Brak konta brzmi tak samo jak sukces — adresu nie da się sprawdzić z formularza.
+            if (code === 'auth/user-not-found') setInfo('Jeśli jest konto z tym adresem, wysłaliśmy link do zmiany hasła.');
+            else if (code === 'auth/invalid-email') setError('Podaj prawidłowy adres e-mail.');
+            else if (code === 'auth/too-many-requests') setError('Za dużo prób. Spróbuj za kilka minut.');
+            else if (code === 'auth/unauthorized-continue-uri') setError('Reset hasła nie jest włączony na tej domenie.');
+            else setError('Nie udało się wysłać linku. Spróbuj ponownie.');
+        } finally {
+            setBusy(false);
+        }
+    };
 
     const onGoogle = async () => {
         setError(null);
@@ -97,6 +122,7 @@ export function LoginPanel({ googleLabel = 'Zaloguj się przez Google' }: { goog
                     <div className="flex items-center gap-3 text-xs text-mk-faint" aria-hidden>
                         <span className="h-px flex-1 bg-mk-border" /> albo e-mailem <span className="h-px flex-1 bg-mk-border" />
                     </div>
+                    <p className="text-xs leading-relaxed text-mk-muted">Nowe konto powstaje przez Google. E-mail i hasło działają tylko dla konta, które już je ma.</p>
                 </>
             )}
             <div>
@@ -110,9 +136,16 @@ export function LoginPanel({ googleLabel = 'Zaloguj się przez Google' }: { goog
                 <input id="password" name="password" type="password" autoComplete="current-password" autoCapitalize="none"
                     autoCorrect="off" spellCheck={false} enterKeyHint="go" required className="mk-input min-h-12 max-lg:text-base!"
                     value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
+                {enabled && (
+                    <button type="button" onClick={() => void onReset()} disabled={busy}
+                        className="mt-2 inline-flex min-h-11 items-center text-sm font-medium text-mk-text-soft underline underline-offset-2 hover:text-mk-text">
+                        Nie pamiętam hasła
+                    </button>
+                )}
             </div>
 
-            {error && <p role="alert" className="text-sm font-medium text-mk-negative">{error}</p>}
+            {(error || authNotice) && <p role="alert" className="text-sm font-medium text-mk-negative">{error ?? authNotice}</p>}
+            {info && <p role="status" className="text-sm font-medium text-mk-text">{info}</p>}
 
             <button type="submit" className="mk-btn mk-btn-primary min-h-12 w-full text-base sm:text-sm" disabled={busy}>
                 {busy ? <Loader2 size={16} className="animate-spin" /> : null}
