@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Settings, LogOut, ChevronDown, ChevronRight } from 'lucide-react';
 import { useAuth } from '@/lib/auth/use-auth';
 import { SHEET_ROW, ShellSheet } from './ShellSheet';
@@ -15,11 +15,12 @@ const DESKTOP = '(min-width: 1024px)';
  * cele ≥ 52 px). Tryb wybierany w chwili otwarcia, więc SSR i hydratacja renderują to samo.
  */
 export function UserMenu() {
-    const { user, enabled, signOut } = useAuth();
+    const { user, loading, enabled, signOut } = useAuth();
     const [mode, setMode] = useState<null | 'menu' | 'sheet'>(null);
     const ref = useRef<HTMLDivElement>(null);
     const btnRef = useRef<HTMLButtonElement>(null);
     const router = useRouter();
+    const pathname = usePathname();
     const close = () => setMode(null);
 
     // Menu (desktop): klik poza nim i Esc zamykają, fokus wraca do przycisku.
@@ -75,6 +76,16 @@ export function UserMenu() {
         <div className="mt-1.5 inline-block rounded bg-mk-warn-soft px-1.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-mk-warn">tryb demo</div>
     );
     const signOutLabel = enabled ? 'Wyloguj' : 'Ekran logowania';
+
+    // Logowanie włączone, nikt nie jest zalogowany → zamiast awatara „Zaloguj się” (strona i tak jest publiczna).
+    if (enabled && !loading && !user) {
+        return (
+            <Link href={pathname && pathname !== '/login' ? `/login?from=${encodeURIComponent(pathname)}` : '/login'}
+                className="mk-btn flex h-11 items-center px-3 text-sm font-semibold lg:h-9">
+                Zaloguj się
+            </Link>
+        );
+    }
 
     return (
         <div className="relative" ref={ref}>

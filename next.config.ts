@@ -21,9 +21,13 @@ copyPdfWorkerToPublic();
  * Nowe źródło po stronie przeglądarki (skrypt, iframe, fetch) wymaga wpisu tutaj.
  * W `next dev` CSP jest wyłączona (React dev używa eval, HMR — websocketów).
  */
+/** authDomain bez schematu, ukośnika i spacji z wklejki w Vercelu — inaczej źródło w CSP byłoby nieważne. */
+const AUTH_DOMAIN = (process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN ?? '').trim().replace(/^https?:\/\//, '').replace(/\/+$/, '');
+
 const CONTENT_SECURITY_POLICY = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline'",
+  // apis.google.com: biblioteka gapi, przez którą Firebase otwiera okno logowania Google (signInWithPopup).
+  "script-src 'self' 'unsafe-inline' https://apis.google.com",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' data: https://fonts.gstatic.com",
   "img-src 'self' data: blob: https:",
@@ -31,7 +35,8 @@ const CONTENT_SECURITY_POLICY = [
   // domeną każdy może mieć własny bucket (storage.googleapis.com), czyli kanał wycieku dla wstrzykniętego skryptu.
   // Bazy (Firestore, Realtime DB) przeglądarka nie używa — tylko serwer przez Admin SDK.
   "connect-src 'self' https://identitytoolkit.googleapis.com https://securetoken.googleapis.com",
-  "frame-src 'self' https://*.firebaseapp.com",
+  // Ukryty iframe obsługi logowania na authDomain projektu (np. aplikacja-prawnicy.firebaseapp.com).
+  `frame-src 'self' ${AUTH_DOMAIN ? `https://${AUTH_DOMAIN}` : 'https://*.firebaseapp.com'}`,
   "worker-src 'self' blob:",
   "object-src 'none'",
   "base-uri 'self'",
@@ -48,7 +53,8 @@ const SECURITY_HEADERS = [
   { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
   { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(), payment=(), usb=()' },
-  { key: 'Cross-Origin-Opener-Policy', value: 'same-origin' },
+  // `same-origin-allow-popups`, nie `same-origin`: okno logowania Google (popup) musi móc oddać wynik stronie.
+  { key: 'Cross-Origin-Opener-Policy', value: 'same-origin-allow-popups' },
   ...(process.env.NODE_ENV === 'production' ? [{ key: 'Content-Security-Policy', value: CONTENT_SECURITY_POLICY }] : []),
 ];
 
