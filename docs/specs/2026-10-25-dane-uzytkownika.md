@@ -70,10 +70,31 @@ Przed zmianą watchlista żyła w `localStorage` pod jednym kluczem `mk:watchlis
    `onOnline()` → konto = `[cpi, pko, eur]`; 503 przy odczycie → ponowienie po 15 s, bez PUT do tego czasu; 401/501 →
    bez ponawiania i bez PUT. Do tego: zapis tuż przed wylogowaniem wychodzi przed zmianą konta (uwaga 1 z recenzji).
 
-## Recenzja PM (25.10.2026) — werdykt: FIX
+## Recenzja PM (25.10.2026) — werdykt końcowy: **SHIP** (po poprawce kryterium 8; pierwsza runda: FIX)
 
-Kryteria 1–6 spełnione (dowody: `npx vitest run tests/user-data.test.ts` 12/12, `npm test` 221/221, `tsc` czysto;
-`/prywatnosc` l. 44–48 i 77–80). Do poprawy przed wdrożeniem — kryterium 8 (`src/lib/watchlist.ts`, `pullFromAccount`
+**Druga runda (po commicie „Watchlista: PUT dopiero po udanym odczycie konta…”):** kryterium 8 spełnione —
+`src/lib/watchlist-store.ts`: `schedulePush` l. 93–99 ustawia `dirty`, ale bez `pulled` nie planuje PUT; `pull` l. 116–118
+ponawia nieudany odczyt po 15 s tylko dla 429/5xx bez 501 (`isTransient` l. 38), `onOnline` l. 224–228 dokańcza odczyt
+albo wysyła zaległy zapis; po udanym odczycie ścieżka `dirty` l. 125–134 scala konto + kliknięcia. Dowód:
+`npx vitest run tests/watchlist-store.test.ts` → 11/11 (offline → `[cpi, pko, eur]`; 503 → drugi GET po 15 s, zero PUT;
+401/501 → jeden GET, zero PUT). Uwaga 1 z pierwszej rundy też zrobiona (`activate` l. 203–204 wysyła zaległy zapis przed
+zmianą konta; PUT rusza synchronicznie z ciasteczkiem, a `DELETE /api/auth/session` tylko kasuje ciasteczko, nie
+unieważnia sesji — zapis dochodzi). Reszta kryteriów bez zmian: `tsc` 0, eslint 0 na zmienionych plikach, `npm test`
+232/232, trasa/serwer/`/prywatnosc` nietknięte w tym commicie; hook nadal hydration-safe (`getServerSnapshot` =
+`EMPTY_SNAPSHOT`, `activate` w `useEffect`). Kryterium 7 — do sprawdzenia po wdrożeniu.
+
+Nowe uwagi niewstrzymujące (dziś nieosiągalne albo rzadkie; backlog ROADMAP P-5):
+- `src/lib/watchlist.ts:25` czyta `window.localStorage` przy ładowaniu modułu, poza `try` — przy zablokowanych
+  ciasteczkach (Safari „Blokuj wszystkie”, Chrome bez storage) getter rzuca `SecurityError` i wywala cały chunk strony.
+  Dziś nieosiągalne: bez ciasteczek nie da się przejść bramki; przy `NEXT_PUBLIC_AUTH_REQUIRED=false` już tak.
+  Poprzednia wersja dotykała `localStorage` tylko w `try`.
+- `watchlist-store.ts:125–134`: ścieżka `dirty` przy koncie bez dokumentu bierze `snapshot.items`, nie listę sprzed
+  logowania — kliknięcie w oknie pierwszego odczytu przy pierwszym logowaniu gubi migrację listy anonimowej
+  (`base = account ?? legacy` naprawia).
+- `activate` l. 204 nie wysyła zaległych kliknięć, gdy zapis właśnie trwa (`inflight && dirty`).
+
+**Pierwsza runda:** kryteria 1–6 spełnione (dowody: `npx vitest run tests/user-data.test.ts` 12/12, `npm test` 221/221, `tsc` czysto;
+`/prywatnosc` l. 44–48 i 77–80). Do poprawy przed wdrożeniem było — kryterium 8 (`src/lib/watchlist.ts`, `pullFromAccount`
 l. 100–108 i `push` l. 143–155): nieudany odczyt konta jest cichy i nieponawiany, a następne kliknięcie wysyła lokalną
 listę jako całą listę konta. Na nowym telefonie (pusta kopia lokalna, słaba sieć) jedna gwiazdka kasuje listę
 z komputera — jedyne dane użytkownika, które przechowujemy. Ścieżka scalania przy `dirty` (l. 114–122) obejmuje tylko

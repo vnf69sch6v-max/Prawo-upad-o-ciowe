@@ -88,6 +88,13 @@ P-3. **Konto**: strona „Mój dostęp” (plan, do kiedy, przedłuż), usunięc
 P-4. **Dostęp zamrożony w ciasteczku sesji (do 5 dni)**: po zakupie albo blokadzie konta nowy stan widać dopiero po
      ponownym zalogowaniu albo wygaśnięciu ciasteczka (Edge nie sprawdza revoke). Przy P-1: odświeżenie sesji po
      płatności (`/api/auth/session` z nowym tokenem); blokada konta = `revokeRefreshTokens` + krótsza sesja.
+P-5. **Watchlista — drobiazgi z recenzji PM 25.10** (niewstrzymujące, jeden mały PR): `src/lib/watchlist.ts:25`
+     dostęp do `window.localStorage` w `try` (przy zablokowanych ciasteczkach getter rzuca `SecurityError` i wywala
+     chunk strony — dziś nieosiągalne przez bramkę); `watchlist-store.ts` ścieżka `dirty` przy koncie bez dokumentu
+     ma brać też listę sprzed logowania (`account ?? legacy`); `activate` ma wysłać zaległe kliknięcia także, gdy
+     zapis właśnie trwa; `readUserData` — `console.warn`, gdy dokument istnieje, ale nie da się go otworzyć; wspólny
+     `sameOrigin` dla `/api/auth/session` i `/api/me/*`. Po wdrożeniu: kryterium 7 specyfikacji (konsola Firebase →
+     `savori_users/{uid}` z `sealed`; drugie urządzenie = ta sama lista; drugie konto = pusta) — wynik dopisać tutaj.
 
 ### Produkt
 7. **Szybki szacunek CPI** (ostatni dzień roboczy miesiąca) na Przeglądzie w dniu publikacji —
@@ -187,7 +194,8 @@ J3. **Przegląd Japonii** (hero jak w PL), gdy będą ≥3 wskaźniki.
 - **`GUS_BDL_KEY`** — wyższy limit BDL (rejestracja na api.stat.gov.pl).
 
 ## Zrobione
-- **25.10.2026 — dane użytkownika na koncie** (`docs/specs/2026-10-25-dane-uzytkownika.md`, prośba właściciela):
+- **25.10.2026 — dane użytkownika na koncie** (`docs/specs/2026-10-25-dane-uzytkownika.md`, prośba właściciela;
+  **PM: SHIP** po jednej rundzie FIX — PUT dopiero po udanym odczycie konta, `tests/watchlist-store.test.ts`):
   watchlista należy do konta (`savori_users/{uid}`, zapis tylko przez serwer po weryfikacji ciasteczka sesji,
   treść szyfrowana jak reszta bazy), ta sama na każdym urządzeniu; dwa konta w jednej przeglądarce nie widzą swoich
   list; lista sprzed logowania przenosi się na konto przy pierwszym logowaniu. `localStorage` tylko jako kopia.
