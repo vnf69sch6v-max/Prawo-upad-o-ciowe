@@ -9,6 +9,7 @@ import { datasetById, pluralPl, STATUS_LABELS, type FreshnessItem, type Freshnes
 import { useIsClient } from '@/lib/use-is-client';
 import { DatasetCard, DatasetCardSkeleton } from './DatasetCard';
 import { CronRuns } from './CronRuns';
+import { PaymentsHealth } from './PaymentsHealth';
 import { STATUS_STYLE } from './StatusPill';
 
 const QUERY_KEY = ['health-freshness'] as const;
@@ -177,6 +178,7 @@ export function StatusView() {
                     })}
 
                     {report && <CronRuns crons={report.crons} />}
+                    {report && <PaymentsHealth payments={report.payments ?? null} />}
                 </>
             )}
 

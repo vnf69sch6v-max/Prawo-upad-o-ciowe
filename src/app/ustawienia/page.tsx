@@ -1,8 +1,10 @@
 'use client';
 
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { LogOut, Sun, Moon } from 'lucide-react';
 import { useAuth } from '@/lib/auth/use-auth';
+import { AccessLine, RENEW_HREF, useAccessLine } from '@/components/shell/AccessLine';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { PageHeader } from '@/components/ui/PageHeader';
 
@@ -10,6 +12,7 @@ const DATA_SOURCES = ['GUS BDL', 'NBP', 'Eurostat', 'Yahoo Finance', 'EIA', 'SMU
 
 export default function UstawieniaPage() {
     const { user, enabled, signOut } = useAuth();
+    const accessLine = useAccessLine();
     const router = useRouter();
 
     const onSignOut = async () => {
@@ -23,18 +26,26 @@ export default function UstawieniaPage() {
 
             <SectionCard title="Konto" titleVariant="label" editorial>
                 <div className="flex flex-wrap items-center justify-between gap-4">
-                    <div className="flex min-w-0 items-center gap-3">
-                        <span className="flex h-11 w-11 items-center justify-center rounded-full bg-mk-brand-soft text-sm font-semibold text-mk-brand">
+                    <div className="flex min-w-0 flex-1 items-center gap-3">
+                        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-mk-brand-soft text-sm font-semibold text-mk-brand">
                             {user?.initials ?? 'MD'}
                         </span>
-                        <div className="min-w-0">
+                        <div className="min-w-0 flex-1">
                             <div className="truncate text-[15px] font-semibold text-mk-text sm:text-sm">{user?.displayName ?? 'Użytkownik'}</div>
                             <div className="truncate text-sm text-mk-muted sm:text-xs">{user?.email}</div>
+                            <AccessLine className="mt-0.5 text-sm leading-snug sm:text-xs" />
                         </div>
                     </div>
-                    <button type="button" onClick={onSignOut} className="mk-btn min-h-12 w-full active:bg-mk-surface-alt sm:min-h-11 sm:w-auto lg:min-h-0">
-                        <LogOut size={15} /> {enabled ? 'Wyloguj' : 'Ekran logowania'}
-                    </button>
+                    <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+                        {accessLine?.renew && (
+                            <Link href={RENEW_HREF} className="mk-btn min-h-12 w-full whitespace-nowrap active:bg-mk-surface-alt sm:min-h-11 sm:w-auto">
+                                Przedłuż dostęp
+                            </Link>
+                        )}
+                        <button type="button" onClick={onSignOut} className="mk-btn min-h-12 w-full active:bg-mk-surface-alt sm:min-h-11 sm:w-auto lg:min-h-0">
+                            <LogOut size={15} /> {enabled ? 'Wyloguj' : 'Ekran logowania'}
+                        </button>
+                    </div>
                 </div>
                 {!enabled && (
                     <p className="mt-3 rounded-lg bg-mk-warn-soft px-3 py-2 text-sm text-mk-warn sm:text-xs">

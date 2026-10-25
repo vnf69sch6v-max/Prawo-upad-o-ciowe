@@ -6,16 +6,18 @@
 // `legacy: 0`, `truncated: false` i `failed: 0`, można włączyć DATA_ENCRYPTION_STRICT=1 (jawne wpisy odrzucane).
 //
 // Dotyka WYŁĄCZNIE dokumentów tej aplikacji: kolekcji z `CACHE_COLLECTIONS` w kształcie cache (`payload`), znanych
-// dokumentów `health/*` i kont użytkowników (`savori_users/*` — nazwa z przedrostkiem, więc cała kolekcja jest nasza).
+// dokumentów `health/*` (w tym `stripe_webhook`), kont użytkowników (`savori_users/*`) i końca dostępu
+// (`savori_access/*`). Nazwy z przedrostkiem, więc całe kolekcje są nasze.
 // Projekt Firebase może mieć dane innej aplikacji — tych nie czytamy ani nie zmieniamy.
 import { FieldPath, type DocumentReference, type Firestore, type QueryDocumentSnapshot } from 'firebase-admin/firestore';
 import { docLegacy, fromStored, open, seal, sealConfig, sealedWithActiveKey, storedUpdatedAt, toStored } from '@/lib/data-seal';
 import { CACHE_COLLECTIONS, SEALED_CACHE_EXTRA } from '@/lib/server-cache';
 import { USER_COLLECTION } from '@/lib/user-data';
+import { ACCESS_COLLECTION } from '@/lib/user-data';
 
 export const SEAL_STATE = { collection: 'health', id: 'seal_state' } as const;
-/** Dokumenty `health/*`, które zapisuje aplikacja (cron-log, cron/freshness, ta migracja). */
-export const HEALTH_DOCS = ['cron_runs', 'freshness_latest', 'freshness_history', SEAL_STATE.id] as const;
+/** Dokumenty `health/*`, które zapisuje aplikacja (cron-log, cron/freshness, webhook Stripe, ta migracja). */
+export const HEALTH_DOCS = ['cron_runs', 'freshness_latest', 'freshness_history', 'stripe_webhook', SEAL_STATE.id] as const;
 const STATE_PATH = `${SEAL_STATE.collection}/${SEAL_STATE.id}`;
 const SWEEP_EVERY_MS = 6 * 3600_000;
 /** Dokument do ~1 MiB — strona po 50 to w najgorszym razie ~50 MB pamięci funkcji. */
@@ -92,7 +94,11 @@ export async function sweepLegacyDocs(
         const snap = await ref.get();
         if (snap.exists) await handle('doc', ref, snap.data() ?? {});
     }
-    const collections: Array<[string, Shape]> = [...CACHE_COLLECTIONS.map((n): [string, Shape] => [n, 'cache']), [USER_COLLECTION, 'doc']];
+    const collections: Array<[string, Shape]> = [
+        ...CACHE_COLLECTIONS.map((n): [string, Shape] => [n, 'cache']),
+        [USER_COLLECTION, 'doc'],
+        [ACCESS_COLLECTION, 'doc'],
+    ];
     for (const [name, shape] of collections) {
         let last: QueryDocumentSnapshot | null = null;
         for (;;) {

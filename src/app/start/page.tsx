@@ -1,12 +1,12 @@
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 import Link from 'next/link';
 import {
     Activity, BarChart3, Briefcase, CalendarClock, FileSpreadsheet, Globe2, Landmark, Lock, ShieldCheck, Sparkles, TrendingUp, Zap,
 } from 'lucide-react';
 import { peekServerCache } from '@/lib/server-cache';
 import { trialDays } from '@/lib/access';
-import { LoginPanel } from '@/components/auth/LoginPanel';
-import { AccessNotice, PaymentReturn, PricingCards, PricingNote, StartCta } from '@/components/landing/LandingClient';
+import { AccessNotice, LoginGate, PaymentReturn, PricingCards, PricingNote, SearchBridge, StartCta } from '@/components/landing/LandingClient';
 import { SITE_URL } from '@/lib/internal-fetch';
 import { paymentsEnabled } from '@/lib/stripe/billing';
 
@@ -119,7 +119,7 @@ const WHY = [
 const faqItems = (payments: boolean) => [
     { q: 'Czy płatność odnawia się automatycznie?', a: 'Nie. Każdy plan to jednorazowa płatność za wybrany okres. Gdy się skończy, sam decydujesz, czy przedłużyć.' },
     ...(payments ? [{ q: 'Jak zapłacę?', a: 'Na stronie Stripe: kartą, a jeśli włączone — BLIK-iem albo szybkim przelewem. Danych karty nie widzimy. Dostęp liczymy w miesiącach kalendarzowych i włączamy po zaksięgowaniu płatności. Pokwitowanie z informacją o 14 dniach na odstąpienie przychodzi na e-mail.' }] : []),
-    { q: 'Co dostaję w okresie próbnym?', a: `Pełny dostęp do wszystkich funkcji przez ${days} dni od pierwszego logowania. Bez podawania karty.` },
+    ...(days > 0 ? [{ q: 'Co dostaję w okresie próbnym?', a: `Pełny dostęp do wszystkich funkcji przez ${days} dni od pierwszego logowania. Bez podawania karty.` }] : []),
     { q: 'Skąd są dane?', a: 'Z oficjalnych źródeł: GUS (DBW i BDL), NBP, Eurostat, Statistics Bureau of Japan, notowania giełdowe. Każdy wskaźnik pokazuje źródło i okres.' },
     { q: 'Czy to porada inwestycyjna?', a: 'Nie. Savori pokazuje dane i ich interpretację statystyczną. Decyzje inwestycyjne podejmujesz samodzielnie.' },
     { q: 'Czy działa na telefonie?', a: 'Tak — Savori jest projektowane najpierw pod telefon. Możesz też dodać je do ekranu głównego jak aplikację.' },
@@ -139,22 +139,30 @@ export default async function StartPage() {
 
             <header className="sticky top-0 z-30 border-b border-transparent bg-white/75 pt-[env(safe-area-inset-top)] backdrop-blur-md">
                 <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
-                    <Link href="/start" className="flex items-center gap-2 text-lg font-extrabold tracking-tight">
+                    <Link href="/start" className="flex min-h-11 items-center gap-2 text-lg font-extrabold tracking-tight">
                         <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-mk-primary text-white shadow-sm">
                             <BarChart3 size={20} strokeWidth={2.4} aria-hidden />
                         </span>
                         Savori
                     </Link>
                     <nav className="hidden items-center gap-7 text-sm font-medium text-mk-text-soft md:flex">
-                        <a href="#funkcje" className="hover:text-mk-text">Funkcje</a>
-                        <a href="#cennik" className="hover:text-mk-text">Cennik</a>
-                        <a href="#faq" className="hover:text-mk-text">FAQ</a>
+                        <a href="#funkcje" className="touch:min-h-11 touch:inline-flex touch:items-center hover:text-mk-text">Funkcje</a>
+                        <a href="#cennik" className="touch:min-h-11 touch:inline-flex touch:items-center hover:text-mk-text">Cennik</a>
+                        <a href="#faq" className="touch:min-h-11 touch:inline-flex touch:items-center hover:text-mk-text">FAQ</a>
                     </nav>
                     <StartCta label="Zaloguj się" className="mk-btn min-h-11 px-4 text-sm font-semibold" />
                 </div>
             </header>
 
             <main className="relative">
+                <Suspense fallback={null}>
+                    <SearchBridge />
+                </Suspense>
+                <div id="stan-platnosci" role="status" className="mx-auto max-w-6xl scroll-mt-20 px-4 empty:hidden sm:px-6">
+                    <PaymentReturn />
+                    <AccessNotice />
+                </div>
+
                 {/* HERO */}
                 <section className="mx-auto grid max-w-6xl items-center gap-12 px-4 pb-16 pt-10 sm:px-6 lg:grid-cols-[1.05fr_1fr] lg:pb-24 lg:pt-20">
                     <div>
@@ -171,8 +179,8 @@ export default async function StartPage() {
                             Jedno miejsce, czyste wykresy i wniosek w jednym zdaniu.
                         </p>
                         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                            <StartCta label={ctaLabel} className="mk-btn mk-btn-primary min-h-13 px-7 text-base font-semibold shadow-[0_10px_30px_-10px_rgba(220,38,38,0.6)]" />
-                            <a href="#cennik" className="mk-btn min-h-13 px-7 text-base font-semibold">Zobacz cennik</a>
+                            <StartCta label={ctaLabel} className="mk-btn mk-btn-primary min-h-12 px-7 text-base font-semibold shadow-[0_10px_30px_-10px_rgba(220,38,38,0.6)]" />
+                            <a href="#cennik" className="mk-btn min-h-12 px-7 text-base font-semibold">Zobacz cennik</a>
                         </div>
                         <p className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-mk-muted">
                             <span className="inline-flex items-center gap-1.5"><Lock size={14} aria-hidden /> Logowanie Google</span>
@@ -245,8 +253,6 @@ export default async function StartPage() {
 
                 {/* CENNIK */}
                 <section id="cennik" className="mx-auto max-w-6xl scroll-mt-20 px-4 py-20 sm:px-6">
-                    <PaymentReturn />
-                    <AccessNotice />
                     <h2 className="text-center text-3xl font-extrabold tracking-tight sm:text-4xl">Prosty cennik. Bez pułapek.</h2>
                     <p className="mx-auto mt-3 max-w-2xl text-center text-mk-muted">
                         Płacisz raz za wybrany okres — bez subskrypcji i automatycznego odnawiania. Każdy plan to pełny dostęp.
@@ -267,11 +273,7 @@ export default async function StartPage() {
                             </ul>
                         </div>
                         <div className="mx-auto w-full max-w-[420px]">
-                            <LoginPanel googleLabel={days > 0 ? `Zacznij z Google — ${TRIAL}` : 'Zaloguj się przez Google'} />
-                            <p className="mt-4 text-center text-xs leading-relaxed text-mk-faint">
-                                Logując się, akceptujesz <Link href="/regulamin" className="underline underline-offset-2">regulamin</Link> i
-                                zasady <Link href="/prywatnosc" className="underline underline-offset-2">prywatności</Link>.
-                            </p>
+                            <LoginGate googleLabel={days > 0 ? `Zacznij z Google — ${TRIAL}` : 'Zaloguj się przez Google'} />
                         </div>
                     </div>
                 </section>

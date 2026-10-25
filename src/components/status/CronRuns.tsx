@@ -14,7 +14,7 @@ const DAY = new Intl.DateTimeFormat('pl-PL', { timeZone: 'Europe/Warsaw', day: '
 const KEY = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Warsaw', year: 'numeric', month: '2-digit', day: '2-digit' });
 
 /** „dziś 07:02", „wczoraj 15:41", „1 paź 13:00" — czas warszawski. Renderowane tylko po hydratacji. */
-function when(iso: string): string {
+export function formatStatusWhen(iso: string): string {
     const d = new Date(iso);
     if (Number.isNaN(d.getTime())) return '—';
     const today = KEY.format(new Date());
@@ -41,7 +41,7 @@ function Row({ c }: { c: CronRunReport }) {
             </div>
             {c.run && (
                 <p className="text-xs text-mk-text-soft">
-                    Ostatnio <span className="font-semibold tabular-nums text-mk-text">{when(c.run.at)}</span>
+                    Ostatnio <span className="font-semibold tabular-nums text-mk-text">{formatStatusWhen(c.run.at)}</span>
                     {' · '}
                     <span className="tabular-nums">{c.run.ok}/{c.run.total}</span> źródeł odświeżonych
                     {c.run.failed.length > 0 && c.status !== 'ok' && (

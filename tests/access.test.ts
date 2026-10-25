@@ -51,9 +51,15 @@ describe('bramka', () => {
         expect(g('/start', null)).toEqual({ kind: 'pass' });
     });
 
-    it('zalogowany: z ważnym dostępem przechodzi, po wygaśnięciu — cennik', () => {
+    it('zalogowany: z ważnym dostępem przechodzi, po wygaśnięciu — cennik z powrotem na stronę', () => {
         expect(g('/ceny', ok)).toEqual({ kind: 'pass' });
-        expect(g('/ceny', { accessUntil: NOW - 1, plan: 'trial' })).toEqual({ kind: 'redirect', to: '/start?dostep=wygasl#cennik' });
+        expect(g('/ceny', { accessUntil: NOW - 1, plan: 'trial' })).toEqual({ kind: 'redirect', to: '/start?dostep=wygasl&from=%2Fceny#cennik' });
+        expect(gate({ pathname: '/ceny', search: '?x=1', session: { accessUntil: NOW - 1 }, nowS: NOW, protectApi: true, internal: false }))
+            .toEqual({ kind: 'redirect', to: '/start?dostep=wygasl&from=%2Fceny%3Fx%3D1#cennik' });
+        expect(g('/', { accessUntil: NOW - 1 })).toEqual({ kind: 'redirect', to: '/start?dostep=wygasl#cennik' });
+        expect(gate({ pathname: '/', search: '?x=1', session: { accessUntil: NOW - 1 }, nowS: NOW, protectApi: true, internal: false }))
+            .toEqual({ kind: 'redirect', to: '/start?dostep=wygasl&from=%2F%3Fx%3D1#cennik' });
+        expect(g('/start', { accessUntil: NOW - 1 })).toEqual({ kind: 'pass' });
         expect(g('/ceny', {}).kind).toBe('redirect');
     });
 

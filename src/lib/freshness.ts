@@ -71,12 +71,52 @@ export interface FreshnessItem {
     durationMs?: number;
 }
 
+/** Wynik webhooka Stripe. Ślad na `/status` i w `/api/health/freshness` — bez danych osobowych. */
+export type PaymentEventKind =
+    | 'ok'
+    | 'already'
+    | 'pending'
+    | 'bad-signature'
+    | 'not-configured'
+    | 'livemode'
+    | 'ignored'
+    | 'user-missing'
+    | 'failed';
+
+export interface PaymentEvent {
+    at: string;
+    kind: PaymentEventKind;
+    sessionId?: string;
+    eventType?: string;
+}
+
+export interface PaymentHealth {
+    last: PaymentEvent | null;
+    /** Ostatnie udane księgowanie (`ok`), nie powtórka. */
+    lastOk: { at: string; sessionId?: string } | null;
+    counts: Record<PaymentEventKind, number>;
+}
+
+export const PAYMENT_KIND_LABELS: Record<PaymentEventKind, string> = {
+    ok: 'zaksięgowano',
+    already: 'powtórka (bez zmian)',
+    pending: 'oczekuje na zaksięgowanie (BLIK/P24)',
+    'bad-signature': 'zły podpis — sprawdź STRIPE_WEBHOOK_SECRET',
+    'not-configured': 'brak sekretu webhooka',
+    livemode: 'tryb test/live niezgodny z kluczem',
+    ignored: 'odrzucona sesja',
+    'user-missing': 'brak użytkownika',
+    failed: 'błąd zapisu',
+};
+
 export interface FreshnessReport {
     checkedAt: string;
     overall: FreshnessStatus;
     items: FreshnessItem[];
     /** Ostatnie przebiegi cronów (Firestore). `available: false` = brak Firestore (tryb demo). */
     crons?: { available: boolean; items: CronRunReport[] };
+    /** Webhook Stripe. `null` = brak Firestore (tryb demo) albo błąd odczytu. Pusto: `last === null`. */
+    payments?: PaymentHealth | null;
 }
 
 // ─── Czas warszawski ────────────────────────────────────

@@ -68,10 +68,17 @@ P3. **Przekrój DBW 1698 jest ucięty do 5000 wierszy.** DBW ignoruje `ile-na-st
 P-2. ~~API za bramką~~ — działa od 25.10.2026 (`CRON_SECRET` ustawiony, `/api/*` bez sesji = 401). Wymuszone
      odświeżenie GUS tylko dla cronów — 1b, zrobione 25.10.2026.
 P-3. **Konto**: strona „Mój dostęp” (plan, do kiedy, przedłuż), usunięcie konta (RODO), automatyczne usuwanie kont
-     nieaktywnych (np. 24 mies.) — wtedy zaktualizować `/prywatnosc` §7.
-P-4. **Dostęp zamrożony w ciasteczku sesji (do 5 dni)**: po blokadzie konta nowy stan widać dopiero po
-     ponownym zalogowaniu albo wygaśnięciu ciasteczka (Edge nie sprawdza revoke). Po płatności ciasteczko odświeża
-     `/api/stripe/confirm`. Blokada konta = `revokeRefreshTokens` + krótsza sesja — jeszcze nie.
+     nieaktywnych (np. 24 mies.) — wtedy zaktualizować `/prywatnosc` §7. Część „plan, do kiedy, przedłuż” zrobiona
+     25.10 w menu konta i `/ustawienia` (`AccessLine`); zostaje strona, usunięcie konta i auto-usuwanie.
+P-4. **Dostęp zamrożony w ciasteczku sesji — została połowa „blokada”.** Kierunek „nadanie dostępu” zamknięty 25.10
+     (`docs/specs/2026-10-25-platnosci-smooth.md`): `GET /api/auth/session` czyta claims ciasteczka, `PUT` odnawia je
+     po cichu po dobie (ważne ciasteczko + świeży token tej samej osoby; `revoke-admin` wykonuje), `/start?dostep=wygasl`
+     sam odnawia i wraca na `from`, `confirm` wystawia nowe ciasteczko po płatności. Zostaje kierunek „odebranie”:
+     Edge nie sprawdza unieważnienia, więc po `revokeRefreshTokens` / wyłączeniu konta stare ciasteczko przechodzi
+     bramkę do 5 dni (GET/PUT widzą unieważnienie od razu — UI pokaże „sesja wygasła”, ale strony się otworzą);
+     ciche odnowienie sprawia, że ciasteczko żyje, dopóki użytkownik odwiedza serwis co ≤5 dni. Do zrobienia:
+     krótsze ciasteczko (np. 24 h) skoro odnawianie już jest, a blokada konta = `revokeRefreshTokens` + wpis
+     w `/status`. Znane: po BLIK-u przy zamkniętej karcie etykieta „Dostęp do …” odświeża się do 24 h.
 P-5. **Watchlista — drobiazgi z recenzji PM 25.10** (niewstrzymujące). Zrobione w tym samym PR: `localStorage`
      w `try` (getter rzuca `SecurityError` przy zablokowanej pamięci), ścieżka `dirty` przy koncie bez dokumentu bierze
      listę sprzed logowania (`account ?? legacy`, test), wspólny `sameOrigin` dla `/api/auth/session` i `/api/me/*`;
@@ -118,10 +125,15 @@ J3. **Przegląd Japonii** (hero jak w PL), gdy będą ≥3 wskaźniki.
      bo crony wołają własne endpointy — z sekretem podpisują się nim).
   3a. Firebase → Authentication → Settings → User actions: wyłączyć zakładanie kont e-mail/hasło przez API
      („Enable create (sign-up)”), skoro na stronie nie ma rejestracji e-mailem — konta tylko przez Google.
-  4. **Stripe — dokończenie po stronie konta** (kod jest; bez sekretu webhooka płatność wraca na stronę, ale
-     zamknięta karta nie przedłuży dostępu):
-     - Developers → Webhooks → endpoint `https://savori.space/api/stripe/webhook`, zdarzenia
-       `checkout.session.completed` i `checkout.session.async_payment_succeeded`.
+  4. **Stripe — dokończenie po stronie konta** (kod jest; bez sekretu webhooka płatność kartą wraca na stronę
+     i księguje się przez `confirm`, ale zamknięta karta nie przedłuży dostępu, a **BLIK i Przelewy24 nie zadziałają
+     wcale** — przy powrocie są jeszcze `unpaid`, dostęp nadaje dopiero drugi webhook):
+     - Developers → Webhooks → endpoint `https://savori.space/api/stripe/webhook`, **oba** zdarzenia:
+       `checkout.session.completed` **i** `checkout.session.async_payment_succeeded` (bez drugiego BLIK/P24 nigdy
+       nie nadadzą dostępu — klient po 3 min zobaczy „płatność jeszcze nie doszła”, choć pieniądze zeszły).
+       Nie podpinać innych zdarzeń — każde `checkout.session.*` poza tymi dwoma ląduje na `/status` jako „odrzucona sesja”.
+     - Po wdrożeniu: Developers → Webhooks → „Send test webhook” i sprawdzić kartę „Płatności” na `/status`
+       (zły podpis / brak sekretu / zły tryb widać tam od razu; „brak zdarzeń” = nic nie doszło).
      - Signing secret → Vercel `STRIPE_WEBHOOK_SECRET` (*Sensitive*) → Redeploy. Klucz prywatny czytamy z
        `STRIPE_SECRET_KEY` (albo `STRIPE_PRIVATE_KEY` / `STRIPE_API_KEY` / `STRIPE_SECRET`) — ma to być `sk_live_…`.
      - Włącz metody: karta, BLIK, Przelewy24. Włącz pokwitowania e-mail (Customer emails → successful payments).
@@ -146,8 +158,9 @@ J3. **Przegląd Japonii** (hero jak w PL), gdy będą ≥3 wskaźniki.
      aplikacje nadpisują sobie cache). Migracja dotyka wyłącznie kolekcji Savori (`CACHE_COLLECTIONS`, `health/*`
      i od 25.10 `savori_users` — kolekcja z przedrostkiem, więc cała jest nasza).
   2. **Konto serwisowe** (Google Cloud → IAM): zamiast Editor/Owner dwie role — „Cloud Datastore User” i
-     „Firebase Authentication Admin” (bez tej drugiej `/api/auth/session` zawsze zwróci 401: `verifyIdToken` z
-     `checkRevoked` i `createSessionCookie` jej wymagają). `FIREBASE_PRIVATE_KEY` jako *Sensitive*.
+     „Firebase Authentication Admin” (bez tej drugiej `/api/auth/session` zawsze zwróci 401, `GET` odpowie
+     `{ signedIn: false }`, a klient będzie pokazywał „Sesja wygasła — zaloguj się ponownie” w pętli:
+     `verifyIdToken`/`verifySessionCookie` z `checkRevoked` i `createSessionCookie` jej wymagają). `FIREBASE_PRIVATE_KEY` jako *Sensitive*.
   3. **Klucz szyfrowania:** u siebie `openssl rand -base64 32` (losowy, nie z hasła) → Vercel → Settings →
      Environment Variables → `DATA_ENCRYPTION_KEY`, *Sensitive*, w **tych samych środowiskach co
      `FIREBASE_PRIVATE_KEY`** (jeśli Preview ma `FIREBASE_*`, to także Preview — inaczej podgląd nadpisuje
@@ -167,7 +180,9 @@ J3. **Przegląd Japonii** (hero jak w PL), gdy będą ≥3 wskaźniki.
 - **Usunięcie konta na prośbę użytkownika (RODO art. 17)** — do czasu P-3 ręcznie, w tej kolejności: konsola Firebase
   (`aplikacja-prawnicy`) → Authentication → Users → użytkownik → „Delete account” (skopiować wcześniej jego **UID**),
   potem Firestore Database → kolekcja `savori_users` → dokument o tym UID → usuń (to lista obserwowanych; `/prywatnosc`
-  obiecuje „usuwamy ją razem z kontem”). Dokument `trials/{HMAC(e-mail)}` zostaje celowo (okres próbny raz na adres —
+  obiecuje „usuwamy ją razem z kontem”) **oraz** kolekcja `savori_access` → dokument o tym UID → usuń (koniec dostępu
+  i plan; `/prywatnosc` §7: „dane konta — do usunięcia konta”). Dokumenty `payments/{cs_…}` zostają (dokument sprzedaży,
+  5 lat). Dokument `trials/{HMAC(e-mail)}` zostaje celowo (okres próbny raz na adres —
   tak opisuje go `/prywatnosc`). Pomocnik w kodzie: `deleteUserData()` w `src/lib/user-data-server.ts`.
 - **`ALERT_WEBHOOK_URL`** (Slack/Discord) — alert, gdy kontrola świeżości wykryje problem.
 - **savori.com:** przypięte do projektu w Vercelu, ale DNS wskazuje na inny serwer (Linode) —
@@ -199,6 +214,19 @@ J3. **Przegląd Japonii** (hero jak w PL), gdy będą ≥3 wskaźniki.
   domyślny glob — wpisy pod nim były martwe i `gus-cpi-full` dostawało 504 po 30 s. Ścieżki powstają tylko
   w `src/lib/gus-api-paths.ts` (hooki nie wysyłają roku z zegara urządzenia), listy cronów w
   `src/lib/cron-endpoints.ts`. Klucze cache bez zmian. Testy: `gus-params`, `gus-routes`, `function-limits`.
+- **25.10.2026 — płatności i sesja „smooth”** (`docs/specs/2026-10-25-platnosci-smooth.md`, prośba właściciela;
+  **PM: FIX → SHIP**): sesja nie wypada po 5 dniach — `GET /api/auth/session` (claims ciasteczka) i `PUT` (ciche
+  odnowienie po dobie: ważne ciasteczko + świeży token tej samej osoby, 401/403/`{refresh}`, `revoke-admin`),
+  `useAccess()` z etykietą „Okres próbny do … / Dostęp do … / Kończy się dziś/jutro o … / Przedłuż” w menu, arkuszu
+  i `/ustawienia`; bramka zachowuje `from` przy wygaśnięciu, a `/start?dostep=wygasl` sam odnawia ciasteczko i wraca,
+  gdy webhook już nadał dostęp. Powrót ze Stripe: silnik `payment-return.ts` (BLIK/P24 odpytywane co 4 s przez 3 min,
+  logowanie na adresie powrotu dokańcza płatność po `sessionReady`, każdy stan z przyciskiem), pasek stanu pod
+  nagłówkiem, lepki przycisk nie ucieka na `/`. Księgowanie: jedna transakcja `payments/{cs}` + `savori_access/{uid}`
+  (dwie równoległe sesje sumują miesiące), `pending` tylko dla `unpaid`+`open|complete`, rabat odrzuca, limit 10 s
+  na Stripe, klucz idempotencji z sufiksem przy ukończonej sesji. Obserwowalność: `health/stripe_webhook` i karta
+  „Płatności” na `/status` (zły podpis / brak sekretu / zły tryb / brak użytkownika; zdarzenia bez podpisu najwyżej
+  raz na 10 min). `deleteUserData()` usuwa też `savori_access`. Testy: `session-route`, `session-info`,
+  `payment-return`, rozszerzone `stripe`. Zostało właścicielowi: punkt 4 listy „Płatna platforma” (oba zdarzenia webhooka).
 - **25.10.2026 — P-1 płatności Stripe** (prośba właściciela: klucz prywatny już na Vercelu, dodać trasę): Checkout
   jednorazowy 10/20/30 zł (`/api/stripe/checkout`), webhook z podpisem i idempotencją (`/api/stripe/webhook`,
   zapis `payments/{session}` przez `toStored`), przedłużenie `accessUntil` od późniejszej z dat, odświeżenie

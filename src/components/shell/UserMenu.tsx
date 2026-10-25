@@ -4,8 +4,9 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
-import { Settings, LogOut, ChevronDown, ChevronRight } from 'lucide-react';
+import { Settings, LogOut, ChevronDown, ChevronRight, CreditCard } from 'lucide-react';
 import { useAuth } from '@/lib/auth/use-auth';
+import { AccessLine, RENEW_HREF, useAccessLine } from './AccessLine';
 import { SHEET_ROW, ShellSheet } from './ShellSheet';
 
 const DESKTOP = '(min-width: 1024px)';
@@ -16,6 +17,7 @@ const DESKTOP = '(min-width: 1024px)';
  */
 export function UserMenu() {
     const { user, loading, enabled, signOut } = useAuth();
+    const accessLine = useAccessLine();
     const [mode, setMode] = useState<null | 'menu' | 'sheet'>(null);
     const ref = useRef<HTMLDivElement>(null);
     const btnRef = useRef<HTMLButtonElement>(null);
@@ -103,10 +105,11 @@ export function UserMenu() {
             </button>
 
             {mode === 'menu' && (
-                <div id="mk-account-menu" className="absolute right-0 z-50 mt-2 w-60 overflow-hidden rounded-xl border border-mk-border bg-mk-surface p-1 shadow-[var(--shadow-mk-lg)]">
+                <div id="mk-account-menu" className="absolute right-0 z-50 mt-2 w-80 overflow-hidden rounded-xl border border-mk-border bg-mk-surface p-1 shadow-[var(--shadow-mk-lg)]">
                     <div className="border-b border-mk-border px-3 py-2.5">
                         <div className="text-sm font-semibold text-mk-text">{user?.displayName ?? 'Użytkownik'}</div>
                         <div className="truncate text-xs text-mk-muted">{user?.email}</div>
+                        <AccessLine link onNavigate={close} className="mt-1 text-xs leading-snug" />
                         {demoBadge}
                     </div>
                     <Link href="/ustawienia" onClick={close} className="flex min-h-9 items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-mk-text-soft transition-colors hover:bg-mk-surface-alt">
@@ -121,13 +124,25 @@ export function UserMenu() {
             <ShellSheet id="mk-account-sheet" open={mode === 'sheet'} onClose={close} title="Konto" returnFocusRef={btnRef} className="lg:hidden">
                 <div className="flex items-center gap-3 rounded-2xl border border-mk-border bg-mk-surface p-3.5">
                     {avatar(48)}
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                         <div className="truncate text-[15px] font-semibold text-mk-text">{user?.displayName ?? 'Użytkownik'}</div>
                         <div className="truncate text-sm text-mk-muted">{user?.email}</div>
+                        <AccessLine link onNavigate={close} className="mt-0.5 text-sm leading-snug" />
                         {demoBadge}
                     </div>
                 </div>
                 <ul className="mt-4 divide-y divide-mk-border overflow-hidden rounded-2xl border border-mk-border bg-mk-surface">
+                    {accessLine?.renew && (
+                        <li>
+                            <Link href={RENEW_HREF} onClick={close} className={SHEET_ROW}>
+                                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-mk-surface-alt text-mk-muted">
+                                    <CreditCard size={19} aria-hidden />
+                                </span>
+                                <span className="min-w-0 flex-1 truncate text-[15px] font-medium text-mk-text">Przedłuż dostęp</span>
+                                <ChevronRight size={18} className="shrink-0 text-mk-faint" aria-hidden />
+                            </Link>
+                        </li>
+                    )}
                     <li>
                         <Link href="/ustawienia" onClick={close} className={SHEET_ROW}>
                             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-mk-surface-alt text-mk-muted">

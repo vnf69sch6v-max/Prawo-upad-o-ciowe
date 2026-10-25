@@ -35,7 +35,8 @@ export default function PrivacyPage() {
                         (od późniejszej z dat: teraz albo koniec obecnego dostępu; w tym {trialDays()} dni próbnych),
                         identyfikator transakcji Stripe, kwota i adres e-mail, na który idzie pokwitowanie. Zapis płatności
                         w bazie jest szyfrowany tak jak pozostałe dokumenty. Danych karty, BLIK-a ani konta bankowego nie
-                        widzimy — zostają u Stripe. Cel: świadczenie płatnej usługi, rozliczenia i księgowość. Podstawa:
+                        widzimy — zostają u Stripe. Koniec dostępu i plan są zapisane przy koncie (savori_access), a dziennik
+                        webhooka zawiera tylko rodzaj zdarzenia, czas i identyfikator sesji Stripe — bez e-maila i kwoty. Cel: świadczenie płatnej usługi, rozliczenia i księgowość. Podstawa:
                         umowa (lit. b) oraz obowiązki podatkowe i rachunkowe (lit. c).
                     </li>
                     <li>
@@ -74,13 +75,17 @@ export default function PrivacyPage() {
             <Section title="4. Ciasteczka i pamięć przeglądarki">
                 <p>Używamy wyłącznie mechanizmów niezbędnych do działania serwisu, dlatego nie prosimy o zgodę:</p>
                 <ul className="list-disc space-y-2 pl-5">
-                    <li><code>__session</code> — ciasteczko sesji (httpOnly, szyfrowane połączenie), ważne do 5 dni; usuwamy je przy wylogowaniu.</li>
+                    <li><code>__session</code> — ciasteczko sesji (httpOnly, szyfrowane połączenie), ważne 5 dni i odnawiane po cichu, gdy korzystasz z serwisu (najwcześniej po dobie od wystawienia); usuwamy je przy wylogowaniu.</li>
                     <li>Pamięć przeglądarki (IndexedDB) biblioteki logowania Firebase — utrzymuje zalogowanie.</li>
                     <li>
                         Kopia listy obserwowanych (localStorage) — po zalogowaniu lista jest zapisana przy koncie, a przeglądarka
                         trzyma tylko jej kopię do szybkiego wyświetlenia; bez logowania lista zostaje wyłącznie w przeglądarce.
                     </li>
-                    <li>Wybrany plan (sessionStorage, do 15 minut) — żeby po zalogowaniu dokończyć płatność. Zostaje w tej karcie i nie wysyłamy go, dopóki nie klikniesz „Zapłać”.</li>
+                    <li>
+                        Wybrany plan, strona, na którą wrócisz po płatności, i identyfikator sesji płatności (sessionStorage; plan do 15 minut,
+                        reszta do zakończenia płatności) — żeby po zalogowaniu dokończyć płatność i wrócić tam, skąd przyszedłeś. Zostają w tej
+                        karcie i nie wysyłamy ich, dopóki nie klikniesz „Zapłać”.
+                    </li>
                 </ul>
             </Section>
 
