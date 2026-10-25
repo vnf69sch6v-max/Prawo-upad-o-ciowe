@@ -8,6 +8,8 @@
 // Vercel dołącza `Authorization: Bearer ${CRON_SECRET}` automatycznie, gdy CRON_SECRET jest ustawiony.
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdminDb } from '@/lib/firebase/admin';
+import { docLegacy, fromStored, toStored } from '@/lib/data-seal';
+import { maybeSweep } from '@/lib/data-seal-sweep';
 import type { FreshnessReport } from '@/lib/freshness';
 import { runFreshnessCheck, selfHeal, sendFreshnessAlert, type HealAttempt } from '@/lib/freshness-check';
 import { recordCronRun } from '@/lib/cron-log';
@@ -27,11 +29,14 @@ async function persist(report: FreshnessReport, attempts: HealAttempt[]): Promis
     if (!db) return false; // tryb demo — brak Firestore
     try {
         const col = db.collection('health');
-        await col.doc('freshness_latest').set(plain({ ...report, selfHeal: attempts, updatedAt: Date.now() }));
+        await col.doc('freshness_latest').set(
+            toStored('health/freshness_latest', plain({ ...report, selfHeal: attempts }), Date.now(), docLegacy.write),
+        );
         const histRef = col.doc('freshness_history');
         await db.runTransaction(async (tx) => {
             const snap = await tx.get(histRef);
-            const runs = ((snap.exists ? snap.data()?.runs : null) ?? []) as unknown[];
+            const prev = fromStored<{ runs?: unknown[] }>('health/freshness_history', snap.exists ? snap.data() : undefined, docLegacy.read);
+            const runs = (prev?.value.runs ?? []) as unknown[];
             const entry = {
                 checkedAt: report.checkedAt,
                 overall: report.overall,
@@ -40,7 +45,7 @@ async function persist(report: FreshnessReport, attempts: HealAttempt[]): Promis
                     .map((i) => ({ id: i.id, status: i.status, latest: i.latest, expected: i.expected })),
                 healed: attempts.map((a) => a.endpoint),
             };
-            tx.set(histRef, plain({ runs: [entry, ...runs].slice(0, HISTORY_LIMIT), updatedAt: Date.now() }));
+            tx.set(histRef, toStored('health/freshness_history', plain({ runs: [entry, ...runs].slice(0, HISTORY_LIMIT) }), Date.now(), docLegacy.write));
         });
         return true;
     } catch (err) {
@@ -64,6 +69,11 @@ export async function GET(request: NextRequest) {
         persist(report, attempts),
         sendFreshnessAlert(process.env.ALERT_WEBHOOK_URL, origin, report),
     ]);
+    // Szyfrowanie jawnych dokumentów sprzed ustawienia DATA_ENCRYPTION_KEY (najwyżej co 6 h).
+    const sealSweep = await maybeSweep(getAdminDb()).catch((err) => {
+        console.error('[cron/freshness] seal sweep:', err);
+        return null;
+    });
 
     const problems = report.items.filter((i) => i.status === 'stale' || i.status === 'error');
     await recordCronRun('freshness', {
@@ -81,5 +91,6 @@ export async function GET(request: NextRequest) {
         selfHeal: attempts,
         persisted,
         alerted,
+        sealSweep,
     });
 }

@@ -98,6 +98,24 @@ J2. **Kolejne wskaźniki Japonii** (po jednym na krok): stopa BOJ i USD/JPY (API
 J3. **Przegląd Japonii** (hero jak w PL), gdy będą ≥3 wskaźniki.
 
 ## Wymaga właściciela (nie da się z kodu)
+- **Ochrona danych — po kolei** (specyfikacja `docs/specs/2026-10-25-ochrona-danych.md`):
+  1. **Klucz szyfrowania:** u siebie `openssl rand -base64 32` → Vercel → Settings → Environment Variables →
+     `DATA_ENCRYPTION_KEY`, tylko Production, zaznaczone *Sensitive*. Kopia w menedżerze haseł. Nigdy w czacie,
+     mailu ani repo. Utrata klucza = utrata cache (dane wrócą ze źródeł, dziennik cronów zginie).
+  2. **Reguły Firebase:** `firebase deploy --only firestore:rules,storage --project <NEXT_PUBLIC_FIREBASE_PROJECT_ID
+     z Vercela>` albo wkleić `firestore.rules` / `storage.rules` w konsoli Firebase → Rules → Publish. Uwaga:
+     `.firebaserc` wskazuje `aplikacja-prawnicy` — sprawdzić, że to projekt produkcji Savori.
+  3. **Tryb ścisły:** gdy `/api/health/freshness` pokaże `encryption.lastSweep.legacy: 0` (rutyna sprawdzi),
+     dodać `DATA_ENCRYPTION_STRICT=1`.
+  4. **Konto serwisowe** (Google Cloud → IAM): rola „Cloud Datastore User” zamiast Editor/Owner; klucz
+     `FIREBASE_PRIVATE_KEY` w Vercelu jako *Sensitive*, tylko Production.
+  5. **Jeden projekt Firebase na aplikację:** repo wdraża się też do projektu Vercela `lexcapital-pro`. Jeśli
+     używa tego samego Firebase — rozdzielić albo dać mu ten sam `DATA_ENCRYPTION_KEY` (inaczej oba nadpisują
+     sobie cache).
+  6. **Konta administratora:** passkey albo klucz sprzętowy (2 sztuki) na GitHubie, w Vercelu, na koncie Google
+     (Firebase), u rejestratora domeny i na skrzynce do resetów haseł; menedżer haseł; bez SMS.
+  7. **Przed otwarciem rejestracji:** Identity Platform (MFA TOTP), App Check, klucz API ograniczony do
+     savori.space (Google Cloud Console → Credentials).
 - **`CRON_SECRET`** w Vercelu (projekt → Settings → Environment Variables → Production, losowy ciąg
   ≥ 32 znaków; Vercel sam dołącza go do wywołań cronów). Bez niego crony może wywołać każdy, a krok 1b
   (wymuszone odświeżenie GUS tylko dla cronów) nie ruszy. Po 1a publiczne `refresh=1` nadal może dać
@@ -112,6 +130,11 @@ J3. **Przegląd Japonii** (hero jak w PL), gdy będą ≥3 wskaźniki.
 - **`GUS_BDL_KEY`** — wyższy limit BDL (rejestracja na api.stat.gov.pl).
 
 ## Zrobione
+- **25.10.2026 — ochrona danych** (`docs/specs/2026-10-25-ochrona-danych.md`, prośba właściciela): reguły
+  Firestore/Storage bez żadnego dostępu z przeglądarki, drugie szyfrowanie treści w Firestore (AES-256-GCM,
+  wykrywa podmianę, rotacja kluczy, migracja jawnych wpisów w cronie `freshness`), klient Firebase tylko do
+  logowania, CSP `connect-src` zawężony do logowania Firebase, sesja logowania odporna na login CSRF i stare tokeny.
+  Szyfrowanie włącza się po ustawieniu `DATA_ENCRYPTION_KEY` (lista wyżej).
 - **24.10.2026 — `?refresh=1` z limitem na klucz** (`docs/specs/2026-10-24-refresh-limit.md`): wymuszone
   odświeżenie w `withCache` idzie do źródła najwyżej raz na 10 min na klucz cache (`FORCED_REFRESH_MIN_AGE_MS`),
   bez sekretu. Dotyczy wszystkich tras z `refresh=1`, także `/api/news`. Testy w `tests/server-cache.test.ts`.

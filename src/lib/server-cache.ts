@@ -1,6 +1,8 @@
 // Server-side Firestore cache helper for API routes
 // Uses Firebase Admin SDK (works in Next.js API routes)
+// Treść wpisów jest szyfrowana przed zapisem (`src/lib/data-seal.ts`), gdy serwer ma DATA_ENCRYPTION_KEY.
 import { getAdminDb } from '@/lib/firebase/admin';
+import { cacheLegacy, fromStored, toStored } from '@/lib/data-seal';
 
 const CACHE_TTL: Record<string, number> = {
     'exchange_rates': 6 * 3600 * 1000,   // 6h
@@ -33,18 +35,15 @@ export async function getServerCache<T>(
     if (!db) return null; // No Firestore available
 
     try {
-        const ref = db.collection(collection).doc(docId);
-        const snap = await ref.get();
-        if (!snap.exists) return null;
+        const entry = await readServerCacheEntry<T>(collection, docId, true);
+        if (!entry) return null;
 
-        const data = snap.data()!;
-        const updatedAt = data.updatedAt?.toMillis?.() ?? data.updatedAt ?? 0;
-        const age = Date.now() - updatedAt;
+        const age = Date.now() - entry.updatedAt;
         const ttl = maxAgeMs ?? CACHE_TTL[collection] ?? 6 * 3600 * 1000;
 
         if (age > ttl) return null;
 
-        return data.payload as T;
+        return entry.payload;
     } catch (err) {
         console.error(`[Cache READ] ${collection}/${docId}:`, err);
         return null;
@@ -65,12 +64,12 @@ export async function setServerCache<T>(
 
     try {
         const ref = db.collection(collection).doc(docId);
-        await ref.set({
-            payload,
-            updatedAt: Date.now(),
+        await ref.set(toStored(`${collection}/${docId}`, payload, Date.now(), (p, updatedAt) => ({
+            payload: p,
+            updatedAt,
             source,
-            cachedAt: new Date().toISOString(),
-        });
+            cachedAt: new Date(updatedAt).toISOString(),
+        })));
     } catch (err) {
         console.error(`[Cache WRITE] ${collection}/${docId}:`, err);
     }
@@ -86,12 +85,27 @@ export async function peekServerCache<T>(collection: string, docId: string): Pro
 }
 
 async function getStaleServerCache<T>(collection: string, docId: string): Promise<T | null> {
+    return (await readServerCacheEntry<T>(collection, docId))?.payload ?? null;
+}
+
+/**
+ * Wpis z datą zapisu, bez względu na wiek. `null`: brak wpisu, brak Firestore albo treść, której nie da się
+ * odszyfrować (zły klucz / podmiana) — wtedy cache zachowuje się jak przy braku wpisu i pobiera dane od nowa.
+ */
+export async function readServerCacheEntry<T>(
+    collection: string,
+    docId: string,
+    rethrow = false,
+): Promise<{ payload: T; updatedAt: number } | null> {
     const db = getAdminDb();
     if (!db) return null;
     try {
         const snap = await db.collection(collection).doc(docId).get();
-        return snap.exists ? ((snap.data()!.payload as T) ?? null) : null;
-    } catch {
+        if (!snap.exists) return null;
+        const entry = fromStored<T>(`${collection}/${docId}`, snap.data(), (d) => cacheLegacy.read(d) as T | undefined);
+        return entry && entry.value != null ? { payload: entry.value, updatedAt: entry.updatedAt } : null;
+    } catch (err) {
+        if (rethrow) throw err;
         return null;
     }
 }

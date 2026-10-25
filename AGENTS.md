@@ -37,12 +37,29 @@ Standard scripts in `package.json`:
   unavailable, so a missing data value is not necessarily a bug.
 - The `middleware`-file deprecation warning from Next.js at startup is
   expected and harmless.
+- Data protection (`docs/specs/2026-10-25-ochrona-danych.md`). `firestore.rules` / `storage.rules` deny every
+  client read and write; the server uses the Admin SDK, which bypasses rules. Rules are deployed manually by
+  the owner, not by Vercel. The browser uses Firebase only for Auth: never import `firebase/firestore`,
+  `firebase/storage` or `firebase/database` in `src` (enforced by `tests/data-protection.test.ts`).
+  Every Firestore document the app writes goes through `toStored()` / `fromStored()` (`src/lib/data-seal.ts`;
+  `withCache` and `readServerCacheEntry` already do this). Never write or read raw `payload` fields.
+  - With `DATA_ENCRYPTION_KEY` (32 bytes, base64), content is JSON → deflate → AES-256-GCM, with
+    AAD = doc path + `updatedAt`. The document holds `{ sealed, updatedAt }`.
+  - Without the key (demo, before the owner sets it), documents keep the old plaintext shape.
+  - A document that cannot be decrypted (tampered, moved, wrong key) reads as a cache miss.
+  - `cron/freshness` seals leftover plaintext docs and re-seals docs from `DATA_ENCRYPTION_KEY_PREVIOUS`
+    (`maybeSweep`, every 6 h at most).
+  - `DATA_ENCRYPTION_STRICT=1` rejects plaintext docs.
+  - Status: `/api/health/freshness` → `encryption`.
+  - Merge-writes (`set(..., { merge: true })`) can't work on sealed docs. Do read-modify-write in a
+    transaction, like `recordCronRun`.
 - Security headers (CSP, HSTS, `X-Frame-Options`, …) are set for every route in
   `next.config.ts` (`SECURITY_HEADERS`; CSP only in production builds — check
   with `next start`, not `next dev`). The CSP allows only what the browser
   actually loads: own scripts (`'unsafe-inline'`, pages are prerendered so no
-  nonce), Google Fonts, Firebase (`*.googleapis.com`, `*.firebaseio.com`,
-  `*.firebaseapp.com` frames), https images, the `/pdfjs` worker. Any new
+  nonce), Google Fonts, Firebase Auth only (`connect-src` = `identitytoolkit` + `securetoken`, not
+  `*.googleapis.com` where anyone can host a bucket; `*.firebaseapp.com` frames), https images, the
+  `/pdfjs` worker. Any new
   browser-side script, iframe, font or `fetch` to another origin needs a CSP
   entry, or it is silently blocked (`securitypolicyviolation` in the console).
 - Autonomous work follows `docs/ROADMAP.md` (backlog, owner-only actions, log)

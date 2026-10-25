@@ -1,10 +1,13 @@
 rules_version = '2';
+// Zero dostępu z przeglądarki. Klucz API Firebase (NEXT_PUBLIC_*) jest publiczny z definicji, więc reguły
+// to jedyna bariera przed odczytem bazy przez kogokolwiek. Serwis czyta i pisze wyłącznie po stronie
+// serwera przez Admin SDK (konto serwisowe), które tych reguł nie podlega — strona działa bez zmian.
+// Treść dokumentów jest dodatkowo szyfrowana przez aplikację (src/lib/data-seal.ts).
+// Wdrożenie: firebase deploy --only firestore:rules --project <NEXT_PUBLIC_FIREBASE_PROJECT_ID>
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Public read for all dashboard data
     match /{document=**} {
-      allow read: if true;
-      allow write: if false;  // Write only via server (cron jobs)
+      allow read, write: if false;
     }
   }
 }

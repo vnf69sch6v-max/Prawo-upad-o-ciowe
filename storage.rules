@@ -1,35 +1,12 @@
 rules_version = '2';
-
+// Serwis nie przechowuje plików (parser przetwarza PDF/XLSX w pamięci i niczego nie zapisuje),
+// więc magazyn jest zamknięty w całości. Jeśli kiedyś będą pliki użytkowników: osobna ścieżka
+// users/{uid}/..., dostęp tylko dla właściciela, limit rozmiaru i typu, szyfrowanie po stronie aplikacji.
+// Wdrożenie: firebase deploy --only storage --project <NEXT_PUBLIC_FIREBASE_PROJECT_ID>
 service firebase.storage {
   match /b/{bucket}/o {
-    
-    function isAuthenticated() {
-      return request.auth != null;
-    }
-    
-    function isOwner(userId) {
-      return isAuthenticated() && request.auth.uid == userId;
-    }
-    
-    // User profile images
-    match /users/{userId}/profile/{fileName} {
-      allow read: if isAuthenticated();
-      allow write: if isOwner(userId) 
-        && request.resource.size < 5 * 1024 * 1024 // 5MB max
-        && request.resource.contentType.matches('image/.*');
-    }
-    
-    // User uploads (documents, etc.)
-    match /users/{userId}/uploads/{fileName} {
-      allow read: if isOwner(userId);
-      allow write: if isOwner(userId)
-        && request.resource.size < 10 * 1024 * 1024; // 10MB max
-    }
-    
-    // Public assets (read-only)
-    match /public/{allPaths=**} {
-      allow read: if true;
-      allow write: if false;
+    match /{allPaths=**} {
+      allow read, write: if false;
     }
   }
 }
