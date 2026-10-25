@@ -17,6 +17,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAdminAuth, getAdminDb } from '@/lib/firebase/admin';
 import { trialClaims, trialDays, type AccessClaims } from '@/lib/access';
 import { ADMIN_UNTIL, adminEmails, claimTrial, grantDecision } from '@/lib/auth/grant';
+import { sameOrigin } from '@/lib/auth/require-session';
 
 const COOKIE = '__session';
 const MAX_AGE_S = 60 * 60 * 24 * 5; // 5 days
@@ -35,13 +36,6 @@ async function accessToGrant(decoded: { email?: string; email_verified?: boolean
         case 'trial':
             return trialDays() > 0 && (await claimTrial(getAdminDb(), decoded.email!)) ? trialClaims(nowS, trialDays()) : { accessUntil: nowS };
     }
-}
-
-/** Żądanie z naszej własnej strony (fetch z przeglądarki na tej samej domenie). */
-function sameOrigin(request: NextRequest): boolean {
-    const origin = request.headers.get('origin');
-    if (origin) return origin === request.nextUrl.origin;
-    return request.headers.get('sec-fetch-site') === 'same-origin';
 }
 
 const deny = (error: string, status: number) =>

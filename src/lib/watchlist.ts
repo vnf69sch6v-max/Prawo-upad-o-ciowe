@@ -20,9 +20,19 @@ export type { WatchItem, WatchKind };
  * (kafle KPI, pas „Obserwowane”, gwiazdki), więc widzą to samo bez przeładowania.
  */
 
+/** Sam getter `window.localStorage` rzuca `SecurityError` przy zablokowanej pamięci (Safari „Blokuj wszystkie”). */
+function browserStorage(): Storage | null {
+    if (typeof window === 'undefined') return null;
+    try {
+        return window.localStorage;
+    } catch {
+        return null;
+    }
+}
+
 const store = createWatchlistStore({
     fetch: (input, init) => fetch(input, init),
-    storage: typeof window !== 'undefined' ? window.localStorage : null,
+    storage: browserStorage(),
 });
 
 if (typeof window !== 'undefined') {

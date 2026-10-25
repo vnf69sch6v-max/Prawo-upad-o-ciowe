@@ -124,12 +124,13 @@ export function createWatchlistStore(deps: StoreDeps) {
 
         if (dirty) {
             // Użytkownik klikał przed odczytem (nowe urządzenie, kopia pusta). Wysłanie samych jego kliknięć
-            // skasowałoby listę konta — łączymy: konto + to, co dodał, i zapisujemy całość.
-            const merged = account
-                ? [...account, ...snapshot.items.filter((i) => !account.some((a) => a.kind === i.kind && a.id === i.id))]
-                : snapshot.items;
+            // skasowałoby listę konta — łączymy: konto (albo lista sprzed logowania, gdy konto nie ma jeszcze
+            // dokumentu) + to, co dodał, i zapisujemy całość.
+            const base = account ?? legacy;
+            const merged = [...base, ...snapshot.items.filter((i) => !base.some((a) => a.kind === i.kind && a.id === i.id))];
             writeLocal(storageKey(), merged);
             if (!sameWatchlist(merged, snapshot.items)) emit(merged);
+            dropLegacyAfterPush = account === null && legacy.length > 0;
             schedulePush(0);
             return;
         }

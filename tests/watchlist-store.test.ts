@@ -108,6 +108,24 @@ describe('zalogowany: lista należy do konta', () => {
         expect(JSON.parse(storage.map.get(userKey('u1'))!)).toEqual([cpi, pko]);
     });
 
+    it('kliknięcie w oknie pierwszego odczytu nie gubi migracji listy sprzed logowania', async () => {
+        const storage = memoryStorage();
+        storage.map.set(LEGACY_KEY, JSON.stringify([cpi]));
+        const srv = server(null);
+        srv.fail('offline');
+        const st = createWatchlistStore({ fetch: srv.fetch, storage });
+        st.activate('u1');
+        await flush();
+        st.toggle('spolka', 'PKO.WA'); // zanim odczyt się udał
+        st.onOnline();
+        await flush();
+        expect(st.getSnapshot().items).toEqual([cpi, pko]);
+        await vi.advanceTimersByTimeAsync(1);
+        await flush();
+        expect(srv.account).toEqual([cpi, pko]);
+        expect(storage.map.has(LEGACY_KEY)).toBe(false);
+    });
+
     it('konto ma już listę → lista anonimowa z tego urządzenia nie jest doklejana i znika', async () => {
         const storage = memoryStorage();
         storage.map.set(LEGACY_KEY, JSON.stringify([eur]));
