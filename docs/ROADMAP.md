@@ -20,40 +20,72 @@ pierwszeństwo. Rzeczy, których nie da się zrobić z kodu, trafiają do „Wym
    koszyka miesięcznie — czeka na `ESTAT_APP_ID` (właściciel).
 
 ### Bezpieczeństwo i niezawodność
-1. **Publiczne trasy GUS nadal mogą wyczerpać limit DBW** (~100 żądań / 15 min; crony dostają wtedy 429).
-   Limit 10 min na klucz (zrobiony 24.10) ogranicza tylko powtórzenia na jednym kluczu i nie jest budżetem GUS.
-   Pętla po jednym kluczu `gus-cpi-full` daje 64–128 wywołań DBW / 15 min, po wszystkich kluczach DBW
-   ~440–590 / 15 min. Dwa kroki:
-   - **1a (bez klucza, najpierw): walidacja parametrów tras GUS.** `year` tylko bieżący i poprzedni rok
-     w `gus-cpi-full`, `gus-ppi-full`, `gus-cpi`, `gus-koniunktura`, `dbw-series`. `dbw-series` wpuszcza
-     tylko serie z konfiguracji (zebrać wszystkie używane `var`/`przekroj`/`poz`/`prez` z kodu:
-     `src/lib/gus-dbw-series.ts`, `DbwPriceSection` na `/ceny` itd.). Dziś `/api/gus-cpi-full?year=1`
-     buduje ~8140 okresów, więc jedno GET to setki wywołań DBW bez żadnego `refresh=1`. Dowolne
-     `var`/`przekroj` tworzą też dowolne klucze cache.
+1. **Publiczne trasy GUS mogą wyczerpać limit DBW** (~100 żądań / 15 min, crony dostają wtedy 429).
+   **Crony CPI nie kończą się w czasie.** Limit 10 min na klucz (zrobiony 24.10) ogranicza tylko powtórzenia
+   na jednym kluczu i nie jest budżetem GUS. Kroki:
+   - **1a (bez klucza, w toku; specyfikacja `docs/specs/2026-10-25-gus-parametry-i-limit-czasu.md`).**
+     Walidacja: `year` = bieżący i poprzedni rok wg Warszawy (31.12 także następny) w `gus-cpi-full`,
+     `gus-ppi-full`, `gus-koniunktura` i `dbw-series`. `dbw-series` przyjmuje tylko 6 serii z konfiguracji.
+     `gus-monthly` przyjmuje tylko `years=4`. Zły parametr daje 400 bez GUS i bez cache. Nieużywane
+     `/api/gus-cpi` i `/api/dbw` (otwarte proxy DBW) zablokowane walidacją, nie usunięte — usunięcie czeka
+     na decyzję właściciela. Do tego naprawa 504:
+     - `dbw-1` (`gus-cpi-full`) i `dbw-3` (`gus-cpi`) są ucinane po 30 s. `vercel.json` bierze pierwszy pasujący
+       wzorzec, więc wpis 120 s pod globem 30 s był martwy.
+     - Działa tylko `export const maxDuration`.
+     - Wymuszone odświeżenie CPI z crona nie zapisywało się, a CPI docierało przez Data Cache przy wizytach.
+
+     Dziś `/api/gus-cpi-full?year=1` to 8152 wywołania DBW na jedno GET. `sub100=0` / `poz1` w `dbw-series`
+     nadpisywały cache Przeglądu.
    - **1b: wymuszone odświeżenie GUS DBW/BDL tylko z `CRON_SECRET`** (`Authorization` z `internalInit`).
      Publiczne `refresh=1` ma wtedy zwykły TTL, a przycisk „Aktualizuj” na CPI/PPI nie wysyła `refresh=1`.
-     Wymaga ustawienia `CRON_SECRET` przez właściciela.
-2. **CORS na `/api/*`:** `Access-Control-Allow-Origin: *` z metodami POST/PUT/DELETE/PATCH
+     Po 1a `refresh=1` na kluczach bieżącego roku daje nadal ~279 wywołań DBW / 10 min. Wymaga ustawienia
+     `CRON_SECRET` przez właściciela.
+   - **1c: walidacja tras GUS BDL** (limit BDL bez klucza: ~5 żądań/s, ~100 / 15 min):
+     - `bdl-series`: dowolne `start`/`step`/`year`/`freq` tworzą dowolne klucze;
+     - `gus-labor-extra` `year`, `regional-gus`, `gus-regional`, `smup`;
+     - cron `bdl`: 8 tras × 30 s > `maxDuration` 120 s. Przy wolnym BDL cron zostanie ucięty, zanim zapisze
+       przebieg (ta sama reguła co A3 w 1a).
+2. **`/status` ukrywa częściowe awarie cronów.** `evaluateCronRuns` daje „ok” przy `ok ≥ total/2`, więc
+   `dbw-1` z `gus-cpi-full → 504` był zielony, choć CPI z crona się nie odświeżało. Potrzebny stan pośredni
+   („częściowo”) przy każdej nieudanej trasie i ostrzeżenie w `/api/health/freshness`. Do tego czas każdej
+   trasy w dzienniku (dziś jest tylko suma).
+3. **CORS na `/api/*`:** `Access-Control-Allow-Origin: *` z metodami POST/PUT/DELETE/PATCH
    (`vercel.json`). Zawęzić do GET/OPTIONS; POST tylko dla parsera z własnej domeny.
-3. **`news-digest` nie zapisuje przebiegu** w `health/cron_runs` — `/status` nie pokazuje, czy działa.
-4. **Lint:** ~21 starych błędów w `src/lib/firebase/*` i hookach — wyczyścić, potem lint w CI.
-5. **`/api/news?refresh=1` przy każdym wywołaniu zapisuje archiwum dzienne do Firestore**, także wtedy,
+4. **`news-digest` nie zapisuje przebiegu** w `health/cron_runs` — `/status` nie pokazuje, czy działa.
+5. **Lint:** ~21 starych błędów w `src/lib/firebase/*` i hookach — wyczyścić, potem lint w CI.
+6. **`/api/news?refresh=1` przy każdym wywołaniu zapisuje archiwum dzienne do Firestore**, także wtedy,
    gdy feed przyszedł z cache. Pętla zjada limit zapisów Firestore. Scalać tylko przy świeżym pobraniu
    albo najwyżej raz na N minut.
 
+### Polska: terminy i kontrole
+P0. **13.11.2026 (CPI za październik, komunikat 10:00):** po wdrożeniu 1a, do 11:00 UTC przebieg `dbw-1` ma
+    `failed: []`, a świeżość `cpi` = ok z okresem 2026-10. Liczba zgodna z komunikatem GUS (kryterium 19
+    specyfikacji 1a). Wynik dopisać tutaj.
+P1. **Kalendarz GUS 2027 do 31.12.2026.** `CPI_PRELIMINARY_PUBLISH` i pozostałe harmonogramy w
+    `src/lib/calendar-schedules.ts` mają tylko 2026. Od stycznia świeżość i ranking hero przejdą na heurystykę
+    dni. Źródło: kalendarz roczny GUS (stat.gov.pl), zwykle publikowany w grudniu.
+P2. **CPI pełne w 2027 do 13.02.2027.** `gus-cpi-full` ma na sztywno `rok: 2026` dla działów i klas
+    (przekrój 1698) oraz miesięczny nagłówek od 2026. Od publikacji CPI za styczeń 2027 działy i podkategorie
+    stanęłyby na 2026-12, a nagłówek pokazywałby 2027-01. Przed zmianą sprawdzić w katalogu DBW przekroje
+    na 2027.
+P3. **Przekrój DBW 1698 jest ucięty do 5000 wierszy.** DBW ignoruje `ile-na-stronie=9000` (zwraca `page-size`
+    5000, `page-count` 3, 2,44 MB na miesiąc). Czytamy tylko stronę 0, a 4 ze 142 klas COICOP
+    (`src/lib/coicop-subcategories.ts`) jej nie mają. Sprawdzić strony 1–2 (2 zapytania) i albo pobierać
+    wszystkie strony, albo opisać te klasy jako niepublikowane. Odpowiedź > 2 MB nie trafia też do Data Cache.
+
 ### Produkt
-6. **Szybki szacunek CPI** (ostatni dzień roboczy miesiąca) na Przeglądzie w dniu publikacji —
+7. **Szybki szacunek CPI** (ostatni dzień roboczy miesiąca) na Przeglądzie w dniu publikacji —
    dziś strona pokazuje inflację ~15 dni po rynku. DBW go nie dostaje; źródło: komunikat GUS.
-7. **CI na GitHub Actions:** `tsc`, `npm test`, `eslint` na każdym PR (może wymagać uprawnienia
+8. **CI na GitHub Actions:** `tsc`, `npm test`, `eslint` na każdym PR (może wymagać uprawnienia
    `workflow` dla tokenu — jeśli push odrzuci, przenieść do „Wymaga właściciela”).
-8. **SEO:** metadane i opisy per strona, `sitemap.xml`, `robots.txt`, obrazy OG z aktualnymi
+9. **SEO:** metadane i opisy per strona, `sitemap.xml`, `robots.txt`, obrazy OG z aktualnymi
    liczbami (`next/og`), liczby w HTML z serwera, nie tylko po hydratacji.
-9. **Kalkulator „Twoja inflacja”:** własny koszyk na wagach COICOP z DBW.
-10. **Polska na tle UE:** HICP, bezrobocie, PKB z Eurostatu dla PL / strefy euro / sąsiadów.
-11. **Monitoring błędów przeglądarki** bez zewnętrznych usług: `/api/client-errors` → Firestore,
+10. **Kalkulator „Twoja inflacja”:** własny koszyk na wagach COICOP z DBW.
+11. **Polska na tle UE:** HICP, bezrobocie, PKB z Eurostatu dla PL / strefy euro / sąsiadów.
+12. **Monitoring błędów przeglądarki** bez zewnętrznych usług: `/api/client-errors` → Firestore,
     licznik na `/status`.
-12. **Dostępność:** kontrasty, `aria-*`, nawigacja klawiaturą, czytniki ekranu na wykresach.
-13. **Wydajność:** Lighthouse mobile, rozmiar bundla, leniwe ładowanie wykresów.
+13. **Dostępność:** kontrasty, `aria-*`, nawigacja klawiaturą, czytniki ekranu na wykresach.
+14. **Wydajność:** Lighthouse mobile, rozmiar bundla, leniwe ładowanie wykresów.
 
 ### Japonia (krok po kroku, każdy krok porządnie od początku)
 J0. **20.11.2026 (CPI za październik):** do 15:00 JST `jp-cpi` i `jp-cpi-breakdown` = ok z okresem 2026-10,
@@ -66,12 +98,17 @@ J2. **Kolejne wskaźniki Japonii** (po jednym na krok): stopa BOJ i USD/JPY (API
 J3. **Przegląd Japonii** (hero jak w PL), gdy będą ≥3 wskaźniki.
 
 ## Wymaga właściciela (nie da się z kodu)
-- **`CRON_SECRET`** w Vercelu (Settings → Environment Variables) — bez niego crony może wywołać każdy.
+- **`CRON_SECRET`** w Vercelu (projekt → Settings → Environment Variables → Production, losowy ciąg
+  ≥ 32 znaków; Vercel sam dołącza go do wywołań cronów). Bez niego crony może wywołać każdy, a krok 1b
+  (wymuszone odświeżenie GUS tylko dla cronów) nie ruszy. Po 1a publiczne `refresh=1` nadal może dać
+  ~279 wywołań DBW / 10 min przy limicie ~100 / 15 min.
 - **`ALERT_WEBHOOK_URL`** (Slack/Discord) — alert, gdy kontrola świeżości wykryje problem.
 - **savori.com:** przypięte do projektu w Vercelu, ale DNS wskazuje na inny serwer (Linode) —
   usunąć z projektu albo przepiąć DNS na Vercel (wtedy dostanie też certyfikat).
 - **HSTS preload** (opcjonalnie, praktycznie nieodwracalne): po tygodniu bez problemów z nagłówkiem
   HSTS dopisać `preload` i zgłosić domenę na hstspreload.org.
+- **Decyzja: usunąć `/api/gus-cpi` i `/api/dbw`?** Nic w serwisie ich nie czyta (PM, 25.10). Po 1a są
+  zablokowane walidacją; usunięcie to mniej kodu, ale rutyna nie usuwa funkcji bez zgody.
 - **`GUS_BDL_KEY`** — wyższy limit BDL (rejestracja na api.stat.gov.pl).
 
 ## Zrobione
