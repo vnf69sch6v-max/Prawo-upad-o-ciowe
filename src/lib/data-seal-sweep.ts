@@ -5,11 +5,13 @@
 // (też zaszyfrowany) pokazuje /api/health/freshness → `encryption.lastSweep`. Gdy dwa kolejne przebiegi mają
 // `legacy: 0`, `truncated: false` i `failed: 0`, można włączyć DATA_ENCRYPTION_STRICT=1 (jawne wpisy odrzucane).
 //
-// Dotyka WYŁĄCZNIE dokumentów tej aplikacji: kolekcji z `CACHE_COLLECTIONS` w kształcie cache (`payload`) i znanych
-// dokumentów `health/*`. Projekt Firebase może mieć dane innej aplikacji — tych nie czytamy ani nie zmieniamy.
+// Dotyka WYŁĄCZNIE dokumentów tej aplikacji: kolekcji z `CACHE_COLLECTIONS` w kształcie cache (`payload`), znanych
+// dokumentów `health/*` i kont użytkowników (`savori_users/*` — nazwa z przedrostkiem, więc cała kolekcja jest nasza).
+// Projekt Firebase może mieć dane innej aplikacji — tych nie czytamy ani nie zmieniamy.
 import { FieldPath, type DocumentReference, type Firestore, type QueryDocumentSnapshot } from 'firebase-admin/firestore';
 import { docLegacy, fromStored, open, seal, sealConfig, sealedWithActiveKey, storedUpdatedAt, toStored } from '@/lib/data-seal';
 import { CACHE_COLLECTIONS, SEALED_CACHE_EXTRA } from '@/lib/server-cache';
+import { USER_COLLECTION } from '@/lib/user-data';
 
 export const SEAL_STATE = { collection: 'health', id: 'seal_state' } as const;
 /** Dokumenty `health/*`, które zapisuje aplikacja (cron-log, cron/freshness, ta migracja). */
@@ -90,7 +92,8 @@ export async function sweepLegacyDocs(
         const snap = await ref.get();
         if (snap.exists) await handle('doc', ref, snap.data() ?? {});
     }
-    for (const name of CACHE_COLLECTIONS) {
+    const collections: Array<[string, Shape]> = [...CACHE_COLLECTIONS.map((n): [string, Shape] => [n, 'cache']), [USER_COLLECTION, 'doc']];
+    for (const [name, shape] of collections) {
         let last: QueryDocumentSnapshot | null = null;
         for (;;) {
             if (outOfBudget()) return { ...res, truncated: true };
@@ -99,7 +102,7 @@ export async function sweepLegacyDocs(
             const page = await q.get();
             for (const doc of page.docs) {
                 if (outOfBudget()) return { ...res, truncated: true };
-                await handle('cache', doc.ref, doc.data());
+                await handle(shape, doc.ref, doc.data());
             }
             if (page.docs.length < PAGE) break;
             last = page.docs[page.docs.length - 1];

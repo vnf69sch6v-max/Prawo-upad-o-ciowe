@@ -71,6 +71,10 @@ odpowiedź na pytanie „co się zmieniło i co to znaczy” — w dniu publikac
 - [ ] Nic zależnego od „dziś” przed hydratacją (*React #418*).
 - [ ] Telefon 320/390 px i desktop 1280/1440 px — bez przewijania w bok (*nagłówek przy 1280 px*).
 - [ ] Nowe źródło w przeglądarce → wpis w CSP.
+- [ ] Dane użytkownika należą do konta, nie do przeglądarki: tożsamość wyłącznie z zweryfikowanego ciasteczka sesji
+      (`requireSession`), zapis tylko z własnej domeny, `Cache-Control: private, no-store`, treść szyfrowana jak reszta
+      bazy, nieudany odczyt konta nigdy nie kończy się nadpisaniem konta kopią lokalną, `/prywatnosc` w tym samym PR.
+      (*watchlista w `localStorage` była wspólna dla kont w jednej przeglądarce i różna na urządzeniach*)
 
 ## Definicja „zrobione”
 

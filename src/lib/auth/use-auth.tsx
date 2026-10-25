@@ -22,6 +22,8 @@ import {
 const AUTH_ACTIVE = AUTH_FLAGS.enabled;
 
 export interface AppUser {
+    /** Identyfikator konta Firebase — klucz danych użytkownika (`savori_users/{uid}`, lokalna kopia watchlisty). */
+    uid: string;
     email: string | null;
     displayName: string | null;
     photoURL: string | null;
@@ -46,9 +48,10 @@ function computeInitials(name?: string | null, email?: string | null): string {
     return raw.toUpperCase();
 }
 
-const DEMO_USER: AppUser = { email: 'demo@makro.pl', displayName: 'Konto demo', photoURL: null, initials: 'MD' };
+const DEMO_USER: AppUser = { uid: 'demo', email: 'demo@makro.pl', displayName: 'Konto demo', photoURL: null, initials: 'MD' };
 
 const toAppUser = (u: User): AppUser => ({
+    uid: u.uid,
     email: u.email,
     displayName: u.displayName,
     photoURL: u.photoURL,
