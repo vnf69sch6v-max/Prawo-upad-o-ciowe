@@ -17,7 +17,8 @@ import {
 } from '@/lib/calendar-schedules';
 import { generateMacroCalendar } from '@/lib/calendar';
 import { formatDataPeriod } from '@/lib/formatters';
-import { dbwSeriesPath, GUS_INDUSTRY_SERIES, GUS_RETAIL_SERIES, type DbwSeriesConfig } from '@/lib/gus-dbw-series';
+import { DBW_SERIES, type DbwSeriesId } from '@/lib/gus-dbw-series';
+import { cpiFullPath, dbwSeriesPath, gusMonthlyPath } from '@/lib/gus-api-paths';
 import { warsawMinutes } from '@/lib/market-hours';
 import { warsawDateKey } from '@/lib/news/warsaw-date';
 import { expectedJpCpi } from '@/lib/jp/calendar';
@@ -336,14 +337,14 @@ export function extractJpCpi(json: unknown): string | null {
 const MONTHLY = { ok: 0, lag: 1 } as const;
 
 function dbwSpec(
-    id: string, label: string, config: DbwSeriesConfig,
+    id: string, label: string, series: DbwSeriesId,
     publishDate: (year: number, publishMonth: number) => string,
 ): DatasetSpec {
     return {
         id, label, source: 'GUS DBW', kind: 'gus-dbw', group: 'gus', frequency: 'monthly',
         // Jedno miejsce budowy URL-a (`dbwSeriesPath`) = ten sam klucz cache co hook strony.
-        endpoint: () => dbwSeriesPath(config),
-        extract: (json) => extractDbwSeries(json, config.poz[0]),
+        endpoint: () => dbwSeriesPath(series),
+        extract: (json) => extractDbwSeries(json, DBW_SERIES[series].poz[0]),
         expected: (now) => expectedMonthlyBySchedule(now, publishDate),
         tolerance: MONTHLY, maxAgeDays: 100, lagNote: LAG_NOTES['gus-dbw'], selfHeal: false,
     };
@@ -391,19 +392,19 @@ function nbpSpec(id: string, label: string, endpoint: string, extract: (json: un
 export const FRESHNESS_DATASETS: DatasetSpec[] = [
     {
         id: 'cpi', label: 'Inflacja CPI', source: 'GUS DBW', kind: 'gus-dbw', group: 'gus', frequency: 'monthly',
-        // useCpiFull() na Przeglądzie: /api/gus-cpi-full?year=<bieżący rok>
-        endpoint: (now) => `/api/gus-cpi-full?year=${warsawClock(now).year}`,
+        // useCpiFull() na Przeglądzie: ten sam adres, rok ustala serwer (Warszawa).
+        endpoint: () => cpiFullPath(),
         extract: extractCpiFull,
         // Pełne dane CPI (nie szybki szacunek) — dopiero one trafiają do DBW.
         expected: (now) => expectedMonthlyBySchedule(now, cpiPreliminaryDate),
         tolerance: MONTHLY, maxAgeDays: 100, lagNote: LAG_NOTES['gus-dbw'], selfHeal: false,
     },
-    dbwSpec('retail', 'Sprzedaż detaliczna', GUS_RETAIL_SERIES, retailDate),
-    dbwSpec('industry', 'Produkcja przemysłowa', GUS_INDUSTRY_SERIES, industrialDate),
+    dbwSpec('retail', 'Sprzedaż detaliczna', 'retail', retailDate),
+    dbwSpec('industry', 'Produkcja przemysłowa', 'industry', industrialDate),
     {
         id: 'wages', label: 'Wynagrodzenia (sektor przedsiębiorstw)', source: 'GUS BDL', kind: 'gus-bdl', group: 'gus',
         frequency: 'monthly',
-        endpoint: () => '/api/gus-monthly',
+        endpoint: () => gusMonthlyPath(),
         extract: (json) => extractGusMonthly(json, 'wages'),
         // GUS podaje płace w sektorze przedsiębiorstw razem z danymi o produkcji (~20. dnia M+1).
         expected: (now) => expectedMonthlyBySchedule(now, industrialDate),

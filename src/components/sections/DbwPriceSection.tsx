@@ -1,7 +1,7 @@
 'use client';
 
 import type { LucideIcon } from 'lucide-react';
-import { useDbwSeries, type DbwSeriesConfig } from '@/lib/hooks';
+import { useDbwSeries, type DbwSeriesId } from '@/lib/hooks';
 import { fmtPL } from '@/lib/series';
 import { formatDecimalPL, formatDataPeriod } from '@/lib/formatters';
 import { KpiCard, type AccentKey } from '@/components/ui/KpiCard';
@@ -19,11 +19,11 @@ const tick = (d: string) => {
 };
 
 /** Reusable price/index section backed by the generic DBW series route. */
-export function DbwPriceSection({ title, subtitle, config, series, unit = '%', refline, note, invertKpi = true, heroTitle, heroText, heroPoz }: {
-    title: string; subtitle: string; config: DbwSeriesConfig; series: PriceSeries[]; unit?: string; refline?: number; note?: string; invertKpi?: boolean;
+export function DbwPriceSection({ title, subtitle, seriesId, series, unit = '%', refline, note, invertKpi = true, heroTitle, heroText, heroPoz }: {
+    title: string; subtitle: string; seriesId: DbwSeriesId; series: PriceSeries[]; unit?: string; refline?: number; note?: string; invertKpi?: boolean;
     heroTitle?: string; heroText?: string; heroPoz?: number;
 }) {
-    const q = useDbwSeries(config);
+    const q = useDbwSeries(seriesId);
     const data = q.data?.series ?? [];
 
     // Ostatni dostępny odczyt danej serii (serie mogą kończyć się w różnych okresach) — realne dane GUS.

@@ -1,16 +1,12 @@
-// Cron DBW grupa 2 (harmonogram 13:40 UTC) — ~77 wywołań DBW, samotnie w swoim oknie 15-min.
-//  • gus-ppi-full  (53: PPI, 33 pozycje PKD, 10 lat)
-//  • dbw-series var 312 / przekrój 93 (24: wskaźniki cen robót budowlano-montażowych — /ceny, 2 lata)
+// Cron DBW grupa 2 (harmonogram 13:40 UTC). Lista endpointów: src/lib/cron-endpoints.ts.
+// `maxDuration` ≥ suma limitów wywoływanych tras + odstępy + 10 s (120 + 60 + 2 × 1,5 + 10 = 193) — inaczej Vercel ucina
+// crona, zanim zapisze przebieg w dzienniku (test: tests/function-limits.test.ts).
 import { NextRequest } from 'next/server';
 import { warmEndpoints } from '@/lib/cron-warm';
+import { CRON_ENDPOINTS } from '@/lib/cron-endpoints';
 
-export const maxDuration = 120;
-
-const ENDPOINTS = [
-    '/api/gus-ppi-full?refresh=1',
-    '/api/dbw-series?var=312&przekroj=93&poz=6661787&refresh=1',
-];
+export const maxDuration = 200;
 
 export async function GET(request: NextRequest) {
-    return warmEndpoints(request, ENDPOINTS, 'dbw-2');
+    return warmEndpoints(request, [...CRON_ENDPOINTS['dbw-2']], 'dbw-2');
 }

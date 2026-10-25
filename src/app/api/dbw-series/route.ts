@@ -1,8 +1,14 @@
-// Generic DBW time-series stitcher — one call per period (DBW limitation), assembled server-side.
-// Reusable for PPI, construction, agri, real-estate prices (any DBW variable/position).
+// DBW time-series stitcher — one call per period (DBW limitation), assembled server-side.
+// Tylko serie z listy dozwolonych (`DBW_SERIES`): dowolna seria i rok były nowym kluczem cache bez górnej granicy,
+// a `sub100=0` / inne `poz1` przy parametrach Przeglądu nadpisywały jego klucz (cache nie zawiera tych pól).
 import { NextRequest, NextResponse } from 'next/server';
 import { withCache } from '@/lib/server-cache';
 import { gusFetchInit } from '@/lib/upstream-fetch';
+import { badParam, forcedRefresh, parseDbwSeries, parseGusYear } from '@/lib/gus-params';
+import { DBW_POLSKA, DBW_SERIES, dbwSeriesCacheKey } from '@/lib/gus-dbw-series';
+
+// 8–24 wywołania po kolei; przy kilku 429 (3,5 s każde) 30 s nie wystarcza.
+export const maxDuration = 60;
 
 const DBW = 'https://api-dbw.stat.gov.pl/api/1.1.0/variable/variable-data-section';
 
@@ -23,21 +29,18 @@ async function fetchPeriod(varId: string, przekroj: string, rok: number, okres: 
 
 export async function GET(request: NextRequest) {
     const sp = new URL(request.url).searchParams;
-    const varId = sp.get('var');
-    const przekroj = sp.get('przekroj');
-    const poz = sp.getAll('poz'); // one or more id-pozycja-2
-    if (!varId || !przekroj || poz.length === 0) {
-        return NextResponse.json({ error: 'Wymagane: var, przekroj, poz' }, { status: 400 });
-    }
-    const year = parseInt(sp.get('year') || String(new Date().getFullYear()));
-    const force = sp.get('refresh') === '1'; // cron warm → wymuś refetch (pomiń cache)
-    const prez = parseInt(sp.get('prez') || '5');
-    const poz1 = parseInt(sp.get('poz1') || '33617'); // POLSKA
-    const freq = sp.get('freq') === 'q' ? 'q' : 'm';
-    const sub100 = sp.get('sub100') !== '0';
-    const pozNums = poz.map(Number);
-
-    const cacheKey = `dbwser_${varId}_${przekroj}_${poz.join('-')}_${year}_${freq}_${prez}_v3`.slice(0, 120);
+    const y = parseGusYear(sp);
+    if (!y.ok) return badParam(y);
+    const s = parseDbwSeries(sp);
+    if (!s.ok) return badParam(s);
+    const year = y.value.year;
+    const force = forcedRefresh(sp, y.value); // cron warm → wymuś refetch (pomiń cache), tylko rok bieżący
+    const { var: v, przekroj: p2, poz: pozNums, freq = 'm', prez = 5 } = DBW_SERIES[s.value];
+    const varId = String(v);
+    const przekroj = String(p2);
+    const poz1 = DBW_POLSKA;
+    const sub100 = true;
+    const cacheKey = dbwSeriesCacheKey(s.value, year);
 
     try {
         const result = await withCache(

@@ -5,6 +5,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withCache } from '@/lib/server-cache';
 import { dbwFetchMany, pick, monthOkres, type DbwRow, type DbwPeriod } from '@/lib/dbw-fetch';
+import { badParam, forcedRefresh, parseGusYear } from '@/lib/gus-params';
 
 export const maxDuration = 120;
 const mm = (m: number) => String(m).padStart(2, '0');
@@ -57,8 +58,11 @@ const DIVISIONS: Div[] = [
 interface Pt { date: string; yoy: number | null; mom: number | null }
 
 export async function GET(request: NextRequest) {
-    const now = parseInt(new URL(request.url).searchParams.get('year') || String(new Date().getFullYear()));
-    const force = new URL(request.url).searchParams.get('refresh') === '1'; // cron warm → wymuś refetch (pomiń cache)
+    const sp = new URL(request.url).searchParams;
+    const y = parseGusYear(sp);
+    if (!y.ok) return badParam(y);
+    const now = y.value.year;
+    const force = forcedRefresh(sp, y.value); // cron warm → wymuś refetch (pomiń cache), tylko rok bieżący
 
     try {
         const result = await withCache(

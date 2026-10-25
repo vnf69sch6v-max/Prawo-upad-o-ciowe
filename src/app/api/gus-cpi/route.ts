@@ -5,6 +5,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withCache } from '@/lib/server-cache';
 import { gusFetchInit } from '@/lib/upstream-fetch';
+import { badParam, forcedRefresh, parseGusYear } from '@/lib/gus-params';
+
+// Żadna strona nie czyta tej trasy (useCpiNational nie jest użyty) i żaden cron jej nie woła — zablokowana
+// walidacją `year` zamiast usunięcia (decyzja właściciela, ROADMAP). 24 wywołania po kolei.
+export const maxDuration = 60;
 
 const DBW = 'https://api-dbw.stat.gov.pl/api/1.1.0/variable/variable-data-section';
 const POLSKA = 33617;
@@ -54,8 +59,11 @@ function yoy(rows: DbwRow[], poz: number): number | null {
 }
 
 export async function GET(request: NextRequest) {
-    const year = parseInt(new URL(request.url).searchParams.get('year') || String(new Date().getFullYear()));
-    const force = new URL(request.url).searchParams.get('refresh') === '1'; // cron warm → wymuś refetch (pomiń cache)
+    const sp = new URL(request.url).searchParams;
+    const y = parseGusYear(sp);
+    if (!y.ok) return badParam(y);
+    const year = y.value.year;
+    const force = forcedRefresh(sp, y.value); // cron warm → wymuś refetch (pomiń cache), tylko rok bieżący
     const years = [year - 1, year];
 
     try {

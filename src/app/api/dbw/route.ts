@@ -1,33 +1,29 @@
 // DBW proxy — Dziedzinowe Bazy Wiedzy GUS (api-dbw.stat.gov.pl, no API key).
-// Source for monthly CPI/PPI/prices + business-tendency (koniunktura).
-// Rate-limited (429) → cache aggressively + back off.
+// Żaden kod serwisu tej trasy nie woła. Było otwartym proxy (każda kombinacja = wywołanie DBW i nowy klucz cache
+// przy wspólnym limicie ~100 / 15 min), więc przepuszcza już tylko var/przekrój serii z `DBW_SERIES`, rok wg tej
+// samej reguły co reszta tras GUS i jeden znany okres. Usunięcie trasy to decyzja właściciela (ROADMAP).
 import { NextRequest, NextResponse } from 'next/server';
 import { withCache } from '@/lib/server-cache';
+import { badParam, parseDbwProxy } from '@/lib/gus-params';
 
 const DBW_BASE = 'https://api-dbw.stat.gov.pl/api/1.1.0';
 
 export async function GET(request: NextRequest) {
     const sp = new URL(request.url).searchParams;
-    const varId = sp.get('var');
-    const przekroj = sp.get('przekroj');
-    if (!varId || !przekroj) {
-        return NextResponse.json({ error: 'Wymagane parametry: var, przekroj' }, { status: 400 });
-    }
-
-    const years = sp.getAll('rok');
-    const okresy = sp.getAll('okres');
-    const pageSize = sp.get('page-size') || '5000';
+    const parsed = parseDbwProxy(sp);
+    if (!parsed.ok) return badParam(parsed);
+    const { var: varId, przekroj, year, okres } = parsed.value;
 
     const qs = new URLSearchParams();
-    qs.set('id-zmienna', varId);
-    qs.set('id-przekroj', przekroj);
-    years.forEach((y) => qs.append('id-rok', y));
-    okresy.forEach((o) => qs.append('id-okres', o));
-    qs.set('ile-na-stronie', pageSize);
+    qs.set('id-zmienna', String(varId));
+    qs.set('id-przekroj', String(przekroj));
+    qs.append('id-rok', String(year.year));
+    if (okres != null) qs.append('id-okres', String(okres));
+    qs.set('ile-na-stronie', '5000');
     qs.set('numer-strony', '0');
     qs.set('lang', 'pl');
 
-    const cacheKey = `dbw_${varId}_${przekroj}_${years.join('-')}_${okresy.join('-')}`.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 120);
+    const cacheKey = `dbw_${varId}_${przekroj}_${year.year}_${okres ?? ''}`;
     const url = `${DBW_BASE}/variable/variable-data-section?${qs}`;
 
     try {

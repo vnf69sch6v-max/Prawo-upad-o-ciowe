@@ -217,7 +217,7 @@ describe('raport', () => {
     });
 
     it('endpointy DBW budowane jak w hooku (ten sam klucz cache)', () => {
-        expect(spec('retail').endpoint(new Date())).toMatch(/^\/api\/dbw-series\?var=109&przekroj=849&year=\d{4}&freq=m&prez=7&poz1=33617&sub100=1&poz=6661586$/);
+        expect(spec('retail').endpoint(new Date())).toBe('/api/dbw-series?var=109&przekroj=849&freq=m&prez=7&poz1=33617&sub100=1&poz=6661586'); // rok ustala serwer
         expect(spec('industry').endpoint(new Date())).toMatch(/var=814&przekroj=807/);
     });
 

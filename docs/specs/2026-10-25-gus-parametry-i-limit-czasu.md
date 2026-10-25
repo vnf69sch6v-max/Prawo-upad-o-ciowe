@@ -7,6 +7,7 @@
   w hookach, cronach i kontroli świeżości.
 - **Poza zakresem:** 1b, czyli wymuszone odświeżenie tylko z `CRON_SECRET` (czeka na właściciela). Trasy BDL to
   osobna pozycja 1c.
+- **Status:** wdrożone 25.10.2026 (ROADMAP → „Zrobione”); kontrola 13.11.2026 w ROADMAP P0.
 - **Ekrany:** wygląd stron się nie zmienia. `/status` przestaje pokazywać `gus-cpi-full → 504` i `gus-cpi → 504`.
 
 ## 1. Problem i wartość dla użytkownika
@@ -204,7 +205,11 @@ z B3. Po wdrożeniu nie ma zimnego cache ani dodatkowych wywołań DBW. `daily-m
 **B9. Budżet DBW po zmianie** (do opisu w PR, bez testu):
 - Bez `refresh` wszystkie poprawne klucze z obu lat to ≤ ~550 wywołań na 48 h (TTL). Dziś nie ma górnej granicy.
 - Z `refresh=1` (tylko klucze `W`, najwyżej co 10 min) to 64 + 60 + 24 + 128 + 3 = **279 na 10 min**, nadal
-  powyżej limitu ~100 / 15 min. Domyka to dopiero 1b (`CRON_SECRET`).
+  powyżej limitu ~100 / 15 min. Od 25.10.2026 `/api/*` jest za bramką, więc `refresh=1` może wysłać tylko
+  zalogowany z dostępem — ale okres próbny dostaje każdy zweryfikowany e-mail, więc ryzyko zostaje. Domyka to
+  dopiero 1b (wymuszone odświeżenie tylko z `CRON_SECRET`).
+- `/api/dbw` (zablokowane proxy): 6 serii × 2 lata × do 18 okresów ≈ 216 kluczy po 1 wywołaniu DBW na 24 h.
+  Nikt jej nie czyta — argument za decyzją właściciela o usunięciu (ROADMAP, „Wymaga właściciela”).
 
 ## 5. Dane
 
@@ -298,16 +303,23 @@ Testy bez sieci (vitest). Żaden test nie woła GUS.
 15. Playwright nie jest wymagany, bo UI się nie zmienia, a budowę URL-i hooków pokrywają kryteria 11–12.
     Jeśli inżynier i tak sprawdza `/ceny` w `next dev`, przechwytuje `/api/dbw-series*` (`page.route`) i nie
     woła DBW.
-16. Produkcja po wdrożeniu (pojedyncze żądania, po jednym na URL):
-    - `curl -s -o /dev/null -w '%{http_code} %{time_total}\n' 'https://savori.space/api/gus-cpi-full?year=1'`
-      zwraca `400` w < 2 s;
+16. Produkcja po wdrożeniu (pojedyncze żądania, po jednym na URL). Od 25.10.2026 `/api/*` jest za bramką
+    (ustawiony `CRON_SECRET`): **bez uwierzytelnienia oczekiwane jest 401** `{"error":"unauthorized"}`, a 400
+    widać tylko z `-H "Authorization: Bearer $CRON_SECRET"` (właściciel) albo z ciasteczkiem `__session` konta
+    z dostępem. Wtedy:
+    - `curl -s -o /dev/null -w '%{http_code} %{time_total}\n' -H "Authorization: Bearer $CRON_SECRET" 'https://savori.space/api/gus-cpi-full?year=1'`
+      zwraca `400` + `{ error, param }` w < 2 s;
     - 400 zwracają też: `/api/gus-ppi-full?year=2030`, `/api/gus-koniunktura?year=abc`,
       `/api/dbw-series?var=1&przekroj=1&poz=1`, parametry sprzedaży z B3 z `&sub100=0`, `/api/gus-monthly?years=5`;
     - 400 zwracają też `/api/dbw?var=1&przekroj=1&rok=2026` i `/api/gus-cpi?year=1`.
-17. Produkcja: `/api/health/freshness` zwraca 200 i 15/15 ok. `/api/gus-cpi-full?year=2026` ma ostatni punkt
-    nagłówka `2026-09` z `yoy` 4,1 (do 13.11).
+17. Produkcja: `/api/health/freshness` zwraca 200 i 15/15 ok (`cpi` = 2026-09). `/api/gus-cpi-full?year=2026`
+    (z uwierzytelnieniem jak w 16) ma ostatni punkt nagłówka `2026-09` z `yoy` 4,1 (do 13.11). Publiczny dowód bez
+    logowania: `/start` czyta ten sam klucz `gus_cpi_full_2026_v5` i pokazuje CPI 4,1% za wrzesień 2026.
 18. Produkcja: pierwszy przebieg `dbw-1` i `dbw-3` po wdrożeniu ma w `crons.items` `failed: []` i `ok == total`,
-    a `ms` jest poniżej `maxDuration` crona.
+    a `ms` jest poniżej `maxDuration` crona. Samo `failed: []` niczego nie rozstrzyga — `dbw-1` 25.10 09:53 UTC,
+    przed wdrożeniem, też miał 2/2 ok (33,8 s), gdy DBW odpowiadał szybko. Dowód rozstrzygający: Vercel →
+    Deployment → Functions pokazuje `/api/gus-cpi-full` z limitem 120 s, crony `dbw-1/2/4` 200 s i `dbw-3` 140 s
+    (lokalnie to samo daje `.next/server/functions-config-manifest.json` po `npm run build`).
 19. **13.11.2026 (CPI za październik):** do 11:00 UTC przebieg `dbw-1` z tego dnia ma `failed: []`, świeżość `cpi`
     = ok z `2026-10`, a liczba zgadza się z komunikatem GUS (sprawdzona z niezależnym źródłem). Wynik dopisać
     w ROADMAP (pozycja P0).

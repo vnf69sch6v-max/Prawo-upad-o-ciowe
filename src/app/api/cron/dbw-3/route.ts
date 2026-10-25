@@ -1,18 +1,12 @@
-// Cron DBW grupa 3 (harmonogram 15:40 UTC) — ~72 wywołania DBW, samotnie w swoim oknie 15-min.
-//  • gus-cpi          (24: krajowy CPI headline, miesięcznie, 2 lata)
-//  • gus-koniunktura  (24: badanie koniunktury GUS, miesięcznie, 2 lata)
-//  • dbw-series var 324 / przekrój 775 (24: ceny produktów rolnych miesięcznie — /ceny, 2 lata)
+// Cron DBW grupa 3 (harmonogram 15:40 UTC). Lista endpointów: src/lib/cron-endpoints.ts.
+// `maxDuration` ≥ suma limitów wywoływanych tras + odstępy + 10 s (60 + 60 + 2 × 1,5 + 10 = 133) — inaczej Vercel ucina
+// crona, zanim zapisze przebieg w dzienniku (test: tests/function-limits.test.ts).
 import { NextRequest } from 'next/server';
 import { warmEndpoints } from '@/lib/cron-warm';
+import { CRON_ENDPOINTS } from '@/lib/cron-endpoints';
 
-export const maxDuration = 120;
-
-const ENDPOINTS = [
-    '/api/gus-cpi?refresh=1',
-    '/api/gus-koniunktura?refresh=1',
-    '/api/dbw-series?var=324&przekroj=775&poz=7124703&poz=7124713&poz=7124724&poz=7189791&poz=7121981&refresh=1',
-];
+export const maxDuration = 140;
 
 export async function GET(request: NextRequest) {
-    return warmEndpoints(request, ENDPOINTS, 'dbw-3');
+    return warmEndpoints(request, [...CRON_ENDPOINTS['dbw-3']], 'dbw-3');
 }

@@ -23,23 +23,13 @@ pierwszeństwo. Rzeczy, których nie da się zrobić z kodu, trafiają do „Wym
 1. **Publiczne trasy GUS mogą wyczerpać limit DBW** (~100 żądań / 15 min, crony dostają wtedy 429).
    **Crony CPI nie kończą się w czasie.** Limit 10 min na klucz (zrobiony 24.10) ogranicza tylko powtórzenia
    na jednym kluczu i nie jest budżetem GUS. Kroki:
-   - **1a (bez klucza, w toku; specyfikacja `docs/specs/2026-10-25-gus-parametry-i-limit-czasu.md`).**
-     Walidacja: `year` = bieżący i poprzedni rok wg Warszawy (31.12 także następny) w `gus-cpi-full`,
-     `gus-ppi-full`, `gus-koniunktura` i `dbw-series`. `dbw-series` przyjmuje tylko 6 serii z konfiguracji.
-     `gus-monthly` przyjmuje tylko `years=4`. Zły parametr daje 400 bez GUS i bez cache. Nieużywane
-     `/api/gus-cpi` i `/api/dbw` (otwarte proxy DBW) zablokowane walidacją, nie usunięte — usunięcie czeka
-     na decyzję właściciela. Do tego naprawa 504:
-     - `dbw-1` (`gus-cpi-full`) i `dbw-3` (`gus-cpi`) są ucinane po 30 s. `vercel.json` bierze pierwszy pasujący
-       wzorzec, więc wpis 120 s pod globem 30 s był martwy.
-     - Działa tylko `export const maxDuration`.
-     - Wymuszone odświeżenie CPI z crona nie zapisywało się, a CPI docierało przez Data Cache przy wizytach.
-
-     Dziś `/api/gus-cpi-full?year=1` to 8152 wywołania DBW na jedno GET. `sub100=0` / `poz1` w `dbw-series`
-     nadpisywały cache Przeglądu.
+   - **1a — zrobione 25.10.2026** (specyfikacja `docs/specs/2026-10-25-gus-parametry-i-limit-czasu.md`, wpis
+     w „Zrobione”). Kontrola produkcyjna crona CPI 13.11.2026 — pozycja P0.
    - **1b: wymuszone odświeżenie GUS DBW/BDL tylko z `CRON_SECRET`** (`Authorization` z `internalInit`).
      Publiczne `refresh=1` ma wtedy zwykły TTL, a przycisk „Aktualizuj” na CPI/PPI nie wysyła `refresh=1`.
-     Po 1a `refresh=1` na kluczach bieżącego roku daje nadal ~279 wywołań DBW / 10 min. Wymaga ustawienia
-     `CRON_SECRET` przez właściciela.
+     Po 1a `refresh=1` na kluczach bieżącego roku daje nadal ~279 wywołań DBW / 10 min — dziś tylko dla
+     zalogowanych z dostępem (bramka API), ale okres próbny dostaje każdy zweryfikowany e-mail. **Odblokowane:**
+     `CRON_SECRET` jest ustawiony (25.10.2026 `/api/*` bez sesji odpowiada 401). Następny krok rutyny.
    - **1c: walidacja tras GUS BDL** (limit BDL bez klucza: ~5 żądań/s, ~100 / 15 min):
      - `bdl-series`: dowolne `start`/`step`/`year`/`freq` tworzą dowolne klucze;
      - `gus-labor-extra` `year`, `regional-gus`, `gus-regional`, `smup`;
@@ -182,10 +172,6 @@ J3. **Przegląd Japonii** (hero jak w PL), gdy będą ≥3 wskaźniki.
   potem Firestore Database → kolekcja `savori_users` → dokument o tym UID → usuń (to lista obserwowanych; `/prywatnosc`
   obiecuje „usuwamy ją razem z kontem”). Dokument `trials/{HMAC(e-mail)}` zostaje celowo (okres próbny raz na adres —
   tak opisuje go `/prywatnosc`). Pomocnik w kodzie: `deleteUserData()` w `src/lib/user-data-server.ts`.
-- **`CRON_SECRET`** w Vercelu (projekt → Settings → Environment Variables → Production, losowy ciąg
-  ≥ 32 znaków; Vercel sam dołącza go do wywołań cronów). Bez niego crony może wywołać każdy, a krok 1b
-  (wymuszone odświeżenie GUS tylko dla cronów) nie ruszy. Po 1a publiczne `refresh=1` nadal może dać
-  ~279 wywołań DBW / 10 min przy limicie ~100 / 15 min.
 - **`ALERT_WEBHOOK_URL`** (Slack/Discord) — alert, gdy kontrola świeżości wykryje problem.
 - **savori.com:** przypięte do projektu w Vercelu, ale DNS wskazuje na inny serwer (Linode) —
   usunąć z projektu albo przepiąć DNS na Vercel (wtedy dostanie też certyfikat).
@@ -196,6 +182,18 @@ J3. **Przegląd Japonii** (hero jak w PL), gdy będą ≥3 wskaźniki.
 - **`GUS_BDL_KEY`** — wyższy limit BDL (rejestracja na api.stat.gov.pl).
 
 ## Zrobione
+- **25.10.2026 — `CRON_SECRET` ustawiony przez właściciela** (`/api/*` bez sesji odpowiada 401, crony przechodzą
+  bramkę z `Authorization: Bearer`). Krok 1b odblokowany.
+- **25.10.2026 — 1a: trasy GUS DBW przyjmują tylko znane parametry, crony CPI mieszczą się w czasie**
+  (PR #38, `docs/specs/2026-10-25-gus-parametry-i-limit-czasu.md`, PM: SHIP). Walidacja przed cache i GUS (`src/lib/gus-params.ts`,
+  400 + `no-store`): `year` = bieżący i poprzedni rok w Warszawie (31.12 także następny) w `gus-cpi-full`,
+  `gus-ppi-full`, `gus-koniunktura`, `dbw-series`, `gus-cpi`; `dbw-series` tylko 6 serii z `DBW_SERIES`;
+  `gus-monthly` tylko `years=4`; `refresh=1` wymusza tylko rok bieżący. `/api/gus-cpi` i `/api/dbw` zablokowane
+  walidacją (bez usuwania), `gus-cpi` wypadło z crona `dbw-3`. Limity czasu z `export const maxDuration`
+  (`gus-cpi-full` 120 s, `gus-koniunktura`/`dbw-series` 60 s, crony DBW 140–200 s); `vercel.json` ma już tylko
+  domyślny glob — wpisy pod nim były martwe i `gus-cpi-full` dostawało 504 po 30 s. Ścieżki powstają tylko
+  w `src/lib/gus-api-paths.ts` (hooki nie wysyłają roku z zegara urządzenia), listy cronów w
+  `src/lib/cron-endpoints.ts`. Klucze cache bez zmian. Testy: `gus-params`, `gus-routes`, `function-limits`.
 - **25.10.2026 — P-1 płatności Stripe** (prośba właściciela: klucz prywatny już na Vercelu, dodać trasę): Checkout
   jednorazowy 10/20/30 zł (`/api/stripe/checkout`), webhook z podpisem i idempotencją (`/api/stripe/webhook`,
   zapis `payments/{session}` przez `toStored`), przedłużenie `accessUntil` od późniejszej z dat, odświeżenie
