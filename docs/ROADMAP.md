@@ -181,6 +181,11 @@ J3. **Przegląd Japonii** (hero jak w PL), gdy będą ≥3 wskaźniki.
 - **`GUS_BDL_KEY`** — wyższy limit BDL (rejestracja na api.stat.gov.pl).
 
 ## Zrobione
+- **25.10.2026 — dane użytkownika na koncie** (`docs/specs/2026-10-25-dane-uzytkownika.md`, prośba właściciela):
+  watchlista należy do konta (`savori_users/{uid}`, zapis tylko przez serwer po weryfikacji ciasteczka sesji,
+  treść szyfrowana jak reszta bazy), ta sama na każdym urządzeniu; dwa konta w jednej przeglądarce nie widzą swoich
+  list; lista sprzed logowania przenosi się na konto przy pierwszym logowaniu. `localStorage` tylko jako kopia.
+  Przy usuwaniu konta na prośbę użytkownika usunąć też `savori_users/{uid}`.
 - **25.10.2026 — płatna platforma, etap 1** (prośba właściciela): strona startowa `/start` z logowaniem i cennikiem
   10/20/30 zł (1/3/6 mies., jednorazowo), bramka z kryptograficzną weryfikacją sesji (podrobione ciasteczko nie
   przechodzi), okres próbny i dostęp administratora w claims, `/prywatnosc` (RODO) i `/regulamin`, czcionka z własnej

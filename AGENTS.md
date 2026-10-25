@@ -80,6 +80,18 @@ Standard scripts in `package.json`:
     must update `/prywatnosc` in the same PR.
   - Inter comes from `next/font` (self-hosted, `--font-inter`). Don't add `fonts.googleapis.com` back: it sent
     every visitor's IP to Google.
+- Per-user data (`docs/specs/2026-10-25-dane-uzytkownika.md`) lives in one sealed Firestore doc per account,
+  `savori_users/{uid}` (`src/lib/user-data.ts` = shape + validation, `src/lib/user-data-server.ts` = read /
+  transactional read-modify-write). The prefix matters: the Firebase project is shared with another app, so a plain
+  `users` collection could collide and the seal sweep (which now also walks `savori_users`) would touch foreign docs.
+  Identity comes only from the `__session` cookie verified server-side (`requireSession`,
+  `src/lib/auth/require-session.ts`) — never from a `uid` in the request body or query. Routes under `/api/me/*`
+  answer `Cache-Control: private, no-store`, 501 without Admin SDK (demo), 401 without a session, and validate the
+  body with `parseWatchItems`-style allowlists (400, nothing written). Today the only such data is the watchlist:
+  `useWatchlist` (`src/lib/watchlist.ts`) is a module store that keys `localStorage` by `uid`
+  (`mk:watchlist:u:{uid}`; anonymous/demo keeps `mk:watchlist:v1`), pulls the account list on sign-in (account wins;
+  a pre-login list migrates once), and debounces `PUT /api/me/watchlist` 400 ms with retry. Adding a new per-user
+  field = extend `UserData`, pass it through `writeUserData` (whole-doc), and update `/prywatnosc`.
 - Auth flags (`src/lib/auth/flags.ts`): since 25.10.2026 both default to **on** when the Firebase client config is
   present (owner's decision: savori.space only for signed-in users). `NEXT_PUBLIC_AUTH_ENABLED=false` turns off
   sign-in (Google popup + e-mail/password, `src/lib/auth/use-auth.tsx`) and the gate; `NEXT_PUBLIC_AUTH_REQUIRED=false`
