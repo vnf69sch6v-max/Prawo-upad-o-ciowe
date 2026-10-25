@@ -2,8 +2,8 @@
 // a po rotacji klucza (DATA_ENCRYPTION_KEY_PREVIOUS) wpisy starym kluczem są przepisywane nowym.
 // Cache z krótkim TTL i tak nadpisuje się sam w ciągu doby, ale archiwum newsów (dzień = dokument) nigdy —
 // bez tego zostałoby jawne na zawsze. Uruchamia ją cron `freshness` najwyżej co 6 h; wynik w `health/seal_state`
-// (też zaszyfrowany) pokazuje /api/health/freshness → `encryption.lastSweep`. Gdy `legacy` = 0 przez kolejne
-// przebiegi, można włączyć DATA_ENCRYPTION_STRICT=1 (jawne wpisy będą wtedy odrzucane).
+// (też zaszyfrowany) pokazuje /api/health/freshness → `encryption.lastSweep`. Gdy dwa kolejne przebiegi mają
+// `legacy: 0`, `truncated: false` i `failed: 0`, można włączyć DATA_ENCRYPTION_STRICT=1 (jawne wpisy odrzucane).
 //
 // Dotyka WYŁĄCZNIE dokumentów tej aplikacji: kolekcji z `CACHE_COLLECTIONS` w kształcie cache (`payload`) i znanych
 // dokumentów `health/*`. Projekt Firebase może mieć dane innej aplikacji — tych nie czytamy ani nie zmieniamy.
@@ -16,7 +16,8 @@ export const SEAL_STATE = { collection: 'health', id: 'seal_state' } as const;
 export const HEALTH_DOCS = ['cron_runs', 'freshness_latest', 'freshness_history', SEAL_STATE.id] as const;
 const STATE_PATH = `${SEAL_STATE.collection}/${SEAL_STATE.id}`;
 const SWEEP_EVERY_MS = 6 * 3600_000;
-const PAGE = 200;
+/** Dokument do ~1 MiB — strona po 50 to w najgorszym razie ~50 MB pamięci funkcji. */
+const PAGE = 50;
 
 export interface SweepResult {
     /** Start przebiegu (też blokada „co 6 h”). */

@@ -43,16 +43,17 @@ wykrywana. Poufność dotyczy dziennika cronów, kontroli świeżości i wszystk
 - Bez klucza (tryb demo, przed ustawieniem): zapis jawny jak dawniej — nic się nie psuje.
 - Z kluczem: nowe zapisy szyfrowane; jawne wpisy sprzed włączenia nadal czytane (brak przerwy w danych).
   Migracja w cronie `freshness` (najwyżej co 6 h; blokada zapisywana przed skanem) szyfruje resztę, w tym stare dni
-  archiwum newsów. Czyta stronami po 200, kończy najpóźniej 95 s od startu crona (po zapisie przebiegu w dzienniku),
+  archiwum newsów. Czyta stronami po 50, kończy najpóźniej 95 s od startu crona (po zapisie przebiegu w dzienniku),
   resztę zostawia na kolejny przebieg (`truncated`).
 - `DATA_ENCRYPTION_STRICT=1`: jawne wpisy odrzucane (podrzucony jawny dokument nie przejdzie). Włączyć, gdy
-  `encryption.lastSweep.legacy` = 0.
+  `encryption.lastSweep` ma `legacy: 0`, `truncated: false` i `failed: 0` w dwóch kolejnych przebiegach (ucięty
+  przebieg też pokazuje `legacy: 0`; za wcześnie = nieczytelne stare dni archiwum newsów).
 - Wpis nie do odszyfrowania (podmiana, inny dokument, zły klucz) = brak wpisu: cache pobiera dane ze źródła
   i nadpisuje dokument.
 - Zły format klucza: `encryption.mode = "error"`, zapis wstrzymany (nie piszemy jawnie, skoro miało być
   szyfrowanie), odczyt jawnych wpisów działa.
 - Rotacja: nowy klucz w `DATA_ENCRYPTION_KEY`, stary w `DATA_ENCRYPTION_KEY_PREVIOUS`; migracja przepisuje wpisy
-  (`lastSweep.rotated`); gdy `rotated` = 0 i `legacy` = 0, stary klucz można usunąć.
+  (`lastSweep.rotated`); gdy `rotated: 0`, `truncated: false` i `failed: 0`, stary klucz można usunąć.
 - Stan: `/api/health/freshness` → `encryption` (`mode`, `kid` = 8 znaków skrótu SHA-256 klucza, `strict`,
   `lastSweep`).
 

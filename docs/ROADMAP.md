@@ -119,8 +119,9 @@ J3. **Przegląd Japonii** (hero jak w PL), gdy będą ≥3 wskaźniki.
      (albo `firebase deploy --only firestore:rules --project aplikacja-prawnicy`). Storage w projekcie nie istnieje
      (bucket 404, 25.10) — nie trzeba nic wdrażać. Odczyt bez logowania produkcja blokowała już 25.10; nowe reguły
      blokują też zalogowanych.
-  5. **Tryb ścisły:** gdy `/api/health/freshness` pokaże `encryption.lastSweep.legacy: 0` (rutyna sprawdzi),
-     dodać `DATA_ENCRYPTION_STRICT=1`.
+  5. **Tryb ścisły:** gdy `/api/health/freshness` pokaże w `encryption.lastSweep` jednocześnie `legacy: 0`,
+     `truncated: false` i `failed: 0` w **dwóch kolejnych** przebiegach (rutyna sprawdzi), dodać
+     `DATA_ENCRYPTION_STRICT=1`. Samo `legacy: 0` nie wystarcza — ucięty przebieg też je pokazuje.
   6. **Konta administratora:** passkey albo klucz sprzętowy (2 sztuki) na GitHubie, w Vercelu, na koncie Google
      (Firebase), u rejestratora domeny (Name.com) i na skrzynce do resetów haseł; menedżer haseł; bez SMS.
   7. **Przed otwarciem rejestracji:** Identity Platform (MFA TOTP), App Check, klucz API ograniczony do

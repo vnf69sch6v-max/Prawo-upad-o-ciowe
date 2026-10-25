@@ -135,7 +135,7 @@ describe('migracja dotyka tylko danych tej aplikacji', () => {
         expect(store.get('health/other_app')).toEqual({ x: 1 });
     });
 
-    it('czyta stronami po 200 i przerywa po limicie czasu (truncated), reszta w kolejnym przebiegu', async () => {
+    it('czyta stronami i przerywa po limicie czasu (truncated), reszta w kolejnym przebiegu', async () => {
         for (let i = 0; i < 450; i++) store.set(`news_archive/d${String(i).padStart(3, '0')}`, { payload: { i }, updatedAt: i });
         expect((await sweepLegacyDocs(fakeDb as never, { deadline: Date.now() - 1 })).truncated).toBe(true);
         const res = await sweepLegacyDocs(fakeDb as never, { maxWrites: 1000 });
