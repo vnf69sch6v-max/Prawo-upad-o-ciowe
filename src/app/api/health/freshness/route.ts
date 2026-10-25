@@ -10,15 +10,20 @@ import { runFreshnessCheck } from '@/lib/freshness-check';
 import { readCronRuns } from '@/lib/cron-log';
 import { evaluateCronRuns } from '@/lib/cron-runs';
 import { internalOrigin } from '@/lib/internal-fetch';
+import { getAdminDb } from '@/lib/firebase/admin';
+import { sealStatus } from '@/lib/data-seal';
+import { readSealState } from '@/lib/data-seal-sweep';
 
 export const maxDuration = 30;
 
 export async function GET(request: NextRequest) {
     const origin = internalOrigin(request);
-    const [report, runs] = await Promise.all([runFreshnessCheck(origin), readCronRuns()]);
+    const [report, runs, lastSweep] = await Promise.all([runFreshnessCheck(origin), readCronRuns(), readSealState(getAdminDb())]);
     // Przebiegi cronów są informacją (dowód automatu), nie zmieniają kodu HTTP — ten zależy od danych.
     const crons = runs ? { available: true, items: evaluateCronRuns(runs, new Date()) } : { available: false, items: [] };
-    return NextResponse.json({ ...report, crons }, {
+    // Stan szyfrowania danych w Firestore (src/lib/data-seal.ts) — identyfikatory kluczy, nigdy klucze.
+    const encryption = { ...sealStatus(), lastSweep };
+    return NextResponse.json({ ...report, crons, encryption }, {
         status: httpStatusFor(report.items),
         headers: { 'Cache-Control': 's-maxage=300, stale-while-revalidate=60' },
     });

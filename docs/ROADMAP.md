@@ -72,6 +72,10 @@ P3. **Przekrój DBW 1698 jest ucięty do 5000 wierszy.** DBW ignoruje `ile-na-st
     5000, `page-count` 3, 2,44 MB na miesiąc). Czytamy tylko stronę 0, a 4 ze 142 klas COICOP
     (`src/lib/coicop-subcategories.ts`) jej nie mają. Sprawdzić strony 1–2 (2 zapytania) i albo pobierać
     wszystkie strony, albo opisać te klasy jako niepublikowane. Odpowiedź > 2 MB nie trafia też do Data Cache.
+   - **Bramka logowania sprawdza tylko obecność ciasteczka** (`src/middleware.ts`): dowolne `__session=x` ją omija,
+     gdy `NEXT_PUBLIC_AUTH_ENABLED=true`. Dziś bez skutku (strony to dane publiczne, bramka wyłączona), ale przed
+     funkcjami dla zalogowanych: weryfikacja podpisu ciasteczka sesji (JWT, klucze publiczne Google) na Edge albo
+     w trasach z danymi użytkownika (`verifySessionCookie(..., true)`).
 
 ### Produkt
 7. **Szybki szacunek CPI** (ostatni dzień roboczy miesiąca) na Przeglądzie w dniu publikacji —
@@ -98,6 +102,30 @@ J2. **Kolejne wskaźniki Japonii** (po jednym na krok): stopa BOJ i USD/JPY (API
 J3. **Przegląd Japonii** (hero jak w PL), gdy będą ≥3 wskaźniki.
 
 ## Wymaga właściciela (nie da się z kodu)
+- **Ochrona danych — po kolei** (specyfikacja `docs/specs/2026-10-25-ochrona-danych.md`; recenzja bezpieczeństwa):
+  1. **Jeden projekt Firebase na aplikację — przed kluczem.** Produkcja Savori używa `aplikacja-prawnicy`
+     (sprawdzone w kodzie strony 25.10). Repo wdraża się też do projektu Vercela `lexcapital-pro`: sprawdzić, czy ma
+     te same `FIREBASE_*`. Jeśli tak — rozdzielić projekty albo dać mu ten sam klucz z kroku 3 (inaczej obie
+     aplikacje nadpisują sobie cache). Migracja dotyka wyłącznie kolekcji Savori (`CACHE_COLLECTIONS` + `health`).
+  2. **Konto serwisowe** (Google Cloud → IAM): zamiast Editor/Owner dwie role — „Cloud Datastore User” i
+     „Firebase Authentication Admin” (bez tej drugiej `/api/auth/session` zawsze zwróci 401: `verifyIdToken` z
+     `checkRevoked` i `createSessionCookie` jej wymagają). `FIREBASE_PRIVATE_KEY` jako *Sensitive*.
+  3. **Klucz szyfrowania:** u siebie `openssl rand -base64 32` (losowy, nie z hasła) → Vercel → Settings →
+     Environment Variables → `DATA_ENCRYPTION_KEY`, *Sensitive*, w **tych samych środowiskach co
+     `FIREBASE_PRIVATE_KEY`** (jeśli Preview ma `FIREBASE_*`, to także Preview — inaczej podgląd nadpisuje
+     produkcję jawną treścią). Kopia w menedżerze haseł; nigdy w czacie, mailu ani repo. Utrata klucza = utrata
+     cache (dane wrócą ze źródeł, dziennik cronów zginie). Potem redeploy.
+  4. **Reguły Firestore:** konsola Firebase → Firestore Database → Rules → wkleić `firestore.rules` → Publish
+     (albo `firebase deploy --only firestore:rules --project aplikacja-prawnicy`). Storage w projekcie nie istnieje
+     (bucket 404, 25.10) — nie trzeba nic wdrażać. Odczyt bez logowania produkcja blokowała już 25.10; nowe reguły
+     blokują też zalogowanych.
+  5. **Tryb ścisły:** gdy `/api/health/freshness` pokaże w `encryption.lastSweep` jednocześnie `legacy: 0`,
+     `truncated: false` i `failed: 0` w **dwóch kolejnych** przebiegach (rutyna sprawdzi), dodać
+     `DATA_ENCRYPTION_STRICT=1`. Samo `legacy: 0` nie wystarcza — ucięty przebieg też je pokazuje.
+  6. **Konta administratora:** passkey albo klucz sprzętowy (2 sztuki) na GitHubie, w Vercelu, na koncie Google
+     (Firebase), u rejestratora domeny (Name.com) i na skrzynce do resetów haseł; menedżer haseł; bez SMS.
+  7. **Przed otwarciem rejestracji:** Identity Platform (MFA TOTP), App Check, klucz API ograniczony do
+     savori.space (Google Cloud Console → Credentials).
 - **`CRON_SECRET`** w Vercelu (projekt → Settings → Environment Variables → Production, losowy ciąg
   ≥ 32 znaków; Vercel sam dołącza go do wywołań cronów). Bez niego crony może wywołać każdy, a krok 1b
   (wymuszone odświeżenie GUS tylko dla cronów) nie ruszy. Po 1a publiczne `refresh=1` nadal może dać
@@ -112,6 +140,11 @@ J3. **Przegląd Japonii** (hero jak w PL), gdy będą ≥3 wskaźniki.
 - **`GUS_BDL_KEY`** — wyższy limit BDL (rejestracja na api.stat.gov.pl).
 
 ## Zrobione
+- **25.10.2026 — ochrona danych** (`docs/specs/2026-10-25-ochrona-danych.md`, prośba właściciela): reguły
+  Firestore/Storage bez żadnego dostępu z przeglądarki, drugie szyfrowanie treści w Firestore (AES-256-GCM,
+  wykrywa podmianę, rotacja kluczy, migracja jawnych wpisów w cronie `freshness`), klient Firebase tylko do
+  logowania, CSP `connect-src` zawężony do logowania Firebase, sesja logowania odporna na login CSRF i stare tokeny.
+  Szyfrowanie włącza się po ustawieniu `DATA_ENCRYPTION_KEY` (lista wyżej).
 - **24.10.2026 — `?refresh=1` z limitem na klucz** (`docs/specs/2026-10-24-refresh-limit.md`): wymuszone
   odświeżenie w `withCache` idzie do źródła najwyżej raz na 10 min na klucz cache (`FORCED_REFRESH_MIN_AGE_MS`),
   bez sekretu. Dotyczy wszystkich tras z `refresh=1`, także `/api/news`. Testy w `tests/server-cache.test.ts`.

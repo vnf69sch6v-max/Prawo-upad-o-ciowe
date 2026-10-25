@@ -15,8 +15,8 @@ copyPdfWorkerToPublic();
 /**
  * Nagłówki bezpieczeństwa dla każdej odpowiedzi. CSP dopuszcza tylko to, czego strona naprawdę używa:
  * własne skrypty (Next wstrzykuje skrypty inline, a strony są prerenderowane — nonce jest
- * niemożliwy, stąd 'unsafe-inline'), Google Fonts, Firebase (logowanie e-mail/hasło, Firestore,
- * Storage), worker pdfjs z /pdfjs (parser) i obrazy z https. Dane zewnętrzne (GUS, NBP, Eurostat,
+ * niemożliwy, stąd 'unsafe-inline'), Google Fonts, logowanie Firebase (e-mail/hasło: identitytoolkit,
+ * securetoken), worker pdfjs z /pdfjs (parser) i obrazy z https. Dane zewnętrzne (GUS, NBP, Eurostat,
  * Yahoo) pobierają trasy API po stronie serwera, więc przeglądarka łączy się tylko z 'self'.
  * Nowe źródło po stronie przeglądarki (skrypt, iframe, fetch) wymaga wpisu tutaj.
  * W `next dev` CSP jest wyłączona (React dev używa eval, HMR — websocketów).
@@ -27,7 +27,10 @@ const CONTENT_SECURITY_POLICY = [
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' data: https://fonts.gstatic.com",
   "img-src 'self' data: blob: https:",
-  "connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com",
+  // Przeglądarka łączy się tylko z logowaniem Firebase (e-mail + hasło). Nie `*.googleapis.com`: pod tą
+  // domeną każdy może mieć własny bucket (storage.googleapis.com), czyli kanał wycieku dla wstrzykniętego skryptu.
+  // Bazy (Firestore, Realtime DB) przeglądarka nie używa — tylko serwer przez Admin SDK.
+  "connect-src 'self' https://identitytoolkit.googleapis.com https://securetoken.googleapis.com",
   "frame-src 'self' https://*.firebaseapp.com",
   "worker-src 'self' blob:",
   "object-src 'none'",

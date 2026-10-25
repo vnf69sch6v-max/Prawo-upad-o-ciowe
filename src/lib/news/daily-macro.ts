@@ -4,10 +4,9 @@
 
 import { generateMacroCalendar } from '@/lib/calendar';
 import { formatDecimalPL } from '@/lib/formatters';
-import { getAdminDb } from '@/lib/firebase/admin';
 import type { MacroChange } from '@/lib/news/daily';
 import { warsawDateKey } from '@/lib/news/warsaw-date';
-import { getServerCache } from '@/lib/server-cache';
+import { readServerCacheEntry, type CacheCollection } from '@/lib/server-cache';
 
 interface CacheMeta<T> {
     payload: T;
@@ -28,24 +27,9 @@ export interface MacroFetchResult {
     diagnostics: MacroFetchDiagnostics;
 }
 
-async function readCacheWithMeta<T>(collection: string, docId: string): Promise<CacheMeta<T> | null> {
-    const db = getAdminDb();
-    if (db) {
-        try {
-            const snap = await db.collection(collection).doc(docId).get();
-            if (snap.exists) {
-                const data = snap.data()!;
-                const updatedAt = data.updatedAt?.toMillis?.() ?? data.updatedAt ?? 0;
-                return { payload: data.payload as T, updatedAt: typeof updatedAt === 'number' ? updatedAt : 0 };
-            }
-        } catch (err) {
-            console.error(`[daily-macro] read ${collection}/${docId}:`, err);
-        }
-    }
-    // Fallback bez meta — CPI/PPI wymagają updatedAt; rynki i tak filtrują po dacie odczytu w payloadzie.
-    const payload = await getServerCache<T>(collection, docId, 365 * 24 * 3600 * 1000);
-    if (payload == null) return null;
-    return { payload, updatedAt: 0 };
+async function readCacheWithMeta<T>(collection: CacheCollection, docId: string): Promise<CacheMeta<T> | null> {
+    // Ten sam odczyt co withCache: z odszyfrowaniem (src/lib/data-seal.ts) i datą zapisu, bez względu na wiek.
+    return readServerCacheEntry<T>(collection, docId);
 }
 
 /** Delta: `pp` = punkty procentowe, `pct` = zmiana względna w %, `abs` = różnica absolutna. */

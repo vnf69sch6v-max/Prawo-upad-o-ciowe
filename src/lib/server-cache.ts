@@ -1,6 +1,22 @@
 // Server-side Firestore cache helper for API routes
 // Uses Firebase Admin SDK (works in Next.js API routes)
+// Treść wpisów jest szyfrowana przed zapisem (`src/lib/data-seal.ts`), gdy serwer ma DATA_ENCRYPTION_KEY.
 import { getAdminDb } from '@/lib/firebase/admin';
+import { cacheLegacy, fromStored, toStored } from '@/lib/data-seal';
+
+/**
+ * Wszystkie kolekcje cache aplikacji. Projekt Firebase może mieć kolekcje innych aplikacji, więc migracja
+ * szyfrowania (`src/lib/data-seal-sweep.ts`) dotyka wyłącznie tych i `health`. Typ wymusza wpis tutaj
+ * dla każdej nowej kolekcji.
+ */
+export const CACHE_COLLECTIONS = [
+    'exchange_rates', 'market_data', 'macro_data', 'interest_rates', 'wibor', 'gold', 'eurostat', 'smup', 'sdp',
+    'dbw', 'news', 'news_archive', 'digest', 'api_cache', 'jp_data',
+] as const;
+export type CacheCollection = (typeof CACHE_COLLECTIONS)[number];
+
+/** Zaszyfrowany wpis ma `payload: null`: stary kod (wycofane wdrożenie) widzi wtedy brak wpisu, nie `undefined`. */
+export const SEALED_CACHE_EXTRA = { payload: null } as const;
 
 const CACHE_TTL: Record<string, number> = {
     'exchange_rates': 6 * 3600 * 1000,   // 6h
@@ -25,7 +41,7 @@ const CACHE_TTL: Record<string, number> = {
  * Returns null if cache miss or expired.
  */
 export async function getServerCache<T>(
-    collection: string,
+    collection: CacheCollection,
     docId: string,
     maxAgeMs?: number
 ): Promise<T | null> {
@@ -33,18 +49,15 @@ export async function getServerCache<T>(
     if (!db) return null; // No Firestore available
 
     try {
-        const ref = db.collection(collection).doc(docId);
-        const snap = await ref.get();
-        if (!snap.exists) return null;
+        const entry = await readServerCacheEntry<T>(collection, docId, true);
+        if (!entry) return null;
 
-        const data = snap.data()!;
-        const updatedAt = data.updatedAt?.toMillis?.() ?? data.updatedAt ?? 0;
-        const age = Date.now() - updatedAt;
+        const age = Date.now() - entry.updatedAt;
         const ttl = maxAgeMs ?? CACHE_TTL[collection] ?? 6 * 3600 * 1000;
 
         if (age > ttl) return null;
 
-        return data.payload as T;
+        return entry.payload;
     } catch (err) {
         console.error(`[Cache READ] ${collection}/${docId}:`, err);
         return null;
@@ -55,7 +68,7 @@ export async function getServerCache<T>(
  * Write data to Firestore cache (server-side).
  */
 export async function setServerCache<T>(
-    collection: string,
+    collection: CacheCollection,
     docId: string,
     payload: T,
     source: string
@@ -65,12 +78,12 @@ export async function setServerCache<T>(
 
     try {
         const ref = db.collection(collection).doc(docId);
-        await ref.set({
-            payload,
-            updatedAt: Date.now(),
+        await ref.set(toStored(`${collection}/${docId}`, payload, Date.now(), (p, updatedAt) => ({
+            payload: p,
+            updatedAt,
             source,
-            cachedAt: new Date().toISOString(),
-        });
+            cachedAt: new Date(updatedAt).toISOString(),
+        }), SEALED_CACHE_EXTRA));
     } catch (err) {
         console.error(`[Cache WRITE] ${collection}/${docId}:`, err);
     }
@@ -81,17 +94,32 @@ export async function setServerCache<T>(
  * dla stron renderowanych na serwerze (ISR), które NIE mogą same wołać źródła: w renderze strony
  * `fetch` trafiałby do Data Cache Next.js (stale-while-revalidate) — patrz AGENTS.md.
  */
-export async function peekServerCache<T>(collection: string, docId: string): Promise<T | null> {
+export async function peekServerCache<T>(collection: CacheCollection, docId: string): Promise<T | null> {
     return getStaleServerCache<T>(collection, docId);
 }
 
-async function getStaleServerCache<T>(collection: string, docId: string): Promise<T | null> {
+async function getStaleServerCache<T>(collection: CacheCollection, docId: string): Promise<T | null> {
+    return (await readServerCacheEntry<T>(collection, docId))?.payload ?? null;
+}
+
+/**
+ * Wpis z datą zapisu, bez względu na wiek. `null`: brak wpisu, brak Firestore albo treść, której nie da się
+ * odszyfrować (zły klucz / podmiana) — wtedy cache zachowuje się jak przy braku wpisu i pobiera dane od nowa.
+ */
+export async function readServerCacheEntry<T>(
+    collection: CacheCollection,
+    docId: string,
+    rethrow = false,
+): Promise<{ payload: T; updatedAt: number } | null> {
     const db = getAdminDb();
     if (!db) return null;
     try {
         const snap = await db.collection(collection).doc(docId).get();
-        return snap.exists ? ((snap.data()!.payload as T) ?? null) : null;
-    } catch {
+        if (!snap.exists) return null;
+        const entry = fromStored<T>(`${collection}/${docId}`, snap.data(), (d) => cacheLegacy.read(d) as T | undefined);
+        return entry && entry.value != null ? { payload: entry.value, updatedAt: entry.updatedAt } : null;
+    } catch (err) {
+        if (rethrow) throw err;
         return null;
     }
 }
@@ -128,7 +156,7 @@ export const FORCED_REFRESH_MIN_AGE_MS = 10 * 60_000;
  * (`selfHeal`) przy wpisie młodszym niż 10 min dostaje cache — to dane, które źródło dało przed chwilą.
  */
 export async function withCache<T>(
-    collection: string,
+    collection: CacheCollection,
     docId: string,
     fetcher: () => Promise<T>,
     source: string,

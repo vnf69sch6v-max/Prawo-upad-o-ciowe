@@ -71,11 +71,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             if (!auth) throw new Error('Firebase Auth niedostępny — sprawdź konfigurację.');
             const cred = await signInWithEmailAndPassword(auth, email, password);
             const idToken = await cred.user.getIdToken();
-            await fetch('/api/auth/session', {
+            const res = await fetch('/api/auth/session', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ idToken }),
             });
+            // Bez sesji na serwerze middleware odesłałby z powrotem na /login — lepiej powiedzieć to wprost.
+            if (!res.ok) {
+                await fbSignOut(auth);
+                throw new Error('Nie udało się utworzyć sesji. Spróbuj zalogować się ponownie.');
+            }
         },
         signOut: async () => {
             if (AUTH_ENABLED && isFirebaseAvailable()) {
