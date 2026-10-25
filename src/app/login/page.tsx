@@ -25,8 +25,10 @@ export default function LoginPage() {
         try {
             await signIn(email, password);
             router.push(target());
-        } catch {
-            setError('Nieprawidłowy e-mail lub hasło.');
+        } catch (err) {
+            // Firebase (zły e-mail/hasło) ma kod `auth/...`; nasz błąd sesji ma własny komunikat.
+            const code = (err as { code?: string }).code;
+            setError(code || !(err instanceof Error) ? 'Nieprawidłowy e-mail lub hasło.' : err.message);
             setBusy(false);
         }
     };

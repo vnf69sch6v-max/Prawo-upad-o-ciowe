@@ -6,7 +6,7 @@ import { generateMacroCalendar } from '@/lib/calendar';
 import { formatDecimalPL } from '@/lib/formatters';
 import type { MacroChange } from '@/lib/news/daily';
 import { warsawDateKey } from '@/lib/news/warsaw-date';
-import { readServerCacheEntry } from '@/lib/server-cache';
+import { readServerCacheEntry, type CacheCollection } from '@/lib/server-cache';
 
 interface CacheMeta<T> {
     payload: T;
@@ -27,7 +27,7 @@ export interface MacroFetchResult {
     diagnostics: MacroFetchDiagnostics;
 }
 
-async function readCacheWithMeta<T>(collection: string, docId: string): Promise<CacheMeta<T> | null> {
+async function readCacheWithMeta<T>(collection: CacheCollection, docId: string): Promise<CacheMeta<T> | null> {
     // Ten sam odczyt co withCache: z odszyfrowaniem (src/lib/data-seal.ts) i datą zapisu, bez względu na wiek.
     return readServerCacheEntry<T>(collection, docId);
 }

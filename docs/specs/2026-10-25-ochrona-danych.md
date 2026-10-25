@@ -10,8 +10,8 @@
 
 | Dane | Gdzie | Kto mógł czytać / zmieniać przed zmianą |
 |---|---|---|
-| Cache danych (GUS, NBP, Eurostat, Japonia…), archiwum newsów, dziennik cronów, kontrola świeżości | Firestore | **Każdy w internecie**: `firestore.rules` pozwalały czytać całą bazę, a klucz API Firebase jest publiczny w kodzie strony |
-| Pliki | Storage | nic nie przechowujemy, ale reguły pozwalały zalogowanym zapisywać do 10 MB |
+| Cache danych (GUS, NBP, Eurostat, Japonia…), archiwum newsów, dziennik cronów, kontrola świeżości | Firestore | `firestore.rules` w repo: **każdy** (`allow read: if true`, klucz API jest publiczny w kodzie strony). Wdrożone reguły produkcji są inne: odczyt bez logowania → `PERMISSION_DENIED` (sprawdzone REST-em 25.10). Plik w repo był bombą: pierwszy `firebase deploy` otworzyłby bazę. Czy wdrożone reguły wpuszczają zalogowanych — nieznane (konto można założyć REST-em publicznym kluczem, jeśli dostawca e-mail/hasło na to pozwala) |
+| Pliki | Storage | w projekcie nie ma bucketu (404, 25.10); reguły w repo pozwalały zalogowanym zapisywać do 10 MB |
 | Konta (e-mail, hasło) | Firebase Auth | Google; hasła hashowane przez Firebase (scrypt) |
 | Raporty wgrane do parsera | pamięć funkcji | nikt — przetwarzane w pamięci, nigdzie nie zapisywane (tak zostaje) |
 
@@ -29,9 +29,11 @@ wykrywana. Poufność dotyczy dziennika cronów, kontroli świeżości i wszystk
    (`identitytoolkit`, `securetoken`). Usunięte `*.googleapis.com` (każdy może mieć bucket pod
    `storage.googleapis.com` — kanał wycieku dla wstrzykniętego skryptu) i nieużywane `*.firebaseio.com`.
 4. **Szyfrowanie u Google:** dyski Firestore — AES-256, domyślnie.
-5. **Drugie szyfrowanie (nasze):** `src/lib/data-seal.ts` — treść każdego dokumentu: JSON → deflate →
+5. **Drugie szyfrowanie (nasze, tylko dane Savori — kolekcje `CACHE_COLLECTIONS` i `health/*`; projekt może mieć dane
+   innej aplikacji, których migracja nie dotyka):** `src/lib/data-seal.ts` — treść każdego dokumentu: JSON → deflate →
    AES-256-GCM, losowy IV, AAD = wersja | ścieżka dokumentu | `updatedAt`. W bazie zostaje `{ sealed: Bytes,
-   updatedAt }`. Klucz tylko w env serwera (`DATA_ENCRYPTION_KEY`), nigdy w bazie ani repo.
+   updatedAt }` (cache dodatkowo `payload: null`, żeby wycofane wdrożenie widziało brak wpisu, nie `undefined`).
+   Identyfikator klucza = HMAC(klucz, etykieta)[0..4]. Klucz tylko w env serwera (`DATA_ENCRYPTION_KEY`), nigdy w bazie ani repo.
 6. **Sesja logowania:** `/api/auth/session` przyjmuje tylko żądania z własnej domeny (`Origin`) z
    `Content-Type: application/json` (login CSRF), sprawdza unieważnienie tokenu i świeże logowanie (≤ 5 min),
    nie zwraca treści wyjątków.
@@ -40,7 +42,9 @@ wykrywana. Poufność dotyczy dziennika cronów, kontroli świeżości i wszystk
 
 - Bez klucza (tryb demo, przed ustawieniem): zapis jawny jak dawniej — nic się nie psuje.
 - Z kluczem: nowe zapisy szyfrowane; jawne wpisy sprzed włączenia nadal czytane (brak przerwy w danych).
-  Migracja w cronie `freshness` (najwyżej co 6 h) szyfruje resztę, w tym stare dni archiwum newsów.
+  Migracja w cronie `freshness` (najwyżej co 6 h; blokada zapisywana przed skanem) szyfruje resztę, w tym stare dni
+  archiwum newsów. Czyta stronami po 200, kończy najpóźniej 95 s od startu crona (po zapisie przebiegu w dzienniku),
+  resztę zostawia na kolejny przebieg (`truncated`).
 - `DATA_ENCRYPTION_STRICT=1`: jawne wpisy odrzucane (podrzucony jawny dokument nie przejdzie). Włączyć, gdy
   `encryption.lastSweep.legacy` = 0.
 - Wpis nie do odszyfrowania (podmiana, inny dokument, zły klucz) = brak wpisu: cache pobiera dane ze źródła

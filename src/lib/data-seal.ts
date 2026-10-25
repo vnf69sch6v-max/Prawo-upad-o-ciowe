@@ -6,11 +6,12 @@
 //   DATA_ENCRYPTION_KEY_PREVIOUS  poprzedni klucz przy rotacji — tylko odszyfrowuje
 //   DATA_ENCRYPTION_STRICT=1      odrzuca wpisy jawne (po migracji: `sweepLegacyDocs` nie znajduje już żadnego)
 //
-// Format pola `sealed` (Bytes): "SV1" | kid (4 B = SHA-256(klucz)[0..4]) | IV (12 B) | tag GCM (16 B) | szyfrogram.
+// Format pola `sealed` (Bytes): "SV1" | kid (4 B = HMAC-SHA-256(klucz, etykieta)[0..4]) | IV (12 B) | tag GCM (16 B) |
+// szyfrogram. Klucz musi być losowy (openssl), nie z hasła — kid jest publiczny w /api/health/freshness.
 // Treść: JSON → deflate → AES-256-GCM. AAD = wersja | ścieżka dokumentu | updatedAt, więc szyfrogramu nie da
 // się przenieść do innego dokumentu ani „odświeżyć” podmianą jawnego `updatedAt`.
 // Bez klucza (tryb demo, przed ustawieniem w Vercelu) zapis jest jawny jak dawniej — strona działa tak samo.
-import { createCipheriv, createDecipheriv, createHash, randomBytes } from 'node:crypto';
+import { createCipheriv, createDecipheriv, createHmac, randomBytes } from 'node:crypto';
 import { deflateRawSync, inflateRawSync } from 'node:zlib';
 
 const MAGIC = Buffer.from('SV1', 'ascii');
@@ -48,7 +49,7 @@ function parseKey(raw: string | undefined, name: string): SealKey | null {
     if (key.length !== 32 || key.toString('base64') !== s) {
         throw new SealError(`${name}: oczekiwano 32 bajtów w base64 (openssl rand -base64 32)`);
     }
-    return { key, kid: createHash('sha256').update(key).digest().subarray(0, KID_LEN) };
+    return { key, kid: createHmac('sha256', key).update('savori-seal-kid').digest().subarray(0, KID_LEN) };
 }
 
 let cached: { sig: string; cfg: SealConfig } | null = null;
@@ -71,7 +72,7 @@ export function sealConfig(env: Env = process.env): SealConfig {
     return cfg;
 }
 
-/** Do /api/health/freshness — identyfikatory kluczy to skrót SHA-256, nie klucz. */
+/** Do /api/health/freshness — identyfikatory kluczy (HMAC klucza), nie klucze. */
 export function sealStatus(env?: Env) {
     const c = sealConfig(env);
     return {
@@ -138,10 +139,11 @@ export function toStored(
     value: unknown,
     updatedAt: number,
     legacy: (value: unknown, updatedAt: number) => Record<string, unknown>,
+    sealedExtra: Record<string, unknown> = {},
     cfg: SealConfig = sealConfig(),
 ): Record<string, unknown> {
     if (cfg.mode === 'off') return legacy(value, updatedAt);
-    return { sealed: seal(path, updatedAt, value, cfg), updatedAt };
+    return { ...sealedExtra, sealed: seal(path, updatedAt, value, cfg), updatedAt };
 }
 
 /**

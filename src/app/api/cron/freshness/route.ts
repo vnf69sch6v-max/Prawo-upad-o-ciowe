@@ -18,6 +18,8 @@ import { internalOrigin } from '@/lib/internal-fetch';
 export const maxDuration = 120;
 
 const HISTORY_LIMIT = 30;
+/** Migracja szyfrowania kończy się najpóźniej 95 s od startu crona (maxDuration 120 s). */
+const SWEEP_DEADLINE_MS = 95_000;
 
 /** Firestore nie przyjmuje `undefined` — JSON round-trip je usuwa. */
 function plain<T>(v: T): T {
@@ -69,11 +71,6 @@ export async function GET(request: NextRequest) {
         persist(report, attempts),
         sendFreshnessAlert(process.env.ALERT_WEBHOOK_URL, origin, report),
     ]);
-    // Szyfrowanie jawnych dokumentów sprzed ustawienia DATA_ENCRYPTION_KEY (najwyżej co 6 h).
-    const sealSweep = await maybeSweep(getAdminDb()).catch((err) => {
-        console.error('[cron/freshness] seal sweep:', err);
-        return null;
-    });
 
     const problems = report.items.filter((i) => i.status === 'stale' || i.status === 'error');
     await recordCronRun('freshness', {
@@ -83,6 +80,13 @@ export async function GET(request: NextRequest) {
         ms: Date.now() - startedAt,
         failed: problems.map((i) => `${i.id} → ${i.status}`).slice(0, 10),
         origin: origin.replace(/^https?:\/\//, ''),
+    });
+
+    // Szyfrowanie jawnych dokumentów sprzed ustawienia DATA_ENCRYPTION_KEY (najwyżej co 6 h). Po zapisie przebiegu
+    // crona i z budżetem liczonym od startu: ucięcie funkcji po 120 s nie może skasować wpisu w dzienniku.
+    const sealSweep = await maybeSweep(getAdminDb(), startedAt + SWEEP_DEADLINE_MS).catch((err) => {
+        console.error('[cron/freshness] seal sweep:', err);
+        return null;
     });
 
     return NextResponse.json({

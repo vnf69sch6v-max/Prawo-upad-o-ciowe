@@ -4,6 +4,20 @@
 import { getAdminDb } from '@/lib/firebase/admin';
 import { cacheLegacy, fromStored, toStored } from '@/lib/data-seal';
 
+/**
+ * Wszystkie kolekcje cache aplikacji. Projekt Firebase może mieć kolekcje innych aplikacji, więc migracja
+ * szyfrowania (`src/lib/data-seal-sweep.ts`) dotyka wyłącznie tych i `health`. Typ wymusza wpis tutaj
+ * dla każdej nowej kolekcji.
+ */
+export const CACHE_COLLECTIONS = [
+    'exchange_rates', 'market_data', 'macro_data', 'interest_rates', 'wibor', 'gold', 'eurostat', 'smup', 'sdp',
+    'dbw', 'news', 'news_archive', 'digest', 'api_cache', 'jp_data',
+] as const;
+export type CacheCollection = (typeof CACHE_COLLECTIONS)[number];
+
+/** Zaszyfrowany wpis ma `payload: null`: stary kod (wycofane wdrożenie) widzi wtedy brak wpisu, nie `undefined`. */
+export const SEALED_CACHE_EXTRA = { payload: null } as const;
+
 const CACHE_TTL: Record<string, number> = {
     'exchange_rates': 6 * 3600 * 1000,   // 6h
     'market_data': 2 * 3600 * 1000,      // 2h
@@ -27,7 +41,7 @@ const CACHE_TTL: Record<string, number> = {
  * Returns null if cache miss or expired.
  */
 export async function getServerCache<T>(
-    collection: string,
+    collection: CacheCollection,
     docId: string,
     maxAgeMs?: number
 ): Promise<T | null> {
@@ -54,7 +68,7 @@ export async function getServerCache<T>(
  * Write data to Firestore cache (server-side).
  */
 export async function setServerCache<T>(
-    collection: string,
+    collection: CacheCollection,
     docId: string,
     payload: T,
     source: string
@@ -69,7 +83,7 @@ export async function setServerCache<T>(
             updatedAt,
             source,
             cachedAt: new Date(updatedAt).toISOString(),
-        })));
+        }), SEALED_CACHE_EXTRA));
     } catch (err) {
         console.error(`[Cache WRITE] ${collection}/${docId}:`, err);
     }
@@ -80,11 +94,11 @@ export async function setServerCache<T>(
  * dla stron renderowanych na serwerze (ISR), które NIE mogą same wołać źródła: w renderze strony
  * `fetch` trafiałby do Data Cache Next.js (stale-while-revalidate) — patrz AGENTS.md.
  */
-export async function peekServerCache<T>(collection: string, docId: string): Promise<T | null> {
+export async function peekServerCache<T>(collection: CacheCollection, docId: string): Promise<T | null> {
     return getStaleServerCache<T>(collection, docId);
 }
 
-async function getStaleServerCache<T>(collection: string, docId: string): Promise<T | null> {
+async function getStaleServerCache<T>(collection: CacheCollection, docId: string): Promise<T | null> {
     return (await readServerCacheEntry<T>(collection, docId))?.payload ?? null;
 }
 
@@ -93,7 +107,7 @@ async function getStaleServerCache<T>(collection: string, docId: string): Promis
  * odszyfrować (zły klucz / podmiana) — wtedy cache zachowuje się jak przy braku wpisu i pobiera dane od nowa.
  */
 export async function readServerCacheEntry<T>(
-    collection: string,
+    collection: CacheCollection,
     docId: string,
     rethrow = false,
 ): Promise<{ payload: T; updatedAt: number } | null> {
@@ -142,7 +156,7 @@ export const FORCED_REFRESH_MIN_AGE_MS = 10 * 60_000;
  * (`selfHeal`) przy wpisie młodszym niż 10 min dostaje cache — to dane, które źródło dało przed chwilą.
  */
 export async function withCache<T>(
-    collection: string,
+    collection: CacheCollection,
     docId: string,
     fetcher: () => Promise<T>,
     source: string,

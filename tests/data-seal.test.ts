@@ -74,14 +74,14 @@ describe('konfiguracja klucza', () => {
     it('bez klucza: tryb off, zapis jawny jak dawniej', () => {
         const cfg = sealConfig({});
         expect(cfg.mode).toBe('off');
-        expect(toStored(PATH, PAYLOAD, T, cacheLegacy.write, cfg)).toEqual({ payload: PAYLOAD, updatedAt: T });
+        expect(toStored(PATH, PAYLOAD, T, cacheLegacy.write, {}, cfg)).toEqual({ payload: PAYLOAD, updatedAt: T });
     });
 
     it('zły klucz: tryb error i zapis wstrzymany (nie piszemy jawnie, skoro miało być szyfrowanie)', () => {
         for (const bad of ['abc', randomBytes(16).toString('base64'), `${K1}!`]) {
             const cfg = sealConfig({ DATA_ENCRYPTION_KEY: bad });
             expect(cfg.mode).toBe('error');
-            expect(() => toStored(PATH, PAYLOAD, T, cacheLegacy.write, cfg)).toThrow(SealError);
+            expect(() => toStored(PATH, PAYLOAD, T, cacheLegacy.write, {}, cfg)).toThrow(SealError);
         }
         expect(sealConfig({ DATA_ENCRYPTION_KEY_PREVIOUS: K1 }).mode).toBe('error');
     });
@@ -96,7 +96,7 @@ describe('konfiguracja klucza', () => {
 
 describe('toStored / fromStored — dokumenty Firestore', () => {
     it('z kluczem w dokumencie zostaje tylko szyfrogram i data', () => {
-        const doc = toStored(PATH, PAYLOAD, T, cacheLegacy.write, on());
+        const doc = toStored(PATH, PAYLOAD, T, cacheLegacy.write, {}, on());
         expect(Object.keys(doc).sort()).toEqual(['sealed', 'updatedAt']);
         expect(fromStored(PATH, doc, cacheLegacy.read, on())).toEqual({ value: PAYLOAD, updatedAt: T });
     });
@@ -112,17 +112,17 @@ describe('toStored / fromStored — dokumenty Firestore', () => {
     });
 
     it('podmieniony albo nieodszyfrowywalny wpis = brak wpisu (cache pobierze dane od nowa)', () => {
-        const doc = toStored(PATH, PAYLOAD, T, cacheLegacy.write, on());
+        const doc = toStored(PATH, PAYLOAD, T, cacheLegacy.write, {}, on());
         expect(fromStored(PATH, doc, cacheLegacy.read, sealConfig({}))).toBeNull();
         expect(fromStored(PATH, { ...doc, updatedAt: T + 1 }, cacheLegacy.read, on())).toBeNull();
     });
 
     it('dokumenty health/* (cała treść bez updatedAt) w obu trybach', () => {
         const runs = { 'dbw-1': { at: '2026-10-25T09:50:00Z', ok: 2, total: 2, ms: 1, failed: [] } };
-        const legacy = toStored('health/cron_runs', runs, T, docLegacy.write, sealConfig({}));
+        const legacy = toStored('health/cron_runs', runs, T, docLegacy.write, {}, sealConfig({}));
         expect(legacy).toEqual({ ...runs, updatedAt: T });
         expect(fromStored('health/cron_runs', legacy, docLegacy.read, on())?.value).toEqual(runs);
-        const sealed = toStored('health/cron_runs', runs, T, docLegacy.write, on());
+        const sealed = toStored('health/cron_runs', runs, T, docLegacy.write, {}, on());
         expect(fromStored('health/cron_runs', sealed, docLegacy.read, on())?.value).toEqual(runs);
     });
 });
