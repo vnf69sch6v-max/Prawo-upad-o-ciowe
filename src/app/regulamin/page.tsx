@@ -46,7 +46,8 @@ export default function TermsPage() {
                 <p>
                     Konto zakładasz, logując się przez Google albo adresem e-mail i hasłem. Umowa o prowadzenie konta jest
                     bezpłatna i zawarta na czas nieokreślony; możesz ją rozwiązać w każdej chwili, prosząc o usunięcie konta.
-                    Po pierwszym logowaniu otrzymujesz {trialDays()} dni bezpłatnego dostępu do wszystkich funkcji.
+                    {trialDays() > 0 && <> Po pierwszym logowaniu ze zweryfikowanym adresem e-mail otrzymujesz {trialDays()} dni
+                        bezpłatnego dostępu do wszystkich funkcji — jeden raz na adres e-mail.</>}
                 </p>
             </Section>
 
@@ -61,24 +62,26 @@ export default function TermsPage() {
                     Każdy plan to <strong>jednorazowa płatność bez automatycznego odnawiania</strong> — nic nie pobierzemy bez
                     Twojej decyzji. Dostęp zaczyna się po potwierdzeniu płatności przez operatora i trwa przez opłacony okres;
                     kolejny zakup przedłuża go od dnia jego zakończenia. Płatności obsługuje zewnętrzny operator płatności
-                    (np. BLIK, karta, szybki przelew).
+                    (np. BLIK, karta, szybki przelew). Potwierdzenie zawarcia umowy otrzymasz na adres e-mail konta.
                 </p>
             </Section>
 
             <Section title="6. Odstąpienie od umowy">
                 <p>
-                    Konsument (oraz przedsiębiorca na prawach konsumenta) może odstąpić od umowy zawartej na odległość w ciągu
-                    14 dni bez podania przyczyny, pisząc na <strong>{field(OWNER.email)}</strong>. Zwrot nastąpi w ciągu 14 dni
-                    tą samą metodą płatności.
-                </p>
-                <p>
-                    Jeśli przy zakupie wyraźnie zażądasz rozpoczęcia świadczenia usługi przed upływem tego terminu i przyjmiesz
-                    do wiadomości utratę prawa odstąpienia, prawo to wygasa z chwilą udostępnienia Ci treści cyfrowych
-                    (art. 38 ust. 1 pkt 13 ustawy o prawach konsumenta) — potwierdzenie otrzymasz e-mailem.
+                    Dostęp do platformy jest usługą cyfrową. Konsument (oraz przedsiębiorca na prawach konsumenta) może odstąpić
+                    od umowy zawartej na odległość w ciągu 14 dni od jej zawarcia bez podania przyczyny, pisząc na{' '}
+                    <strong>{field(OWNER.email)}</strong>. Zwrot nastąpi w ciągu 14 dni tą samą metodą płatności. Wyjątki
+                    i rozliczenie usługi wykonanej przed odstąpieniem określa ustawa o prawach konsumenta; informację o nich
+                    i o swoim wyborze otrzymasz przed zapłatą.
                 </p>
             </Section>
 
-            <Section title="7. Reklamacje">
+            <Section title="7. Reklamacje i zgodność usługi z umową">
+                <p>
+                    Odpowiadamy za zgodność usługi cyfrowej z umową (rozdział 5b ustawy o prawach konsumenta). Jeśli platforma
+                    nie działa zgodnie z umową, możesz żądać doprowadzenia jej do zgodności, a gdy to niemożliwe lub nie nastąpi
+                    w rozsądnym czasie — obniżenia ceny albo odstąpienia od umowy.
+                </p>
                 <p>
                     Reklamacje dotyczące działania serwisu lub płatności zgłoś na <strong>{field(OWNER.email)}</strong>,
                     opisując problem. Odpowiemy w ciągu 14 dni. Konsument może skorzystać z pozasądowych sposobów rozwiązywania
@@ -95,13 +98,22 @@ export default function TermsPage() {
                 </p>
             </Section>
 
-            <Section title="9. Dane osobowe">
+            <Section title="9. Bezpieczeństwo korzystania z internetu">
+                <p>
+                    Korzystanie z usług przez internet wiąże się z ryzykami, takimi jak złośliwe oprogramowanie, wyłudzanie danych
+                    logowania (phishing) czy przechwycenie połączenia w niezabezpieczonej sieci. Savori nigdy nie prosi o hasło
+                    do Google ani o dane karty poza stroną operatora płatności. Korzystaj z aktualnej przeglądarki, sprawdzaj adres
+                    savori.space i włącz weryfikację dwuetapową na koncie Google.
+                </p>
+            </Section>
+
+            <Section title="10. Dane osobowe">
                 <p>
                     Zasady przetwarzania danych opisuje <Link href="/prywatnosc" className="font-semibold text-mk-primary underline-offset-2 hover:underline">polityka prywatności</Link>.
                 </p>
             </Section>
 
-            <Section title="10. Zmiany i postanowienia końcowe">
+            <Section title="11. Zmiany i postanowienia końcowe">
                 <p>
                     Regulamin możemy zmienić z ważnych przyczyn (zmiana prawa, funkcji, operatora płatności), informując o tym
                     z 14-dniowym wyprzedzeniem; zmiany nie dotyczą już opłaconych okresów. W sprawach nieuregulowanych stosuje

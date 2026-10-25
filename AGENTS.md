@@ -66,7 +66,15 @@ Standard scripts in `package.json`:
     refreshed token, because claims reach a token only after refresh.
   - Use a redirect, not a rewrite, for `/` → `/start`: `ShellFrame` keys off `usePathname()`, so a rewrite would
     wrap the landing in the app chrome. `/start`, `/prywatnosc`, `/regulamin` are `BARE_ROUTES`.
-  - `/api/*` stays public. API routes are not paywalled yet (ROADMAP).
+  - `/api/*` is behind the gate only when `CRON_SECRET` is set: crons and the freshness check call our own
+    endpoints with `Authorization: Bearer CRON_SECRET` (`internalInit`), the browser with the session cookie.
+    Without a session the API answers 401, without access 403. Public API: `/api/auth/session`, `/api/health/*`,
+    `/api/cron/*`.
+  - `isPublicPath` uses an allowlist of real files, not "anything with a dot". On Vercel `/ceny.rsc` and
+    `/ceny.segments/…` are the rendered page (RSC) and used to slip through as "files".
+  - If Google's certs are unreachable, the result is `'unavailable'` → 503 + `Retry-After`. The cookie is not
+    deleted, so a blip doesn't log paying users out.
+  - Trial: verified e-mail only, once per address (`trials/{HMAC(e-mail)}` via `claimTrial`, `src/lib/auth/grant.ts`).
   - Legal pages read the owner's data from env `NEXT_PUBLIC_OWNER_NAME|ADDRESS|NIP`, `NEXT_PUBLIC_CONTACT_EMAIL`
     (`src/lib/legal.ts`; it shows a draft notice until they are set). Any change to what data the app processes
     must update `/prywatnosc` in the same PR.

@@ -37,6 +37,11 @@ export default function PrivacyPage() {
                         oraz obowiązki podatkowe i rachunkowe (lit. c).
                     </li>
                     <li>
+                        <strong>Wykorzystany okres próbny</strong>: zaszyfrowany skrót (HMAC) adresu e-mail z datą — tylko po to,
+                        by okres próbny przysługiwał raz na adres, także po usunięciu i ponownym założeniu konta. Ze skrótu nie
+                        da się odtworzyć adresu. Podstawa: prawnie uzasadniony interes w zapobieganiu nadużyciom (lit. f).
+                    </li>
+                    <li>
                         <strong>Dane techniczne</strong>: adres IP, typ przeglądarki, czas żądania w logach serwera. Cel:
                         bezpieczeństwo, wykrywanie nadużyć i awarii. Podstawa: prawnie uzasadniony interes (lit. f).
                     </li>
@@ -87,13 +92,18 @@ export default function PrivacyPage() {
                 <p>
                     Połączenie jest zawsze szyfrowane (HTTPS, HSTS). Baza danych jest zamknięta dla przeglądarek, a treść
                     zapisywanych w niej dokumentów jest dodatkowo szyfrowana przez aplikację algorytmem AES-256-GCM —
-                    niezależnie od szyfrowania dysków u dostawcy. Sesja jest weryfikowana kryptograficznie przy każdej stronie.
+                    niezależnie od szyfrowania dysków u dostawcy. Gdy platforma wymaga logowania, podpis sesji jest sprawdzany
+                    kryptograficznie przy każdym wejściu na stronę platformy.
                 </p>
             </Section>
 
             <Section title="7. Jak długo">
                 <ul className="list-disc space-y-2 pl-5">
-                    <li>Dane konta — do usunięcia konta; potem do 30 dni w kopiach technicznych.</li>
+                    <li>
+                        Dane konta — do usunięcia konta na Twoją prośbę; potem do 30 dni w kopiach technicznych. Kont nieaktywnych
+                        dziś nie usuwamy automatycznie — możesz poprosić o usunięcie w każdej chwili.
+                    </li>
+                    <li>Skrót e-maila po okresie próbnym — dopóki oferujemy okresy próbne, albo do skutecznego sprzeciwu.</li>
                     <li>Dokumenty sprzedaży i dane płatności — 5 lat od końca roku, w którym powstał obowiązek podatkowy.</li>
                     <li>Logi serwera — do 30 dni.</li>
                     <li>Korespondencja i reklamacje — do zakończenia sprawy i upływu terminów przedawnienia roszczeń.</li>

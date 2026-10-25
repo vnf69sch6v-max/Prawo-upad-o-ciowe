@@ -1,5 +1,5 @@
 // Session endpoint — exchanges a Firebase ID token for an httpOnly session cookie.
-// Middleware only checks for the cookie's presence; verification happens here.
+// Middleware weryfikuje podpis ciasteczka (src/lib/auth/session-verify.ts); tu powstaje i dostaje claims dostępu.
 //
 // Zabezpieczenia (zalecenia Firebase dla session cookies):
 //  - tylko z własnej strony: `Origin` = ta sama domena i `Content-Type: application/json`, inaczej obca strona
@@ -8,31 +8,33 @@
 //    przechwycony stary ID token nie wystarczy do wyrobienia 5-dniowej sesji;
 //  - błędy bez szczegółów (treść wyjątku Firebase zostaje w logach serwera, bez tokenu).
 //
-// Dostęp (płatna platforma, src/lib/access.ts): konto bez `accessUntil` w claims dostaje okres próbny
-// (TRIAL_DAYS, domyślnie 7). Claims trafiają do tokenu dopiero po jego odświeżeniu, więc odpowiadamy
-// `{ refresh: true }` bez ciasteczka — klient odświeża token i wysyła go ponownie (raz). Adresy z
-// ADMIN_EMAILS (zweryfikowany e-mail) mają dostęp bez końca.
+// Dostęp (płatna platforma, src/lib/access.ts, zasady w src/lib/auth/grant.ts): nowe konto ze zweryfikowanym
+// e-mailem dostaje okres próbny (TRIAL_DAYS, domyślnie 7) — jeden na adres; reszta trafia od razu na cennik.
+// Claims trafiają do tokenu dopiero po jego odświeżeniu, więc odpowiadamy `{ refresh: true }` bez ciasteczka —
+// klient odświeża token i wysyła go ponownie (raz). ADMIN_EMAILS (zweryfikowany e-mail) — dostęp bez końca.
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getAdminAuth } from '@/lib/firebase/admin';
+import { getAdminAuth, getAdminDb } from '@/lib/firebase/admin';
 import { trialClaims, trialDays, type AccessClaims } from '@/lib/access';
+import { ADMIN_UNTIL, adminEmails, claimTrial, grantDecision } from '@/lib/auth/grant';
 
 const COOKIE = '__session';
 const MAX_AGE_S = 60 * 60 * 24 * 5; // 5 days
 const RECENT_SIGN_IN_S = 5 * 60;
-/** Dostęp administratora: rok 2100 (sekundy). */
-const ADMIN_UNTIL = 4_102_444_800;
-
-function adminEmails(): Set<string> {
-    return new Set((process.env.ADMIN_EMAILS ?? '').split(',').map((e) => e.trim().toLowerCase()).filter(Boolean));
-}
 
 /** Claims do ustawienia albo `null`, gdy token ma już właściwy dostęp. */
-function accessToGrant(decoded: { email?: string; email_verified?: boolean; accessUntil?: unknown; plan?: unknown }, nowS: number): AccessClaims | null {
-    const admin = !!decoded.email && decoded.email_verified === true && adminEmails().has(decoded.email.toLowerCase());
-    if (admin) return decoded.accessUntil === ADMIN_UNTIL ? null : { plan: 'm6', accessUntil: ADMIN_UNTIL };
-    if (typeof decoded.accessUntil === 'number') return null;
-    return trialClaims(nowS, trialDays());
+async function accessToGrant(decoded: { email?: string; email_verified?: boolean; accessUntil?: unknown }, nowS: number): Promise<AccessClaims | null> {
+    switch (grantDecision(decoded, adminEmails()).kind) {
+        case 'none':
+            return null;
+        case 'admin':
+            return { plan: 'm6', accessUntil: ADMIN_UNTIL };
+        case 'revoke-admin':
+        case 'no-trial':
+            return { accessUntil: nowS }; // bez dostępu — cennik
+        case 'trial':
+            return trialDays() > 0 && (await claimTrial(getAdminDb(), decoded.email!)) ? trialClaims(nowS, trialDays()) : { accessUntil: nowS };
+    }
 }
 
 /** Żądanie z naszej własnej strony (fetch z przeglądarki na tej samej domenie). */
@@ -66,7 +68,7 @@ export async function POST(request: NextRequest) {
     try {
         const decoded = await auth.verifyIdToken(idToken, true);
         if (Date.now() / 1000 - decoded.auth_time > RECENT_SIGN_IN_S) return deny('recent-sign-in-required', 401);
-        const grant = accessToGrant(decoded, Math.floor(Date.now() / 1000));
+        const grant = await accessToGrant(decoded, Math.floor(Date.now() / 1000));
         if (grant) {
             const { customClaims } = await auth.getUser(decoded.uid);
             await auth.setCustomUserClaims(decoded.uid, { ...customClaims, ...grant });

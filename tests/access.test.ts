@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { SignJWT, generateKeyPair } from 'jose';
-import { PLANS, gate, hasAccess, isPublicPath, monthlyPrice, savingsPct, trialClaims, trialDays } from '@/lib/access';
-import { verifySessionCookie } from '@/lib/auth/session-verify';
+import { PLANS, gate, hasAccess, isPublicPath, monthlyPrice, sameSecret, savingsPct, trialClaims, trialDays } from '@/lib/access';
+import { KeysUnavailable, verifySessionCookie } from '@/lib/auth/session-verify';
+import { ADMIN_UNTIL, grantDecision, trialId } from '@/lib/auth/grant';
 
 const NOW = 1_792_900_000; // 25.10.2026, sekundy
 
@@ -24,22 +25,57 @@ describe('cennik', () => {
 });
 
 describe('bramka', () => {
-    it('strony publiczne: start, logowanie, dokumenty prawne, status, API, pliki', () => {
-        for (const p of ['/start', '/login', '/prywatnosc', '/regulamin', '/status', '/api/health/freshness', '/_next/static/x.js',
-            '/icon.svg', '/manifest.webmanifest', '/pdfjs/pdf.worker.min.mjs']) expect(isPublicPath(p), p).toBe(true);
-        for (const p of ['/', '/ceny', '/japonia', '/spolki/PKN', '/startowa', '/regulaminy', '/apix']) expect(isPublicPath(p), p).toBe(false);
+    const g = (pathname: string, session: Parameters<typeof gate>[0]['session'], extra: Partial<Parameters<typeof gate>[0]> = {}) =>
+        gate({ pathname, search: '', session, nowS: NOW, protectApi: true, internal: false, ...extra });
+    const ok = { accessUntil: NOW + 60, plan: 'm1' as const };
+
+    it('strony publiczne i pliki: tylko znane ścieżki, nie „cokolwiek z kropką”', () => {
+        for (const p of ['/start', '/login', '/prywatnosc', '/regulamin', '/status', '/_next/static/x.js', '/icon.svg', '/favicon.ico',
+            '/manifest.webmanifest', '/robots.txt', '/icons/icon-192.png', '/pdfjs/pdf.worker.min.mjs', '/globe.svg']) expect(isPublicPath(p), p).toBe(true);
+        for (const p of ['/', '/ceny', '/japonia', '/spolki/PKN', '/spolki/PKO.WA', '/startowa', '/regulaminy', '/ceny.txt', '/ceny.json'])
+            expect(isPublicPath(p), p).toBe(false);
+    });
+
+    it('RSC strony (/ceny.rsc, /ceny.segments/…) jest zawsze za bramką', () => {
+        for (const p of ['/ceny.rsc', '/japonia.rsc', '/japonia.segments/_index.segment.rsc', '/start.rsc', '/status.rsc']) {
+            expect(isPublicPath(p), p).toBe(false);
+            expect(g(p, null).kind, p).toBe('redirect');
+        }
     });
 
     it('niezalogowany → strona startowa (z powrotem na podstronę po zalogowaniu)', () => {
-        expect(gate('/', '', null, NOW)).toEqual({ kind: 'redirect', to: '/start' });
-        expect(gate('/ceny', '?zakres=1R', null, NOW)).toEqual({ kind: 'redirect', to: '/start?from=%2Fceny%3Fzakres%3D1R' });
-        expect(gate('/start', '', null, NOW)).toEqual({ kind: 'pass' });
+        expect(g('/', null)).toEqual({ kind: 'redirect', to: '/start' });
+        expect(gate({ pathname: '/ceny', search: '?zakres=1R', session: null, nowS: NOW, protectApi: true, internal: false }))
+            .toEqual({ kind: 'redirect', to: '/start?from=%2Fceny%3Fzakres%3D1R' });
+        expect(g('/start', null)).toEqual({ kind: 'pass' });
     });
 
     it('zalogowany: z ważnym dostępem przechodzi, po wygaśnięciu — cennik', () => {
-        expect(gate('/ceny', '', { accessUntil: NOW + 60, plan: 'm1' }, NOW)).toEqual({ kind: 'pass' });
-        expect(gate('/ceny', '', { accessUntil: NOW - 1, plan: 'trial' }, NOW)).toEqual({ kind: 'redirect', to: '/start?dostep=wygasl#cennik' });
-        expect(gate('/ceny', '', {}, NOW).kind).toBe('redirect');
+        expect(g('/ceny', ok)).toEqual({ kind: 'pass' });
+        expect(g('/ceny', { accessUntil: NOW - 1, plan: 'trial' })).toEqual({ kind: 'redirect', to: '/start?dostep=wygasl#cennik' });
+        expect(g('/ceny', {}).kind).toBe('redirect');
+    });
+
+    it('chwilowa niedostępność kluczy Google nie wylogowuje (503, nie przekierowanie)', () => {
+        expect(g('/ceny', 'unavailable')).toEqual({ kind: 'unavailable' });
+        expect(g('/api/nbp', 'unavailable')).toEqual({ kind: 'unavailable' });
+    });
+
+    it('API za bramką (z CRON_SECRET): bez sesji 401, bez dostępu 403, crony z sekretem przechodzą', () => {
+        expect(g('/api/gus-cpi-full', null)).toEqual({ kind: 'deny', status: 401 });
+        expect(g('/api/parser/parse', { accessUntil: NOW - 1 })).toEqual({ kind: 'deny', status: 403 });
+        expect(g('/api/nbp', ok)).toEqual({ kind: 'pass' });
+        expect(g('/api/nbp', null, { internal: true })).toEqual({ kind: 'pass' });
+        for (const p of ['/api/auth/session', '/api/health/freshness', '/api/cron/dbw-1']) expect(g(p, null), p).toEqual({ kind: 'pass' });
+        // bez CRON_SECRET API zostaje otwarte (inaczej crony przestałyby odświeżać dane)
+        expect(g('/api/nbp', null, { protectApi: false })).toEqual({ kind: 'pass' });
+    });
+
+    it('sekret porównywany w stałym czasie i dokładnie', () => {
+        expect(sameSecret('Bearer abc', 'Bearer abc')).toBe(true);
+        expect(sameSecret('Bearer abd', 'Bearer abc')).toBe(false);
+        expect(sameSecret('Bearer ab', 'Bearer abc')).toBe(false);
+        expect(sameSecret('', '')).toBe(false);
     });
 });
 
@@ -78,8 +114,39 @@ describe('weryfikacja ciasteczka sesji (Edge)', async () => {
         expect(await verifySessionCookie(await sign(google.privateKey, {}), undefined, keys)).toBeNull();
     });
 
+    it('klucze Google niedostępne → „unavailable”, nie wylogowanie', async () => {
+        const c = await sign(google.privateKey, { accessUntil: NOW + 100 });
+        expect(await verifySessionCookie(c, PROJECT, async () => { throw new KeysUnavailable('offline'); })).toBe('unavailable');
+    });
+
     it('śmieciowe claims dostępu są ignorowane', async () => {
         const c = await sign(google.privateKey, { accessUntil: '4000000000', plan: 'vip' });
         expect(await verifySessionCookie(c, PROJECT, keys)).toEqual({ uid: 'uid-123', email: undefined, accessUntil: undefined, plan: undefined });
+    });
+});
+
+describe('nadawanie dostępu przy logowaniu', () => {
+    const admins = new Set(['szef@gmail.com']);
+    it('okres próbny tylko dla zweryfikowanego e-maila, raz na konto', () => {
+        expect(grantDecision({ email: 'a@b.pl', email_verified: true }, admins)).toEqual({ kind: 'trial' });
+        expect(grantDecision({ email: 'a@b.pl', email_verified: false }, admins)).toEqual({ kind: 'no-trial' });
+        expect(grantDecision({ email: 'a@b.pl' }, admins)).toEqual({ kind: 'no-trial' });
+        expect(grantDecision({ email: 'a@b.pl', email_verified: true, accessUntil: NOW }, admins)).toEqual({ kind: 'none' });
+    });
+
+    it('admin tylko ze zweryfikowanym adresem; po usunięciu z listy dostęp „do 2100” znika', () => {
+        expect(grantDecision({ email: 'Szef@Gmail.com', email_verified: true }, admins)).toEqual({ kind: 'admin' });
+        expect(grantDecision({ email: 'szef@gmail.com', email_verified: false }, admins)).toEqual({ kind: 'no-trial' });
+        expect(grantDecision({ email: 'szef@gmail.com', email_verified: true, accessUntil: ADMIN_UNTIL }, admins)).toEqual({ kind: 'none' });
+        expect(grantDecision({ email: 'szef@gmail.com', email_verified: true, accessUntil: ADMIN_UNTIL }, new Set())).toEqual({ kind: 'revoke-admin' });
+    });
+
+    it('identyfikator okresu próbnego: ten sam dla wielkości liter, zależny od klucza (bez klucza nie zgadniesz)', () => {
+        const k1 = { DATA_ENCRYPTION_KEY: Buffer.alloc(32, 1).toString('base64') };
+        const k2 = { DATA_ENCRYPTION_KEY: Buffer.alloc(32, 2).toString('base64') };
+        expect(trialId(' A@B.pl ', k1)).toBe(trialId('a@b.pl', k1));
+        expect(trialId('a@b.pl', k1)).not.toBe(trialId('a@b.pl', k2));
+        expect(trialId('a@b.pl', k1)).not.toBe(trialId('a@b.pl', {}));
+        expect(trialId('a@b.pl', k1)).toMatch(/^[0-9a-f]{64}$/);
     });
 });

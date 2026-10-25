@@ -83,7 +83,11 @@ P-1. **Płatności** (po decyzji właściciela o operatorze): Checkout jednorazo
      późniejszej z dat (teraz / koniec dostępu), odświeżenie sesji po zakupie, potwierdzenie e-mailem (odstąpienie).
 P-2. **API za bramką**: `/api/*` jest publiczne — dane da się pobrać bez konta. Trasy danych tylko z ważną sesją
      (weryfikacja jak w middleware), crony przez `CRON_SECRET` (1b).
-P-3. **Konto**: strona „Mój dostęp” (plan, do kiedy, przedłuż), usunięcie konta (RODO).
+P-3. **Konto**: strona „Mój dostęp” (plan, do kiedy, przedłuż), usunięcie konta (RODO), automatyczne usuwanie kont
+     nieaktywnych (np. 24 mies.) — wtedy zaktualizować `/prywatnosc` §7.
+P-4. **Dostęp zamrożony w ciasteczku sesji (do 5 dni)**: po zakupie albo blokadzie konta nowy stan widać dopiero po
+     ponownym zalogowaniu albo wygaśnięciu ciasteczka (Edge nie sprawdza revoke). Przy P-1: odświeżenie sesji po
+     płatności (`/api/auth/session` z nowym tokenem); blokada konta = `revokeRefreshTokens` + krótsza sesja.
 
 ### Produkt
 7. **Szybki szacunek CPI** (ostatni dzień roboczy miesiąca) na Przeglądzie w dniu publikacji —
@@ -116,7 +120,10 @@ J3. **Przegląd Japonii** (hero jak w PL), gdy będą ≥3 wskaźniki.
      `/prywatnosc` i `/regulamin` (bez nich strony pokazują „wersja robocza”). Przegląd obu dokumentów przez prawnika.
   2. `ADMIN_EMAILS` = Twój e-mail Google (stały dostęp), opcjonalnie `TRIAL_DAYS` (domyślnie 7).
   3. `NEXT_PUBLIC_AUTH_ENABLED=true` i `NEXT_PUBLIC_AUTH_REQUIRED=true` → Redeploy. Od tej chwili niezalogowani
-     widzą stronę startową z cennikiem.
+     widzą stronę startową z cennikiem. **`CRON_SECRET`** zamyka też API (bez niego `/api/*` zostaje publiczne,
+     bo crony wołają własne endpointy — z sekretem podpisują się nim).
+  3a. Firebase → Authentication → Settings → User actions: wyłączyć zakładanie kont e-mail/hasło przez API
+     („Enable create (sign-up)”), skoro na stronie nie ma rejestracji e-mailem — konta tylko przez Google.
   4. Płatności: konto u operatora (Stripe — BLIK, karta, Przelewy24; albo Przelewy24/Tpay bezpośrednio) i forma
      sprzedaży (działalność nierejestrowana do limitu przychodu albo JDG — księgowość). Bez tego cennik działa jako
      okres próbny; integracja płatności to następny krok w kodzie (backlog P-1).
