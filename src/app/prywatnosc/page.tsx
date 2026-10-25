@@ -9,8 +9,8 @@ export const metadata: Metadata = {
 };
 
 // Treść opisuje to, co serwis naprawdę robi (stan kodu z 25.10.2026): logowanie Firebase, ciasteczko sesji,
-// brak analityki i reklam, parser bez zapisu plików, szyfrowanie danych w bazie. Zmiana w przetwarzaniu
-// danych = zmiana tego dokumentu w tym samym PR.
+// płatność jednorazowa przez Stripe, brak analityki i reklam, parser bez zapisu plików, szyfrowanie danych
+// w bazie. Zmiana w przetwarzaniu danych = zmiana tego dokumentu w tym samym PR.
 export default function PrivacyPage() {
     return (
         <LegalPage title="Prywatność i przetwarzanie danych" lead="Krótko: zbieramy tylko to, co potrzebne do konta i płatności. Bez reklam, bez śledzenia, bez sprzedawania danych.">
@@ -32,9 +32,9 @@ export default function PrivacyPage() {
                     </li>
                     <li>
                         <strong>Dostęp i płatności</strong>: wybrany plan, okres dostępu (w tym {trialDays()} dni próbnych),
-                        identyfikator i kwota transakcji. Danych karty ani konta bankowego nie widzimy — obsługuje je operator
-                        płatności. Cel: świadczenie płatnej usługi, rozliczenia i księgowość. Podstawa: umowa (lit. b)
-                        oraz obowiązki podatkowe i rachunkowe (lit. c).
+                        identyfikator transakcji Stripe, kwota i adres e-mail, na który idzie pokwitowanie. Danych karty, BLIK-a
+                        ani konta bankowego nie widzimy — obsługuje je Stripe. Cel: świadczenie płatnej usługi, rozliczenia
+                        i księgowość. Podstawa: umowa (lit. b) oraz obowiązki podatkowe i rachunkowe (lit. c).
                     </li>
                     <li>
                         <strong>Wykorzystany okres próbny</strong>: zaszyfrowany skrót (HMAC) adresu e-mail z datą — tylko po to,
@@ -77,7 +77,10 @@ export default function PrivacyPage() {
                 <ul className="list-disc space-y-2 pl-5">
                     <li><strong>Google</strong> (Firebase Authentication, Google Cloud) — konta i logowanie, baza danych.</li>
                     <li><strong>Vercel Inc.</strong> — hosting serwisu i logi serwera.</li>
-                    <li><strong>Operator płatności</strong> — obsługa płatności (nazwę podajemy przy zakupie).</li>
+                    <li>
+                        <strong>Stripe Payments Europe, Ltd.</strong> (Irlandia) — obsługa płatności: adres e-mail, kwota, plan
+                        i identyfikator transakcji. Dane karty, BLIK i konta bankowego trafiają wyłącznie do Stripe.
+                    </li>
                     <li><strong>Biuro rachunkowe</strong> — jeśli prowadzi naszą księgowość, w zakresie dokumentów sprzedaży.</li>
                 </ul>
                 <p>

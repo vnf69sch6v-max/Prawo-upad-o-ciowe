@@ -58,8 +58,11 @@ const PUBLIC_FILES = new Set(['/favicon.ico', '/icon.svg', '/apple-icon.png', '/
 const PUBLIC_FILE_DIRS = ['/icons/', '/pdfjs/', '/parser-samples/', '/_next/'];
 /** Obrazy w katalogu głównym public/ (jeden segment) — w katalogu głównym nie ma dynamicznych tras. */
 const ROOT_IMAGE = /^\/[^/]+\.(svg|png|ico|jpe?g|webp|gif|avif)$/i;
-/** API bez sesji: wymiana tokenu na sesję, zdrowie danych (/status, monitoring), crony (same sprawdzają CRON_SECRET). */
-const PUBLIC_API = ['/api/auth/session', '/api/health/', '/api/cron/'];
+/**
+ * API bez ważnego dostępu. Checkout i confirm same sprawdzają ciasteczko (wpuszczają też wygasły dostęp,
+ * inaczej nie da się zapłacić). Webhook Stripe nie ma sesji — podpis weryfikuje trasa.
+ */
+const PUBLIC_API = ['/api/auth/session', '/api/health/', '/api/cron/', '/api/stripe/checkout', '/api/stripe/confirm', '/api/stripe/webhook'];
 
 const under = (pathname: string, p: string) => (p.endsWith('/') ? pathname.startsWith(p) : pathname === p || pathname.startsWith(`${p}/`));
 

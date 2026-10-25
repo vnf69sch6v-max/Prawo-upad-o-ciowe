@@ -6,8 +6,9 @@ import {
 import { peekServerCache } from '@/lib/server-cache';
 import { trialDays } from '@/lib/access';
 import { LoginPanel } from '@/components/auth/LoginPanel';
-import { AccessNotice, PricingCards, StartCta } from '@/components/landing/LandingClient';
+import { AccessNotice, PaymentReturn, PricingCards, PricingNote, StartCta } from '@/components/landing/LandingClient';
 import { SITE_URL } from '@/lib/internal-fetch';
+import { paymentsEnabled } from '@/lib/stripe/billing';
 
 // Strona startowa płatnej platformy pod /start: niezalogowanych przekierowuje tu bramka (src/middleware.ts,
 // domyślnie włączona — src/lib/auth/flags.ts) z każdej strony platformy, także z `/`. ISR jak /japonia: liczby z cache w Firestore
@@ -117,6 +118,7 @@ const WHY = [
 
 const FAQ = [
     { q: 'Czy płatność odnawia się automatycznie?', a: 'Nie. Każdy plan to jednorazowa płatność za wybrany okres. Gdy się skończy, sam decydujesz, czy przedłużyć.' },
+    { q: 'Jak zapłacę?', a: 'Na stronie Stripe: kartą, a jeśli włączone — BLIK-iem albo szybkim przelewem. Danych karty nie widzimy. Dostęp włącza się po zaksięgowaniu płatności.' },
     { q: 'Co dostaję w okresie próbnym?', a: `Pełny dostęp do wszystkich funkcji przez ${days} dni od pierwszego logowania. Bez podawania karty.` },
     { q: 'Skąd są dane?', a: 'Z oficjalnych źródeł: GUS (DBW i BDL), NBP, Eurostat, Statistics Bureau of Japan, notowania giełdowe. Każdy wskaźnik pokazuje źródło i okres.' },
     { q: 'Czy to porada inwestycyjna?', a: 'Nie. Savori pokazuje dane i ich interpretację statystyczną. Decyzje inwestycyjne podejmujesz samodzielnie.' },
@@ -127,6 +129,7 @@ const FAQ = [
 export default async function StartPage() {
     const [pl, jp] = await Promise.all([plCpi(), jpCpi()]);
     const ctaLabel = days > 0 ? `Zacznij — ${TRIAL}` : 'Zaloguj się';
+    const payments = paymentsEnabled();
 
     return (
         <div className="min-h-dvh overflow-x-clip bg-white text-mk-text">
@@ -242,15 +245,14 @@ export default async function StartPage() {
 
                 {/* CENNIK */}
                 <section id="cennik" className="mx-auto max-w-6xl scroll-mt-20 px-4 py-20 sm:px-6">
+                    <PaymentReturn />
                     <AccessNotice />
                     <h2 className="text-center text-3xl font-extrabold tracking-tight sm:text-4xl">Prosty cennik. Bez pułapek.</h2>
                     <p className="mx-auto mt-3 max-w-2xl text-center text-mk-muted">
                         Płacisz raz za wybrany okres — bez subskrypcji i automatycznego odnawiania. Każdy plan to pełny dostęp.
                     </p>
-                    <div className="mt-14"><PricingCards ctaLabel={ctaLabel} /></div>
-                    <p className="mt-8 text-center text-sm text-mk-muted">
-                        Ceny brutto. Płatności BLIK, kartą i szybkim przelewem uruchamiamy wkrótce — dziś zaczynasz od okresu próbnego.
-                    </p>
+                    <div className="mt-14"><PricingCards ctaLabel={ctaLabel} payments={payments} /></div>
+                    <PricingNote payments={payments} />
                 </section>
 
                 {/* LOGOWANIE */}

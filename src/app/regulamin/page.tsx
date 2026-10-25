@@ -60,9 +60,11 @@ export default function TermsPage() {
                 </ul>
                 <p>
                     Każdy plan to <strong>jednorazowa płatność bez automatycznego odnawiania</strong> — nic nie pobierzemy bez
-                    Twojej decyzji. Dostęp zaczyna się po potwierdzeniu płatności przez operatora i trwa przez opłacony okres;
-                    kolejny zakup przedłuża go od dnia jego zakończenia. Płatności obsługuje zewnętrzny operator płatności
-                    (np. BLIK, karta, szybki przelew). Potwierdzenie zawarcia umowy otrzymasz na adres e-mail konta.
+                    Twojej decyzji. Płatność obsługuje Stripe (Stripe Payments Europe, Ltd.). Dostępne metody (karta, BLIK,
+                    szybki przelew) zależą od tych włączonych u operatora. Dostęp zaczyna się po potwierdzeniu płatności
+                    i trwa przez opłacony okres liczony w miesiącach kalendarzowych; kolejny zakup przedłuża go od końca
+                    bieżącego dostępu, a jeśli dostęp już wygasł — od chwili zakupu. Potwierdzenie z informacją o odstąpieniu
+                    przychodzi na adres e-mail konta.
                 </p>
             </Section>
 

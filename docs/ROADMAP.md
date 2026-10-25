@@ -78,16 +78,13 @@ P3. **Przekrój DBW 1698 jest ucięty do 5000 wierszy.** DBW ignoruje `ile-na-st
      w trasach z danymi użytkownika (`verifySessionCookie(..., true)`).
 
 ### Płatna platforma
-P-1. **Płatności** (po decyzji właściciela o operatorze): Checkout jednorazowy 10/20/30 zł, webhook z weryfikacją
-     podpisu i idempotencją (zapis zdarzenia przez `toStored`), `setCustomUserClaims` przedłuża `accessUntil` od
-     późniejszej z dat (teraz / koniec dostępu), odświeżenie sesji po zakupie, potwierdzenie e-mailem (odstąpienie).
 P-2. **API za bramką**: `/api/*` jest publiczne — dane da się pobrać bez konta. Trasy danych tylko z ważną sesją
      (weryfikacja jak w middleware), crony przez `CRON_SECRET` (1b).
 P-3. **Konto**: strona „Mój dostęp” (plan, do kiedy, przedłuż), usunięcie konta (RODO), automatyczne usuwanie kont
      nieaktywnych (np. 24 mies.) — wtedy zaktualizować `/prywatnosc` §7.
-P-4. **Dostęp zamrożony w ciasteczku sesji (do 5 dni)**: po zakupie albo blokadzie konta nowy stan widać dopiero po
-     ponownym zalogowaniu albo wygaśnięciu ciasteczka (Edge nie sprawdza revoke). Przy P-1: odświeżenie sesji po
-     płatności (`/api/auth/session` z nowym tokenem); blokada konta = `revokeRefreshTokens` + krótsza sesja.
+P-4. **Dostęp zamrożony w ciasteczku sesji (do 5 dni)**: po blokadzie konta nowy stan widać dopiero po
+     ponownym zalogowaniu albo wygaśnięciu ciasteczka (Edge nie sprawdza revoke). Po płatności ciasteczko odświeża
+     `/api/stripe/confirm`. Blokada konta = `revokeRefreshTokens` + krótsza sesja — jeszcze nie.
 
 ### Produkt
 7. **Szybki szacunek CPI** (ostatni dzień roboczy miesiąca) na Przeglądzie w dniu publikacji —
@@ -117,7 +114,7 @@ J3. **Przegląd Japonii** (hero jak w PL), gdy będą ≥3 wskaźniki.
 - **Płatna platforma — uruchomienie** (kod gotowy 25.10, bramka wyłączona do czasu flag):
   1. Vercel → Environment Variables (Production): `NEXT_PUBLIC_OWNER_NAME` (imię i nazwisko / firma),
      `NEXT_PUBLIC_OWNER_ADDRESS`, `NEXT_PUBLIC_CONTACT_EMAIL`, opcjonalnie `NEXT_PUBLIC_OWNER_NIP` — trafiają do
-     `/prywatnosc` i `/regulamin` (bez nich strony pokazują „wersja robocza”). Przegląd obu dokumentów przez prawnika.
+     `/prywatnosc` i `/regulamin` (brak adresu widać jako „do uzupełnienia” w treści; baneru „wersja robocza” nie ma). Przegląd obu dokumentów przez prawnika.
   2. `ADMIN_EMAILS` = Twój e-mail Google (stały dostęp), opcjonalnie `TRIAL_DAYS` (domyślnie 7) i `TRIAL_ID_KEY`
      (`openssl rand -base64 32`, stały — identyfikuje wykorzystane okresy próbne; bez niego używany jest klucz
      szyfrowania, a jego rotacja dałaby wszystkim drugi okres próbny).
@@ -127,9 +124,14 @@ J3. **Przegląd Japonii** (hero jak w PL), gdy będą ≥3 wskaźniki.
      bo crony wołają własne endpointy — z sekretem podpisują się nim).
   3a. Firebase → Authentication → Settings → User actions: wyłączyć zakładanie kont e-mail/hasło przez API
      („Enable create (sign-up)”), skoro na stronie nie ma rejestracji e-mailem — konta tylko przez Google.
-  4. Płatności: konto u operatora (Stripe — BLIK, karta, Przelewy24; albo Przelewy24/Tpay bezpośrednio) i forma
-     sprzedaży (działalność nierejestrowana do limitu przychodu albo JDG — księgowość). Bez tego cennik działa jako
-     okres próbny; integracja płatności to następny krok w kodzie (backlog P-1).
+  4. **Stripe — dokończenie po stronie konta** (kod jest; bez sekretu webhooka płatność wraca na stronę, ale
+     zamknięta karta nie przedłuży dostępu):
+     - Developers → Webhooks → endpoint `https://savori.space/api/stripe/webhook`, zdarzenia
+       `checkout.session.completed` i `checkout.session.async_payment_succeeded`.
+     - Signing secret → Vercel `STRIPE_WEBHOOK_SECRET` (*Sensitive*) → Redeploy. Klucz prywatny czytamy z
+       `STRIPE_SECRET_KEY` (albo `STRIPE_PRIVATE_KEY` / `STRIPE_API_KEY` / `STRIPE_SECRET`) — ma to być `sk_live_…`.
+     - Włącz metody: karta, BLIK, Przelewy24. Włącz pokwitowania e-mail (Customer emails → successful payments).
+     - Forma sprzedaży (działalność nierejestrowana albo JDG) zostaje po stronie księgowości.
 - **Logowanie przez Google — włączenie** (kod gotowy, strona zostaje publiczna):
   1. Konsola Firebase (`aplikacja-prawnicy`) → Authentication → Sign-in method → Google → Enable, e-mail pomocy → Save.
   2. Authentication → Settings → Authorized domains: dodać `savori.space` (i `www.savori.space`, jeśli używany).
@@ -181,6 +183,11 @@ J3. **Przegląd Japonii** (hero jak w PL), gdy będą ≥3 wskaźniki.
 - **`GUS_BDL_KEY`** — wyższy limit BDL (rejestracja na api.stat.gov.pl).
 
 ## Zrobione
+- **25.10.2026 — płatności Stripe** (prośba właściciela: klucz prywatny już na Vercelu, dodać trasę): Checkout
+  jednorazowy 10/20/30 zł (`/api/stripe/checkout`), webhook z podpisem i idempotencją (`/api/stripe/webhook`,
+  zapis `payments/{session}` przez `toStored`), przedłużenie `accessUntil` od późniejszej z dat, odświeżenie
+  ciasteczka po powrocie (`/api/stripe/confirm`). Pokwitowanie z informacją o odstąpieniu idzie przez Stripe
+  (`receipt_email`). Zostało właścicielowi: `STRIPE_WEBHOOK_SECRET` i metody płatności (punkt 4 wyżej).
 - **25.10.2026 — płatna platforma, etap 1** (prośba właściciela): strona startowa `/start` z logowaniem i cennikiem
   10/20/30 zł (1/3/6 mies., jednorazowo), bramka z kryptograficzną weryfikacją sesji (podrobione ciasteczko nie
   przechodzi), okres próbny i dostęp administratora w claims, `/prywatnosc` (RODO) i `/regulamin`, czcionka z własnej

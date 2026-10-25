@@ -13,9 +13,6 @@ export const OWNER = {
     email: process.env.NEXT_PUBLIC_CONTACT_EMAIL?.trim() || 'mikolaj.marcinkowski22@o2.pl',
 };
 
-/** Wszystkie obowiązkowe dane uzupełnione — dopiero wtedy wolno włączyć płatny dostęp. */
-export const LEGAL_READY = !!(OWNER.name && OWNER.address && OWNER.email);
-
 export const MISSING = '[do uzupełnienia przez właściciela]';
 export const field = (v: string) => v || MISSING;
 

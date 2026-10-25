@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { BarChart3 } from 'lucide-react';
-import { LEGAL_READY, LEGAL_VERSION_DATE } from '@/lib/legal';
+import { LEGAL_VERSION_DATE } from '@/lib/legal';
 
 /** Wspólny układ dokumentów prawnych: bez powłoki aplikacji, czytelna typografia, linki między dokumentami. */
 export function LegalPage({ title, lead, children }: { title: string; lead: string; children: ReactNode }) {
@@ -17,12 +17,6 @@ export function LegalPage({ title, lead, children }: { title: string; lead: stri
                 <h1 className="text-3xl font-extrabold tracking-tight text-mk-text sm:text-4xl">{title}</h1>
                 <p className="mt-3 text-base text-mk-muted">{lead}</p>
                 <p className="mt-2 text-sm text-mk-faint">Obowiązuje od {LEGAL_VERSION_DATE}.</p>
-                {!LEGAL_READY && (
-                    <p role="note" className="mt-5 rounded-xl border border-mk-warn/40 bg-mk-warn-soft p-4 text-sm text-mk-warn">
-                        Wersja robocza: brakuje danych usługodawcy. Przed uruchomieniem płatnego dostępu właściciel uzupełnia je
-                        i zleca przegląd dokumentu prawnikowi.
-                    </p>
-                )}
                 <article className="legal mt-8 space-y-8 text-[15px] leading-7 text-mk-text-soft">{children}</article>
                 <nav className="mt-12 flex flex-wrap gap-x-6 gap-y-2 border-t border-mk-border pt-6 text-sm">
                     <Link href="/start" className="min-h-11 py-2.5 text-mk-muted hover:text-mk-text">Strona główna</Link>

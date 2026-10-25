@@ -69,15 +69,25 @@ Standard scripts in `package.json`:
   - `/api/*` is behind the gate only when `CRON_SECRET` is set: crons and the freshness check call our own
     endpoints with `Authorization: Bearer CRON_SECRET` (`internalInit`), the browser with the session cookie.
     Without a session the API answers 401, without access 403. Public API: `/api/auth/session`, `/api/health/*`,
-    `/api/cron/*`.
+    `/api/cron/*`, `/api/stripe/checkout`, `/api/stripe/confirm`, `/api/stripe/webhook`.
+  - Payments are one-time Stripe Checkout (no stripe.js, no publishable key in the browser). The secret is
+    read server-side from `STRIPE_SECRET_KEY` (also `STRIPE_PRIVATE_KEY`, `STRIPE_API_KEY`, `STRIPE_SECRET`;
+    `pk_` and `whsec_` are ignored). `STRIPE_WEBHOOK_SECRET` verifies `checkout.session.completed` and
+    `checkout.session.async_payment_succeeded`. Granting access is `fulfillPaidSession` (`payments/{sessionId}`
+    via `toStored`, then `setCustomUserClaims`); a replay does not add months twice. Checkout and confirm stay
+    on the public-API list so an expired user can pay, but both routes require the session cookie themselves.
+    The webhook has no cookie — a bad signature is 400 and grants nothing. Success returns to
+    `/start?platnosc=ok`, which refreshes `__session` (`iat` of a forced token, not the 5-minute `auth_time`
+    rule on `/api/auth/session`). Do not add `checkout.stripe.com` to `connect-src`; the browser only navigates there.
   - `isPublicPath` uses an allowlist of real files, not "anything with a dot". On Vercel `/ceny.rsc` and
     `/ceny.segments/…` are the rendered page (RSC) and used to slip through as "files".
   - If Google's certs are unreachable, the result is `'unavailable'` → 503 + `Retry-After`. The cookie is not
     deleted, so a blip doesn't log paying users out.
   - Trial: verified e-mail only, once per address (`trials/{HMAC(e-mail)}` via `claimTrial`, `src/lib/auth/grant.ts`).
   - Legal pages read the owner's data from env `NEXT_PUBLIC_OWNER_NAME|ADDRESS|NIP`, `NEXT_PUBLIC_CONTACT_EMAIL`
-    (`src/lib/legal.ts`; it shows a draft notice until they are set). Any change to what data the app processes
-    must update `/prywatnosc` in the same PR.
+    (`src/lib/legal.ts`; name and e-mail also have defaults in code). A missing address is the placeholder
+    `[do uzupełnienia przez właściciela]` inside the document — there is no draft banner. Any change to what
+    data the app processes must update `/prywatnosc` in the same PR.
   - Inter comes from `next/font` (self-hosted, `--font-inter`). Don't add `fonts.googleapis.com` back: it sent
     every visitor's IP to Google.
 - Auth flags (`src/lib/auth/flags.ts`): since 25.10.2026 both default to **on** when the Firebase client config is

@@ -67,7 +67,11 @@ describe('bramka', () => {
         expect(g('/api/parser/parse', { accessUntil: NOW - 1 })).toEqual({ kind: 'deny', status: 403 });
         expect(g('/api/nbp', ok)).toEqual({ kind: 'pass' });
         expect(g('/api/nbp', null, { internal: true })).toEqual({ kind: 'pass' });
-        for (const p of ['/api/auth/session', '/api/health/freshness', '/api/cron/dbw-1']) expect(g(p, null), p).toEqual({ kind: 'pass' });
+        for (const p of ['/api/auth/session', '/api/health/freshness', '/api/cron/dbw-1', '/api/stripe/checkout', '/api/stripe/confirm', '/api/stripe/webhook']) {
+            expect(g(p, null), p).toEqual({ kind: 'pass' });
+        }
+        // wygasły dostęp nadal może zapłacić i dokończyć powrót ze Stripe
+        expect(g('/api/stripe/checkout', { accessUntil: NOW - 1 })).toEqual({ kind: 'pass' });
         // bez CRON_SECRET API zostaje otwarte (inaczej crony przestałyby odświeżać dane)
         expect(g('/api/nbp', null, { protectApi: false })).toEqual({ kind: 'pass' });
     });
