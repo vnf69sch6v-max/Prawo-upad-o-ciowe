@@ -102,8 +102,9 @@ export interface GateInput {
 
 /**
  * Bramka: niezalogowany trafia na stronę startową z logowaniem i cennikiem (z podstrony — z powrotem po
- * zalogowaniu), zalogowany bez ważnego dostępu — na cennik; API bez dostępu dostaje 401/403. Przekierowanie,
- * nie rewrite: przy rewrite `/` powłoka aplikacji (usePathname = `/`) owinęłaby stronę startową.
+ * zalogowaniu), zalogowany bez ważnego dostępu — na cennik z `from` (sama strona główna bez query zostaje
+ * bez `from`); API bez dostępu dostaje 401/403. Przekierowanie, nie rewrite: przy rewrite `/` powłoka
+ * aplikacji (usePathname = `/`) owinęłaby stronę startową.
  */
 export function gate({ pathname, search, session, nowS, protectApi, internal }: GateInput): GateDecision {
     if (isApi(pathname)) {
@@ -118,7 +119,10 @@ export function gate({ pathname, search, session, nowS, protectApi, internal }: 
         if (pathname === '/' && !search) return { kind: 'redirect', to: '/start' };
         return { kind: 'redirect', to: `/start?from=${encodeURIComponent(pathname + search)}` };
     }
-    if (!hasAccess(session, nowS)) return { kind: 'redirect', to: '/start?dostep=wygasl#cennik' };
+    if (!hasAccess(session, nowS)) {
+        if (pathname === '/' && !search) return { kind: 'redirect', to: '/start?dostep=wygasl#cennik' };
+        return { kind: 'redirect', to: `/start?dostep=wygasl&from=${encodeURIComponent(pathname + search)}#cennik` };
+    }
     return { kind: 'pass' };
 }
 
