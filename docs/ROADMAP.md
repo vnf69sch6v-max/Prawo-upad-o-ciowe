@@ -27,8 +27,9 @@ pierwszeństwo. Rzeczy, których nie da się zrobić z kodu, trafiają do „Wym
      w „Zrobione”). Kontrola produkcyjna crona CPI 13.11.2026 — pozycja P0.
    - **1b: wymuszone odświeżenie GUS DBW/BDL tylko z `CRON_SECRET`** (`Authorization` z `internalInit`).
      Publiczne `refresh=1` ma wtedy zwykły TTL, a przycisk „Aktualizuj” na CPI/PPI nie wysyła `refresh=1`.
-     Po 1a `refresh=1` na kluczach bieżącego roku daje nadal ~279 wywołań DBW / 10 min. Wymaga ustawienia
-     `CRON_SECRET` przez właściciela.
+     Po 1a `refresh=1` na kluczach bieżącego roku daje nadal ~279 wywołań DBW / 10 min — dziś tylko dla
+     zalogowanych z dostępem (bramka API), ale okres próbny dostaje każdy zweryfikowany e-mail. **Odblokowane:**
+     `CRON_SECRET` jest ustawiony (25.10.2026 `/api/*` bez sesji odpowiada 401). Następny krok rutyny.
    - **1c: walidacja tras GUS BDL** (limit BDL bez klucza: ~5 żądań/s, ~100 / 15 min):
      - `bdl-series`: dowolne `start`/`step`/`year`/`freq` tworzą dowolne klucze;
      - `gus-labor-extra` `year`, `regional-gus`, `gus-regional`, `smup`;
@@ -171,10 +172,8 @@ J3. **Przegląd Japonii** (hero jak w PL), gdy będą ≥3 wskaźniki.
   potem Firestore Database → kolekcja `savori_users` → dokument o tym UID → usuń (to lista obserwowanych; `/prywatnosc`
   obiecuje „usuwamy ją razem z kontem”). Dokument `trials/{HMAC(e-mail)}` zostaje celowo (okres próbny raz na adres —
   tak opisuje go `/prywatnosc`). Pomocnik w kodzie: `deleteUserData()` w `src/lib/user-data-server.ts`.
-- **`CRON_SECRET`** w Vercelu (projekt → Settings → Environment Variables → Production, losowy ciąg
-  ≥ 32 znaków; Vercel sam dołącza go do wywołań cronów). Bez niego crony może wywołać każdy, a krok 1b
-  (wymuszone odświeżenie GUS tylko dla cronów) nie ruszy. Po 1a publiczne `refresh=1` nadal może dać
-  ~279 wywołań DBW / 10 min przy limicie ~100 / 15 min.
+- ~~**`CRON_SECRET`** w Vercelu~~ — ustawiony (25.10.2026: `/api/*` bez sesji odpowiada 401, crony przechodzą
+  bramkę z `Authorization: Bearer`). Krok 1b odblokowany.
 - **`ALERT_WEBHOOK_URL`** (Slack/Discord) — alert, gdy kontrola świeżości wykryje problem.
 - **savori.com:** przypięte do projektu w Vercelu, ale DNS wskazuje na inny serwer (Linode) —
   usunąć z projektu albo przepiąć DNS na Vercel (wtedy dostanie też certyfikat).
