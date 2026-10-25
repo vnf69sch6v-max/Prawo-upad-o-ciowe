@@ -36,7 +36,7 @@ Przed zmianą watchlista żyła w `localStorage` pod jednym kluczem `mk:watchlis
 | Zapis | wyłącznie serwer (Admin SDK), szyfrowany `data-seal` z AAD = ścieżka dokumentu (szyfrogram z konta A nie otwiera się pod kontem B); `firestore.rules` bez zmian (`allow read, write: if false`) |
 | Tożsamość | ciasteczko `__session` zweryfikowane `verifySessionCookie(cookie, true)` w `src/lib/auth/require-session.ts` — nie `uid` z treści żądania |
 | Trasa | `GET /api/me/watchlist` → `{ items, account }` (`account: false` = konto bez dokumentu); `PUT { items }` → zapis całości; 400 zły kształt, 401 bez sesji, 403 obca domena, 415 nie-JSON, 501 bez Admin SDK (demo), 503 błąd bazy; `Cache-Control: private, no-store` |
-| Klient | `src/lib/watchlist.ts`: magazyn modułowy + `useSyncExternalStore`; klucz lokalny `mk:watchlist:u:{uid}` (zalogowany) albo `mk:watchlist:v1` (anonim / demo); zapis na konto 400 ms po ostatnim kliknięciu |
+| Klient | `src/lib/watchlist-store.ts` (silnik bez Reacta i `window`: `fetch`/pamięć wstrzykiwane, testy `tests/watchlist-store.test.ts`) + `src/lib/watchlist.ts` (`useSyncExternalStore`); klucz lokalny `mk:watchlist:u:{uid}` (zalogowany) albo `mk:watchlist:v1` (anonim / demo); zapis na konto 400 ms po ostatnim kliknięciu; **PUT nigdy przed udanym odczytem konta** |
 | Migracja szyfrowania | `sweepLegacyDocs` przegląda też `savori_users` (kształt `doc`) |
 
 ## Lekcje zastosowane (docs/PRODUCT.md)
@@ -66,6 +66,9 @@ Przed zmianą watchlista żyła w `localStorage` pod jednym kluczem `mk:watchlis
    i idą na konto przez istniejącą ścieżkę scalania po udanym odczycie. Dowód: test w `tests/` (store z podstawionym
    `fetch`/`localStorage`, bez jsdom — `vi.stubGlobal`) albo nagranie: DevTools → Offline → wejście zalogowanym na nowe
    urządzenie → gwiazdka → Online → w Firestore lista konta zawiera stare pozycje **i** nową.
+   **Dowód (25.10):** `tests/watchlist-store.test.ts`, blok „kryterium 8”: offline przy wejściu → gwiazdka lokalnie, zero PUT →
+   `onOnline()` → konto = `[cpi, pko, eur]`; 503 przy odczycie → ponowienie po 15 s, bez PUT do tego czasu; 401/501 →
+   bez ponawiania i bez PUT. Do tego: zapis tuż przed wylogowaniem wychodzi przed zmianą konta (uwaga 1 z recenzji).
 
 ## Recenzja PM (25.10.2026) — werdykt: FIX
 
