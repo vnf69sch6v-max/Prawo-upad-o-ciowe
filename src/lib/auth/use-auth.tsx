@@ -5,7 +5,10 @@ import {
     GoogleAuthProvider,
     onAuthStateChanged,
     signInWithEmailAndPassword,
+    getRedirectResult,
     signInWithPopup,
+    signInWithRedirect,
+    sendPasswordResetEmail,
     signOut as fbSignOut,
     type Auth,
     type User,
@@ -49,7 +52,11 @@ export interface AuthContextValue {
     signIn: (email: string, password: string) => Promise<void>;
     /** Okno Google (popup). `false`, gdy użytkownik zamknął okno (bez błędu). */
     signInWithGoogle: () => Promise<boolean>;
+    /** Link do zmiany hasła. Nie zdradza, czy konto istnieje (`auth/user-not-found` = sukces). */
+    resetPassword: (email: string) => Promise<void>;
     signOut: () => Promise<void>;
+    /** Błąd powrotu z przekierowania Google, widoczny na formularzu logowania. */
+    authNotice: string | null;
     /** Stan ciasteczka serwera (bramki), nie Firebase. `status: 'unknown'` do pierwszej sondy. */
     session: SessionInfo;
     /** `true`, gdy ciasteczko jest potwierdzone (sonda GET albo POST/PUT zakończone sukcesem). */
@@ -141,6 +148,15 @@ function requireAuth(): Auth {
 
 const SESSION_ERROR = 'Nie udało się utworzyć sesji. Spróbuj zalogować się ponownie.';
 
+function redirectNotice(err: unknown): string | null {
+    const code = (err as { code?: string }).code;
+    if (!code || code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') return null;
+    if (code === 'auth/unauthorized-domain') return 'Ta domena nie jest dopuszczona do logowania w Firebase.';
+    if (code === 'auth/network-request-failed') return 'Brak połączenia. Sprawdź internet i spróbuj ponownie.';
+    if (code === 'auth/too-many-requests') return 'Za dużo prób logowania. Spróbuj ponownie za kilka minut.';
+    return 'Nie udało się dokończyć logowania przez Google. Spróbuj ponownie.';
+}
+
 /**
  * Zegar klienta poza renderem: `Date.now` w renderze jest nieczyste (lint) i rozjeżdża hydratację.
  * Subskrypcja ustawia czas po hydratacji i odświeża go co minutę oraz przy każdym zapisie sesji.
@@ -183,6 +199,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [loading, setLoading] = useState(AUTH_ACTIVE);
     const [session, setSession] = useState<SessionInfo>(AUTH_ACTIVE ? UNKNOWN_SESSION : DEMO_SESSION);
     const [sessionReady, setSessionReady] = useState(!AUTH_ACTIVE);
+    const [authNotice, setAuthNotice] = useState<string | null>(null);
     const sessionRef = useRef(session);
     /** Unieważnia sondę i odnowienie, które wystartowały przed logowaniem albo wylogowaniem. */
     const epoch = useRef(0);
@@ -262,28 +279,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         })();
     }, [commit, refreshSession]);
 
-    useEffect(() => {
-        if (!AUTH_ACTIVE) return;
-        const auth = getFirebaseAuth();
-        if (!auth) return;
-        const unsub = onAuthStateChanged(auth, (u: User | null) => {
-            setUser(u ? toAppUser(u) : null);
-            setLoading(false);
-            // Logowanie samo wystawia ciasteczko (POST) — sonda w tym oknie nadpisałaby je brakiem sesji.
-            if (signingIn.current) return;
-            if (!u) {
-                epoch.current += 1;
-                commit(NONE_SESSION);
-                return;
-            }
-            probe(++epoch.current);
-        });
-        return () => {
-            unsub();
-            stopFlight();
-        };
-    }, [commit, probe, stopFlight]);
-
     /**
      * Wymiana świeżego ID tokenu na ciasteczko (httpOnly). Przy pierwszym logowaniu serwer nadaje dostęp
      * i prosi o odświeżenie tokenu (`refresh`) — wysyłamy go raz jeszcze. `sessionReady` dopiero po sukcesie.
@@ -334,6 +329,54 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         probe(++epoch.current);
     }, [commit, probe]);
 
+    useEffect(() => {
+        if (!AUTH_ACTIVE) return;
+        const auth = getFirebaseAuth();
+        if (!auth) return;
+        let unsub = () => {};
+        let cancelled = false;
+        void (async () => {
+            // Powrót z signInWithRedirect (popup zablokowany). Zanim wstanie onAuthStateChanged,
+            // bo inaczej sonda zobaczy użytkownika Firebase bez ciasteczka i pokaże „sesja wygasła”.
+            try {
+                const cred = await getRedirectResult(auth);
+                if (cancelled) return;
+                if (cred?.user) {
+                    const my = beginSignIn();
+                    try {
+                        const created = await createSession(auth, cred.user, my);
+                        if (!created && epoch.current === my) setAuthNotice(SESSION_ERROR);
+                    } catch (err) {
+                        if (!(err instanceof Error && err.message === SESSION_ERROR)) abortSignIn(my);
+                        if (epoch.current === my) setAuthNotice(err instanceof Error ? err.message : SESSION_ERROR);
+                    } finally {
+                        if (epoch.current === my) signingIn.current = false;
+                    }
+                }
+            } catch (err) {
+                if (!cancelled) setAuthNotice(redirectNotice(err));
+            }
+            if (cancelled) return;
+            unsub = onAuthStateChanged(auth, (u: User | null) => {
+                setUser(u ? toAppUser(u) : null);
+                setLoading(false);
+                // Logowanie samo wystawia ciasteczko (POST) — sonda w tym oknie nadpisałaby je brakiem sesji.
+                if (signingIn.current) return;
+                if (!u) {
+                    epoch.current += 1;
+                    commit(NONE_SESSION);
+                    return;
+                }
+                probe(++epoch.current);
+            });
+        })();
+        return () => {
+            cancelled = true;
+            unsub();
+            stopFlight();
+        };
+    }, [abortSignIn, beginSignIn, commit, createSession, probe, stopFlight]);
+
     const signIn = useCallback(async (email: string, password: string) => {
         if (!AUTH_ACTIVE) return;
         const auth = requireAuth();
@@ -361,14 +404,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const cred = await signInWithPopup(auth, provider);
             return await createSession(auth, cred.user, my);
         } catch (err) {
-            if (!(err instanceof Error && err.message === SESSION_ERROR)) abortSignIn(my);
             const code = (err as { code?: string }).code;
+            // Okno nie wstanie (telefon, przeglądarka w aplikacji, blokada popupów) — ta sama karta idzie do Google
+            // i wraca tutaj; ciasteczko dokleja getRedirectResult przy starcie.
+            if (code === 'auth/popup-blocked' || code === 'auth/operation-not-supported-in-this-environment') {
+                await signInWithRedirect(auth, provider);
+                return false;
+            }
+            if (!(err instanceof Error && err.message === SESSION_ERROR)) abortSignIn(my);
             if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') return false;
             throw err;
         } finally {
             if (epoch.current === my) signingIn.current = false;
         }
     }, [abortSignIn, beginSignIn, createSession]);
+
+    const resetPassword = useCallback(async (email: string) => {
+        const auth = requireAuth();
+        await sendPasswordResetEmail(auth, email.trim(), {
+            url: `${window.location.origin}/login`,
+            handleCodeInApp: false,
+        });
+    }, []);
 
     const signOut = useCallback(async () => {
         if (!AUTH_ACTIVE) return;
@@ -389,9 +446,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         sessionReady,
         signIn,
         signInWithGoogle,
+        resetPassword,
         signOut,
         refreshSession,
-    }), [user, loading, session, sessionReady, signIn, signInWithGoogle, signOut, refreshSession]);
+        authNotice,
+    }), [user, loading, session, sessionReady, signIn, signInWithGoogle, resetPassword, signOut, refreshSession, authNotice]);
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

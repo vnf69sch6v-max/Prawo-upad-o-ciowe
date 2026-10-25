@@ -52,7 +52,11 @@ function getFirebaseApp(): FirebaseApp | null {
 export function getFirebaseAuth(): Auth | null {
     const app = getFirebaseApp();
     if (!app) return null;
-    if (!_auth) _auth = getAuth(app);
+    if (!_auth) {
+        _auth = getAuth(app);
+        // Maile Firebase (reset hasła) i komunikaty handlera po polsku. Okno Google i tak bierze język konta.
+        _auth.languageCode = 'pl';
+    }
     return _auth;
 }
 

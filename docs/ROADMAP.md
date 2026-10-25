@@ -140,7 +140,7 @@ J3. **Przegląd Japonii** (hero jak w PL), gdy będą ≥3 wskaźniki.
      - Forma sprzedaży (działalność nierejestrowana albo JDG) zostaje po stronie księgowości.
 - **Logowanie przez Google — włączenie** (kod gotowy, strona zostaje publiczna):
   1. Konsola Firebase (`aplikacja-prawnicy`) → Authentication → Sign-in method → Google → Enable, e-mail pomocy → Save.
-  2. Authentication → Settings → Authorized domains: dodać `savori.space` (i `www.savori.space`, jeśli używany).
+  2. ~~Authorized domains~~ — `savori.space` jest na liście (sprawdzone 25.10, publiczny `getProjectConfig`). `www` robi 307 na apex, więc osobnego wpisu nie potrzebuje. Okno Google nadal mówi „aplikacja-prawnicy.firebaseapp.com”, bo handler OAuth stoi na authDomain Firebase, nie na Vercelu. Żeby było „savori.space”, potrzebna jest własna domena auth w Firebase Hosting (DNS) — sam `authDomain` w kodzie na Vercel zepsuje logowanie (brak `/__/auth/handler`).
   3. ~~Flaga~~ — logowanie jest domyślnie włączone w kodzie (25.10.2026), razem z bramką (patrz „Płatna platforma”).
   4. Konto serwisowe musi mieć rolę „Firebase Authentication Admin” (punkt 2 niżej), inaczej sesja = 401.
   5. **Przed ustawieniem flagi** (Google = otwarta rejestracja: każde konto Google tworzy użytkownika):
@@ -194,6 +194,7 @@ J3. **Przegląd Japonii** (hero jak w PL), gdy będą ≥3 wskaźniki.
 - **`GUS_BDL_KEY`** — wyższy limit BDL (rejestracja na api.stat.gov.pl).
 
 ## Zrobione
+- **25.10.2026 — logowanie: od wejścia na stronę do formularza.** Niezalogowany z podstrony (`/ceny`) ląduje na `/start?from=…#logowanie`, nie na hero. Zablokowany popup Google przechodzi na przekierowanie w tej samej karcie (`getRedirectResult` dokleja ciasteczko po powrocie). „Nie pamiętam hasła” wysyła link; brak konta brzmi tak samo jak sukces. Nowe konto jest przez Google — formularz e-mail to mówi wprost. „Zaloguj się ponownie” przewija do formularza, nie otwiera od razu Google.
 - **25.10.2026 — 1b: wymuszone pobranie z GUS DBW/BDL tylko z `CRON_SECRET`**
   (PR #39, `docs/specs/2026-10-25-gus-odswiezanie-tylko-cron.md`). `canForceUpstream` (`src/lib/access.ts`) w 8 trasach
   (`gus-cpi-full`, `gus-ppi-full`, `gus-koniunktura`, `dbw-series`, `gus-cpi`, `gus-monthly`, `bdl-series`,
