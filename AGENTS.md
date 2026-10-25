@@ -53,8 +53,8 @@ Standard scripts in `package.json`:
   - Status: `/api/health/freshness` → `encryption`.
   - Merge-writes (`set(..., { merge: true })`) can't work on sealed docs. Do read-modify-write in a
     transaction, like `recordCronRun`.
-- Paid platform (`src/lib/access.ts`, `src/middleware.ts`, `src/app/start`). With `NEXT_PUBLIC_AUTH_REQUIRED=true`
-  (plus `AUTH_ENABLED`), signed-out visitors are redirected to `/start`, the landing with login and pricing (`PLANS`:
+- Paid platform (`src/lib/access.ts`, `src/middleware.ts`, `src/app/start`). The gate is on by default (`src/lib/auth/flags.ts`,
+  whenever Firebase is configured), so signed-out visitors are redirected to `/start`, the landing with login and pricing (`PLANS`:
   10/20/30 zł for 1/3/6 months, one-time, no auto-renewal). Signed-in users without valid access go to
   `/start?dostep=wygasl#cennik`. Public: `/start`, `/login`, `/prywatnosc`, `/regulamin`, `/status`, `/api/*`, files.
   - The middleware verifies the `__session` cookie cryptographically (`src/lib/auth/session-verify.ts`: jose,
@@ -80,10 +80,12 @@ Standard scripts in `package.json`:
     must update `/prywatnosc` in the same PR.
   - Inter comes from `next/font` (self-hosted, `--font-inter`). Don't add `fonts.googleapis.com` back: it sent
     every visitor's IP to Google.
-- Auth flags: `NEXT_PUBLIC_AUTH_ENABLED=true` turns on sign-in (Google popup + e-mail/password,
-  `src/lib/auth/use-auth.tsx`). The site stays public. `NEXT_PUBLIC_AUTH_REQUIRED=true` (on top of it) puts the
-  whole site behind login (`src/middleware.ts`). Until 10.2026 one flag did both, so production ran in demo mode.
-  Both are inlined at build time: the SSR and the browser render agree, and changing them needs a redeploy.
+- Auth flags (`src/lib/auth/flags.ts`): since 25.10.2026 both default to **on** when the Firebase client config is
+  present (owner's decision: savori.space only for signed-in users). `NEXT_PUBLIC_AUTH_ENABLED=false` turns off
+  sign-in (Google popup + e-mail/password, `src/lib/auth/use-auth.tsx`) and the gate; `NEXT_PUBLIC_AUTH_REQUIRED=false`
+  keeps sign-in but leaves the site public (`src/middleware.ts`). Without Firebase config (dev, demo) both are off —
+  a gate without working sign-in would lock everyone out. Both are inlined at build time (read them only as literal
+  `process.env.NEXT_PUBLIC_*`): the SSR and the browser render agree, and changing them needs a redeploy.
   Google sign-in uses `signInWithPopup`, not redirect: redirect breaks with third-party storage blocking
   because the authDomain (`*.firebaseapp.com`) differs from savori.space. The popup needs:
   - `script-src https://apis.google.com` (gapi);

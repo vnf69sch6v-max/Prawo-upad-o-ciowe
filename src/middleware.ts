@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { gate, isApi, isPublicApi, isPublicPath, sameSecret } from '@/lib/access';
 import { verifySessionCookie } from '@/lib/auth/session-verify';
+import { AUTH_FLAGS } from '@/lib/auth/flags';
 
-// Bramka płatnej platformy — tylko gdy NEXT_PUBLIC_AUTH_REQUIRED=true (i włączone logowanie). Niezalogowany
+// Bramka płatnej platformy — domyślnie włączona (src/lib/auth/flags.ts; `NEXT_PUBLIC_AUTH_REQUIRED=false` wyłącza). Niezalogowany
 // dostaje stronę startową z cennikiem (src/app/start), zalogowany bez ważnego dostępu — cennik. Ciasteczko
 // sesji jest weryfikowane kryptograficznie (podpis Google, projekt, ważność; src/lib/auth/session-verify.ts),
 // a dostęp (`accessUntil`) siedzi w podpisanych claims — podrobione `__session=x` nie przechodzi.
 // API (/api/*) jest za bramką dopiero z CRON_SECRET: crony i kontrola świeżości wołają własne endpointy
 // z `Authorization: Bearer CRON_SECRET` (src/lib/internal-fetch.ts) — bez sekretu przestałyby odświeżać dane.
-const REQUIRED = process.env.NEXT_PUBLIC_AUTH_REQUIRED === 'true' && process.env.NEXT_PUBLIC_AUTH_ENABLED === 'true';
+const REQUIRED = AUTH_FLAGS.required;
 const PROJECT_ID = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
 const COOKIE = '__session';
 
