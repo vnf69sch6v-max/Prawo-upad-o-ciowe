@@ -1,35 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { gate, isPublicPath } from '@/lib/access';
+import { verifySessionCookie } from '@/lib/auth/session-verify';
 
-// Bramka „cała platforma tylko po zalogowaniu” — osobna flaga NEXT_PUBLIC_AUTH_REQUIRED, domyślnie wyłączona.
-// Samo logowanie (NEXT_PUBLIC_AUTH_ENABLED, src/lib/auth/use-auth.tsx) zostawia stronę publiczną: Savori to
-// dane publiczne, konto jest dodatkiem. Middleware działa na Edge, więc sprawdza tylko obecność ciasteczka —
-// wydaje je i weryfikuje /api/auth/session (przed funkcjami dla zalogowanych: weryfikacja podpisu, ROADMAP).
-const AUTH_ENABLED = process.env.NEXT_PUBLIC_AUTH_REQUIRED === 'true' && process.env.NEXT_PUBLIC_AUTH_ENABLED === 'true';
+// Bramka płatnej platformy — tylko gdy NEXT_PUBLIC_AUTH_REQUIRED=true (i włączone logowanie). Niezalogowany
+// dostaje stronę startową z cennikiem (src/app/start), zalogowany bez ważnego dostępu — cennik. Ciasteczko
+// sesji jest weryfikowane kryptograficznie (podpis Google, projekt, ważność; src/lib/auth/session-verify.ts),
+// a dostęp (`accessUntil`) siedzi w podpisanych claims — podrobione `__session=x` nie przechodzi.
+const REQUIRED = process.env.NEXT_PUBLIC_AUTH_REQUIRED === 'true' && process.env.NEXT_PUBLIC_AUTH_ENABLED === 'true';
+const PROJECT_ID = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
 const COOKIE = '__session';
 
-export function middleware(request: NextRequest) {
-    if (!AUTH_ENABLED) return NextResponse.next();
+export async function middleware(request: NextRequest) {
+    if (!REQUIRED) return NextResponse.next();
 
-    const { pathname } = request.nextUrl;
+    const { pathname, search } = request.nextUrl;
+    // API, pliki i strony publiczne — bez weryfikacji (kryptografia przy każdym wywołaniu API niczego nie zmienia).
+    if (isPublicPath(pathname)) return NextResponse.next();
+    const claims = await verifySessionCookie(request.cookies.get(COOKIE)?.value, PROJECT_ID);
+    const decision = gate(pathname, search, claims, Math.floor(Date.now() / 1000));
 
-    // Always-public paths
-    if (
-        pathname.startsWith('/login') ||
-        pathname.startsWith('/api') ||
-        pathname.startsWith('/_next') ||
-        pathname.includes('.') // static assets
-    ) {
-        return NextResponse.next();
+    if (decision.kind === 'redirect') {
+        const res = NextResponse.redirect(new URL(decision.to, request.url));
+        // Nieważne ciasteczko (zły podpis, wygasłe) — usuń, żeby nie weryfikować go przy każdej stronie.
+        if (!claims && request.cookies.get(COOKIE)) res.cookies.delete(COOKIE);
+        return res;
     }
-
-    const hasSession = Boolean(request.cookies.get(COOKIE)?.value);
-    if (!hasSession) {
-        const url = request.nextUrl.clone();
-        url.pathname = '/login';
-        url.searchParams.set('from', pathname);
-        return NextResponse.redirect(url);
-    }
-
     return NextResponse.next();
 }
 

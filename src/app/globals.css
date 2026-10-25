@@ -79,7 +79,8 @@ html {
 }
 
 body {
-  font-family: 'Inter', -apple-system, system-ui, 'Segoe UI', sans-serif;
+  /* --font-inter: Inter z next/font (src/app/layout.tsx) — serwowany z naszej domeny, bez zapytań do Google. */
+  font-family: var(--font-inter), 'Inter', -apple-system, system-ui, 'Segoe UI', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background: var(--color-mk-bg);
@@ -89,7 +90,7 @@ body {
 }
 
 .font-sans {
-  font-family: 'Inter', -apple-system, system-ui, sans-serif !important;
+  font-family: var(--font-inter), 'Inter', -apple-system, system-ui, sans-serif !important;
 }
 
 /* Tabular numerals for aligned data */

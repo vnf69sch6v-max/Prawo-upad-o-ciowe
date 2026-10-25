@@ -77,6 +77,14 @@ P3. **Przekrój DBW 1698 jest ucięty do 5000 wierszy.** DBW ignoruje `ile-na-st
      funkcjami dla zalogowanych: weryfikacja podpisu ciasteczka sesji (JWT, klucze publiczne Google) na Edge albo
      w trasach z danymi użytkownika (`verifySessionCookie(..., true)`).
 
+### Płatna platforma
+P-1. **Płatności** (po decyzji właściciela o operatorze): Checkout jednorazowy 10/20/30 zł, webhook z weryfikacją
+     podpisu i idempotencją (zapis zdarzenia przez `toStored`), `setCustomUserClaims` przedłuża `accessUntil` od
+     późniejszej z dat (teraz / koniec dostępu), odświeżenie sesji po zakupie, potwierdzenie e-mailem (odstąpienie).
+P-2. **API za bramką**: `/api/*` jest publiczne — dane da się pobrać bez konta. Trasy danych tylko z ważną sesją
+     (weryfikacja jak w middleware), crony przez `CRON_SECRET` (1b).
+P-3. **Konto**: strona „Mój dostęp” (plan, do kiedy, przedłuż), usunięcie konta (RODO).
+
 ### Produkt
 7. **Szybki szacunek CPI** (ostatni dzień roboczy miesiąca) na Przeglądzie w dniu publikacji —
    dziś strona pokazuje inflację ~15 dni po rynku. DBW go nie dostaje; źródło: komunikat GUS.
@@ -102,6 +110,16 @@ J2. **Kolejne wskaźniki Japonii** (po jednym na krok): stopa BOJ i USD/JPY (API
 J3. **Przegląd Japonii** (hero jak w PL), gdy będą ≥3 wskaźniki.
 
 ## Wymaga właściciela (nie da się z kodu)
+- **Płatna platforma — uruchomienie** (kod gotowy 25.10, bramka wyłączona do czasu flag):
+  1. Vercel → Environment Variables (Production): `NEXT_PUBLIC_OWNER_NAME` (imię i nazwisko / firma),
+     `NEXT_PUBLIC_OWNER_ADDRESS`, `NEXT_PUBLIC_CONTACT_EMAIL`, opcjonalnie `NEXT_PUBLIC_OWNER_NIP` — trafiają do
+     `/prywatnosc` i `/regulamin` (bez nich strony pokazują „wersja robocza”). Przegląd obu dokumentów przez prawnika.
+  2. `ADMIN_EMAILS` = Twój e-mail Google (stały dostęp), opcjonalnie `TRIAL_DAYS` (domyślnie 7).
+  3. `NEXT_PUBLIC_AUTH_ENABLED=true` i `NEXT_PUBLIC_AUTH_REQUIRED=true` → Redeploy. Od tej chwili niezalogowani
+     widzą stronę startową z cennikiem.
+  4. Płatności: konto u operatora (Stripe — BLIK, karta, Przelewy24; albo Przelewy24/Tpay bezpośrednio) i forma
+     sprzedaży (działalność nierejestrowana do limitu przychodu albo JDG — księgowość). Bez tego cennik działa jako
+     okres próbny; integracja płatności to następny krok w kodzie (backlog P-1).
 - **Logowanie przez Google — włączenie** (kod gotowy, strona zostaje publiczna):
   1. Konsola Firebase (`aplikacja-prawnicy`) → Authentication → Sign-in method → Google → Enable, e-mail pomocy → Save.
   2. Authentication → Settings → Authorized domains: dodać `savori.space` (i `www.savori.space`, jeśli używany).
@@ -155,6 +173,10 @@ J3. **Przegląd Japonii** (hero jak w PL), gdy będą ≥3 wskaźniki.
 - **`GUS_BDL_KEY`** — wyższy limit BDL (rejestracja na api.stat.gov.pl).
 
 ## Zrobione
+- **25.10.2026 — płatna platforma, etap 1** (prośba właściciela): strona startowa `/start` z logowaniem i cennikiem
+  10/20/30 zł (1/3/6 mies., jednorazowo), bramka z kryptograficzną weryfikacją sesji (podrobione ciasteczko nie
+  przechodzi), okres próbny i dostęp administratora w claims, `/prywatnosc` (RODO) i `/regulamin`, czcionka z własnej
+  domeny (koniec wysyłania IP do Google Fonts). Włączenie: lista „Płatna platforma — uruchomienie”.
 - **25.10.2026 — ochrona danych** (`docs/specs/2026-10-25-ochrona-danych.md`, prośba właściciela): reguły
   Firestore/Storage bez żadnego dostępu z przeglądarki, drugie szyfrowanie treści w Firestore (AES-256-GCM,
   wykrywa podmianę, rotacja kluczy, migracja jawnych wpisów w cronie `freshness`), klient Firebase tylko do

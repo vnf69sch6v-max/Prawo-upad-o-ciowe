@@ -53,6 +53,25 @@ Standard scripts in `package.json`:
   - Status: `/api/health/freshness` → `encryption`.
   - Merge-writes (`set(..., { merge: true })`) can't work on sealed docs. Do read-modify-write in a
     transaction, like `recordCronRun`.
+- Paid platform (`src/lib/access.ts`, `src/middleware.ts`, `src/app/start`). With `NEXT_PUBLIC_AUTH_REQUIRED=true`
+  (plus `AUTH_ENABLED`), signed-out visitors are redirected to `/start`, the landing with login and pricing (`PLANS`:
+  10/20/30 zł for 1/3/6 months, one-time, no auto-renewal). Signed-in users without valid access go to
+  `/start?dostep=wygasl#cennik`. Public: `/start`, `/login`, `/prywatnosc`, `/regulamin`, `/status`, `/api/*`, files.
+  - The middleware verifies the `__session` cookie cryptographically (`src/lib/auth/session-verify.ts`: jose,
+    Google session-cookie certs, issuer/audience = project). A forged cookie is rejected and deleted. Revocation is
+    checked only on the server.
+  - Access is held in custom claims (`accessUntil` in seconds, `plan`) inside the signed cookie, so the gate needs
+    no DB read. `/api/auth/session` grants a trial (`TRIAL_DAYS`, default 7, `0` = none) on first sign-in, and
+    permanent access for verified `ADMIN_EMAILS`. It then answers `{ refresh: true }` and the client re-sends a
+    refreshed token, because claims reach a token only after refresh.
+  - Use a redirect, not a rewrite, for `/` → `/start`: `ShellFrame` keys off `usePathname()`, so a rewrite would
+    wrap the landing in the app chrome. `/start`, `/prywatnosc`, `/regulamin` are `BARE_ROUTES`.
+  - `/api/*` stays public. API routes are not paywalled yet (ROADMAP).
+  - Legal pages read the owner's data from env `NEXT_PUBLIC_OWNER_NAME|ADDRESS|NIP`, `NEXT_PUBLIC_CONTACT_EMAIL`
+    (`src/lib/legal.ts`; it shows a draft notice until they are set). Any change to what data the app processes
+    must update `/prywatnosc` in the same PR.
+  - Inter comes from `next/font` (self-hosted, `--font-inter`). Don't add `fonts.googleapis.com` back: it sent
+    every visitor's IP to Google.
 - Auth flags: `NEXT_PUBLIC_AUTH_ENABLED=true` turns on sign-in (Google popup + e-mail/password,
   `src/lib/auth/use-auth.tsx`). The site stays public. `NEXT_PUBLIC_AUTH_REQUIRED=true` (on top of it) puts the
   whole site behind login (`src/middleware.ts`). Until 10.2026 one flag did both, so production ran in demo mode.
@@ -66,7 +85,7 @@ Standard scripts in `package.json`:
   `next.config.ts` (`SECURITY_HEADERS`; CSP only in production builds — check
   with `next start`, not `next dev`). The CSP allows only what the browser
   actually loads: own scripts (`'unsafe-inline'`, pages are prerendered so no
-  nonce), Google Fonts, Firebase Auth only (`connect-src` = `identitytoolkit` + `securetoken`, not
+  nonce), Firebase Auth only (`connect-src` = `identitytoolkit` + `securetoken`, not
   `*.googleapis.com` where anyone can host a bucket; `*.firebaseapp.com` frames), https images, the
   `/pdfjs` worker. Any new
   browser-side script, iframe, font or `fetch` to another origin needs a CSP

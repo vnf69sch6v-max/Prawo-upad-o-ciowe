@@ -60,16 +60,23 @@ function requireAuth(): Auth {
     return auth;
 }
 
-/** Wymiana świeżego ID tokenu na ciasteczko sesji (httpOnly) — weryfikacja po stronie serwera. */
+/**
+ * Wymiana świeżego ID tokenu na ciasteczko sesji (httpOnly) — weryfikacja po stronie serwera. Przy pierwszym
+ * logowaniu serwer nadaje dostęp (claims) i prosi o odświeżenie tokenu (`refresh`) — wtedy wysyłamy go raz jeszcze.
+ */
 async function createSession(auth: Auth, user: User): Promise<void> {
     let ok = false;
     try {
-        const res = await fetch('/api/auth/session', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ idToken: await user.getIdToken() }),
-        });
-        ok = res.ok;
+        for (let attempt = 0; attempt < 2 && !ok; attempt++) {
+            const res = await fetch('/api/auth/session', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ idToken: await user.getIdToken(attempt > 0) }),
+            });
+            if (!res.ok) break;
+            const body = (await res.json().catch(() => ({}))) as { refresh?: boolean };
+            ok = !body.refresh;
+        }
     } catch {
         ok = false; // brak sieci — ten sam komunikat, nie angielskie „Failed to fetch”
     }

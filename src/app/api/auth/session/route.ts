@@ -7,13 +7,33 @@
 //  - token sprawdzany z unieważnieniem (`checkRevoked`) i tylko świeży (logowanie ≤ 5 min temu) —
 //    przechwycony stary ID token nie wystarczy do wyrobienia 5-dniowej sesji;
 //  - błędy bez szczegółów (treść wyjątku Firebase zostaje w logach serwera, bez tokenu).
+//
+// Dostęp (płatna platforma, src/lib/access.ts): konto bez `accessUntil` w claims dostaje okres próbny
+// (TRIAL_DAYS, domyślnie 7). Claims trafiają do tokenu dopiero po jego odświeżeniu, więc odpowiadamy
+// `{ refresh: true }` bez ciasteczka — klient odświeża token i wysyła go ponownie (raz). Adresy z
+// ADMIN_EMAILS (zweryfikowany e-mail) mają dostęp bez końca.
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdminAuth } from '@/lib/firebase/admin';
+import { trialClaims, trialDays, type AccessClaims } from '@/lib/access';
 
 const COOKIE = '__session';
 const MAX_AGE_S = 60 * 60 * 24 * 5; // 5 days
 const RECENT_SIGN_IN_S = 5 * 60;
+/** Dostęp administratora: rok 2100 (sekundy). */
+const ADMIN_UNTIL = 4_102_444_800;
+
+function adminEmails(): Set<string> {
+    return new Set((process.env.ADMIN_EMAILS ?? '').split(',').map((e) => e.trim().toLowerCase()).filter(Boolean));
+}
+
+/** Claims do ustawienia albo `null`, gdy token ma już właściwy dostęp. */
+function accessToGrant(decoded: { email?: string; email_verified?: boolean; accessUntil?: unknown; plan?: unknown }, nowS: number): AccessClaims | null {
+    const admin = !!decoded.email && decoded.email_verified === true && adminEmails().has(decoded.email.toLowerCase());
+    if (admin) return decoded.accessUntil === ADMIN_UNTIL ? null : { plan: 'm6', accessUntil: ADMIN_UNTIL };
+    if (typeof decoded.accessUntil === 'number') return null;
+    return trialClaims(nowS, trialDays());
+}
 
 /** Żądanie z naszej własnej strony (fetch z przeglądarki na tej samej domenie). */
 function sameOrigin(request: NextRequest): boolean {
@@ -46,6 +66,12 @@ export async function POST(request: NextRequest) {
     try {
         const decoded = await auth.verifyIdToken(idToken, true);
         if (Date.now() / 1000 - decoded.auth_time > RECENT_SIGN_IN_S) return deny('recent-sign-in-required', 401);
+        const grant = accessToGrant(decoded, Math.floor(Date.now() / 1000));
+        if (grant) {
+            const { customClaims } = await auth.getUser(decoded.uid);
+            await auth.setCustomUserClaims(decoded.uid, { ...customClaims, ...grant });
+            return NextResponse.json({ refresh: true }, { headers: { 'Cache-Control': 'no-store' } });
+        }
         const sessionCookie = await auth.createSessionCookie(idToken, { expiresIn: MAX_AGE_S * 1000 });
 
         const res = NextResponse.json({ ok: true }, { headers: { 'Cache-Control': 'no-store' } });

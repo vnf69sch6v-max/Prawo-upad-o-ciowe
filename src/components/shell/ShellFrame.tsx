@@ -8,8 +8,8 @@ import { CommandPalette } from './CommandPalette';
 import { MobileTabBar } from './MobileTabBar';
 import { countryOf } from './country';
 
-/** Routes that render without the app chrome (header/nav/footer). */
-const BARE_ROUTES = ['/login'];
+/** Routes that render without the app chrome (header/nav/footer): logowanie, strona startowa z cennikiem, dokumenty prawne. */
+const BARE_ROUTES = ['/login', '/start', '/prywatnosc', '/regulamin'];
 
 export function ShellFrame({ children }: { children: ReactNode }) {
     const pathname = usePathname();
