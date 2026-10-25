@@ -13,17 +13,23 @@ import { internalOrigin } from '@/lib/internal-fetch';
 import { getAdminDb } from '@/lib/firebase/admin';
 import { sealStatus } from '@/lib/data-seal';
 import { readSealState } from '@/lib/data-seal-sweep';
+import { readPaymentHealth } from '@/lib/stripe/health';
 
 export const maxDuration = 30;
 
 export async function GET(request: NextRequest) {
     const origin = internalOrigin(request);
-    const [report, runs, lastSweep] = await Promise.all([runFreshnessCheck(origin), readCronRuns(), readSealState(getAdminDb())]);
-    // Przebiegi cronów są informacją (dowód automatu), nie zmieniają kodu HTTP — ten zależy od danych.
+    const [report, runs, lastSweep, payments] = await Promise.all([
+        runFreshnessCheck(origin),
+        readCronRuns(),
+        readSealState(getAdminDb()),
+        readPaymentHealth(),
+    ]);
+    // Przebiegi cronów i webhook płatności są informacją, nie zmieniają kodu HTTP — ten zależy od danych.
     const crons = runs ? { available: true, items: evaluateCronRuns(runs, new Date()) } : { available: false, items: [] };
     // Stan szyfrowania danych w Firestore (src/lib/data-seal.ts) — identyfikatory kluczy, nigdy klucze.
     const encryption = { ...sealStatus(), lastSweep };
-    return NextResponse.json({ ...report, crons, encryption }, {
+    return NextResponse.json({ ...report, crons, encryption, payments }, {
         status: httpStatusFor(report.items),
         headers: { 'Cache-Control': 's-maxage=300, stale-while-revalidate=60' },
     });

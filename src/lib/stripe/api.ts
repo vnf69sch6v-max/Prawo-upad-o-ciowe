@@ -30,6 +30,8 @@ async function stripeCall(secret: string, path: string, init: RequestInit): Prom
         ...init,
         cache: 'no-store',
         redirect: 'manual',
+        // 10 s: bez limitu wywołanie ginie na 30 s platformy. Abort leci tą samą ścieżką co inny błąd sieci (502 / 500).
+        signal: AbortSignal.timeout(10_000),
         headers: {
             Authorization: `Bearer ${secret}`,
             ...(init.headers ?? {}),

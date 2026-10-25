@@ -35,7 +35,8 @@ export default function PrivacyPage() {
                         (od późniejszej z dat: teraz albo koniec obecnego dostępu; w tym {trialDays()} dni próbnych),
                         identyfikator transakcji Stripe, kwota i adres e-mail, na który idzie pokwitowanie. Zapis płatności
                         w bazie jest szyfrowany tak jak pozostałe dokumenty. Danych karty, BLIK-a ani konta bankowego nie
-                        widzimy — zostają u Stripe. Cel: świadczenie płatnej usługi, rozliczenia i księgowość. Podstawa:
+                        widzimy — zostają u Stripe. Koniec dostępu i plan są zapisane przy koncie (savori_access), a dziennik
+                        webhooka nie zawiera danych osobowych. Cel: świadczenie płatnej usługi, rozliczenia i księgowość. Podstawa:
                         umowa (lit. b) oraz obowiązki podatkowe i rachunkowe (lit. c).
                     </li>
                     <li>

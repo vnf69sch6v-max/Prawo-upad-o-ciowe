@@ -7,6 +7,7 @@ import { OWNER } from '@/lib/legal';
 import { jsonError, noStore, sameSite, stripeErrorCode, stripeForm, wantsJson } from '@/lib/stripe/api';
 import {
     checkoutBody,
+    checkoutFollowUpKey,
     checkoutIdempotencyKey,
     livemodeMatches,
     normalizeEmail,
@@ -15,7 +16,7 @@ import {
     safeCheckoutOrigin,
     stripeSecret,
 } from '@/lib/stripe/billing';
-import { isStripeCheckoutUrl } from '@/lib/stripe/ids';
+import { isCheckoutSessionId, isStripeCheckoutUrl } from '@/lib/stripe/ids';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -68,9 +69,15 @@ export async function POST(request: NextRequest) {
 
     const origin = safeCheckoutOrigin(request.nextUrl.origin);
     const form = checkoutBody({ plan, uid, email, origin, contactEmail: OWNER.email });
+    const idempotencyKey = checkoutIdempotencyKey(uid, plan.id, Date.now());
     let stripe: { status: number; json: unknown };
     try {
-        stripe = await stripeForm(secret, '/checkout/sessions', form, checkoutIdempotencyKey(uid, plan.id, Date.now()));
+        stripe = await stripeForm(secret, '/checkout/sessions', form, idempotencyKey);
+        const first = stripe.json && typeof stripe.json === 'object' ? stripe.json as { status?: unknown; id?: unknown } : undefined;
+        // Ta sama minuta i ten sam plan: cache idempotencji oddaje sesję już opłaconą. Nowa, z id tamtej w kluczu.
+        if (stripe.status >= 200 && stripe.status < 300 && first?.status === 'complete' && isCheckoutSessionId(first.id)) {
+            stripe = await stripeForm(secret, '/checkout/sessions', form, checkoutFollowUpKey(idempotencyKey, first.id));
+        }
     } catch (err) {
         console.error('[stripe/checkout] sieć:', (err as { code?: string }).code ?? 'error');
         return jsonError('stripe-unreachable', 502);

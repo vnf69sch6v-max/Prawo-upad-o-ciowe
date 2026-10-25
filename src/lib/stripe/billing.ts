@@ -73,10 +73,21 @@ export function checkoutIdempotencyKey(uid: string, plan: PlanId, nowMs: number)
     return `savori_${plan}_${minute}_${safeUid}`.slice(0, 255);
 }
 
+/**
+ * Druga sesja w tej samej minucie. Cache idempotencji Stripe oddaje sesję już `complete` —
+ * dopisujemy jej id, żeby dostać nową, a nie otworzyć tamtej drugi raz. Sufiks zostaje w całości (limit 255).
+ */
+export function checkoutFollowUpKey(baseKey: string, completedSessionId: string): string {
+    const suffix = `_${completedSessionId}`;
+    const room = 255 - suffix.length;
+    const head = room > 0 ? baseKey.slice(0, room) : '';
+    return `${head}${suffix}`.slice(0, 255);
+}
+
 /** Tekst na stronie Stripe i na pokwitowaniu: jednorazowo, jak liczymy okres, jak odstąpić. */
 export function withdrawalNote(contactEmail: string): string {
     const to = contactEmail.trim() || 'adres z regulaminu (savori.space/regulamin)';
-    return `Jednorazowa płatność, bez automatycznego odnawiania. Dostęp na opłacony okres; kolejny zakup przedłuża go od jego końca. Odstąpienie: 14 dni, wiadomość na ${to}.`;
+    return `Jednorazowa płatność, bez automatycznego odnawiania. Dostęp na opłacony okres; kolejny zakup przedłuża go od jego końca. Odstąpienie: 14 dni, wiadomość na ${to}. Dostęp od razu po zaksięgowaniu.`;
 }
 
 function periodPhrase(months: number): string {
@@ -218,9 +229,18 @@ export function sessionUid(obj: unknown): string | null {
     return cleanUid(metadata?.uid);
 }
 
+/** Rabat obniża kwotę poniżej cennika. `0` i brak pola są w porządku — podatek Stripe nie jest rabatem. */
+function discountAllowed(details: unknown): boolean {
+    if (details === undefined || details === null) return true;
+    if (typeof details !== 'object' || Array.isArray(details)) return false;
+    if (!('amount_discount' in details)) return true;
+    return (details as { amount_discount?: unknown }).amount_discount === 0;
+}
+
 /**
  * Opłacona sesja jednorazowa, której kwota (przed podatkiem) jest dokładnie ceną planu z metadanych.
  * Niższa kwota nie przedłuża dostępu. Podatek doliczony przez Stripe nie blokuje — patrzymy na `amount_subtotal`.
+ * Jakikolwiek rabat (`total_details.amount_discount` inny niż 0) odrzuca sesję.
  */
 export function readPaidSession(obj: unknown): PaidSession | null {
     if (!obj || typeof obj !== 'object') return null;
@@ -237,6 +257,7 @@ export function readPaidSession(obj: unknown): PaidSession | null {
     const subtotal = typeof session.amount_subtotal === 'number' ? session.amount_subtotal : total;
     if (typeof total !== 'number' || typeof subtotal !== 'number') return null;
     if (subtotal !== plan.pricePln * 100 || total < subtotal) return null;
+    if (!discountAllowed(session.total_details)) return null;
     const details = session.customer_details;
     const nested = details && typeof details === 'object' ? (details as { email?: unknown }).email : undefined;
     return {
@@ -255,10 +276,19 @@ export type ClassifiedSession =
     | { kind: 'pending' }
     | { kind: 'reject' };
 
-/** `unpaid` (BLIK / przelew jeszcze w drodze) nie jest błędem — webhook przyjdzie drugi raz. */
+/**
+ * `pending` tylko gdy płatność jest `unpaid`, a sesja wciąż `open` albo `complete` (albo bez statusu) —
+ * BLIK / przelew jeszcze w drodze, webhook przyjdzie drugi raz.
+ * `expired`, `no_payment_required` i każda inna kombinacja to odrzut: nic już nie przyjdzie.
+ */
 export function classifySession(obj: unknown): ClassifiedSession {
     if (!obj || typeof obj !== 'object' || (obj as { object?: unknown }).object !== 'checkout.session') return { kind: 'reject' };
-    if ((obj as { payment_status?: unknown }).payment_status !== 'paid') return { kind: 'pending' };
-    const session = readPaidSession(obj);
-    return session ? { kind: 'paid', session } : { kind: 'reject' };
+    const session = obj as { payment_status?: unknown; status?: unknown };
+    if (session.payment_status === 'unpaid') {
+        const status = session.status;
+        if (status === undefined || status === 'open' || status === 'complete') return { kind: 'pending' };
+        return { kind: 'reject' };
+    }
+    const paid = readPaidSession(obj);
+    return paid ? { kind: 'paid', session: paid } : { kind: 'reject' };
 }

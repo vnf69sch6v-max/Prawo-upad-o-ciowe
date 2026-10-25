@@ -9,15 +9,19 @@ export const STATUS_STYLE: Record<FreshnessStatus, { icon: LucideIcon; iconClass
     error: { icon: XCircle, iconClass: 'text-mk-negative', pillClass: 'bg-mk-negative-soft ring-mk-negative/25', tintClass: 'bg-mk-negative-soft' },
 };
 
-export function StatusPill({ status }: { status: FreshnessStatus }) {
+export function StatusPill({ status, label }: { status: FreshnessStatus; label?: string }) {
     const s = STATUS_STYLE[status];
     const Icon = s.icon;
+    const text = label ?? STATUS_LABELS[status];
+    const wrap = label !== undefined;
     return (
         <span
-            className={`inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-semibold text-mk-text ring-1 ring-inset ${s.pillClass}`}
+            className={wrap
+                ? `inline-flex w-fit max-w-full items-start gap-1 whitespace-normal rounded-full px-2 py-0.5 text-xs font-semibold leading-snug text-mk-text ring-1 ring-inset [overflow-wrap:anywhere] ${s.pillClass}`
+                : `inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-semibold text-mk-text ring-1 ring-inset ${s.pillClass}`}
         >
-            <Icon size={13} className={s.iconClass} aria-hidden />
-            {STATUS_LABELS[status]}
+            <Icon size={13} className={wrap ? `mt-0.5 shrink-0 ${s.iconClass}` : s.iconClass} aria-hidden />
+            {text}
         </span>
     );
 }
