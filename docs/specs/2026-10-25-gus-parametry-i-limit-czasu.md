@@ -7,6 +7,7 @@
   w hookach, cronach i kontroli świeżości.
 - **Poza zakresem:** 1b, czyli wymuszone odświeżenie tylko z `CRON_SECRET` (czeka na właściciela). Trasy BDL to
   osobna pozycja 1c.
+- **Status:** wdrożone 25.10.2026 (ROADMAP → „Zrobione”); kontrola 13.11.2026 w ROADMAP P0.
 - **Ekrany:** wygląd stron się nie zmienia. `/status` przestaje pokazywać `gus-cpi-full → 504` i `gus-cpi → 504`.
 
 ## 1. Problem i wartość dla użytkownika

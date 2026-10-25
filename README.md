@@ -19,7 +19,9 @@ z oficjalnych źródeł i odświeżają się automatycznie — bez danych wpisan
 ## Źródła danych
 
 - **GUS BDL** (`/api/gus*`, `/api/bdl-series`) — wskaźniki makro i regionalne
-- **GUS DBW** (`/api/dbw*`, `/api/gus-cpi-full`, `/api/gus-ppi-full`) — CPI, PPI, koniunktura
+- **GUS DBW** (`/api/dbw-series`, `/api/gus-cpi-full`, `/api/gus-ppi-full`, `/api/gus-koniunktura`) — CPI, PPI,
+  koniunktura, wskaźniki krótkookresowe; tylko znane parametry (`src/lib/gus-params.ts`). `/api/dbw` i `/api/gus-cpi`
+  nie mają czytelnika i są zablokowane walidacją
 - **Eurostat** (`/api/eurostat`) — HICP, PKB, dług i deficyt, rentowności
 - **NBP** (`/api/nbp`, `/api/nbp-rates`, `/api/wibor`) — kursy, stopy, złoto
 - **Yahoo/Stooq** (`/api/stooq`, `/api/wig20`) — indeksy, spółki, surowce

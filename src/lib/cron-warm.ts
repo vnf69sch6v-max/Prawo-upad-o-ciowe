@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { recordCronRun } from '@/lib/cron-log';
 import { summarizeResults } from '@/lib/cron-runs';
 import { internalCall, internalOrigin } from '@/lib/internal-fetch';
+import { CRON_SPACING_MS } from '@/lib/cron-endpoints';
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -14,7 +15,7 @@ export async function warmEndpoints(
     request: NextRequest,
     endpoints: string[],
     group: string,
-    spacingMs = 1500,
+    spacingMs = CRON_SPACING_MS,
 ) {
     // Vercel dołącza `Authorization: Bearer ${CRON_SECRET}` automatycznie, gdy CRON_SECRET jest ustawiony.
     const secret = process.env.CRON_SECRET;

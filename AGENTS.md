@@ -173,7 +173,13 @@ Standard scripts in `package.json`:
   The per-key limit is not a GUS budget. A loop over one `gus-cpi-full` key still
   makes 64–128 DBW calls / 15 min, and all DBW keys together ~440–590 / 15 min
   against a limit of ~100. So GUS routes must never build a cache key or a period
-  list from unvalidated query params (ROADMAP 1a/1b).
+  list from unvalidated query params. Since 1a (10.2026) they validate before any cache read or GUS call
+  (`src/lib/gus-params.ts`, 400 + `no-store`): `year` only the current/previous Warsaw year (31.12 also the next),
+  `/api/dbw-series` only the six series in `DBW_SERIES` (`src/lib/gus-dbw-series.ts`), `gus-monthly` only
+  `years=4`, and `refresh=1` forces only the current year. Paths are built only in `src/lib/gus-api-paths.ts`
+  (hooks send no year — the server decides, so a wrong phone clock can't get a 400); cron lists live in
+  `src/lib/cron-endpoints.ts`; `tests/gus-params.test.ts` fails if a cron, freshness or hook path is rejected.
+  `/api/gus-cpi` and `/api/dbw` have no reader and are blocked by validation, not deleted (owner's decision).
 - Data freshness: `/api/health/freshness` compares the latest period each page
   endpoint serves with the period the publication calendar says should exist
   (`src/lib/freshness.ts`, tests in `tests/freshness.test.ts`). 200 = no
@@ -200,15 +206,17 @@ Standard scripts in `package.json`:
   `redirect: 'manual'`, and only a 2xx JSON answer counts as success.
   Every cron records its run in Firestore `health/cron_runs`
   (`src/lib/cron-log.ts`; evaluation in `src/lib/cron-runs.ts`), shown on
-  `/status` — the only proof the automation actually ran. `vercel.json` has
-  `src/app/api/**/*.ts → maxDuration 30`; every long-running route also needs
-  its own explicit `functions` entry, or it is cut at 30 s regardless of the
-  `export const maxDuration` in code.
+  `/status` — the only proof the automation actually ran. `vercel.json` → `functions` holds
+  only the default `src/app/api/**/*.ts → maxDuration 30`. A long route sets its limit with
+  `export const maxDuration` in its own file: Vercel prefers the export, and from `functions` it takes only the
+  **first** matching pattern — every entry below the glob was dead, so `gus-cpi-full` ran with 30 s and the
+  `dbw-1` cron got 504 until 10.2026. A cron's limit must be ≥ the sum of its routes' limits + 1.5 s spacing
+  each + 10 s, or it is cut before it logs the run (`tests/function-limits.test.ts`).
 - GUS DBW short-term indicators (industrial production, construction output,
   retail sales — y/y, constant prices, unadjusted = the GUS press-release
-  number) are configured once in `src/lib/gus-dbw-series.ts` and requested via
-  `dbwSeriesPath()` / `dbwSeriesParams()`, so hooks, the `dbw-4` warm cron and
-  the freshness check hit the same `/api/dbw-series` cache key. DBW variable 312
+  number) are configured once in `src/lib/gus-dbw-series.ts` (`DBW_SERIES`, also the route's allowlist) and
+  requested via `dbwSeriesPath(id)` (`src/lib/gus-api-paths.ts`), so hooks, the `dbw-4` warm cron and
+  the freshness check hit the same `/api/dbw-series` cache key; a new series is a new `DBW_SERIES` entry. DBW variable 312
   is the construction **price** index (used only on `/ceny`) — until Oct 2026 it
   was mislabelled as industrial production. BDL P3860 retail lags GUS releases
   by weeks and is in current prices; don't use it for the headline number.

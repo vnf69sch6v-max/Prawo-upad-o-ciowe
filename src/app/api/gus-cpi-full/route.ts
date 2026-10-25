@@ -9,6 +9,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { withCache } from '@/lib/server-cache';
 import { dbwFetchMany, pick, monthlyPeriods, quarterlyPeriods, monthOkres, type DbwPeriod, type DbwRow } from '@/lib/dbw-fetch';
 import { COICOP_CLASSES } from '@/lib/coicop-subcategories';
+import { badParam, forcedRefresh, parseGusYear } from '@/lib/gus-params';
+
+// Limit z eksportu (wpis w vercel.json pod globem `src/app/api/**` był martwy → 30 s i 504 w cronie dbw-1).
+// 120 s tylko razem z walidacją `year`: bez niej `?year=1` (8152 wywołania DBW) paliłoby limit 4× dłużej.
+export const maxDuration = 120;
 
 const DIVISIONS = [
     { poz: 14150568, code: '01', name: 'Żywność i napoje bezalk.', weight: 25.9 },
@@ -39,8 +44,11 @@ interface HeadPoint { date: string; yoy: number | null; mom: number | null }
 interface HistPoint { date: string; yoy: number | null; qoq?: number | null; mom?: number | null }
 
 export async function GET(request: NextRequest) {
-    const now = parseInt(new URL(request.url).searchParams.get('year') || String(new Date().getFullYear()));
-    const force = new URL(request.url).searchParams.get('refresh') === '1'; // cron warm → wymuś refetch (pomiń cache)
+    const sp = new URL(request.url).searchParams;
+    const y = parseGusYear(sp);
+    if (!y.ok) return badParam(y);
+    const now = y.value.year;
+    const force = forcedRefresh(sp, y.value); // cron warm → wymuś refetch (pomiń cache), tylko rok bieżący
 
     try {
         const result = await withCache(

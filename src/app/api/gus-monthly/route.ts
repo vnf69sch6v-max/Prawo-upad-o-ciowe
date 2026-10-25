@@ -3,6 +3,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { withCache } from '@/lib/server-cache';
+import { badParam, parseGusMonthlyYears } from '@/lib/gus-params';
 import { gusFetchInit } from '@/lib/upstream-fetch';
 import { dbwFetchMany, monthOkres, type DbwPeriod } from '@/lib/dbw-fetch';
 
@@ -116,7 +117,9 @@ async function fetchWagesDbwRecent(force: boolean, months = 3): Promise<MonthlyD
 
 export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
-    const years = parseInt(searchParams.get('years') || '4');
+    const parsed = parseGusMonthlyYears(searchParams); // każde inne `years` = nowy klucz i 3 + 12 wywołań GUS
+    if (!parsed.ok) return badParam(parsed);
+    const years = parsed.value;
     const apiKey = process.env.GUS_BDL_KEY || process.env.GUS_API_KEY;
     const force = searchParams.get('refresh') === '1'; // cron warm → pobierz u źródła, pomiń oba cache
 

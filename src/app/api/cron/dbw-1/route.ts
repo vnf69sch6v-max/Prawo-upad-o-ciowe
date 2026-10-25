@@ -1,16 +1,12 @@
-// Cron DBW grupa 1 (harmonogram 09:40 UTC — po komunikatach GUS o 10:00 czasu PL) — ~72 wywołania DBW, samotnie w swoim oknie 15-min.
-//  • gus-cpi-full  (64: COICOP 1999 kwartalnie 2016–2025 + COICOP 2018 miesięcznie 2026)
-//  • dbw-series var 310 / przekrój 484 (8: budownictwo kwartalnie, 2 lata)
+// Cron DBW grupa 1 (harmonogram 09:40 UTC — po komunikatach GUS o 10:00 czasu PL). Lista endpointów: src/lib/cron-endpoints.ts.
+// `maxDuration` ≥ suma limitów wywoływanych tras + odstępy + 10 s (120 + 60 + 2 × 1,5 + 10 = 193) — inaczej Vercel ucina
+// crona, zanim zapisze przebieg w dzienniku (test: tests/function-limits.test.ts).
 import { NextRequest } from 'next/server';
 import { warmEndpoints } from '@/lib/cron-warm';
+import { CRON_ENDPOINTS } from '@/lib/cron-endpoints';
 
-export const maxDuration = 120;
-
-const ENDPOINTS = [
-    '/api/gus-cpi-full?refresh=1',
-    '/api/dbw-series?var=310&przekroj=484&poz=4801795&poz=4801796&freq=q&refresh=1',
-];
+export const maxDuration = 200;
 
 export async function GET(request: NextRequest) {
-    return warmEndpoints(request, ENDPOINTS, 'dbw-1');
+    return warmEndpoints(request, [...CRON_ENDPOINTS['dbw-1']], 'dbw-1');
 }

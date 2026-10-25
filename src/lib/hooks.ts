@@ -3,10 +3,8 @@
 import { useCallback, useMemo } from 'react';
 import { useQuery, useQueries, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
 import type { NewsResult } from '@/lib/news/types';
-import {
-    dbwSeriesParams, GUS_CONSTRUCTION_SERIES, GUS_INDUSTRY_SERIES, GUS_RETAIL_SERIES,
-    type DbwSeriesConfig,
-} from '@/lib/gus-dbw-series';
+import { DBW_SERIES, type DbwSeriesId } from '@/lib/gus-dbw-series';
+import { cpiFullPath, dbwSeriesPath, gusCpiPath, gusMonthlyPath, koniunkturaPath, ppiFullPath } from '@/lib/gus-api-paths';
 import type { DailyDigest } from '@/lib/news/daily';
 import { refreshOptions } from '@/lib/query-refresh';
 
@@ -250,7 +248,7 @@ interface GusMonthlyData {
 export function useGusMonthly() {
     return useQuery<GusMonthlyData>({
         queryKey: ['gus-monthly'],
-        queryFn: () => fetchJSON('/api/gus-monthly'),
+        queryFn: () => fetchJSON(gusMonthlyPath()),
         ...refreshOptions('gusMonthly'),
     });
 }
@@ -504,20 +502,21 @@ interface CpiFullData {
     source?: string;
 }
 
-export function useCpiFull(year = new Date().getFullYear()) {
+// Rok ustala serwer (strefa Europe/Warsaw) — zły zegar urządzenia nie może skończyć się błędem 400.
+export function useCpiFull() {
     const queryClient = useQueryClient();
-    const queryKey = ['gus-cpi-full', year] as const;
+    const queryKey = ['gus-cpi-full'] as const;
     const query = useQuery<CpiFullData>({
         queryKey,
-        queryFn: () => fetchJSON(`/api/gus-cpi-full?year=${year}`),
+        queryFn: () => fetchJSON(cpiFullPath()),
         ...refreshOptions('gusDbw'),
     });
     const refreshFromSource = useCallback(
         () => queryClient.fetchQuery({
             queryKey,
-            queryFn: () => fetchJSON<CpiFullData>(`/api/gus-cpi-full?year=${year}&refresh=1`),
+            queryFn: () => fetchJSON<CpiFullData>(cpiFullPath({ refresh: '1' })),
         }),
-        [queryClient, year],
+        [queryClient],
     );
     return { ...query, refreshFromSource };
 }
@@ -532,13 +531,13 @@ export function usePpiFull() {
     const queryKey = ['gus-ppi-full'] as const;
     const query = useQuery<PpiFullData>({
         queryKey,
-        queryFn: () => fetchJSON('/api/gus-ppi-full'),
+        queryFn: () => fetchJSON(ppiFullPath()),
         ...refreshOptions('gusDbw'),
     });
     const refreshFromSource = useCallback(
         () => queryClient.fetchQuery({
             queryKey,
-            queryFn: () => fetchJSON<PpiFullData>('/api/gus-ppi-full?refresh=1'),
+            queryFn: () => fetchJSON<PpiFullData>(ppiFullPath({ refresh: '1' })),
         }),
         [queryClient],
     );
@@ -553,10 +552,10 @@ interface CpiNationalData {
     source: string;
 }
 
-export function useCpiNational(year = new Date().getFullYear()) {
+export function useCpiNational() {
     return useQuery<CpiNationalData>({
-        queryKey: ['gus-cpi', year],
-        queryFn: () => fetchJSON(`/api/gus-cpi?year=${year}`),
+        queryKey: ['gus-cpi'],
+        queryFn: () => fetchJSON(gusCpiPath()),
         ...refreshOptions('gusDbw'),
     });
 }
@@ -590,14 +589,13 @@ export function useBaelUnemploymentRate(year = new Date().getFullYear()) {
 
 // ─── Generic DBW series (PPI, ceny nieruchomości/budowlane/rolne) ───
 
-export type { DbwSeriesConfig } from '@/lib/gus-dbw-series';
+export type { DbwSeriesId } from '@/lib/gus-dbw-series';
 
-export function useDbwSeries(config: DbwSeriesConfig) {
-    const { var: v, przekroj, poz, year = new Date().getFullYear(), freq = 'm', prez = 5, sub100 = true } = config;
-    const qs = dbwSeriesParams(config, year);
+/** Tylko serie z listy dozwolonych (`DBW_SERIES`) — trasa odrzuca każdą inną (400). */
+export function useDbwSeries(id: DbwSeriesId) {
     return useQuery<{ series: Record<string, number | string>[]; source: string }>({
-        queryKey: ['dbw-series', v, przekroj, poz.join('-'), year, freq, prez, sub100],
-        queryFn: () => fetchJSON(`/api/dbw-series?${qs}`),
+        queryKey: ['dbw-series', id],
+        queryFn: () => fetchJSON(dbwSeriesPath(id)),
         ...refreshOptions('gusDbw'),
     });
 }
@@ -611,10 +609,10 @@ interface KoniunkturaData {
     source: string;
 }
 
-export function useKoniunktura(year = new Date().getFullYear()) {
+export function useKoniunktura() {
     return useQuery<KoniunkturaData>({
-        queryKey: ['gus-koniunktura', year],
-        queryFn: () => fetchJSON(`/api/gus-koniunktura?year=${year}`),
+        queryKey: ['gus-koniunktura'],
+        queryFn: () => fetchJSON(koniunkturaPath()),
         ...refreshOptions('gusDbw'),
     });
 }
@@ -664,20 +662,20 @@ function useBdlPrevYearAsEurostat(
 /** Sprzedaż detaliczna (r/r, ceny stałe) — GUS DBW zm. 109, „ogółem". Wcześniej BDL P3860, który
  *  dostaje miesiąc kilka tygodni po komunikacie GUS (i w cenach bieżących) — patrz `GUS_RETAIL_SERIES`. */
 export function useGusRetailSales(): UseQueryResult<EurostatResult> {
-    const q = useDbwSeries(GUS_RETAIL_SERIES);
-    return useDbwSeriesAsEurostat(q, GUS_RETAIL_SERIES.poz[0], 'Sprzedaż detaliczna (r/r)');
+    const q = useDbwSeries('retail');
+    return useDbwSeriesAsEurostat(q, DBW_SERIES.retail.poz[0], 'Sprzedaż detaliczna (r/r)');
 }
 
 /** Produkcja sprzedana przemysłu (r/r, ceny stałe) — GUS DBW zm. 814. */
 export function useGusIndustrialProduction(): UseQueryResult<EurostatResult> {
-    const q = useDbwSeries(GUS_INDUSTRY_SERIES);
-    return useDbwSeriesAsEurostat(q, GUS_INDUSTRY_SERIES.poz[0], 'Produkcja przemysłowa (r/r)');
+    const q = useDbwSeries('industry');
+    return useDbwSeriesAsEurostat(q, DBW_SERIES.industry.poz[0], 'Produkcja przemysłowa (r/r)');
 }
 
 /** Produkcja budowlano-montażowa (r/r, ceny stałe) — GUS DBW zm. 392. */
 export function useGusConstructionOutput(): UseQueryResult<EurostatResult> {
-    const q = useDbwSeries(GUS_CONSTRUCTION_SERIES);
-    return useDbwSeriesAsEurostat(q, GUS_CONSTRUCTION_SERIES.poz[0], 'Produkcja budowlano-montażowa (r/r)');
+    const q = useDbwSeries('construction');
+    return useDbwSeriesAsEurostat(q, DBW_SERIES.construction.poz[0], 'Produkcja budowlano-montażowa (r/r)');
 }
 
 /** PKB (r/r) rocznie — GUS BDL var 458272 (rok poprzedni = 100).

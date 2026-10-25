@@ -4,6 +4,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withCache } from '@/lib/server-cache';
 import { gusFetchInit } from '@/lib/upstream-fetch';
+import { badParam, forcedRefresh, parseGusYear } from '@/lib/gus-params';
+
+// 24 wywołania po kolei; przy kilku 429 (3,5 s każde) 30 s nie wystarcza.
+export const maxDuration = 60;
 
 const DBW = 'https://api-dbw.stat.gov.pl/api/1.1.0/variable/variable-data-section';
 const POLSKA = 33617;
@@ -32,8 +36,11 @@ async function fetchMonth(rok: number, okres: number, force: boolean): Promise<D
 }
 
 export async function GET(request: NextRequest) {
-    const year = parseInt(new URL(request.url).searchParams.get('year') || String(new Date().getFullYear()));
-    const force = new URL(request.url).searchParams.get('refresh') === '1'; // cron warm → wymuś refetch (pomiń cache)
+    const sp = new URL(request.url).searchParams;
+    const y = parseGusYear(sp);
+    if (!y.ok) return badParam(y);
+    const year = y.value.year;
+    const force = forcedRefresh(sp, y.value); // cron warm → wymuś refetch (pomiń cache), tylko rok bieżący
     const years = [year - 1, year];
 
     try {
