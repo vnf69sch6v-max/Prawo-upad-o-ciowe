@@ -21,6 +21,9 @@ copyPdfWorkerToPublic();
  * Nowe źródło po stronie przeglądarki (skrypt, iframe, fetch) wymaga wpisu tutaj.
  * W `next dev` CSP jest wyłączona (React dev używa eval, HMR — websocketów).
  */
+/** authDomain bez schematu, ukośnika i spacji z wklejki w Vercelu — inaczej źródło w CSP byłoby nieważne. */
+const AUTH_DOMAIN = (process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN ?? '').trim().replace(/^https?:\/\//, '').replace(/\/+$/, '');
+
 const CONTENT_SECURITY_POLICY = [
   "default-src 'self'",
   // apis.google.com: biblioteka gapi, przez którą Firebase otwiera okno logowania Google (signInWithPopup).
@@ -33,7 +36,7 @@ const CONTENT_SECURITY_POLICY = [
   // Bazy (Firestore, Realtime DB) przeglądarka nie używa — tylko serwer przez Admin SDK.
   "connect-src 'self' https://identitytoolkit.googleapis.com https://securetoken.googleapis.com",
   // Ukryty iframe obsługi logowania na authDomain projektu (np. aplikacja-prawnicy.firebaseapp.com).
-  `frame-src 'self' ${process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN ? `https://${process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN}` : 'https://*.firebaseapp.com'}`,
+  `frame-src 'self' ${AUTH_DOMAIN ? `https://${AUTH_DOMAIN}` : 'https://*.firebaseapp.com'}`,
   "worker-src 'self' blob:",
   "object-src 'none'",
   "base-uri 'self'",

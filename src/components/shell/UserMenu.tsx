@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Settings, LogOut, ChevronDown, ChevronRight } from 'lucide-react';
 import { useAuth } from '@/lib/auth/use-auth';
 import { SHEET_ROW, ShellSheet } from './ShellSheet';
@@ -20,6 +20,7 @@ export function UserMenu() {
     const ref = useRef<HTMLDivElement>(null);
     const btnRef = useRef<HTMLButtonElement>(null);
     const router = useRouter();
+    const pathname = usePathname();
     const close = () => setMode(null);
 
     // Menu (desktop): klik poza nim i Esc zamykają, fokus wraca do przycisku.
@@ -79,7 +80,8 @@ export function UserMenu() {
     // Logowanie włączone, nikt nie jest zalogowany → zamiast awatara „Zaloguj się” (strona i tak jest publiczna).
     if (enabled && !loading && !user) {
         return (
-            <Link href="/login" className="mk-btn flex h-11 items-center px-3 text-sm font-semibold lg:h-9">
+            <Link href={pathname && pathname !== '/login' ? `/login?from=${encodeURIComponent(pathname)}` : '/login'}
+                className="mk-btn flex h-11 items-center px-3 text-sm font-semibold lg:h-9">
                 Zaloguj się
             </Link>
         );

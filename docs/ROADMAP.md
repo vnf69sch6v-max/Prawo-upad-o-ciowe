@@ -108,7 +108,14 @@ J3. **Przegląd Japonii** (hero jak w PL), gdy będą ≥3 wskaźniki.
   3. Vercel → Environment Variables → `NEXT_PUBLIC_AUTH_ENABLED=true` (Production) → Redeploy.
      NIE ustawiać `NEXT_PUBLIC_AUTH_REQUIRED` — ona zamyka całą stronę za logowaniem.
   4. Konto serwisowe musi mieć rolę „Firebase Authentication Admin” (punkt 2 niżej), inaczej sesja = 401.
-  5. Przed funkcjami dla zalogowanych: polityka prywatności (RODO) i weryfikacja podpisu sesji (backlog).
+  5. **Przed ustawieniem flagi** (Google = otwarta rejestracja: każde konto Google tworzy użytkownika):
+     informacja o prywatności (RODO art. 13: Firebase/Google jako podmiot przetwarzający; na Safari i telefonach
+     przy włączonym logowaniu każda strona ładuje `apis.google.com` i ukryty iframe authDomain — jak Google Fonts,
+     ale trzeba to napisać), klucz API ograniczony do savori.space (Google Cloud → Credentials), App Check,
+     z Authorized domains usunąć `localhost` i nieużywane domeny.
+  6. `NEXT_PUBLIC_AUTH_REQUIRED` (cała strona za logowaniem) ma sens dopiero z listą dozwolonych kont w
+     `/api/auth/session` (custom claim albo lista e-maili) i weryfikacją podpisu sesji — inaczej wejdzie każdy
+     z kontem Google.
 - **Ochrona danych — po kolei** (specyfikacja `docs/specs/2026-10-25-ochrona-danych.md`; recenzja bezpieczeństwa):
   1. **Jeden projekt Firebase na aplikację — przed kluczem.** Produkcja Savori używa `aplikacja-prawnicy`
      (sprawdzone w kodzie strony 25.10). Repo wdraża się też do projektu Vercela `lexcapital-pro`: sprawdzić, czy ma

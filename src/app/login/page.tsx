@@ -4,6 +4,7 @@ import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { BarChart3, Loader2, ShieldCheck } from 'lucide-react';
 import { useAuth } from '@/lib/auth/use-auth';
+import { safeRedirectTarget } from '@/lib/auth/redirect';
 
 /** Oficjalne „G” Google (wytyczne marki: kolory bez zmian, na białym tle). */
 function GoogleG() {
@@ -43,11 +44,8 @@ export default function LoginPage() {
     const [password, setPassword] = useState('');
     const [error, setError] = useState<string | null>(null);
     const [busy, setBusy] = useState(false);
-    // `?from=` czytamy w chwili przejścia (bez stanu i efektu); tylko ścieżki wewnętrzne.
-    const target = () => {
-        const q = new URLSearchParams(window.location.search).get('from');
-        return q && q.startsWith('/') && !q.startsWith('//') ? q : '/';
-    };
+    // `?from=` czytamy w chwili przejścia (bez stanu i efektu); tylko ścieżki na tej samej domenie.
+    const target = () => safeRedirectTarget(new URLSearchParams(window.location.search).get('from'), window.location.origin);
 
     const onSubmit = async (e: FormEvent) => {
         e.preventDefault();
@@ -57,9 +55,11 @@ export default function LoginPage() {
             await signIn(email, password);
             router.push(target());
         } catch (err) {
-            // Firebase (zły e-mail/hasło) ma kod `auth/...`; nasz błąd sesji ma własny komunikat.
+            // Firebase ma kod `auth/...` (bez zdradzania, czy konto istnieje); nasz błąd sesji ma własny komunikat.
             const code = (err as { code?: string }).code;
-            setError(code || !(err instanceof Error) ? 'Nieprawidłowy e-mail lub hasło.' : err.message);
+            setError(code === 'auth/too-many-requests' ? 'Za dużo prób logowania. Spróbuj ponownie za kilka minut.'
+                : code === 'auth/network-request-failed' ? 'Brak połączenia. Sprawdź internet i spróbuj ponownie.'
+                    : code || !(err instanceof Error) ? 'Nieprawidłowy e-mail lub hasło.' : err.message);
             setBusy(false);
         }
     };
