@@ -129,3 +129,16 @@ export function sameSecret(a: string, b: string): boolean {
     for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
     return diff === 0;
 }
+
+/**
+ * Czy żądanie może wymusić pobranie u źródła z limitem (GUS DBW/BDL, `?refresh=1`) — ROADMAP 1b. Z ustawionym
+ * `CRON_SECRET` tylko automatyka (crony i kontrola świeżości wysyłają `Authorization: Bearer` przez `internalInit`).
+ * Dwa uczciwe kliknięcia „odśwież” (CPI ~64 + PPI ~53 wywołania) przekraczały limit DBW ~100 / 15 min, a cron
+ * z 429 przesuwał publikację GUS na następny dzień. Bez sekretu (dev, demo) — jak dawniej.
+ */
+export function canForceUpstream(
+    request: { headers: { get(name: string): string | null } },
+    secret: string = process.env.CRON_SECRET ?? '',
+): boolean {
+    return !secret || sameSecret(request.headers.get('authorization') ?? '', `Bearer ${secret}`);
+}

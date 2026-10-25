@@ -4,6 +4,7 @@
 // wysyłany — ustala go serwer w strefie Europe/Warsaw, więc zły zegar telefonu nie kończy się błędem 400.
 import { dbwSeriesParams, type DbwSeriesId } from '@/lib/gus-dbw-series';
 
+// `extra` = np. `{ refresh: '1' }` dla cronów; wymuszenie działa tylko z `Bearer CRON_SECRET` (ROADMAP 1b).
 type Extra = Record<string, string>;
 
 function withQuery(path: string, qs: URLSearchParams, extra: Extra): string {

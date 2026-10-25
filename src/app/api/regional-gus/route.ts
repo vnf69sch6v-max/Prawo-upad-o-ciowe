@@ -3,6 +3,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withCache } from '@/lib/server-cache';
 import { gusFetchInit } from '@/lib/upstream-fetch';
+import { canForceUpstream } from '@/lib/access';
 
 const GUS_BASE = 'https://bdl.stat.gov.pl/api/v1';
 
@@ -77,7 +78,7 @@ async function fetchByVariable(varId: number, unitLevel: number, years: number[]
 }
 
 export async function GET(request: NextRequest) {
-    const force = new URL(request.url).searchParams.get('refresh') === '1';
+    const force = new URL(request.url).searchParams.get('refresh') === '1' && canForceUpstream(request); // tylko cron
     const apiKey = process.env.GUS_BDL_KEY || process.env.GUS_API_KEY;
 
     try {

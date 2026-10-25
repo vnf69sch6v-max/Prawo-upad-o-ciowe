@@ -4,6 +4,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withCache } from '@/lib/server-cache';
 import { gusFetchInit } from '@/lib/upstream-fetch';
+import { canForceUpstream } from '@/lib/access';
 
 const BDL = 'https://bdl.stat.gov.pl/api/v1/data/by-variable';
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -32,7 +33,7 @@ export async function GET(request: NextRequest) {
     const step = Math.max(1, parseInt(sp.get('step') || '1') || 1);
     const year = parseInt(sp.get('year') || String(new Date().getFullYear()));
     const freq = sp.get('freq') === 'q' ? 'q' : 'm';
-    const force = sp.get('refresh') === '1'; // cron warm → pobierz u źródła, pomiń oba cache
+    const force = sp.get('refresh') === '1' && canForceUpstream(request); // tylko cron → u źródła, pomiń oba cache
     if (!start) return NextResponse.json({ error: 'Wymagane: start (id zmiennej)' }, { status: 400 });
 
     const apiKey = process.env.GUS_BDL_KEY || process.env.GUS_API_KEY;

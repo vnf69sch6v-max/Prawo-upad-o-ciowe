@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
     const y = parseGusYear(sp);
     if (!y.ok) return badParam(y);
     const year = y.value.year;
-    const force = forcedRefresh(sp, y.value); // cron warm → wymuś refetch (pomiń cache), tylko rok bieżący
+    const force = forcedRefresh(sp, y.value, request); // tylko cron (Bearer CRON_SECRET) i tylko rok bieżący
     const years = [year - 1, year];
 
     try {

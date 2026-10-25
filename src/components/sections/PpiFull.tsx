@@ -62,7 +62,7 @@ const DIV_INFO: Record<string, string> = {
 const divFallback = (secName: string) => `Dział sekcji „${secName}". Ceny producenta zależą od kosztów surowców, energii i pracy w tej branży.`;
 
 export function PpiFull() {
-    const { data, isLoading, isError, isFetching, refetch, refreshFromSource } = usePpiFull();
+    const { data, isLoading, isError, isFetching, refetch } = usePpiFull();
     const cpiQ = useCpiFull();
     useGusPpiHeadline();
 
@@ -203,7 +203,7 @@ export function PpiFull() {
                     <SectionCard editorial titleVariant="label" title="PPI — trend" subtitle={`${freq === 'yoy' ? 'rok do roku' : 'miesiąc do miesiąca'} (%) · GUS`}
                         actions={<div className="flex flex-wrap items-center gap-2">
                             <Segmented value={freq} onChange={setFreq} aria-label="Częstotliwość PPI" options={[{ value: 'yoy', label: 'r/r' }, { value: 'mom', label: 'm/m' }]} />
-                            <RefreshButton onClick={() => { void refreshFromSource(); }} loading={isFetching && !isLoading} />
+                            <RefreshButton onClick={() => { void refetch(); }} loading={isFetching && !isLoading} />
                             {dataDate && <span className="text-[11px] font-medium text-mk-muted">{formatDataPeriodLabel(dataDate)}</span>}
                             <StaleBadge date={dataDate} label="dane za" warnAfterMonths={3} />
                         </div>}>

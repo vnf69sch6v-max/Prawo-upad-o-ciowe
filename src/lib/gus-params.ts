@@ -4,6 +4,7 @@
 // Dlatego trasy przyjmują tylko to, co wysyła nasz kod (`src/lib/gus-api-paths.ts`); reszta dostaje 400.
 import { NextResponse } from 'next/server';
 import { DBW_POLSKA, DBW_SERIES, type DbwSeriesId } from '@/lib/gus-dbw-series';
+import { canForceUpstream } from '@/lib/access';
 
 export type Parsed<T> = { ok: true; value: T } | { ok: false; error: string; param: string };
 
@@ -49,8 +50,12 @@ export function parseGusYear(sp: URLSearchParams, now: Date = new Date(), name =
     return { ok: true, value: { year, current: year === current } };
 }
 
-/** `refresh=1` wymusza pobranie u źródła tylko dla klucza bieżącego roku (połowa budżetu wymuszonych wywołań). */
-export const forcedRefresh = (sp: URLSearchParams, y: GusYear) => sp.get('refresh') === '1' && y.current;
+/**
+ * `refresh=1` wymusza pobranie u źródła tylko dla klucza bieżącego roku (1a) i tylko z `Bearer CRON_SECRET` (1b).
+ * Publiczne `refresh=1` to zwykłe żądanie: cache ze zwykłym TTL, ten sam klucz.
+ */
+export const forcedRefresh = (sp: URLSearchParams, y: GusYear, request: Parameters<typeof canForceUpstream>[0]) =>
+    sp.get('refresh') === '1' && y.current && canForceUpstream(request);
 
 const SINGLE_DBW = ['var', 'przekroj', 'freq', 'prez', 'poz1', 'sub100'] as const;
 const NUM = /^\d+$/;

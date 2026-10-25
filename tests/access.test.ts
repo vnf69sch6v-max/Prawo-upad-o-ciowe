@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { SignJWT, generateKeyPair } from 'jose';
-import { PLANS, gate, hasAccess, isPublicPath, monthlyPrice, sameSecret, savingsPct, trialClaims, trialDays } from '@/lib/access';
+import { PLANS, canForceUpstream, gate, hasAccess, isPublicPath, monthlyPrice, sameSecret, savingsPct, trialClaims, trialDays } from '@/lib/access';
 import { KeysUnavailable, verifySessionCookie } from '@/lib/auth/session-verify';
 import { ADMIN_UNTIL, grantDecision, trialId } from '@/lib/auth/grant';
 import { authFlags } from '@/lib/auth/flags';
@@ -167,5 +167,16 @@ describe('flagi logowania', () => {
     it('bez konfiguracji Firebase wszystko wyłączone — bramka bez logowania zamknęłaby stronę', () => {
         expect(authFlags('true', 'true', false)).toEqual({ enabled: false, required: false });
         expect(authFlags(undefined, undefined, false)).toEqual({ enabled: false, required: false });
+    });
+});
+
+describe('wymuszone pobranie u źródła GUS (ROADMAP 1b)', () => {
+    const req = (auth?: string) => new Request('https://savori.space/api/gus-cpi-full?refresh=1', auth ? { headers: { authorization: auth } } : {});
+    it('bez CRON_SECRET jak dawniej (dev, demo)', () => {
+        expect(canForceUpstream(req(), '')).toBe(true);
+    });
+    it('z sekretem tylko dokładnie „Bearer <sekret>”', () => {
+        for (const a of [undefined, 'Bearer x', 'bearer s', 'Bearer  s', 's']) expect(canForceUpstream(req(a), 's'), String(a)).toBe(false);
+        expect(canForceUpstream(req('Bearer s'), 's')).toBe(true);
     });
 });
