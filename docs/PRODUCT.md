@@ -62,6 +62,11 @@ odpowiedź na pytanie „co się zmieniło i co to znaczy” — w dniu publikac
 - [ ] Upstream `no-store`; cron z `refresh=1`; dziennik cronów (*Data Cache Next.js zamrażał dane*).
 - [ ] Crony wołają `SITE_URL` przez `internal-fetch` (*adres wdrożenia był za logowaniem Vercela*).
 - [ ] `refresh=1` z limitem (*publiczne odświeżanie mogło wyczerpać limit GUS*).
+- [ ] Publiczna trasa do źródła z limitem przyjmuje tylko znane parametry (rok, seria z listy). Zły parametr
+      daje 400 bez wywołania źródła i bez zapisu do cache. (*`/api/gus-cpi-full?year=1` to 8152 wywołania DBW;
+      `sub100=0` zapisywało surowy indeks pod kluczem Przeglądu*)
+- [ ] Długa trasa ma `export const maxDuration` w pliku, a limit crona ≥ suma limitów jego tras. (*`vercel.json`
+      bierze pierwszy pasujący wzorzec, więc wpisy pod globem 30 s były martwe, a CPI z crona dostawało 504*)
 - [ ] Kontrola świeżości dla nowego zbioru.
 - [ ] Nic zależnego od „dziś” przed hydratacją (*React #418*).
 - [ ] Telefon 320/390 px i desktop 1280/1440 px — bez przewijania w bok (*nagłówek przy 1280 px*).
