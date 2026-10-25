@@ -119,7 +119,7 @@ function WaterfallChart({ rows, trigger }: { rows: WaterfallRow[]; trigger: 'hov
 }
 
 export function InflacjaFull() {
-    const { data, isLoading, isError, isFetching, refetch, refreshFromSource } = useCpiFull();
+    const { data, isLoading, isError, isFetching, refetch } = useCpiFull();
     const ppiHeadQ = useGusPpiHeadline();
     const ppiFullQ = usePpiFull();
     const tooltipTrigger = useCanHover() ? 'hover' : 'click';
@@ -328,7 +328,7 @@ export function InflacjaFull() {
                     <SectionCard editorial titleVariant="label" title="Inflacja CPI — trend (10 lat)" subtitle={`${freq === 'yoy' ? 'rok do roku' : 'miesiąc do miesiąca'} (%) · GUS`}
                         actions={<div className="flex flex-wrap items-center gap-2">
                             <Segmented value={freq} onChange={setFreq} aria-label="Częstotliwość CPI" options={[{ value: 'yoy', label: 'r/r' }, { value: 'mom', label: 'm/m' }]} />
-                            <RefreshButton onClick={() => { void refreshFromSource(); }} loading={isFetching && !isLoading} />
+                            <RefreshButton onClick={() => { void refetch(); }} loading={isFetching && !isLoading} />
                             {dataDate && <span className="text-[11px] font-medium text-mk-muted">{formatDataPeriodLabel(dataDate)}</span>}
                             <StaleBadge date={dataDate} label="dane za" warnAfterMonths={4} />
                         </div>}>

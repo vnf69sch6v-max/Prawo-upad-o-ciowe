@@ -166,7 +166,12 @@ Standard scripts in `package.json`:
   throws it returns the last stored payload (any age), and an empty payload
   (`looksEmpty`: every top-level array empty) does not replace a non-empty one.
   An API can therefore answer 200 with old data — staleness is detected by the
-  freshness check, not by HTTP errors. `?refresh=1` is public (no secret), so a
+  freshness check, not by HTTP errors. In GUS DBW/BDL routes `?refresh=1` forces the
+  source only with `Authorization: Bearer CRON_SECRET` (`canForceUpstream`, `src/lib/access.ts`; crons and the
+  freshness check send it via `internalInit`) or when no secret is set (dev, demo). A public `refresh=1` is a
+  normal request: same cache key, normal TTL (ROADMAP 1b — two honest "Aktualizuj" clicks on CPI + PPI used to
+  exceed the DBW limit and push a GUS release to the next day). The CPI/PPI "Aktualizuj" button only refetches
+  our cache. Elsewhere `refresh=1` is still public. Either way a
   forced refresh (`maxAgeMs < 0`) reaches the source at most once per 10 min per
   cache key (`FORCED_REFRESH_MIN_AGE_MS`); a younger entry is served from cache.
   Routes pass `force ? -1 : ttl` — never `0`, which bypasses the limit.

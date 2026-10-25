@@ -170,3 +170,18 @@ describe('ścieżki powstają w jednym miejscu (kryterium 12)', () => {
         expect(readFileSync('src/app/ceny/page.tsx', 'utf8')).not.toContain('config={{');
     });
 });
+
+describe('przeglądarka nie wymusza pobrania z GUS (ROADMAP 1b)', () => {
+    const walk = (dir: string): string[] => readdirSync(dir).flatMap((f) => {
+        const p = join(dir, f);
+        return statSync(p).isDirectory() ? walk(p) : /\.tsx?$/.test(f) ? [p] : [];
+    });
+    it('komponenty i hooki bez refresh=1, nigdzie refreshFromSource', () => {
+        for (const file of [...walk('src/components'), 'src/lib/hooks.ts']) {
+            // Kod, nie komentarze (np. „bez refresh=1 (limit DBW)”).
+            const code = readFileSync(file, 'utf8').split('\n').map((l) => l.replace(/\/\/.*$/, '')).filter((l) => !l.trim().startsWith('*'));
+            expect(code.some((l) => /refresh=1|refresh: '1'/.test(l)), file).toBe(false);
+        }
+        for (const file of walk('src')) expect(readFileSync(file, 'utf8').includes('refreshFromSource'), file).toBe(false);
+    });
+});

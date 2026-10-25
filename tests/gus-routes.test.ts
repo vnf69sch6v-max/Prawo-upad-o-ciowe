@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Kryteria 8, 10 i 13 specyfikacji docs/specs/2026-10-25-gus-parametry-i-limit-czasu.md: błędny parametr = 400
 // bez odczytu cache i bez wywołania GUS; poprawne żądanie trafia w dzisiejszy klucz; `refresh=1` tylko dla roku bieżącego.
@@ -24,17 +24,25 @@ const W = warsawDate(new Date()).year;
 const fetchMock = vi.fn();
 const cache = vi.mocked(withCache);
 
-async function call(path: string) {
+const ALL_ROUTES: Record<string, () => Promise<{ GET: Handler }>> = {
+    ...ROUTES,
+    'bdl-series': () => import('@/app/api/bdl-series/route'),
+    'regional-gus': () => import('@/app/api/regional-gus/route'),
+};
+
+async function call(path: string, headers: Record<string, string> = {}) {
     const route = path.split('?')[0].replace('/api/', '');
-    const { GET } = await ROUTES[route]();
-    return GET(new Request(`https://savori.space${path}`) as never);
+    const { GET } = await ALL_ROUTES[route]();
+    return GET(new Request(`https://savori.space${path}`, { headers }) as never);
 }
 
 beforeEach(() => {
     cache.mockClear();
     fetchMock.mockReset();
     vi.stubGlobal('fetch', fetchMock);
+    vi.stubEnv('CRON_SECRET', ''); // 1a: bez sekretu (dev, demo); testy 1b ustawiają go same
 });
+afterEach(() => vi.unstubAllEnvs());
 
 const BAD: Record<string, string[]> = {
     'gus-cpi-full': ['?year=1', '?year=2030', `?year=${W}&year=${W}`],
@@ -92,5 +100,57 @@ describe('refresh=1 tylko dla roku bieżącego (kryterium 10)', () => {
         expect(await ttl(`year=${W}&refresh=1`)).toBe(-1);
         expect(await ttl(`year=${W - 1}&refresh=1`)).toBeGreaterThan(0);
         expect(await ttl(`year=${W}`)).toBeGreaterThan(0);
+    });
+});
+
+describe('refresh=1 wymusza GUS tylko z Bearer CRON_SECRET (ROADMAP 1b)', async () => {
+    const { CRON_ENDPOINTS } = await import('@/lib/cron-endpoints');
+    const { internalInit } = await import('@/lib/internal-fetch');
+    // 8 tras, które czytają `refresh`; ścieżka = poprawne żądanie (walidacja 1a), dopisujemy refresh=1.
+    const PATHS: Record<string, string> = {
+        'gus-cpi-full': '/api/gus-cpi-full', 'gus-ppi-full': '/api/gus-ppi-full', 'gus-koniunktura': '/api/gus-koniunktura',
+        'dbw-series': dbwSeriesPath('retail'), 'gus-cpi': '/api/gus-cpi', 'gus-monthly': '/api/gus-monthly',
+        'bdl-series': '/api/bdl-series?start=461680&count=12', 'regional-gus': '/api/regional-gus',
+    };
+    const withRefresh = (p: string) => `${p}${p.includes('?') ? '&' : '?'}refresh=1`;
+    const run = async (path: string, headers: Record<string, string> = {}) => {
+        cache.mockClear();
+        await call(path, headers);
+        expect(cache).toHaveBeenCalledTimes(1);
+        return { key: cache.mock.calls[0][1] as string, ttl: cache.mock.calls[0][4] as number };
+    };
+
+    it.each(Object.keys(PATHS))('/api/%s: publiczne refresh=1 = zwykły TTL, z sekretem -1, ten sam klucz', async (route) => {
+        vi.stubEnv('CRON_SECRET', 's');
+        const plain = await run(PATHS[route]);
+        const pub = await run(withRefresh(PATHS[route]));
+        const wrong = await run(withRefresh(PATHS[route]), { authorization: 'Bearer x' });
+        const cron = await run(withRefresh(PATHS[route]), { authorization: 'Bearer s' });
+        expect(plain.ttl).toBeGreaterThan(0);
+        expect(pub.ttl).toBe(plain.ttl);
+        expect(wrong.ttl).toBe(plain.ttl);
+        expect(cron.ttl).toBe(-1);
+        expect(new Set([plain.key, pub.key, wrong.key, cron.key]).size).toBe(1);
+        expect(fetchMock).not.toHaveBeenCalled();
+        vi.stubEnv('CRON_SECRET', '');
+        expect((await run(withRefresh(PATHS[route]))).ttl).toBe(-1); // bez sekretu jak dawniej
+    });
+
+    it('rok poprzedni nie jest wymuszany nawet z sekretem (reguła 1a zostaje)', async () => {
+        vi.stubEnv('CRON_SECRET', 's');
+        expect((await run(`/api/gus-cpi-full?year=${W - 1}&refresh=1`, { authorization: 'Bearer s' })).ttl).toBeGreaterThan(0);
+    });
+
+    it('crony (nagłówki internalInit) nadal wymuszają pobranie na każdej trasie z listy', async () => {
+        vi.stubEnv('CRON_SECRET', 's');
+        const headers = Object.fromEntries(new Headers(internalInit().headers).entries());
+        let checked = 0;
+        for (const ep of Object.values(CRON_ENDPOINTS).flat()) {
+            const route = new URL(ep, 'https://x').pathname.replace('/api/', '');
+            if (!(route in PATHS) || !ep.includes('refresh=1')) continue;
+            expect((await run(ep, headers)).ttl, ep).toBe(-1);
+            checked++;
+        }
+        expect(checked).toBeGreaterThanOrEqual(13);
     });
 });

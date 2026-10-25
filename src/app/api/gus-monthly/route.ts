@@ -4,6 +4,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withCache } from '@/lib/server-cache';
 import { badParam, parseGusMonthlyYears } from '@/lib/gus-params';
+import { canForceUpstream } from '@/lib/access';
 import { gusFetchInit } from '@/lib/upstream-fetch';
 import { dbwFetchMany, monthOkres, type DbwPeriod } from '@/lib/dbw-fetch';
 
@@ -121,7 +122,7 @@ export async function GET(request: NextRequest) {
     if (!parsed.ok) return badParam(parsed);
     const years = parsed.value;
     const apiKey = process.env.GUS_BDL_KEY || process.env.GUS_API_KEY;
-    const force = searchParams.get('refresh') === '1'; // cron warm → pobierz u źródła, pomiń oba cache
+    const force = searchParams.get('refresh') === '1' && canForceUpstream(request); // tylko cron → u źródła, pomiń oba cache
 
     try {
         const data = await withCache<GUSMonthlyResult>(

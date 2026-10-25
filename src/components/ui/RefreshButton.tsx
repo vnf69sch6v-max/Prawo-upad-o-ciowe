@@ -8,7 +8,8 @@ interface RefreshButtonProps {
     label?: string;
 }
 
-/** Ręczne odświeżenie danych u źródła (`?refresh=1` po stronie API). */
+/** Ponowny odczyt danych z serwera (cache odświeżany przez crony). Wymuszenie pobrania u źródła GUS ma tylko
+ *  automatyka z `CRON_SECRET` (ROADMAP 1b) — jedno kliknięcie CPI to ~64 wywołania DBW przy limicie ~100 / 15 min. */
 export function RefreshButton({ onClick, loading = false, label = 'Aktualizuj' }: RefreshButtonProps) {
     return (
         <button

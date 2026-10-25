@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
     const s = parseDbwSeries(sp);
     if (!s.ok) return badParam(s);
     const year = y.value.year;
-    const force = forcedRefresh(sp, y.value); // cron warm → wymuś refetch (pomiń cache), tylko rok bieżący
+    const force = forcedRefresh(sp, y.value, request); // tylko cron (Bearer CRON_SECRET) i tylko rok bieżący
     const { var: v, przekroj: p2, poz: pozNums, freq = 'm', prez = 5 } = DBW_SERIES[s.value];
     const varId = String(v);
     const przekroj = String(p2);

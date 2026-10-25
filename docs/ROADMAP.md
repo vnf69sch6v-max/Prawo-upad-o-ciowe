@@ -25,11 +25,8 @@ pierwszeństwo. Rzeczy, których nie da się zrobić z kodu, trafiają do „Wym
    na jednym kluczu i nie jest budżetem GUS. Kroki:
    - **1a — zrobione 25.10.2026** (specyfikacja `docs/specs/2026-10-25-gus-parametry-i-limit-czasu.md`, wpis
      w „Zrobione”). Kontrola produkcyjna crona CPI 13.11.2026 — pozycja P0.
-   - **1b: wymuszone odświeżenie GUS DBW/BDL tylko z `CRON_SECRET`** (`Authorization` z `internalInit`).
-     Publiczne `refresh=1` ma wtedy zwykły TTL, a przycisk „Aktualizuj” na CPI/PPI nie wysyła `refresh=1`.
-     Po 1a `refresh=1` na kluczach bieżącego roku daje nadal ~279 wywołań DBW / 10 min — dziś tylko dla
-     zalogowanych z dostępem (bramka API), ale okres próbny dostaje każdy zweryfikowany e-mail. **Odblokowane:**
-     `CRON_SECRET` jest ustawiony (25.10.2026 `/api/*` bez sesji odpowiada 401). Następny krok rutyny.
+   - **1b — zrobione 25.10.2026** (specyfikacja `docs/specs/2026-10-25-gus-odswiezanie-tylko-cron.md`, wpis
+     w „Zrobione”). Kontrola przebiegów cronów 26.10 po 16:40 UTC i 13.11 (P0).
    - **1c: walidacja tras GUS BDL** (limit BDL bez klucza: ~5 żądań/s, ~100 / 15 min):
      - `bdl-series`: dowolne `start`/`step`/`year`/`freq` tworzą dowolne klucze;
      - `gus-labor-extra` `year`, `regional-gus`, `gus-regional`, `smup`;
@@ -68,8 +65,8 @@ P3. **Przekrój DBW 1698 jest ucięty do 5000 wierszy.** DBW ignoruje `ile-na-st
      w trasach z danymi użytkownika (`verifySessionCookie(..., true)`).
 
 ### Płatna platforma
-P-2. **API za bramką**: `/api/*` jest publiczne — dane da się pobrać bez konta. Trasy danych tylko z ważną sesją
-     (weryfikacja jak w middleware), crony przez `CRON_SECRET` (1b).
+P-2. ~~API za bramką~~ — działa od 25.10.2026 (`CRON_SECRET` ustawiony, `/api/*` bez sesji = 401). Wymuszone
+     odświeżenie GUS tylko dla cronów — 1b, zrobione 25.10.2026.
 P-3. **Konto**: strona „Mój dostęp” (plan, do kiedy, przedłuż), usunięcie konta (RODO), automatyczne usuwanie kont
      nieaktywnych (np. 24 mies.) — wtedy zaktualizować `/prywatnosc` §7.
 P-4. **Dostęp zamrożony w ciasteczku sesji (do 5 dni)**: po blokadzie konta nowy stan widać dopiero po
@@ -182,6 +179,14 @@ J3. **Przegląd Japonii** (hero jak w PL), gdy będą ≥3 wskaźniki.
 - **`GUS_BDL_KEY`** — wyższy limit BDL (rejestracja na api.stat.gov.pl).
 
 ## Zrobione
+- **25.10.2026 — 1b: wymuszone pobranie z GUS DBW/BDL tylko z `CRON_SECRET`**
+  (PR #39, `docs/specs/2026-10-25-gus-odswiezanie-tylko-cron.md`). `canForceUpstream` (`src/lib/access.ts`) w 8 trasach
+  (`gus-cpi-full`, `gus-ppi-full`, `gus-koniunktura`, `dbw-series`, `gus-cpi`, `gus-monthly`, `bdl-series`,
+  `regional-gus`): publiczne `refresh=1` = zwykły TTL i ten sam klucz, crony (`internalInit`) dalej wymuszają.
+  Przycisk „Aktualizuj” na CPI/PPI **został** (granica rutyny: nie usuwać funkcji) — czyta już tylko cache
+  odświeżany przez crony, bez `refresh=1`. PM w recenzji: **SHIP**, przycisk zostaje (zapytania GUS mają
+  `staleTime` 24 h, więc bez niego otwarta karta nie zobaczy odczytu z crona do przeładowania). Propozycja usunięcia
+  wycofana. Wyjście awaryjne przy spóźnionej publikacji: Vercel → Settings → Cron Jobs → `dbw-1` → Run.
 - **25.10.2026 — `CRON_SECRET` ustawiony przez właściciela** (`/api/*` bez sesji odpowiada 401, crony przechodzą
   bramkę z `Authorization: Bearer`). Krok 1b odblokowany.
 - **25.10.2026 — 1a: trasy GUS DBW przyjmują tylko znane parametry, crony CPI mieszczą się w czasie**

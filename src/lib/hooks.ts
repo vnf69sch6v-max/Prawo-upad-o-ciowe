@@ -1,7 +1,7 @@
 'use client';
 
-import { useCallback, useMemo } from 'react';
-import { useQuery, useQueries, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
+import { useMemo } from 'react';
+import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import type { NewsResult } from '@/lib/news/types';
 import { DBW_SERIES, type DbwSeriesId } from '@/lib/gus-dbw-series';
 import { cpiFullPath, dbwSeriesPath, gusCpiPath, gusMonthlyPath, koniunkturaPath, ppiFullPath } from '@/lib/gus-api-paths';
@@ -504,21 +504,13 @@ interface CpiFullData {
 
 // Rok ustala serwer (strefa Europe/Warsaw) — zły zegar urządzenia nie może skończyć się błędem 400.
 export function useCpiFull() {
-    const queryClient = useQueryClient();
-    const queryKey = ['gus-cpi-full'] as const;
+    // Bez `refresh=1`: wymuszenie GUS tylko z crona (ROADMAP 1b) — „Aktualizuj” czyta cache, który odświeża cron.
     const query = useQuery<CpiFullData>({
-        queryKey,
+        queryKey: ['gus-cpi-full'],
         queryFn: () => fetchJSON(cpiFullPath()),
         ...refreshOptions('gusDbw'),
     });
-    const refreshFromSource = useCallback(
-        () => queryClient.fetchQuery({
-            queryKey,
-            queryFn: () => fetchJSON<CpiFullData>(cpiFullPath({ refresh: '1' })),
-        }),
-        [queryClient],
-    );
-    return { ...query, refreshFromSource };
+    return query;
 }
 
 // ─── GUS PPI pełny (ceny produkcji, PKD 2007) ────────────
@@ -527,21 +519,12 @@ export interface PpiDivision { code: string; name: string; sec: string; yoy: num
 export interface PpiSection { code: string; name: string; yoy: number | null; mom: number | null; history: PpiHistPoint[]; divisions: PpiDivision[] }
 export interface PpiFullData { headline: PpiHistPoint[]; sections: PpiSection[]; dataDate: string; source: string }
 export function usePpiFull() {
-    const queryClient = useQueryClient();
-    const queryKey = ['gus-ppi-full'] as const;
     const query = useQuery<PpiFullData>({
-        queryKey,
+        queryKey: ['gus-ppi-full'],
         queryFn: () => fetchJSON(ppiFullPath()),
         ...refreshOptions('gusDbw'),
     });
-    const refreshFromSource = useCallback(
-        () => queryClient.fetchQuery({
-            queryKey,
-            queryFn: () => fetchJSON<PpiFullData>(ppiFullPath({ refresh: '1' })),
-        }),
-        [queryClient],
-    );
-    return { ...query, refreshFromSource };
+    return query;
 }
 
 // ─── GUS krajowy CPI (oficjalny, DBW) ───────────────────
