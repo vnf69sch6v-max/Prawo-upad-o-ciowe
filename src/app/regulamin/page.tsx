@@ -60,11 +60,11 @@ export default function TermsPage() {
                 </ul>
                 <p>
                     Każdy plan to <strong>jednorazowa płatność bez automatycznego odnawiania</strong> — nic nie pobierzemy bez
-                    Twojej decyzji. Płatność obsługuje Stripe (Stripe Payments Europe, Ltd.). Dostępne metody (karta, BLIK,
-                    szybki przelew) zależą od tych włączonych u operatora. Dostęp zaczyna się po potwierdzeniu płatności
-                    i trwa przez opłacony okres liczony w miesiącach kalendarzowych; kolejny zakup przedłuża go od końca
-                    bieżącego dostępu, a jeśli dostęp już wygasł — od chwili zakupu. Potwierdzenie z informacją o odstąpieniu
-                    przychodzi na adres e-mail konta.
+                    Twojej decyzji. Płatność obsługuje Stripe (Stripe Payments Europe, Ltd.) na stronie checkout.stripe.com.
+                    Dostępne metody (karta, BLIK, szybki przelew) zależą od tych włączonych u operatora. Dostęp zaczyna się
+                    po potwierdzeniu płatności i trwa przez opłacony okres liczony w miesiącach kalendarzowych; kolejny zakup
+                    przedłuża go od końca bieżącego dostępu, a jeśli dostęp już wygasł — od chwili zakupu. Pokwitowanie e-mail
+                    z informacją o 14 dniach na odstąpienie wysyła Stripe na adres e-mail konta.
                 </p>
             </Section>
 
@@ -104,7 +104,7 @@ export default function TermsPage() {
                 <p>
                     Korzystanie z usług przez internet wiąże się z ryzykami, takimi jak złośliwe oprogramowanie, wyłudzanie danych
                     logowania (phishing) czy przechwycenie połączenia w niezabezpieczonej sieci. Savori nigdy nie prosi o hasło
-                    do Google ani o dane karty poza stroną operatora płatności. Korzystaj z aktualnej przeglądarki, sprawdzaj adres
+                    do Google ani o dane karty poza stroną Stripe (checkout.stripe.com). Korzystaj z aktualnej przeglądarki, sprawdzaj adres
                     savori.space i włącz weryfikację dwuetapową na koncie Google.
                 </p>
             </Section>

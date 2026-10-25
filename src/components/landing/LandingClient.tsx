@@ -1,12 +1,13 @@
 'use client';
 
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { Check, Loader2 } from 'lucide-react';
 import { PLANS, monthlyPrice, savingsPct, type PlanId } from '@/lib/access';
+import { safeRedirectTarget } from '@/lib/auth/redirect';
 import { getFirebaseAuth } from '@/lib/firebase/config';
 import { useAuth } from '@/lib/auth/use-auth';
-import { isCheckoutSessionId } from '@/lib/stripe/ids';
+import { isCheckoutSessionId, isStripeCheckoutUrl } from '@/lib/stripe/ids';
 import { useIsClient } from '@/lib/use-is-client';
 
 const scrollToLogin = () => document.getElementById('logowanie')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -37,9 +38,12 @@ const PLAN_TTL_MS = 15 * 60 * 1000;
 
 interface SavedPlan { plan: PlanId; at: number; from: string | null }
 
-function safePath(from: string | null): string | null {
-    if (!from || !from.startsWith('/') || from.startsWith('//') || from.includes('\\')) return null;
-    return from;
+/** Ścieżka powrotu po płatności. `null`, gdy zostajemy na stronie startowej albo w `/`. */
+function returnPath(from: string | null): string | null {
+    if (!from) return null;
+    const safe = safeRedirectTarget(from, window.location.origin);
+    if (safe === '/' || safe === '/start' || safe.startsWith('/start?') || safe.startsWith('/start#')) return null;
+    return safe;
 }
 
 function readSaved(): SavedPlan | null {
@@ -48,7 +52,10 @@ function readSaved(): SavedPlan | null {
         if (!raw) return null;
         const value = JSON.parse(raw) as Partial<SavedPlan>;
         if (!value.plan || !PLANS.some((p) => p.id === value.plan) || typeof value.at !== 'number') return null;
-        if (Date.now() - value.at > PLAN_TTL_MS) return null;
+        if (Date.now() - value.at > PLAN_TTL_MS) {
+            sessionStorage.removeItem(PLAN_KEY);
+            return null;
+        }
         return { plan: value.plan, at: value.at, from: typeof value.from === 'string' ? value.from : null };
     } catch {
         return null;
@@ -57,21 +64,25 @@ function readSaved(): SavedPlan | null {
 
 function rememberPlan(plan: PlanId) {
     const params = new URLSearchParams(window.location.search);
-    const from = safePath(params.get('from'));
-    sessionStorage.setItem(PLAN_KEY, JSON.stringify({ plan, at: Date.now(), from } satisfies SavedPlan));
-    if (from) sessionStorage.setItem(RETURN_KEY, from);
+    const back = returnPath(params.get('from'));
+    sessionStorage.setItem(PLAN_KEY, JSON.stringify({ plan, at: Date.now(), from: back } satisfies SavedPlan));
+    if (back) sessionStorage.setItem(RETURN_KEY, back);
     params.set('from', '/start');
     const qs = params.toString();
     window.history.replaceState(null, '', `${window.location.pathname}${qs ? `?${qs}` : ''}#logowanie`);
     document.getElementById('logowanie')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
+function rememberReturn() {
+    const back = returnPath(new URLSearchParams(window.location.search).get('from'));
+    if (back) sessionStorage.setItem(RETURN_KEY, back);
+}
+
 function consumeReturnPath(): string {
-    const from = safePath(sessionStorage.getItem(RETURN_KEY));
+    const from = sessionStorage.getItem(RETURN_KEY);
     sessionStorage.removeItem(RETURN_KEY);
     sessionStorage.removeItem(PLAN_KEY);
-    if (!from || from === '/start' || from.startsWith('/start?') || from.startsWith('/start#')) return '/';
-    return from;
+    return returnPath(from) ?? '/';
 }
 
 function checkoutError(code: string | undefined): string {
@@ -103,7 +114,6 @@ export function PaymentReturn() {
     const { enabled, loading, user } = useAuth();
     const [phase, setPhase] = useState<'ok' | 'pending' | 'error' | null>(null);
     const [detail, setDetail] = useState<string | null>(null);
-    const started = useRef(false);
     const params = isClient ? new URLSearchParams(window.location.search) : null;
     const flag = params?.get('platnosc') ?? null;
     const sessionId = params?.get('session_id') ?? null;
@@ -111,10 +121,20 @@ export function PaymentReturn() {
     const signedOut = flag === 'ok' && !badId && !loading && (!enabled || !user);
 
     useEffect(() => {
-        if (!isClient || loading || badId || signedOut || flag !== 'ok' || started.current) return;
+        if (!isClient || loading || flag !== 'ok' || badId) return;
+        if (!enabled || !user) {
+            const backParams = new URLSearchParams(window.location.search);
+            backParams.delete('from');
+            const back = `${window.location.pathname}?${backParams.toString()}`;
+            if (new URLSearchParams(window.location.search).get('from') !== back) {
+                const next = new URLSearchParams(window.location.search);
+                next.set('from', back);
+                window.history.replaceState(null, '', `${window.location.pathname}?${next.toString()}${window.location.hash}`);
+            }
+            return;
+        }
         const fb = getFirebaseAuth()?.currentUser;
         if (!fb || !sessionId) return;
-        started.current = true;
         let cancel = false;
         void (async () => {
             for (let i = 0; i < 5 && !cancel; i++) {
@@ -152,7 +172,7 @@ export function PaymentReturn() {
             }
         })();
         return () => { cancel = true; };
-    }, [isClient, loading, badId, signedOut, flag, sessionId]);
+    }, [isClient, loading, enabled, user, flag, sessionId, badId]);
 
     if (!isClient || !flag) return null;
     if (flag === 'anulowana') return <PayBanner>Płatność anulowana. Nic nie zostało pobrane — możesz wybrać plan ponownie.</PayBanner>;
@@ -181,7 +201,7 @@ export function PricingNote({ payments }: { payments: boolean }) {
     return (
         <p className="mt-8 text-center text-sm text-mk-muted">
             {payments
-                ? 'Ceny brutto. Płatność jednorazowa przez Stripe — karta, a gdy włączone, także BLIK i szybki przelew. Potwierdzenie przychodzi na e-mail. Bez automatycznego odnawiania.'
+                ? 'Ceny brutto. Płatność jednorazowa przez Stripe — karta, a gdy włączone, także BLIK i szybki przelew. Pokwitowanie z informacją o 14 dniach na odstąpienie przychodzi na e-mail. Bez automatycznego odnawiania.'
                 : 'Ceny brutto. Płatności BLIK, kartą i szybkim przelewem uruchamiamy wkrótce — dziś zaczynasz od okresu próbnego.'}
         </p>
     );
@@ -197,14 +217,18 @@ export function PricingCards({ ctaLabel, payments }: { ctaLabel: string; payment
     const pending = isClient && payments && signedIn && !paying ? readSaved() : null;
     const pendingPlan = pending ? PLANS.find((p) => p.id === pending.plan) : undefined;
 
+    useEffect(() => {
+        if (!pendingPlan) return;
+        document.getElementById('cennik')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, [pendingPlan]);
+
     const buy = async (plan: PlanId) => {
         if (!signedIn) {
             rememberPlan(plan);
             setError('Zaloguj się, żeby zapłacić. Potem wrócimy do płatności.');
             return;
         }
-        const from = safePath(new URLSearchParams(window.location.search).get('from'));
-        if (from) sessionStorage.setItem(RETURN_KEY, from);
+        rememberReturn();
         setBusy(plan);
         setError(null);
         try {
@@ -213,14 +237,14 @@ export function PricingCards({ ctaLabel, payments }: { ctaLabel: string; payment
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ plan }),
             });
-            const body = await res.json().catch(() => ({})) as { url?: string; error?: string };
+            const body = await res.json().catch(() => ({})) as { url?: unknown; error?: string };
             if (res.status === 401) {
                 rememberPlan(plan);
                 setError(checkoutError('unauthorized'));
                 setBusy(null);
                 return;
             }
-            if (!res.ok || typeof body.url !== 'string') {
+            if (!res.ok || !isStripeCheckoutUrl(body.url)) {
                 setError(checkoutError(body.error));
                 setBusy(null);
                 return;
@@ -240,7 +264,7 @@ export function PricingCards({ ctaLabel, payments }: { ctaLabel: string; payment
                     <button type="button" onClick={() => void buy(pendingPlan.id)} disabled={busy !== null}
                         className="mk-btn mk-btn-primary min-h-12 shrink-0 px-4 text-sm font-semibold">
                         {busy === pendingPlan.id ? <Loader2 size={16} className="animate-spin" /> : null}
-                        Przejdź do płatności
+                        Zapłać {pendingPlan.pricePln} zł
                     </button>
                 </div>
             )}

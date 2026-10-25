@@ -1,8 +1,10 @@
 import { createHmac, randomBytes } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 import { ADMIN_UNTIL } from '@/lib/auth/grant';
 import { PLANS } from '@/lib/access';
+import { docLegacy, fromStored } from '@/lib/data-seal';
 import {
     addCalendarMonths,
     checkoutBody,
@@ -42,6 +44,7 @@ const h = vi.hoisted(() => {
                 set: (ref, data) => ref.set(data),
             }),
     };
+    const flags = { auth: true, iat: null as number | null };
     const fakeAuth = {
         getUser: async (uid: string) => {
             const user = users.get(uid);
@@ -53,29 +56,45 @@ const h = vi.hoisted(() => {
             user.customClaims = claims;
             users.set(uid, user);
         },
-        verifySessionCookie: async (cookie: string) => {
+        verifySessionCookie: async (cookie: string, checkRevoked?: boolean) => {
+            if (checkRevoked !== true) throw Object.assign(new Error('revocation'), { code: 'auth/argument-error' });
             if (cookie !== 'good') throw Object.assign(new Error('bad'), { code: 'auth/argument-error' });
             return { uid: 'user_1' };
         },
-        verifyIdToken: async (token: string) => {
+        verifyIdToken: async (token: string, checkRevoked?: boolean) => {
+            if (checkRevoked !== true) throw Object.assign(new Error('revocation'), { code: 'auth/argument-error' });
             if (token !== 'fresh') throw Object.assign(new Error('bad'), { code: 'auth/argument-error' });
             const user = users.get('user_1');
-            return { uid: 'user_1', iat: Math.floor(Date.now() / 1000), accessUntil: user?.customClaims?.accessUntil, plan: user?.customClaims?.plan };
+            const now = Math.floor(Date.now() / 1000);
+            return {
+                uid: 'user_1',
+                iat: flags.iat ?? now,
+                auth_time: 1,
+                email: user?.email ?? 'a@b.pl',
+                email_verified: true,
+                accessUntil: user?.customClaims?.accessUntil,
+                plan: user?.customClaims?.plan,
+            };
         },
-        createSessionCookie: async (token: string) => {
+        createSessionCookie: async (token: string, opts?: { expiresIn?: number }) => {
             if (token !== 'fresh') throw Object.assign(new Error('old'), { code: 'auth/invalid-id-token' });
+            if (opts?.expiresIn !== 5 * 24 * 60 * 60 * 1000) throw Object.assign(new Error('ttl'), { code: 'auth/invalid-argument' });
             return 'minted';
         },
     };
-    return { store, users, fakeDb, fakeAuth };
+    return { store, users, fakeDb, fakeAuth, flags };
 });
 
-vi.mock('@/lib/firebase/admin', () => ({ getAdminDb: () => h.fakeDb, getAdminAuth: () => h.fakeAuth }));
+vi.mock('@/lib/firebase/admin', () => ({
+    getAdminDb: () => (h.flags.auth ? h.fakeDb : null),
+    getAdminAuth: () => (h.flags.auth ? h.fakeAuth : null),
+}));
 
 const { fulfillPaidSession } = await import('@/lib/stripe/fulfill');
 const { POST: checkoutPost, GET: checkoutGet } = await import('@/app/api/stripe/checkout/route');
 const { POST: webhookPost } = await import('@/app/api/stripe/webhook/route');
 const { POST: confirmPost } = await import('@/app/api/stripe/confirm/route');
+const { POST: sessionPost } = await import('@/app/api/auth/session/route');
 
 const at = (y: number, m: number, d: number, hh = 0, mm = 0, ss = 0) => Math.floor(Date.UTC(y, m - 1, d, hh, mm, ss) / 1000);
 const SECRET = 'sk_test_dummy';
@@ -112,6 +131,8 @@ function sign(payload: string, secret = WHSEC, t = Math.floor(Date.now() / 1000)
 beforeEach(() => {
     h.store.clear();
     h.users.clear();
+    h.flags.auth = true;
+    h.flags.iat = null;
     vi.stubEnv('DATA_ENCRYPTION_KEY', KEY);
     vi.stubEnv('STRIPE_SECRET_KEY', SECRET);
     vi.stubEnv('STRIPE_WEBHOOK_SECRET', WHSEC);
@@ -210,9 +231,14 @@ describe('zaksięgowanie', () => {
         expect(second.already).toBe(true);
         expect(second.accessUntil).toBe(first.accessUntil);
         expect(h.users.get('user_1')?.customClaims).toMatchObject({ plan: 'm1', accessUntil: first.accessUntil });
-        const raw = JSON.stringify(h.store.get(`payments/${SESSION}`), (k, v) => (k === 'sealed' || k === 'updatedAt' ? undefined : v));
-        expect(raw).not.toContain('a@b.pl');
-        expect(h.store.get(`payments/${SESSION}`)?.sealed).toBeInstanceOf(Uint8Array);
+        const path = `payments/${SESSION}`;
+        const doc = h.store.get(path);
+        expect(doc?.sealed).toBeInstanceOf(Uint8Array);
+        expect(Buffer.from(doc!.sealed as Uint8Array).includes(Buffer.from('a@b.pl'))).toBe(false);
+        const rest = { ...doc };
+        delete rest.sealed;
+        expect(JSON.stringify(rest)).not.toContain('a@b.pl');
+        expect(fromStored(path, doc, docLegacy.read)?.value).toMatchObject({ email: 'a@b.pl' });
     });
 
     it('aktywny dostęp wydłuża od jego końca, a administrator zostaje administratorem', async () => {
@@ -223,18 +249,32 @@ describe('zaksięgowanie', () => {
 
         h.store.clear();
         h.users.set('admin_1', { email: 'a@b.pl', customClaims: { plan: 'm6', accessUntil: ADMIN_UNTIL } });
-        await fulfillPaidSession(paid({ id: 'cs_test_admin1234', uid: 'admin_1' }), nowMs);
-        expect(h.users.get('admin_1')?.customClaims).toMatchObject({ plan: 'm6', accessUntil: ADMIN_UNTIL });
+        const adminId = 'cs_test_admin1234';
+        const adminPaid = paid({ id: adminId, uid: 'admin_1' });
+        const granted = await fulfillPaidSession(adminPaid, nowMs);
+        const commercial = addCalendarMonths(Math.floor(nowMs / 1000), 1);
+        expect(granted.accessUntil).toBe(commercial);
+        expect(h.users.get('admin_1')?.customClaims).toEqual({ plan: 'm6', accessUntil: ADMIN_UNTIL });
+        const replay = await fulfillPaidSession(adminPaid, nowMs + 86_400_000);
+        expect(replay.already).toBe(true);
+        expect(replay.accessUntil).toBe(commercial);
+        expect(h.users.get('admin_1')?.customClaims).toEqual({ plan: 'm6', accessUntil: ADMIN_UNTIL });
+        const doc = h.store.get(`payments/${adminId}`);
+        expect(Buffer.from(doc!.sealed as Uint8Array).includes(Buffer.from('a@b.pl'))).toBe(false);
+        expect(fromStored(`payments/${adminId}`, doc, docLegacy.read)?.value).toMatchObject({ accessUntil: commercial });
     });
 });
 
 describe('trasy', () => {
     it('checkout: bez origin 403, bez ciasteczka 401, z sesją zwraca wyłącznie adres Stripe', async () => {
-        const seen: { url?: string; body?: string; auth?: string } = {};
+        const seen: { url?: string; body?: string; auth?: string; key?: string; redirect?: RequestRedirect } = {};
         vi.stubGlobal('fetch', vi.fn(async (url: string, init: RequestInit) => {
             seen.url = url;
             seen.body = String(init.body);
-            seen.auth = new Headers(init.headers).get('authorization') ?? '';
+            const headers = new Headers(init.headers);
+            seen.auth = headers.get('authorization') ?? '';
+            seen.key = headers.get('idempotency-key') ?? '';
+            seen.redirect = init.redirect;
             return new Response(JSON.stringify({ url: 'https://checkout.stripe.com/c/pay/cs_test_abc12345' }), { status: 200 });
         }));
         h.users.set('user_1', { email: 'a@b.pl', customClaims: {} });
@@ -253,7 +293,7 @@ describe('trasy', () => {
         const ok = new NextRequest('https://savori.space/api/stripe/checkout', {
             method: 'POST',
             headers: { origin: 'https://savori.space', 'content-type': 'application/json', cookie: '__session=good' },
-            body: '{"plan":"m1"}',
+            body: '{"plan":"m1","uid":"attacker"}',
         });
         const res = await checkoutPost(ok);
         expect(res.status).toBe(200);
@@ -261,8 +301,15 @@ describe('trasy', () => {
         expect(seen.url).toBe('https://api.stripe.com/v1/checkout/sessions');
         expect(seen.body).toContain('%5Bunit_amount%5D=1000');
         expect(seen.body).toContain('session_id%3D{CHECKOUT_SESSION_ID}');
+        expect(seen.body).toContain('metadata%5Buid%5D=user_1');
+        expect(seen.body).not.toContain('attacker');
+        expect(seen.body).not.toMatch(/recurring|subscription/);
         expect(seen.auth).toBe(`Bearer ${SECRET}`);
-        expect((await checkoutGet()).status).toBe(200);
+        expect(seen.key).toMatch(/^savori_m1_\d+_user_1$/);
+        expect(seen.redirect).toBe('manual');
+        const enabled = await checkoutGet();
+        expect(enabled.status).toBe(200);
+        expect(await enabled.json()).toEqual({ enabled: true });
     });
 
     it('webhook bez podpisu nie nadaje dostępu; z podpisem nadaje raz', async () => {
@@ -301,5 +348,108 @@ describe('trasy', () => {
         const second = await confirmPost(call());
         expect((await second.json()).ok).toBe(true);
         expect(second.cookies.get('__session')?.value).toBe('minted');
+        expect(second.cookies.get('__session')?.httpOnly).toBe(true);
+    });
+
+    it('checkout bez Firebase: brak ciasteczka to 401, ciasteczko bez serwera to 501', async () => {
+        h.flags.auth = false;
+        const anon = new NextRequest('https://savori.space/api/stripe/checkout', {
+            method: 'POST', headers: { origin: 'https://savori.space', 'content-type': 'application/json' }, body: '{"plan":"m1"}',
+        });
+        expect((await checkoutPost(anon)).status).toBe(401);
+        const withCookie = new NextRequest('https://savori.space/api/stripe/checkout', {
+            method: 'POST',
+            headers: { origin: 'https://savori.space', 'content-type': 'application/json', cookie: '__session=good' },
+            body: '{"plan":"m1"}',
+        });
+        expect((await checkoutPost(withCookie)).status).toBe(501);
+    });
+
+    it('obcy adres Stripe nie wychodzi do przeglądarki', async () => {
+        h.users.set('user_1', { email: 'a@b.pl', customClaims: {} });
+        vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ url: 'https://evil.example/pay', livemode: false }), { status: 200 })));
+        const req = new NextRequest('https://savori.space/api/stripe/checkout', {
+            method: 'POST',
+            headers: { origin: 'https://savori.space', 'content-type': 'application/json', cookie: '__session=good' },
+            body: '{"plan":"m1"}',
+        });
+        const res = await checkoutPost(req);
+        expect(res.status).toBe(502);
+        expect(JSON.stringify(await res.json())).not.toContain('evil.example');
+    });
+
+    async function postWebhook(object: Record<string, unknown>, type = 'checkout.session.completed') {
+        const payload = JSON.stringify({ id: 'evt_x', type, data: { object } });
+        const res = await webhookPost(new NextRequest('https://savori.space/api/stripe/webhook', {
+            method: 'POST',
+            headers: { 'stripe-signature': sign(payload), origin: 'https://evil.example' },
+            body: payload,
+        }));
+        return { status: res.status, json: await res.json() as { pending?: boolean; ignored?: boolean; received?: boolean } };
+    }
+
+    it('webhook: nieopłacone, zła kwota, podatek, brak konta, zły tryb', async () => {
+        h.users.set('user_1', { email: 'a@b.pl', customClaims: { plan: 'trial', accessUntil: 5 } });
+        const pending = await postWebhook(sessionObject({ payment_status: 'unpaid', status: 'complete' }));
+        expect(pending.status).toBe(200);
+        expect(pending.json.pending).toBe(true);
+        expect(h.users.get('user_1')?.customClaims?.accessUntil).toBe(5);
+
+        const low = await postWebhook(sessionObject({ id: 'cs_test_lowamount1', amount_subtotal: 100, amount_total: 100 }));
+        expect(low.status).toBe(200);
+        expect(low.json.ignored).toBe(true);
+        expect(h.users.get('user_1')?.customClaims?.accessUntil).toBe(5);
+
+        const taxedDown = await postWebhook(sessionObject({ id: 'cs_test_taxdown01', amount_subtotal: 1000, amount_total: 900 }));
+        expect(taxedDown.json.ignored).toBe(true);
+        expect(h.users.get('user_1')?.customClaims?.accessUntil).toBe(5);
+
+        const missing = await postWebhook(sessionObject({
+            id: 'cs_test_missing01',
+            client_reference_id: 'ghost_user',
+            metadata: { uid: 'ghost_user', plan: 'm1' },
+        }));
+        expect(missing.status).toBe(200);
+        expect(missing.json.ignored).toBe(true);
+        expect(h.users.has('ghost_user')).toBe(false);
+
+        const mode = await postWebhook(sessionObject({ id: 'cs_test_livemode1', livemode: true }));
+        expect(mode.status).toBe(200);
+        expect(mode.json.ignored).toBe(true);
+        expect(h.users.get('user_1')?.customClaims?.accessUntil).toBe(5);
+
+        const tax = await postWebhook(sessionObject({ id: 'cs_test_withtax01', amount_subtotal: 1000, amount_total: 1230 }), 'checkout.session.async_payment_succeeded');
+        expect(tax.status).toBe(200);
+        expect(h.users.get('user_1')?.customClaims?.accessUntil).not.toBe(5);
+    });
+
+    it('confirm nie księguje cudzej sesji; logowanie nadal wymaga świeżego auth_time', async () => {
+        h.users.set('user_1', { email: 'a@b.pl', customClaims: { plan: 'trial', accessUntil: 10 } });
+        vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify(sessionObject({
+            metadata: { uid: 'other_user', plan: 'm1' },
+            client_reference_id: 'other_user',
+        })), { status: 200 })));
+        const foreign = await confirmPost(new NextRequest('https://savori.space/api/stripe/confirm', {
+            method: 'POST',
+            headers: { origin: 'https://savori.space', 'content-type': 'application/json', cookie: '__session=good' },
+            body: JSON.stringify({ sessionId: SESSION, idToken: 'fresh' }),
+        }));
+        expect(foreign.status).toBe(403);
+        expect(h.store.size).toBe(0);
+        expect(h.users.get('user_1')?.customClaims?.accessUntil).toBe(10);
+
+        const login = await sessionPost(new NextRequest('https://savori.space/api/auth/session', {
+            method: 'POST',
+            headers: { origin: 'https://savori.space', 'content-type': 'application/json' },
+            body: JSON.stringify({ idToken: 'fresh' }),
+        }));
+        expect(login.status).toBe(401);
+        expect(await login.json()).toEqual({ error: 'recent-sign-in-required' });
+    });
+
+    it('klient cennika nie importuje billing.ts', () => {
+        const src = readFileSync('src/components/landing/LandingClient.tsx', 'utf8');
+        expect(src).not.toMatch(/stripe\/billing|node:crypto/);
+        expect(src).toContain("from '@/lib/stripe/ids'");
     });
 });

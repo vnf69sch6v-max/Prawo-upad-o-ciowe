@@ -10,6 +10,8 @@ import { ADMIN_UNTIL } from '@/lib/auth/grant';
 import { SITE_URL } from '@/lib/internal-fetch';
 import { isCheckoutSessionId } from '@/lib/stripe/ids';
 
+export { isStripeCheckoutUrl } from '@/lib/stripe/ids';
+
 const SECRET_NAMES = ['STRIPE_SECRET_KEY', 'STRIPE_PRIVATE_KEY', 'STRIPE_API_KEY', 'STRIPE_SECRET'] as const;
 
 type Env = Record<string, string | undefined>;
@@ -164,16 +166,6 @@ export function claimsCover(tokenUntil: unknown, requiredUntil: number): boolean
 /** `iat` tokenu, nie `auth_time`: odświeżony token ma świeże `iat`, choć logowanie było wcześniej. */
 export function freshToken(iat: unknown, nowS: number, windowS = 300): boolean {
     return typeof iat === 'number' && Number.isFinite(iat) && nowS - iat <= windowS && iat <= nowS + 60;
-}
-
-export function isStripeCheckoutUrl(raw: unknown): raw is string {
-    if (typeof raw !== 'string' || raw.length > 2000) return false;
-    try {
-        const url = new URL(raw);
-        return url.protocol === 'https:' && url.hostname === 'checkout.stripe.com' && !url.username && !url.password;
-    } catch {
-        return false;
-    }
 }
 
 /**

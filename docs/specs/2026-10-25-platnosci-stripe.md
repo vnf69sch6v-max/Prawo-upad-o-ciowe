@@ -23,11 +23,21 @@ Bez klucza zostaje dotychczasowe wezwanie do okresu próbnego.
 ## Kryteria akceptacji
 
 1. `npm test` — `tests/stripe.test.ts` i wpis tras Stripe w `tests/access.test.ts` są zielone.
-2. `POST /api/stripe/checkout` bez ciasteczka → 401 i zero wywołań Stripe; z sesją → adres tylko na `checkout.stripe.com`,
-   w body `mode=payment`, `unit_amount` 1000/2000/3000 i dosłowne `{CHECKOUT_SESSION_ID}`.
-3. Webhook ze złym podpisem → 400, claims bez zmian. Z dobrym podpisem dostęp raz; druga dostawa nie przesuwa daty.
-4. Confirm przy starym tokenie zwraca `{ refresh: true }`, po tokenie z nowym `accessUntil` ustawia `__session`.
-5. `/prywatnosc` wymienia Stripe Payments Europe, Ltd. Baner „Wersja robocza” nie występuje na `/prywatnosc` ani `/regulamin`.
+2. `POST /api/stripe/checkout` bez ciasteczka → 401 i zero wywołań Stripe (także gdy nie ma Firebase Admin);
+   z sesją → adres tylko na `checkout.stripe.com`, w body `mode=payment`, `unit_amount` 1000/2000/3000,
+   dosłowne `{CHECKOUT_SESSION_ID}` i nagłówek `Idempotency-Key`. Uid z body jest ignorowane.
+3. Webhook ze złym podpisem → 400, claims bez zmian. Nieopłacona sesja → 200 `pending`. Zła kwota, niższy
+   total, zły `livemode` i brak użytkownika → 200 `ignored`, bez nadania dostępu. Podatek (subtotal = cena,
+   total wyższy) przechodzi. Z dobrym podpisem dostęp raz; druga dostawa nie przesuwa daty. Zapis
+   `payments/{id}` nie zawiera e-maila jawnym tekstem. Claims administratora zostają.
+4. Confirm przy tokenie bez nowego `accessUntil` zwraca `{ refresh: true }` bez ciasteczka; po tokenie, który
+   je obejmuje, ustawia `__session` (5 dni). Cudze `metadata.uid` → 403, bez zapisu. Świeżość liczy `iat`
+   (≤ 5 min), nie `auth_time`. `/api/auth/session` nadal odrzuca logowanie starsze niż 5 minut.
+5. `/prywatnosc` wymienia Stripe Payments Europe, Ltd. i mówi, że dane karty oraz BLIK zostają u Stripe.
+   `/regulamin` opisuje miesiące kalendarzowe, brak automatycznego odnawiania i pokwitowanie e-mail.
+   Baner „Wersja robocza” nie występuje na `/prywatnosc` ani `/regulamin`.
+6. Bez klucza Stripe cennik zostaje przy dotychczasowym wezwaniu („wkrótce”). Z kluczem przycisk to
+   „Zapłać N zł”; bez logowania przewija do `#logowanie` i nie woła Stripe.
 
 ## Zostaje właścicielowi
 

@@ -116,9 +116,9 @@ const WHY = [
     { icon: ShieldCheck, title: 'Bezpieczeństwo', text: 'Logowanie Google, szyfrowanie AES-256 w bazie, żadnych narzędzi śledzących. Twoje dane zostają Twoje.' },
 ];
 
-const FAQ = [
+const faqItems = (payments: boolean) => [
     { q: 'Czy płatność odnawia się automatycznie?', a: 'Nie. Każdy plan to jednorazowa płatność za wybrany okres. Gdy się skończy, sam decydujesz, czy przedłużyć.' },
-    { q: 'Jak zapłacę?', a: 'Na stronie Stripe: kartą, a jeśli włączone — BLIK-iem albo szybkim przelewem. Danych karty nie widzimy. Dostęp włącza się po zaksięgowaniu płatności.' },
+    ...(payments ? [{ q: 'Jak zapłacę?', a: 'Na stronie Stripe: kartą, a jeśli włączone — BLIK-iem albo szybkim przelewem. Danych karty nie widzimy. Dostęp liczymy w miesiącach kalendarzowych i włączamy po zaksięgowaniu płatności. Pokwitowanie z informacją o 14 dniach na odstąpienie przychodzi na e-mail.' }] : []),
     { q: 'Co dostaję w okresie próbnym?', a: `Pełny dostęp do wszystkich funkcji przez ${days} dni od pierwszego logowania. Bez podawania karty.` },
     { q: 'Skąd są dane?', a: 'Z oficjalnych źródeł: GUS (DBW i BDL), NBP, Eurostat, Statistics Bureau of Japan, notowania giełdowe. Każdy wskaźnik pokazuje źródło i okres.' },
     { q: 'Czy to porada inwestycyjna?', a: 'Nie. Savori pokazuje dane i ich interpretację statystyczną. Decyzje inwestycyjne podejmujesz samodzielnie.' },
@@ -280,7 +280,7 @@ export default async function StartPage() {
                 <section id="faq" className="mx-auto max-w-3xl scroll-mt-20 px-4 py-20 sm:px-6">
                     <h2 className="text-center text-3xl font-extrabold tracking-tight sm:text-4xl">Pytania</h2>
                     <div className="mt-10 divide-y divide-mk-border rounded-3xl border border-mk-border bg-white">
-                        {FAQ.map(({ q, a }) => (
+                        {faqItems(payments).map(({ q, a }) => (
                             <details key={q} className="group px-5 sm:px-6">
                                 <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 py-4 font-semibold [&::-webkit-details-marker]:hidden">
                                     {q}

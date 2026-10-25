@@ -31,10 +31,12 @@ export default function PrivacyPage() {
                         umowy (art. 6 ust. 1 lit. b RODO).
                     </li>
                     <li>
-                        <strong>Dostęp i płatności</strong>: wybrany plan, okres dostępu (w tym {trialDays()} dni próbnych),
-                        identyfikator transakcji Stripe, kwota i adres e-mail, na który idzie pokwitowanie. Danych karty, BLIK-a
-                        ani konta bankowego nie widzimy — obsługuje je Stripe. Cel: świadczenie płatnej usługi, rozliczenia
-                        i księgowość. Podstawa: umowa (lit. b) oraz obowiązki podatkowe i rachunkowe (lit. c).
+                        <strong>Dostęp i płatności</strong>: wybrany plan, koniec dostępu liczony w miesiącach kalendarzowych
+                        (od późniejszej z dat: teraz albo koniec obecnego dostępu; w tym {trialDays()} dni próbnych),
+                        identyfikator transakcji Stripe, kwota i adres e-mail, na który idzie pokwitowanie. Zapis płatności
+                        w bazie jest szyfrowany tak jak pozostałe dokumenty. Danych karty, BLIK-a ani konta bankowego nie
+                        widzimy — zostają u Stripe. Cel: świadczenie płatnej usługi, rozliczenia i księgowość. Podstawa:
+                        umowa (lit. b) oraz obowiązki podatkowe i rachunkowe (lit. c).
                     </li>
                     <li>
                         <strong>Wykorzystany okres próbny</strong>: zaszyfrowany skrót (HMAC) adresu e-mail z datą — tylko po to,
@@ -78,6 +80,7 @@ export default function PrivacyPage() {
                         Kopia listy obserwowanych (localStorage) — po zalogowaniu lista jest zapisana przy koncie, a przeglądarka
                         trzyma tylko jej kopię do szybkiego wyświetlenia; bez logowania lista zostaje wyłącznie w przeglądarce.
                     </li>
+                    <li>Wybrany plan (sessionStorage, do 15 minut) — żeby po zalogowaniu dokończyć płatność. Zostaje w tej karcie i nie wysyłamy go, dopóki nie klikniesz „Zapłać”.</li>
                 </ul>
             </Section>
 

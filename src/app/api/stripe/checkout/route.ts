@@ -8,13 +8,14 @@ import { jsonError, noStore, sameSite, stripeErrorCode, stripeForm, wantsJson } 
 import {
     checkoutBody,
     checkoutIdempotencyKey,
-    isStripeCheckoutUrl,
+    livemodeMatches,
     normalizeEmail,
     paymentsEnabled,
     planById,
     safeCheckoutOrigin,
     stripeSecret,
 } from '@/lib/stripe/billing';
+import { isStripeCheckoutUrl } from '@/lib/stripe/ids';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -28,6 +29,10 @@ export async function GET() {
 export async function POST(request: NextRequest) {
     if (!sameSite(request)) return jsonError('forbidden', 403);
     if (!wantsJson(request)) return jsonError('unsupported-media-type', 415);
+
+    // Brak ciasteczka to 401 także bez Firebase — 501 tylko gdy sesja jest, a serwera nie da się użyć.
+    const cookie = request.cookies.get(COOKIE)?.value;
+    if (!cookie) return jsonError('unauthorized', 401);
 
     const secret = stripeSecret();
     if (!secret) return jsonError('stripe-not-configured', 501);
@@ -45,10 +50,11 @@ export async function POST(request: NextRequest) {
 
     let uid: string;
     try {
-        const decoded = await auth.verifySessionCookie(request.cookies.get(COOKIE)?.value ?? '', true);
+        const decoded = await auth.verifySessionCookie(cookie, true);
         uid = decoded.uid;
         if (!uid) return jsonError('unauthorized', 401);
-    } catch {
+    } catch (err) {
+        console.error('[stripe/checkout] sesja:', (err as { code?: string }).code ?? 'unauthorized');
         return jsonError('unauthorized', 401);
     }
 
@@ -69,9 +75,12 @@ export async function POST(request: NextRequest) {
         console.error('[stripe/checkout] sieć:', (err as { code?: string }).code ?? 'error');
         return jsonError('stripe-unreachable', 502);
     }
-    const url = stripe.json && typeof stripe.json === 'object' ? (stripe.json as { url?: unknown }).url : undefined;
-    if (stripe.status < 200 || stripe.status >= 300 || !isStripeCheckoutUrl(url)) {
-        console.error('[stripe/checkout]', stripe.status, stripeErrorCode(stripe.json));
+    const payload = stripe.json && typeof stripe.json === 'object' ? stripe.json as { url?: unknown; livemode?: unknown } : undefined;
+    const url = payload?.url;
+    const livemode = payload?.livemode;
+    const modeOk = typeof livemode !== 'boolean' || livemodeMatches(secret, livemode);
+    if (stripe.status < 200 || stripe.status >= 300 || !modeOk || !isStripeCheckoutUrl(url)) {
+        console.error('[stripe/checkout]', stripeErrorCode(stripe.json));
         return jsonError('stripe-error', 502);
     }
     return NextResponse.json({ url }, { headers: noStore });

@@ -196,7 +196,7 @@ J3. **Przegląd Japonii** (hero jak w PL), gdy będą ≥3 wskaźniki.
 - **`GUS_BDL_KEY`** — wyższy limit BDL (rejestracja na api.stat.gov.pl).
 
 ## Zrobione
-- **25.10.2026 — płatności Stripe** (prośba właściciela: klucz prywatny już na Vercelu, dodać trasę): Checkout
+- **25.10.2026 — P-1 płatności Stripe** (prośba właściciela: klucz prywatny już na Vercelu, dodać trasę): Checkout
   jednorazowy 10/20/30 zł (`/api/stripe/checkout`), webhook z podpisem i idempotencją (`/api/stripe/webhook`,
   zapis `payments/{session}` przez `toStored`), przedłużenie `accessUntil` od późniejszej z dat, odświeżenie
   ciasteczka po powrocie (`/api/stripe/confirm`). Pokwitowanie z informacją o odstąpieniu idzie przez Stripe

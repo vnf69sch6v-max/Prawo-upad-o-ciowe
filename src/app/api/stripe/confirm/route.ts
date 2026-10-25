@@ -67,10 +67,11 @@ export async function POST(request: NextRequest) {
         return jsonError('stripe-error', 502);
     }
 
-    const livemode = !!stripe.json && typeof stripe.json === 'object' && (stripe.json as { livemode?: unknown }).livemode === true;
-    if (!livemodeMatches(secret, livemode)) return jsonError('livemode-mismatch', 400);
+    const livemode = stripe.json && typeof stripe.json === 'object' ? (stripe.json as { livemode?: unknown }).livemode : undefined;
+    if (typeof livemode !== 'boolean' || !livemodeMatches(secret, livemode)) return jsonError('livemode-mismatch', 400);
+    // Księgujemy wyłącznie sesję tej osoby. Brak metadata.uid albo cudzy uid — bez zapisu.
     const owner = sessionUid(stripe.json);
-    if (owner && owner !== cookieUid) return jsonError('forbidden', 403);
+    if (owner !== cookieUid) return jsonError('forbidden', 403);
 
     const classified = classifySession(stripe.json);
     if (classified.kind === 'pending') return NextResponse.json({ pending: true }, { headers: noStore });

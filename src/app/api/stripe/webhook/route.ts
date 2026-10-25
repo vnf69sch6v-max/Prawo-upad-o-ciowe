@@ -35,10 +35,11 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ received: true }, { headers: noStore });
     }
     const obj = (event as { data?: { object?: unknown } }).data?.object;
-    const livemode = !!obj && typeof obj === 'object' && (obj as { livemode?: unknown }).livemode === true;
-    if (!livemodeMatches(secret, livemode)) {
-        console.error('[stripe/webhook] livemode mismatch');
-        return jsonError('livemode-mismatch', 400);
+    const livemode = obj && typeof obj === 'object' ? (obj as { livemode?: unknown }).livemode : undefined;
+    // 200, nie 400: Stripe powtarza każde nie-2xx przez dni. Zły tryb nie przedłuża dostępu.
+    if (typeof livemode !== 'boolean' || !livemodeMatches(secret, livemode)) {
+        console.error('[stripe/webhook] livemode');
+        return NextResponse.json({ received: true, ignored: true }, { headers: noStore });
     }
 
     const classified = classifySession(obj);
