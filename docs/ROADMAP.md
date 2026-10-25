@@ -172,8 +172,6 @@ J3. **Przegląd Japonii** (hero jak w PL), gdy będą ≥3 wskaźniki.
   potem Firestore Database → kolekcja `savori_users` → dokument o tym UID → usuń (to lista obserwowanych; `/prywatnosc`
   obiecuje „usuwamy ją razem z kontem”). Dokument `trials/{HMAC(e-mail)}` zostaje celowo (okres próbny raz na adres —
   tak opisuje go `/prywatnosc`). Pomocnik w kodzie: `deleteUserData()` w `src/lib/user-data-server.ts`.
-- ~~**`CRON_SECRET`** w Vercelu~~ — ustawiony (25.10.2026: `/api/*` bez sesji odpowiada 401, crony przechodzą
-  bramkę z `Authorization: Bearer`). Krok 1b odblokowany.
 - **`ALERT_WEBHOOK_URL`** (Slack/Discord) — alert, gdy kontrola świeżości wykryje problem.
 - **savori.com:** przypięte do projektu w Vercelu, ale DNS wskazuje na inny serwer (Linode) —
   usunąć z projektu albo przepiąć DNS na Vercel (wtedy dostanie też certyfikat).
@@ -184,8 +182,10 @@ J3. **Przegląd Japonii** (hero jak w PL), gdy będą ≥3 wskaźniki.
 - **`GUS_BDL_KEY`** — wyższy limit BDL (rejestracja na api.stat.gov.pl).
 
 ## Zrobione
+- **25.10.2026 — `CRON_SECRET` ustawiony przez właściciela** (`/api/*` bez sesji odpowiada 401, crony przechodzą
+  bramkę z `Authorization: Bearer`). Krok 1b odblokowany.
 - **25.10.2026 — 1a: trasy GUS DBW przyjmują tylko znane parametry, crony CPI mieszczą się w czasie**
-  (`docs/specs/2026-10-25-gus-parametry-i-limit-czasu.md`). Walidacja przed cache i GUS (`src/lib/gus-params.ts`,
+  (PR #38, `docs/specs/2026-10-25-gus-parametry-i-limit-czasu.md`, PM: SHIP). Walidacja przed cache i GUS (`src/lib/gus-params.ts`,
   400 + `no-store`): `year` = bieżący i poprzedni rok w Warszawie (31.12 także następny) w `gus-cpi-full`,
   `gus-ppi-full`, `gus-koniunktura`, `dbw-series`, `gus-cpi`; `dbw-series` tylko 6 serii z `DBW_SERIES`;
   `gus-monthly` tylko `years=4`; `refresh=1` wymusza tylko rok bieżący. `/api/gus-cpi` i `/api/dbw` zablokowane
