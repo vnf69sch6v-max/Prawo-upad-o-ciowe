@@ -32,16 +32,21 @@ const privateNoStore = { 'Cache-Control': 'private, no-store' };
 
 type AccessPlan = 'trial' | PlanId;
 
-/** Claims do ustawienia albo `null`, gdy token ma już właściwy dostęp. */
-async function accessToGrant(decoded: { email?: string; email_verified?: boolean; accessUntil?: unknown }, nowS: number): Promise<AccessClaims | null> {
+/**
+ * Claims do ustawienia, `null` gdy token ma już właściwy dostęp, albo `'verify-email'`.
+ * Niepotwierdzony adres nie dostaje `accessUntil`: zapis „brak dostępu” zablokowałby okres próbny na zawsze,
+ * bo przy kolejnym logowaniu `grantDecision` widzi liczbę i nic już nie nadaje.
+ */
+async function accessToGrant(decoded: { email?: string; email_verified?: boolean; accessUntil?: unknown }, nowS: number): Promise<AccessClaims | 'verify-email' | null> {
     switch (grantDecision(decoded, adminEmails()).kind) {
         case 'none':
             return null;
         case 'admin':
             return { plan: 'm6', accessUntil: ADMIN_UNTIL };
         case 'revoke-admin':
+            return { accessUntil: nowS };
         case 'no-trial':
-            return { accessUntil: nowS }; // bez dostępu — cennik
+            return 'verify-email';
         case 'trial':
             return trialDays() > 0 && (await claimTrial(getAdminDb(), decoded.email!)) ? trialClaims(nowS, trialDays()) : { accessUntil: nowS };
     }
@@ -129,6 +134,7 @@ export async function POST(request: NextRequest) {
         const decoded = await auth.verifyIdToken(idToken, true);
         if (Date.now() / 1000 - decoded.auth_time > RECENT_SIGN_IN_S) return deny('recent-sign-in-required', 401);
         const grant = await accessToGrant(decoded, Math.floor(Date.now() / 1000));
+        if (grant === 'verify-email') return NextResponse.json({ verifyEmail: true }, { headers: noStore });
         if (grant) {
             const { customClaims } = await auth.getUser(decoded.uid);
             await auth.setCustomUserClaims(decoded.uid, { ...customClaims, ...grant });

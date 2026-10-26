@@ -4,6 +4,8 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import {
     GoogleAuthProvider,
     onAuthStateChanged,
+    createUserWithEmailAndPassword,
+    sendEmailVerification,
     signInWithEmailAndPassword,
     getRedirectResult,
     signInWithPopup,
@@ -50,6 +52,11 @@ export interface AuthContextValue {
     /** True when real Firebase auth is active (not demo mode). */
     enabled: boolean;
     signIn: (email: string, password: string) => Promise<void>;
+    /**
+     * Konto e-mail bez ciasteczka sesji. Link weryfikacyjny idzie od razu; okres próbny dopiero
+     * po potwierdzeniu adresu i zwykłym logowaniu. Po wysłaniu linku Firebase jest wylogowany.
+     */
+    signUp: (email: string, password: string) => Promise<void>;
     /** Okno Google (popup). `false`, gdy użytkownik zamknął okno (bez błędu). */
     signInWithGoogle: () => Promise<boolean>;
     /** Link do zmiany hasła. Nie zdradza, czy konto istnieje (`auth/user-not-found` = sukces). */
@@ -73,6 +80,7 @@ const DEMO_SESSION: SessionInfo = { status: 'ok', accessUntil: null, plan: null,
 type SessionResponse = {
     ok?: boolean;
     refresh?: boolean;
+    verifyEmail?: boolean;
     signedIn?: boolean;
     accessUntil?: unknown;
     plan?: unknown;
@@ -147,6 +155,11 @@ function requireAuth(): Auth {
 }
 
 const SESSION_ERROR = 'Nie udało się utworzyć sesji. Spróbuj zalogować się ponownie.';
+const VERIFY_EMAIL = 'Adres e-mail nie jest jeszcze potwierdzony. Kliknij link z wiadomości, a potem zaloguj się ponownie.';
+
+function verifyEmailError(): Error {
+    return Object.assign(new Error(VERIFY_EMAIL), { code: 'email-not-verified' });
+}
 
 function redirectNotice(err: unknown): string | null {
     const code = (err as { code?: string }).code;
@@ -293,10 +306,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 const result = await sendSession('POST', await fbUser.getIdToken(attempt > 0), signal);
                 if (epoch.current !== my || signal.aborted) return false;
                 if (!result.ok) break;
+                if (result.body.verifyEmail) {
+                    await fbSignOut(auth);
+                    if (epoch.current === my) commit(NONE_SESSION);
+                    throw verifyEmailError();
+                }
                 if (result.body.refresh) continue;
                 next = sessionFromOk(result.body);
             }
         } catch (err) {
+            if ((err as { code?: string }).code === 'email-not-verified') throw err;
             aborted = isAbort(err);
             next = null;
         }
@@ -419,6 +438,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     }, [abortSignIn, beginSignIn, createSession]);
 
+    const signUp = useCallback(async (email: string, password: string) => {
+        if (!AUTH_ACTIVE) return;
+        const auth = requireAuth();
+        const my = beginSignIn();
+        try {
+            const cred = await createUserWithEmailAndPassword(auth, email.trim(), password);
+            try {
+                await sendEmailVerification(cred.user, {
+                    url: `${window.location.origin}/login`,
+                    handleCodeInApp: false,
+                });
+            } catch {
+                throw Object.assign(
+                    new Error('Konto jest założone, ale link nie wyszedł. Użyj „Nie pamiętam hasła” — wyślemy wiadomość jeszcze raz.'),
+                    { code: 'verification-not-sent' },
+                );
+            } finally {
+                // Bez ciasteczka. Zostawienie sesji Firebase pokazałoby „sesja wygasła”, a logowanie przed
+                // kliknięciem linku zapisałoby accessUntil i zabrało okres próbny na stałe.
+                await fbSignOut(auth);
+            }
+            if (epoch.current === my) commit(NONE_SESSION);
+        } catch (err) {
+            if (epoch.current === my) abortSignIn(my);
+            throw err;
+        } finally {
+            if (epoch.current === my) signingIn.current = false;
+        }
+    }, [abortSignIn, beginSignIn, commit]);
+
     const resetPassword = useCallback(async (email: string) => {
         const auth = requireAuth();
         await sendPasswordResetEmail(auth, email.trim(), {
@@ -445,12 +494,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         session,
         sessionReady,
         signIn,
+        signUp,
         signInWithGoogle,
         resetPassword,
         signOut,
         refreshSession,
         authNotice,
-    }), [user, loading, session, sessionReady, signIn, signInWithGoogle, resetPassword, signOut, refreshSession, authNotice]);
+    }), [user, loading, session, sessionReady, signIn, signUp, signInWithGoogle, resetPassword, signOut, refreshSession, authNotice]);
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

@@ -113,7 +113,7 @@ const FEATURES = [
 const WHY = [
     { icon: Zap, title: 'W dniu publikacji', text: 'Automaty pobierają dane po każdym komunikacie GUS, NBP i Eurostatu, a kontrola świeżości pilnuje, by nic nie utknęło.' },
     { icon: Activity, title: 'Liczby, nie szum', text: 'Każda liczba ze źródłem i datą. Zero clickbaitu, zero reklam, zero „ekspertów”.' },
-    { icon: ShieldCheck, title: 'Bezpieczeństwo', text: 'Logowanie Google, szyfrowanie AES-256 w bazie, żadnych narzędzi śledzących. Twoje dane zostają Twoje.' },
+    { icon: ShieldCheck, title: 'Bezpieczeństwo', text: 'Logowanie Google albo e-mailem, szyfrowanie AES-256 w bazie, żadnych narzędzi śledzących. Twoje dane zostają Twoje.' },
 ];
 
 const faqItems = (payments: boolean) => [
@@ -183,7 +183,7 @@ export default async function StartPage() {
                             <a href="#cennik" className="mk-btn min-h-12 px-7 text-base font-semibold">Zobacz cennik</a>
                         </div>
                         <p className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-mk-muted">
-                            <span className="inline-flex items-center gap-1.5"><Lock size={14} aria-hidden /> Logowanie Google</span>
+                            <span className="inline-flex items-center gap-1.5"><Lock size={14} aria-hidden /> Google albo e-mail</span>
                             <span>od 5 zł / mies.</span>
                             <span>bez automatycznego odnawiania</span>
                         </p>
@@ -266,10 +266,10 @@ export default async function StartPage() {
                     <div className="mx-auto grid max-w-6xl items-center gap-10 px-4 py-20 sm:px-6 lg:grid-cols-2">
                         <div>
                             <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl">Zacznij w 10 sekund.</h2>
-                            <p className="mt-3 max-w-md text-lg text-mk-text-soft">Jedno kliknięcie z kontem Google. {days > 0 ? `Pierwsze ${days} dni na nasz koszt — bez karty.` : ''}</p>
+                            <p className="mt-3 max-w-md text-lg text-mk-text-soft">Konto Google albo zwykła rejestracja e-mailem. {days > 0 ? `Pierwsze ${days} dni na nasz koszt — bez karty, po potwierdzeniu adresu.` : ''}</p>
                             <ul className="mt-6 space-y-3 text-mk-text-soft">
                                 <li className="flex gap-3"><ShieldCheck size={20} className="shrink-0 text-mk-primary" aria-hidden />Nie znamy Twojego hasła do Google — logowanie obsługuje Google.</li>
-                                <li className="flex gap-3"><Lock size={20} className="shrink-0 text-mk-primary" aria-hidden />Dane konta: e-mail, imię i zdjęcie. Nic więcej.</li>
+                                <li className="flex gap-3"><Lock size={20} className="shrink-0 text-mk-primary" aria-hidden />E-mail i hasło albo konto Google. Hasła nie widzimy — zostaje skrót u Firebase.</li>
                             </ul>
                         </div>
                         <div className="mx-auto w-full max-w-[420px]">

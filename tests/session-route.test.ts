@@ -324,6 +324,17 @@ describe('POST /api/auth/session', () => {
         expect(names()).not.toContain('setCustomUserClaims');
     });
 
+    it('niepotwierdzony e-mail nie dostaje accessUntil — inaczej okres próbny przepadłby po kliknięciu linku', async () => {
+        h.tokens.set('unverified', token({ email_verified: false, accessUntil: undefined, plan: undefined }));
+        h.users.set('user_1', { customClaims: { keep: 1 } });
+        const res = await POST(call('POST', { idToken: 'unverified' }));
+        expect(res.status).toBe(200);
+        expect(await res.json()).toEqual({ verifyEmail: true });
+        expect(setCookie(res)).toEqual([]);
+        expect(h.users.get('user_1')?.customClaims).toEqual({ keep: 1 });
+        expect(names()).toEqual(['verifyIdToken']);
+    });
+
     it('świeże logowanie bez dostępu nadal nadaje okres próbny i prosi o refresh, bez ciasteczka', async () => {
         vi.stubEnv('TRIAL_DAYS', '7');
         h.tokens.set('new', token({ accessUntil: undefined, plan: undefined }));

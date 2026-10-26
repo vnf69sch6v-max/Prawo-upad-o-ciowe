@@ -123,8 +123,8 @@ J3. **Przegląd Japonii** (hero jak w PL), gdy będą ≥3 wskaźniki.
      niezalogowani widzą stronę startową z cennikiem. Awaryjne wyłączenie bez zmiany kodu:
      `NEXT_PUBLIC_AUTH_REQUIRED=false` (strona publiczna, logowanie zostaje) → Redeploy. **`CRON_SECRET`** zamyka też API (bez niego `/api/*` zostaje publiczne,
      bo crony wołają własne endpointy — z sekretem podpisują się nim).
-  3a. Firebase → Authentication → Settings → User actions: wyłączyć zakładanie kont e-mail/hasło przez API
-     („Enable create (sign-up)”), skoro na stronie nie ma rejestracji e-mailem — konta tylko przez Google.
+  3a. Rejestracja e-mailem jest na `/start` i `/login` (zostaw „Enable create (sign-up)” włączone). Okres próbny
+     tylko po potwierdzeniu adresu — surowe `accounts:signUp` bez kliknięcia linku nie dostaje `accessUntil`.
   4. **Stripe — dokończenie po stronie konta** (kod jest; bez sekretu webhooka płatność kartą wraca na stronę
      i księguje się przez `confirm`, ale zamknięta karta nie przedłuży dostępu, a **BLIK i Przelewy24 nie zadziałają
      wcale** — przy powrocie są jeszcze `unpaid`, dostęp nadaje dopiero drugi webhook):
@@ -194,6 +194,7 @@ J3. **Przegląd Japonii** (hero jak w PL), gdy będą ≥3 wskaźniki.
 - **`GUS_BDL_KEY`** — wyższy limit BDL (rejestracja na api.stat.gov.pl).
 
 ## Zrobione
+- **26.10.2026 — rejestracja e-mailem.** Na `/login` i `/start`: „Nie masz konta? Załóż je” (e-mail, hasło, powtórzenie, min. 8 znaków). Link weryfikacyjny, bez ciasteczka sesji do kliknięcia. Logowanie przed potwierdzeniem nie zapisuje `accessUntil` (inaczej okres próbny przepadłby). Po potwierdzeniu zwykłe logowanie nadaje trial jak dotychczas.
 - **25.10.2026 — logowanie: od wejścia na stronę do formularza.** Niezalogowany z podstrony (`/ceny`) ląduje na `/start?from=…#logowanie`, nie na hero. Zablokowany popup Google przechodzi na przekierowanie w tej samej karcie (`getRedirectResult` dokleja ciasteczko po powrocie). „Nie pamiętam hasła” wysyła link; brak konta brzmi tak samo jak sukces. Nowe konto jest przez Google — formularz e-mail to mówi wprost. „Zaloguj się ponownie” przewija do formularza, nie otwiera od razu Google.
 - **25.10.2026 — 1b: wymuszone pobranie z GUS DBW/BDL tylko z `CRON_SECRET`**
   (PR #39, `docs/specs/2026-10-25-gus-odswiezanie-tylko-cron.md`). `canForceUpstream` (`src/lib/access.ts`) w 8 trasach

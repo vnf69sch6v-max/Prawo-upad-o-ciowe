@@ -4,6 +4,7 @@ import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2, ShieldCheck } from 'lucide-react';
 import { useAuth } from '@/lib/auth/use-auth';
+import { passwordProblem } from '@/lib/auth/password';
 import { safeRedirectTarget } from '@/lib/auth/redirect';
 
 /** Oficjalne „G” Google (wytyczne marki: kolory bez zmian, na białym tle). */
@@ -37,16 +38,42 @@ function googleError(err: unknown): string {
     }
 }
 
+function signUpError(err: unknown): string {
+    const code = (err as { code?: string }).code;
+    switch (code) {
+        case 'auth/email-already-in-use':
+            return 'Konto z tym adresem już istnieje. Zaloguj się albo ustaw hasło od nowa.';
+        case 'auth/invalid-email':
+            return 'Podaj prawidłowy adres e-mail.';
+        case 'auth/weak-password':
+            return 'Hasło jest za słabe. Użyj co najmniej 8 znaków.';
+        case 'auth/operation-not-allowed':
+            return 'Rejestracja e-mailem nie jest jeszcze włączona.';
+        case 'auth/too-many-requests':
+            return 'Za dużo prób. Spróbuj ponownie za kilka minut.';
+        case 'auth/network-request-failed':
+            return 'Brak połączenia. Sprawdź internet i spróbuj ponownie.';
+        case 'auth/unauthorized-continue-uri':
+            return 'Nie udało się wysłać linku z tej domeny.';
+        case 'verification-not-sent':
+            return err instanceof Error ? err.message : 'Konto jest założone, ale link nie wyszedł. Użyj „Nie pamiętam hasła”.';
+        default:
+            return err instanceof Error && !code ? err.message : 'Nie udało się założyć konta. Spróbuj ponownie.';
+    }
+}
+
 /**
  * Logowanie (Google + e-mail) — wspólne dla /login i strony startowej. Po sukcesie wraca pod `?from=`
  * (tylko ta sama domena, `safeRedirectTarget`). `googleLabel` — tekst przycisku Google (na stronie startowej
  * „Zacznij za darmo z Google”).
  */
 export function LoginPanel({ googleLabel = 'Zaloguj się przez Google' }: { googleLabel?: string }) {
-    const { signIn, signInWithGoogle, resetPassword, enabled, authNotice } = useAuth();
+    const { signIn, signUp, signInWithGoogle, resetPassword, enabled, authNotice } = useAuth();
     const router = useRouter();
+    const [mode, setMode] = useState<'login' | 'register'>('login');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [confirm, setConfirm] = useState('');
     const [error, setError] = useState<string | null>(null);
     const [info, setInfo] = useState<string | null>(null);
     const [busy, setBusy] = useState(false);
@@ -56,18 +83,43 @@ export function LoginPanel({ googleLabel = 'Zaloguj się przez Google' }: { goog
     const onSubmit = async (e: FormEvent) => {
         e.preventDefault();
         setError(null);
+        setInfo(null);
+        if (mode === 'register') {
+            const problem = passwordProblem(password, confirm);
+            if (problem) {
+                setError(problem);
+                return;
+            }
+        }
         setBusy(true);
         try {
+            if (mode === 'register') {
+                await signUp(email, password);
+                setPassword('');
+                setConfirm('');
+                setMode('login');
+                setInfo(`Wysłaliśmy link na ${email.trim()}. Kliknij go, a potem zaloguj się tym samym hasłem. Okres próbny włączamy po potwierdzeniu adresu.`);
+                setBusy(false);
+                return;
+            }
             await signIn(email, password);
             router.push(target());
         } catch (err) {
-            // Firebase ma kod `auth/...` (bez zdradzania, czy konto istnieje); nasz błąd sesji ma własny komunikat.
             const code = (err as { code?: string }).code;
-            setError(code === 'auth/too-many-requests' ? 'Za dużo prób logowania. Spróbuj ponownie za kilka minut.'
+            if (mode === 'register') setError(signUpError(err));
+            else if (code === 'email-not-verified') setError(err instanceof Error ? err.message : 'Potwierdź adres e-mail, a potem zaloguj się ponownie.');
+            else setError(code === 'auth/too-many-requests' ? 'Za dużo prób logowania. Spróbuj ponownie za kilka minut.'
                 : code === 'auth/network-request-failed' ? 'Brak połączenia. Sprawdź internet i spróbuj ponownie.'
-                    : code || !(err instanceof Error) ? 'Nieprawidłowy e-mail lub hasło. Nowe konto zakładasz przez Google.' : err.message);
+                    : code || !(err instanceof Error) ? 'Nieprawidłowy e-mail lub hasło.' : err.message);
             setBusy(false);
         }
+    };
+
+    const switchMode = () => {
+        setMode((m) => (m === 'login' ? 'register' : 'login'));
+        setError(null);
+        setInfo(null);
+        setConfirm('');
     };
 
     const enterDemo = () => router.push(target());
@@ -122,7 +174,6 @@ export function LoginPanel({ googleLabel = 'Zaloguj się przez Google' }: { goog
                     <div className="flex items-center gap-3 text-xs text-mk-faint" aria-hidden>
                         <span className="h-px flex-1 bg-mk-border" /> albo e-mailem <span className="h-px flex-1 bg-mk-border" />
                     </div>
-                    <p className="text-xs leading-relaxed text-mk-muted">Nowe konto powstaje przez Google. E-mail i hasło działają tylko dla konta, które już je ma.</p>
                 </>
             )}
             <div>
@@ -133,24 +184,40 @@ export function LoginPanel({ googleLabel = 'Zaloguj się przez Google' }: { goog
             </div>
             <div>
                 <label className="mk-label mb-1.5 block" htmlFor="password">Hasło</label>
-                <input id="password" name="password" type="password" autoComplete="current-password" autoCapitalize="none"
-                    autoCorrect="off" spellCheck={false} enterKeyHint="go" required className="mk-input min-h-12 max-lg:text-base!"
+                <input id="password" name="password" type="password" autoComplete={mode === 'register' ? 'new-password' : 'current-password'} autoCapitalize="none"
+                    autoCorrect="off" spellCheck={false} enterKeyHint={mode === 'register' ? 'next' : 'go'} required minLength={mode === 'register' ? 8 : undefined}
+                    className="mk-input min-h-12 max-lg:text-base!"
                     value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
-                {enabled && (
+                {enabled && mode === 'login' && (
                     <button type="button" onClick={() => void onReset()} disabled={busy}
                         className="mt-2 inline-flex min-h-11 items-center text-sm font-medium text-mk-text-soft underline underline-offset-2 hover:text-mk-text">
                         Nie pamiętam hasła
                     </button>
                 )}
             </div>
+            {mode === 'register' && (
+                <div>
+                    <label className="mk-label mb-1.5 block" htmlFor="password-confirm">Powtórz hasło</label>
+                    <input id="password-confirm" name="password-confirm" type="password" autoComplete="new-password" autoCapitalize="none"
+                        autoCorrect="off" spellCheck={false} enterKeyHint="go" required minLength={8} className="mk-input min-h-12 max-lg:text-base!"
+                        value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="••••••••" />
+                    <p className="mt-2 text-xs leading-relaxed text-mk-muted">Co najmniej 8 znaków. Na ten adres wyślemy link — okres próbny włączy się po jego kliknięciu.</p>
+                </div>
+            )}
 
             {(error || authNotice) && <p role="alert" className="text-sm font-medium text-mk-negative">{error ?? authNotice}</p>}
             {info && <p role="status" className="text-sm font-medium text-mk-text">{info}</p>}
 
             <button type="submit" className="mk-btn mk-btn-primary min-h-12 w-full text-base sm:text-sm" disabled={busy}>
                 {busy ? <Loader2 size={16} className="animate-spin" /> : null}
-                Zaloguj się
+                {mode === 'register' ? 'Załóż konto' : 'Zaloguj się'}
             </button>
+            {enabled && (
+                <button type="button" onClick={switchMode} disabled={busy}
+                    className="mx-auto flex min-h-11 items-center text-sm font-medium text-mk-text-soft underline underline-offset-2 hover:text-mk-text">
+                    {mode === 'login' ? 'Nie masz konta? Załóż je' : 'Masz już konto? Zaloguj się'}
+                </button>
+            )}
 
             {!enabled && (
                 <div className="rounded-xl border border-mk-border bg-mk-surface-alt p-3 text-center">

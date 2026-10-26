@@ -27,7 +27,8 @@ export default function PrivacyPage() {
                     <li>
                         <strong>Konto</strong>: adres e-mail, imię i nazwisko oraz zdjęcie profilowe (przy logowaniu przez Google),
                         identyfikator konta, daty logowania; przy logowaniu e-mailem — hasło, które przechowujemy wyłącznie
-                        w postaci skrótu (hash). Cel: założenie konta, logowanie, dostęp do platformy. Podstawa: wykonanie
+                        w postaci skrótu (hash). Przy rejestracji e-mailem wysyłamy na ten adres link potwierdzający;
+                        okres próbny włączamy dopiero po jego kliknięciu. Cel: założenie konta, logowanie, dostęp do platformy. Podstawa: wykonanie
                         umowy (art. 6 ust. 1 lit. b RODO).
                     </li>
                     <li>
