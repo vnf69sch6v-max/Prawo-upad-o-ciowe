@@ -30,7 +30,7 @@ import { latestCommonPeriod } from '@/lib/jp/breakdown';
  *  źródła, ostrzeżenie); stale = ≥2 okresy za nim albo przekroczony maks. wiek; error = brak odpowiedzi/danych. */
 export type FreshnessStatus = 'ok' | 'lag' | 'stale' | 'error';
 export type Frequency = 'daily' | 'monthly' | 'quarterly';
-export type SourceKind = 'gus-dbw' | 'gus-bdl' | 'eurostat' | 'nbp' | 'yahoo' | 'jp-dashboard';
+export type SourceKind = 'gus-dbw' | 'gus-bdl' | 'eurostat' | 'nbp' | 'yahoo' | 'jp-dashboard' | 'jp-estat';
 
 export interface DatasetSpec {
     id: string;
@@ -359,6 +359,7 @@ const LAG_NOTES: Record<SourceKind, string> = {
     nbp: 'Tabela z poprzedniego dnia roboczego — cache odświeża się po publikacji NBP (ok. 12:15).',
     yahoo: 'Brak notowania z ostatnich sesji — możliwe święto giełdowe albo opóźnienie Yahoo.',
     'jp-dashboard': 'Komunikat Statistics Bureau (8:30 JST) już jest, ale Statistics Dashboard albo nasze odświeżenie (9:30 i 15:00 JST) jeszcze go nie objęły.',
+    'jp-estat': 'Komunikat CPI jest, ale plik wkładów (e-Stat, tabela 5) jeszcze nie wszedł do cache.',
 };
 
 /** `/api/jp/cpi` → najnowszy miesiąc wspólny czterem miarom rozbicia (ogółem, bazowa, bez świeżej
@@ -366,6 +367,12 @@ const LAG_NOTES: Record<SourceKind, string> = {
 export function extractJpCpiBreakdown(json: unknown): string | null {
     const series = asObj(asObj(json)?.series);
     return series ? latestCommonPeriod(series as Parameters<typeof latestCommonPeriod>[0]) : null;
+}
+
+/** `/api/jp/cpi-contributions` → `{ period: 'YYYY-MM' }` — miesiąc tabeli 5. */
+export function extractJpContributions(json: unknown): string | null {
+    const period = asObj(json)?.period;
+    return typeof period === 'string' && /^\d{4}-\d{2}$/.test(period) ? period : null;
 }
 
 /** `/api/jp/cpi` → { series: { headline: [{ date: 'YYYY-MM' }] } } — najnowszy miesiąc CPI ogółem. */
@@ -487,6 +494,14 @@ export const FRESHNESS_DATASETS: DatasetSpec[] = [
         extract: extractJpCpiBreakdown,
         expected: (now) => expectedJpCpi(now).period,
         tolerance: MONTHLY, maxAgeDays: 70, lagNote: LAG_NOTES['jp-dashboard'], selfHeal: true,
+    },
+    {
+        id: 'jp-cpi-contributions', label: 'Japonia — wkłady CPI', source: 'e-Stat, tabela 5', kind: 'jp-estat',
+        group: 'jp', frequency: 'monthly',
+        endpoint: () => '/api/jp/cpi-contributions',
+        extract: extractJpContributions,
+        expected: (now) => expectedJpCpi(now).period,
+        tolerance: MONTHLY, maxAgeDays: 70, lagNote: LAG_NOTES['jp-estat'], selfHeal: true,
     },
 ];
 

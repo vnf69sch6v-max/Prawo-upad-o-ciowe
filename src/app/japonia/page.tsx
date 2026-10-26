@@ -3,6 +3,7 @@ import { JpInflation } from '@/components/jp/JpInflation';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { jpCpiSummary } from '@/lib/jp/cpi';
 import { peekJpCpi } from '@/lib/jp/cpi-server';
+import { peekJpContributions } from '@/lib/jp/contributions-server';
 import { SITE_URL } from '@/lib/internal-fetch';
 
 // ISR: HTML z liczbami odświeżany co 30 min z ostatniego wpisu cache (Firestore). Strona NIE woła źródła —
@@ -21,11 +22,14 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function JaponiaPage() {
-    const initial = await peekJpCpi().catch(() => null);
+    const [initial, contributions] = await Promise.all([
+        peekJpCpi().catch(() => null),
+        peekJpContributions().catch(() => null),
+    ]);
     return (
         <div className="mk-fade-in space-y-5">
             <PageHeader title="Japonia · Inflacja" />
-            <JpInflation initial={initial} />
+            <JpInflation initial={initial} contributions={contributions} />
         </div>
     );
 }
