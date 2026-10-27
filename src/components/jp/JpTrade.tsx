@@ -23,8 +23,8 @@ export function JpTrade({ initial }: { initial: JpTradePayload | null }) {
     const { data, isLoading, isError, refetch } = useJpTrade(initial);
     const isClient = useIsClient();
     const rows = useMemo(() => {
-        const byDate = new Map<string, { date: string; current?: number; primary?: number; trade?: number; services?: number }>();
-        for (const id of ['current', 'primary', 'trade', 'services'] as const) {
+        const byDate = new Map<string, { date: string; current?: number; primary?: number; trade?: number; services?: number; secondary?: number }>();
+        for (const id of ['current', 'primary', 'trade', 'services', 'secondary'] as const) {
             for (const p of data?.series[id] ?? []) {
                 const row = byDate.get(p.date) ?? { date: p.date };
                 row[id] = okuToMld(p.value);
@@ -48,6 +48,9 @@ export function JpTrade({ initial }: { initial: JpTradePayload | null }) {
     const servicesSame = services && current && services.date === current.date ? services : null;
     const primaryYoy = primarySame ? primaryIncomeYoyOku(data.series.primary, primarySame.date) : null;
     const servicesYoy = servicesSame ? balanceYoyOku(data.series.services, servicesSame.date) : null;
+    const secondary = lastTradePoint(data.series.secondary);
+    const secondarySame = secondary && current && secondary.date === current.date ? secondary : null;
+    const secondaryYoy = secondarySame ? balanceYoyOku(data.series.secondary, secondarySame.date) : null;
     const next = isClient ? nextTradeRelease(new Date()) : null;
     const headline = !current
         ? 'Obroty bieżące'
@@ -81,9 +84,14 @@ export function JpTrade({ initial }: { initial: JpTradePayload | null }) {
                         label: servicesSame?.provisional ? 'Usługi · wstępne' : 'Usługi',
                         value: servicesSame ? `${formatMldYen(servicesSame.value)} mld` : '—',
                     },
+                    {
+                        label: secondarySame?.provisional ? 'Dochód wtórny · wstępne' : 'Dochód wtórny',
+                        value: secondarySame ? `${formatMldYen(secondarySame.value)} mld` : '—',
+                        divider: true,
+                    },
                 ]}
             />
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-2 md:grid-cols-3 [&>*:last-child:nth-child(odd)]:col-span-2 md:[&>*:last-child:nth-child(odd)]:col-span-1">
                 <CompactKpi
                     label="Obroty bieżące"
                     icon={Scale}
@@ -111,6 +119,13 @@ export function JpTrade({ initial }: { initial: JpTradePayload | null }) {
                     value={servicesSame ? formatMldYen(servicesSame.value) : '—'}
                     unit="mld jenów"
                     footnote={servicesSame ? `${formatDataPeriod(servicesSame.date)}${servicesSame.provisional ? ' · wstępne' : ''}${servicesYoy != null ? ` · ${servicesYoy > 0 ? '+' : '−'}${formatMldYen(Math.abs(servicesYoy))} mld r/r` : ''}` : undefined}
+                />
+                <CompactKpi
+                    label="Dochód wtórny"
+                    icon={Scale}
+                    value={secondarySame ? formatMldYen(secondarySame.value) : '—'}
+                    unit="mld jenów"
+                    footnote={secondarySame ? `${formatDataPeriod(secondarySame.date)}${secondarySame.provisional ? ' · wstępne' : ''}${secondaryYoy != null ? ` · ${secondaryYoy > 0 ? '+' : '−'}${formatMldYen(Math.abs(secondaryYoy))} mld r/r` : ''}` : undefined}
                 />
             </div>
             {rows.length > 1 && (

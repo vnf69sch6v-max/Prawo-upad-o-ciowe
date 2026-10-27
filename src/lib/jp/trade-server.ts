@@ -2,7 +2,7 @@ import { peekServerCache, withCache } from '@/lib/server-cache';
 import { fetchDashboardSeries, type DashboardPoint } from './stat-dashboard';
 import { JP_TRADE_SERIES, JP_TRADE_SOURCE, jpTradeIsEmpty, type JpTradeId, type JpTradePayload } from './trade';
 
-const CACHE = { collection: 'jp_data', doc: 'trade_v3' } as const;
+const CACHE = { collection: 'jp_data', doc: 'trade_v4' } as const;
 const USER_TTL_MS = 6 * 3_600_000;
 
 export async function fetchJpTrade(): Promise<JpTradePayload> {

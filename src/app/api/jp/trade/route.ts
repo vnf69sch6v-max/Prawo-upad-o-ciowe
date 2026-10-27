@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getJpTrade } from '@/lib/jp/trade-server';
 
-// Cztery serie × 10 s + trzy odstępy 0,3 s = 40,9 s.
-export const maxDuration = 60;
+// Pięć serii × 10 s + cztery odstępy 0,3 s = 51,2 s.
+export const maxDuration = 70;
 
 export async function GET(request: NextRequest) {
     const force = request.nextUrl.searchParams.get('refresh') === '1';

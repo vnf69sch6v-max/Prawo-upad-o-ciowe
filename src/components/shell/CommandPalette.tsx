@@ -37,7 +37,7 @@ const COMMANDS: Cmd[] = [
     { id: 'jp-cpi', group: 'Wskaźniki', label: 'Inflacja w Japonii', sub: 'Japonia', keywords: 'japonia japan cpi boj bank japonii tokio jen inflacja bazowa ceny producenta cgpi ceny usług sppi transport międzynarodowy fracht', href: '/japonia/inflacja', icon: TrendingUp },
     { id: 'jp-industry', group: 'Wskaźniki', label: 'Produkcja przemysłowa w Japonii', sub: 'Japonia', keywords: 'japonia produkcja przemysł meti iip przemysłowa', href: '/japonia/gospodarka', icon: Factory },
     { id: 'jp-tertiary', group: 'Wskaźniki', label: 'Aktywność usług w Japonii', sub: 'Japonia', keywords: 'japonia usługi trzeci sektor meti tertiary services aktywność', href: '/japonia/gospodarka', icon: Briefcase },
-    { id: 'jp-trade', group: 'Wskaźniki', label: 'Handel Japonii', sub: 'Japonia', keywords: 'japonia handel bilans płatniczy obroty bieżące deficyt eksport import mof', href: '/japonia/gospodarka', icon: Scale },
+    { id: 'jp-trade', group: 'Wskaźniki', label: 'Handel Japonii', sub: 'Japonia', keywords: 'japonia handel bilans płatniczy obroty bieżące deficyt eksport import mof dochód wtórny transfery', href: '/japonia/gospodarka', icon: Scale },
     { id: 'jp-markets', group: 'Wskaźniki', label: 'Rynki Japonii', sub: 'Japonia', keywords: 'japonia jen jpy usd dolar stopa boj call overnight jgb', href: '/japonia/rynki', icon: TrendingUp },
     { id: 'jp-labour', group: 'Wskaźniki', label: 'Praca w Japonii', sub: 'Japonia', keywords: 'japonia bezrobocie praca płace wynagrodzenie labour unemployment wages', href: '/japonia/praca', icon: Users },
     { id: 'ind-ppi', group: 'Wskaźniki', label: 'Ceny producenta (PPI)', sub: 'Ceny', keywords: 'ppi producent przemysł', href: '/ceny?tab=ppi', icon: Factory },

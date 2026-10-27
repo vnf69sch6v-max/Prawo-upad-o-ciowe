@@ -124,6 +124,7 @@ J5. **Gospodarka Japonii** — produkcja zrobiona 27.10 (`/japonia/gospodarka`: 
     Przegląd od 27.10 rankinguje też płace, produkcję, sprzedaż, PKB i obroty bieżące.
     Dochód pierwotny też 27.10: sierpień, 5 133,2 mld jenów, +910,5 mld r/r.
     Usługi też 27.10: sierpień, deficyt 115,8 mld jenów, o 150,9 mld mniejszy niż rok wcześniej.
+    Dochód wtórny też 28.10: sierpień, deficyt 267,7 mld jenów, o 174 mld mniejszy niż rok wcześniej.
     Zamówienia maszyn też 27.10: sierpień, +5,2% m/m sezonowo, +18,6% r/r.
     Nowe mieszkania też 27.10: sierpień, 63 974, +6,1% r/r, skala roku 753 108.
     Od 28.10 czwarta grupa: mieszkania służbowe 1114, +228,6% r/r. Cztery grupy sumują się do całości.
@@ -211,6 +212,7 @@ J5. **Gospodarka Japonii** — produkcja zrobiona 27.10 (`/japonia/gospodarka`: 
 - **`GUS_BDL_KEY`** — wyższy limit BDL (rejestracja na api.stat.gov.pl).
 
 ## Zrobione
+- **28.10.2026 — Japonia: dochód wtórny.** Na `/japonia/gospodarka` w bilansie: sierpień 2026, deficyt 267,7 mld jenów, o 174 mld mniejszy niż rok wcześniej. Wstępny komunikat Ministerstwa Finansów z 8.10. Cache `jp_data/trade_v4`.
 - **28.10.2026 — Japonia: mieszkania służbowe.** Pod sumą 63 974: służbowe 1114, +228,6% r/r. Razem z własnymi, na wynajem i na sprzedaż dają całość. Cache `jp_data/housing_v3`.
 - **28.10.2026 — Japonia: ceny usług bez transportu międzynarodowego.** Na `/japonia/inflacja` obok +3,7%: wrzesień 2026, +2,9% r/r, tyle samo co w sierpniu. To łączny indeks bez żeglugi oceanicznej, lotów międzynarodowych i poczty międzynarodowej. Cache `jp_data/sppi_v2`.
 - **28.10.2026 — Japonia: aktywność usług.** Na `/japonia/gospodarka` pod produkcją: indeks METI, baza 2020 (średnia z 2019 i 2020). Sierpień 2026, wstępny: 106,8, −0,1% wobec lipca, +1,7% r/r bez korekty. Komunikat z 19.10, 13:30. Świeżość `jp-tertiary`. Wrzesień: 17 listopada.

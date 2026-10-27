@@ -3,12 +3,12 @@ import { describe, expect, it } from 'vitest';
 import { dashboardUrl, parseDashboardData } from '@/lib/jp/stat-dashboard';
 import { formatDecimalPL, formatNumber } from '@/lib/formatters';
 import {
-    JP_TRADE_SERIES, expectedJpTrade, formatMldYen, nextTradeRelease, okuToMld, primaryIncomeYoyOku, tradeMldSeries, tradeSentence, type JpTradePayload,
+    JP_TRADE_SERIES, balanceYoyOku, expectedJpTrade, formatMldYen, nextTradeRelease, okuToMld, primaryIncomeYoyOku, tradeMldSeries, tradeSentence, type JpTradePayload,
 } from '@/lib/jp/trade';
 import { datasetById, extractJpTrade } from '@/lib/freshness';
 
 const fixture = (name: string) => JSON.parse(readFileSync(`tests/fixtures/jp/${name}.json`, 'utf8'));
-const cfg = (id: 'current' | 'primary' | 'trade' | 'services') => JP_TRADE_SERIES.find((s) => s.id === id)!.query;
+const cfg = (id: 'current' | 'primary' | 'trade' | 'services' | 'secondary') => JP_TRADE_SERIES.find((s) => s.id === id)!.query;
 
 function withName(name: string, file: string) {
     const json = fixture(file);
@@ -69,6 +69,28 @@ describe('Japan balance of payments', () => {
         expect(() => parseDashboardData(json, cfg('services'))).toThrow(/貿易/);
     });
 
+    it('reads the secondary-income deficit, 174 billion yen smaller than a year earlier', () => {
+        const s = parseDashboardData(fixture('dashboard-bop-secondary'), cfg('secondary'));
+        expect(s.name).toBe('第二次所得収支');
+        expect(s.points.at(-1)).toEqual({ date: '2026-08', value: -2677, provisional: true });
+        expect(s.points.find((p) => p.date === '2025-08')?.value).toBe(-4417);
+        expect(balanceYoyOku(s.points, '2026-08')).toBe(1740);
+        expect(okuToMld(-2677)).toBe(-267.7);
+        expect(() => parseDashboardData(fixture('dashboard-primary'), cfg('secondary'))).toThrow(/第二次所得収支/);
+        const payload = {
+            series: {
+                current: [{ date: '2026-08', value: 40620, provisional: true }],
+                primary: [], trade: [], services: [],
+                secondary: s.points,
+            },
+            names: { current: '', primary: '', trade: '', services: '', secondary: '' },
+            source: '', fetchedAt: '',
+        } satisfies JpTradePayload;
+        expect(tradeSentence(payload)).toBe(
+            `Dane za sierpień 2026: nadwyżka obrotów bieżących wyniosła ${formatMldYen(40620)} mld jenów. Deficyt dochodu wtórnego wyniósł ${formatMldYen(2677)} mld jenów, o ${formatMldYen(1740)} mld mniejszy niż rok wcześniej. Odczyty są wstępne.`,
+        );
+    });
+
     it('rejects a seasonally adjusted trade name and a dollar or ratio current account', () => {
         expect(() => parseDashboardData(withName('貿易収支（季節調整値）', 'dashboard-trade'), cfg('trade'))).toThrow(/季節調整値/);
         expect(() => parseDashboardData(withName('経常収支（米ドル）', 'dashboard-ca'), cfg('current'))).toThrow(/米ドル/);
@@ -103,8 +125,9 @@ describe('Japan balance of payments', () => {
                     { date: '2025-08', value: -2667 },
                     { date: '2026-08', value: -1158, provisional: true },
                 ],
+                secondary: [],
             },
-            names: { current: '経常収支', primary: '第一次所得収支', trade: '貿易収支', services: 'サービス収支' },
+            names: { current: '経常収支', primary: '第一次所得収支', trade: '貿易収支', services: 'サービス収支', secondary: '' },
             source: '',
             fetchedAt: '',
         } satisfies JpTradePayload;
