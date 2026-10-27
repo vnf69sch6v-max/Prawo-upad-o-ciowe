@@ -11,7 +11,7 @@ import { formatDataPeriod, formatDecimalPL, formatNumber } from '@/lib/formatter
 import { useIsClient } from '@/lib/use-is-client';
 import { DASHBOARD_CREDIT_JA, DASHBOARD_CREDIT_PL } from '@/lib/jp/stat-dashboard';
 import {
-    JP_TRADE_SERIES, formatMldYen, lastTradePoint, nextTradeRelease, okuToMld, tradeSentence, type JpTradePayload,
+    JP_TRADE_SERIES, formatMldYen, lastTradePoint, nextTradeRelease, okuToMld, primaryIncomeYoyOku, tradeSentence, type JpTradePayload,
 } from '@/lib/jp/trade';
 import { useJpTrade } from '@/lib/jp/use-jp-trade';
 
@@ -23,8 +23,8 @@ export function JpTrade({ initial }: { initial: JpTradePayload | null }) {
     const { data, isLoading, isError, refetch } = useJpTrade(initial);
     const isClient = useIsClient();
     const rows = useMemo(() => {
-        const byDate = new Map<string, { date: string; current?: number; trade?: number }>();
-        for (const id of ['current', 'trade'] as const) {
+        const byDate = new Map<string, { date: string; current?: number; primary?: number; trade?: number }>();
+        for (const id of ['current', 'primary', 'trade'] as const) {
             for (const p of data?.series[id] ?? []) {
                 const row = byDate.get(p.date) ?? { date: p.date };
                 row[id] = okuToMld(p.value);
@@ -40,8 +40,11 @@ export function JpTrade({ initial }: { initial: JpTradePayload | null }) {
     }
 
     const current = lastTradePoint(data.series.current);
+    const primary = lastTradePoint(data.series.primary);
     const trade = lastTradePoint(data.series.trade);
+    const primarySame = primary && current && primary.date === current.date ? primary : null;
     const same = trade && current && trade.date === current.date ? trade : null;
+    const primaryYoy = primarySame ? primaryIncomeYoyOku(data.series.primary, primarySame.date) : null;
     const next = isClient ? nextTradeRelease(new Date()) : null;
     const headline = !current
         ? 'Obroty bieżące'
@@ -63,8 +66,13 @@ export function JpTrade({ initial }: { initial: JpTradePayload | null }) {
                 panelTitle="Handel towarami"
                 rows={[
                     {
+                        label: primarySame?.provisional ? 'Dochód pierwotny · wstępne' : 'Dochód pierwotny',
+                        value: primarySame ? `${formatMldYen(primarySame.value)} mld` : '—',
+                    },
+                    {
                         label: same?.provisional ? 'Handel · wstępne' : 'Handel towarami',
                         value: same ? `${formatMldYen(same.value)} mld` : '—',
+                        divider: true,
                     },
                 ]}
             />
@@ -77,12 +85,21 @@ export function JpTrade({ initial }: { initial: JpTradePayload | null }) {
                     footnote={current ? `${formatDataPeriod(current.date)}${current.provisional ? ' · wstępne' : ''}` : undefined}
                 />
                 <CompactKpi
-                    label="Handel towarami"
+                    label="Dochód pierwotny"
                     icon={Scale}
-                    value={same ? formatMldYen(same.value) : '—'}
+                    value={primarySame ? formatMldYen(primarySame.value) : '—'}
                     unit="mld jenów"
-                    footnote={same ? `${formatDataPeriod(same.date)}${same.provisional ? ' · wstępne' : ''}` : undefined}
+                    footnote={primarySame ? `${formatDataPeriod(primarySame.date)}${primarySame.provisional ? ' · wstępne' : ''}${primaryYoy != null ? ` · ${primaryYoy > 0 ? '+' : '−'}${formatMldYen(Math.abs(primaryYoy))} mld r/r` : ''}` : undefined}
                 />
+                <div className="col-span-2">
+                    <CompactKpi
+                        label="Handel towarami"
+                        icon={Scale}
+                        value={same ? formatMldYen(same.value) : '—'}
+                        unit="mld jenów"
+                        footnote={same ? `${formatDataPeriod(same.date)}${same.provisional ? ' · wstępne' : ''}` : undefined}
+                    />
+                </div>
             </div>
             {rows.length > 1 && (
                 <SectionCard editorial titleVariant="label" title="Bilans płatniczy" subtitle="mld jenów · bez korekty sezonowej">

@@ -3,12 +3,12 @@ import { describe, expect, it } from 'vitest';
 import { dashboardUrl, parseDashboardData } from '@/lib/jp/stat-dashboard';
 import { formatDecimalPL, formatNumber } from '@/lib/formatters';
 import {
-    JP_TRADE_SERIES, expectedJpTrade, formatMldYen, nextTradeRelease, okuToMld, tradeMldSeries, tradeSentence, type JpTradePayload,
+    JP_TRADE_SERIES, expectedJpTrade, formatMldYen, nextTradeRelease, okuToMld, primaryIncomeYoyOku, tradeMldSeries, tradeSentence, type JpTradePayload,
 } from '@/lib/jp/trade';
 import { datasetById, extractJpTrade } from '@/lib/freshness';
 
 const fixture = (name: string) => JSON.parse(readFileSync(`tests/fixtures/jp/${name}.json`, 'utf8'));
-const cfg = (id: 'current' | 'trade') => JP_TRADE_SERIES.find((s) => s.id === id)!.query;
+const cfg = (id: 'current' | 'primary' | 'trade') => JP_TRADE_SERIES.find((s) => s.id === id)!.query;
 
 function withName(name: string, file: string) {
     const json = fixture(file);
@@ -41,6 +41,22 @@ describe('Japan balance of payments', () => {
         expect(formatMldYen(-6877)).toBe(formatDecimalPL(-687.7, 1));
     });
 
+    it('reads the August primary-income surplus that widened the current account', () => {
+        const s = parseDashboardData(fixture('dashboard-primary'), cfg('primary'));
+        expect(s.name).toBe('第一次所得収支');
+        expect(s.points.at(-1)).toEqual({ date: '2026-08', value: 51332, provisional: true });
+        expect(okuToMld(51332)).toBe(5133.2);
+        expect(primaryIncomeYoyOku([
+            { date: '2025-08', value: 42227 },
+            { date: '2026-08', value: 51332, provisional: true },
+        ])).toBe(9105);
+        const goodsServices = fixture('dashboard-primary');
+        const indicator = goodsServices.GET_STATS.STATISTICAL_DATA.CLASS_INF.CLASS_OBJ.find((c: { '@id': string }) => c['@id'] === 'indicator');
+        const row = Array.isArray(indicator.CLASS) ? indicator.CLASS[0] : indicator.CLASS;
+        row['@name'] = '第二次所得収支';
+        expect(() => parseDashboardData(goodsServices, cfg('primary'))).toThrow(/第一次所得収支|第二次/);
+    });
+
     it('rejects a seasonally adjusted trade name and a dollar or ratio current account', () => {
         expect(() => parseDashboardData(withName('貿易収支（季節調整値）', 'dashboard-trade'), cfg('trade'))).toThrow(/季節調整値/);
         expect(() => parseDashboardData(withName('経常収支（米ドル）', 'dashboard-ca'), cfg('current'))).toThrow(/米ドル/);
@@ -66,14 +82,18 @@ describe('Japan balance of payments', () => {
         const payload = {
             series: {
                 current: [{ date: '2026-08', value: 40620, provisional: true }],
+                primary: [
+                    { date: '2025-08', value: 42227 },
+                    { date: '2026-08', value: 51332, provisional: true },
+                ],
                 trade: [{ date: '2026-08', value: -6877, provisional: true }],
             },
-            names: { current: '経常収支', trade: '貿易収支' },
+            names: { current: '経常収支', primary: '第一次所得収支', trade: '貿易収支' },
             source: '',
             fetchedAt: '',
         } satisfies JpTradePayload;
         expect(tradeSentence(payload)).toBe(
-            `Dane za sierpień 2026: nadwyżka obrotów bieżących wyniosła ${formatNumber(4062, 0)} mld jenów. Deficyt handlu towarami wyniósł ${formatDecimalPL(687.7, 1)} mld jenów. Oba odczyty są wstępne.`,
+            `Dane za sierpień 2026: nadwyżka obrotów bieżących wyniosła ${formatNumber(4062, 0)} mld jenów. Nadwyżka dochodu pierwotnego wyniosła ${formatDecimalPL(5133.2, 1)} mld jenów, wobec roku wcześniej więcej o ${formatDecimalPL(910.5, 1)} mld. Deficyt handlu towarami wyniósł ${formatDecimalPL(687.7, 1)} mld jenów. Odczyty są wstępne.`,
         );
     });
 
