@@ -11,7 +11,7 @@ import { formatDataPeriod, formatDecimalPL, formatNumber } from '@/lib/formatter
 import { useIsClient } from '@/lib/use-is-client';
 import { DASHBOARD_CREDIT_JA, DASHBOARD_CREDIT_PL } from '@/lib/jp/stat-dashboard';
 import {
-    JP_TRADE_SERIES, formatMldYen, lastTradePoint, nextTradeRelease, okuToMld, primaryIncomeYoyOku, tradeSentence, type JpTradePayload,
+    JP_TRADE_SERIES, balanceYoyOku, formatMldYen, lastTradePoint, nextTradeRelease, okuToMld, primaryIncomeYoyOku, tradeSentence, type JpTradePayload,
 } from '@/lib/jp/trade';
 import { useJpTrade } from '@/lib/jp/use-jp-trade';
 
@@ -23,8 +23,8 @@ export function JpTrade({ initial }: { initial: JpTradePayload | null }) {
     const { data, isLoading, isError, refetch } = useJpTrade(initial);
     const isClient = useIsClient();
     const rows = useMemo(() => {
-        const byDate = new Map<string, { date: string; current?: number; primary?: number; trade?: number }>();
-        for (const id of ['current', 'primary', 'trade'] as const) {
+        const byDate = new Map<string, { date: string; current?: number; primary?: number; trade?: number; services?: number }>();
+        for (const id of ['current', 'primary', 'trade', 'services'] as const) {
             for (const p of data?.series[id] ?? []) {
                 const row = byDate.get(p.date) ?? { date: p.date };
                 row[id] = okuToMld(p.value);
@@ -44,7 +44,10 @@ export function JpTrade({ initial }: { initial: JpTradePayload | null }) {
     const trade = lastTradePoint(data.series.trade);
     const primarySame = primary && current && primary.date === current.date ? primary : null;
     const same = trade && current && trade.date === current.date ? trade : null;
+    const services = lastTradePoint(data.series.services);
+    const servicesSame = services && current && services.date === current.date ? services : null;
     const primaryYoy = primarySame ? primaryIncomeYoyOku(data.series.primary, primarySame.date) : null;
+    const servicesYoy = servicesSame ? balanceYoyOku(data.series.services, servicesSame.date) : null;
     const next = isClient ? nextTradeRelease(new Date()) : null;
     const headline = !current
         ? 'Obroty bieżące'
@@ -74,6 +77,10 @@ export function JpTrade({ initial }: { initial: JpTradePayload | null }) {
                         value: same ? `${formatMldYen(same.value)} mld` : '—',
                         divider: true,
                     },
+                    {
+                        label: servicesSame?.provisional ? 'Usługi · wstępne' : 'Usługi',
+                        value: servicesSame ? `${formatMldYen(servicesSame.value)} mld` : '—',
+                    },
                 ]}
             />
             <div className="grid grid-cols-2 gap-2">
@@ -91,15 +98,20 @@ export function JpTrade({ initial }: { initial: JpTradePayload | null }) {
                     unit="mld jenów"
                     footnote={primarySame ? `${formatDataPeriod(primarySame.date)}${primarySame.provisional ? ' · wstępne' : ''}${primaryYoy != null ? ` · ${primaryYoy > 0 ? '+' : '−'}${formatMldYen(Math.abs(primaryYoy))} mld r/r` : ''}` : undefined}
                 />
-                <div className="col-span-2">
-                    <CompactKpi
-                        label="Handel towarami"
-                        icon={Scale}
-                        value={same ? formatMldYen(same.value) : '—'}
-                        unit="mld jenów"
-                        footnote={same ? `${formatDataPeriod(same.date)}${same.provisional ? ' · wstępne' : ''}` : undefined}
-                    />
-                </div>
+                <CompactKpi
+                    label="Handel towarami"
+                    icon={Scale}
+                    value={same ? formatMldYen(same.value) : '—'}
+                    unit="mld jenów"
+                    footnote={same ? `${formatDataPeriod(same.date)}${same.provisional ? ' · wstępne' : ''}` : undefined}
+                />
+                <CompactKpi
+                    label="Usługi"
+                    icon={Scale}
+                    value={servicesSame ? formatMldYen(servicesSame.value) : '—'}
+                    unit="mld jenów"
+                    footnote={servicesSame ? `${formatDataPeriod(servicesSame.date)}${servicesSame.provisional ? ' · wstępne' : ''}${servicesYoy != null ? ` · ${servicesYoy > 0 ? '+' : '−'}${formatMldYen(Math.abs(servicesYoy))} mld r/r` : ''}` : undefined}
+                />
             </div>
             {rows.length > 1 && (
                 <SectionCard editorial titleVariant="label" title="Bilans płatniczy" subtitle="mld jenów · bez korekty sezonowej">

@@ -7,7 +7,7 @@ import { formatDataPeriod, formatDecimalPL, formatNumber } from '@/lib/formatter
 import { jstDateKey } from './calendar';
 import type { DashboardPoint, DashboardQuery } from './stat-dashboard';
 
-export type JpTradeId = 'current' | 'primary' | 'trade';
+export type JpTradeId = 'current' | 'primary' | 'trade' | 'services';
 
 export interface JpTradeSeriesConfig {
     id: JpTradeId;
@@ -50,6 +50,16 @@ export const JP_TRADE_SERIES: JpTradeSeriesConfig[] = [
             unitIncludes: ['億円'],
         },
     },
+    {
+        id: 'services', label: 'Usługi', short: 'Usługi', color: '#0369A1',
+        hint: 'Podróże, transport i pozostałe usługi. Osobno od handlu towarami.',
+        query: {
+            indicator: '1601010101000010030', rank: 2, region: '00000', from: '201801',
+            mustInclude: ['サービス収支'],
+            mustExclude: ['貿易', '季節調整値', '米ドル'],
+            unitIncludes: ['億円'],
+        },
+    },
 ];
 
 export const JP_TRADE_SOURCE = 'Ministry of Finance · Balance of Payments';
@@ -62,7 +72,7 @@ export interface JpTradePayload {
 }
 
 export function jpTradeIsEmpty(p: JpTradePayload | null | undefined): boolean {
-    return !p?.series?.current?.length || !p.series.primary?.length || !p.series.trade?.length;
+    return !p?.series?.current?.length || !p.series.primary?.length || !p.series.trade?.length || !p.series.services?.length;
 }
 
 export function lastTradePoint(points: DashboardPoint[] | undefined): DashboardPoint | null {
@@ -147,8 +157,8 @@ function sameMonth(points: DashboardPoint[] | undefined, date: string): Dashboar
     return points?.find((p) => p.date === date) ?? null;
 }
 
-/** Różnica dochodu pierwotnego wobec tego samego miesiąca rok wcześniej, w 億円. */
-export function primaryIncomeYoyOku(points: DashboardPoint[] | undefined, period?: string): number | null {
+/** Różnica salda wobec tego samego miesiąca rok wcześniej, w 億円. */
+export function balanceYoyOku(points: DashboardPoint[] | undefined, period?: string): number | null {
     const last = period ? points?.find((p) => p.date === period) : lastTradePoint(points);
     if (!last) return null;
     const prevDate = last.date.replace(/^(\d{4})/, (y) => String(Number(y) - 1));
@@ -156,6 +166,11 @@ export function primaryIncomeYoyOku(points: DashboardPoint[] | undefined, period
     const prev = points?.find((p) => p.date === prevDate);
     if (!prev) return null;
     return last.value - prev.value;
+}
+
+/** Różnica dochodu pierwotnego wobec tego samego miesiąca rok wcześniej, w 億円. */
+export function primaryIncomeYoyOku(points: DashboardPoint[] | undefined, period?: string): number | null {
+    return balanceYoyOku(points, period);
 }
 
 export function tradeSentence(p: JpTradePayload): string | null {
@@ -176,7 +191,15 @@ export function tradeSentence(p: JpTradePayload): string | null {
     if (trade) {
         parts.push(`${capital(side(trade.value))} handlu towarami ${verb(trade.value)} ${formatMldYen(Math.abs(trade.value))} mld jenów`);
     }
-    const shown = [current, primary, trade].filter((x): x is DashboardPoint => x != null);
+    const services = sameMonth(p.series.services, current.date);
+    if (services) {
+        const yoy = balanceYoyOku(p.series.services, current.date);
+        const yoyBit = yoy == null || yoy === 0 ? '' : services.value < 0
+            ? `, o ${formatMldYen(Math.abs(yoy))} mld ${yoy > 0 ? 'mniejszy' : 'większy'} niż rok wcześniej`
+            : `, wobec roku wcześniej ${yoy > 0 ? 'więcej' : 'mniej'} o ${formatMldYen(Math.abs(yoy))} mld`;
+        parts.push(`${capital(side(services.value))} usług ${verb(services.value)} ${formatMldYen(Math.abs(services.value))} mld jenów${yoyBit}`);
+    }
+    const shown = [current, primary, trade, services].filter((x): x is DashboardPoint => x != null);
     const provisional = shown.filter((x) => x.provisional).length;
     const tag = provisional === 0 ? '' : provisional === shown.length && shown.length > 1 ? ' Odczyty są wstępne.' : ' Odczyt jest wstępny.';
     return `Dane za ${formatDataPeriod(current.date)}: ${parts.join('. ')}.${tag}`;

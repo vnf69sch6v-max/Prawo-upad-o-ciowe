@@ -184,12 +184,15 @@ Standard scripts in `package.json`:
   seasonally adjusted — the Cabinet Office headline, not the annualised rate.
   Quarterly `TimeFrom` is `20262Q00` (`Cycle=2`). Second-estimate dates are
   `JP_GDP_SECOND_RELEASES` at 8:50 JST. The same page shows the balance of
-  payments (`/api/jp/trade`, cache `jp_data/trade_v2`, freshness `jp-trade`):
-  current account, primary income and goods trade, not seasonally adjusted, in
-  億円 (divide by 10 for billions of yen). August 2026 preliminary (8 Oct,
-  8:50 JST) is a 4,062 billion yen surplus, a 5,133.2 billion yen primary-income
-  surplus (+910.5 billion versus August 2025) and a 687.7 billion yen trade
-  deficit; the points stay `provisional`. Dates are `JP_BOP_RELEASES` at 8:50 JST through January
+  payments (`/api/jp/trade`, cache `jp_data/trade_v3`, freshness `jp-trade`):
+  current account, primary income, goods trade and services, not seasonally
+  adjusted, in 億円 (divide by 10 for billions of yen). August 2026 preliminary
+  (8 Oct, 8:50 JST) is a 4,062 billion yen surplus, a 5,133.2 billion yen
+  primary-income surplus (+910.5 billion versus August 2025), a 687.7 billion
+  yen trade deficit and a 115.8 billion yen services deficit (150.9 billion
+  smaller than August 2025). The points stay `provisional`. The services name
+  must exclude 貿易, because 貿易・サービス収支 contains サービス収支. Dates are
+  `JP_BOP_RELEASES` at 8:50 JST through January
   2027 data on 08.03.2027. Extend that map before April 2027.
 - Header from `xl`: sections inline, search is an icon (⌘K still works) — with
   the 220 px field the row did not fit the 1440 px container.
