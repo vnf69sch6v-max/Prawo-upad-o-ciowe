@@ -113,6 +113,7 @@ J2. **Kolejne wskaźniki Japonii.** Stopa BOJ, call, USD/JPY, JGB 10Y (`/japonia
     Kalendarz Labour Force Survey w `src/lib/jp/labour.ts` sięga lutego 2027 — dopisać przed majem 2027.
 J3. **Przegląd Japonii** — zrobione 27.10. `/japonia` rankinguje CPI, bezrobocie, jen i JGB
     (świeżość z kalendarzy Japonii, cel BOJ 2%). Inflacja jest na `/japonia/inflacja`.
+    Ceny producenta też 27.10: wrzesień, wstępne, +6,8% r/r, indeks 135,7.
 J4. **Płace w Japonii** — zrobione 27.10. Na `/japonia/praca` nominalne 3,9% i realne 1,6% za sierpień
     (komunikat końcowy, zakłady od 5 osób). Kalendarz 確報 w `src/lib/jp/wages.ts` sięga grudnia 2026.
 J5. **Gospodarka Japonii** — produkcja zrobiona 27.10 (`/japonia/gospodarka`: sierpień 101,9, −2,4% m/m).
@@ -205,6 +206,7 @@ J5. **Gospodarka Japonii** — produkcja zrobiona 27.10 (`/japonia/gospodarka`: 
 - **`GUS_BDL_KEY`** — wyższy limit BDL (rejestracja na api.stat.gov.pl).
 
 ## Zrobione
+- **27.10.2026 — Japonia: ceny producenta.** Na `/japonia/inflacja`: wrzesień 2026, wstępne, +6,8% r/r (sierpień po korekcie 7,6%). Indeks 135,7, baza 2020, −0,3% wobec sierpnia. Komunikat Banku Japonii z 13.10, 8:50. Świeżość `jp-cgpi`. Październik: 12 listopada.
 - **27.10.2026 — Japonia: usługi w bilansie.** Na `/japonia/gospodarka`: sierpień 2026, deficyt usług 115,8 mld jenów, o 150,9 mld mniejszy niż rok wcześniej. Osobno od handlu towarami. Cache `jp_data/trade_v3`.
 - **27.10.2026 — Japonia: dochód pierwotny.** Na `/japonia/gospodarka` obok handlu: sierpień 2026, 5 133,2 mld jenów nadwyżki, o 910,5 mld więcej niż rok wcześniej. To ta pozycja trzyma nadwyżkę obrotów bieżących przy deficycie handlu. Cache `jp_data/trade_v2`.
 - **27.10.2026 — Japonia: przegląd widzi bilans.** Hero i rząd „Praca i gospodarka” dostają obroty bieżące w mld jenów, z datą wstępnego komunikatu Ministerstwa Finansów. Zmiana salda nie jest podpisana jako punkty procentowe. Kafel pokazuje też deficyt handlu z tego samego miesiąca.
