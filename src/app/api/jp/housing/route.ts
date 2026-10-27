@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getJpHousing } from '@/lib/jp/housing-server';
 
-export const maxDuration = 30;
+// Pięć serii × 10 s + cztery odstępy 0,3 s = 51,2 s.
+export const maxDuration = 60;
 
 export async function GET(request: NextRequest) {
     const force = request.nextUrl.searchParams.get('refresh') === '1';

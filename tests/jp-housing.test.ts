@@ -8,7 +8,7 @@ import {
 import { datasetById, extractJpHousing } from '@/lib/freshness';
 
 const fixture = (name: string) => JSON.parse(readFileSync(`tests/fixtures/jp/${name}.json`, 'utf8'));
-const cfg = (id: 'count' | 'annual') => JP_HOUSING_SERIES.find((s) => s.id === id)!.query;
+const cfg = (id: 'count' | 'annual' | 'owner' | 'rent' | 'sale') => JP_HOUSING_SERIES.find((s) => s.id === id)!.query;
 
 describe('Japan housing starts', () => {
     it('reads the August count and the 6.1% rise versus a year earlier', () => {
@@ -30,6 +30,19 @@ describe('Japan housing starts', () => {
         expect(() => parseDashboardData(fixture('dashboard-housing-count'), cfg('annual'))).toThrow(/年率|季調|2/);
     });
 
+    it('reads owner, rental and for-sale homes from the same release', () => {
+        const owner = parseDashboardData(fixture('dashboard-housing-owner'), cfg('owner'));
+        const rent = parseDashboardData(fixture('dashboard-housing-rent'), cfg('rent'));
+        const sale = parseDashboardData(fixture('dashboard-housing-sale'), cfg('sale'));
+        expect(owner.points.find((p) => p.date === '2026-08')?.value).toBe(17713);
+        expect(rent.points.find((p) => p.date === '2026-08')?.value).toBe(28309);
+        expect(sale.points.find((p) => p.date === '2026-08')?.value).toBe(16838);
+        expect(housingYoy(owner.points, '2026-08')).toBe(1);
+        expect(housingYoy(rent.points, '2026-08')).toBe(6.5);
+        expect(housingYoy(sale.points, '2026-08')).toBe(6.4);
+        expect(() => parseDashboardData(fixture('dashboard-housing-rent'), cfg('owner'))).toThrow(/持家/);
+    });
+
     it('switches at 14:00 JST on the release day', () => {
         expect(expectedJpHousing(new Date('2026-09-30T04:59:00Z'))).toBe('2026-07');
         expect(expectedJpHousing(new Date('2026-09-30T05:00:00Z'))).toBe('2026-08');
@@ -44,8 +57,9 @@ describe('Japan housing starts', () => {
             series: {
                 count: [{ date: '2025-08', value: 60275 }, { date: '2026-08', value: 63974 }],
                 annual: [{ date: '2026-07', value: 773916 }, { date: '2026-08', value: 753108 }],
+                owner: [], rent: [], sale: [],
             },
-            names: { count: '', annual: '' },
+            names: { count: '', annual: '', owner: '', rent: '', sale: '' },
             source: '',
             fetchedAt: '',
         } satisfies JpHousingPayload;

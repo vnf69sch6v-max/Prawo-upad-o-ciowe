@@ -5,7 +5,7 @@ import { formatDataPeriod, formatDecimalPL, formatNumber } from '@/lib/formatter
 import { jstDateKey } from './calendar';
 import type { DashboardPoint, DashboardQuery } from './stat-dashboard';
 
-export type JpHousingId = 'count' | 'annual';
+export type JpHousingId = 'count' | 'annual' | 'owner' | 'rent' | 'sale';
 
 const TOTAL = ['新設住宅着工戸数（総戸数）'];
 
@@ -33,6 +33,33 @@ export const JP_HOUSING_SERIES: JpHousingSeriesConfig[] = [
             unitIncludes: ['戸'],
         },
     },
+    {
+        id: 'owner',
+        query: {
+            indicator: '0802010103010010010', rank: 2, region: '00000', from: '201801',
+            mustInclude: ['新設住宅着工戸数（持家）'],
+            mustExclude: ['年率', '季調', '貸家', '分譲'],
+            unitIncludes: ['戸'],
+        },
+    },
+    {
+        id: 'rent',
+        query: {
+            indicator: '0802010103010010020', rank: 2, region: '00000', from: '201801',
+            mustInclude: ['新設住宅着工戸数（貸家）'],
+            mustExclude: ['年率', '季調', '持家', '分譲'],
+            unitIncludes: ['戸'],
+        },
+    },
+    {
+        id: 'sale',
+        query: {
+            indicator: '0802010103010010030', rank: 2, region: '00000', from: '201801',
+            mustInclude: ['新設住宅着工戸数（分譲住宅）'],
+            mustExclude: ['年率', '季調', '持家', '貸家'],
+            unitIncludes: ['戸'],
+        },
+    },
 ];
 
 export const JP_HOUSING_SOURCE = 'Ministry of Land, Infrastructure, Transport and Tourism · Housing Starts';
@@ -45,7 +72,7 @@ export interface JpHousingPayload {
 }
 
 export function jpHousingIsEmpty(p: JpHousingPayload | null | undefined): boolean {
-    return !p?.series?.count?.length || !p.series.annual?.length;
+    return !p?.series?.count?.length || !p.series.annual?.length || !p.series.owner?.length || !p.series.rent?.length || !p.series.sale?.length;
 }
 
 export function lastHousingPoint(points: DashboardPoint[] | undefined): DashboardPoint | null {
