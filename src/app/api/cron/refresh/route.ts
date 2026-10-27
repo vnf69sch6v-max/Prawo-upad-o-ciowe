@@ -69,6 +69,7 @@ const ENDPOINTS = [
     '/api/jp/retail?refresh=1',
     '/api/jp/gdp?refresh=1',
     '/api/jp/trade?refresh=1',
+    '/api/jp/cgpi?refresh=1',
 ];
 
 export async function GET(request: NextRequest) {

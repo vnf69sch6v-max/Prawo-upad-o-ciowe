@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
+import { JpCgpi } from '@/components/jp/JpCgpi';
 import { JpInflation } from '@/components/jp/JpInflation';
 import { PageHeader } from '@/components/ui/PageHeader';
+import { peekJpCgpi } from '@/lib/jp/cgpi-server';
 import { jpCpiSummary } from '@/lib/jp/cpi';
 import { peekJpCpi } from '@/lib/jp/cpi-server';
 import { peekJpContributions } from '@/lib/jp/contributions-server';
@@ -15,21 +17,23 @@ export async function generateMetadata(): Promise<Metadata> {
     return {
         title: 'Inflacja w Japonii — CPI, cel BOJ 2% | Savori',
         description: summary
-            ? `Inflacja CPI w Japonii: ${summary}. CPI ogółem, bazowa (bez świeżej żywności), bez energii i wstępny odczyt z Tokio — dane Statistics Bureau of Japan.`
-            : 'Inflacja CPI w Japonii: ogółem, bazowa (bez świeżej żywności), bez energii i wstępny odczyt z Tokio — dane Statistics Bureau of Japan.',
+            ? `Inflacja CPI w Japonii: ${summary}. CPI ogółem, bazowa, Tokio i ceny producenta.`
+            : 'Inflacja CPI w Japonii: ogółem, bazowa, Tokio i ceny producenta.',
         alternates: { canonical: `${SITE_URL}/japonia/inflacja` },
     };
 }
 
 export default async function JaponiaInflacjaPage() {
-    const [initial, contributions] = await Promise.all([
+    const [initial, contributions, cgpi] = await Promise.all([
         peekJpCpi().catch(() => null),
         peekJpContributions().catch(() => null),
+        peekJpCgpi().catch(() => null),
     ]);
     return (
         <div className="mk-fade-in space-y-5">
             <PageHeader title="Japonia · Inflacja" />
             <JpInflation initial={initial} contributions={contributions} />
+            <JpCgpi initial={cgpi} />
         </div>
     );
 }
