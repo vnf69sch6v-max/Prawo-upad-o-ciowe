@@ -4,11 +4,16 @@ import { formatDecimalPL, formatPP } from '@/lib/formatters';
 import { rankHeroSignals, type HeroCandidate, type Point, type RankedSignal } from '@/lib/hero-signals';
 import { JP_CPI_NATIONAL_RELEASES } from './calendar';
 import { BOJ_TARGET } from './cpi';
+import { JP_GDP_SECOND_RELEASES } from './gdp';
+import { JP_IIP_FINAL_RELEASES } from './industry';
 import { JP_LFS_RELEASES } from './labour';
+import { JP_RETAIL_FINAL_RELEASES } from './retail';
+import { JP_WAGE_FINAL_RELEASES } from './wages';
 
 const CPI_HREF = '/japonia/inflacja';
 const LABOUR_HREF = '/japonia/praca';
 const MARKETS_HREF = '/japonia/rynki';
+const ECONOMY_HREF = '/japonia/gospodarka';
 
 function nextAfter(releases: Record<string, string>, today: string): string | null {
     return Object.values(releases).sort().find((date) => date > today) ?? null;
@@ -19,6 +24,14 @@ export function jpHeroCandidates(input: {
     unemployment: Point[];
     usdjpy: Point[];
     jgb: Point[];
+    /** Płace nominalne, już jako r/r. */
+    wages?: Point[];
+    /** Indeks produkcji wyrównany sezonowo. Zmiana procentowa to liczba z komunikatu. */
+    industry?: Point[];
+    /** Sprzedaż detaliczna, już jako r/r. */
+    retail?: Point[];
+    /** PKB realny, już jako zmiana wobec poprzedniego kwartału. */
+    gdp?: Point[];
 }): HeroCandidate[] {
     return [
         {
@@ -34,6 +47,34 @@ export function jpHeroCandidates(input: {
             href: LABOUR_HREF,
             releaseOf: (period) => JP_LFS_RELEASES[period] ?? null,
             nextReleaseOf: (today) => nextAfter(JP_LFS_RELEASES, today),
+        },
+        {
+            id: 'jp-wages', kind: 'employment', label: 'Płace nominalne', series: input.wages ?? [],
+            unit: '%', decimals: 1, deltaMode: 'pp', weight: 1,
+            href: LABOUR_HREF,
+            releaseOf: (period) => JP_WAGE_FINAL_RELEASES[period] ?? null,
+            nextReleaseOf: (today) => nextAfter(JP_WAGE_FINAL_RELEASES, today),
+        },
+        {
+            id: 'jp-industry', kind: 'industrial', label: 'Produkcja przemysłowa', series: input.industry ?? [],
+            unit: '%', decimals: 1, deltaMode: 'pct', weight: 1.1,
+            href: ECONOMY_HREF,
+            releaseOf: (period) => JP_IIP_FINAL_RELEASES[period] ?? null,
+            nextReleaseOf: (today) => nextAfter(JP_IIP_FINAL_RELEASES, today),
+        },
+        {
+            id: 'jp-retail', kind: 'retail', label: 'Sprzedaż detaliczna', series: input.retail ?? [],
+            unit: '%', decimals: 1, deltaMode: 'pp', weight: 1,
+            href: ECONOMY_HREF,
+            releaseOf: (period) => JP_RETAIL_FINAL_RELEASES[period] ?? null,
+            nextReleaseOf: (today) => nextAfter(JP_RETAIL_FINAL_RELEASES, today),
+        },
+        {
+            id: 'jp-gdp', kind: 'industrial', label: 'PKB realny', series: input.gdp ?? [],
+            unit: '%', decimals: 1, deltaMode: 'pp', weight: 1.2,
+            href: ECONOMY_HREF,
+            releaseOf: (period) => JP_GDP_SECOND_RELEASES[period] ?? null,
+            nextReleaseOf: (today) => nextAfter(JP_GDP_SECOND_RELEASES, today),
         },
         {
             id: 'jp-usdjpy', kind: 'market', label: 'USD/JPY', series: input.usdjpy,
@@ -71,6 +112,13 @@ export function jpSignalHeadline(r: RankedSignal): string {
     }
     if (c.id === 'jp-usdjpy') return (delta ?? 0) > 0 ? 'Jen słabnie wobec dolara' : 'Jen umacnia się wobec dolara';
     if (c.id === 'jp-jgb') return (delta ?? 0) > 0 ? 'Rentowność JGB mocno w górę' : 'Rentowność JGB mocno w dół';
+    if (c.id === 'jp-industry') {
+        if (delta == null || Math.abs(delta) < 0.05) return 'Produkcja bez zmian';
+        return delta < 0 ? 'Produkcja spadła' : 'Produkcja wzrosła';
+    }
+    if (c.id === 'jp-retail') return 'Sprzedaż detaliczna rok do roku';
+    if (c.id === 'jp-wages') return 'Płace nominalne rok do roku';
+    if (c.id === 'jp-gdp') return last < 0 ? 'PKB spadł wobec kwartału' : 'PKB wzrósł wobec kwartału';
     if (delta == null || Math.abs(delta) < 0.2) return `${c.label} — stabilnie`;
     if (c.kind === 'employment') return delta > 0 ? 'Bezrobocie rośnie' : 'Bezrobocie spada';
     return c.label;
@@ -89,6 +137,13 @@ export function jpSignalText(r: RankedSignal): string {
             : `${delta > 0 ? '+' : delta < 0 ? '−' : ''}${formatDecimalPL(Math.abs(delta), 2)}%`;
         const since = r.biggestSince >= 5 ? ` Największy ruch od ${r.biggestSince} notowań.` : '';
         return `Ostatnie notowanie: ${move}.${since}`;
+    }
+    if (c.id === 'jp-industry') {
+        const move = delta == null ? '—' : `${delta > 0 ? '+' : ''}${formatDecimalPL(delta, 1)}%`;
+        return `Indeks ${formatDecimalPL(last, 1)} (baza 2020). Wobec poprzedniego miesiąca ${move}.`;
+    }
+    if (c.id === 'jp-gdp') {
+        return `Wobec poprzedniego kwartału ${formatDecimalPL(last, 1)}%, nie w skali roku.`;
     }
     if (c.kind === 'cpi') {
         const target = c.target ?? BOJ_TARGET;

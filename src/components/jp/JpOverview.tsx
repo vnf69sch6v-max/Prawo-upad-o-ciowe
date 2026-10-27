@@ -2,27 +2,36 @@
 
 import { useMemo } from 'react';
 import Link from 'next/link';
-import { DollarSign, Landmark, Percent, TrendingUp, Users } from 'lucide-react';
+import { Banknote, DollarSign, Factory, Landmark, Percent, ShoppingCart, TrendingUp, Users } from 'lucide-react';
 import { CompactKpiGrid, type CompactKpiItem } from '@/components/ui/CompactKpiGrid';
-import { formatDataPeriod, formatDate, formatDecimalPL, formatPP } from '@/lib/formatters';
+import { formatDataPeriod, formatDate, formatDecimalPL, formatNumber, formatPP } from '@/lib/formatters';
 import { useIsClient } from '@/lib/use-is-client';
 import { jstDateKey } from '@/lib/jp/calendar';
 import { BOJ_CREDIT_EN, BOJ_CREDIT_PL, lastBojPoint, type BojPayload } from '@/lib/jp/boj';
 import { changePp, lastPoint, type JpCpiPayload } from '@/lib/jp/cpi';
+import { lastGdpPoint, type JpGdpPayload } from '@/lib/jp/gdp';
+import { industryMom, type JpIndustryPayload } from '@/lib/jp/industry';
 import { labourChangePp, lastLabourPoint, type JpLabourPayload } from '@/lib/jp/labour';
 import { type JgbPayload } from '@/lib/jp/jgb';
+import { lastRetailPoint, retailYoy, retailYoySeries, type JpRetailPayload } from '@/lib/jp/retail';
+import { lastWagePoint, wageChangePp, type JpWagesPayload } from '@/lib/jp/wages';
 import { jpSignalHeadline, jpSignalReason, jpSignalText, rankJpHero } from '@/lib/jp/overview';
 import { DASHBOARD_CREDIT_JA, DASHBOARD_CREDIT_PL } from '@/lib/jp/stat-dashboard';
 import { useJpCpi } from '@/lib/jp/use-jp-cpi';
+import { useJpGdp } from '@/lib/jp/use-jp-gdp';
+import { useJpIndustry } from '@/lib/jp/use-jp-industry';
 import { useJpJgb } from '@/lib/jp/use-jp-jgb';
 import { useJpLabour } from '@/lib/jp/use-jp-labour';
 import { useJpMarkets } from '@/lib/jp/use-jp-markets';
+import { useJpRetail } from '@/lib/jp/use-jp-retail';
+import { useJpWages } from '@/lib/jp/use-jp-wages';
 import type { RankedSignal } from '@/lib/hero-signals';
 
 const SPARK = 12;
 const pct1 = (v: number) => `${formatDecimalPL(v, 1)}%`;
 const jpy2 = (v: number) => `${formatDecimalPL(v, 2)} jena`;
 const pct3 = (v: number) => `${formatDecimalPL(v, 3)}%`;
+const formatNumberSafe = (n: number) => formatNumber(n, 0);
 
 function pctMove(points: { value: number }[] | undefined): number | null {
     if (!points || points.length < 2) return null;
@@ -33,6 +42,10 @@ function pctMove(points: { value: number }[] | undefined): number | null {
 }
 
 function valueOf(r: RankedSignal): string {
+    if (r.candidate.id === 'jp-industry') {
+        if (r.delta == null) return '—';
+        return `${r.delta > 0 ? '+' : ''}${formatDecimalPL(r.delta, 1)}%`;
+    }
     const n = formatDecimalPL(r.last, r.candidate.decimals);
     return r.candidate.unit === '%' ? `${n}%` : `${n} ${r.candidate.unit}`;
 }
@@ -52,7 +65,7 @@ function SignalLink({ r, emphasis }: { r: RankedSignal; emphasis: 'primary' | 's
             </div>
             <div className="mt-2 flex flex-wrap items-baseline gap-2">
                 <span className={`tnum font-extrabold tracking-tight ${emphasis === 'primary' ? 'text-4xl sm:text-5xl' : 'text-2xl sm:text-3xl'}`}>{valueOf(r)}</span>
-                {deltaTxt && <span className="mk-hero-chip">{arrow}{deltaTxt}</span>}
+                {r.candidate.id !== 'jp-industry' && deltaTxt && <span className="mk-hero-chip">{arrow}{deltaTxt}</span>}
             </div>
             <p className="mk-hero-muted mt-2 max-w-md text-xs leading-relaxed sm:text-sm">{jpSignalText(r)}</p>
             <p className="mk-hero-muted mt-2.5 text-[11px] font-semibold uppercase tracking-wide">
@@ -65,16 +78,25 @@ function SignalLink({ r, emphasis }: { r: RankedSignal; emphasis: 'primary' | 's
 
 export function JpOverview({
     cpi: cpiInitial, labour: labourInitial, markets: marketsInitial, jgb: jgbInitial,
+    wages: wagesInitial, industry: industryInitial, retail: retailInitial, gdp: gdpInitial,
 }: {
     cpi: JpCpiPayload | null;
     labour: JpLabourPayload | null;
     markets: BojPayload | null;
     jgb: JgbPayload | null;
+    wages: JpWagesPayload | null;
+    industry: JpIndustryPayload | null;
+    retail: JpRetailPayload | null;
+    gdp: JpGdpPayload | null;
 }) {
     const cpiQ = useJpCpi(cpiInitial);
     const labourQ = useJpLabour(labourInitial);
     const marketsQ = useJpMarkets(marketsInitial);
     const jgbQ = useJpJgb(jgbInitial);
+    const wagesQ = useJpWages(wagesInitial);
+    const industryQ = useJpIndustry(industryInitial);
+    const retailQ = useJpRetail(retailInitial);
+    const gdpQ = useJpGdp(gdpInitial);
     const isClient = useIsClient();
     const today = isClient ? jstDateKey() : null;
 
@@ -83,13 +105,19 @@ export function JpOverview({
     const fxSeries = useMemo(() => marketsQ.data?.series.usdjpy ?? [], [marketsQ.data]);
     const policySeries = useMemo(() => marketsQ.data?.series.policy ?? [], [marketsQ.data]);
     const jgbSeries = useMemo(() => (jgbQ.data?.history ?? []).map((p) => ({ date: p.date, value: p.y10 })), [jgbQ.data]);
+    const wageSeries = useMemo(() => wagesQ.data?.series.nominal ?? [], [wagesQ.data]);
+    const industrySeries = useMemo(() => industryQ.data?.series.sa ?? [], [industryQ.data]);
+    const retailLevels = useMemo(() => retailQ.data?.points ?? [], [retailQ.data]);
+    const retailSeries = useMemo(() => retailYoySeries(retailLevels).map((p) => ({ date: p.date, value: p.yoy })), [retailLevels]);
+    const gdpSeries = useMemo(() => gdpQ.data?.series.real ?? [], [gdpQ.data]);
 
     const ranked = useMemo(() => rankJpHero({
         cpi: cpiSeries, unemployment: labourSeries, usdjpy: fxSeries, jgb: jgbSeries,
-    }, today), [cpiSeries, labourSeries, fxSeries, jgbSeries, today]);
+        wages: wageSeries, industry: industrySeries, retail: retailSeries, gdp: gdpSeries,
+    }, today), [cpiSeries, labourSeries, fxSeries, jgbSeries, wageSeries, industrySeries, retailSeries, gdpSeries, today]);
     const freshIds = useMemo(() => new Set(ranked.filter((r) => r.fresh).map((r) => r.candidate.id)), [ranked]);
     // Hero czeka na CPI i bezrobocie razem — inaczej pierwszy, który dojdzie, wskakuje na górę i po chwili spada.
-    const heroLoading = cpiQ.isLoading || labourQ.isLoading;
+    const heroLoading = cpiQ.isLoading || labourQ.isLoading || wagesQ.isLoading || industryQ.isLoading || retailQ.isLoading || gdpQ.isLoading;
     const [primary, secondary] = ranked;
 
     const cpiLast = lastPoint(cpiSeries);
@@ -100,6 +128,12 @@ export function JpOverview({
     const jgbPrev = jgbSeries.length > 1 ? jgbSeries[jgbSeries.length - 2].value : null;
     const jgbMove = jgbLast && jgbPrev != null ? +(jgbLast.value - jgbPrev).toFixed(3) : null;
     const policyDelta = policySeries.length > 1 ? policySeries[policySeries.length - 1].value - policySeries[policySeries.length - 2].value : null;
+    const wageLast = lastWagePoint(wageSeries);
+    const industryLast = industrySeries.at(-1) ?? null;
+    const industryMove = industryMom(industrySeries);
+    const retailLast = lastRetailPoint(retailLevels);
+    const retailMove = retailYoy(retailLevels);
+    const gdpLast = lastGdpPoint(gdpSeries);
 
     const kpis: CompactKpiItem[] = [
         {
@@ -142,6 +176,35 @@ export function JpOverview({
             loading: jgbQ.isLoading, error: jgbQ.isError, onRetry: () => { void jgbQ.refetch(); },
         },
     ];
+    const economy: CompactKpiItem[] = [
+        {
+            key: 'jp-wages', label: 'Płace nominalne', href: '/japonia/praca', watchId: 'jp-wages', icon: Banknote,
+            value: wageLast ? formatDecimalPL(wageLast.value, 1) : '—', unit: '%',
+            delta: wageChangePp(wageSeries) != null ? { value: wageChangePp(wageSeries)!, unit: 'pp' } : undefined,
+            footnote: wageLast ? `${freshIds.has('jp-wages') ? 'nowe · ' : ''}r/r · ${formatDataPeriod(wageLast.date)}` : 'r/r',
+            spark: wageSeries.slice(-SPARK), sparkFormat: pct1,
+            loading: wagesQ.isLoading, error: wagesQ.isError, onRetry: () => { void wagesQ.refetch(); },
+        },
+        {
+            key: 'jp-industry', label: 'Produkcja', href: '/japonia/gospodarka', watchId: 'jp-industry', icon: Factory,
+            value: industryMove == null ? '—' : `${industryMove > 0 ? '+' : ''}${formatDecimalPL(industryMove, 1)}`, unit: '%',
+            footnote: industryLast ? `wobec poprzedniego miesiąca · ${formatDataPeriod(industryLast.date)}` : 'wobec poprzedniego miesiąca',
+            loading: industryQ.isLoading, error: industryQ.isError, onRetry: () => { void industryQ.refetch(); },
+        },
+        {
+            key: 'jp-retail', label: 'Sprzedaż detaliczna', href: '/japonia/gospodarka', watchId: 'jp-retail', icon: ShoppingCart,
+            value: retailMove == null ? '—' : `${retailMove > 0 ? '+' : ''}${formatDecimalPL(retailMove, 1)}`, unit: '%',
+            footnote: retailLast ? `r/r · ${formatNumberSafe(retailLast.value)} mld jenów` : 'r/r',
+            loading: retailQ.isLoading, error: retailQ.isError, onRetry: () => { void retailQ.refetch(); },
+        },
+        {
+            key: 'jp-gdp', label: 'PKB realny', href: '/japonia/gospodarka', watchId: 'jp-gdp', icon: Landmark,
+            value: gdpLast ? `${gdpLast.value > 0 ? '+' : ''}${formatDecimalPL(gdpLast.value, 1)}` : '—', unit: '%',
+            footnote: gdpLast ? `wobec poprzedniego kwartału · ${formatDataPeriod(gdpLast.date)}` : 'wobec poprzedniego kwartału',
+            spark: gdpSeries.slice(-SPARK), sparkFormat: pct1,
+            loading: gdpQ.isLoading, error: gdpQ.isError, onRetry: () => { void gdpQ.refetch(); },
+        },
+    ];
 
     return (
         <div className="space-y-4 lg:space-y-5">
@@ -174,6 +237,7 @@ export function JpOverview({
                 Na górze jest świeży odczyt albo duża zmiana. Jen i obligacje wchodzą tylko przy ruchu powyżej dwóch odchyleń własnej historii.
             </p>
             <CompactKpiGrid items={kpis} label="Japonia" columns={5} dense />
+            <CompactKpiGrid items={economy} label="Praca i gospodarka" columns={4} dense />
             <footer className="space-y-1 border-t border-mk-border pt-3 text-xs leading-relaxed text-mk-muted">
                 <p>{DASHBOARD_CREDIT_PL}</p>
                 <p lang="ja">{DASHBOARD_CREDIT_JA}</p>
