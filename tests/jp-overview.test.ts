@@ -46,6 +46,28 @@ describe('Japan overview hero', () => {
         expect(price.next?.date).toBe('2026-11-20');
     });
 
+    it('dates production, wages and GDP from their own release calendars', () => {
+        const ranked = rankJpHero({
+            cpi: monthly('2025-10', [...calm, 2.1]),
+            unemployment, usdjpy, jgb,
+            wages: monthly('2025-10', [2.5, 3.4, 3.1, 3.6, 3.3, 4.0, 4.3, 3.9, 3.6, 3.4, 3.9]),
+            industry: monthly('2025-10', [100, 101, 102, 103, 102, 103, 104, 104.6, 104.4, 104.4, 101.9]),
+            gdp: [{ date: '2026-Q1', value: 0.5 }, { date: '2026-Q2', value: 0.4 }],
+        }, '2026-10-27');
+        const wages = ranked.find((r) => r.candidate.id === 'jp-wages')!;
+        const industry = ranked.find((r) => r.candidate.id === 'jp-industry')!;
+        const gdp = ranked.find((r) => r.candidate.id === 'jp-gdp')!;
+        expect(wages.publishedOn).toBe('2026-10-23');
+        expect(wages.fresh).toBe(true);
+        expect(industry.publishedOn).toBe('2026-10-15');
+        expect(industry.delta).toBeCloseTo(-2.39, 1);
+        expect(jpSignalHeadline(industry)).toBe('Produkcja spadła');
+        expect(jpSignalText(industry)).toContain('101,9');
+        expect(gdp.period).toBe('2026-Q2');
+        expect(gdp.publishedOn).toBe('2026-09-08');
+        expect(jpSignalHeadline(gdp)).toBe('PKB wzrósł wobec kwartału');
+    });
+
     it('lets a two-sigma yen move into the hero', () => {
         const shock = usdjpy.map((p, i) => i === usdjpy.length - 1 ? { ...p, date: '2026-10-26', value: 160 } : p);
         const ranked = rankJpHero({ cpi, unemployment, usdjpy: shock, jgb }, '2026-10-27');
