@@ -147,7 +147,10 @@ Standard scripts in `package.json`:
   (`revalidate = 1800`) and reads Firestore only (`peekJpCpi`) — never fetch an
   upstream source in a page render (Data Cache trap above). Cron `jp`
   00:30 UTC (9:30 JST) plus a second pass in `refresh`; freshness id `jp-cpi`.
-  The Statistics Dashboard credit text must stay visible on the page.
+  The Statistics Dashboard credit text must stay visible on the page. Official
+  CPI contributions (寄与度) are a separate cache (`jp_data/cpi_contributions_v1`,
+  `/api/jp/cpi-contributions`): the latest e-Stat table 5 xlsx from the stable
+  list `lid=000001491870`, not the Dashboard. The page only peeks that cache.
 - Header from `xl`: sections inline, search is an icon (⌘K still works) — with
   the 220 px field the row did not fit the 1440 px container.
 - Inside a `withCache(...)` fetcher, fetch upstream with `cache: 'no-store'`,

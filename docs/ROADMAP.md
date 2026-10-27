@@ -16,8 +16,9 @@ pierwszeństwo. Rzeczy, których nie da się zrobić z kodu, trafiają do „Wym
    i energii). Pierwszy krok bez klucza: rozbicie z różnic tych miar (wpływ świeżej żywności, energii,
    żywności przetworzonej — opisane jako różnice miar, nie wagi). Pełne kategorie miesięczne: e-Stat API
    (`ESTAT_APP_ID`, darmowa rejestracja — właściciel) albo pliki Statistics Bureau — PM ustala w specyfikacji.
-   **Krok 1 zrobiony 24.10** (różnice miar, PM: SHIP). **Krok 2** — oficjalne wkłady 寄与度 i kategorie
-   koszyka miesięcznie — czeka na `ESTAT_APP_ID` (właściciel).
+   **Krok 1 zrobiony 24.10** (różnice miar, PM: SHIP). **Krok 2 zrobiony 26.10** — oficjalne wkłady
+   寄与度 z publicznego pliku e-Stat (tabela 5, bez `ESTAT_APP_ID`): 10 grup, towary/usługi, świeża żywność,
+   energia, ryż. Dalsze pozycje koszyka (setki) zostają w pliku, nie na stronie.
 
 ### Bezpieczeństwo i niezawodność
 1. **Publiczne trasy GUS mogą wyczerpać limit DBW** (~100 żądań / 15 min, crony dostają wtedy 429).
@@ -194,6 +195,7 @@ J3. **Przegląd Japonii** (hero jak w PL), gdy będą ≥3 wskaźniki.
 - **`GUS_BDL_KEY`** — wyższy limit BDL (rejestracja na api.stat.gov.pl).
 
 ## Zrobione
+- **26.10.2026 — Japonia: oficjalne wkłady CPI.** `/japonia` pokazuje 寄与度 z tabeli 5 (e-Stat, plik xlsx, bez klucza): 10 grup koszyka, towary i usługi, świeża żywność, energia, ryż. Wrzesień 2026: żywność +0,77 p.p., ryż −0,21 p.p. przy CPI 2,1%. Różnice miar zostają osobno i nie nazywają się wkładem. Cache `jp_data/cpi_contributions_v1`, świeżość `jp-cpi-contributions`, cron `jp` i `refresh`.
 - **26.10.2026 — rejestracja e-mailem.** Na `/login` i `/start`: „Nie masz konta? Załóż je” (e-mail, hasło, powtórzenie, min. 8 znaków). Link weryfikacyjny, bez ciasteczka sesji do kliknięcia. Logowanie przed potwierdzeniem nie zapisuje `accessUntil` (inaczej okres próbny przepadłby). Po potwierdzeniu zwykłe logowanie nadaje trial jak dotychczas.
 - **25.10.2026 — logowanie: od wejścia na stronę do formularza.** Niezalogowany z podstrony (`/ceny`) ląduje na `/start?from=…#logowanie`, nie na hero. Zablokowany popup Google przechodzi na przekierowanie w tej samej karcie (`getRedirectResult` dokleja ciasteczko po powrocie). „Nie pamiętam hasła” wysyła link; brak konta brzmi tak samo jak sukces. Nowe konto jest przez Google — formularz e-mail to mówi wprost. „Zaloguj się ponownie” przewija do formularza, nie otwiera od razu Google.
 - **25.10.2026 — 1b: wymuszone pobranie z GUS DBW/BDL tylko z `CRON_SECRET`**

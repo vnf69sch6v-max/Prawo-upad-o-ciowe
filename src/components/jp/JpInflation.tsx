@@ -12,6 +12,9 @@ import { formatDataPeriod, formatDecimalPL } from '@/lib/formatters';
 import { useIsClient } from '@/lib/use-is-client';
 import { BOJ_TARGET, JP_CPI_DISPLAY_SERIES, JP_CPI_SERIES, changePp, chartRows, lastPoint, type JpCpiId, type JpCpiPayload } from '@/lib/jp/cpi';
 import { JpBreakdown, jpBreakdownSentence } from './JpBreakdown';
+import { JpContributionsView } from './JpContributions';
+import { useJpContributions } from '@/lib/jp/use-jp-contributions';
+import { contributionSentence, type JpContributions } from '@/lib/jp/contributions';
 import { jstDateKey, nextRelease, publishedOn, releaseInstant } from '@/lib/jp/calendar';
 import { DASHBOARD_CREDIT_JA, DASHBOARD_CREDIT_PL } from '@/lib/jp/stat-dashboard';
 import { useJpCpi } from '@/lib/jp/use-jp-cpi';
@@ -36,8 +39,9 @@ function ageText(days: number): string {
     return `${days} dni temu`;
 }
 
-export function JpInflation({ initial }: { initial: JpCpiPayload | null }) {
+export function JpInflation({ initial, contributions }: { initial: JpCpiPayload | null; contributions: JpContributions | null }) {
     const { data, isLoading, isError, refetch } = useJpCpi(initial);
+    const contribQuery = useJpContributions(contributions);
     // „Dziś” tylko po hydratacji — strona jest renderowana na serwerze (React #418, AGENTS.md).
     const isClient = useIsClient();
     const todayJst = isClient ? jstDateKey() : null;
@@ -95,6 +99,8 @@ export function JpInflation({ initial }: { initial: JpCpiPayload | null }) {
 
     // Zdanie-wniosek z rozbicia (najnowszy miesiąc wspólny czterem miarom) — liczby, nie „dziś”, więc w HTML z serwera.
     const sentence = jpBreakdownSentence(data.series);
+    const contrib = contribQuery.data ?? null;
+    const drive = contrib && head && contrib.period === head.date ? contributionSentence(contrib) : sentence;
 
     const upcoming = todayJst
         ? (['tokyo', 'national'] as const).map((kind) => ({ kind, next: nextRelease(kind, new Date()) }))
@@ -111,7 +117,7 @@ export function JpInflation({ initial }: { initial: JpCpiPayload | null }) {
                 description={
                     <>
                         CPI ogółem wynosi {pct(head?.value)}% r/r przy celu BOJ {BOJ_TARGET}%.{' '}
-                        {sentence ?? `Bazowa (bez świeżej żywności) — ${pct(latest.core?.value)}%, bez świeżej żywności i energii — ${pct(latest.coreCore?.value)}%.`}
+                        {drive ?? `Bazowa (bez świeżej żywności) — ${pct(latest.core?.value)}%, bez świeżej żywności i energii — ${pct(latest.coreCore?.value)}%.`}
                         {tokyoAhead && ` Wstępny odczyt z Tokio za ${formatDataPeriod(tokyoAhead.date).split(' ')[0]}: ${pct(tokyoAhead.value)}%.`}
                     </>
                 }
@@ -130,6 +136,7 @@ export function JpInflation({ initial }: { initial: JpCpiPayload | null }) {
 
             <CompactKpiGrid items={kpis} label="Miary inflacji (r/r)" columns={4} dense />
 
+            <JpContributionsView data={contrib} />
             <JpBreakdown series={data.series} />
 
             <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
@@ -178,7 +185,7 @@ export function JpInflation({ initial }: { initial: JpCpiPayload | null }) {
                             ))}
                             {[
                                 'Rozbicie to różnice między oficjalnymi miarami: o ile zmienia się stopa inflacji, gdy do koszyka dołączamy kolejno żywność poza świeżą, energię i świeżą żywność. Kolejność wynika z miar, które publikuje Statistics Bureau.',
-                                'To nie są wkłady (寄与度) z komunikatu. Grupa, która drożeje w tym samym tempie co reszta koszyka, ma różnicę 0,0 p.p., nawet jeśli jej ceny rosną. Oficjalne wkłady pokażemy w kolejnym kroku.',
+                                'To nie są wkłady (寄与度) z komunikatu — te są w sekcji „Wkłady w inflację”. Grupa, która drożeje w tym samym tempie co reszta koszyka, ma różnicę 0,0 p.p., nawet jeśli jej ceny rosną.',
                                 'Bez żywności i energii: alkohol zostaje w koszyku, a gastronomia nie. To miara bliska inflacji bazowej NBP, ale nie identyczna. Różnice stóp zaokrąglonych do 0,1 mają dokładność ±0,1 p.p.',
                                 'Od sierpnia 2026 r. Japonia liczy CPI w bazie 2025. Pokazujemy tylko nową bazę — historię przeliczył Statistics Bureau.',
                             ].map((t) => (
