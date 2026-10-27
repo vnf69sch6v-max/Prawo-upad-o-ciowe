@@ -32,6 +32,7 @@ import { expectedJpTrade } from '@/lib/jp/trade';
 import { expectedJpCgpi } from '@/lib/jp/cgpi';
 import { expectedJpSppi } from '@/lib/jp/sppi';
 import { expectedJpOrders } from '@/lib/jp/orders';
+import { expectedJpHousing } from '@/lib/jp/housing';
 import { latestCommonPeriod } from '@/lib/jp/breakdown';
 
 // ─── Typy ───────────────────────────────────────────────
@@ -380,6 +381,12 @@ export function extractJpCpiBreakdown(json: unknown): string | null {
     return series ? latestCommonPeriod(series as Parameters<typeof latestCommonPeriod>[0]) : null;
 }
 
+/** `/api/jp/housing` → najnowszy miesiąc liczby nowych mieszkań. */
+export function extractJpHousing(json: unknown): string | null {
+    const points = asObj(asObj(json)?.series)?.count;
+    return maxPeriod(Array.isArray(points) ? points.map((p) => asObj(p)?.date) : [], 'monthly');
+}
+
 /** `/api/jp/orders` → najnowszy miesiąc zamówień maszyn wyrównanych sezonowo. */
 export function extractJpOrders(json: unknown): string | null {
     const points = asObj(asObj(json)?.series)?.sa;
@@ -682,6 +689,16 @@ export const FRESHNESS_DATASETS: DatasetSpec[] = [
         expected: (now) => expectedJpOrders(now),
         tolerance: MONTHLY, maxAgeDays: 100,
         lagNote: 'Komunikat zamówień maszyn (8:50 JST) już jest, ale Statistics Dashboard albo nasze odświeżenie jeszcze go nie objęły.',
+        selfHeal: true,
+    },
+    {
+        id: 'jp-housing', label: 'Japonia — nowe mieszkania', source: 'Ministerstwo Ziemi Japonii', kind: 'jp-dashboard',
+        group: 'jp', frequency: 'monthly',
+        endpoint: () => '/api/jp/housing',
+        extract: extractJpHousing,
+        expected: (now) => expectedJpHousing(now),
+        tolerance: MONTHLY, maxAgeDays: 80,
+        lagNote: 'Komunikat nowych mieszkań (14:00 JST) już jest, ale Statistics Dashboard albo nasze odświeżenie jeszcze go nie objęły.',
         selfHeal: true,
     },
 ];
