@@ -162,7 +162,13 @@ Standard scripts in `package.json`:
   `parseDashboardData` also requires `isSeasonal` class `2` (季調値) or `1`
   (原数値). Release dates live in `JP_LFS_RELEASES` (8:30 JST, through February
   2027 data on 30.03.2027); extend that map before May 2027 or freshness falls
-  back to a day-of-month heuristic. The page only peeks the cache.
+  back to a day-of-month heuristic. The same page shows Monthly Labour Survey
+  wages (`/api/jp/wages`, cache `jp_data/wages_v1`, freshness `jp-wages`):
+  nominal total cash earnings y/y for establishments with 5 or more employees,
+  and real wages versus CPI excluding imputed rent. The Dashboard print is the
+  revised release (確報), not the flash. Dates are `JP_WAGE_FINAL_RELEASES`
+  (8:30 JST, through December 2026 data on 26.02.2027). The page only peeks
+  both caches.
 - Header from `xl`: sections inline, search is an icon (⌘K still works) — with
   the 220 px field the row did not fit the 1440 px container.
 - Inside a `withCache(...)` fetcher, fetch upstream with `cache: 'no-store'`,

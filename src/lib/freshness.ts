@@ -24,6 +24,7 @@ import { warsawDateKey } from '@/lib/news/warsaw-date';
 import { expectedJpCpi } from '@/lib/jp/calendar';
 import { expectedUsdJpyDate } from '@/lib/jp/boj';
 import { expectedJpUnemployment } from '@/lib/jp/labour';
+import { expectedJpWages } from '@/lib/jp/wages';
 import { latestCommonPeriod } from '@/lib/jp/breakdown';
 
 // ─── Typy ───────────────────────────────────────────────
@@ -372,6 +373,12 @@ export function extractJpCpiBreakdown(json: unknown): string | null {
     return series ? latestCommonPeriod(series as Parameters<typeof latestCommonPeriod>[0]) : null;
 }
 
+/** `/api/jp/wages` → najnowszy miesiąc płac nominalnych (liczba z komunikatu końcowego). */
+export function extractJpWages(json: unknown): string | null {
+    const points = asObj(asObj(json)?.series)?.nominal;
+    return maxPeriod(Array.isArray(points) ? points.map((p) => asObj(p)?.date) : [], 'monthly');
+}
+
 /** `/api/jp/labour` → najnowszy miesiąc stopy wyrównanej sezonowo. */
 export function extractJpLabour(json: unknown): string | null {
     const points = asObj(asObj(json)?.series)?.sa;
@@ -547,6 +554,16 @@ export const FRESHNESS_DATASETS: DatasetSpec[] = [
         extract: extractJpLabour,
         expected: (now) => expectedJpUnemployment(now),
         tolerance: MONTHLY, maxAgeDays: 70, lagNote: LAG_NOTES['jp-dashboard'], selfHeal: true,
+    },
+    {
+        id: 'jp-wages', label: 'Japonia — płace', source: 'Monthly Labour Survey', kind: 'jp-dashboard',
+        group: 'jp', frequency: 'monthly',
+        endpoint: () => '/api/jp/wages',
+        extract: extractJpWages,
+        expected: (now) => expectedJpWages(now),
+        tolerance: MONTHLY, maxAgeDays: 100,
+        lagNote: 'Komunikat końcowy płac (8:30 JST) już jest, ale Statistics Dashboard albo nasze odświeżenie jeszcze go nie objęły. Wstępny odczyt na stronę nie wchodzi.',
+        selfHeal: true,
     },
 ];
 
