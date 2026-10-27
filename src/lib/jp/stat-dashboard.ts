@@ -31,6 +31,8 @@ export interface DashboardQuery {
     mustInclude: string[];
     /** Fragmenty, których w nazwie być nie może (surowa stopa nie może być szeregiem sezonowym). */
     mustExclude?: string[];
+    /** Fragmenty jednostki z metadanych (np. „10億円"). Zła jednostka = błąd, nie ciche przeliczenie. */
+    unitIncludes?: string[];
     /** `true` = szereg wyrównany sezonowo (季調値). Domyślnie dane surowe. */
     seasonal?: boolean;
 }
@@ -108,6 +110,14 @@ export function parseDashboardData(json: unknown, q: DashboardQuery): DashboardS
     const seasonalCode = typeof seasonalClass?.['@code'] === 'string' ? seasonalClass['@code'] : '';
     if (seasonalCode !== wantSeasonal) {
         throw new Error(`Statistics Dashboard: seria ${q.indicator} ma znacznik sezonowy „${seasonalCode || 'brak'}", oczekiwano „${wantSeasonal}" (${q.seasonal ? '季調値' : '原数値'})`);
+    }
+    if (q.unitIncludes?.length) {
+        const unitClass = asArray(asObj(classes.find((c) => asObj(c)?.['@id'] === 'unit'))?.CLASS as Obj | Obj[] | undefined)[0];
+        const unitText = typeof unitClass?.$ === 'string' ? unitClass.$ : '';
+        const missingUnit = q.unitIncludes.filter((frag) => !unitText.includes(frag));
+        if (missingUnit.length) {
+            throw new Error(`Statistics Dashboard: seria ${q.indicator} ma jednostkę „${unitText || 'brak'}" — brak „${missingUnit.join('", „')}"`);
+        }
     }
 
     const byDate = new Map<string, DashboardPoint>();

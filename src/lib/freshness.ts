@@ -26,6 +26,7 @@ import { expectedUsdJpyDate } from '@/lib/jp/boj';
 import { expectedJpUnemployment } from '@/lib/jp/labour';
 import { expectedJpWages } from '@/lib/jp/wages';
 import { expectedJpIndustry } from '@/lib/jp/industry';
+import { expectedJpRetail } from '@/lib/jp/retail';
 import { latestCommonPeriod } from '@/lib/jp/breakdown';
 
 // ─── Typy ───────────────────────────────────────────────
@@ -374,6 +375,12 @@ export function extractJpCpiBreakdown(json: unknown): string | null {
     return series ? latestCommonPeriod(series as Parameters<typeof latestCommonPeriod>[0]) : null;
 }
 
+/** `/api/jp/retail` → najnowszy miesiąc sprzedaży detalicznej. */
+export function extractJpRetail(json: unknown): string | null {
+    const points = asObj(json)?.points;
+    return maxPeriod(Array.isArray(points) ? points.map((p) => asObj(p)?.date) : [], 'monthly');
+}
+
 /** `/api/jp/industry` → najnowszy miesiąc indeksu wyrównanego sezonowo. */
 export function extractJpIndustry(json: unknown): string | null {
     const points = asObj(asObj(json)?.series)?.sa;
@@ -580,6 +587,16 @@ export const FRESHNESS_DATASETS: DatasetSpec[] = [
         expected: (now) => expectedJpIndustry(now),
         tolerance: MONTHLY, maxAgeDays: 100,
         lagNote: 'Komunikat końcowy produkcji (13:30 JST) już jest, ale Statistics Dashboard albo nasze odświeżenie jeszcze go nie objęły. Wstępny odczyt na stronę nie wchodzi.',
+        selfHeal: true,
+    },
+    {
+        id: 'jp-retail', label: 'Japonia — sprzedaż detaliczna', source: 'METI', kind: 'jp-dashboard',
+        group: 'jp', frequency: 'monthly',
+        endpoint: () => '/api/jp/retail',
+        extract: extractJpRetail,
+        expected: (now) => expectedJpRetail(now),
+        tolerance: MONTHLY, maxAgeDays: 100,
+        lagNote: 'Komunikat końcowy sprzedaży (13:30 JST) już jest, ale Statistics Dashboard albo nasze odświeżenie jeszcze go nie objęły. Wstępny odczyt na stronę nie wchodzi.',
         selfHeal: true,
     },
 ];
