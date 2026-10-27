@@ -57,10 +57,12 @@ describe('BOJ markets', () => {
 
     it('does not light the inflation tab on the markets page', () => {
         const items = [
-            { label: 'Inflacja', href: '/japonia', icon: () => null },
+            { label: 'Przegląd', href: '/japonia', icon: () => null },
+            { label: 'Inflacja', href: '/japonia/inflacja', icon: () => null },
             { label: 'Rynki', href: '/japonia/rynki', icon: () => null },
         ] as unknown as NavItem[];
         expect(activeNavHref('/japonia/rynki', items)).toBe('/japonia/rynki');
+        expect(activeNavHref('/japonia/inflacja', items)).toBe('/japonia/inflacja');
         expect(activeNavHref('/japonia', items)).toBe('/japonia');
     });
 

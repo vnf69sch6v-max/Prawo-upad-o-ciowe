@@ -15,7 +15,7 @@ export interface HeroCandidate {
     label: string;
     series: Point[];
     /** Jednostka wartości na kaflu. */
-    unit: '%' | 'pkt' | 'zł';
+    unit: '%' | 'pkt' | 'zł' | 'jena';
     decimals: number;
     /** `pp` — zmiana wskaźnika r/r w punktach proc.; `pct` — zmiana poziomu (rynki) w %. */
     deltaMode: 'pp' | 'pct';
@@ -24,6 +24,18 @@ export interface HeroCandidate {
     /** Waga redakcyjna (domyślnie 1) — CPI jest ważniejsze od bezrobocia rejestrowanego. */
     weight?: number;
     href: string;
+    /**
+     * Cel inflacyjny do „przebicia”. Bez pola i przy `kind: 'cpi'` liczymy cel NBP 2,5%.
+     * Japonia podaje 2 (cel BOJ).
+     */
+    target?: number;
+    /**
+     * Dzień, w którym okres trafia na stronę. Bez pola: kalendarz GUS, a dla rynku data sesji.
+     * Japonia podaje własne kalendarze (CPI, Labour Force Survey).
+     */
+    releaseOf?: (period: string) => string | null;
+    /** Najbliższa publikacja po dniu `today` (YYYY-MM-DD). Bez pola: kalendarz GUS. */
+    nextReleaseOf?: (today: string) => string | null;
 }
 
 export interface RankedSignal {
@@ -43,8 +55,8 @@ export interface RankedSignal {
     ageDays: number | null;
     /** Opublikowane w ostatnich 7 dniach. */
     fresh: boolean;
-    /** Najbliższa zapowiedziana publikacja tego wskaźnika. */
-    next: MacroEvent | null;
+    /** Najbliższa zapowiedziana publikacja tego wskaźnika (dzień). */
+    next: { date: string } | null;
     /** Inflacja przekroczyła cel NBP (w górę lub w dół) w ostatnim odczycie. */
     crossedTarget: boolean;
 }
@@ -101,6 +113,15 @@ export function nextPublication(kind: SignalKind, today: string): MacroEvent | n
     return releases(type, Number(today.slice(0, 4))).find((e) => e.date > today) ?? null;
 }
 
+function nextOn(c: HeroCandidate, today: string): { date: string } | null {
+    if (c.nextReleaseOf) {
+        const date = c.nextReleaseOf(today);
+        return date ? { date } : null;
+    }
+    const hit = nextPublication(c.kind, today);
+    return hit ? { date: hit.date } : null;
+}
+
 function changes(series: Point[], mode: 'pp' | 'pct'): number[] {
     const out: number[] = [];
     for (let i = 1; i < series.length; i++) {
@@ -133,11 +154,15 @@ export function evaluateSignal(c: HeroCandidate, today: string | null): RankedSi
     const delta = ch.length ? +ch[ch.length - 1].toFixed(c.deltaMode === 'pp' ? 1 : 2) : null;
     const { z, biggestSince } = zScore(ch, c.deltaMode);
 
-    const publishedOn = c.kind === 'market' ? lastP.date.slice(0, 10) : publicationDate(c.kind, lastP.date);
+    const periodKey = c.kind === 'market' ? lastP.date.slice(0, 10) : lastP.date;
+    const publishedOn = c.releaseOf
+        ? c.releaseOf(periodKey)
+        : c.kind === 'market' ? periodKey : publicationDate(c.kind, lastP.date);
     const ageDays = today && publishedOn ? Math.max(0, daysBetween(publishedOn, today)) : null;
     const fresh = ageDays != null && ageDays <= FRESH_DAYS;
-    const crossedTarget = c.kind === 'cpi' && prev != null
-        && (prev <= NBP_TARGET) !== (lastP.value <= NBP_TARGET);
+    const target = c.target ?? (c.kind === 'cpi' ? NBP_TARGET : null);
+    const crossedTarget = target != null && prev != null
+        && (prev <= target) !== (lastP.value <= target);
 
     // Świeżość: dziś = 1, 3 dni ≈ 0,55, tydzień ≈ 0,25, 2 tygodnie ≈ 0,06. Odczyt sprzed >2 tygodni
     // bez niespodzianki nie wygrywa z ważniejszym wskaźnikiem (waga) — wtedy hero wraca do CPI.
@@ -155,7 +180,7 @@ export function evaluateSignal(c: HeroCandidate, today: string | null): RankedSi
     return {
         candidate: c, score, last: lastP.value, prev, delta, z, biggestSince,
         period: lastP.date, publishedOn, ageDays, fresh,
-        next: today ? nextPublication(c.kind, today) : null,
+        next: today ? nextOn(c, today) : null,
         crossedTarget,
     };
 }

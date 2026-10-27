@@ -70,11 +70,13 @@ describe('Labour Force Survey', () => {
 
     it('does not light the inflation tab on the labour page', () => {
         const items = [
-            { label: 'Inflacja', href: '/japonia', icon: () => null },
+            { label: 'Przegląd', href: '/japonia', icon: () => null },
+            { label: 'Inflacja', href: '/japonia/inflacja', icon: () => null },
             { label: 'Rynki', href: '/japonia/rynki', icon: () => null },
             { label: 'Praca', href: '/japonia/praca', icon: () => null },
         ] as unknown as NavItem[];
         expect(activeNavHref('/japonia/praca', items)).toBe('/japonia/praca');
+        expect(activeNavHref('/japonia/inflacja', items)).toBe('/japonia/inflacja');
         expect(activeNavHref('/japonia', items)).toBe('/japonia');
         expect(activeNavHref('/japonia/rynki', items)).toBe('/japonia/rynki');
     });
