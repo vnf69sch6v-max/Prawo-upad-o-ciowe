@@ -30,6 +30,7 @@ import { expectedJpRetail } from '@/lib/jp/retail';
 import { expectedJpGdp } from '@/lib/jp/gdp';
 import { expectedJpTrade } from '@/lib/jp/trade';
 import { expectedJpCgpi } from '@/lib/jp/cgpi';
+import { expectedJpSppi } from '@/lib/jp/sppi';
 import { latestCommonPeriod } from '@/lib/jp/breakdown';
 
 // ─── Typy ───────────────────────────────────────────────
@@ -378,6 +379,12 @@ export function extractJpCpiBreakdown(json: unknown): string | null {
     return series ? latestCommonPeriod(series as Parameters<typeof latestCommonPeriod>[0]) : null;
 }
 
+/** `/api/jp/sppi` → najnowszy miesiąc cen usług dla firm rok do roku. */
+export function extractJpSppi(json: unknown): string | null {
+    const points = asObj(asObj(json)?.series)?.yoy;
+    return maxPeriod(Array.isArray(points) ? points.map((p) => asObj(p)?.date) : [], 'monthly');
+}
+
 /** `/api/jp/cgpi` → najnowszy miesiąc cen producenta rok do roku. */
 export function extractJpCgpi(json: unknown): string | null {
     const points = asObj(asObj(json)?.series)?.yoy;
@@ -648,6 +655,16 @@ export const FRESHNESS_DATASETS: DatasetSpec[] = [
         expected: (now) => expectedJpCgpi(now),
         tolerance: MONTHLY, maxAgeDays: 70,
         lagNote: 'Komunikat cen producenta (8:50 JST) już jest, ale Statistics Dashboard albo nasze odświeżenie jeszcze go nie objęły.',
+        selfHeal: true,
+    },
+    {
+        id: 'jp-sppi', label: 'Japonia — ceny usług dla firm', source: 'Bank Japonii', kind: 'jp-boj',
+        group: 'jp', frequency: 'monthly',
+        endpoint: () => '/api/jp/sppi',
+        extract: extractJpSppi,
+        expected: (now) => expectedJpSppi(now),
+        tolerance: MONTHLY, maxAgeDays: 80,
+        lagNote: 'Komunikat cen usług dla firm (8:50 JST) już jest, ale API Banku Japonii albo nasze odświeżenie jeszcze go nie objęły.',
         selfHeal: true,
     },
 ];
