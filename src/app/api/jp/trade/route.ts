@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getJpTrade } from '@/lib/jp/trade-server';
 
-// Trzy serie × 10 s + dwa odstępy 0,3 s. Limit 30 s uciąłby ostatnią serię przy wolnym Dashboardzie.
-export const maxDuration = 45;
+// Cztery serie × 10 s + trzy odstępy 0,3 s = 40,9 s.
+export const maxDuration = 60;
 
 export async function GET(request: NextRequest) {
     const force = request.nextUrl.searchParams.get('refresh') === '1';

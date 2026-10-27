@@ -8,7 +8,7 @@ import {
 import { datasetById, extractJpTrade } from '@/lib/freshness';
 
 const fixture = (name: string) => JSON.parse(readFileSync(`tests/fixtures/jp/${name}.json`, 'utf8'));
-const cfg = (id: 'current' | 'primary' | 'trade') => JP_TRADE_SERIES.find((s) => s.id === id)!.query;
+const cfg = (id: 'current' | 'primary' | 'trade' | 'services') => JP_TRADE_SERIES.find((s) => s.id === id)!.query;
 
 function withName(name: string, file: string) {
     const json = fixture(file);
@@ -57,6 +57,18 @@ describe('Japan balance of payments', () => {
         expect(() => parseDashboardData(goodsServices, cfg('primary'))).toThrow(/第一次所得収支|第二次/);
     });
 
+    it('reads the August services deficit and rejects the combined goods-and-services name', () => {
+        const s = parseDashboardData(fixture('dashboard-services'), cfg('services'));
+        expect(s.name).toBe('サービス収支');
+        expect(s.points.at(-1)).toEqual({ date: '2026-08', value: -1158, provisional: true });
+        expect(okuToMld(-1158)).toBe(-115.8);
+        const json = fixture('dashboard-services');
+        const indicator = json.GET_STATS.STATISTICAL_DATA.CLASS_INF.CLASS_OBJ.find((c: { '@id': string }) => c['@id'] === 'indicator');
+        const row = Array.isArray(indicator.CLASS) ? indicator.CLASS[0] : indicator.CLASS;
+        row['@name'] = '貿易・サービス収支';
+        expect(() => parseDashboardData(json, cfg('services'))).toThrow(/貿易/);
+    });
+
     it('rejects a seasonally adjusted trade name and a dollar or ratio current account', () => {
         expect(() => parseDashboardData(withName('貿易収支（季節調整値）', 'dashboard-trade'), cfg('trade'))).toThrow(/季節調整値/);
         expect(() => parseDashboardData(withName('経常収支（米ドル）', 'dashboard-ca'), cfg('current'))).toThrow(/米ドル/);
@@ -87,13 +99,17 @@ describe('Japan balance of payments', () => {
                     { date: '2026-08', value: 51332, provisional: true },
                 ],
                 trade: [{ date: '2026-08', value: -6877, provisional: true }],
+                services: [
+                    { date: '2025-08', value: -2667 },
+                    { date: '2026-08', value: -1158, provisional: true },
+                ],
             },
-            names: { current: '経常収支', primary: '第一次所得収支', trade: '貿易収支' },
+            names: { current: '経常収支', primary: '第一次所得収支', trade: '貿易収支', services: 'サービス収支' },
             source: '',
             fetchedAt: '',
         } satisfies JpTradePayload;
         expect(tradeSentence(payload)).toBe(
-            `Dane za sierpień 2026: nadwyżka obrotów bieżących wyniosła ${formatNumber(4062, 0)} mld jenów. Nadwyżka dochodu pierwotnego wyniosła ${formatDecimalPL(5133.2, 1)} mld jenów, wobec roku wcześniej więcej o ${formatDecimalPL(910.5, 1)} mld. Deficyt handlu towarami wyniósł ${formatDecimalPL(687.7, 1)} mld jenów. Odczyty są wstępne.`,
+            `Dane za sierpień 2026: nadwyżka obrotów bieżących wyniosła ${formatNumber(4062, 0)} mld jenów. Nadwyżka dochodu pierwotnego wyniosła ${formatDecimalPL(5133.2, 1)} mld jenów, wobec roku wcześniej więcej o ${formatDecimalPL(910.5, 1)} mld. Deficyt handlu towarami wyniósł ${formatDecimalPL(687.7, 1)} mld jenów. Deficyt usług wyniósł ${formatDecimalPL(115.8, 1)} mld jenów, o ${formatDecimalPL(150.9, 1)} mld mniejszy niż rok wcześniej. Odczyty są wstępne.`,
         );
     });
 
