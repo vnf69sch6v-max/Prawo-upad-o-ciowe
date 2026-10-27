@@ -108,9 +108,10 @@ J0. **20.11.2026 (CPI za październik):** do 15:00 JST `jp-cpi` i `jp-cpi-breakd
 J1. **30.10.2026 (Tokio, wstępne za październik):** sprawdzić, czy Statistics Dashboard dostaje odczyt
     wstępny (`@isProvisional = 1`) tego samego dnia. Jeśli nie — wstępne Tokio z e-Stat API
     (wymaga `ESTAT_APP_ID`, darmowa rejestracja — właściciel) albo z komunikatu Statistics Bureau.
-J2. **Kolejne wskaźniki Japonii.** Stopa BOJ, call, USD/JPY i JGB 10Y — zrobione 27.10 (`/japonia/rynki`).
-    Zostaje bezrobocie. Właściciel: jednorazowy e-mail do Banku Japonii, że używamy BOJ Time-Series Data Search.
-J3. **Przegląd Japonii** (hero jak w PL), gdy będą ≥3 wskaźniki.
+J2. **Kolejne wskaźniki Japonii.** Stopa BOJ, call, USD/JPY, JGB 10Y (`/japonia/rynki`) i bezrobocie
+    (`/japonia/praca`) — zrobione 27.10. Właściciel: jednorazowy e-mail do Banku Japonii, że używamy BOJ Time-Series Data Search.
+    Kalendarz Labour Force Survey w `src/lib/jp/labour.ts` sięga lutego 2027 — dopisać przed majem 2027.
+J3. **Przegląd Japonii** (hero jak w PL). Wskaźniki już są (inflacja, rynki, praca).
 
 ## Wymaga właściciela (nie da się z kodu)
 - **Płatna platforma — uruchomienie** (kod gotowy 25.10, bramka wyłączona do czasu flag):
@@ -195,6 +196,7 @@ J3. **Przegląd Japonii** (hero jak w PL), gdy będą ≥3 wskaźniki.
 - **`GUS_BDL_KEY`** — wyższy limit BDL (rejestracja na api.stat.gov.pl).
 
 ## Zrobione
+- **27.10.2026 — Japonia: bezrobocie.** `/japonia/praca`: stopa z komunikatu Labour Force Survey, wyrównana sezonowo 2,5% za sierpień 2026, obok surowa 2,6%. Statistics Dashboard bez klucza; nazwa serii jest ta sama, więc parser wymaga znacznika sezonowego. Świeżość `jp-labour`, cron `jp` i `refresh`. Wrzesień wychodzi 30.10 o 8:30 JST.
 - **27.10.2026 — Japonia: JGB 10Y.** Na `/japonia/rynki` krzywa i 10-latka z CSV Ministerstwa Finansów. 26.10.2026: 2,824%. Historia do września z pliku angielskiego, październik z pliku bieżącego miesiąca (daty Reiwa). Świeżość `jp-jgb`.
 - **27.10.2026 — Japonia: rynki.** `/japonia/rynki`: USD/JPY o 17:00 Tokio (156,96 jena na 23.10.2026), stopa BOJ 1,50% (basic loan rate) i call overnight 1,227%. API Banku Japonii bez klucza, walidacja nazwy serii, świeżość `jp-usdjpy`, cron `jp` i `refresh`. Zakładka Inflacja nie świeci się na tej stronie.
 - **26.10.2026 — Japonia: oficjalne wkłady CPI.** `/japonia` pokazuje 寄与度 z tabeli 5 (e-Stat, plik xlsx, bez klucza): 10 grup koszyka, towary i usługi, świeża żywność, energia, ryż. Wrzesień 2026: żywność +0,77 p.p., ryż −0,21 p.p. przy CPI 2,1%. Różnice miar zostają osobno i nie nazywają się wkładem. Cache `jp_data/cpi_contributions_v1`, świeżość `jp-cpi-contributions`, cron `jp` i `refresh`.

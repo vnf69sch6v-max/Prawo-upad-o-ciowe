@@ -25,6 +25,7 @@ export const NAV_ITEMS: NavItem[] = [
 export const JP_NAV_ITEMS: NavItem[] = [
     { label: 'Inflacja', href: '/japonia', icon: Tag, hint: 'CPI, bazowa, Tokio, wkłady grup' },
     { label: 'Rynki', href: '/japonia/rynki', icon: TrendingUp, hint: 'Jen, stopa BOJ, JGB 10Y' },
+    { label: 'Praca', href: '/japonia/praca', icon: Users, hint: 'Stopa bezrobocia, Labour Force Survey' },
 ];
 
 export function navItemsFor(country: Country): NavItem[] {

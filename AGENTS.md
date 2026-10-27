@@ -154,6 +154,13 @@ Standard scripts in `package.json`:
   `/japonia/rynki` reads BOJ Time-Series Data Search (`/api/jp/markets`, no key).
   Daily `startDate` is `YYYYMM`, not `YYYYMMDD`. Series names are validated
   (`mustInclude`); the credit must stay on the page.
+  `/japonia/praca` is the Labour Force Survey unemployment rate (`/api/jp/labour`,
+  cache `jp_data/labour_v1`, freshness `jp-labour`). The press-release number is
+  seasonally adjusted. `getData` returns the same series name for both, so
+  `parseDashboardData` also requires `isSeasonal` class `2` (季調値) or `1`
+  (原数値). Release dates live in `JP_LFS_RELEASES` (8:30 JST, through February
+  2027 data on 30.03.2027); extend that map before May 2027 or freshness falls
+  back to a day-of-month heuristic. The page only peeks the cache.
 - Header from `xl`: sections inline, search is an icon (⌘K still works) — with
   the 220 px field the row did not fit the 1440 px container.
 - Inside a `withCache(...)` fetcher, fetch upstream with `cache: 'no-store'`,
