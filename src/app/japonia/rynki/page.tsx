@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
+import { JpJgb } from '@/components/jp/JpJgb';
 import { JpMarkets } from '@/components/jp/JpMarkets';
 import { PageHeader } from '@/components/ui/PageHeader';
+import { peekJgb } from '@/lib/jp/jgb-server';
 import { lastBojPoint } from '@/lib/jp/boj';
 import { peekBojMarkets } from '@/lib/jp/boj-server';
 import { formatDecimalPL } from '@/lib/formatters';
@@ -23,11 +25,15 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function JaponiaRynkiPage() {
-    const initial = await peekBojMarkets().catch(() => null);
+    const [initial, jgb] = await Promise.all([
+        peekBojMarkets().catch(() => null),
+        peekJgb().catch(() => null),
+    ]);
     return (
         <div className="mk-fade-in space-y-5">
             <PageHeader title="Japonia · Rynki" />
             <JpMarkets initial={initial} />
+            <JpJgb initial={jgb} />
         </div>
     );
 }

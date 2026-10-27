@@ -24,7 +24,7 @@ export const NAV_ITEMS: NavItem[] = [
 /** Japonia — sekcje dochodzą krok po kroku (na start inflacja). */
 export const JP_NAV_ITEMS: NavItem[] = [
     { label: 'Inflacja', href: '/japonia', icon: Tag, hint: 'CPI, bazowa, Tokio, wkłady grup' },
-    { label: 'Rynki', href: '/japonia/rynki', icon: TrendingUp, hint: 'Jen, stopa BOJ, call overnight' },
+    { label: 'Rynki', href: '/japonia/rynki', icon: TrendingUp, hint: 'Jen, stopa BOJ, JGB 10Y' },
 ];
 
 export function navItemsFor(country: Country): NavItem[] {
