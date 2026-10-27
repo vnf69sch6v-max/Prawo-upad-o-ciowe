@@ -203,6 +203,7 @@ J5. **Gospodarka Japonii** — produkcja zrobiona 27.10 (`/japonia/gospodarka`: 
 - **`GUS_BDL_KEY`** — wyższy limit BDL (rejestracja na api.stat.gov.pl).
 
 ## Zrobione
+- **27.10.2026 — Japonia: bilans płatniczy.** Na `/japonia/gospodarka` pod PKB: sierpień 2026, komunikat wstępny z 8.10. Nadwyżka obrotów bieżących 4 062 mld jenów, deficyt handlu towarami 687,7 mld. Jednostka źródła to 億円. Świeżość `jp-trade`. Wrzesień: 10 listopada, 8:50 JST.
 - **27.10.2026 — Japonia: przegląd widzi gospodarkę.** Hero na `/japonia` dostaje płace, produkcję (zmiana indeksu), sprzedaż r/r i PKB realny, z datami ich własnych komunikatów. Jen i JGB dalej tylko przy ruchu ≥2σ.
 - **27.10.2026 — Japonia: PKB.** Na `/japonia/gospodarka` pod sprzedażą: II kwartał 2026, drugi komunikat z 8.09. Realny +0,4% i nominalny +1,3% wobec poprzedniego kwartału (nie w skali roku). Świeżość `jp-gdp`. III kwartał, drugi komunikat: 8 grudnia.
 - **27.10.2026 — Japonia: sprzedaż detaliczna.** Na `/japonia/gospodarka` pod produkcją: 13 072 mld jenów za sierpień 2026, +2,9% r/r liczone z poziomów po komunikacie końcowym z 15.10. Wstępne 13 052 mld i +2,7% nie wchodzą. Stopa wobec 2024 nie jest liczona — od stycznia 2025 jest nieciągłość po spisie. Świeżość `jp-retail`.

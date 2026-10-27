@@ -182,7 +182,13 @@ Standard scripts in `package.json`:
   freshness `jp-gdp`) is real and nominal GDP, quarter-on-quarter, 2020 base,
   seasonally adjusted — the Cabinet Office headline, not the annualised rate.
   Quarterly `TimeFrom` is `20262Q00` (`Cycle=2`). Second-estimate dates are
-  `JP_GDP_SECOND_RELEASES` at 8:50 JST.
+  `JP_GDP_SECOND_RELEASES` at 8:50 JST. The same page shows the balance of
+  payments (`/api/jp/trade`, cache `jp_data/trade_v1`, freshness `jp-trade`):
+  current account and goods trade, not seasonally adjusted, in 億円 (divide by
+  10 for billions of yen). August 2026 preliminary (8 Oct, 8:50 JST) is a
+  4,062 billion yen surplus and a 687.7 billion yen trade deficit; the point
+  stays `provisional`. Dates are `JP_BOP_RELEASES` at 8:50 JST through January
+  2027 data on 08.03.2027. Extend that map before April 2027.
 - Header from `xl`: sections inline, search is an icon (⌘K still works) — with
   the 220 px field the row did not fit the 1440 px container.
 - Inside a `withCache(...)` fetcher, fetch upstream with `cache: 'no-store'`,

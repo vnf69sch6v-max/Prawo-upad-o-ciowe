@@ -28,6 +28,7 @@ import { expectedJpWages } from '@/lib/jp/wages';
 import { expectedJpIndustry } from '@/lib/jp/industry';
 import { expectedJpRetail } from '@/lib/jp/retail';
 import { expectedJpGdp } from '@/lib/jp/gdp';
+import { expectedJpTrade } from '@/lib/jp/trade';
 import { latestCommonPeriod } from '@/lib/jp/breakdown';
 
 // ─── Typy ───────────────────────────────────────────────
@@ -376,6 +377,12 @@ export function extractJpCpiBreakdown(json: unknown): string | null {
     return series ? latestCommonPeriod(series as Parameters<typeof latestCommonPeriod>[0]) : null;
 }
 
+/** `/api/jp/trade` → najnowszy miesiąc obrotów bieżących. */
+export function extractJpTrade(json: unknown): string | null {
+    const points = asObj(asObj(json)?.series)?.current;
+    return maxPeriod(Array.isArray(points) ? points.map((p) => asObj(p)?.date) : [], 'monthly');
+}
+
 /** `/api/jp/gdp` → najnowszy kwartał realnego PKB. */
 export function extractJpGdp(json: unknown): string | null {
     const points = asObj(asObj(json)?.series)?.real;
@@ -614,6 +621,16 @@ export const FRESHNESS_DATASETS: DatasetSpec[] = [
         expected: (now) => expectedJpGdp(now),
         tolerance: { ok: 0, lag: 1 }, maxAgeDays: 200,
         lagNote: 'Drugi komunikat PKB (8:50 JST) już jest, ale Statistics Dashboard albo nasze odświeżenie jeszcze go nie objęły.',
+        selfHeal: true,
+    },
+    {
+        id: 'jp-trade', label: 'Japonia — bilans płatniczy', source: 'Ministerstwo Finansów Japonii', kind: 'jp-dashboard',
+        group: 'jp', frequency: 'monthly',
+        endpoint: () => '/api/jp/trade',
+        extract: extractJpTrade,
+        expected: (now) => expectedJpTrade(now),
+        tolerance: MONTHLY, maxAgeDays: 100,
+        lagNote: 'Wstępny bilans płatniczy (8:50 JST) już jest, ale Statistics Dashboard albo nasze odświeżenie jeszcze go nie objęły.',
         selfHeal: true,
     },
 ];
