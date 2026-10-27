@@ -16,9 +16,14 @@ export const TAB_HREFS = ['/', '/rynki', '/ceny', '/gospodarka'] as const;
 
 export const TAB_ITEMS: NavItem[] = TAB_HREFS.map((href) => NAV_ITEMS.find((it) => it.href === href)!);
 
-/** Zakładki dolnego paska dla kraju z adresu. Japonia: jej sekcje + „Więcej”. */
+/** Dolny pasek Japonii: cztery sekcje. „Gospodarka” jest w arkuszu „Więcej” — piąta etykieta
+ *  ucinała się do „Gospoda…” przy 320 px. Na szerokim ekranie nagłówek pokazuje wszystkie. */
+const JP_TAB_HREFS = ['/japonia', '/japonia/inflacja', '/japonia/rynki', '/japonia/praca'] as const;
+
+/** Zakładki dolnego paska dla kraju z adresu. */
 export function tabItemsFor(country: Country): NavItem[] {
-    return country === 'jp' ? JP_NAV_ITEMS : TAB_ITEMS;
+    if (country !== 'jp') return TAB_ITEMS;
+    return JP_TAB_HREFS.map((href) => JP_NAV_ITEMS.find((it) => it.href === href)!);
 }
 
 export type MoreLink = { kind: 'link'; label: string; href: string; icon: LucideIcon; hint?: string };
@@ -50,6 +55,10 @@ export const MORE_GROUPS: MoreGroup[] = [
 
 /** Japonia: dane PL (kalendarz GUS, podsumowanie dnia) nie mają tu sensu — zostają narzędzia wspólne. */
 const JP_MORE_GROUPS: MoreGroup[] = [
+    {
+        title: 'Sekcje',
+        items: JP_NAV_ITEMS.filter((it) => !(JP_TAB_HREFS as readonly string[]).includes(it.href)).map((it) => ({ kind: 'link', ...it })),
+    },
     {
         title: 'Narzędzia',
         items: [

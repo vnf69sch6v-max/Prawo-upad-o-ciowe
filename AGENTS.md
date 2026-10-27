@@ -168,7 +168,11 @@ Standard scripts in `package.json`:
   and real wages versus CPI excluding imputed rent. The Dashboard print is the
   revised release (確報), not the flash. Dates are `JP_WAGE_FINAL_RELEASES`
   (8:30 JST, through December 2026 data on 26.02.2027). The page only peeks
-  both caches.
+  both caches. `/japonia/gospodarka` is METI industrial production
+  (`/api/jp/industry`, cache `jp_data/industry_v1`, freshness `jp-industry`):
+  the 2020-base seasonal index, month-on-month as in the revised release
+  (13:30 JST, not the 8:50 flash), plus year-on-year from the unadjusted index.
+  Dates are `JP_IIP_FINAL_RELEASES` through January 2027 data on 19.03.2027.
 - Header from `xl`: sections inline, search is an icon (⌘K still works) — with
   the 220 px field the row did not fit the 1440 px container.
 - Inside a `withCache(...)` fetcher, fetch upstream with `cache: 'no-store'`,
