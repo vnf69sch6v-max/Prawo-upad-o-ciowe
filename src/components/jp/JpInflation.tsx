@@ -185,7 +185,7 @@ export function JpInflation({ initial, contributions }: { initial: JpCpiPayload 
                             ))}
                             {[
                                 'Rozbicie to różnice między oficjalnymi miarami: o ile zmienia się stopa inflacji, gdy do koszyka dołączamy kolejno żywność poza świeżą, energię i świeżą żywność. Kolejność wynika z miar, które publikuje Statistics Bureau.',
-                                'To nie są wkłady (寄与度) z komunikatu. Grupa, która drożeje w tym samym tempie co reszta koszyka, ma różnicę 0,0 p.p., nawet jeśli jej ceny rosną. Oficjalne wkłady pokażemy w kolejnym kroku.',
+                                'To nie są wkłady (寄与度) z komunikatu — te są w sekcji „Wkłady w inflację”. Grupa, która drożeje w tym samym tempie co reszta koszyka, ma różnicę 0,0 p.p., nawet jeśli jej ceny rosną.',
                                 'Bez żywności i energii: alkohol zostaje w koszyku, a gastronomia nie. To miara bliska inflacji bazowej NBP, ale nie identyczna. Różnice stóp zaokrąglonych do 0,1 mają dokładność ±0,1 p.p.',
                                 'Od sierpnia 2026 r. Japonia liczy CPI w bazie 2025. Pokazujemy tylko nową bazę — historię przeliczył Statistics Bureau.',
                             ].map((t) => (
