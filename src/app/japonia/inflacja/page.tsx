@@ -1,8 +1,10 @@
 import type { Metadata } from 'next';
 import { JpCgpi } from '@/components/jp/JpCgpi';
+import { JpSppi } from '@/components/jp/JpSppi';
 import { JpInflation } from '@/components/jp/JpInflation';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { peekJpCgpi } from '@/lib/jp/cgpi-server';
+import { peekJpSppi } from '@/lib/jp/sppi-server';
 import { jpCpiSummary } from '@/lib/jp/cpi';
 import { peekJpCpi } from '@/lib/jp/cpi-server';
 import { peekJpContributions } from '@/lib/jp/contributions-server';
@@ -24,16 +26,18 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function JaponiaInflacjaPage() {
-    const [initial, contributions, cgpi] = await Promise.all([
+    const [initial, contributions, cgpi, sppi] = await Promise.all([
         peekJpCpi().catch(() => null),
         peekJpContributions().catch(() => null),
         peekJpCgpi().catch(() => null),
+        peekJpSppi().catch(() => null),
     ]);
     return (
         <div className="mk-fade-in space-y-5">
             <PageHeader title="Japonia · Inflacja" />
             <JpInflation initial={initial} contributions={contributions} />
             <JpCgpi initial={cgpi} />
+            <JpSppi initial={sppi} />
         </div>
     );
 }

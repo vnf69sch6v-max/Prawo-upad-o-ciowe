@@ -36,7 +36,7 @@ odpowiedź na pytanie „co się zmieniło i co to znaczy” — w dniu publikac
 | Sekcja | Polska | Japonia (stan / plan) |
 |---|---|---|
 | Przegląd (hero z najważniejszą zmianą dnia) | `/` | `/japonia` |
-| Ceny / inflacja + rozbicie | `/ceny` | `/japonia/inflacja` (CPI i ceny producenta) |
+| Ceny / inflacja + rozbicie | `/ceny` | `/japonia/inflacja` (CPI, ceny producenta i usług) |
 | Gospodarka (PKB, produkcja, sprzedaż) | `/gospodarka` | `/japonia/gospodarka` (produkcja, sprzedaż, PKB, handel) |
 | Rynek pracy | `/praca` | `/japonia/praca` (bezrobocie i płace) |
 | Rynki (kursy, stopy, obligacje) | `/rynki` | `/japonia/rynki` (stopa BOJ, call, USD/JPY, JGB 10Y) |
