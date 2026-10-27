@@ -115,6 +115,7 @@ J3. **Przegląd Japonii** — zrobione 27.10. `/japonia` rankinguje CPI, bezrobo
     (świeżość z kalendarzy Japonii, cel BOJ 2%). Inflacja jest na `/japonia/inflacja`.
     Ceny producenta też 27.10: wrzesień, wstępne, +6,8% r/r, indeks 135,7.
     Ceny usług dla firm też 27.10: wrzesień, wstępne, +3,7% r/r, indeks 115,5.
+    Od 28.10 obok jest miara bez transportu międzynarodowego: wrzesień +2,9%, tyle samo co sierpień.
 J4. **Płace w Japonii** — zrobione 27.10. Na `/japonia/praca` nominalne 3,9% i realne 1,6% za sierpień
     (komunikat końcowy, zakłady od 5 osób). Kalendarz 確報 w `src/lib/jp/wages.ts` sięga grudnia 2026.
 J5. **Gospodarka Japonii** — produkcja zrobiona 27.10 (`/japonia/gospodarka`: sierpień 101,9, −2,4% m/m).
@@ -209,6 +210,7 @@ J5. **Gospodarka Japonii** — produkcja zrobiona 27.10 (`/japonia/gospodarka`: 
 - **`GUS_BDL_KEY`** — wyższy limit BDL (rejestracja na api.stat.gov.pl).
 
 ## Zrobione
+- **28.10.2026 — Japonia: ceny usług bez transportu międzynarodowego.** Na `/japonia/inflacja` obok +3,7%: wrzesień 2026, +2,9% r/r, tyle samo co w sierpniu. To łączny indeks bez żeglugi oceanicznej, lotów międzynarodowych i poczty międzynarodowej. Cache `jp_data/sppi_v2`.
 - **28.10.2026 — Japonia: aktywność usług.** Na `/japonia/gospodarka` pod produkcją: indeks METI, baza 2020 (średnia z 2019 i 2020). Sierpień 2026, wstępny: 106,8, −0,1% wobec lipca, +1,7% r/r bez korekty. Komunikat z 19.10, 13:30. Świeżość `jp-tertiary`. Wrzesień: 17 listopada.
 - **28.10.2026 — Japonia: skład nowych mieszkań.** Pod sumą 63 974: własne 17 713 (+1,0% r/r), na wynajem 28 309 (+6,5%), na sprzedaż 16 838 (+6,4%). Reszta to mieszkania służbowe. Cache `jp_data/housing_v2`.
 - **27.10.2026 — Japonia: nowe mieszkania.** Na `/japonia/gospodarka`: sierpień 2026, 63 974 rozpoczęte budowy, +6,1% r/r. Skala roku po sezonie: 753 108, −2,7% wobec lipca. Komunikat Ministerstwa Ziemi z 30.09, 14:00. Świeżość `jp-housing`. Wrzesień: 30 października.

@@ -21,7 +21,16 @@ const signed = (v: number) => `${v > 0 ? '+' : ''}${formatDecimalPL(v, 1)}`;
 export function JpSppi({ initial }: { initial: JpSppiPayload | null }) {
     const { data, isLoading, isError, refetch } = useJpSppi(initial);
     const isClient = useIsClient();
-    const yoyRows = useMemo(() => (data?.series.yoy ?? []).map((p) => ({ date: p.date, yoy: p.value })), [data]);
+    const yoyRows = useMemo(() => {
+        const byDate = new Map<string, { date: string; yoy?: number; ex?: number }>();
+        for (const p of data?.series.yoy ?? []) byDate.set(p.date, { date: p.date, yoy: p.value });
+        for (const p of data?.series.exYoy ?? []) {
+            const row = byDate.get(p.date) ?? { date: p.date };
+            row.ex = p.value;
+            byDate.set(p.date, row);
+        }
+        return [...byDate.values()].sort((a, b) => a.date.localeCompare(b.date));
+    }, [data]);
 
     if (!data) {
         if (isError) return <QueryState isError onRetry={() => { void refetch(); }} height={220} />;
@@ -33,6 +42,8 @@ export function JpSppi({ initial }: { initial: JpSppiPayload | null }) {
     const sameIndex = index && yoy && index.date === yoy.date ? index : null;
     const mom = sameIndex ? sppiMom(data.series.index) : null;
     const prevRate = data.series.yoy.length > 1 ? data.series.yoy[data.series.yoy.length - 2].value : null;
+    const ex = lastSppiPoint(data.series.exYoy);
+    const sameEx = ex && yoy && ex.date === yoy.date ? ex : null;
     const next = isClient ? nextSppiRelease(new Date()) : null;
     const headline = !yoy ? 'Ceny usług dla firm' : yoy.value > 0 ? `Ceny usług dla firm wzrosły o ${formatDecimalPL(yoy.value, 1)}%` : yoy.value < 0 ? `Ceny usług dla firm spadły o ${formatDecimalPL(Math.abs(yoy.value), 1)}%` : 'Ceny usług dla firm bez zmian rok do roku';
 
@@ -52,9 +63,10 @@ export function JpSppi({ initial }: { initial: JpSppiPayload | null }) {
                 rows={[
                     { label: 'Indeks, baza 2020', value: sameIndex ? formatDecimalPL(sameIndex.value, 1) : '—' },
                     { label: 'Wobec poprzedniego miesiąca', value: mom == null ? '—' : `${signed(mom)}%`, divider: true },
+                    { label: 'Bez transportu międzynarodowego', value: sameEx ? `${signed(sameEx.value)}%` : '—', divider: true },
                 ]}
             />
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-2 md:grid-cols-3 [&>*:last-child:nth-child(odd)]:col-span-2 md:[&>*:last-child:nth-child(odd)]:col-span-1">
                 <CompactKpi
                     label="Rok do roku"
                     icon={Briefcase}
@@ -68,13 +80,23 @@ export function JpSppi({ initial }: { initial: JpSppiPayload | null }) {
                     value={sameIndex ? formatDecimalPL(sameIndex.value, 1) : '—'}
                     footnote={mom == null ? 'baza 2020' : `baza 2020 · ${signed(mom)}% m/m`}
                 />
+                <CompactKpi
+                    label="Bez transportu międzynarodowego"
+                    icon={Briefcase}
+                    value={sameEx ? signed(sameEx.value) : '—'}
+                    unit="%"
+                    footnote={sameEx ? `${formatDataPeriod(sameEx.date)} · rok do roku` : undefined}
+                />
             </div>
             {yoyRows.length > 1 && (
-                <SectionCard editorial titleVariant="label" title="Ceny usług dla firm rok do roku" subtitle="procent · łączny indeks · baza 2020">
+                <SectionCard editorial titleVariant="label" title="Ceny usług dla firm rok do roku" subtitle="procent · baza 2020">
                     <InteractiveChart
-                        data={yoyRows} xKey="date" height={260} unit="%" showRange initialRange="1R" ranges={['1R', 'ALL']}
+                        data={yoyRows} xKey="date" height={260} unit="%" showRange initialRange="1R" ranges={['1R', 'ALL']} legend
                         valueFormatter={(v) => formatDecimalPL(v, 1)} xTickFormatter={monthTick}
-                        series={[{ key: 'yoy', name: 'Rok do roku', color: '#DC2626', type: 'line', strokeWidth: 2.5 }]}
+                        series={[
+                            { key: 'yoy', name: 'Łącznie', color: '#DC2626', type: 'line', strokeWidth: 2.5 },
+                            { key: 'ex', name: 'Bez transportu międzynarodowego', color: '#0369A1', type: 'line', strokeWidth: 2 },
+                        ]}
                     />
                 </SectionCard>
             )}
@@ -102,6 +124,7 @@ export function JpSppi({ initial }: { initial: JpSppiPayload | null }) {
                 <ul className="space-y-2.5 text-sm leading-relaxed text-mk-text-soft">
                     <li><strong className="font-semibold text-mk-text">Rok do roku</strong> — łączny indeks cen usług, które firmy sprzedają innym firmom: transport, reklama, najem. To nie jest koszyk gospodarstw domowych.</li>
                     <li><strong className="font-semibold text-mk-text">Indeks</strong> — poziom przy bazie 2020 = 100. Obok jest zmiana tego poziomu wobec poprzedniego miesiąca.</li>
+                    <li><strong className="font-semibold text-mk-text">Bez transportu międzynarodowego</strong> — ten sam indeks bez żeglugi oceanicznej, międzynarodowych lotów pasażerskich i towarowych oraz poczty międzynarodowej. Łączny wskaźnik może przyspieszyć, gdy drożeje ten transport, a ta miara zostaje w miejscu.</li>
                     <li>Najnowszy miesiąc jest wstępny. W następnym komunikacie Bank Japonii może go skorygować.</li>
                 </ul>
             </SectionCard>
