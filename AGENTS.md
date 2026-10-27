@@ -192,7 +192,13 @@ Standard scripts in `package.json`:
   freshness `jp-gdp`) is real and nominal GDP, quarter-on-quarter, 2020 base,
   seasonally adjusted — the Cabinet Office headline, not the annualised rate.
   Quarterly `TimeFrom` is `20262Q00` (`Cycle=2`). Second-estimate dates are
-  `JP_GDP_SECOND_RELEASES` at 8:50 JST. The same page shows the balance of
+  `JP_GDP_SECOND_RELEASES` at 8:50 JST. The same page shows machinery orders
+  (`/api/jp/orders`, cache `jp_data/orders_v1`, freshness `jp-orders`): private
+  demand excluding ships and electric power. August 2026 is +5.2% month on
+  month, seasonally adjusted, and +18.6% year on year, unadjusted. The
+  seasonally adjusted `getData` name omits 季節調整値, so the parser requires
+  seasonal class 2. Dates are `JP_ORDERS_RELEASES` at 8:50 JST through February
+  2027 data on 14.04.2027. The same page shows the balance of
   payments (`/api/jp/trade`, cache `jp_data/trade_v3`, freshness `jp-trade`):
   current account, primary income, goods trade and services, not seasonally
   adjusted, in 億円 (divide by 10 for billions of yen). August 2026 preliminary
