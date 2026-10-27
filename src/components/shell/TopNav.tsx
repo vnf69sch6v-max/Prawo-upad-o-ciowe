@@ -27,7 +27,7 @@ export const JP_NAV_ITEMS: NavItem[] = [
     { label: 'Inflacja', href: '/japonia/inflacja', icon: Tag, hint: 'CPI, Tokio, wkłady, ceny producenta' },
     { label: 'Gospodarka', href: '/japonia/gospodarka', icon: Factory, hint: 'Produkcja, usługi, sprzedaż, PKB i handel' },
     { label: 'Rynki', href: '/japonia/rynki', icon: TrendingUp, hint: 'Jen, stopa BOJ, JGB 10Y' },
-    { label: 'Praca', href: '/japonia/praca', icon: Users, hint: 'Bezrobocie i płace' },
+    { label: 'Praca', href: '/japonia/praca', icon: Users, hint: 'Bezrobocie, oferty i płace' },
 ];
 
 export function navItemsFor(country: Country): NavItem[] {

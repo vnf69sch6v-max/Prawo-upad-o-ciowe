@@ -39,7 +39,7 @@ const COMMANDS: Cmd[] = [
     { id: 'jp-tertiary', group: 'Wskaźniki', label: 'Aktywność usług w Japonii', sub: 'Japonia', keywords: 'japonia usługi trzeci sektor meti tertiary services aktywność', href: '/japonia/gospodarka', icon: Briefcase },
     { id: 'jp-trade', group: 'Wskaźniki', label: 'Handel Japonii', sub: 'Japonia', keywords: 'japonia handel bilans płatniczy obroty bieżące deficyt eksport import mof dochód wtórny transfery', href: '/japonia/gospodarka', icon: Scale },
     { id: 'jp-markets', group: 'Wskaźniki', label: 'Rynki Japonii', sub: 'Japonia', keywords: 'japonia jen jpy usd dolar stopa boj call overnight jgb', href: '/japonia/rynki', icon: TrendingUp },
-    { id: 'jp-labour', group: 'Wskaźniki', label: 'Praca w Japonii', sub: 'Japonia', keywords: 'japonia bezrobocie praca płace wynagrodzenie labour unemployment wages', href: '/japonia/praca', icon: Users },
+    { id: 'jp-labour', group: 'Wskaźniki', label: 'Praca w Japonii', sub: 'Japonia', keywords: 'japonia bezrobocie praca płace wynagrodzenie labour unemployment wages oferty hello work urząd pracy', href: '/japonia/praca', icon: Users },
     { id: 'ind-ppi', group: 'Wskaźniki', label: 'Ceny producenta (PPI)', sub: 'Ceny', keywords: 'ppi producent przemysł', href: '/ceny?tab=ppi', icon: Factory },
     { id: 'ind-nier', group: 'Wskaźniki', label: 'Ceny nieruchomości', sub: 'Ceny', keywords: 'mieszkania nieruchomości rynek pierwotny wtórny', href: '/ceny?tab=nieruchomosci', icon: Home },
     { id: 'ind-bud', group: 'Wskaźniki', label: 'Ceny robót budowlanych', sub: 'Ceny', keywords: 'budownictwo budowlano-montażowe', href: '/ceny?tab=budowlane', icon: HardHat },

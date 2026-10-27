@@ -174,7 +174,14 @@ Standard scripts in `package.json`:
   `parseDashboardData` also requires `isSeasonal` class `2` (季調値) or `1`
   (原数値). Release dates live in `JP_LFS_RELEASES` (8:30 JST, through February
   2027 data on 30.03.2027); extend that map before May 2027 or freshness falls
-  back to a day-of-month heuristic. The same page shows Monthly Labour Survey
+  back to a day-of-month heuristic. The same page shows Hello Work job
+  openings (`/api/jp/jobs`, cache `jp_data/jobs_v1`, freshness `jp-jobs`):
+  August 2026 is 1.18 openings per registered jobseeker, seasonally adjusted,
+  unchanged from July, and 2.06 new openings, down 0.04. The unadjusted ratio
+  is 1.16. The active and unadjusted series share a name, so the parser
+  requires the seasonal class. Dates are `JP_JOBS_RELEASES` at 8:30 JST, the
+  same mornings as the labour force survey, through February 2027 data on
+  30.03.2027. The same page shows Monthly Labour Survey
   wages (`/api/jp/wages`, cache `jp_data/wages_v1`, freshness `jp-wages`):
   nominal total cash earnings y/y for establishments with 5 or more employees,
   and real wages versus CPI excluding imputed rent. The Dashboard print is the
