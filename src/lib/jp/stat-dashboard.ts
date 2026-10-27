@@ -29,6 +29,10 @@ export interface DashboardQuery {
     from: string;
     /** Fragmenty, które MUSI zawierać nazwa serii zwrócona przez API (np. „2025年基準"). */
     mustInclude: string[];
+    /** Fragmenty, których w nazwie być nie może (surowa stopa nie może być szeregiem sezonowym). */
+    mustExclude?: string[];
+    /** `true` = szereg wyrównany sezonowo (季調値). Domyślnie dane surowe. */
+    seasonal?: boolean;
 }
 
 export interface DashboardPoint {
@@ -53,7 +57,7 @@ export function dashboardUrl(q: DashboardQuery): string {
         Cycle: '1', // miesięcznie
         RegionalRank: String(q.rank),
         RegionCode: q.region,
-        IsSeasonalAdjustment: '1', // dane surowe (原数値) — tak jak w komunikacie
+        IsSeasonalAdjustment: q.seasonal ? '2' : '1', // 1 = surowe (原数値), 2 = wyrównane sezonowo
         TimeFrom: `${q.from}00`,
         MetaGetFlg: 'Y', // nazwa serii do walidacji
         SectionHeaderFlg: '2',
@@ -92,6 +96,19 @@ export function parseDashboardData(json: unknown, q: DashboardQuery): DashboardS
     if (missing.length) {
         throw new Error(`Statistics Dashboard: seria ${q.indicator} to „${name}" — brak „${missing.join('", „')}"`);
     }
+    const banned = (q.mustExclude ?? []).filter((frag) => name.includes(frag));
+    if (banned.length) {
+        throw new Error(`Statistics Dashboard: seria ${q.indicator} to „${name}" — nie może zawierać „${banned.join('", „')}"`);
+    }
+
+    // Nazwa bezrobocia jest identyczna dla szeregu surowego i sezonowego — rozróżnia je klasa isSeasonal
+    // (1 = 原数値, 2 = 季調値) i ten sam znacznik na każdym punkcie. Zły przełącznik nie może przejść po nazwie.
+    const wantSeasonal = q.seasonal ? '2' : '1';
+    const seasonalClass = asArray(asObj(classes.find((c) => asObj(c)?.['@id'] === 'isSeasonal'))?.CLASS as Obj | Obj[] | undefined)[0];
+    const seasonalCode = typeof seasonalClass?.['@code'] === 'string' ? seasonalClass['@code'] : '';
+    if (seasonalCode !== wantSeasonal) {
+        throw new Error(`Statistics Dashboard: seria ${q.indicator} ma znacznik sezonowy „${seasonalCode || 'brak'}", oczekiwano „${wantSeasonal}" (${q.seasonal ? '季調値' : '原数値'})`);
+    }
 
     const byDate = new Map<string, DashboardPoint>();
     for (const raw of asArray(asObj(data.DATA_INF)?.DATA_OBJ as Obj | Obj[] | undefined)) {
@@ -99,6 +116,9 @@ export function parseDashboardData(json: unknown, q: DashboardQuery): DashboardS
         if (!v) continue;
         if (v['@indicator'] !== q.indicator || v['@regionCode'] !== q.region) {
             throw new Error(`Statistics Dashboard: oczekiwano ${q.indicator}/${q.region}, przyszło ${String(v['@indicator'])}/${String(v['@regionCode'])}`);
+        }
+        if (v['@isSeasonal'] !== wantSeasonal) {
+            throw new Error(`Statistics Dashboard: punkt ${String(v['@time'])} serii ${q.indicator} ma @isSeasonal „${String(v['@isSeasonal'])}", oczekiwano „${wantSeasonal}"`);
         }
         const date = monthOf(v['@time']);
         const value = typeof v.$ === 'string' && v.$.trim() !== '' ? Number(v.$) : NaN;

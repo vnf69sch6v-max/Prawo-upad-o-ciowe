@@ -16,7 +16,7 @@ export const TAB_HREFS = ['/', '/rynki', '/ceny', '/gospodarka'] as const;
 
 export const TAB_ITEMS: NavItem[] = TAB_HREFS.map((href) => NAV_ITEMS.find((it) => it.href === href)!);
 
-/** Zakładki dolnego paska dla kraju z adresu. Japonia: jej sekcje (na start jedna) + „Więcej”. */
+/** Zakładki dolnego paska dla kraju z adresu. Japonia: jej sekcje + „Więcej”. */
 export function tabItemsFor(country: Country): NavItem[] {
     return country === 'jp' ? JP_NAV_ITEMS : TAB_ITEMS;
 }

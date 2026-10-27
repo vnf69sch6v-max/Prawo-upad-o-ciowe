@@ -23,6 +23,7 @@ import { warsawMinutes } from '@/lib/market-hours';
 import { warsawDateKey } from '@/lib/news/warsaw-date';
 import { expectedJpCpi } from '@/lib/jp/calendar';
 import { expectedUsdJpyDate } from '@/lib/jp/boj';
+import { expectedJpUnemployment } from '@/lib/jp/labour';
 import { latestCommonPeriod } from '@/lib/jp/breakdown';
 
 // ─── Typy ───────────────────────────────────────────────
@@ -371,6 +372,12 @@ export function extractJpCpiBreakdown(json: unknown): string | null {
     return series ? latestCommonPeriod(series as Parameters<typeof latestCommonPeriod>[0]) : null;
 }
 
+/** `/api/jp/labour` → najnowszy miesiąc stopy wyrównanej sezonowo. */
+export function extractJpLabour(json: unknown): string | null {
+    const points = asObj(asObj(json)?.series)?.sa;
+    return maxPeriod(Array.isArray(points) ? points.map((p) => asObj(p)?.date) : [], 'monthly');
+}
+
 /** `/api/jp/jgb` → data ostatniej 10-latki. */
 export function extractJpJgb(json: unknown): string | null {
     const date = asObj(asObj(json)?.latest)?.date;
@@ -532,6 +539,14 @@ export const FRESHNESS_DATASETS: DatasetSpec[] = [
         extract: extractJpJgb,
         expected: (now) => expectedUsdJpyDate(now),
         tolerance: { ok: 1, lag: 4 }, maxAgeDays: 10, lagNote: LAG_NOTES['jp-boj'], selfHeal: true,
+    },
+    {
+        id: 'jp-labour', label: 'Japonia — bezrobocie', source: 'Labour Force Survey', kind: 'jp-dashboard',
+        group: 'jp', frequency: 'monthly',
+        endpoint: () => '/api/jp/labour',
+        extract: extractJpLabour,
+        expected: (now) => expectedJpUnemployment(now),
+        tolerance: MONTHLY, maxAgeDays: 70, lagNote: LAG_NOTES['jp-dashboard'], selfHeal: true,
     },
 ];
 
