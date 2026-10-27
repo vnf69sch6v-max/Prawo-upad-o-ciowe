@@ -371,6 +371,12 @@ export function extractJpCpiBreakdown(json: unknown): string | null {
     return series ? latestCommonPeriod(series as Parameters<typeof latestCommonPeriod>[0]) : null;
 }
 
+/** `/api/jp/jgb` → data ostatniej 10-latki. */
+export function extractJpJgb(json: unknown): string | null {
+    const date = asObj(asObj(json)?.latest)?.date;
+    return typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : null;
+}
+
 /** `/api/jp/markets` → data ostatniego kursu USD/JPY (dzień, nie miesiąc). */
 export function extractJpUsdJpy(json: unknown): string | null {
     const points = asObj(asObj(json)?.series)?.usdjpy;
@@ -516,6 +522,14 @@ export const FRESHNESS_DATASETS: DatasetSpec[] = [
         group: 'jp', frequency: 'daily',
         endpoint: () => '/api/jp/markets',
         extract: extractJpUsdJpy,
+        expected: (now) => expectedUsdJpyDate(now),
+        tolerance: { ok: 1, lag: 4 }, maxAgeDays: 10, lagNote: LAG_NOTES['jp-boj'], selfHeal: true,
+    },
+    {
+        id: 'jp-jgb', label: 'Japonia — JGB 10Y', source: 'Ministerstwo Finansów Japonii', kind: 'jp-boj',
+        group: 'jp', frequency: 'daily',
+        endpoint: () => '/api/jp/jgb',
+        extract: extractJpJgb,
         expected: (now) => expectedUsdJpyDate(now),
         tolerance: { ok: 1, lag: 4 }, maxAgeDays: 10, lagNote: LAG_NOTES['jp-boj'], selfHeal: true,
     },

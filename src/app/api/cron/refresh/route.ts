@@ -62,6 +62,7 @@ const ENDPOINTS = [
     '/api/jp/cpi?refresh=1',
     '/api/jp/cpi-contributions?refresh=1',
     '/api/jp/markets?refresh=1',
+    '/api/jp/jgb?refresh=1',
 ];
 
 export async function GET(request: NextRequest) {
