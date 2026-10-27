@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, type MouseEvent } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Menu } from 'lucide-react';
-import { isActive } from './TopNav';
+import { activeNavHref } from './TopNav';
 import { isMoreActive, tabItemsFor } from './mobile-nav';
 import { countryOf } from './country';
 import { MoreSheet } from './MoreSheet';
@@ -28,6 +28,8 @@ export function MobileTabBar() {
     const sheetOpen = sheetOn === pathname;
     const moreRef = useRef<HTMLButtonElement>(null);
     const moreOn = sheetOpen || isMoreActive(pathname);
+    const tabs = tabItemsFor(countryOf(pathname));
+    const current = activeNavHref(pathname, tabs);
 
     useEffect(() => {
         // Obrót / poszerzenie okna do `lg` chowa pasek — arkusz nie może zostać osierocony.
@@ -61,9 +63,9 @@ export function MobileTabBar() {
                 {/* Komórki `flex-auto`: podstawa = szerokość treści, nadwyżka dzielona po równo. Przy 320 px
                     „Gospodarka” dostaje kilka px więcej niż „Ceny”, zamiast ucięcia etykiety (siatka 5×64 px ucinała). */}
                 <ul className="mx-auto flex h-[var(--mk-tabbar-h)] max-w-lg">
-                    {tabItemsFor(countryOf(pathname)).map((it) => {
+                    {tabs.map((it) => {
                         const Icon = it.icon;
-                        const active = isActive(pathname, it.href);
+                        const active = current === it.href;
                         return (
                             <li key={it.href} className="min-w-0 flex-auto">
                                 <Link

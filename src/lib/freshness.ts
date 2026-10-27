@@ -22,6 +22,7 @@ import { cpiFullPath, dbwSeriesPath, gusMonthlyPath } from '@/lib/gus-api-paths'
 import { warsawMinutes } from '@/lib/market-hours';
 import { warsawDateKey } from '@/lib/news/warsaw-date';
 import { expectedJpCpi } from '@/lib/jp/calendar';
+import { expectedUsdJpyDate } from '@/lib/jp/boj';
 import { latestCommonPeriod } from '@/lib/jp/breakdown';
 
 // ─── Typy ───────────────────────────────────────────────
@@ -30,7 +31,7 @@ import { latestCommonPeriod } from '@/lib/jp/breakdown';
  *  źródła, ostrzeżenie); stale = ≥2 okresy za nim albo przekroczony maks. wiek; error = brak odpowiedzi/danych. */
 export type FreshnessStatus = 'ok' | 'lag' | 'stale' | 'error';
 export type Frequency = 'daily' | 'monthly' | 'quarterly';
-export type SourceKind = 'gus-dbw' | 'gus-bdl' | 'eurostat' | 'nbp' | 'yahoo' | 'jp-dashboard' | 'jp-estat';
+export type SourceKind = 'gus-dbw' | 'gus-bdl' | 'eurostat' | 'nbp' | 'yahoo' | 'jp-dashboard' | 'jp-estat' | 'jp-boj';
 
 export interface DatasetSpec {
     id: string;
@@ -360,6 +361,7 @@ const LAG_NOTES: Record<SourceKind, string> = {
     yahoo: 'Brak notowania z ostatnich sesji — możliwe święto giełdowe albo opóźnienie Yahoo.',
     'jp-dashboard': 'Komunikat Statistics Bureau (8:30 JST) już jest, ale Statistics Dashboard albo nasze odświeżenie (9:30 i 15:00 JST) jeszcze go nie objęły.',
     'jp-estat': 'Komunikat CPI jest, ale plik wkładów (e-Stat, tabela 5) jeszcze nie wszedł do cache.',
+    'jp-boj': 'Kurs 17:00 z Tokio albo stopa BOJ spóźnia się wobec dnia roboczego w Japonii.',
 };
 
 /** `/api/jp/cpi` → najnowszy miesiąc wspólny czterem miarom rozbicia (ogółem, bazowa, bez świeżej
@@ -367,6 +369,12 @@ const LAG_NOTES: Record<SourceKind, string> = {
 export function extractJpCpiBreakdown(json: unknown): string | null {
     const series = asObj(asObj(json)?.series);
     return series ? latestCommonPeriod(series as Parameters<typeof latestCommonPeriod>[0]) : null;
+}
+
+/** `/api/jp/markets` → data ostatniego kursu USD/JPY (dzień, nie miesiąc). */
+export function extractJpUsdJpy(json: unknown): string | null {
+    const points = asObj(asObj(json)?.series)?.usdjpy;
+    return maxPeriod(Array.isArray(points) ? points.map((p) => asObj(p)?.date) : [], 'daily');
 }
 
 /** `/api/jp/cpi-contributions` → `{ period: 'YYYY-MM' }` — miesiąc tabeli 5. */
@@ -502,6 +510,14 @@ export const FRESHNESS_DATASETS: DatasetSpec[] = [
         extract: extractJpContributions,
         expected: (now) => expectedJpCpi(now).period,
         tolerance: MONTHLY, maxAgeDays: 70, lagNote: LAG_NOTES['jp-estat'], selfHeal: true,
+    },
+    {
+        id: 'jp-usdjpy', label: 'Japonia — USD/JPY 17:00', source: 'Bank Japonii', kind: 'jp-boj',
+        group: 'jp', frequency: 'daily',
+        endpoint: () => '/api/jp/markets',
+        extract: extractJpUsdJpy,
+        expected: (now) => expectedUsdJpyDate(now),
+        tolerance: { ok: 1, lag: 4 }, maxAgeDays: 10, lagNote: LAG_NOTES['jp-boj'], selfHeal: true,
     },
 ];
 

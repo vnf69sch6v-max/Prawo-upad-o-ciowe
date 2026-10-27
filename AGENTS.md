@@ -151,6 +151,9 @@ Standard scripts in `package.json`:
   CPI contributions (寄与度) are a separate cache (`jp_data/cpi_contributions_v1`,
   `/api/jp/cpi-contributions`): the latest e-Stat table 5 xlsx from the stable
   list `lid=000001491870`, not the Dashboard. The page only peeks that cache.
+  `/japonia/rynki` reads BOJ Time-Series Data Search (`/api/jp/markets`, no key).
+  Daily `startDate` is `YYYYMM`, not `YYYYMMDD`. Series names are validated
+  (`mustInclude`); the credit must stay on the page.
 - Header from `xl`: sections inline, search is an icon (⌘K still works) — with
   the 220 px field the row did not fit the 1440 px container.
 - Inside a `withCache(...)` fetcher, fetch upstream with `cache: 'no-store'`,

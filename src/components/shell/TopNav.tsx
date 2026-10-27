@@ -23,7 +23,8 @@ export const NAV_ITEMS: NavItem[] = [
 
 /** Japonia — sekcje dochodzą krok po kroku (na start inflacja). */
 export const JP_NAV_ITEMS: NavItem[] = [
-    { label: 'Inflacja', href: '/japonia', icon: Tag, hint: 'CPI, bazowa, Tokio, cel BOJ 2%' },
+    { label: 'Inflacja', href: '/japonia', icon: Tag, hint: 'CPI, bazowa, Tokio, wkłady grup' },
+    { label: 'Rynki', href: '/japonia/rynki', icon: TrendingUp, hint: 'Jen, stopa BOJ, call overnight' },
 ];
 
 export function navItemsFor(country: Country): NavItem[] {
@@ -32,6 +33,16 @@ export function navItemsFor(country: Country): NavItem[] {
 
 /** Podstrony spoza ścieżki sekcji, które do niej należą (karta spółki WIG20 → Rynki). */
 const SECTION_ALIASES: Record<string, string[]> = { '/rynki': ['/spolki'] };
+
+/** Najdłuższy pasujący adres wygrywa: `/japonia/rynki` nie zapala też zakładki `/japonia`. */
+export function activeNavHref(pathname: string, items: NavItem[]): string | null {
+    let best: string | null = null;
+    for (const it of items) {
+        if (!isActive(pathname, it.href)) continue;
+        if (!best || it.href.length > best.length) best = it.href;
+    }
+    return best;
+}
 
 export function isActive(pathname: string, href: string): boolean {
     const match = (h: string) => (h === '/' ? pathname === '/' : pathname === h || pathname.startsWith(`${h}/`));
@@ -50,11 +61,13 @@ export function TopNav({ className = '' }: { className?: string }) {
         if (nav && active) scrollChildInline(nav, active);
     }, [pathname]);
 
+    const items = navItemsFor(countryOf(pathname));
+    const current = activeNavHref(pathname, items);
     return (
         <nav ref={navRef} aria-label="Sekcje serwisu" className={`flex items-center gap-1 ${className}`}>
-            {navItemsFor(countryOf(pathname)).map((it) => {
+            {items.map((it) => {
                 const Icon = it.icon;
-                const active = isActive(pathname, it.href);
+                const active = current === it.href;
                 return (
                     <Link key={it.href} href={it.href} className={`mk-tab ${active ? 'mk-tab-active' : ''}`} aria-current={active ? 'page' : undefined}>
                         <Icon size={16} strokeWidth={2} aria-hidden />

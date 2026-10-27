@@ -39,7 +39,7 @@ odpowiedź na pytanie „co się zmieniło i co to znaczy” — w dniu publikac
 | Ceny / inflacja + rozbicie | `/ceny` | `/japonia` (inflacja) · rozbicie — w toku |
 | Gospodarka (PKB, produkcja, sprzedaż) | `/gospodarka` | plan |
 | Rynek pracy | `/praca` | plan |
-| Rynki (kursy, stopy, obligacje) | `/rynki` | plan: stopa BOJ, USD/JPY, JGB 10Y |
+| Rynki (kursy, stopy, obligacje) | `/rynki` | `/japonia/rynki` (stopa BOJ, call, USD/JPY) · JGB 10Y — plan |
 | Stan danych | `/status` | wspólna (grupa „Japonia”) |
 
 ## Wzorzec wskaźnika kraju (każdy nowy wskaźnik przechodzi te kroki)
