@@ -61,6 +61,7 @@ const ENDPOINTS = [
     // Japonia — drugi przebieg dnia (15:00 JST) po cronie `jp` (9:30 JST); do źródła najwyżej raz na 10 min.
     '/api/jp/cpi?refresh=1',
     '/api/jp/cpi-contributions?refresh=1',
+    '/api/jp/markets?refresh=1',
 ];
 
 export async function GET(request: NextRequest) {

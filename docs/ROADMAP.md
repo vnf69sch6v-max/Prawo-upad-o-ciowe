@@ -108,8 +108,9 @@ J0. **20.11.2026 (CPI za październik):** do 15:00 JST `jp-cpi` i `jp-cpi-breakd
 J1. **30.10.2026 (Tokio, wstępne za październik):** sprawdzić, czy Statistics Dashboard dostaje odczyt
     wstępny (`@isProvisional = 1`) tego samego dnia. Jeśli nie — wstępne Tokio z e-Stat API
     (wymaga `ESTAT_APP_ID`, darmowa rejestracja — właściciel) albo z komunikatu Statistics Bureau.
-J2. **Kolejne wskaźniki Japonii** (po jednym na krok): stopa BOJ i USD/JPY (API Banku Japonii, bez
-    klucza, dopisek + e-mail do BOJ przy starcie), bezrobocie, rentowność JGB 10Y (CSV Ministerstwa Finansów).
+J2. **Kolejne wskaźniki Japonii.** Stopa BOJ, call overnight i USD/JPY — zrobione 27.10 (`/japonia/rynki`,
+    API Banku Japonii bez klucza). Zostaje: bezrobocie, rentowność JGB 10Y (CSV Ministerstwa Finansów).
+    Właściciel: jednorazowy e-mail do Banku Japonii, że używamy BOJ Time-Series Data Search (dopisek jest na stronie).
 J3. **Przegląd Japonii** (hero jak w PL), gdy będą ≥3 wskaźniki.
 
 ## Wymaga właściciela (nie da się z kodu)
@@ -195,6 +196,7 @@ J3. **Przegląd Japonii** (hero jak w PL), gdy będą ≥3 wskaźniki.
 - **`GUS_BDL_KEY`** — wyższy limit BDL (rejestracja na api.stat.gov.pl).
 
 ## Zrobione
+- **27.10.2026 — Japonia: rynki.** `/japonia/rynki`: USD/JPY o 17:00 Tokio (156,96 jena na 23.10.2026), stopa BOJ 1,50% (basic loan rate) i call overnight 1,227%. API Banku Japonii bez klucza, walidacja nazwy serii, świeżość `jp-usdjpy`, cron `jp` i `refresh`. Zakładka Inflacja nie świeci się na tej stronie.
 - **26.10.2026 — Japonia: oficjalne wkłady CPI.** `/japonia` pokazuje 寄与度 z tabeli 5 (e-Stat, plik xlsx, bez klucza): 10 grup koszyka, towary i usługi, świeża żywność, energia, ryż. Wrzesień 2026: żywność +0,77 p.p., ryż −0,21 p.p. przy CPI 2,1%. Różnice miar zostają osobno i nie nazywają się wkładem. Cache `jp_data/cpi_contributions_v1`, świeżość `jp-cpi-contributions`, cron `jp` i `refresh`.
 - **26.10.2026 — rejestracja e-mailem.** Na `/login` i `/start`: „Nie masz konta? Załóż je” (e-mail, hasło, powtórzenie, min. 8 znaków). Link weryfikacyjny, bez ciasteczka sesji do kliknięcia. Logowanie przed potwierdzeniem nie zapisuje `accessUntil` (inaczej okres próbny przepadłby). Po potwierdzeniu zwykłe logowanie nadaje trial jak dotychczas.
 - **25.10.2026 — logowanie: od wejścia na stronę do formularza.** Niezalogowany z podstrony (`/ceny`) ląduje na `/start?from=…#logowanie`, nie na hero. Zablokowany popup Google przechodzi na przekierowanie w tej samej karcie (`getRedirectResult` dokleja ciasteczko po powrocie). „Nie pamiętam hasła” wysyła link; brak konta brzmi tak samo jak sukces. Nowe konto jest przez Google — formularz e-mail to mówi wprost. „Zaloguj się ponownie” przewija do formularza, nie otwiera od razu Google.

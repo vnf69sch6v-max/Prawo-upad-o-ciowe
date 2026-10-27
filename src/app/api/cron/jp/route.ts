@@ -6,7 +6,7 @@ import { warmEndpoints } from '@/lib/cron-warm';
 
 export const maxDuration = 60;
 
-const ENDPOINTS = ['/api/jp/cpi?refresh=1', '/api/jp/cpi-contributions?refresh=1'];
+const ENDPOINTS = ['/api/jp/cpi?refresh=1', '/api/jp/cpi-contributions?refresh=1', '/api/jp/markets?refresh=1'];
 
 export async function GET(request: NextRequest) {
     return warmEndpoints(request, ENDPOINTS, 'jp');
