@@ -183,7 +183,14 @@ Standard scripts in `package.json`:
   the 2020-base seasonal index, month-on-month as in the revised release
   (13:30 JST, not the 8:50 flash), plus year-on-year from the unadjusted index.
   Dates are `JP_IIP_FINAL_RELEASES` through January 2027 data on 19.03.2027.
-  The same page shows nominal retail sales (`/api/jp/retail`, cache
+  The same page shows tertiary industry activity (`/api/jp/tertiary`, cache
+  `jp_data/tertiary_v1`, freshness `jp-tertiary`): the 2020-base services index,
+  where 2020 means the 2019–2020 average equals 100. August 2026 is preliminary
+  (the point carries the flag): 106.8, −0.1% month on month, seasonally
+  adjusted, and +1.7% year on year from the unadjusted index. `getData` returns
+  the same name for both classes, so the parser requires seasonal class 2 or 1.
+  Dates are `JP_TERTIARY_RELEASES` at 13:30 JST through January 2027 data on
+  17.03.2027; extend that map before April 2027. The same page shows nominal retail sales (`/api/jp/retail`, cache
   `jp_data/retail_v1`, freshness `jp-retail`): the published level is in
   units of 1 billion yen. Year-on-year is computed from those levels only
   when both months are on or after January 2025 (census break). The retail
