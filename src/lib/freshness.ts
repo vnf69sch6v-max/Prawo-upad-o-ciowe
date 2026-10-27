@@ -24,6 +24,7 @@ import { warsawDateKey } from '@/lib/news/warsaw-date';
 import { expectedJpCpi } from '@/lib/jp/calendar';
 import { expectedUsdJpyDate } from '@/lib/jp/boj';
 import { expectedJpUnemployment } from '@/lib/jp/labour';
+import { expectedJpJobs } from '@/lib/jp/jobs';
 import { expectedJpWages } from '@/lib/jp/wages';
 import { expectedJpIndustry } from '@/lib/jp/industry';
 import { expectedJpTertiary } from '@/lib/jp/tertiary';
@@ -442,6 +443,12 @@ export function extractJpWages(json: unknown): string | null {
     return maxPeriod(Array.isArray(points) ? points.map((p) => asObj(p)?.date) : [], 'monthly');
 }
 
+/** `/api/jp/jobs` → najnowszy miesiąc ofert na osobę, po sezonie. */
+export function extractJpJobs(json: unknown): string | null {
+    const points = asObj(asObj(json)?.series)?.sa;
+    return maxPeriod(Array.isArray(points) ? points.map((p) => asObj(p)?.date) : [], 'monthly');
+}
+
 /** `/api/jp/labour` → najnowszy miesiąc stopy wyrównanej sezonowo. */
 export function extractJpLabour(json: unknown): string | null {
     const points = asObj(asObj(json)?.series)?.sa;
@@ -617,6 +624,16 @@ export const FRESHNESS_DATASETS: DatasetSpec[] = [
         extract: extractJpLabour,
         expected: (now) => expectedJpUnemployment(now),
         tolerance: MONTHLY, maxAgeDays: 70, lagNote: LAG_NOTES['jp-dashboard'], selfHeal: true,
+    },
+    {
+        id: 'jp-jobs', label: 'Japonia — oferty pracy', source: 'Ministerstwo Zdrowia Japonii', kind: 'jp-dashboard',
+        group: 'jp', frequency: 'monthly',
+        endpoint: () => '/api/jp/jobs',
+        extract: extractJpJobs,
+        expected: (now) => expectedJpJobs(now),
+        tolerance: MONTHLY, maxAgeDays: 70,
+        lagNote: 'Komunikat ofert pracy (8:30 JST) już jest, ale Statistics Dashboard albo nasze odświeżenie jeszcze go nie objęły.',
+        selfHeal: true,
     },
     {
         id: 'jp-wages', label: 'Japonia — płace', source: 'Monthly Labour Survey', kind: 'jp-dashboard',
