@@ -27,6 +27,7 @@ import { expectedJpUnemployment } from '@/lib/jp/labour';
 import { expectedJpWages } from '@/lib/jp/wages';
 import { expectedJpIndustry } from '@/lib/jp/industry';
 import { expectedJpRetail } from '@/lib/jp/retail';
+import { expectedJpGdp } from '@/lib/jp/gdp';
 import { latestCommonPeriod } from '@/lib/jp/breakdown';
 
 // ─── Typy ───────────────────────────────────────────────
@@ -375,6 +376,12 @@ export function extractJpCpiBreakdown(json: unknown): string | null {
     return series ? latestCommonPeriod(series as Parameters<typeof latestCommonPeriod>[0]) : null;
 }
 
+/** `/api/jp/gdp` → najnowszy kwartał realnego PKB. */
+export function extractJpGdp(json: unknown): string | null {
+    const points = asObj(asObj(json)?.series)?.real;
+    return maxPeriod(Array.isArray(points) ? points.map((p) => asObj(p)?.date) : [], 'quarterly');
+}
+
 /** `/api/jp/retail` → najnowszy miesiąc sprzedaży detalicznej. */
 export function extractJpRetail(json: unknown): string | null {
     const points = asObj(json)?.points;
@@ -597,6 +604,16 @@ export const FRESHNESS_DATASETS: DatasetSpec[] = [
         expected: (now) => expectedJpRetail(now),
         tolerance: MONTHLY, maxAgeDays: 100,
         lagNote: 'Komunikat końcowy sprzedaży (13:30 JST) już jest, ale Statistics Dashboard albo nasze odświeżenie jeszcze go nie objęły. Wstępny odczyt na stronę nie wchodzi.',
+        selfHeal: true,
+    },
+    {
+        id: 'jp-gdp', label: 'Japonia — PKB', source: 'Gabinet Japonii', kind: 'jp-dashboard',
+        group: 'jp', frequency: 'quarterly',
+        endpoint: () => '/api/jp/gdp',
+        extract: extractJpGdp,
+        expected: (now) => expectedJpGdp(now),
+        tolerance: { ok: 0, lag: 1 }, maxAgeDays: 200,
+        lagNote: 'Drugi komunikat PKB (8:50 JST) już jest, ale Statistics Dashboard albo nasze odświeżenie jeszcze go nie objęły.',
         selfHeal: true,
     },
 ];
