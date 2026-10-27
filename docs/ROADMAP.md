@@ -123,6 +123,7 @@ J5. **Gospodarka Japonii** — produkcja zrobiona 27.10 (`/japonia/gospodarka`: 
     Przegląd od 27.10 rankinguje też płace, produkcję, sprzedaż, PKB i obroty bieżące.
     Dochód pierwotny też 27.10: sierpień, 5 133,2 mld jenów, +910,5 mld r/r.
     Usługi też 27.10: sierpień, deficyt 115,8 mld jenów, o 150,9 mld mniejszy niż rok wcześniej.
+    Zamówienia maszyn też 27.10: sierpień, +5,2% m/m sezonowo, +18,6% r/r.
 
 ## Wymaga właściciela (nie da się z kodu)
 - **Płatna platforma — uruchomienie** (kod gotowy 25.10, bramka wyłączona do czasu flag):
@@ -207,6 +208,7 @@ J5. **Gospodarka Japonii** — produkcja zrobiona 27.10 (`/japonia/gospodarka`: 
 - **`GUS_BDL_KEY`** — wyższy limit BDL (rejestracja na api.stat.gov.pl).
 
 ## Zrobione
+- **27.10.2026 — Japonia: zamówienia maszyn.** Na `/japonia/gospodarka`: sierpień 2026, popyt prywatny bez statków i energetyki, +5,2% m/m po wyrównaniu sezonowym i +18,6% r/r bez korekty. Poziom 1 069,8 mld jenów. Komunikat Gabinetu z 15.10, 8:50. Świeżość `jp-orders`. Wrzesień: 19 listopada.
 - **27.10.2026 — Japonia: ceny usług dla firm.** Na `/japonia/inflacja` pod cenami towarów: wrzesień 2026, wstępne, +3,7% r/r (sierpień po korekcie 3,5%). Indeks 115,5, baza 2020, +0,3% wobec sierpnia. Komunikat Banku Japonii z 27.10, 8:50. Świeżość `jp-sppi`.
 - **27.10.2026 — Japonia: ceny producenta.** Na `/japonia/inflacja`: wrzesień 2026, wstępne, +6,8% r/r (sierpień po korekcie 7,6%). Indeks 135,7, baza 2020, −0,3% wobec sierpnia. Komunikat Banku Japonii z 13.10, 8:50. Świeżość `jp-cgpi`. Październik: 12 listopada.
 - **27.10.2026 — Japonia: usługi w bilansie.** Na `/japonia/gospodarka`: sierpień 2026, deficyt usług 115,8 mld jenów, o 150,9 mld mniejszy niż rok wcześniej. Osobno od handlu towarami. Cache `jp_data/trade_v3`.

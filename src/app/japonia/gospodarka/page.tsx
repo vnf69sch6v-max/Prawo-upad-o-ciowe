@@ -1,11 +1,14 @@
 import type { Metadata } from 'next';
 import { JpGdp } from '@/components/jp/JpGdp';
+import { JpOrders } from '@/components/jp/JpOrders';
 import { JpIndustry } from '@/components/jp/JpIndustry';
 import { JpRetail } from '@/components/jp/JpRetail';
 import { JpTrade } from '@/components/jp/JpTrade';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { gdpSentence } from '@/lib/jp/gdp';
 import { peekJpGdp } from '@/lib/jp/gdp-server';
+import { ordersSentence } from '@/lib/jp/orders';
+import { peekJpOrders } from '@/lib/jp/orders-server';
 import { industrySentence } from '@/lib/jp/industry';
 import { peekJpIndustry } from '@/lib/jp/industry-server';
 import { retailSentence } from '@/lib/jp/retail';
@@ -17,16 +20,18 @@ import { SITE_URL } from '@/lib/internal-fetch';
 export const revalidate = 1800;
 
 export async function generateMetadata(): Promise<Metadata> {
-    const [industry, retail, gdp, trade] = await Promise.all([
+    const [industry, retail, gdp, orders, trade] = await Promise.all([
         peekJpIndustry().catch(() => null),
         peekJpRetail().catch(() => null),
         peekJpGdp().catch(() => null),
+        peekJpOrders().catch(() => null),
         peekJpTrade().catch(() => null),
     ]);
     const bits = [
         industry ? industrySentence(industry) : null,
         retail ? retailSentence(retail.points) : null,
         gdp ? gdpSentence(gdp) : null,
+        orders ? ordersSentence(orders) : null,
         trade ? tradeSentence(trade) : null,
     ].filter(Boolean);
     return {
@@ -37,10 +42,11 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function JaponiaGospodarkaPage() {
-    const [industry, retail, gdp, trade] = await Promise.all([
+    const [industry, retail, gdp, orders, trade] = await Promise.all([
         peekJpIndustry().catch(() => null),
         peekJpRetail().catch(() => null),
         peekJpGdp().catch(() => null),
+        peekJpOrders().catch(() => null),
         peekJpTrade().catch(() => null),
     ]);
     return (
@@ -48,6 +54,7 @@ export default async function JaponiaGospodarkaPage() {
             <PageHeader title="Japonia · Gospodarka" />
             <JpIndustry initial={industry} />
             <JpRetail initial={retail} />
+            <JpOrders initial={orders} />
             <JpGdp initial={gdp} />
             <JpTrade initial={trade} />
         </div>
