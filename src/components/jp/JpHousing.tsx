@@ -41,6 +41,12 @@ export function JpHousing({ initial }: { initial: JpHousingPayload | null }) {
     const sameAnnual = annual && count && annual.date === count.date ? annual : null;
     const yoy = housingYoy(data.series.count);
     const mom = sameAnnual ? housingAnnMom(data.series.annual) : null;
+    const parts = (['owner', 'rent', 'sale'] as const).map((id) => {
+        const point = lastHousingPoint(data.series[id]);
+        const same = point && count && point.date === count.date ? point : null;
+        return { id, point: same, yoy: same ? housingYoy(data.series[id], same.date) : null };
+    });
+    const partLabel = { owner: 'Własne', rent: 'Na wynajem', sale: 'Na sprzedaż' };
     const next = isClient ? nextHousingRelease(new Date()) : null;
     const headline = yoy == null
         ? 'Nowe mieszkania'
@@ -64,9 +70,19 @@ export function JpHousing({ initial }: { initial: JpHousingPayload | null }) {
                     { label: 'Tempo wobec poprzedniego miesiąca', value: mom == null ? '—' : `${signed(mom)}%` },
                 ]}
             />
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-2 [&>*:last-child:nth-child(odd)]:col-span-2">
                 <CompactKpi label="Rok do roku" icon={Home} value={yoy == null ? '—' : signed(yoy)} unit="%" footnote={count ? formatDataPeriod(count.date) : undefined} />
                 <CompactKpi label="Skala roku" icon={Home} value={sameAnnual ? formatNumber(sameAnnual.value, 0) : '—'} unit="mieszkań" footnote={mom == null ? 'sezonowo' : `sezonowo · ${signed(mom)}% m/m`} />
+                {parts.map((part) => (
+                    <CompactKpi
+                        key={part.id}
+                        label={partLabel[part.id]}
+                        icon={Home}
+                        value={part.point ? formatNumber(part.point.value, 0) : '—'}
+                        unit="mieszkań"
+                        footnote={part.yoy == null ? undefined : `${signed(part.yoy)}% r/r`}
+                    />
+                ))}
             </div>
             {yoyRows.length > 1 && (
                 <SectionCard editorial titleVariant="label" title="Nowe mieszkania rok do roku" subtitle="procent · liczba rozpoczętych budów">
@@ -101,6 +117,7 @@ export function JpHousing({ initial }: { initial: JpHousingPayload | null }) {
                 <ul className="space-y-2.5 text-sm leading-relaxed text-mk-text-soft">
                     <li><strong className="font-semibold text-mk-text">Rok do roku</strong> — liczba mieszkań, których budowę rozpoczęto w tym miesiącu, wobec tego samego miesiąca rok wcześniej. Taką stopę podaje ministerstwo w pierwszym zdaniu komunikatu.</li>
                     <li><strong className="font-semibold text-mk-text">Skala roku</strong> — to samo tempo po zdjęciu sezonu i przeliczeniu na rok. Porównanie z poprzednim miesiącem ma sens dopiero na tej liczbie.</li>
+                    <li><strong className="font-semibold text-mk-text">Trzy grupy</strong> — dom na własne potrzeby, mieszkanie na wynajem i lokal na sprzedaż. Reszta łącznej liczby to mieszkania służbowe.</li>
                     <li>Mieszkanie w tym zestawieniu to lokal z własnym wejściem, nie cała kamienica.</li>
                 </ul>
             </SectionCard>
