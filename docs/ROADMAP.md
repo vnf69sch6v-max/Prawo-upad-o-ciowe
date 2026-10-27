@@ -209,6 +209,7 @@ J5. **Gospodarka Japonii** — produkcja zrobiona 27.10 (`/japonia/gospodarka`: 
 - **`GUS_BDL_KEY`** — wyższy limit BDL (rejestracja na api.stat.gov.pl).
 
 ## Zrobione
+- **28.10.2026 — Japonia: aktywność usług.** Na `/japonia/gospodarka` pod produkcją: indeks METI, baza 2020 (średnia z 2019 i 2020). Sierpień 2026, wstępny: 106,8, −0,1% wobec lipca, +1,7% r/r bez korekty. Komunikat z 19.10, 13:30. Świeżość `jp-tertiary`. Wrzesień: 17 listopada.
 - **28.10.2026 — Japonia: skład nowych mieszkań.** Pod sumą 63 974: własne 17 713 (+1,0% r/r), na wynajem 28 309 (+6,5%), na sprzedaż 16 838 (+6,4%). Reszta to mieszkania służbowe. Cache `jp_data/housing_v2`.
 - **27.10.2026 — Japonia: nowe mieszkania.** Na `/japonia/gospodarka`: sierpień 2026, 63 974 rozpoczęte budowy, +6,1% r/r. Skala roku po sezonie: 753 108, −2,7% wobec lipca. Komunikat Ministerstwa Ziemi z 30.09, 14:00. Świeżość `jp-housing`. Wrzesień: 30 października.
 - **27.10.2026 — Japonia: zamówienia maszyn.** Na `/japonia/gospodarka`: sierpień 2026, popyt prywatny bez statków i energetyki, +5,2% m/m po wyrównaniu sezonowym i +18,6% r/r bez korekty. Poziom 1 069,8 mld jenów. Komunikat Gabinetu z 15.10, 8:50. Świeżość `jp-orders`. Wrzesień: 19 listopada.

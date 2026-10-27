@@ -25,7 +25,7 @@ export const NAV_ITEMS: NavItem[] = [
 export const JP_NAV_ITEMS: NavItem[] = [
     { label: 'Przegląd', href: '/japonia', icon: LayoutDashboard, hint: 'Najważniejsza zmiana dnia' },
     { label: 'Inflacja', href: '/japonia/inflacja', icon: Tag, hint: 'CPI, Tokio, wkłady, ceny producenta' },
-    { label: 'Gospodarka', href: '/japonia/gospodarka', icon: Factory, hint: 'Produkcja, sprzedaż, PKB i handel' },
+    { label: 'Gospodarka', href: '/japonia/gospodarka', icon: Factory, hint: 'Produkcja, usługi, sprzedaż, PKB i handel' },
     { label: 'Rynki', href: '/japonia/rynki', icon: TrendingUp, hint: 'Jen, stopa BOJ, JGB 10Y' },
     { label: 'Praca', href: '/japonia/praca', icon: Users, hint: 'Bezrobocie i płace' },
 ];
