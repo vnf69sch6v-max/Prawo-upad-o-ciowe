@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 import Link from 'next/link';
-import { Banknote, DollarSign, Factory, Landmark, Percent, ShoppingCart, TrendingUp, Users } from 'lucide-react';
+import { Banknote, DollarSign, Factory, Landmark, Percent, Scale, ShoppingCart, TrendingUp, Users } from 'lucide-react';
 import { CompactKpiGrid, type CompactKpiItem } from '@/components/ui/CompactKpiGrid';
 import { formatDataPeriod, formatDate, formatDecimalPL, formatNumber, formatPP } from '@/lib/formatters';
 import { useIsClient } from '@/lib/use-is-client';
@@ -14,6 +14,7 @@ import { industryMom, type JpIndustryPayload } from '@/lib/jp/industry';
 import { labourChangePp, lastLabourPoint, type JpLabourPayload } from '@/lib/jp/labour';
 import { type JgbPayload } from '@/lib/jp/jgb';
 import { lastRetailPoint, retailYoy, retailYoySeries, type JpRetailPayload } from '@/lib/jp/retail';
+import { formatMldAmount, formatMldYen, lastTradePoint, tradeMldSeries, type JpTradePayload } from '@/lib/jp/trade';
 import { lastWagePoint, wageChangePp, type JpWagesPayload } from '@/lib/jp/wages';
 import { jpSignalHeadline, jpSignalReason, jpSignalText, rankJpHero } from '@/lib/jp/overview';
 import { DASHBOARD_CREDIT_JA, DASHBOARD_CREDIT_PL } from '@/lib/jp/stat-dashboard';
@@ -24,6 +25,7 @@ import { useJpJgb } from '@/lib/jp/use-jp-jgb';
 import { useJpLabour } from '@/lib/jp/use-jp-labour';
 import { useJpMarkets } from '@/lib/jp/use-jp-markets';
 import { useJpRetail } from '@/lib/jp/use-jp-retail';
+import { useJpTrade } from '@/lib/jp/use-jp-trade';
 import { useJpWages } from '@/lib/jp/use-jp-wages';
 import type { RankedSignal } from '@/lib/hero-signals';
 
@@ -46,6 +48,7 @@ function valueOf(r: RankedSignal): string {
         if (r.delta == null) return '—';
         return `${r.delta > 0 ? '+' : ''}${formatDecimalPL(r.delta, 1)}%`;
     }
+    if (r.candidate.id === 'jp-trade') return `${formatMldAmount(r.last)} mld`;
     const n = formatDecimalPL(r.last, r.candidate.decimals);
     return r.candidate.unit === '%' ? `${n}%` : `${n} ${r.candidate.unit}`;
 }
@@ -65,7 +68,7 @@ function SignalLink({ r, emphasis }: { r: RankedSignal; emphasis: 'primary' | 's
             </div>
             <div className="mt-2 flex flex-wrap items-baseline gap-2">
                 <span className={`tnum font-extrabold tracking-tight ${emphasis === 'primary' ? 'text-4xl sm:text-5xl' : 'text-2xl sm:text-3xl'}`}>{valueOf(r)}</span>
-                {r.candidate.id !== 'jp-industry' && deltaTxt && <span className="mk-hero-chip">{arrow}{deltaTxt}</span>}
+                {r.candidate.id !== 'jp-industry' && r.candidate.id !== 'jp-trade' && deltaTxt && <span className="mk-hero-chip">{arrow}{deltaTxt}</span>}
             </div>
             <p className="mk-hero-muted mt-2 max-w-md text-xs leading-relaxed sm:text-sm">{jpSignalText(r)}</p>
             <p className="mk-hero-muted mt-2.5 text-[11px] font-semibold uppercase tracking-wide">
@@ -78,7 +81,7 @@ function SignalLink({ r, emphasis }: { r: RankedSignal; emphasis: 'primary' | 's
 
 export function JpOverview({
     cpi: cpiInitial, labour: labourInitial, markets: marketsInitial, jgb: jgbInitial,
-    wages: wagesInitial, industry: industryInitial, retail: retailInitial, gdp: gdpInitial,
+    wages: wagesInitial, industry: industryInitial, retail: retailInitial, gdp: gdpInitial, trade: tradeInitial,
 }: {
     cpi: JpCpiPayload | null;
     labour: JpLabourPayload | null;
@@ -88,6 +91,7 @@ export function JpOverview({
     industry: JpIndustryPayload | null;
     retail: JpRetailPayload | null;
     gdp: JpGdpPayload | null;
+    trade: JpTradePayload | null;
 }) {
     const cpiQ = useJpCpi(cpiInitial);
     const labourQ = useJpLabour(labourInitial);
@@ -97,6 +101,7 @@ export function JpOverview({
     const industryQ = useJpIndustry(industryInitial);
     const retailQ = useJpRetail(retailInitial);
     const gdpQ = useJpGdp(gdpInitial);
+    const tradeQ = useJpTrade(tradeInitial);
     const isClient = useIsClient();
     const today = isClient ? jstDateKey() : null;
 
@@ -110,14 +115,15 @@ export function JpOverview({
     const retailLevels = useMemo(() => retailQ.data?.points ?? [], [retailQ.data]);
     const retailSeries = useMemo(() => retailYoySeries(retailLevels).map((p) => ({ date: p.date, value: p.yoy })), [retailLevels]);
     const gdpSeries = useMemo(() => gdpQ.data?.series.real ?? [], [gdpQ.data]);
+    const currentSeries = useMemo(() => tradeMldSeries(tradeQ.data?.series.current), [tradeQ.data]);
 
     const ranked = useMemo(() => rankJpHero({
         cpi: cpiSeries, unemployment: labourSeries, usdjpy: fxSeries, jgb: jgbSeries,
-        wages: wageSeries, industry: industrySeries, retail: retailSeries, gdp: gdpSeries,
-    }, today), [cpiSeries, labourSeries, fxSeries, jgbSeries, wageSeries, industrySeries, retailSeries, gdpSeries, today]);
+        wages: wageSeries, industry: industrySeries, retail: retailSeries, gdp: gdpSeries, current: currentSeries,
+    }, today), [cpiSeries, labourSeries, fxSeries, jgbSeries, wageSeries, industrySeries, retailSeries, gdpSeries, currentSeries, today]);
     const freshIds = useMemo(() => new Set(ranked.filter((r) => r.fresh).map((r) => r.candidate.id)), [ranked]);
     // Hero czeka na CPI i bezrobocie razem — inaczej pierwszy, który dojdzie, wskakuje na górę i po chwili spada.
-    const heroLoading = cpiQ.isLoading || labourQ.isLoading || wagesQ.isLoading || industryQ.isLoading || retailQ.isLoading || gdpQ.isLoading;
+    const heroLoading = cpiQ.isLoading || labourQ.isLoading || wagesQ.isLoading || industryQ.isLoading || retailQ.isLoading || gdpQ.isLoading || tradeQ.isLoading;
     const [primary, secondary] = ranked;
 
     const cpiLast = lastPoint(cpiSeries);
@@ -134,6 +140,9 @@ export function JpOverview({
     const retailLast = lastRetailPoint(retailLevels);
     const retailMove = retailYoy(retailLevels);
     const gdpLast = lastGdpPoint(gdpSeries);
+    const currentLast = lastTradePoint(tradeQ.data?.series.current);
+    const goodsLast = lastTradePoint(tradeQ.data?.series.trade);
+    const goodsSame = goodsLast && currentLast && goodsLast.date === currentLast.date ? goodsLast : null;
 
     const kpis: CompactKpiItem[] = [
         {
@@ -204,6 +213,15 @@ export function JpOverview({
             spark: gdpSeries.slice(-SPARK), sparkFormat: pct1,
             loading: gdpQ.isLoading, error: gdpQ.isError, onRetry: () => { void gdpQ.refetch(); },
         },
+        {
+            key: 'jp-trade', label: 'Obroty bieżące', href: '/japonia/gospodarka', watchId: 'jp-trade', icon: Scale,
+            value: currentLast ? formatMldYen(currentLast.value) : '—', unit: 'mld',
+            footnote: currentLast
+                ? `${freshIds.has('jp-trade') ? 'nowe · ' : ''}${currentLast.provisional ? 'wstępne · ' : ''}${formatDataPeriod(currentLast.date)}${goodsSame ? ` · handel ${formatMldYen(goodsSame.value)} mld` : ''}`
+                : 'bilans płatniczy',
+            spark: currentSeries.slice(-SPARK), sparkFormat: (v) => `${formatMldAmount(v)} mld`,
+            loading: tradeQ.isLoading, error: tradeQ.isError, onRetry: () => { void tradeQ.refetch(); },
+        },
     ];
 
     return (
@@ -237,7 +255,7 @@ export function JpOverview({
                 Na górze jest świeży odczyt albo duża zmiana. Jen i obligacje wchodzą tylko przy ruchu powyżej dwóch odchyleń własnej historii.
             </p>
             <CompactKpiGrid items={kpis} label="Japonia" columns={5} dense />
-            <CompactKpiGrid items={economy} label="Praca i gospodarka" columns={4} dense />
+            <CompactKpiGrid items={economy} label="Praca i gospodarka" columns={5} dense />
             <footer className="space-y-1 border-t border-mk-border pt-3 text-xs leading-relaxed text-mk-muted">
                 <p>{DASHBOARD_CREDIT_PL}</p>
                 <p lang="ja">{DASHBOARD_CREDIT_JA}</p>

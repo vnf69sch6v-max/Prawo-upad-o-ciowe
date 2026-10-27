@@ -65,8 +65,18 @@ export function okuToMld(oku: number): number {
 }
 
 export function formatMldYen(oku: number): string {
-    const mld = okuToMld(oku);
-    return Number.isInteger(mld) ? formatNumber(mld, 0) : formatDecimalPL(mld, 1);
+    return formatMldAmount(okuToMld(oku));
+}
+
+/** mld jenów już po przeliczeniu z 億円. Całkowite bez przecinka, reszta do 0,1. */
+export function formatMldAmount(mld: number): string {
+    const rounded = Math.round(mld * 10) / 10;
+    return Number.isInteger(rounded) ? formatNumber(rounded, 0) : formatDecimalPL(rounded, 1);
+}
+
+/** Saldo w mld jenów, do rankingu przeglądu. */
+export function tradeMldSeries(points: DashboardPoint[] | undefined): Array<{ date: string; value: number }> {
+    return (points ?? []).map((p) => ({ date: p.date, value: okuToMld(p.value) }));
 }
 
 /**

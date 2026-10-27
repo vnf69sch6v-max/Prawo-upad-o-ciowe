@@ -68,6 +68,28 @@ describe('Japan overview hero', () => {
         expect(jpSignalHeadline(gdp)).toBe('PKB wzrósł wobec kwartału');
     });
 
+    it('dates the current account from the preliminary balance-of-payments release', () => {
+        const ranked = rankJpHero({
+            cpi, unemployment, usdjpy, jgb,
+            current: monthly('2025-10', [3000, 2800, 3200, 2900, 3100, 2700, 3300, 3000, 2500, 2800, 4062]),
+        }, '2026-10-09');
+        const ca = ranked.find((r) => r.candidate.id === 'jp-trade')!;
+        expect(ca.period).toBe('2026-08');
+        expect(ca.publishedOn).toBe('2026-10-08');
+        expect(ca.ageDays).toBe(1);
+        expect(ca.fresh).toBe(true);
+        expect(ca.delta).toBe(1262);
+        expect(jpSignalHeadline(ca)).toBe('Nadwyżka obrotów bieżących');
+        expect(jpSignalText(ca)).toBe('Nadwyżka 4062 mld jenów. Wobec poprzedniego miesiąca +1262 mld.');
+        expect(jpSignalText(ca)).not.toMatch(/p\.p\./);
+        expect(ca.next?.date).toBe('2026-11-10');
+        const later = rankJpHero({
+            cpi, unemployment, usdjpy, jgb,
+            current: monthly('2025-10', [3000, 2800, 3200, 2900, 3100, 2700, 3300, 3000, 2500, 2800, 4062]),
+        }, '2026-10-27');
+        expect(later.find((r) => r.candidate.id === 'jp-trade')!.fresh).toBe(false);
+    });
+
     it('lets a two-sigma yen move into the hero', () => {
         const shock = usdjpy.map((p, i) => i === usdjpy.length - 1 ? { ...p, date: '2026-10-26', value: 160 } : p);
         const ranked = rankJpHero({ cpi, unemployment, usdjpy: shock, jgb }, '2026-10-27');

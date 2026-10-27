@@ -118,7 +118,7 @@ J4. **Płace w Japonii** — zrobione 27.10. Na `/japonia/praca` nominalne 3,9% 
 J5. **Gospodarka Japonii** — produkcja zrobiona 27.10 (`/japonia/gospodarka`: sierpień 101,9, −2,4% m/m).
     Sprzedaż detaliczna też 27.10: 13 072 mld jenów, +2,9% r/r z poziomów (komunikat końcowy 15.10).
     PKB też 27.10: II kwartał 2026, drugi komunikat, realny +0,4% i nominalny +1,3% wobec poprzedniego kwartału.
-    Przegląd od 27.10 rankinguje też płace, produkcję, sprzedaż i PKB.
+    Przegląd od 27.10 rankinguje też płace, produkcję, sprzedaż, PKB i obroty bieżące.
 
 ## Wymaga właściciela (nie da się z kodu)
 - **Płatna platforma — uruchomienie** (kod gotowy 25.10, bramka wyłączona do czasu flag):
@@ -203,6 +203,7 @@ J5. **Gospodarka Japonii** — produkcja zrobiona 27.10 (`/japonia/gospodarka`: 
 - **`GUS_BDL_KEY`** — wyższy limit BDL (rejestracja na api.stat.gov.pl).
 
 ## Zrobione
+- **27.10.2026 — Japonia: przegląd widzi bilans.** Hero i rząd „Praca i gospodarka” dostają obroty bieżące w mld jenów, z datą wstępnego komunikatu Ministerstwa Finansów. Zmiana salda nie jest podpisana jako punkty procentowe. Kafel pokazuje też deficyt handlu z tego samego miesiąca.
 - **27.10.2026 — Japonia: bilans płatniczy.** Na `/japonia/gospodarka` pod PKB: sierpień 2026, komunikat wstępny z 8.10. Nadwyżka obrotów bieżących 4 062 mld jenów, deficyt handlu towarami 687,7 mld. Jednostka źródła to 億円. Świeżość `jp-trade`. Wrzesień: 10 listopada, 8:50 JST.
 - **27.10.2026 — Japonia: przegląd widzi gospodarkę.** Hero na `/japonia` dostaje płace, produkcję (zmiana indeksu), sprzedaż r/r i PKB realny, z datami ich własnych komunikatów. Jen i JGB dalej tylko przy ruchu ≥2σ.
 - **27.10.2026 — Japonia: PKB.** Na `/japonia/gospodarka` pod sprzedażą: II kwartał 2026, drugi komunikat z 8.09. Realny +0,4% i nominalny +1,3% wobec poprzedniego kwartału (nie w skali roku). Świeżość `jp-gdp`. III kwartał, drugi komunikat: 8 grudnia.

@@ -133,7 +133,8 @@ Standard scripts in `package.json`:
   the per-country indicator blueprint and the definition of done live in
   `docs/PRODUCT.md`.
 - Japan (`/japonia`, Polish UI). `/japonia` is the overview (hero ranked like Poland,
-  with Japanese release dates and the BOJ 2% target). Inflation lives at
+  with Japanese release dates and the BOJ 2% target; the current account is in
+  billions of yen and dated from `JP_BOP_RELEASES`, not as percentage points). Inflation lives at
   `/japonia/inflacja`. The country comes only from the URL
   (`countryOf()` in `src/components/shell/country.ts`); header switch
   `CountrySwitch` (segment from `lg`, 44 px button + sheet below), nav per

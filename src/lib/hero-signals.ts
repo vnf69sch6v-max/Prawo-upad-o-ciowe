@@ -15,7 +15,7 @@ export interface HeroCandidate {
     label: string;
     series: Point[];
     /** Jednostka wartości na kaflu. */
-    unit: '%' | 'pkt' | 'zł' | 'jena';
+    unit: '%' | 'pkt' | 'zł' | 'jena' | 'mld';
     decimals: number;
     /** `pp` — zmiana wskaźnika r/r w punktach proc.; `pct` — zmiana poziomu (rynki) w %. */
     deltaMode: 'pp' | 'pct';
