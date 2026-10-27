@@ -198,7 +198,12 @@ Standard scripts in `package.json`:
   month, seasonally adjusted, and +18.6% year on year, unadjusted. The
   seasonally adjusted `getData` name omits 季節調整値, so the parser requires
   seasonal class 2. Dates are `JP_ORDERS_RELEASES` at 8:50 JST through February
-  2027 data on 14.04.2027. The same page shows the balance of
+  2027 data on 14.04.2027. The same page shows housing starts
+  (`/api/jp/housing`, cache `jp_data/housing_v1`, freshness `jp-housing`):
+  August 2026 is 63,974 dwellings, +6.1% year on year; the seasonally adjusted
+  annual rate is 753,108, −2.7% on the month. MLIT publishes at 14:00 JST.
+  `JP_HOUSING_RELEASES` has August (30.09.2026) and September (30.10.2026);
+  extend it before December 2026. The same page shows the balance of
   payments (`/api/jp/trade`, cache `jp_data/trade_v3`, freshness `jp-trade`):
   current account, primary income, goods trade and services, not seasonally
   adjusted, in 億円 (divide by 10 for billions of yen). August 2026 preliminary
