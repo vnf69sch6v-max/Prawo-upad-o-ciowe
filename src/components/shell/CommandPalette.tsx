@@ -36,7 +36,7 @@ const COMMANDS: Cmd[] = [
     { id: 'jp-home', group: 'Wskaźniki', label: 'Przegląd Japonii', sub: 'Japonia', keywords: 'japonia japan przegląd hero', href: '/japonia', icon: LayoutDashboard },
     { id: 'jp-cpi', group: 'Wskaźniki', label: 'Inflacja w Japonii', sub: 'Japonia', keywords: 'japonia japan cpi boj bank japonii tokio jen inflacja bazowa', href: '/japonia/inflacja', icon: TrendingUp },
     { id: 'jp-markets', group: 'Wskaźniki', label: 'Rynki Japonii', sub: 'Japonia', keywords: 'japonia jen jpy usd dolar stopa boj call overnight jgb', href: '/japonia/rynki', icon: TrendingUp },
-    { id: 'jp-labour', group: 'Wskaźniki', label: 'Bezrobocie w Japonii', sub: 'Japonia', keywords: 'japonia bezrobocie praca labour unemployment', href: '/japonia/praca', icon: Users },
+    { id: 'jp-labour', group: 'Wskaźniki', label: 'Praca w Japonii', sub: 'Japonia', keywords: 'japonia bezrobocie praca płace wynagrodzenie labour unemployment wages', href: '/japonia/praca', icon: Users },
     { id: 'ind-ppi', group: 'Wskaźniki', label: 'Ceny producenta (PPI)', sub: 'Ceny', keywords: 'ppi producent przemysł', href: '/ceny?tab=ppi', icon: Factory },
     { id: 'ind-nier', group: 'Wskaźniki', label: 'Ceny nieruchomości', sub: 'Ceny', keywords: 'mieszkania nieruchomości rynek pierwotny wtórny', href: '/ceny?tab=nieruchomosci', icon: Home },
     { id: 'ind-bud', group: 'Wskaźniki', label: 'Ceny robót budowlanych', sub: 'Ceny', keywords: 'budownictwo budowlano-montażowe', href: '/ceny?tab=budowlane', icon: HardHat },

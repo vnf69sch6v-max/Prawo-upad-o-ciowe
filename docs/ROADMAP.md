@@ -113,8 +113,8 @@ J2. **Kolejne wskaźniki Japonii.** Stopa BOJ, call, USD/JPY, JGB 10Y (`/japonia
     Kalendarz Labour Force Survey w `src/lib/jp/labour.ts` sięga lutego 2027 — dopisać przed majem 2027.
 J3. **Przegląd Japonii** — zrobione 27.10. `/japonia` rankinguje CPI, bezrobocie, jen i JGB
     (świeżość z kalendarzy Japonii, cel BOJ 2%). Inflacja jest na `/japonia/inflacja`.
-J4. **Płace w Japonii** na `/japonia/praca`, obok bezrobocia — przeciętne wynagrodzenie ze Statistics
-    Dashboard, jeśli seria jest bez klucza. Inaczej następny wskaźnik z publicznego źródła.
+J4. **Płace w Japonii** — zrobione 27.10. Na `/japonia/praca` nominalne 3,9% i realne 1,6% za sierpień
+    (komunikat końcowy, zakłady od 5 osób). Kalendarz 確報 w `src/lib/jp/wages.ts` sięga grudnia 2026.
 
 ## Wymaga właściciela (nie da się z kodu)
 - **Płatna platforma — uruchomienie** (kod gotowy 25.10, bramka wyłączona do czasu flag):
@@ -199,6 +199,7 @@ J4. **Płace w Japonii** na `/japonia/praca`, obok bezrobocia — przeciętne wy
 - **`GUS_BDL_KEY`** — wyższy limit BDL (rejestracja na api.stat.gov.pl).
 
 ## Zrobione
+- **27.10.2026 — Japonia: płace.** Na `/japonia/praca` płace z Monthly Labour Survey: nominalne 3,9% r/r i realne 1,6% r/r za sierpień 2026 (komunikat końcowy z 23.10, zakłady od 5 osób; realne wobec CPI bez czynszu właściciela). Wstępne 3,8% z 7.10 nie wchodzi. Świeżość `jp-wages`.
 - **27.10.2026 — Japonia: przegląd.** `/japonia` pokazuje dwa najważniejsze sygnały (świeżość publikacji × skala zmiany; jen i JGB tylko przy ruchu ≥2σ) oraz kafle CPI, bezrobocia, USD/JPY, stopy BOJ i JGB 10Y. Inflacja przeniesiona na `/japonia/inflacja`.
 - **27.10.2026 — Japonia: bezrobocie.** `/japonia/praca`: stopa z komunikatu Labour Force Survey, wyrównana sezonowo 2,5% za sierpień 2026, obok surowa 2,6%. Statistics Dashboard bez klucza; nazwa serii jest ta sama, więc parser wymaga znacznika sezonowego. Świeżość `jp-labour`, cron `jp` i `refresh`. Wrzesień wychodzi 30.10 o 8:30 JST.
 - **27.10.2026 — Japonia: JGB 10Y.** Na `/japonia/rynki` krzywa i 10-latka z CSV Ministerstwa Finansów. 26.10.2026: 2,824%. Historia do września z pliku angielskiego, październik z pliku bieżącego miesiąca (daty Reiwa). Świeżość `jp-jgb`.

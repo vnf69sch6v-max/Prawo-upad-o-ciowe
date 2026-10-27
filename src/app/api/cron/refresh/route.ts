@@ -64,6 +64,7 @@ const ENDPOINTS = [
     '/api/jp/markets?refresh=1',
     '/api/jp/jgb?refresh=1',
     '/api/jp/labour?refresh=1',
+    '/api/jp/wages?refresh=1',
 ];
 
 export async function GET(request: NextRequest) {
