@@ -8,6 +8,7 @@ import { JP_GDP_SECOND_RELEASES } from './gdp';
 import { JP_IIP_FINAL_RELEASES } from './industry';
 import { JP_LFS_RELEASES } from './labour';
 import { JP_RETAIL_FINAL_RELEASES } from './retail';
+import { formatMldAmount, JP_BOP_RELEASES } from './trade';
 import { JP_WAGE_FINAL_RELEASES } from './wages';
 
 const CPI_HREF = '/japonia/inflacja';
@@ -32,6 +33,8 @@ export function jpHeroCandidates(input: {
     retail?: Point[];
     /** PKB realny, już jako zmiana wobec poprzedniego kwartału. */
     gdp?: Point[];
+    /** Obroty bieżące, już w mld jenów. Zmiana to różnica salda, nie procent. */
+    current?: Point[];
 }): HeroCandidate[] {
     return [
         {
@@ -77,6 +80,13 @@ export function jpHeroCandidates(input: {
             nextReleaseOf: (today) => nextAfter(JP_GDP_SECOND_RELEASES, today),
         },
         {
+            id: 'jp-trade', kind: 'industrial', label: 'Obroty bieżące', series: input.current ?? [],
+            unit: 'mld', decimals: 1, deltaMode: 'pp', weight: 1.1,
+            href: ECONOMY_HREF,
+            releaseOf: (period) => JP_BOP_RELEASES[period] ?? null,
+            nextReleaseOf: (today) => nextAfter(JP_BOP_RELEASES, today),
+        },
+        {
             id: 'jp-usdjpy', kind: 'market', label: 'USD/JPY', series: input.usdjpy,
             unit: 'jena', decimals: 2, deltaMode: 'pct', invert: true,
             href: MARKETS_HREF,
@@ -119,6 +129,7 @@ export function jpSignalHeadline(r: RankedSignal): string {
     if (c.id === 'jp-retail') return 'Sprzedaż detaliczna rok do roku';
     if (c.id === 'jp-wages') return 'Płace nominalne rok do roku';
     if (c.id === 'jp-gdp') return last < 0 ? 'PKB spadł wobec kwartału' : 'PKB wzrósł wobec kwartału';
+    if (c.id === 'jp-trade') return last < 0 ? 'Deficyt obrotów bieżących' : last > 0 ? 'Nadwyżka obrotów bieżących' : 'Obroty bieżące bez salda';
     if (delta == null || Math.abs(delta) < 0.2) return `${c.label} — stabilnie`;
     if (c.kind === 'employment') return delta > 0 ? 'Bezrobocie rośnie' : 'Bezrobocie spada';
     return c.label;
@@ -144,6 +155,14 @@ export function jpSignalText(r: RankedSignal): string {
     }
     if (c.id === 'jp-gdp') {
         return `Wobec poprzedniego kwartału ${formatDecimalPL(last, 1)}%, nie w skali roku.`;
+    }
+    if (c.id === 'jp-trade') {
+        const side = last > 0 ? 'Nadwyżka' : last < 0 ? 'Deficyt' : 'Saldo';
+        const level = `${formatMldAmount(Math.abs(last))} mld jenów`;
+        const move = delta == null || Math.abs(delta) < 0.05
+            ? ''
+            : ` Wobec poprzedniego miesiąca ${delta > 0 ? '+' : '−'}${formatMldAmount(Math.abs(delta))} mld.`;
+        return `${side} ${level}.${move}`;
     }
     if (c.kind === 'cpi') {
         const target = c.target ?? BOJ_TARGET;

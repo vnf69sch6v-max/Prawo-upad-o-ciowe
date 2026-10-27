@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { dashboardUrl, parseDashboardData } from '@/lib/jp/stat-dashboard';
 import { formatDecimalPL, formatNumber } from '@/lib/formatters';
 import {
-    JP_TRADE_SERIES, expectedJpTrade, formatMldYen, nextTradeRelease, okuToMld, tradeSentence, type JpTradePayload,
+    JP_TRADE_SERIES, expectedJpTrade, formatMldYen, nextTradeRelease, okuToMld, tradeMldSeries, tradeSentence, type JpTradePayload,
 } from '@/lib/jp/trade';
 import { datasetById, extractJpTrade } from '@/lib/freshness';
 
@@ -36,6 +36,7 @@ describe('Japan balance of payments', () => {
         expect(s.name).toBe('経常収支');
         expect(s.points.at(-1)).toEqual({ date: '2026-08', value: 40620, provisional: true });
         expect(okuToMld(40620)).toBe(4062);
+        expect(tradeMldSeries(s.points).at(-1)).toEqual({ date: '2026-08', value: 4062 });
         expect(formatMldYen(40620)).toBe(formatNumber(4062, 0));
         expect(formatMldYen(-6877)).toBe(formatDecimalPL(-687.7, 1));
     });
