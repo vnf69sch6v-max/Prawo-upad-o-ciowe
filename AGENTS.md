@@ -173,6 +173,12 @@ Standard scripts in `package.json`:
   the 2020-base seasonal index, month-on-month as in the revised release
   (13:30 JST, not the 8:50 flash), plus year-on-year from the unadjusted index.
   Dates are `JP_IIP_FINAL_RELEASES` through January 2027 data on 19.03.2027.
+  The same page shows nominal retail sales (`/api/jp/retail`, cache
+  `jp_data/retail_v1`, freshness `jp-retail`): the published level is in
+  units of 1 billion yen. Year-on-year is computed from those levels only
+  when both months are on or after January 2025 (census break). The retail
+  final calendar is `JP_RETAIL_FINAL_RELEASES`, 13:30 JST, and it is not the
+  same dates as industrial production.
 - Header from `xl`: sections inline, search is an icon (⌘K still works) — with
   the 220 px field the row did not fit the 1440 px container.
 - Inside a `withCache(...)` fetcher, fetch upstream with `cache: 'no-store'`,

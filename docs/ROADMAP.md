@@ -115,9 +115,9 @@ J3. **Przegląd Japonii** — zrobione 27.10. `/japonia` rankinguje CPI, bezrobo
     (świeżość z kalendarzy Japonii, cel BOJ 2%). Inflacja jest na `/japonia/inflacja`.
 J4. **Płace w Japonii** — zrobione 27.10. Na `/japonia/praca` nominalne 3,9% i realne 1,6% za sierpień
     (komunikat końcowy, zakłady od 5 osób). Kalendarz 確報 w `src/lib/jp/wages.ts` sięga grudnia 2026.
-J5. **Gospodarka Japonii** — zrobione 27.10. `/japonia/gospodarka`: produkcja przemysłowa, baza 2020.
-    Sierpień 2026 (確報 15.10, 13:30): indeks 101,9, −2,4% m/m, +2,7% r/r. Kalendarz w `src/lib/jp/industry.ts`
-    sięga stycznia 2027. Zostaje sprzedaż i PKB.
+J5. **Gospodarka Japonii** — produkcja zrobiona 27.10 (`/japonia/gospodarka`: sierpień 101,9, −2,4% m/m).
+    Sprzedaż detaliczna też 27.10: 13 072 mld jenów, +2,9% r/r z poziomów (komunikat końcowy 15.10).
+    Zostaje PKB.
 
 ## Wymaga właściciela (nie da się z kodu)
 - **Płatna platforma — uruchomienie** (kod gotowy 25.10, bramka wyłączona do czasu flag):
@@ -202,6 +202,7 @@ J5. **Gospodarka Japonii** — zrobione 27.10. `/japonia/gospodarka`: produkcja 
 - **`GUS_BDL_KEY`** — wyższy limit BDL (rejestracja na api.stat.gov.pl).
 
 ## Zrobione
+- **27.10.2026 — Japonia: sprzedaż detaliczna.** Na `/japonia/gospodarka` pod produkcją: 13 072 mld jenów za sierpień 2026, +2,9% r/r liczone z poziomów po komunikacie końcowym z 15.10. Wstępne 13 052 mld i +2,7% nie wchodzą. Stopa wobec 2024 nie jest liczona — od stycznia 2025 jest nieciągłość po spisie. Świeżość `jp-retail`.
 - **27.10.2026 — Japonia: produkcja przemysłowa.** `/japonia/gospodarka`: indeks METI, baza 2020. Sierpień 2026 po korekcie: 101,9, −2,4% wobec lipca, +2,7% r/r. Wstępne −1,7% nie wchodzi. Świeżość `jp-industry`. Komunikat końcowy o 13:30 JST.
 - **27.10.2026 — Japonia: płace.** Na `/japonia/praca` płace z Monthly Labour Survey: nominalne 3,9% r/r i realne 1,6% r/r za sierpień 2026 (komunikat końcowy z 23.10, zakłady od 5 osób; realne wobec CPI bez czynszu właściciela). Wstępne 3,8% z 7.10 nie wchodzi. Świeżość `jp-wages`.
 - **27.10.2026 — Japonia: przegląd.** `/japonia` pokazuje dwa najważniejsze sygnały (świeżość publikacji × skala zmiany; jen i JGB tylko przy ruchu ≥2σ) oraz kafle CPI, bezrobocia, USD/JPY, stopy BOJ i JGB 10Y. Inflacja przeniesiona na `/japonia/inflacja`.
