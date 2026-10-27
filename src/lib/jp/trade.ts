@@ -7,7 +7,7 @@ import { formatDataPeriod, formatDecimalPL, formatNumber } from '@/lib/formatter
 import { jstDateKey } from './calendar';
 import type { DashboardPoint, DashboardQuery } from './stat-dashboard';
 
-export type JpTradeId = 'current' | 'primary' | 'trade' | 'services';
+export type JpTradeId = 'current' | 'primary' | 'trade' | 'services' | 'secondary';
 
 export interface JpTradeSeriesConfig {
     id: JpTradeId;
@@ -60,6 +60,16 @@ export const JP_TRADE_SERIES: JpTradeSeriesConfig[] = [
             unitIncludes: ['億円'],
         },
     },
+    {
+        id: 'secondary', label: 'Dochód wtórny', short: 'Dochód wtórny', color: '#B45309',
+        hint: 'Przekazy prywatne, darowizny i składki. Osobno od dywidend i odsetek.',
+        query: {
+            indicator: '1601010103000010010', rank: 2, region: '00000', from: '201801',
+            mustInclude: ['第二次所得収支'],
+            mustExclude: ['第一次', '季節調整値', '米ドル', '比率'],
+            unitIncludes: ['億円'],
+        },
+    },
 ];
 
 export const JP_TRADE_SOURCE = 'Ministry of Finance · Balance of Payments';
@@ -72,7 +82,7 @@ export interface JpTradePayload {
 }
 
 export function jpTradeIsEmpty(p: JpTradePayload | null | undefined): boolean {
-    return !p?.series?.current?.length || !p.series.primary?.length || !p.series.trade?.length || !p.series.services?.length;
+    return !p?.series?.current?.length || !p.series.primary?.length || !p.series.trade?.length || !p.series.services?.length || !p.series.secondary?.length;
 }
 
 export function lastTradePoint(points: DashboardPoint[] | undefined): DashboardPoint | null {
@@ -199,7 +209,15 @@ export function tradeSentence(p: JpTradePayload): string | null {
             : `, wobec roku wcześniej ${yoy > 0 ? 'więcej' : 'mniej'} o ${formatMldYen(Math.abs(yoy))} mld`;
         parts.push(`${capital(side(services.value))} usług ${verb(services.value)} ${formatMldYen(Math.abs(services.value))} mld jenów${yoyBit}`);
     }
-    const shown = [current, primary, trade, services].filter((x): x is DashboardPoint => x != null);
+    const secondary = sameMonth(p.series.secondary, current.date);
+    if (secondary) {
+        const yoy = balanceYoyOku(p.series.secondary, current.date);
+        const yoyBit = yoy == null || yoy === 0 ? '' : secondary.value < 0
+            ? `, o ${formatMldYen(Math.abs(yoy))} mld ${yoy > 0 ? 'mniejszy' : 'większy'} niż rok wcześniej`
+            : `, wobec roku wcześniej ${yoy > 0 ? 'więcej' : 'mniej'} o ${formatMldYen(Math.abs(yoy))} mld`;
+        parts.push(`${capital(side(secondary.value))} dochodu wtórnego ${verb(secondary.value)} ${formatMldYen(Math.abs(secondary.value))} mld jenów${yoyBit}`);
+    }
+    const shown = [current, primary, trade, services, secondary].filter((x): x is DashboardPoint => x != null);
     const provisional = shown.filter((x) => x.provisional).length;
     const tag = provisional === 0 ? '' : provisional === shown.length && shown.length > 1 ? ' Odczyty są wstępne.' : ' Odczyt jest wstępny.';
     return `Dane za ${formatDataPeriod(current.date)}: ${parts.join('. ')}.${tag}`;

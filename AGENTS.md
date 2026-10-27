@@ -216,13 +216,14 @@ Standard scripts in `package.json`:
   to the total. MLIT publishes at 14:00 JST.
   `JP_HOUSING_RELEASES` has August (30.09.2026) and September (30.10.2026);
   extend it before December 2026. The same page shows the balance of
-  payments (`/api/jp/trade`, cache `jp_data/trade_v3`, freshness `jp-trade`):
+  payments (`/api/jp/trade`, cache `jp_data/trade_v4`, freshness `jp-trade`):
   current account, primary income, goods trade and services, not seasonally
   adjusted, in 億円 (divide by 10 for billions of yen). August 2026 preliminary
   (8 Oct, 8:50 JST) is a 4,062 billion yen surplus, a 5,133.2 billion yen
   primary-income surplus (+910.5 billion versus August 2025), a 687.7 billion
-  yen trade deficit and a 115.8 billion yen services deficit (150.9 billion
-  smaller than August 2025). The points stay `provisional`. The services name
+  yen trade deficit, a 115.8 billion yen services deficit (150.9 billion
+  smaller than August 2025) and a 267.7 billion yen secondary-income deficit
+  (174 billion smaller than August 2025). The points stay `provisional`. The services name
   must exclude 貿易, because 貿易・サービス収支 contains サービス収支. Dates are
   `JP_BOP_RELEASES` at 8:50 JST through January
   2027 data on 08.03.2027. Extend that map before April 2027.
