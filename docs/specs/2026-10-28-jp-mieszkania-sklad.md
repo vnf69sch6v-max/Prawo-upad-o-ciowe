@@ -31,3 +31,7 @@ Cache `jp_data/housing_v2`. Ta sama trasa i świeżość.
 2. Stopy rok do roku: 1,0, 6,5 i 6,4.
 3. Najem odrzucony konfiguracją domów własnych.
 4. `tsc` i `npm test` zielone.
+
+## Recenzja
+
+Sierpień: 17 713 (+1,0%), 28 309 (+6,5%), 16 838 (+6,4%). Telefon 320 bez przewijania w bok, trzy grupy widoczne. Werdykt: SHIP.
