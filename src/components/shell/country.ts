@@ -14,7 +14,7 @@ export interface CountryInfo {
 
 export const COUNTRIES: CountryInfo[] = [
     { id: 'pl', label: 'Polska', code: 'PL', home: '/', hint: 'GUS, NBP, Eurostat, GPW' },
-    { id: 'jp', label: 'Japonia', code: 'JP', home: '/japonia', hint: 'Inflacja, praca i rynki · jen, stopa BOJ' },
+    { id: 'jp', label: 'Japonia', code: 'JP', home: '/japonia', hint: 'Przegląd, inflacja, praca i rynki' },
 ];
 
 export const JP_ROOT = '/japonia';

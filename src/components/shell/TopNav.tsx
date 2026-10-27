@@ -21,9 +21,10 @@ export const NAV_ITEMS: NavItem[] = [
     { label: 'Parser', href: '/parser', icon: FileBarChart2, hint: 'Liczby ze sprawozdań spółek' },
 ];
 
-/** Japonia — sekcje dochodzą krok po kroku (na start inflacja). */
+/** Japonia — przegląd jest stroną kraju, tak jak `/` w Polsce. */
 export const JP_NAV_ITEMS: NavItem[] = [
-    { label: 'Inflacja', href: '/japonia', icon: Tag, hint: 'CPI, bazowa, Tokio, wkłady grup' },
+    { label: 'Przegląd', href: '/japonia', icon: LayoutDashboard, hint: 'Najważniejsza zmiana dnia' },
+    { label: 'Inflacja', href: '/japonia/inflacja', icon: Tag, hint: 'CPI, bazowa, Tokio, wkłady grup' },
     { label: 'Rynki', href: '/japonia/rynki', icon: TrendingUp, hint: 'Jen, stopa BOJ, JGB 10Y' },
     { label: 'Praca', href: '/japonia/praca', icon: Users, hint: 'Stopa bezrobocia, Labour Force Survey' },
 ];
