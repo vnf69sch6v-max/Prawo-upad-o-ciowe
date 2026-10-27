@@ -117,7 +117,7 @@ J4. **Płace w Japonii** — zrobione 27.10. Na `/japonia/praca` nominalne 3,9% 
     (komunikat końcowy, zakłady od 5 osób). Kalendarz 確報 w `src/lib/jp/wages.ts` sięga grudnia 2026.
 J5. **Gospodarka Japonii** — produkcja zrobiona 27.10 (`/japonia/gospodarka`: sierpień 101,9, −2,4% m/m).
     Sprzedaż detaliczna też 27.10: 13 072 mld jenów, +2,9% r/r z poziomów (komunikat końcowy 15.10).
-    Zostaje PKB.
+    PKB też 27.10: II kwartał 2026, drugi komunikat, realny +0,4% i nominalny +1,3% wobec poprzedniego kwartału.
 
 ## Wymaga właściciela (nie da się z kodu)
 - **Płatna platforma — uruchomienie** (kod gotowy 25.10, bramka wyłączona do czasu flag):
@@ -202,6 +202,7 @@ J5. **Gospodarka Japonii** — produkcja zrobiona 27.10 (`/japonia/gospodarka`: 
 - **`GUS_BDL_KEY`** — wyższy limit BDL (rejestracja na api.stat.gov.pl).
 
 ## Zrobione
+- **27.10.2026 — Japonia: PKB.** Na `/japonia/gospodarka` pod sprzedażą: II kwartał 2026, drugi komunikat z 8.09. Realny +0,4% i nominalny +1,3% wobec poprzedniego kwartału (nie w skali roku). Świeżość `jp-gdp`. III kwartał, drugi komunikat: 8 grudnia.
 - **27.10.2026 — Japonia: sprzedaż detaliczna.** Na `/japonia/gospodarka` pod produkcją: 13 072 mld jenów za sierpień 2026, +2,9% r/r liczone z poziomów po komunikacie końcowym z 15.10. Wstępne 13 052 mld i +2,7% nie wchodzą. Stopa wobec 2024 nie jest liczona — od stycznia 2025 jest nieciągłość po spisie. Świeżość `jp-retail`.
 - **27.10.2026 — Japonia: produkcja przemysłowa.** `/japonia/gospodarka`: indeks METI, baza 2020. Sierpień 2026 po korekcie: 101,9, −2,4% wobec lipca, +2,7% r/r. Wstępne −1,7% nie wchodzi. Świeżość `jp-industry`. Komunikat końcowy o 13:30 JST.
 - **27.10.2026 — Japonia: płace.** Na `/japonia/praca` płace z Monthly Labour Survey: nominalne 3,9% r/r i realne 1,6% r/r za sierpień 2026 (komunikat końcowy z 23.10, zakłady od 5 osób; realne wobec CPI bez czynszu właściciela). Wstępne 3,8% z 7.10 nie wchodzi. Świeżość `jp-wages`.

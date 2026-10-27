@@ -25,8 +25,10 @@ export interface DashboardQuery {
     rank: DashboardRank;
     /** Kod regionu: „00000" = Japonia, „13100" = 23 dzielnice Tokio (特別区部). */
     region: string;
-    /** Pierwszy miesiąc historii, YYYYMM. */
+    /** Pierwszy okres: `YYYYMM` (miesiąc) albo `YYYY-Q[1-4]` (kwartał). */
     from: string;
+    /** Domyślnie miesiąc. Kwartał to PKB (`Cycle=2`, czas `20262Q00`). */
+    cycle?: 'quarter';
     /** Fragmenty, które MUSI zawierać nazwa serii zwrócona przez API (np. „2025年基準"). */
     mustInclude: string[];
     /** Fragmenty, których w nazwie być nie może (surowa stopa nie może być szeregiem sezonowym). */
@@ -38,7 +40,7 @@ export interface DashboardQuery {
 }
 
 export interface DashboardPoint {
-    /** YYYY-MM */
+    /** `YYYY-MM` albo `YYYY-Q[1-4]`. */
     date: string;
     value: number;
     /** Odczyt wstępny (速報), np. CPI Tokio z końca miesiąca, zanim przyjdą dane końcowe. */
@@ -52,15 +54,22 @@ export interface DashboardSeries {
     points: DashboardPoint[];
 }
 
+function timeFrom(q: DashboardQuery): string {
+    if (q.cycle !== 'quarter') return `${q.from}00`;
+    const m = q.from.match(/^(\d{4})-Q([1-4])$/);
+    if (!m) throw new Error(`Statistics Dashboard: zły kwartał początkowy „${q.from}"`);
+    return `${m[1]}${m[2]}Q00`;
+}
+
 export function dashboardUrl(q: DashboardQuery): string {
     const p = new URLSearchParams({
         Lang: 'JP',
         IndicatorCode: q.indicator,
-        Cycle: '1', // miesięcznie
+        Cycle: q.cycle === 'quarter' ? '2' : '1',
         RegionalRank: String(q.rank),
         RegionCode: q.region,
         IsSeasonalAdjustment: q.seasonal ? '2' : '1', // 1 = surowe (原数値), 2 = wyrównane sezonowo
-        TimeFrom: `${q.from}00`,
+        TimeFrom: timeFrom(q),
         MetaGetFlg: 'Y', // nazwa serii do walidacji
         SectionHeaderFlg: '2',
     });
@@ -71,9 +80,14 @@ type Obj = Record<string, unknown>;
 const asObj = (v: unknown): Obj | null => (v && typeof v === 'object' && !Array.isArray(v) ? (v as Obj) : null);
 const asArray = <T,>(v: T | T[] | undefined | null): T[] => (v == null ? [] : Array.isArray(v) ? v : [v]);
 
-/** „20260900" → „2026-09". */
-function monthOf(time: unknown): string | null {
-    const m = typeof time === 'string' ? time.match(/^(\d{4})(\d{2})00$/) : null;
+/** „20260900" → „2026-09". „20262Q00" → „2026-Q2". */
+function periodOf(time: unknown, quarter: boolean): string | null {
+    if (typeof time !== 'string') return null;
+    if (quarter) {
+        const q = time.match(/^(\d{4})([1-4])Q00$/);
+        return q ? `${q[1]}-Q${q[2]}` : null;
+    }
+    const m = time.match(/^(\d{4})(\d{2})00$/);
     return m && +m[2] >= 1 && +m[2] <= 12 ? `${m[1]}-${m[2]}` : null;
 }
 
@@ -130,7 +144,7 @@ export function parseDashboardData(json: unknown, q: DashboardQuery): DashboardS
         if (v['@isSeasonal'] !== wantSeasonal) {
             throw new Error(`Statistics Dashboard: punkt ${String(v['@time'])} serii ${q.indicator} ma @isSeasonal „${String(v['@isSeasonal'])}", oczekiwano „${wantSeasonal}"`);
         }
-        const date = monthOf(v['@time']);
+        const date = periodOf(v['@time'], q.cycle === 'quarter');
         const value = typeof v.$ === 'string' && v.$.trim() !== '' ? Number(v.$) : NaN;
         if (!date || !Number.isFinite(value)) continue; // „-", „***" = brak wartości
         const provisional = v['@isProvisional'] === '1';

@@ -178,7 +178,11 @@ Standard scripts in `package.json`:
   units of 1 billion yen. Year-on-year is computed from those levels only
   when both months are on or after January 2025 (census break). The retail
   final calendar is `JP_RETAIL_FINAL_RELEASES`, 13:30 JST, and it is not the
-  same dates as industrial production.
+  same dates as industrial production. `/api/jp/gdp` (cache `jp_data/gdp_v1`,
+  freshness `jp-gdp`) is real and nominal GDP, quarter-on-quarter, 2020 base,
+  seasonally adjusted — the Cabinet Office headline, not the annualised rate.
+  Quarterly `TimeFrom` is `20262Q00` (`Cycle=2`). Second-estimate dates are
+  `JP_GDP_SECOND_RELEASES` at 8:50 JST.
 - Header from `xl`: sections inline, search is an icon (⌘K still works) — with
   the 220 px field the row did not fit the 1440 px container.
 - Inside a `withCache(...)` fetcher, fetch upstream with `cache: 'no-store'`,
