@@ -7,7 +7,7 @@ import { formatDataPeriod, formatDecimalPL, formatNumber } from '@/lib/formatter
 import { jstDateKey } from './calendar';
 import type { DashboardPoint, DashboardQuery } from './stat-dashboard';
 
-export type JpTradeId = 'current' | 'trade';
+export type JpTradeId = 'current' | 'primary' | 'trade';
 
 export interface JpTradeSeriesConfig {
     id: JpTradeId;
@@ -22,11 +22,21 @@ export interface JpTradeSeriesConfig {
 export const JP_TRADE_SERIES: JpTradeSeriesConfig[] = [
     {
         id: 'current', label: 'Obroty bieżące', short: 'Obroty bieżące', color: '#DC2626',
-        hint: 'Suma towarów, usług i dochodów. Pierwsza linia komunikatu Ministerstwa Finansów.',
+        hint: 'Suma towarów, usług i dochodów. W sierpniowym komunikacie nadwyżka urosła, bo urósł dochód pierwotny.',
         query: {
             indicator: '1601010100000010000', rank: 2, region: '00000', from: '201801',
             mustInclude: ['経常収支'],
             mustExclude: ['米ドル', '比率', '季節調整値'],
+            unitIncludes: ['億円'],
+        },
+    },
+    {
+        id: 'primary', label: 'Dochód pierwotny', short: 'Dochód pierwotny', color: '#0F766E',
+        hint: 'Dywidendy, odsetki i zyski z inwestycji za granicą. Szereg nie jest wyrównany sezonowo, więc miesiące dywidend odstają od sąsiadów.',
+        query: {
+            indicator: '1601010102000010010', rank: 2, region: '00000', from: '201801',
+            mustInclude: ['第一次所得収支'],
+            mustExclude: ['第二次', '季節調整値', '米ドル', '比率'],
             unitIncludes: ['億円'],
         },
     },
@@ -52,7 +62,7 @@ export interface JpTradePayload {
 }
 
 export function jpTradeIsEmpty(p: JpTradePayload | null | undefined): boolean {
-    return !p?.series?.current?.length || !p.series.trade?.length;
+    return !p?.series?.current?.length || !p.series.primary?.length || !p.series.trade?.length;
 }
 
 export function lastTradePoint(points: DashboardPoint[] | undefined): DashboardPoint | null {
@@ -133,17 +143,41 @@ function capital(word: string): string {
     return word.charAt(0).toUpperCase() + word.slice(1);
 }
 
+function sameMonth(points: DashboardPoint[] | undefined, date: string): DashboardPoint | null {
+    return points?.find((p) => p.date === date) ?? null;
+}
+
+/** Różnica dochodu pierwotnego wobec tego samego miesiąca rok wcześniej, w 億円. */
+export function primaryIncomeYoyOku(points: DashboardPoint[] | undefined, period?: string): number | null {
+    const last = period ? points?.find((p) => p.date === period) : lastTradePoint(points);
+    if (!last) return null;
+    const prevDate = last.date.replace(/^(\d{4})/, (y) => String(Number(y) - 1));
+    if (prevDate === last.date) return null;
+    const prev = points?.find((p) => p.date === prevDate);
+    if (!prev) return null;
+    return last.value - prev.value;
+}
+
 export function tradeSentence(p: JpTradePayload): string | null {
     const current = lastTradePoint(p.series.current);
     if (!current) return null;
-    const trade = lastTradePoint(p.series.trade);
-    const same = trade && trade.date === current.date ? trade : null;
-    const lead = `${side(current.value)} obrotów bieżących ${verb(current.value)} ${formatMldYen(Math.abs(current.value))} mld jenów`;
-    const rest = same
-        ? ` ${capital(side(same.value))} handlu towarami ${verb(same.value)} ${formatMldYen(Math.abs(same.value))} mld jenów.`
-        : '';
-    const both = Boolean(same && current.provisional && same.provisional);
-    const one = !both && (current.provisional || Boolean(same?.provisional));
-    const tag = both ? ' Oba odczyty są wstępne.' : one ? ' Odczyt jest wstępny.' : '';
-    return `Dane za ${formatDataPeriod(current.date)}: ${lead}.${rest}${tag}`;
+    const parts = [
+        `${side(current.value)} obrotów bieżących ${verb(current.value)} ${formatMldYen(Math.abs(current.value))} mld jenów`,
+    ];
+    const primary = sameMonth(p.series.primary, current.date);
+    const trade = sameMonth(p.series.trade, current.date);
+    if (primary) {
+        const yoy = primaryIncomeYoyOku(p.series.primary, current.date);
+        const yoyBit = yoy != null && yoy !== 0
+            ? `, wobec roku wcześniej ${yoy > 0 ? 'więcej' : 'mniej'} o ${formatMldYen(Math.abs(yoy))} mld`
+            : '';
+        parts.push(`${capital(side(primary.value))} dochodu pierwotnego ${verb(primary.value)} ${formatMldYen(Math.abs(primary.value))} mld jenów${yoyBit}`);
+    }
+    if (trade) {
+        parts.push(`${capital(side(trade.value))} handlu towarami ${verb(trade.value)} ${formatMldYen(Math.abs(trade.value))} mld jenów`);
+    }
+    const shown = [current, primary, trade].filter((x): x is DashboardPoint => x != null);
+    const provisional = shown.filter((x) => x.provisional).length;
+    const tag = provisional === 0 ? '' : provisional === shown.length && shown.length > 1 ? ' Odczyty są wstępne.' : ' Odczyt jest wstępny.';
+    return `Dane za ${formatDataPeriod(current.date)}: ${parts.join('. ')}.${tag}`;
 }
