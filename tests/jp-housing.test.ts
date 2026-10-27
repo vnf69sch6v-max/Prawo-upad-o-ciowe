@@ -8,7 +8,7 @@ import {
 import { datasetById, extractJpHousing } from '@/lib/freshness';
 
 const fixture = (name: string) => JSON.parse(readFileSync(`tests/fixtures/jp/${name}.json`, 'utf8'));
-const cfg = (id: 'count' | 'annual' | 'owner' | 'rent' | 'sale') => JP_HOUSING_SERIES.find((s) => s.id === id)!.query;
+const cfg = (id: 'count' | 'annual' | 'owner' | 'rent' | 'sale' | 'company') => JP_HOUSING_SERIES.find((s) => s.id === id)!.query;
 
 describe('Japan housing starts', () => {
     it('reads the August count and the 6.1% rise versus a year earlier', () => {
@@ -43,6 +43,27 @@ describe('Japan housing starts', () => {
         expect(() => parseDashboardData(fixture('dashboard-housing-rent'), cfg('owner'))).toThrow(/持家/);
     });
 
+    it('reads company housing, 1,114 in August, up 228.6%', () => {
+        const s = parseDashboardData(fixture('dashboard-housing-company'), cfg('company'));
+        expect(s.name).toBe('新設住宅着工戸数（給与住宅）');
+        expect(s.points.find((p) => p.date === '2026-08')?.value).toBe(1114);
+        expect(s.points.find((p) => p.date === '2025-08')?.value).toBe(339);
+        expect(housingYoy(s.points, '2026-08')).toBe(228.6);
+        expect(() => parseDashboardData(fixture('dashboard-housing-owner'), cfg('company'))).toThrow(/給与住宅/);
+        const payload = {
+            series: {
+                count: [{ date: '2026-08', value: 63974 }],
+                annual: [], owner: [], rent: [], sale: [],
+                company: s.points,
+            },
+            names: { count: '', annual: '', owner: '', rent: '', sale: '', company: '' },
+            source: '', fetchedAt: '',
+        } satisfies JpHousingPayload;
+        expect(housingSentence(payload)).toBe(
+            `Dane za sierpień 2026: rozpoczęto budowę ${formatNumber(63974, 0)} mieszkań. Mieszkania służbowe: ${formatNumber(1114, 0)}, o 228,6% więcej niż rok wcześniej.`,
+        );
+    });
+
     it('switches at 14:00 JST on the release day', () => {
         expect(expectedJpHousing(new Date('2026-09-30T04:59:00Z'))).toBe('2026-07');
         expect(expectedJpHousing(new Date('2026-09-30T05:00:00Z'))).toBe('2026-08');
@@ -57,9 +78,9 @@ describe('Japan housing starts', () => {
             series: {
                 count: [{ date: '2025-08', value: 60275 }, { date: '2026-08', value: 63974 }],
                 annual: [{ date: '2026-07', value: 773916 }, { date: '2026-08', value: 753108 }],
-                owner: [], rent: [], sale: [],
+                owner: [], rent: [], sale: [], company: [],
             },
-            names: { count: '', annual: '', owner: '', rent: '', sale: '' },
+            names: { count: '', annual: '', owner: '', rent: '', sale: '', company: '' },
             source: '',
             fetchedAt: '',
         } satisfies JpHousingPayload;

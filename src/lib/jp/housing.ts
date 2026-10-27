@@ -5,7 +5,7 @@ import { formatDataPeriod, formatDecimalPL, formatNumber } from '@/lib/formatter
 import { jstDateKey } from './calendar';
 import type { DashboardPoint, DashboardQuery } from './stat-dashboard';
 
-export type JpHousingId = 'count' | 'annual' | 'owner' | 'rent' | 'sale';
+export type JpHousingId = 'count' | 'annual' | 'owner' | 'rent' | 'sale' | 'company';
 
 const TOTAL = ['新設住宅着工戸数（総戸数）'];
 
@@ -60,6 +60,15 @@ export const JP_HOUSING_SERIES: JpHousingSeriesConfig[] = [
             unitIncludes: ['戸'],
         },
     },
+    {
+        id: 'company',
+        query: {
+            indicator: '0802010103010010040', rank: 2, region: '00000', from: '201801',
+            mustInclude: ['新設住宅着工戸数（給与住宅）'],
+            mustExclude: ['前年', '年率', '季調', '持家', '貸家', '分譲'],
+            unitIncludes: ['戸'],
+        },
+    },
 ];
 
 export const JP_HOUSING_SOURCE = 'Ministry of Land, Infrastructure, Transport and Tourism · Housing Starts';
@@ -72,7 +81,7 @@ export interface JpHousingPayload {
 }
 
 export function jpHousingIsEmpty(p: JpHousingPayload | null | undefined): boolean {
-    return !p?.series?.count?.length || !p.series.annual?.length || !p.series.owner?.length || !p.series.rent?.length || !p.series.sale?.length;
+    return !p?.series?.count?.length || !p.series.annual?.length || !p.series.owner?.length || !p.series.rent?.length || !p.series.sale?.length || !p.series.company?.length;
 }
 
 export function lastHousingPoint(points: DashboardPoint[] | undefined): DashboardPoint | null {
@@ -157,5 +166,11 @@ export function housingSentence(p: JpHousingPayload): string | null {
     const pace = annual && annual.date === count.date
         ? ` W skali roku, po wyrównaniu sezonowym: ${formatNumber(annual.value, 0)} mieszkań${mom == null ? '' : mom === 0 ? ', bez zmian wobec poprzedniego miesiąca' : `, ${mom > 0 ? 'więcej' : 'mniej'} o ${formatDecimalPL(Math.abs(mom), 1)}% niż w poprzednim miesiącu`}.`
         : '';
-    return `Dane za ${period}: rozpoczęto budowę ${formatNumber(count.value, 0)} mieszkań${yoyBit}.${pace}`;
+    const company = lastHousingPoint(p.series.company);
+    const companySame = company && company.date === count.date ? company : null;
+    const companyYoy = companySame ? housingYoy(p.series.company, companySame.date) : null;
+    const companyBit = companySame
+        ? ` Mieszkania służbowe: ${formatNumber(companySame.value, 0)}${companyYoy == null ? '' : companyYoy === 0 ? ', tyle samo co rok wcześniej' : `, o ${formatDecimalPL(Math.abs(companyYoy), 1)}% ${companyYoy > 0 ? 'więcej' : 'mniej'} niż rok wcześniej`}.`
+        : '';
+    return `Dane za ${period}: rozpoczęto budowę ${formatNumber(count.value, 0)} mieszkań${yoyBit}.${pace}${companyBit}`;
 }

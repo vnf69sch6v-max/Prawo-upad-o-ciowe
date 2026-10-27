@@ -41,12 +41,12 @@ export function JpHousing({ initial }: { initial: JpHousingPayload | null }) {
     const sameAnnual = annual && count && annual.date === count.date ? annual : null;
     const yoy = housingYoy(data.series.count);
     const mom = sameAnnual ? housingAnnMom(data.series.annual) : null;
-    const parts = (['owner', 'rent', 'sale'] as const).map((id) => {
+    const parts = (['owner', 'rent', 'sale', 'company'] as const).map((id) => {
         const point = lastHousingPoint(data.series[id]);
         const same = point && count && point.date === count.date ? point : null;
         return { id, point: same, yoy: same ? housingYoy(data.series[id], same.date) : null };
     });
-    const partLabel = { owner: 'Własne', rent: 'Na wynajem', sale: 'Na sprzedaż' };
+    const partLabel = { owner: 'Własne', rent: 'Na wynajem', sale: 'Na sprzedaż', company: 'Służbowe' };
     const next = isClient ? nextHousingRelease(new Date()) : null;
     const headline = yoy == null
         ? 'Nowe mieszkania'
@@ -117,7 +117,7 @@ export function JpHousing({ initial }: { initial: JpHousingPayload | null }) {
                 <ul className="space-y-2.5 text-sm leading-relaxed text-mk-text-soft">
                     <li><strong className="font-semibold text-mk-text">Rok do roku</strong> — liczba mieszkań, których budowę rozpoczęto w tym miesiącu, wobec tego samego miesiąca rok wcześniej. Taką stopę podaje ministerstwo w pierwszym zdaniu komunikatu.</li>
                     <li><strong className="font-semibold text-mk-text">Skala roku</strong> — to samo tempo po zdjęciu sezonu i przeliczeniu na rok. Porównanie z poprzednim miesiącem ma sens dopiero na tej liczbie.</li>
-                    <li><strong className="font-semibold text-mk-text">Trzy grupy</strong> — dom na własne potrzeby, mieszkanie na wynajem i lokal na sprzedaż. Reszta łącznej liczby to mieszkania służbowe.</li>
+                    <li><strong className="font-semibold text-mk-text">Cztery grupy</strong> — dom na własne potrzeby, mieszkanie na wynajem, lokal na sprzedaż i mieszkanie służbowe. Te cztery liczby sumują się do łącznej. Służbowe to mała seria, więc procent rok do roku bywa bardzo duży.</li>
                     <li>Mieszkanie w tym zestawieniu to lokal z własnym wejściem, nie cała kamienica.</li>
                 </ul>
             </SectionCard>

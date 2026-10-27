@@ -2,7 +2,7 @@ import { peekServerCache, withCache } from '@/lib/server-cache';
 import { fetchDashboardSeries, type DashboardPoint } from './stat-dashboard';
 import { JP_HOUSING_SERIES, JP_HOUSING_SOURCE, jpHousingIsEmpty, type JpHousingId, type JpHousingPayload } from './housing';
 
-const CACHE = { collection: 'jp_data', doc: 'housing_v2' } as const;
+const CACHE = { collection: 'jp_data', doc: 'housing_v3' } as const;
 const USER_TTL_MS = 6 * 3_600_000;
 
 export async function fetchJpHousing(): Promise<JpHousingPayload> {
