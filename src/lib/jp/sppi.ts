@@ -4,7 +4,7 @@
 import { formatDataPeriod, formatDecimalPL } from '@/lib/formatters';
 import { jstDateKey } from './calendar';
 
-export type JpSppiId = 'yoy' | 'index';
+export type JpSppiId = 'yoy' | 'index' | 'exYoy';
 
 export interface JpSppiSeriesConfig {
     id: JpSppiId;
@@ -25,6 +25,11 @@ export const JP_SPPI_SERIES: JpSppiSeriesConfig[] = [
         mustInclude: ['All items', 'CY2020 average=100'],
         mustExclude: ['Year-on-year', 'excluding', 'labor'],
     },
+    {
+        id: 'exYoy', db: 'PR02', code: 'PRCS20_52B0000000%',
+        mustInclude: ['excluding International transportation', 'Year-on-year', '%'],
+        mustExclude: ['labor'],
+    },
 ];
 
 export const JP_SPPI_SOURCE = 'Bank of Japan · Services Producer Price Index';
@@ -43,7 +48,7 @@ export interface JpSppiPayload {
 }
 
 export function jpSppiIsEmpty(p: JpSppiPayload | null | undefined): boolean {
-    return !p?.series?.yoy?.length || !p.series.index?.length;
+    return !p?.series?.yoy?.length || !p.series.index?.length || !p.series.exYoy?.length;
 }
 
 export function sppiDataUrl(cfg: JpSppiSeriesConfig, startMonth: string, endMonth: string): string {
@@ -160,5 +165,26 @@ export function sppiSentence(p: JpSppiPayload): string | null {
     const month = mom == null ? '' : mom > 0
         ? ` Wobec poprzedniego miesiąca indeks wzrósł o ${formatDecimalPL(mom, 1)}%.`
         : mom < 0 ? ` Wobec poprzedniego miesiąca indeks spadł o ${formatDecimalPL(Math.abs(mom), 1)}%.` : ' Wobec poprzedniego miesiąca indeks się nie zmienił.';
-    return `Dane za ${period}: ${rate}.${level}${month} Odczyt jest wstępny.`;
+    return `Dane za ${period}: ${rate}.${level}${month}${exTransportClause(p, yoy.date)} Odczyt jest wstępny.`;
+}
+
+function signedPct(v: number): string {
+    return `${v > 0 ? '+' : ''}${formatDecimalPL(v, 1)}%`;
+}
+
+/** Rok do roku bez transportu międzynarodowego, gdy dotyczy tego samego miesiąca co nagłówek. */
+function exTransportClause(p: JpSppiPayload, yoyDate: string): string {
+    const points = p.series.exYoy;
+    if (!points?.length) return '';
+    const last = points[points.length - 1];
+    if (last.date !== yoyDate) return '';
+    const prev = points.length > 1 ? points[points.length - 2] : null;
+    const rate = signedPct(last.value);
+    if (prev && consecutive(prev.date, last.date) && prev.value === last.value) {
+        return ` Bez transportu międzynarodowego: ${rate}, tyle samo co miesiąc wcześniej.`;
+    }
+    if (prev && consecutive(prev.date, last.date)) {
+        return ` Bez transportu międzynarodowego: ${rate} (miesiąc wcześniej ${signedPct(prev.value)}).`;
+    }
+    return ` Bez transportu międzynarodowego: ${rate}.`;
 }

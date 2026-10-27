@@ -5,7 +5,7 @@ import {
     type JpSppiId, type JpSppiPayload, type JpSppiPoint,
 } from './sppi';
 
-const CACHE = { collection: 'jp_data', doc: 'sppi_v1' } as const;
+const CACHE = { collection: 'jp_data', doc: 'sppi_v2' } as const;
 const USER_TTL_MS = 6 * 3_600_000;
 
 async function fetchOne(id: JpSppiId, now: Date): Promise<{ name: string; points: JpSppiPoint[] }> {

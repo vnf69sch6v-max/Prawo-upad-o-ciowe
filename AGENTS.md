@@ -140,9 +140,11 @@ Standard scripts in `package.json`:
   preliminary is +6.8% year on year, index 135.7 on the 2020 base, −0.3% on the
   month. The BOJ release is 8:50 JST (`JP_CGPI_RELEASES`; October data on
   12.11.2026). Extend that map before December 2026. The same page shows
-  services producer prices (`/api/jp/sppi`, cache `jp_data/sppi_v1`, freshness
+  services producer prices (`/api/jp/sppi`, cache `jp_data/sppi_v2`, freshness
   `jp-sppi`) from the BOJ Time-Series API: September 2026 preliminary, released
-  27.10 at 8:50 JST, is +3.7% year on year, index 115.5. Monthly dates in that
+  27.10 at 8:50 JST, is +3.7% year on year, index 115.5. The same release
+  excluding international transportation is +2.9%, unchanged from August
+  (code `PRCS20_52B0000000%`). Monthly dates in that
   API are `YYYYMM`. The newest month is the preliminary print. `JP_SPPI_RELEASES`
   stops at September 2026; add October's date when the Bank posts it. The country comes only from the URL
   (`countryOf()` in `src/components/shell/country.ts`); header switch
