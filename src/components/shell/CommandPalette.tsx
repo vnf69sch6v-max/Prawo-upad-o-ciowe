@@ -36,6 +36,7 @@ const COMMANDS: Cmd[] = [
     { id: 'jp-home', group: 'Wskaźniki', label: 'Przegląd Japonii', sub: 'Japonia', keywords: 'japonia japan przegląd hero', href: '/japonia', icon: LayoutDashboard },
     { id: 'jp-cpi', group: 'Wskaźniki', label: 'Inflacja w Japonii', sub: 'Japonia', keywords: 'japonia japan cpi boj bank japonii tokio jen inflacja bazowa ceny producenta cgpi ceny usług sppi transport międzynarodowy fracht', href: '/japonia/inflacja', icon: TrendingUp },
     { id: 'jp-industry', group: 'Wskaźniki', label: 'Produkcja przemysłowa w Japonii', sub: 'Japonia', keywords: 'japonia produkcja przemysł meti iip przemysłowa', href: '/japonia/gospodarka', icon: Factory },
+    { id: 'jp-tankan', group: 'Wskaźniki', label: 'Nastroje firm w Japonii', sub: 'Japonia', keywords: 'japonia tankan nastroje koniunktura di bank japonii firmy', href: '/japonia/gospodarka', icon: Building2 },
     { id: 'jp-tertiary', group: 'Wskaźniki', label: 'Aktywność usług w Japonii', sub: 'Japonia', keywords: 'japonia usługi trzeci sektor meti tertiary services aktywność', href: '/japonia/gospodarka', icon: Briefcase },
     { id: 'jp-trade', group: 'Wskaźniki', label: 'Handel Japonii', sub: 'Japonia', keywords: 'japonia handel bilans płatniczy obroty bieżące deficyt eksport import mof dochód wtórny transfery', href: '/japonia/gospodarka', icon: Scale },
     { id: 'jp-markets', group: 'Wskaźniki', label: 'Rynki Japonii', sub: 'Japonia', keywords: 'japonia jen jpy usd dolar stopa boj call overnight jgb', href: '/japonia/rynki', icon: TrendingUp },

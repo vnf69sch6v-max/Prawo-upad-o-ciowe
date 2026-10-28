@@ -5,6 +5,7 @@ import { JpOrders } from '@/components/jp/JpOrders';
 import { JpIndustry } from '@/components/jp/JpIndustry';
 import { JpRetail } from '@/components/jp/JpRetail';
 import { JpTertiary } from '@/components/jp/JpTertiary';
+import { JpTankan } from '@/components/jp/JpTankan';
 import { JpTrade } from '@/components/jp/JpTrade';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { gdpSentence } from '@/lib/jp/gdp';
@@ -19,6 +20,8 @@ import { tertiarySentence } from '@/lib/jp/tertiary';
 import { peekJpTertiary } from '@/lib/jp/tertiary-server';
 import { retailSentence } from '@/lib/jp/retail';
 import { peekJpRetail } from '@/lib/jp/retail-server';
+import { tankanSentence } from '@/lib/jp/tankan';
+import { peekJpTankan } from '@/lib/jp/tankan-server';
 import { tradeSentence } from '@/lib/jp/trade';
 import { peekJpTrade } from '@/lib/jp/trade-server';
 import { SITE_URL } from '@/lib/internal-fetch';
@@ -26,13 +29,14 @@ import { SITE_URL } from '@/lib/internal-fetch';
 export const revalidate = 1800;
 
 export async function generateMetadata(): Promise<Metadata> {
-    const [industry, tertiary, retail, gdp, orders, housing, trade] = await Promise.all([
+    const [industry, tertiary, retail, gdp, orders, housing, tankan, trade] = await Promise.all([
         peekJpIndustry().catch(() => null),
         peekJpTertiary().catch(() => null),
         peekJpRetail().catch(() => null),
         peekJpGdp().catch(() => null),
         peekJpOrders().catch(() => null),
         peekJpHousing().catch(() => null),
+        peekJpTankan().catch(() => null),
         peekJpTrade().catch(() => null),
     ]);
     const bits = [
@@ -42,6 +46,7 @@ export async function generateMetadata(): Promise<Metadata> {
         gdp ? gdpSentence(gdp) : null,
         orders ? ordersSentence(orders) : null,
         housing ? housingSentence(housing) : null,
+        tankan ? tankanSentence(tankan) : null,
         trade ? tradeSentence(trade) : null,
     ].filter(Boolean);
     return {
@@ -52,13 +57,14 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function JaponiaGospodarkaPage() {
-    const [industry, tertiary, retail, gdp, orders, housing, trade] = await Promise.all([
+    const [industry, tertiary, retail, gdp, orders, housing, tankan, trade] = await Promise.all([
         peekJpIndustry().catch(() => null),
         peekJpTertiary().catch(() => null),
         peekJpRetail().catch(() => null),
         peekJpGdp().catch(() => null),
         peekJpOrders().catch(() => null),
         peekJpHousing().catch(() => null),
+        peekJpTankan().catch(() => null),
         peekJpTrade().catch(() => null),
     ]);
     return (
@@ -70,6 +76,7 @@ export default async function JaponiaGospodarkaPage() {
             <JpOrders initial={orders} />
             <JpHousing initial={housing} />
             <JpGdp initial={gdp} />
+            <JpTankan initial={tankan} />
             <JpTrade initial={trade} />
         </div>
     );
