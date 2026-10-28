@@ -11,6 +11,7 @@ import { peekJpGdp } from '@/lib/jp/gdp-server';
 import { peekJpIndustry } from '@/lib/jp/industry-server';
 import { peekJpLabour } from '@/lib/jp/labour-server';
 import { peekJpRetail } from '@/lib/jp/retail-server';
+import { peekJpTankan } from '@/lib/jp/tankan-server';
 import { peekJpTrade } from '@/lib/jp/trade-server';
 import { peekJpWages } from '@/lib/jp/wages-server';
 import { SITE_URL } from '@/lib/internal-fetch';
@@ -38,7 +39,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function JaponiaPage() {
-    const [cpi, labour, markets, jgb, wages, industry, retail, gdp, trade] = await Promise.all([
+    const [cpi, labour, markets, jgb, wages, industry, retail, gdp, trade, tankan] = await Promise.all([
         peekJpCpi().catch(() => null),
         peekJpLabour().catch(() => null),
         peekBojMarkets().catch(() => null),
@@ -48,11 +49,12 @@ export default async function JaponiaPage() {
         peekJpRetail().catch(() => null),
         peekJpGdp().catch(() => null),
         peekJpTrade().catch(() => null),
+        peekJpTankan().catch(() => null),
     ]);
     return (
         <div className="mk-fade-in space-y-5">
             <PageHeader compact title="Japonia · Przegląd" />
-            <JpOverview cpi={cpi} labour={labour} markets={markets} jgb={jgb} wages={wages} industry={industry} retail={retail} gdp={gdp} trade={trade} />
+            <JpOverview cpi={cpi} labour={labour} markets={markets} jgb={jgb} wages={wages} industry={industry} retail={retail} gdp={gdp} trade={trade} tankan={tankan} />
         </div>
     );
 }

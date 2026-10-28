@@ -133,7 +133,8 @@ Standard scripts in `package.json`:
   the per-country indicator blueprint and the definition of done live in
   `docs/PRODUCT.md`.
 - Japan (`/japonia`, Polish UI). `/japonia` is the overview (hero ranked like Poland,
-  with Japanese release dates and the BOJ 2% target; the current account is in
+  with Japanese release dates and the BOJ 2% target; the Tankan for large
+  manufacturers is dated from `JP_TANKAN_RELEASES` and the current account is in
   billions of yen and dated from `JP_BOP_RELEASES`, not as percentage points). Inflation lives at
   `/japonia/inflacja`, which also shows the domestic corporate goods price index
   (`/api/jp/cgpi`, cache `jp_data/cgpi_v1`, freshness `jp-cgpi`): September 2026

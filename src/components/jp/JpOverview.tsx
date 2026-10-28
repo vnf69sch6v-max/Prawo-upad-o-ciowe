@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 import Link from 'next/link';
-import { Banknote, DollarSign, Factory, Landmark, Percent, Scale, ShoppingCart, TrendingUp, Users } from 'lucide-react';
+import { Banknote, Building2, DollarSign, Factory, Landmark, Percent, Scale, ShoppingCart, TrendingUp, Users } from 'lucide-react';
 import { CompactKpiGrid, type CompactKpiItem } from '@/components/ui/CompactKpiGrid';
 import { formatDataPeriod, formatDate, formatDecimalPL, formatNumber, formatPP } from '@/lib/formatters';
 import { useIsClient } from '@/lib/use-is-client';
@@ -14,6 +14,7 @@ import { industryMom, type JpIndustryPayload } from '@/lib/jp/industry';
 import { labourChangePp, lastLabourPoint, type JpLabourPayload } from '@/lib/jp/labour';
 import { type JgbPayload } from '@/lib/jp/jgb';
 import { lastRetailPoint, retailYoy, retailYoySeries, type JpRetailPayload } from '@/lib/jp/retail';
+import { lastTankanPoint, tankanDelta, tankanSurveyLabel, type JpTankanPayload } from '@/lib/jp/tankan';
 import { formatMldAmount, formatMldYen, lastTradePoint, tradeMldSeries, type JpTradePayload } from '@/lib/jp/trade';
 import { lastWagePoint, wageChangePp, type JpWagesPayload } from '@/lib/jp/wages';
 import { jpSignalHeadline, jpSignalReason, jpSignalText, rankJpHero } from '@/lib/jp/overview';
@@ -25,6 +26,7 @@ import { useJpJgb } from '@/lib/jp/use-jp-jgb';
 import { useJpLabour } from '@/lib/jp/use-jp-labour';
 import { useJpMarkets } from '@/lib/jp/use-jp-markets';
 import { useJpRetail } from '@/lib/jp/use-jp-retail';
+import { useJpTankan } from '@/lib/jp/use-jp-tankan';
 import { useJpTrade } from '@/lib/jp/use-jp-trade';
 import { useJpWages } from '@/lib/jp/use-jp-wages';
 import type { RankedSignal } from '@/lib/hero-signals';
@@ -59,7 +61,9 @@ function SignalLink({ r, emphasis }: { r: RankedSignal; emphasis: 'primary' | 's
     const reason = jpSignalReason(r);
     const deltaTxt = r.delta == null ? null : r.candidate.deltaMode === 'pp' ? formatPP(r.delta, 1) : `${r.delta > 0 ? '+' : r.delta < 0 ? '−' : ''}${formatDecimalPL(Math.abs(r.delta), 2)}%`;
     const arrow = r.delta == null || r.delta === 0 ? '' : r.delta > 0 ? '▲ ' : '▼ ';
-    const period = r.candidate.kind === 'market' ? `notowanie ${formatDate(r.period)}` : `dane za ${formatDataPeriod(r.period)}`;
+    const period = r.candidate.id === 'jp-tankan'
+        ? `dane za ${tankanSurveyLabel(r.period)}`
+        : r.candidate.kind === 'market' ? `notowanie ${formatDate(r.period)}` : `dane za ${formatDataPeriod(r.period)}`;
     return (
         <Link href={r.candidate.href} className="group -m-1 block rounded-lg p-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60 active:opacity-80">
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
@@ -82,6 +86,7 @@ function SignalLink({ r, emphasis }: { r: RankedSignal; emphasis: 'primary' | 's
 export function JpOverview({
     cpi: cpiInitial, labour: labourInitial, markets: marketsInitial, jgb: jgbInitial,
     wages: wagesInitial, industry: industryInitial, retail: retailInitial, gdp: gdpInitial, trade: tradeInitial,
+    tankan: tankanInitial,
 }: {
     cpi: JpCpiPayload | null;
     labour: JpLabourPayload | null;
@@ -92,6 +97,7 @@ export function JpOverview({
     retail: JpRetailPayload | null;
     gdp: JpGdpPayload | null;
     trade: JpTradePayload | null;
+    tankan: JpTankanPayload | null;
 }) {
     const cpiQ = useJpCpi(cpiInitial);
     const labourQ = useJpLabour(labourInitial);
@@ -102,6 +108,7 @@ export function JpOverview({
     const retailQ = useJpRetail(retailInitial);
     const gdpQ = useJpGdp(gdpInitial);
     const tradeQ = useJpTrade(tradeInitial);
+    const tankanQ = useJpTankan(tankanInitial);
     const isClient = useIsClient();
     const today = isClient ? jstDateKey() : null;
 
@@ -116,14 +123,16 @@ export function JpOverview({
     const retailSeries = useMemo(() => retailYoySeries(retailLevels).map((p) => ({ date: p.date, value: p.yoy })), [retailLevels]);
     const gdpSeries = useMemo(() => gdpQ.data?.series.real ?? [], [gdpQ.data]);
     const currentSeries = useMemo(() => tradeMldSeries(tradeQ.data?.series.current), [tradeQ.data]);
+    const tankanSeries = useMemo(() => tankanQ.data?.series.mfg ?? [], [tankanQ.data]);
 
     const ranked = useMemo(() => rankJpHero({
         cpi: cpiSeries, unemployment: labourSeries, usdjpy: fxSeries, jgb: jgbSeries,
         wages: wageSeries, industry: industrySeries, retail: retailSeries, gdp: gdpSeries, current: currentSeries,
-    }, today), [cpiSeries, labourSeries, fxSeries, jgbSeries, wageSeries, industrySeries, retailSeries, gdpSeries, currentSeries, today]);
+        tankan: tankanSeries,
+    }, today), [cpiSeries, labourSeries, fxSeries, jgbSeries, wageSeries, industrySeries, retailSeries, gdpSeries, currentSeries, tankanSeries, today]);
     const freshIds = useMemo(() => new Set(ranked.filter((r) => r.fresh).map((r) => r.candidate.id)), [ranked]);
     // Hero czeka na CPI i bezrobocie razem — inaczej pierwszy, który dojdzie, wskakuje na górę i po chwili spada.
-    const heroLoading = cpiQ.isLoading || labourQ.isLoading || wagesQ.isLoading || industryQ.isLoading || retailQ.isLoading || gdpQ.isLoading || tradeQ.isLoading;
+    const heroLoading = cpiQ.isLoading || labourQ.isLoading || wagesQ.isLoading || industryQ.isLoading || retailQ.isLoading || gdpQ.isLoading || tradeQ.isLoading || tankanQ.isLoading;
     const [primary, secondary] = ranked;
 
     const cpiLast = lastPoint(cpiSeries);
@@ -141,6 +150,8 @@ export function JpOverview({
     const retailMove = retailYoy(retailLevels);
     const gdpLast = lastGdpPoint(gdpSeries);
     const currentLast = lastTradePoint(tradeQ.data?.series.current);
+    const tankanLast = lastTankanPoint(tankanSeries);
+    const tankanMove = tankanDelta(tankanSeries);
     const goodsLast = lastTradePoint(tradeQ.data?.series.trade);
     const goodsSame = goodsLast && currentLast && goodsLast.date === currentLast.date ? goodsLast : null;
 
@@ -222,6 +233,14 @@ export function JpOverview({
             spark: currentSeries.slice(-SPARK), sparkFormat: (v) => `${formatMldAmount(v)} mld`,
             loading: tradeQ.isLoading, error: tradeQ.isError, onRetry: () => { void tradeQ.refetch(); },
         },
+        {
+            key: 'jp-tankan', label: 'Nastroje firm', href: '/japonia/gospodarka', watchId: 'jp-tankan', icon: Building2,
+            value: tankanLast ? formatNumber(tankanLast.value, 0) : '—',
+            delta: tankanMove != null && tankanMove !== 0 ? { value: tankanMove, unit: 'pp' } : undefined,
+            footnote: tankanLast ? `${freshIds.has('jp-tankan') ? 'nowe · ' : ''}${tankanSurveyLabel(tankanLast.date)} · duże firmy przemysłowe` : 'Tankan',
+            spark: tankanSeries.slice(-SPARK), sparkFormat: (v) => formatNumber(v, 0),
+            loading: tankanQ.isLoading, error: tankanQ.isError, onRetry: () => { void tankanQ.refetch(); },
+        },
     ];
 
     return (
@@ -255,7 +274,7 @@ export function JpOverview({
                 Na górze jest świeży odczyt albo duża zmiana. Jen i obligacje wchodzą tylko przy ruchu powyżej dwóch odchyleń własnej historii.
             </p>
             <CompactKpiGrid items={kpis} label="Japonia" columns={5} dense />
-            <CompactKpiGrid items={economy} label="Praca i gospodarka" columns={5} dense />
+            <CompactKpiGrid items={economy} label="Praca i gospodarka" columns={6} dense />
             <footer className="space-y-1 border-t border-mk-border pt-3 text-xs leading-relaxed text-mk-muted">
                 <p>{DASHBOARD_CREDIT_PL}</p>
                 <p lang="ja">{DASHBOARD_CREDIT_JA}</p>
