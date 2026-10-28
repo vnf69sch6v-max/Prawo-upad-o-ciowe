@@ -207,8 +207,14 @@ Standard scripts in `package.json`:
   same dates as industrial production. `/api/jp/gdp` (cache `jp_data/gdp_v1`,
   freshness `jp-gdp`) is real and nominal GDP, quarter-on-quarter, 2020 base,
   seasonally adjusted — the Cabinet Office headline, not the annualised rate.
-  Quarterly `TimeFrom` is `20262Q00` (`Cycle=2`). Second-estimate dates are
-  `JP_GDP_SECOND_RELEASES` at 8:50 JST. The same page shows machinery orders
+  Quarterly `TimeFrom` is `20262Q00` (`Cycle=2`).   Second-estimate dates are
+  `JP_GDP_SECOND_RELEASES` at 8:50 JST. The same page shows the Tankan
+  (`/api/jp/tankan`, cache `jp_data/tankan_v1`, freshness `jp-tankan`): large
+  manufacturers' business-conditions DI was 24 in the September 2026 survey,
+  up 2 points, and large nonmanufacturers were 35, down 2. The BOJ quarterly
+  date code is `YYYYQQ` (`202603` = 2026 Q3). The actual result is shown; the
+  forecast series is not. Dates are `JP_TANKAN_RELEASES` at 8:50 JST. The
+  December 2026 survey is on 14.12.2026. The same page shows machinery orders
   (`/api/jp/orders`, cache `jp_data/orders_v1`, freshness `jp-orders`): private
   demand excluding ships and electric power. August 2026 is +5.2% month on
   month, seasonally adjusted, and +18.6% year on year, unadjusted. The

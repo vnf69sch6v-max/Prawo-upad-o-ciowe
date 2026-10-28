@@ -30,6 +30,7 @@ import { expectedJpIndustry } from '@/lib/jp/industry';
 import { expectedJpTertiary } from '@/lib/jp/tertiary';
 import { expectedJpRetail } from '@/lib/jp/retail';
 import { expectedJpGdp } from '@/lib/jp/gdp';
+import { expectedJpTankan } from '@/lib/jp/tankan';
 import { expectedJpTrade } from '@/lib/jp/trade';
 import { expectedJpCgpi } from '@/lib/jp/cgpi';
 import { expectedJpSppi } from '@/lib/jp/sppi';
@@ -413,6 +414,12 @@ export function extractJpTrade(json: unknown): string | null {
     return maxPeriod(Array.isArray(points) ? points.map((p) => asObj(p)?.date) : [], 'monthly');
 }
 
+/** `/api/jp/tankan` → najnowsze badanie nastrojów dużych firm przemysłowych. */
+export function extractJpTankan(json: unknown): string | null {
+    const points = asObj(asObj(json)?.series)?.mfg;
+    return maxPeriod(Array.isArray(points) ? points.map((p) => asObj(p)?.date) : [], 'quarterly');
+}
+
 /** `/api/jp/gdp` → najnowszy kwartał realnego PKB. */
 export function extractJpGdp(json: unknown): string | null {
     const points = asObj(asObj(json)?.series)?.real;
@@ -683,6 +690,16 @@ export const FRESHNESS_DATASETS: DatasetSpec[] = [
         expected: (now) => expectedJpGdp(now),
         tolerance: { ok: 0, lag: 1 }, maxAgeDays: 200,
         lagNote: 'Drugi komunikat PKB (8:50 JST) już jest, ale Statistics Dashboard albo nasze odświeżenie jeszcze go nie objęły.',
+        selfHeal: true,
+    },
+    {
+        id: 'jp-tankan', label: 'Japonia — nastroje firm', source: 'Bank Japonii', kind: 'jp-boj',
+        group: 'jp', frequency: 'quarterly',
+        endpoint: () => '/api/jp/tankan',
+        extract: extractJpTankan,
+        expected: (now) => expectedJpTankan(now),
+        tolerance: { ok: 0, lag: 1 }, maxAgeDays: 120,
+        lagNote: 'Tankan (8:50 JST) już jest, ale API Banku Japonii albo nasze odświeżenie jeszcze go nie objęły.',
         selfHeal: true,
     },
     {

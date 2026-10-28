@@ -70,6 +70,7 @@ const ENDPOINTS = [
     '/api/jp/tertiary?refresh=1',
     '/api/jp/retail?refresh=1',
     '/api/jp/gdp?refresh=1',
+    '/api/jp/tankan?refresh=1',
     '/api/jp/trade?refresh=1',
     '/api/jp/cgpi?refresh=1',
     '/api/jp/sppi?refresh=1',

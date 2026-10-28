@@ -212,6 +212,7 @@ J5. **Gospodarka Japonii** — produkcja zrobiona 27.10 (`/japonia/gospodarka`: 
 - **`GUS_BDL_KEY`** — wyższy limit BDL (rejestracja na api.stat.gov.pl).
 
 ## Zrobione
+- **28.10.2026 — Japonia: nastroje firm.** Na `/japonia/gospodarka` pod PKB: Tankan z września 2026. Duże firmy przemysłowe 24, o 2 punkty wyżej niż w czerwcu. Duże firmy spoza przemysłu 35, o 2 punkty niżej. Komunikat Banku Japonii z 1.10, 8:50. Świeżość `jp-tankan`. Grudzień: 14 grudnia.
 - **28.10.2026 — Japonia: oferty pracy.** Na `/japonia/praca` pod bezrobociem: sierpień 2026, 1,18 oferty na osobę w urzędzie pracy, tyle samo co w lipcu. Nowe oferty 2,06, o 0,04 mniej. Komunikat ministerstwa z 2.10, 8:30. Świeżość `jp-jobs`. Wrzesień: 30 października.
 - **28.10.2026 — Japonia: dochód wtórny.** Na `/japonia/gospodarka` w bilansie: sierpień 2026, deficyt 267,7 mld jenów, o 174 mld mniejszy niż rok wcześniej. Wstępny komunikat Ministerstwa Finansów z 8.10. Cache `jp_data/trade_v4`.
 - **28.10.2026 — Japonia: mieszkania służbowe.** Pod sumą 63 974: służbowe 1114, +228,6% r/r. Razem z własnymi, na wynajem i na sprzedaż dają całość. Cache `jp_data/housing_v3`.
