@@ -90,6 +90,22 @@ describe('Japan overview hero', () => {
         expect(later.find((r) => r.candidate.id === 'jp-trade')!.fresh).toBe(false);
     });
 
+    it('dates the Tankan from the October release and states the two-point rise', () => {
+        const ranked = rankJpHero({
+            cpi, unemployment, usdjpy, jgb,
+            tankan: [{ date: '2026-Q2', value: 22 }, { date: '2026-Q3', value: 24 }],
+        }, '2026-10-02');
+        const mood = ranked.find((r) => r.candidate.id === 'jp-tankan')!;
+        expect(mood.period).toBe('2026-Q3');
+        expect(mood.publishedOn).toBe('2026-10-01');
+        expect(mood.ageDays).toBe(1);
+        expect(mood.fresh).toBe(true);
+        expect(mood.delta).toBe(2);
+        expect(jpSignalHeadline(mood)).toBe('Nastroje firm przemysłowych lepsze');
+        expect(jpSignalText(mood)).toBe('Duże firmy przemysłowe, wrzesień 2026: 24. Wobec poprzedniego badania +2,0 p.p.');
+        expect(mood.next?.date).toBe('2026-12-14');
+    });
+
     it('lets a two-sigma yen move into the hero', () => {
         const shock = usdjpy.map((p, i) => i === usdjpy.length - 1 ? { ...p, date: '2026-10-26', value: 160 } : p);
         const ranked = rankJpHero({ cpi, unemployment, usdjpy: shock, jgb }, '2026-10-27');
