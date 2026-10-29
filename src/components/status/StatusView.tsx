@@ -2,11 +2,12 @@
 
 import Link from 'next/link';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ChevronDown, RefreshCw } from 'lucide-react';
+import { AlertTriangle, ChevronDown, RefreshCw } from 'lucide-react';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { QueryError } from '@/components/ui/QueryState';
 import { datasetById, pluralPl, STATUS_LABELS, type FreshnessItem, type FreshnessReport, type FreshnessStatus } from '@/lib/freshness';
 import { useIsClient } from '@/lib/use-is-client';
+import { attentionLine } from '@/lib/cron-runs';
 import { DatasetCard, DatasetCardSkeleton } from './DatasetCard';
 import { CronRuns } from './CronRuns';
 import { PaymentsHealth } from './PaymentsHealth';
@@ -76,6 +77,9 @@ function Summary({ report }: { report: FreshnessReport }) {
     const Icon = style.icon;
     const checked = new Date(report.checkedAt);
     const chips = (['ok', 'lag', 'stale', 'error'] as const).filter((s) => s === 'ok' || count(report.items, s) > 0);
+    // Częściowe awarie cronów: zbiór może być jeszcze „aktualny”, a automat już nie odświeża części źródeł.
+    const automat = report.crons?.available ? attentionLine(report.crons.items) : null;
+    const automatSevere = report.crons?.items.some((c) => c.status === 'failing' || c.status === 'late') ?? false;
     return (
         <section className={`rounded-2xl border border-mk-border px-4 py-4 sm:px-5 ${style.tintClass}`} aria-live="polite">
             <div className="flex items-start gap-3">
@@ -87,6 +91,12 @@ function Summary({ report }: { report: FreshnessReport }) {
                         Sprawdzono {Number.isNaN(checked.getTime()) ? '—' : CHECKED_AT_FMT.format(checked)} · {report.items.length}{' '}
                         {pluralPl(report.items.length, 'zbiór', 'zbiory', 'zbiorów')}
                     </p>
+                    {automat && (
+                        <a href="#status-crons" className="mt-1 inline-flex items-center gap-1.5 text-sm font-medium text-mk-text underline underline-offset-2 touch:min-h-11">
+                            <AlertTriangle size={13} className={`shrink-0 ${automatSevere ? 'text-mk-negative' : 'text-mk-warn'}`} aria-hidden />
+                            {automat}
+                        </a>
+                    )}
                 </div>
             </div>
             <ul className="mt-3 flex flex-wrap gap-2" aria-label="Podsumowanie statusów">

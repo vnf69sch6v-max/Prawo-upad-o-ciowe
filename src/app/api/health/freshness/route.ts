@@ -8,7 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { httpStatusFor } from '@/lib/freshness';
 import { runFreshnessCheck } from '@/lib/freshness-check';
 import { readCronRuns } from '@/lib/cron-log';
-import { evaluateCronRuns } from '@/lib/cron-runs';
+import { cronAttention, evaluateCronRuns, type CronRunsSummary } from '@/lib/cron-runs';
 import { internalOrigin } from '@/lib/internal-fetch';
 import { getAdminDb } from '@/lib/firebase/admin';
 import { sealStatus } from '@/lib/data-seal';
@@ -26,7 +26,9 @@ export async function GET(request: NextRequest) {
         readPaymentHealth(),
     ]);
     // Przebiegi cronów i webhook płatności są informacją, nie zmieniają kodu HTTP — ten zależy od danych.
-    const crons = runs ? { available: true, items: evaluateCronRuns(runs, new Date()) } : { available: false, items: [] };
+    // `attention` (częściowe awarie, spóźnienia) — do monitoringu słowem kluczowym `"attention":[]`.
+    const items = runs ? evaluateCronRuns(runs, new Date()) : [];
+    const crons: CronRunsSummary = { available: !!runs, items, attention: cronAttention(items) };
     // Stan szyfrowania danych w Firestore (src/lib/data-seal.ts) — identyfikatory kluczy, nigdy klucze.
     const encryption = { ...sealStatus(), lastSweep };
     return NextResponse.json({ ...report, crons, encryption, payments }, {

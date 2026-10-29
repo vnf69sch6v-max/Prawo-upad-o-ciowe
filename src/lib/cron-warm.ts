@@ -28,13 +28,16 @@ export async function warmEndpoints(
     const origin = internalOrigin(request);
     const startedAt = Date.now();
     const results: Record<string, number | string> = {};
+    const routes: { ep: string; ms: number }[] = [];
     let ok = 0;
     for (const ep of endpoints) {
+        const t0 = Date.now();
         results[ep] = await internalCall(origin + ep);
+        routes.push({ ep, ms: Date.now() - t0 }); // bez odstępu — czas samej trasy, pod `maxDuration`
         if (results[ep] === 200) ok++;
         await sleep(spacingMs);
     }
     // Ślad przebiegu → /status i /api/health/freshness (dowód, że cron faktycznie działa).
-    await recordCronRun(group, summarizeResults(results, startedAt, origin));
+    await recordCronRun(group, summarizeResults(results, startedAt, origin, routes));
     return NextResponse.json({ group, origin, ok, total: endpoints.length, timestamp: new Date().toISOString(), results });
 }
