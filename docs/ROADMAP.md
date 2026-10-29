@@ -218,7 +218,7 @@ J5. **Gospodarka Japonii** — produkcja zrobiona 27.10 (`/japonia/gospodarka`: 
 - **`GUS_BDL_KEY`** — wyższy limit BDL (rejestracja na api.stat.gov.pl).
 
 ## Zrobione
-- **29.10.2026 — 2: `/status` pokazuje częściowe awarie cronów** (`docs/specs/2026-10-29-status-czesciowe-awarie-cronow.md`).
+- **29.10.2026 — 2: `/status` pokazuje częściowe awarie cronów** (PR #69, `docs/specs/2026-10-29-status-czesciowe-awarie-cronow.md`, PM: SHIP).
   Stan „Częściowo” przy każdej nieudanej trasie (dawniej „Działa” do połowy porażek), `crons.attention` w
   `/api/health/freshness` (kod HTTP bez zmian), linia „Automat: N z 12 cronów wymaga uwagi — …” na górze `/status`,
   czas każdej trasy (`routes`) i „Najdłużej: …” w wierszu crona, test, że każdy cron z `vercel.json` ma wpis.
