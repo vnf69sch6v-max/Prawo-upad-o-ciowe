@@ -33,10 +33,14 @@ pierwszeństwo. Rzeczy, których nie da się zrobić z kodu, trafiają do „Wym
      - `gus-labor-extra` `year`, `regional-gus`, `gus-regional`, `smup`;
      - cron `bdl`: 8 tras × 30 s > `maxDuration` 120 s. Przy wolnym BDL cron zostanie ucięty, zanim zapisze
        przebieg (ta sama reguła co A3 w 1a).
-2. **`/status` ukrywa częściowe awarie cronów.** `evaluateCronRuns` daje „ok” przy `ok ≥ total/2`, więc
-   `dbw-1` z `gus-cpi-full → 504` był zielony, choć CPI z crona się nie odświeżało. Potrzebny stan pośredni
-   („częściowo”) przy każdej nieudanej trasie i ostrzeżenie w `/api/health/freshness`. Do tego czas każdej
-   trasy w dzienniku (dziś jest tylko suma).
+     - Ta sama reguła dla crona `jp` (pliki Cursora — uzgodnić): 17 tras, suma ich limitów 640 s, a cron ma 120 s
+       (28.10 trwał 78,1 s). `tests/function-limits.test.ts` sprawdza tylko `dbw-1..4`. Rozszerzyć test na wszystkie
+       warm crony, potem podzielić `jp` albo skrócić limity tras. Czasy tras z kroku 2 pokażą, które są wolne.
+2. **`/status` ukrywa częściowe awarie cronów — zrobione 29.10.2026** (`docs/specs/2026-10-29-status-czesciowe-awarie-cronow.md`, wpis w „Zrobione”).
+   `evaluateCronRuns` daje „ok” przy `ok ≥ total/2`, więc `dbw-1` z `gus-cpi-full → 504` był zielony, choć CPI
+   z crona się nie odświeżało. W kroku: stan „Częściowo” przy każdej nieudanej trasie, `crons.attention`
+   w `/api/health/freshness`, linia „Automat: …” na górze `/status`, czas każdej trasy w dzienniku i test,
+   że każdy cron z `vercel.json` ma wpis. Krok 2b (później): alert webhookiem dla `attention`.
 3. **CORS na `/api/*`:** `Access-Control-Allow-Origin: *` z metodami POST/PUT/DELETE/PATCH
    (`vercel.json`). Zawęzić do GET/OPTIONS; POST tylko dla parsera z własnej domeny.
 4. **`news-digest` nie zapisuje przebiegu** w `health/cron_runs` — `/status` nie pokazuje, czy działa.
@@ -60,10 +64,11 @@ P3. **Przekrój DBW 1698 jest ucięty do 5000 wierszy.** DBW ignoruje `ile-na-st
     5000, `page-count` 3, 2,44 MB na miesiąc). Czytamy tylko stronę 0, a 4 ze 142 klas COICOP
     (`src/lib/coicop-subcategories.ts`) jej nie mają. Sprawdzić strony 1–2 (2 zapytania) i albo pobierać
     wszystkie strony, albo opisać te klasy jako niepublikowane. Odpowiedź > 2 MB nie trafia też do Data Cache.
-   - **Bramka logowania sprawdza tylko obecność ciasteczka** (`src/middleware.ts`): dowolne `__session=x` ją omija,
-     gdy `NEXT_PUBLIC_AUTH_ENABLED=true`. Dziś bez skutku (strony to dane publiczne, bramka wyłączona), ale przed
-     funkcjami dla zalogowanych: weryfikacja podpisu ciasteczka sesji (JWT, klucze publiczne Google) na Edge albo
-     w trasach z danymi użytkownika (`verifySessionCookie(..., true)`).
+P4. **Bezrobocie rejestrowane jest miesiąc za komunikatem GUS.** 29.10 `/api/health/freshness`: `unemployment` = `lag`.
+    Strona pokazuje 2026-08, a kalendarz oczekuje 2026-09. Liczba idzie z BDL (`bdl-series?start=461680`), które dostaje
+    odczyt tygodnie po GUS. Ta sama liczba stoi w hero Przeglądu. Do sprawdzenia: zmienna stopy bezrobocia
+    rejestrowanego w katalogu DBW i jej nazwa. Do tego budżet: `dbw-4` robi już ~72 wywołania, a +24 dałoby ~96
+    przy limicie ~100, więc raczej osobna grupa crona. Kandydat na następny krok PL (priorytet 4, świeżość liczby z hero).
 
 ### Płatna platforma
 P-2. ~~API za bramką~~ — działa od 25.10.2026 (`CRON_SECRET` ustawiony, `/api/*` bez sesji = 401). Wymuszone
@@ -130,7 +135,8 @@ J5. **Gospodarka Japonii** — produkcja zrobiona 27.10 (`/japonia/gospodarka`: 
     Od 28.10 czwarta grupa: mieszkania służbowe 1114, +228,6% r/r. Cztery grupy sumują się do całości.
 
 ## Wymaga właściciela (nie da się z kodu)
-- **Płatna platforma — uruchomienie** (kod gotowy 25.10, bramka wyłączona do czasu flag):
+- **Płatna platforma — uruchomienie** (kod gotowy 25.10, bramka włączona domyślnie od 25.10; podpis ciasteczka
+  sesji sprawdzany na Edge od PR #34):
   1. Vercel → Environment Variables (Production): `NEXT_PUBLIC_OWNER_NAME` (imię i nazwisko / firma),
      `NEXT_PUBLIC_OWNER_ADDRESS`, `NEXT_PUBLIC_CONTACT_EMAIL`, opcjonalnie `NEXT_PUBLIC_OWNER_NIP` — trafiają do
      `/prywatnosc` i `/regulamin` (brak adresu widać jako „do uzupełnienia” w treści; baneru „wersja robocza” nie ma). Przegląd obu dokumentów przez prawnika.
@@ -212,6 +218,12 @@ J5. **Gospodarka Japonii** — produkcja zrobiona 27.10 (`/japonia/gospodarka`: 
 - **`GUS_BDL_KEY`** — wyższy limit BDL (rejestracja na api.stat.gov.pl).
 
 ## Zrobione
+- **29.10.2026 — 2: `/status` pokazuje częściowe awarie cronów** (`docs/specs/2026-10-29-status-czesciowe-awarie-cronow.md`).
+  Stan „Częściowo” przy każdej nieudanej trasie (dawniej „Działa” do połowy porażek), `crons.attention` w
+  `/api/health/freshness` (kod HTTP bez zmian), linia „Automat: N z 12 cronów wymaga uwagi — …” na górze `/status`,
+  czas każdej trasy (`routes`) i „Najdłużej: …” w wierszu crona, test, że każdy cron z `vercel.json` ma wpis.
+  Po wdrożeniu: najbliższy `dbw-1` ma `routes` z 2 pozycjami; czas `gus-cpi-full` 13.11 dopisać w P0. Dalej: 2b
+  (alert webhookiem dla `attention`), 1c (limit crona `bdl` z czasów tras).
 - **28.10.2026 — Japonia: przegląd widzi nastroje.** Na `/japonia` w rzędzie gospodarki jest Tankan: 24 dla dużych firm przemysłowych, +2 p.p. wobec czerwca, z datą komunikatu 1.10. Hero może go wybrać, gdy badanie jest świeże.
 - **28.10.2026 — Japonia: nastroje firm.** Na `/japonia/gospodarka` pod PKB: Tankan z września 2026. Duże firmy przemysłowe 24, o 2 punkty wyżej niż w czerwcu. Duże firmy spoza przemysłu 35, o 2 punkty niżej. Komunikat Banku Japonii z 1.10, 8:50. Świeżość `jp-tankan`. Grudzień: 14 grudnia.
 - **28.10.2026 — Japonia: oferty pracy.** Na `/japonia/praca` pod bezrobociem: sierpień 2026, 1,18 oferty na osobę w urzędzie pracy, tyle samo co w lipcu. Nowe oferty 2,06, o 0,04 mniej. Komunikat ministerstwa z 2.10, 8:30. Świeżość `jp-jobs`. Wrzesień: 30 października.

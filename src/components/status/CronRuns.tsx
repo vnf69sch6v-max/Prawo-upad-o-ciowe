@@ -1,9 +1,10 @@
-import { AlertTriangle, CheckCircle2, CircleDashed, XCircle, type LucideIcon } from 'lucide-react';
-import type { CronRunReport, CronRunStatus } from '@/lib/cron-runs';
+import { AlertTriangle, CheckCircle2, CircleDashed, Clock, XCircle, type LucideIcon } from 'lucide-react';
+import { formatSeconds, slowestRoute, type CronRunReport, type CronRunStatus } from '@/lib/cron-runs';
 import type { FreshnessReport } from '@/lib/freshness';
 
 const STYLE: Record<CronRunStatus, { label: string; icon: LucideIcon; iconClass: string; pillClass: string }> = {
     ok: { label: 'Działa', icon: CheckCircle2, iconClass: 'text-mk-positive', pillClass: 'bg-mk-positive-soft ring-mk-positive/25' },
+    partial: { label: 'Częściowo', icon: Clock, iconClass: 'text-mk-warn', pillClass: 'bg-mk-warn-soft ring-mk-warn/30' },
     failing: { label: 'Błędy', icon: XCircle, iconClass: 'text-mk-negative', pillClass: 'bg-mk-negative-soft ring-mk-negative/25' },
     late: { label: 'Spóźniony', icon: AlertTriangle, iconClass: 'text-mk-negative', pillClass: 'bg-mk-negative-soft ring-mk-negative/25' },
     never: { label: 'Czeka na 1. przebieg', icon: CircleDashed, iconClass: 'text-mk-muted', pillClass: 'bg-mk-surface-alt ring-mk-border' },
@@ -27,6 +28,7 @@ export function formatStatusWhen(iso: string): string {
 function Row({ c }: { c: CronRunReport }) {
     const s = STYLE[c.status];
     const Icon = s.icon;
+    const slowest = slowestRoute(c.run);
     return (
         <li className="flex min-h-12 flex-col gap-1.5 rounded-xl border border-mk-border bg-mk-surface px-3.5 py-3">
             <div className="flex items-start justify-between gap-3">
@@ -44,8 +46,15 @@ function Row({ c }: { c: CronRunReport }) {
                     Ostatnio <span className="font-semibold tabular-nums text-mk-text">{formatStatusWhen(c.run.at)}</span>
                     {' · '}
                     <span className="tabular-nums">{c.run.ok}/{c.run.total}</span> źródeł odświeżonych
+                    {' · '}
+                    <span className="tabular-nums">{formatSeconds(c.run.ms)}</span>
                     {c.run.failed.length > 0 && c.status !== 'ok' && (
                         <span className="block pt-1 text-mk-muted [overflow-wrap:anywhere]">{c.run.failed.slice(0, 3).join(' · ')}</span>
+                    )}
+                    {slowest && (
+                        <span className="block pt-1 text-mk-muted [overflow-wrap:anywhere]">
+                            Najdłużej: {slowest.ep} <span className="tabular-nums">{formatSeconds(slowest.ms)}</span>
+                        </span>
                     )}
                 </p>
             )}

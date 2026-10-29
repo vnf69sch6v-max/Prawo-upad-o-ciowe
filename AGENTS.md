@@ -304,7 +304,12 @@ Standard scripts in `package.json`:
   `redirect: 'manual'`, and only a 2xx JSON answer counts as success.
   Every cron records its run in Firestore `health/cron_runs`
   (`src/lib/cron-log.ts`; evaluation in `src/lib/cron-runs.ts`), shown on
-  `/status` — the only proof the automation actually ran. `vercel.json` → `functions` holds
+  `/status` — the only proof the automation actually ran. A run with any failed route is `partial` („Częściowo”),
+  not ok (until 10.2026 anything ≥ half passed, so `dbw-1` with a 504 on CPI showed green); `/api/health/freshness`
+  → `crons.attention` lists `partial`/`failing`/`late` groups (the HTTP code still depends only on datasets), and
+  `/status` shows an „Automat: …” line for them. `warmEndpoints` stores `routes: [{ ep, ms }]` per run (no
+  `refresh=1`, ≤30) — size `maxDuration` from these. Every cron in `vercel.json` must map to a `CRON_SPECS` group
+  (`tests/cron-runs.test.ts`; exceptions `gus`, `news-digest`). `vercel.json` → `functions` holds
   only the default `src/app/api/**/*.ts → maxDuration 30`. A long route sets its limit with
   `export const maxDuration` in its own file: Vercel prefers the export, and from `functions` it takes only the
   **first** matching pattern — every entry below the glob was dead, so `gus-cpi-full` ran with 30 s and the
