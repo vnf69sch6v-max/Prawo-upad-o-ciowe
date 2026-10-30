@@ -14,8 +14,10 @@ export function KpiTiles({ items, className = '' }: { items: MacroChange[]; clas
         <ul className={`grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6 ${className}`}>
             {items.map((m) => {
                 const delta = m.delta && m.delta !== '—' ? normalizeBriefText(m.delta) : null;
-                const up = delta?.startsWith('+');
-                const down = delta?.startsWith('−');
+                // „+0,0 pp” ze starych digestów to brak zmiany — bez strzałki i koloru.
+                const moved = !!delta && /[1-9]/.test(delta);
+                const up = moved && delta.startsWith('+');
+                const down = moved && delta.startsWith('−');
                 const body = (
                     <>
                         <div className="truncate text-[11px] font-medium text-mk-muted">{m.label}</div>
