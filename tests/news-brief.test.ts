@@ -36,7 +36,7 @@ const goodBody = {
 describe('wejście briefu', () => {
     it('zawiera liczby z digestu, nagłówki PL i świat, kalendarz', () => {
         const text = buildBriefInput(input);
-        expect(text).toContain('Inflacja CPI 2,8%, zmiana −0,1 pp, 15.10, GUS');
+        expect(text).toContain('Inflacja CPI: 2,8%; zmiana −0,1 pp; 15.10; GUS');
         expect(text).not.toMatch(/serwis/i);
         expect(text).toContain('RPP zostawia stopy');
         expect(text).toContain('FOMC statement');
@@ -47,7 +47,7 @@ describe('wejście briefu', () => {
         const many = { ...input, world: Array.from({ length: 50 }, (_, i) => ({ ...input.world[0], title: `World headline ${i} ${'x'.repeat(300)}` })) };
         const text = buildBriefInput(many, 600);
         expect(estimateTokens(text)).toBeLessThanOrEqual(600);
-        expect(text).toContain('Inflacja CPI 2,8%');
+        expect(text).toContain('Inflacja CPI: 2,8%');
         expect(text).not.toContain('World headline 49');
     });
 });
@@ -81,6 +81,16 @@ describe('walidator liczb', () => {
         const fxAllowed = collectBriefAllowed(buildBriefInput(fx), fx.date);
         const body = normalizeBriefBody({ teza: 'Złoty: EUR/PLN 4,3951 (-0.32%), 2026-10-29.', dane: ['a'], polska: ['b'], swiat: ['c'], kalendarz: [] });
         expect(validateBrief(body, fxAllowed)).toEqual({ ok: true });
+    });
+
+    it('indeks ≥ 10 000 (spacja zwykła i twarda) przechodzi — regresja 30.10', () => {
+        const idx = { ...input, digests: [{ ...digest, dane: [
+            { id: 'mwig40', label: 'mWIG40', source: 'GPW', value: '10\u00a0945', delta: '+0,67%', readingDate: '2026-10-29' },
+            { id: 'swig80', label: 'sWIG80', source: 'GPW', value: '30 085', delta: '\u22120,65%', readingDate: '2026-10-29' },
+        ] }] } as BriefInputData;
+        const idxAllowed = collectBriefAllowed(buildBriefInput(idx), idx.date);
+        const body = normalizeBriefBody({ teza: 'mWIG40 10 945 pkt, sWIG80 30\u00a0085 pkt.', dane: ['a'], polska: ['b'], swiat: ['c'], kalendarz: [] });
+        expect(validateBrief(body, idxAllowed)).toEqual({ ok: true });
     });
 
     it('przyjmuje brief z pustym „swiat”', () => {
