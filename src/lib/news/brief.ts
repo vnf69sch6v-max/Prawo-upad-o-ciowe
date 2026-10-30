@@ -122,7 +122,10 @@ export function buildBriefInput(d: BriefInputData, maxTokens = MAX_INPUT_TOKENS)
     const dane: string[] = [];
     for (const dg of d.digests) {
         for (const m of dg.dane) {
-            const line = `- ${m.label} ${m.value}${m.delta ? `, zmiana ${m.delta}` : ''}, ${ddmm(m.readingDate)}${m.source ? `, ${m.source}` : ''}`;
+            // Średnik, nie przecinek, po wartości: `joinThousands` celowo nie skleja „10 945,” (przecinek może
+            // zaczynać część dziesiętną), więc walidator widział 10 i 945, a model pisał 10945 → każdy brief
+            // z mWIG40/sWIG80 ≥ 10 000 był odrzucany (30.10, „liczby spoza wejścia: 10945, 30085”).
+            const line = `- ${m.label}: ${m.value}${m.delta ? `; zmiana ${m.delta}` : ''}; ${ddmm(m.readingDate)}${m.source ? `; ${m.source}` : ''}`;
             if (!seen.has(line)) { seen.add(line); dane.push(line); }
         }
     }
