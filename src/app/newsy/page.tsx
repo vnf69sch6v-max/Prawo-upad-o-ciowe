@@ -118,7 +118,7 @@ function LeadStory({ item, mounted }: { item: NewsItem; mounted: boolean }) {
                     <Flame size={10} /> Najważniejsze
                 </span>
                 <CategoryTag section={item.section} />
-                        <LangTag item={item} />
+                <LangTag item={item} />
                 {(item.corroboration ?? 1) >= 2 && (
                     <span className="mk-tag-brand-fill opacity-90">POTWIERDZONE · {item.corroboration}</span>
                 )}

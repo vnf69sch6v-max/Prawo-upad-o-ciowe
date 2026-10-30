@@ -132,7 +132,7 @@ export const NEWS_SOURCES: NewsSource[] = [
     {
         id: 'boj', name: 'Bank Japonii', owner: 'boj', url: 'https://www.boj.or.jp/en/rss/whatsnew.xml', section: 'banki', limit: 6, lang: 'en', region: 'JP',
         // whatsnew to ~50 pozycji dziennie, głównie harmonogramy operacji i tabele — bierzemy tylko politykę.
-        include: /monetary policy|outlook for economic|tankan|financial system report|summary of opinions|minutes of|governor/i,
+        include: /monetary policy|outlook for economic|tankan|financial system report|summary of opinions|minutes of/i,
     },
     // Media zagraniczne — tylko tytuł + lead + link (jak wszędzie).
     { id: 'bbc-business', name: 'BBC Business', owner: 'bbc', url: 'https://feeds.bbci.co.uk/news/business/rss.xml', section: 'swiat', limit: 10, lang: 'en', region: 'GB' },
@@ -141,7 +141,7 @@ export const NEWS_SOURCES: NewsSource[] = [
         // Top stories miesza rynki z poradnikiem „Moneyist” (listy czytelników: „My husband’s kids…”) — szum.
         exclude: /^[‘'"]|\b(?:my|our) (?:husband|wife|father|mother|son|daughter|sister|brother|parents|kids|family)\b|\bI[’']m\b|\bshould I\b/i,
     },
-    { id: 'guardian-economics', name: 'The Guardian — Economics', owner: 'guardian', url: 'https://www.theguardian.com/business/economics/rss', section: 'swiat', limit: 8, lang: 'en', region: 'GLOBAL' },
+    { id: 'guardian-economics', name: 'The Guardian — Economics', owner: 'guardian', url: 'https://www.theguardian.com/business/economics/rss', section: 'swiat', limit: 8, lang: 'en', region: 'GB' },
     { id: 'ft-economy', name: 'Financial Times — Global Economy', owner: 'nikkei', url: 'https://www.ft.com/global-economy?format=rss', section: 'swiat', limit: 8, lang: 'en', region: 'GLOBAL' },
     { id: 'japantimes-business', name: 'The Japan Times — Business', owner: 'japantimes', url: 'https://www.japantimes.co.jp/business/feed/', section: 'swiat', limit: 8, lang: 'en', region: 'JP' },
 ];

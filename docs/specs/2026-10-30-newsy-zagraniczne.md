@@ -46,7 +46,7 @@ NBP/MF/KNF/PAP/tvn24/Obserwator Finansowy (brak RSS), WSJ dj.com (daty 2025), In
 1. `npm test`: parser czyta `pubDate` w `<![CDATA[...]]>` (fixture Fed) do poprawnego ISO UTC.
 2. `npm test`: feed RDF bez dat (fixture Nikkei-like) → 0 pozycji, bez wyjątku.
 3. `npm test`: filtr BOJ — z fixture 51 poz. przechodzą tylko tytuły z whitelisty; filtr Fed odrzuca enforcement/approval.
-4. `npm test`: miks z 200 poz. EN i 200 PL → ≤ 40 EN w 150; limit per źródło respektowany; dedup URL/tytuł.
+4. `npm test`: miks z 200 poz. EN i 200 PL → ≤ 40 EN w 150. Limit per źródło (`slice(0, src.limit)`) i dedup URL/tytuł to niezmieniony kod `feed.ts`.
 5. `npm test`: lead obcięty do ≤ 400 zn., bez tagów HTML; każda pozycja ma `lang` i `region`.
 6. `curl /api/news` (lokalnie): są pozycje z ≥ 3 nowych źródeł zagranicznych i ≥ 2 nowych PL, daty ≤ 7 dni.
 7. Playwright 390/1440 na /newsy: filtry ŚWIAT i BANKI CENTRALNE działają, tag `EN · …` widoczny, 0 przewijania w bok,

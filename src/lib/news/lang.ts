@@ -5,11 +5,11 @@ export function isPolishNews(it: { lang?: string }): boolean {
 }
 
 const REGION_LABELS: Record<string, string> = {
-    EU: 'Strefa euro',
+    EU: 'STREFA EURO',
     US: 'USA',
-    JP: 'Japonia',
-    GB: 'Wlk. Brytania',
-    GLOBAL: 'Świat',
+    JP: 'JAPONIA',
+    GB: 'W. BRYTANIA',
+    GLOBAL: 'ŚWIAT',
 };
 
 /** Podpis „EN · USA” dla pozycji obcojęzycznej; null dla polskiej. */

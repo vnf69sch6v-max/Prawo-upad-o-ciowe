@@ -70,7 +70,7 @@ describe('capForeign — zagraniczne nie zalewają feedu', () => {
     const mk = (n: number, lang: 'pl' | 'en') => Array.from({ length: n }, (_, i) => ({ id: `${lang}${i}`, lang }));
 
     it('najwyżej MAX_FOREIGN_ITEMS zagranicznych, polskie nie są wypierane', () => {
-        const sorted = [...mk(100, 'en'), ...mk(200, 'pl')];
+        const sorted = [...mk(200, 'en'), ...mk(200, 'pl')];
         const out = capForeign(sorted);
         expect(out).toHaveLength(150);
         expect(out.filter((i) => i.lang === 'en')).toHaveLength(MAX_FOREIGN_ITEMS);
@@ -85,7 +85,7 @@ describe('capForeign — zagraniczne nie zalewają feedu', () => {
 describe('etykiety języka', () => {
     it('EN · region dla zagranicznych, null dla polskich', () => {
         expect(foreignLabel({ lang: 'en', region: 'US' })).toBe('EN · USA');
-        expect(foreignLabel({ lang: 'en', region: 'JP' })).toBe('EN · Japonia');
+        expect(foreignLabel({ lang: 'en', region: 'JP' })).toBe('EN · JAPONIA');
         expect(foreignLabel({})).toBeNull();
         expect(isPolishNews({ lang: 'en' })).toBe(false);
     });
