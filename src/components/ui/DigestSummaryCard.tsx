@@ -4,7 +4,8 @@ import { useMemo } from 'react';
 import Link from 'next/link';
 import { ArrowRight, Bot } from 'lucide-react';
 import { useDailyDigest } from '@/lib/hooks';
-import type { DigestSummary } from '@/lib/news/daily';
+import type { DailyDigest, DigestSummary, MacroChange } from '@/lib/news/daily';
+import { KpiTiles } from '@/components/ui/KpiTiles';
 import { warsawDateKey, prevCalendarDate } from '@/lib/news/warsaw-date';
 import { formatDate } from '@/lib/formatters';
 
@@ -33,6 +34,8 @@ interface SummaryCardProps {
     href?: string;
     /** Wersja do pasa na stronie z newsami — mniejszy padding i typografia. */
     compact?: boolean;
+    /** Liczby dnia jako kafelki KPI nad akapitem (zamiast „W liczbach: …” w tekście). */
+    dane?: MacroChange[];
 }
 
 /**
@@ -40,10 +43,20 @@ interface SummaryCardProps {
  * która ma już własny tytuł (np. „Podsumowanie dnia" na Przeglądzie). Stopka mieszka TYLKO
  * tutaj, żeby jej brzmienie nie rozjechało się między stronami.
  */
-export function SummaryBody({ summary, compact = false }: { summary: DigestSummary; compact?: boolean }) {
+/**
+ * Szablon sprzed 31.10.2026 kończył się „W liczbach: …”. Gdy obok stoją kafelki KPI, ta część
+ * dublowałaby je (i to w starym formacie „-0.56%”), więc ją odcinamy. Tekst modelu zostaje bez zmian.
+ */
+function proseOnly(summary: DigestSummary): string {
+    if (summary.origin === 'model') return summary.text;
+    return summary.text.replace(/\s*W liczbach:[\s\S]*$/, '').trim();
+}
+
+export function SummaryBody({ summary, compact = false, withTiles = false }: { summary: DigestSummary; compact?: boolean; withTiles?: boolean }) {
+    const text = withTiles ? proseOnly(summary) : summary.text;
     return (
         <>
-            <p className={`leading-relaxed text-mk-text ${compact ? 'text-sm' : 'text-base'}`}>{summary.text}</p>
+            <p className={`max-w-[70ch] leading-relaxed text-mk-text ${compact ? 'text-sm' : 'text-base'}`}>{text}</p>
             <p className="mt-3 flex items-start gap-1.5 text-xs text-mk-muted">
                 <Bot size={13} className="mt-0.5 shrink-0" aria-hidden />
                 <span>{summary.origin === 'model' ? FOOT_MODEL : FOOT_TEMPLATE}</span>
@@ -52,7 +65,7 @@ export function SummaryBody({ summary, compact = false }: { summary: DigestSumma
     );
 }
 
-export function SummaryCard({ summary, staleDate, href, compact = false }: SummaryCardProps) {
+export function SummaryCard({ summary, staleDate, href, compact = false, dane }: SummaryCardProps) {
     return (
         <section className={`mk-card mk-card-editorial ${compact ? 'mk-card-pad-compact' : 'mk-card-pad'}`}>
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
@@ -65,7 +78,8 @@ export function SummaryCard({ summary, staleDate, href, compact = false }: Summa
                     </Link>
                 )}
             </div>
-            <SummaryBody summary={summary} compact={compact} />
+            {dane && dane.length > 0 && <KpiTiles items={dane} className="mb-4" />}
+            <SummaryBody summary={summary} compact={compact} withTiles={!!dane?.length} />
         </section>
     );
 }
@@ -86,11 +100,18 @@ export function DailySummaryCard({ compact = false, href = '/podsumowanie' }: { 
     const { data: today } = useDailyDigest();
     const { data: yesterday } = useDailyDigest(yesterdayKey);
 
-    if (today?.podsumowanie) {
-        return <SummaryCard summary={today.podsumowanie} href={href} compact={compact} />;
-    }
-    if (yesterday?.podsumowanie) {
-        return <SummaryCard summary={yesterday.podsumowanie} staleDate={yesterday.date} href={href} compact={compact} />;
+    const pick = (d: DailyDigest | null | undefined) => d?.podsumowanie ? d : null;
+    const dg = pick(today) ?? pick(yesterday);
+    if (dg?.podsumowanie) {
+        return (
+            <SummaryCard
+                summary={dg.podsumowanie}
+                staleDate={dg === today ? undefined : dg.date}
+                href={href}
+                compact={compact}
+                dane={dg.dane}
+            />
+        );
     }
     return null;
 }

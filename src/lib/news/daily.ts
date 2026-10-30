@@ -20,6 +20,8 @@ const OWNER_OF = new Map(NEWS_SOURCES.map((s) => [s.id, s.owner]));
 export interface MacroChange {
     id: string;
     label: string;
+    /** Instytucja podawana przy liczbie (NBP, GPW, GUS…). Brak w digestach sprzed 31.10.2026. */
+    source?: string;
     value: string;
     /** Zmiana względem poprzedniego odczytu (np. „+0,3 pp", „−1,2%"). */
     delta?: string;

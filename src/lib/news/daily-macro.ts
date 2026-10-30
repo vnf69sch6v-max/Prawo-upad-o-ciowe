@@ -32,18 +32,22 @@ async function readCacheWithMeta<T>(collection: CacheCollection, docId: string):
     return readServerCacheEntry<T>(collection, docId);
 }
 
+/** „+0,01” / „−0,56” / „0,00” — polski zapis ze znakiem (wcześniej `toFixed` dawał „-0.56” obok „4,3955”). */
+function signedPL(d: number, decimals: number): string {
+    const f = formatDecimalPL(Math.abs(d), decimals);
+    if (/^0(?:,0+)?$/.test(f)) return f;
+    return `${d > 0 ? '+' : '\u2212'}${f}`;
+}
+
 /** Delta: `pp` = punkty procentowe, `pct` = zmiana względna w %, `abs` = różnica absolutna. */
 export function fmtDelta(cur: number, prev: number, unit: 'pp' | 'pct' | 'abs'): string {
     if (unit === 'pct') {
         if (prev === 0) return '—';
-        const d = ((cur - prev) / prev) * 100;
-        const sign = d >= 0 ? '+' : '';
-        return `${sign}${d.toFixed(2)}%`;
+        return `${signedPL(((cur - prev) / prev) * 100, 2)}%`;
     }
     const d = cur - prev;
-    const sign = d >= 0 ? '+' : '';
-    if (unit === 'pp') return `${sign}${d.toFixed(1)} pp`;
-    return `${sign}${formatDecimalPL(d, 3)}`;
+    if (unit === 'pp') return `${signedPL(d, 1)} pp`;
+    return signedPL(d, 3);
 }
 
 interface CpiCache {
@@ -150,6 +154,7 @@ export async function fetchMacroChangesWithDiagnostics(
             out.push({
                 id: 'cpi-yoy',
                 label: 'Inflacja CPI (r/r)',
+                source: 'GUS',
                 value: `${formatDecimalPL(last.yoy, 1)}%`,
                 delta: prev?.yoy != null ? fmtDelta(last.yoy, prev.yoy, 'pp') : undefined,
                 unit: '%',
@@ -182,6 +187,7 @@ export async function fetchMacroChangesWithDiagnostics(
             out.push({
                 id: 'ppi-yoy',
                 label: 'Ceny producenta PPI (r/r)',
+                source: 'GUS',
                 value: `${formatDecimalPL(last.yoy, 1)}%`,
                 delta: prev?.yoy != null ? fmtDelta(last.yoy, prev.yoy, 'pp') : undefined,
                 unit: '%',
@@ -232,6 +238,7 @@ export async function fetchMacroChangesWithDiagnostics(
         out.push({
             id,
             label: `${code} / PLN`,
+            source: 'NBP',
             value: formatDecimalPL(mid, 4),
             delta: prevMid != null ? fmtDelta(mid, prevMid, 'pct') : undefined,
             unit: 'zł',
@@ -268,6 +275,7 @@ export async function fetchMacroChangesWithDiagnostics(
                     out.push({
                         id: idx.id,
                         label: idx.label,
+                        source: 'Eurostat',
                         value: formatDecimalPL(last.value, 2),
                         delta: prev ? fmtDelta(last.value, prev.value, 'pp') : undefined,
                         unit: idx.unit,
@@ -295,6 +303,7 @@ export async function fetchMacroChangesWithDiagnostics(
         out.push({
             id: idx.id,
             label: idx.label,
+            source: idx.symbol === '10ypl.b' ? 'Stooq' : 'GPW',
             value: idx.symbol === '10ypl.b'
                 ? formatDecimalPL(latest.close, 2)
                 : formatDecimalPL(latest.close, 0),

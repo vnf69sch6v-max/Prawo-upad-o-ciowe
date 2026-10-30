@@ -1,0 +1,23 @@
+{
+  "teza": "Kurs złotego umocnił się, a WIG20 wzrósł, choć rosnąca rentowność 10Y i wysokie ceny energii mogą ciążyć perspektywom kredytobiorców.",
+  "dane": [
+    "EUR/PLN: 4,3951 (zmiana -0.32%), odczyt 2026-10-29, źródło: serwis Savori.",
+    "USD/PLN: 3,9473 (zmiana -0.38%), odczyt 2026-10-29, źródło: serwis Savori.",
+    "WIG20: 4284 (zmiana +1.01%), odczyt 2026-10-29, źródło: serwis Savori.",
+    "mWIG40: 10 945 (zmiana +0.67%), sWIG80: 30 085 (zmiana -0.65%), odczyt 2026-10-29, źródło: serwis Savori.",
+    "Rentowność 10Y: 6,23 (zmiana +0.4 pp), odczyt 2026-10-29, źródło: serwis Savori."
+  ],
+  "polska": [
+    "Według nagłówków GUS pokazał najnowsze dane o zatrudnieniu w gospodarce (Interia Biznes); szczegółów odczytu nie podano w materiale.",
+    "Media piszą o odpowiedzi ministra na zarzuty, że Polacy przepłacają za gaz (Money.pl), co może sugerować utrzymującą się presję na koszty energii.",
+    "Według nagłówków Tauron zachęca do zmiany taryfy, wskazując oszczędności do 500 zł rocznie (wnp.pl); to liczba z nagłówka, nie z danych serwisu.",
+    "Nagłówki wskazują, że bank centralny reaguje na wysokie ceny energii i od tego zależą raty kredytów (wnp.pl), co może wiązać się z ostrożniejszą polityką pieniężną.",
+    "Business Insider Polska pisze, że Budimex szykuje się na wielkie inwestycje i „złote lata nadchodzą” — to cytat z nagłówka, nie prognoza serwisu."
+  ],
+  "swiat": [
+    "Według nagłówka Interia Biznes najnowsze dane zza oceanu okazały się lepsze, niż się spodziewano; brak szczegółów w materiale.",
+    "Brak nagłówków zagranicznych i komunikatów banków centralnych w wejściu, więc wpływ otoczenia zewnętrznego na Polskę pozostaje nieokreślony.",
+    "Umocnienie złotego wobec EUR i USD (odczyt 2026-10-29) może sugerować poprawę sentymentu do aktywów regionu, choć skala ruchu jest niewielka."
+  ],
+  "kalendarz": ["2026-10-30: CPI flash — dane za październik 2026."]
+}

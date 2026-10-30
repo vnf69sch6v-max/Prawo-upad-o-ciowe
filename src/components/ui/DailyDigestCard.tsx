@@ -1,14 +1,15 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowRight, ExternalLink, Layers } from 'lucide-react';
+import { ArrowRight, ArrowUpRight, Layers } from 'lucide-react';
 import { useDailyDigest } from '@/lib/hooks';
 import { corroborationLabel } from '@/lib/news/daily';
 import { formatDate } from '@/lib/formatters';
 import type { NewsTopic } from '@/lib/news/match';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { SummaryBody } from '@/components/ui/DigestSummaryCard';
-import { CategoryTag } from '@/components/ui/RelatedNews';
+import { sectionLabel } from '@/components/ui/RelatedNews';
+import { KpiTiles } from '@/components/ui/KpiTiles';
 
 const TOPIC_LABELS: Record<NewsTopic, string> = {
     ceny: 'Ceny',
@@ -17,23 +18,21 @@ const TOPIC_LABELS: Record<NewsTopic, string> = {
     rynki: 'Rynki',
 };
 
-function TopicTags({ topics }: { topics: NewsTopic[] }) {
-    if (topics.length === 0) return null;
-    return (
-        <>
-            {topics.map((t) => (
-                <span key={t} className="mk-tag-brand">{TOPIC_LABELS[t]}</span>
-            ))}
-        </>
-    );
+/** Tagi neutralne — czerwień w tej karcie czytała się jak błąd (zrzut właściciela 30.10). */
+const NEUTRAL_TAG = 'rounded border border-mk-border px-1.5 py-px text-[10px] font-semibold uppercase tracking-wide text-mk-muted';
+
+function Tags({ topics, section }: { topics: NewsTopic[]; section: string }) {
+    const labels = [...new Set([...topics.map((t) => TOPIC_LABELS[t]), sectionLabel(section)])];
+    return <>{labels.map((l) => <span key={l} className={NEUTRAL_TAG}>{l}</span>)}</>;
 }
 
-function CorroborationTag({ n }: { n: number }) {
+/** „N niezależne relacje” — dyskretnie, bez zielonej pigułki; `corroborationLabel` zwraca null przy N < 2. */
+function Corroboration({ n }: { n: number }) {
     const label = corroborationLabel(n);
     if (!label) return null;
     return (
-        <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full bg-mk-positive/10 px-1.5 py-0.5 text-[11px] font-medium text-mk-positive">
-            <Layers size={10} /> {label}
+        <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap">
+            <Layers size={11} aria-hidden /> {label}
         </span>
     );
 }
@@ -86,37 +85,35 @@ export function DailyDigestCard({
                 </Link>
             }
         >
-            {/* Akapit nad punktami — najpierw „o czym pisano", potem konkretne tematy.
-                Karta ma już własny tytuł, więc wstawiamy samą treść bez nagłówka. */}
-            {digest.podsumowanie && (
-                <div className="mb-4 border-b border-mk-border pb-4">
-                    <SummaryBody summary={digest.podsumowanie} compact />
+            <KpiTiles items={digest.dane} className="mb-4" />
+
+            {/* Akapit modelu nad punktami. Szablon („Najważniejsze dziś: „<tytuł 1. punktu>””)
+                powtarzałby pierwszy punkt listy tuż pod sobą, więc na Przeglądzie go pomijamy. */}
+            {digest.podsumowanie?.origin === 'model' && (
+                <div className="mb-3 border-b border-mk-border pb-3">
+                    <SummaryBody summary={digest.podsumowanie} compact withTiles />
                 </div>
             )}
 
-            <ul className="list-none space-y-2">
+            <ul className="-mx-2 list-none divide-y divide-mk-border">
                 {shown.map((p) => (
-                    <li key={p.link} className="flex gap-3">
-                        <span className="mt-3.5 h-1.5 w-1.5 shrink-0 rounded-full bg-mk-brand" aria-hidden />
-                        <div className="min-w-0 flex-1">
-                            <a
-                                href={p.link}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="mk-press-row group -mx-2 block rounded-lg px-2 py-1.5"
-                            >
-                                <div className="text-sm font-semibold leading-snug text-mk-text transition-colors group-hover:text-mk-brand">
-                                    {p.title}
-                                </div>
-                                <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs text-mk-muted">
-                                    <TopicTags topics={p.topics} />
-                                    <CategoryTag section={p.section} />
-                                    <span>{p.source}</span>
-                                    <CorroborationTag n={p.corroboration} />
-                                    <ExternalLink size={12} className="ml-auto shrink-0 text-mk-faint group-hover:text-mk-brand" aria-hidden />
-                                </div>
-                            </a>
-                        </div>
+                    <li key={p.link}>
+                        <a
+                            href={p.link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="mk-press-row group flex min-h-11 flex-col justify-center rounded-lg px-2 py-2.5"
+                        >
+                            <span className="text-sm font-semibold leading-snug text-mk-text transition-colors group-hover:text-mk-brand">
+                                {p.title}
+                                <ArrowUpRight size={13} className="ml-1 inline-block align-[-1px] text-mk-faint group-hover:text-mk-brand" aria-label="(otwiera się w nowej karcie)" />
+                            </span>
+                            <span className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-mk-muted">
+                                <Tags topics={p.topics} section={p.section} />
+                                <span>{p.source}</span>
+                                <Corroboration n={p.corroboration} />
+                            </span>
+                        </a>
                     </li>
                 ))}
             </ul>

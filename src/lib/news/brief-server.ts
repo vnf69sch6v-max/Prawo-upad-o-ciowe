@@ -7,7 +7,7 @@ import { buildTomorrowBlock, type DailyDigest } from '@/lib/news/daily';
 import { nextCalendarDate, prevCalendarDate, warsawDateKey } from '@/lib/news/warsaw-date';
 import {
     BRIEF_SYSTEM_PROMPT, DEEPSEEK_ENDPOINT, DEEPSEEK_MODEL, MAX_OUTPUT_TOKENS,
-    buildBriefInput, collectBriefAllowed, costUsd, parseBriefJson, validateBrief,
+    buildBriefInput, cleanBriefBody, collectBriefAllowed, costUsd, normalizeBriefBody, parseBriefJson, validateBrief, ddmm,
     type BriefDoc, type BriefKind, type DeepseekUsage,
 } from '@/lib/news/brief';
 
@@ -95,7 +95,7 @@ function gatherCalendar(kind: BriefKind, today: string): string[] {
     const out: string[] = [];
     let day = today;
     for (let i = 0; i < (kind === 'daily' ? 1 : 5); i++) {
-        for (const ev of buildTomorrowBlock(prevCalendarDate(day)).events) out.push(`${day}: ${ev.name}`);
+        for (const ev of buildTomorrowBlock(prevCalendarDate(day)).events) out.push(`${ddmm(day)} · ${ev.name}`);
         day = nextCalendarDate(day);
     }
     return out;
@@ -123,12 +123,17 @@ export async function runBrief(kind: BriefKind, now = new Date(), fetchImpl: typ
                 const reply = await callDeepseek(key, input, MAX_OUTPUT_TOKENS[kind], fetchImpl);
                 cost += costUsd(reply.usage, now);
                 const tokens = { input: reply.usage.prompt_tokens ?? 0, output: reply.usage.completion_tokens ?? 0 };
-                const body = parseBriefJson(reply.content);
-                if (!body) { reason = 'niepoprawny JSON'; continue; }
+                const parsed = parseBriefJson(reply.content);
+                if (!parsed) { reason = 'niepoprawny JSON'; continue; }
+                const body = cleanBriefBody(normalizeBriefBody(parsed));
+                if (!body) { reason = 'meta: teza komentuje wejście'; continue; }
                 const v = validateBrief(body, allowed);
                 if (!v.ok) { reason = v.reason ?? 'walidacja'; continue; }
 
-                const doc: BriefDoc = { kind, date: today, generatedAt: now.toISOString(), model: DEEPSEEK_MODEL, body, tokens, costUsd: cost };
+                const doc: BriefDoc = {
+                    kind, date: today, dataDate: digests[0].date, generatedAt: now.toISOString(), model: DEEPSEEK_MODEL,
+                    body, tokens, costUsd: cost,
+                };
                 await setServerCache('digest', briefDocId(kind), doc, 'deepseek');
                 console.log(`[brief] ${kind} ${today}: ok, ${tokens.input}+${tokens.output} tok, $${cost.toFixed(6)}`);
                 return { kind, status: 'ok', costUsd: cost, tokens };
