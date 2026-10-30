@@ -31,7 +31,7 @@ const SECTION_LABELS: Record<string, string> = {
     oficjalne: 'OFICJALNE',
 };
 
-function sectionLabel(section: string): string {
+export function sectionLabel(section: string): string {
     const key = section.trim().toLowerCase();
     if (SECTION_LABELS[key]) return SECTION_LABELS[key];
     const trimmed = section.trim();

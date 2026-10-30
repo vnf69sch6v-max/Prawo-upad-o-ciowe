@@ -88,13 +88,7 @@ export function buildTemplateSummary(digest: DailyDigest): string | null {
     const corr = corroborationLabel(lead.corroboration);
     const zdania: string[] = [`Najważniejsze dziś: „${lead.title}”${corr ? ` (${corr})` : ''}.`];
 
-    if (digest.dane.length > 0) {
-        const liczby = digest.dane
-            .slice(0, 3)
-            .map((d) => `${d.label} ${d.value}${d.delta ? ` (${d.delta})` : ''}`)
-            .join(', ');
-        zdania.push(`W liczbach: ${liczby}.`);
-    }
+    // Liczby nie idą do akapitu — karta pokazuje je w kafelkach KPI (spec 2026-10-30-podsumowanie-i-brief-wyglad).
     return zdania.join(' ');
 }
 

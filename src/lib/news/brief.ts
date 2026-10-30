@@ -7,6 +7,9 @@
 import { WORD_NUMERALS_G, extractNumbers } from '@/lib/news/summary';
 import type { DailyDigest } from '@/lib/news/daily';
 import type { NewsArchiveItem } from '@/lib/news/archive';
+import { META_POINT, ddmm } from '@/lib/news/brief-text';
+
+export { META_POINT, cleanBriefBody, ddmm, normalizeBriefBody, normalizeBriefText } from '@/lib/news/brief-text';
 
 export type BriefKind = 'daily' | 'weekly';
 
@@ -28,6 +31,8 @@ export interface BriefDoc {
     kind: BriefKind;
     /** Data Warsaw, na którą brief jest przygotowany (YYYY-MM-DD; tydzień = poniedziałek). */
     date: string;
+    /** Data najnowszego digestu, z którego wzięto liczby (dzień: wczoraj). Brak w briefach sprzed 31.10.2026. */
+    dataDate?: string;
     generatedAt: string;
     model: string;
     body: BriefBody;
@@ -81,11 +86,16 @@ export function costUsd(usage: DeepseekUsage, at: Date): number {
 export const BRIEF_SYSTEM_PROMPT = `Jesteś analitykiem makro serwisu Savori. Piszesz po polsku brief dla inwestora.
 Zasady bezwzględne:
 1. Używaj WYŁĄCZNIE liczb, które stoją w danych wejściowych, zapisanych tak samo. Niczego nie licz, nie zaokrąglaj, nie szacuj.
-2. Przy każdej liczbie podaj okres lub datę odczytu i źródło z wejścia.
+2. Źródło liczby to instytucja z wejścia (NBP, GPW, GUS…) — podawaj je tylko, gdy ma znaczenie; nigdy „serwis”.
+   Datę odczytu podaj tylko, gdy ma znaczenie, w formie DD.MM.
 3. Nagłówki to tylko tytuły i lidy mediów — pisz „media piszą”, „według nagłówków”, nie przedstawiaj ich jako faktów.
 4. Wnioski formułuj ostrożnie („może”, „sugeruje”); bez rekomendacji kupna lub sprzedaży.
-5. Odpowiedz wyłącznie obiektem JSON: {"teza": string, "dane": string[], "polska": string[], "swiat": string[], "kalendarz": string[]}.
-   teza = jedno zdanie; dane 2–5 punktów; polska 2–5; swiat 2–4 (co z tego wynika dla Polski lub Japonii); kalendarz 0–5.
+5. Nie komentuj danych wejściowych ani ich braków (żadnego „brak danych w wejściu”, „nie podano w materiale”,
+   „to liczba z nagłówka”). Gdy do sekcji nie ma materiału, zwróć pustą tablicę.
+6. Liczby po polsku: przecinek dziesiętny, minus „−”.
+7. Odpowiedz wyłącznie obiektem JSON: {"teza": string, "dane": string[], "polska": string[], "swiat": string[], "kalendarz": string[]}.
+   teza = jedno zdanie; dane 2–4 punkty (najważniejsze zmiany w liczbach i co mogą znaczyć); polska 2–5;
+   swiat 0–4 (co z tego wynika dla Polski lub Japonii); kalendarz 0–5.
    Każdy punkt to 1–2 zdania czystego tekstu, bez markdownu.`;
 
 export interface BriefInputData {
@@ -111,7 +121,7 @@ export function buildBriefInput(d: BriefInputData, maxTokens = MAX_INPUT_TOKENS)
     const dane: string[] = [];
     for (const dg of d.digests) {
         for (const m of dg.dane) {
-            const line = `- ${m.label}: ${m.value}${m.delta ? ` (zmiana ${m.delta})` : ''}, odczyt ${m.readingDate}`;
+            const line = `- ${m.label} ${m.value}${m.delta ? `, zmiana ${m.delta}` : ''}, ${ddmm(m.readingDate)}${m.source ? `, ${m.source}` : ''}`;
             if (!seen.has(line)) { seen.add(line); dane.push(line); }
         }
     }
@@ -133,18 +143,19 @@ export function buildBriefInput(d: BriefInputData, maxTokens = MAX_INPUT_TOKENS)
             const lead = withLeads && w.description ? ` — ${w.description.slice(0, 200)}` : '';
             return `- „${w.title}” — ${w.source}${w.region ? ` (${w.region})` : ''}${lead}`;
         });
-        const okres = d.kind === 'daily' ? `BRIEF DNIA ${d.date}` : `BRIEF TYGODNIA od ${d.date}`;
+        const okres = d.kind === 'daily' ? `BRIEF NA ${ddmm(d.date)}` : `BRIEF TYGODNIA od ${ddmm(d.date)}`;
         return [
             okres,
             '',
-            'DANE Z SERWISU — wartości zweryfikowane u źródła (GUS, NBP, GPW):',
-            dane.length ? dane.join('\n') : '(brak nowych odczytów)',
+            // Nagłówek bez słowa „serwis” — 30.10 model przepisywał go jako „źródło: serwis Savori”.
+            'DANE — wartości zweryfikowane u źródła; instytucja na końcu linii:',
+            dane.length ? dane.join('\n') : '(pusto)',
             '',
             'NAGŁÓWKI POLSKICH MEDIÓW:',
-            plList.length ? plList.join('\n') : '(brak)',
+            plList.length ? plList.join('\n') : '(pusto)',
             '',
             'NAGŁÓWKI ZAGRANICZNE I KOMUNIKATY BANKÓW CENTRALNYCH (po angielsku):',
-            world.length ? world.join('\n') : '(brak)',
+            world.length ? world.join('\n') : '(pusto — sekcja „swiat” = [])',
             '',
             d.kind === 'daily' ? 'KALENDARZ NA DZIŚ:' : 'KALENDARZ NA TEN TYDZIEŃ:',
             d.calendar.length ? d.calendar.map((c) => `- ${c}`).join('\n') : '(brak publikacji)',
@@ -173,7 +184,7 @@ export interface BriefAllowed {
 /** Liczby, których wolno użyć: wszystko z wejścia (także bez znaku) + składniki daty briefu. */
 export function collectBriefAllowed(input: string, date: string): BriefAllowed {
     const numbers = new Set<string>();
-    for (const n of [...extractNumbers(input), ...extractNumbers(date)]) {
+    for (const n of [...extractNumbers(input), ...extractNumbers(date), ...extractNumbers(ddmm(date))]) {
         numbers.add(n);
         numbers.add(n.replace(/^-/, ''));
     }
@@ -210,6 +221,8 @@ export function validateBrief(body: BriefBody, allowed: BriefAllowed): { ok: boo
     if (body.dane.length + body.polska.length + body.swiat.length < 3) return { ok: false, reason: 'za mało punktów' };
     const text = briefText(body);
     if (/\*\*|^#{1,6}\s/m.test(text)) return { ok: false, reason: 'markdown' };
+    const meta = META_POINT.exec(text);
+    if (meta) return { ok: false, reason: `meta: „${meta[0]}”` };
     const obce = extractNumbers(text).filter((n) => !allowed.numbers.has(n));
     if (obce.length) return { ok: false, reason: `liczby spoza wejścia: ${[...new Set(obce)].slice(0, 5).join(', ')}` };
     // Druga bramka jak w `validateSummary`: „trzeci miesiąc z rzędu” nie ma cyfry, a jest liczeniem.

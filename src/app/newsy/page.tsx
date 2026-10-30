@@ -120,9 +120,6 @@ function LeadStory({ item, mounted }: { item: NewsItem; mounted: boolean }) {
                 </span>
                 <CategoryTag section={item.section} />
                 <LangTag item={item} />
-                {(item.corroboration ?? 1) >= 2 && (
-                    <span className="mk-tag-brand-fill opacity-90">POTWIERDZONE · {item.corroboration}</span>
-                )}
                 <CorroborationBadge n={item.corroboration ?? 1} wire={item.wire} alsoIn={item.alsoIn} />
             </div>
             <h2 className="mt-2 text-lg font-bold leading-tight tracking-tight text-mk-text transition-colors group-hover:text-mk-brand sm:text-xl">
