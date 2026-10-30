@@ -48,9 +48,12 @@ pierwszeństwo. Rzeczy, których nie da się zrobić z kodu, trafiają do „Wym
     wcześniej wczoraj), stan „wyłączony” przy braku klucza zamiast `error`, test w `tests/freshness.test.ts`.
     Do tego czasu stary brief widać tylko jako „Częściowo” w dzienniku crona `brief`. Po pierwszym przebiegu
     z kluczem (31.10, 05:10 UTC): kryteria 6–8 specyfikacji (sealed w Firestore, 3 liczby vs strony, Playwright).
-4b. **Podsumowanie dnia i brief — data, język, wygląd** (prośba właściciela 30.10, w toku na
+4b. **Podsumowanie dnia i brief — data, język, wygląd** — **zrobione 30.10.2026** (prośba właściciela, PM: SHIP po FIX;
     `claude/nice-wozniak-8xnus6`, spec `docs/specs/2026-10-30-podsumowanie-i-brief-wyglad.md`): dwa różne EUR/PLN
     na jednym ekranie bez daty, meta-komentarze modelu, angielski format liczb, pusta połowa karty, czerwone tagi.
+4c. **Lista /newsy spójna z Przeglądem** (z REVIEW PM 30.10): czerwone obrysowane tagi (MAKRO, PRZEMYSŁ) i samotne
+    ikony linku na liście → neutralne tagi i ikona przy tytule, jak w `DailyDigestCard`. Po briefie z 31.10 PM sprawdza,
+    czy punkty „Dane” niosą wniosek, a nie tylko przepisane liczby (nowy prompt).
 4. **`news-digest` nie zapisuje przebiegu** w `health/cron_runs` — `/status` nie pokazuje, czy działa.
 5. **Lint:** ~21 starych błędów w `src/lib/firebase/*` i hookach — wyczyścić, potem lint w CI.
 6. **`/api/news?refresh=1` przy każdym wywołaniu zapisuje archiwum dzienne do Firestore**, także wtedy,

@@ -34,6 +34,7 @@ Od lg: kafelki w jednym rzędzie, brief ma Polskę i Świat w 2 kolumnach, kolum
   - pusta sekcja to `[]` (świat 0–4);
   - liczby po polsku, daty „DD.MM”.
 - Wyjście modelu przechodzi przez `normalizeBriefText` przed walidacją i zapisem: „-0.32%” → „−0,32%”, „2026-10-29” → „29.10”. Walidator liczb działa na tekście po normalizacji.
+- Kalendarz w briefie: „DD.MM · nazwa wydarzenia” — `DailyDigestTomorrowEvent` nie ma instytucji ani godziny.
 - Walidator odrzuca meta-frazy (lista w kodzie i w teście): „nie z danych serwisu”, „nie prognoza serwisu”, „w wejściu”, „w materiale”, „serwis Savori”, „danych wejściowych”. Odrzucenie oznacza, że zostaje poprzedni brief, jak dotąd.
 - Bez nowych źródeł, cronów i zapytań przeglądarki, więc CSP bez zmian.
 
@@ -42,7 +43,10 @@ Od lg: kafelki w jednym rzędzie, brief ma Polskę i Świat w 2 kolumnach, kolum
 - [x] 320/390 i 1280/1440 bez przewijania w bok.  - [ ] Świeżość briefu — osobno, ROADMAP 4a.
 
 ## Kryteria akceptacji
-1. `npm test`: prawdziwa odpowiedź z 30.10 (fixture w `tests/fixtures/`) z „nie z danych serwisu” / „serwis Savori” / „w wejściu” zostaje odrzucona z powodem `meta`.
+1. `npm test`: prawdziwa odpowiedź z 30.10 (fixture w `tests/fixtures/`) z „nie z danych serwisu” / „serwis Savori” / „w wejściu” — surowa zostaje odrzucona z powodem `meta`; po `cleanBriefBody` nie ma w niej żadnej meta-frazy.
+   (Zmiana po wdrożeniu, zaakceptowana w REVIEW: cron najpierw czyści — wycina dopiski o pochodzeniu i usuwa całe
+   punkty komentujące wejście — a odrzuca dopiero, gdy meta jest w tezie albo zostaje po czyszczeniu. Czyszczenie
+   tylko usuwa tekst, więc nie wprowadza liczb; odrzucenie całości za jeden nawyk modelu zostawiałoby brief z wczoraj.)
 2. `npm test`: `normalizeBriefText("EUR/PLN 4.3951 (-0.32%), 2026-10-29")` zwraca „EUR/PLN 4,3951 (−0,32%), 29.10”. Ten tekst przechodzi walidator, gdy wejście ma 4,3951 i −0,32.
 3. `npm test`: wejście briefu ma przy każdej linii danych instytucję (NBP/GPW/GUS) i nie zawiera „serwis Savori”.
 4. `npm test`: `daily-macro` formatuje deltę jako „−0,56%” i „+0,01%”. Akapit `summary.ts` nie zawiera już „W liczbach:”.
