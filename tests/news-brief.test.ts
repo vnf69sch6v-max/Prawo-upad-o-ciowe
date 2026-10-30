@@ -93,6 +93,18 @@ describe('walidator liczb', () => {
         expect(validateBrief(body, idxAllowed)).toEqual({ ok: true });
     });
 
+    it('liczba z tysiącami przed przecinkiem i kropką w prozie modelu — regresja 30.10', () => {
+        const idx = { ...input, digests: [{ ...digest, dane: [
+            { id: 'mwig40', label: 'mWIG40', source: 'GPW', value: '10\u00a0945', delta: '+0,67%', readingDate: '2026-10-29' },
+            { id: 'swig80', label: 'sWIG80', source: 'GPW', value: '30 085', delta: '\u22120,65%', readingDate: '2026-10-29' },
+        ] }] } as BriefInputData;
+        const idxAllowed = collectBriefAllowed(buildBriefInput(idx), idx.date);
+        const ok = (teza: string) => validateBrief(normalizeBriefBody({ teza, dane: ['a'], polska: ['b'], swiat: ['c'], kalendarz: [] }), idxAllowed);
+        expect(ok('mWIG40 spadł do 10 945, a sWIG80 do 30 085.')).toEqual({ ok: true });
+        expect(ok('mWIG40 spadł do 10\u00a0945, a sWIG80 do 30\u00a0085.')).toEqual({ ok: true });
+        expect(ok('mWIG40 spadł do 10 946, a sWIG80 do 30 085.').ok).toBe(false);
+    });
+
     it('przyjmuje brief z pustym „swiat”', () => {
         const body = { ...goodBody, swiat: [], polska: [...goodBody.polska, 'Media piszą o RPP.'] };
         expect(validateBrief(normalizeBriefBody(body), allowed)).toEqual({ ok: true });

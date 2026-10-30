@@ -108,16 +108,18 @@ function canonical(raw: string): string {
 /**
  * Skleja spacje rozdzielające tysiące (zwykłe, niełamliwe i wąskie), żeby „9 402" było jedną liczbą.
  *
- * ⚠ Grupa MUSI mieć dokładnie 3 cyfry i nie może po niej iść cyfra ani separator dziesiętny —
+ * ⚠ Grupa MUSI mieć dokładnie 3 cyfry i nie może po niej iść cyfra ani separator dziesiętny Z CYFRĄ —
  * inaczej sklejamy sąsiadujące, niezwiązane liczby. Pierwsza wersja bez tego warunku zamieniała
  * „WIG20 3 766" na jedną liczbę 203766, a „3,0 3.0" na 3.03. Oba wyszły dopiero w teście.
+ * Sama interpunkcja („10 945, a…”, „…do 30 085.”) NIE blokuje — do 30.10.2026 blokowała, więc
+ * walidator widział 945 i 30 zamiast 10945 i 30085 i odrzucał poprawny brief (cron `brief`).
  */
 function joinThousands(text: string): string {
     let out = text;
     let prev: string;
     do {
         prev = out;
-        out = out.replace(/(\d)[\s\u00A0\u202F](\d{3})(?![\d.,])/g, '$1$2');
+        out = out.replace(/(\d)[\s\u00A0\u202F](\d{3})(?!\d|[.,]\d)/g, '$1$2');
     } while (out !== prev);
     return out;
 }
