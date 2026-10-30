@@ -64,6 +64,14 @@ describe('walidator liczb', () => {
         expect(v.reason).toContain('2.7');
     });
 
+    it('odrzuca liczebnik słowny spoza wejścia, przepuszcza cytat z nagłówka', () => {
+        const v = validateBrief({ ...goodBody, teza: 'Inflacja spada trzeci miesiąc z rzędu.' }, allowed);
+        expect(v.ok).toBe(false);
+        expect(v.reason).toContain('trzeci');
+        const withHeadline = collectBriefAllowed(`${buildBriefInput(input)}\n- Trzy lata hossy uśpiły czujność`, input.date);
+        expect(validateBrief({ ...goodBody, teza: 'Media piszą, że trzy lata hossy uśpiły czujność.' }, withHeadline)).toEqual({ ok: true });
+    });
+
     it('odrzuca markdown i niepoprawny JSON', () => {
         expect(validateBrief({ ...goodBody, teza: '**Teza**' }, allowed).ok).toBe(false);
         expect(parseBriefJson('to nie jest JSON')).toBeNull();

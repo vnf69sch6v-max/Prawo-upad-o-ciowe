@@ -6,7 +6,7 @@ i świata. Mamy liczby (cache) i newsy, brak jednej strony interpretacji. Brief 
 tygodniowy w poniedziałek (podsumowanie tygodnia + kalendarz publikacji na bieżący tydzień).
 
 ## Co widzi użytkownik
-- Telefon: na /newsy (i link z Przeglądu) karta **Brief dnia · {data}**: 1 zdanie-teza, 3–5 punktów z liczbami
+- Telefon: na /newsy karta **Brief dnia · {data}**: 1 zdanie-teza, 3–5 punktów z liczbami
   (każda z okresem i źródłem w nawiasie), „Na świecie” 2–3 punkty, „Dziś w kalendarzu”. Rozwijane „Cały brief”.
   Stopka: „Wygenerowane automatycznie przez model DeepSeek z danych GUS/NBP/… i nagłówków mediów; liczby
   sprawdzone z naszymi danymi. {godzina generacji}”. W poniedziałek zakładka **Brief tygodnia**.
@@ -22,22 +22,22 @@ tygodniowy w poniedziałek (podsumowanie tygodnia + kalendarz publikacji na bie�
   Peak: 01–04 i 06–10 UTC pn–pt. Cron **05:10 UTC** (off-peak; jitter Hobby mieści się w 05:00–05:59).
   Szacunek: 10k wej. + 1,5k wyj. ≈ 0,0024 USD/dzień; tydzień ~0,005 USD → < 0,10 USD/mies.
 - Twarde limity: wejście ≤ 12 000 tokenów (szacunek znaki/3, przycinamy newsy, nie liczby), `max_tokens` 1 200
-  (dzień) / 2 000 (tydzień), `temperature` ≤ 0,3, timeout 45 s, 1 próba + 1 retry. Koszt z `usage` zapisany w logu crona.
+  (dzień) / 2 000 (tydzień), `temperature` ≤ 0,3, timeout 30 s, 1 próba + 1 retry. Koszt z `usage` zapisany w logu crona.
 - Wejście: wyłącznie zweryfikowane liczby z cache (jak `src/lib/news/summary.ts` / `daily-macro.ts`: wartość, okres,
   źródło) + top 15 newsów PL i 10 zagranicznych (tytuł + lead, z feedu wg spec `2026-10-30-newsy-zagraniczne`).
 - **Walidator liczb**: każda liczba w odpowiedzi (po normalizacji 4,9 / 4.9 / „4,9%”) musi wystąpić we wejściu
-  (daty i liczebniki porządkowe z białej listy). Brief z obcą liczbą → **nie publikujemy**, zostaje poprzedni, log `partial`.
-- Zapis: Firestore przez `setServerCache` (`toStored`), klucze `news_brief/daily_v1` i `news_brief/weekly_v1`
-  (+ archiwum dzienne po dacie Warsaw). Strona/route tylko czyta (`peek`); żadnego wywołania DeepSeek w renderze.
+  (daty briefu dozwolone; liczebniki słowne — „trzeci”, „dwa” — tylko te obecne we wejściu, jak w `summary.ts`). Brief z obcą liczbą → **nie publikujemy**, zostaje poprzedni, log `partial`.
+- Zapis: Firestore przez `setServerCache` (`toStored`), klucze `digest/brief_daily_v1` i `digest/brief_weekly_v1`. Strona/route tylko czyta (`peek`); żadnego wywołania DeepSeek w renderze.
 - Bez `DEEPSEEK_API_KEY` funkcja wyłączona: cron odpowiada `skipped`, UI ukryte, `npm test`/build bez klucza zielone.
 - Cron `brief` w `vercel.json` + grupa w `CRON_SPECS`, `maxDuration` ≥ suma (testy `cron-runs`, `function-limits`).
-  Freshness: `DatasetSpec` `news-brief` (dzisiejsza data Warsaw po 07:00; bez klucza → wyłączony, nie `error`).
+  Freshness: `DatasetSpec` `news-brief` — **nie w tym PR**, osobny krok (ROADMAP 4a). Do tego czasu brak digestu
+  przy ustawionym kluczu = `error` → przebieg „Częściowo” w dzienniku cronów.
 - Grok zostaje bez zmian. Serwer → DeepSeek, przeglądarka nic nie woła → CSP bez zmian.
 - /prywatnosc w tym samym PR: DeepSeek (Chiny) jako dostawca generowania tekstu; wysyłamy tylko publiczne dane
   statystyczne i publiczne nagłówki, **żadnych danych użytkowników** (test: wejście promptu budowane bez dostępu do sesji/uid).
 
 ## Lekcje zastosowane
-- [x] Liczby tylko z naszego zweryfikowanego cache, okres + źródło przy każdej.  - [x] Freshness + log crona.
+- [x] Liczby tylko z naszego zweryfikowanego cache, okres + źródło przy każdej.  - [ ] Freshness (ROADMAP 4a)  - [x] log crona.
 - [x] Generacja tylko w cronie, strona czyta Firestore.  - [x] `toStored`.  - [x] Nic z „teraz” przed hydracją.
 
 ## Kryteria akceptacji
@@ -53,7 +53,7 @@ tygodniowy w poniedziałek (podsumowanie tygodnia + kalendarz publikacji na bie�
 9. /prywatnosc zawiera DeepSeek i zakres danych; `tsc`, eslint, `npm run build` czyste.
 
 ## Poza zakresem
-Brief per użytkownik/watchlista, czat, tłumaczenie newsów, brief JP osobno, e-mail/push.
+Link do briefu z Przeglądu (osobny krok), archiwum briefów po dacie, brief per użytkownik/watchlista, czat, tłumaczenie newsów, brief JP osobno, e-mail/push.
 
 ## Akcje właściciela
 Założyć konto na platform.deepseek.com, doładować saldo (np. 2 USD), utworzyć klucz i wpisać `DEEPSEEK_API_KEY`

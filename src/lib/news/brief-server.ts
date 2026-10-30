@@ -109,7 +109,9 @@ export async function runBrief(kind: BriefKind, now = new Date(), fetchImpl: typ
     const today = warsawDateKey(now);
     try {
         const [digests, world] = await Promise.all([gatherDigests(kind, today), gatherWorld(today)]);
-        if (!digests.length) return { kind, status: 'skipped', reason: 'brak digestu', costUsd: 0 };
+        // Klucz jest, a digestu brak → to awaria (cron `news-digest`), nie wyłączona funkcja: `skipped`
+        // dałoby zielone 0/0 w `/status`, choć briefu nie ma.
+        if (!digests.length) return { kind, status: 'error', reason: 'brak digestu', costUsd: 0 };
 
         const input = buildBriefInput({ kind, date: today, digests, world, calendar: gatherCalendar(kind, today) });
         const allowed = collectBriefAllowed(input, today);

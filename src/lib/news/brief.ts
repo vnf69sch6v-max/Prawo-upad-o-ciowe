@@ -4,7 +4,7 @@
 // Zasada jak w summary.ts (Grok): model widzi wyłącznie nasze zweryfikowane liczby z digestu
 // i publiczne nagłówki; każda liczba w odpowiedzi musi wystąpić w wejściu, inaczej brief
 // nie jest publikowany (zostaje poprzedni).
-import { extractNumbers } from '@/lib/news/summary';
+import { WORD_NUMERALS_G, extractNumbers } from '@/lib/news/summary';
 import type { DailyDigest } from '@/lib/news/daily';
 import type { NewsArchiveItem } from '@/lib/news/archive';
 
@@ -164,14 +164,21 @@ export function buildBriefInput(d: BriefInputData, maxTokens = MAX_INPUT_TOKENS)
 
 // ─── Walidacja odpowiedzi ───────────────────────────────────
 
+export interface BriefAllowed {
+    numbers: Set<string>;
+    /** Liczebniki słowne z wejścia — jak w `summary.ts`: cytat z nagłówka to nie liczenie przez model. */
+    words: Set<string>;
+}
+
 /** Liczby, których wolno użyć: wszystko z wejścia (także bez znaku) + składniki daty briefu. */
-export function collectBriefAllowed(input: string, date: string): Set<string> {
-    const allowed = new Set<string>();
+export function collectBriefAllowed(input: string, date: string): BriefAllowed {
+    const numbers = new Set<string>();
     for (const n of [...extractNumbers(input), ...extractNumbers(date)]) {
-        allowed.add(n);
-        allowed.add(n.replace(/^-/, ''));
+        numbers.add(n);
+        numbers.add(n.replace(/^-/, ''));
     }
-    return allowed;
+    const words = new Set([...input.matchAll(WORD_NUMERALS_G)].map((m) => m[0].toLowerCase()));
+    return { numbers, words };
 }
 
 export function parseBriefJson(raw: string): BriefBody | null {
@@ -199,11 +206,14 @@ export function briefText(b: BriefBody): string {
     return [b.teza, ...b.dane, ...b.polska, ...b.swiat, ...b.kalendarz].join('\n');
 }
 
-export function validateBrief(body: BriefBody, allowed: Set<string>): { ok: boolean; reason?: string } {
+export function validateBrief(body: BriefBody, allowed: BriefAllowed): { ok: boolean; reason?: string } {
     if (body.dane.length + body.polska.length + body.swiat.length < 3) return { ok: false, reason: 'za mało punktów' };
     const text = briefText(body);
     if (/\*\*|^#{1,6}\s/m.test(text)) return { ok: false, reason: 'markdown' };
-    const obce = extractNumbers(text).filter((n) => !allowed.has(n));
+    const obce = extractNumbers(text).filter((n) => !allowed.numbers.has(n));
     if (obce.length) return { ok: false, reason: `liczby spoza wejścia: ${[...new Set(obce)].slice(0, 5).join(', ')}` };
+    // Druga bramka jak w `validateSummary`: „trzeci miesiąc z rzędu” nie ma cyfry, a jest liczeniem.
+    const obceSlowa = [...text.matchAll(WORD_NUMERALS_G)].map((m) => m[0]).filter((w) => !allowed.words.has(w.toLowerCase()));
+    if (obceSlowa.length) return { ok: false, reason: `liczebnik słowny spoza wejścia: „${obceSlowa[0]}”` };
     return { ok: true };
 }
