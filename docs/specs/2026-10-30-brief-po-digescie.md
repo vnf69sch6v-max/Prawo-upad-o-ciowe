@@ -20,6 +20,8 @@ Korekty względem planu koordynatora:
   - Bierze WYŁĄCZNIE dzisiejszy digest Warsaw (zapisany jako `dataDate`).
   - **Bez fallbacku na wczorajszy digest.** Wczorajszy brief już go opisuje, więc fallback płaciłby drugi raz za ten sam dzień. Brak dzisiejszego digestu daje `error`, przebieg „Częściowo” i zostawia poprzedni brief.
   - Kalendarz: najbliższy dzień roboczy („Jutro”), nie dzisiejszy, bo o 18:20 dzisiejsze publikacje już były.
+    W UI etykieta to „Najbliższe publikacje” / „Nadchodzący tydzień”, nie „Jutro” — brief czytany rano następnego dnia
+    mówiłby nieprawdę; pozycje mają daty „DD.MM · …” (zaakceptowane w REVIEW).
 - **Brief tygodniowy w niedzielę o 17:20 UTC**, nie w poniedziałek:
   - wejście: 7 digestów pn–nd;
   - kalendarz: pn–pt nadchodzącego tygodnia;
