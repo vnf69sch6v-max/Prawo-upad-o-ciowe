@@ -44,10 +44,10 @@ pierwszeństwo. Rzeczy, których nie da się zrobić z kodu, trafiają do „Wym
 3. **CORS na `/api/*`:** `Access-Control-Allow-Origin: *` z metodami POST/PUT/DELETE/PATCH
    (`vercel.json`). Zawęzić do GET/OPTIONS; POST tylko dla parsera z własnej domeny.
 4a. **Świeżość briefu DeepSeek** (FIX 4 z recenzji PM PR #71, przeniesiony z braku budżetu sesji): `DatasetSpec`
-    `news-brief` w `FRESHNESS_DATASETS` (`/api/news/brief?kind=daily`; oczekiwana data Warsaw = dziś po 07:00,
-    wcześniej wczoraj), stan „wyłączony” przy braku klucza zamiast `error`, test w `tests/freshness.test.ts`.
+    `news-brief` w `FRESHNESS_DATASETS` (`/api/news/brief?kind=daily`; od 30.10 cron 17:20 UTC po digeście:
+    oczekiwana `dataDate` Warsaw = dziś po 18:30, wcześniej wczoraj), stan „wyłączony” przy braku klucza zamiast `error`, test w `tests/freshness.test.ts`.
     Do tego czasu stary brief widać tylko jako „Częściowo” w dzienniku crona `brief`. Po pierwszym przebiegu
-    z kluczem (31.10, 05:10 UTC): kryteria 6–8 specyfikacji (sealed w Firestore, 3 liczby vs strony, Playwright).
+    z kluczem (17:20 UTC): kryteria 6–8 specyfikacji (sealed w Firestore, 3 liczby vs strony, Playwright).
 4b. **Podsumowanie dnia i brief — data, język, wygląd** — **zrobione 30.10.2026** (prośba właściciela, PM: SHIP po FIX;
     `claude/nice-wozniak-8xnus6`, spec `docs/specs/2026-10-30-podsumowanie-i-brief-wyglad.md`): dwa różne EUR/PLN
     na jednym ekranie bez daty, meta-komentarze modelu, angielski format liczb, pusta połowa karty, czerwone tagi.

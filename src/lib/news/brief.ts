@@ -94,14 +94,15 @@ Zasady bezwzględne:
    „to liczba z nagłówka”). Gdy do sekcji nie ma materiału, zwróć pustą tablicę.
 6. Liczby po polsku: przecinek dziesiętny, minus „−”.
 7. Odpowiedz wyłącznie obiektem JSON: {"teza": string, "dane": string[], "polska": string[], "swiat": string[], "kalendarz": string[]}.
-   teza = jedno zdanie; dane 2–4 punkty (najważniejsze zmiany w liczbach i co mogą znaczyć); polska 2–5;
+   teza = jedno zdanie; dane 2–3 wnioski z liczb („co mówią liczby”) — NIE przepisuj wartości po kolei, czytelnik
+   widzi je obok w kafelkach; każdą liczbę przywołaj najwyżej raz; polska 2–5;
    swiat 0–4 (co z tego wynika dla Polski lub Japonii); kalendarz 0–5.
    Każdy punkt to 1–2 zdania czystego tekstu, bez markdownu.`;
 
 export interface BriefInputData {
     kind: BriefKind;
     date: string;
-    /** Digesty (dzień: wczorajszy; tydzień: ostatnie 7) — dane i nagłówki PL. */
+    /** Digesty (dzień: dzisiejszy, a bez niego wczorajszy; tydzień: ostatnie 7) — dane i nagłówki PL. */
     digests: DailyDigest[];
     /** Pozycje zagraniczne z archiwum (lang 'en'). */
     world: Pick<NewsArchiveItem, 'title' | 'description' | 'source' | 'region' | 'publishedAt'>[];
@@ -157,7 +158,7 @@ export function buildBriefInput(d: BriefInputData, maxTokens = MAX_INPUT_TOKENS)
             'NAGŁÓWKI ZAGRANICZNE I KOMUNIKATY BANKÓW CENTRALNYCH (po angielsku):',
             world.length ? world.join('\n') : '(pusto — sekcja „swiat” = [])',
             '',
-            d.kind === 'daily' ? 'KALENDARZ NA DZIŚ:' : 'KALENDARZ NA TEN TYDZIEŃ:',
+            d.kind === 'daily' ? 'KALENDARZ — NAJBLIŻSZY DZIEŃ ROBOCZY:' : 'KALENDARZ — NADCHODZĄCY TYDZIEŃ (pn–pt):',
             d.calendar.length ? d.calendar.map((c) => `- ${c}`).join('\n') : '(brak publikacji)',
         ].join('\n');
     };
@@ -179,6 +180,8 @@ export interface BriefAllowed {
     numbers: Set<string>;
     /** Liczebniki słowne z wejścia — jak w `summary.ts`: cytat z nagłówka to nie liczenie przez model. */
     words: Set<string>;
+    /** Daty „DD.MM” z wejścia jako liczby (29.10 → 29.1) — mogą się powtarzać między punktami. */
+    dates: Set<string>;
 }
 
 /** Liczby, których wolno użyć: wszystko z wejścia (także bez znaku) + składniki daty briefu. */
@@ -189,7 +192,8 @@ export function collectBriefAllowed(input: string, date: string): BriefAllowed {
         numbers.add(n.replace(/^-/, ''));
     }
     const words = new Set([...input.matchAll(WORD_NUMERALS_G)].map((m) => m[0].toLowerCase()));
-    return { numbers, words };
+    const dates = new Set([...`${input} ${ddmm(date)}`.matchAll(/\b\d{2}\.\d{2}\b/g)].flatMap((m) => extractNumbers(m[0])));
+    return { numbers, words, dates };
 }
 
 export function parseBriefJson(raw: string): BriefBody | null {
@@ -228,5 +232,15 @@ export function validateBrief(body: BriefBody, allowed: BriefAllowed): { ok: boo
     // Druga bramka jak w `validateSummary`: „trzeci miesiąc z rzędu” nie ma cyfry, a jest liczeniem.
     const obceSlowa = [...text.matchAll(WORD_NUMERALS_G)].map((m) => m[0]).filter((w) => !allowed.words.has(w.toLowerCase()));
     if (obceSlowa.length) return { ok: false, reason: `liczebnik słowny spoza wejścia: „${obceSlowa[0]}”` };
+    // „Co mówią liczby” to wnioski, a wartości są w kafelkach obok: liczba przywołana w dwóch punktach
+    // `dane` znaczy, że model znowu przepisuje tabelę (brief z 30.10). Daty się nie liczą.
+    const seen = new Set<string>();
+    for (const point of body.dane) {
+        const nums = new Set(extractNumbers(point).map((n) => n.replace(/^-/, '')).filter((n) => !allowed.dates.has(n)));
+        for (const n of nums) {
+            if (seen.has(n)) return { ok: false, reason: `powtórzenie: ${n}` };
+            seen.add(n);
+        }
+    }
     return { ok: true };
 }

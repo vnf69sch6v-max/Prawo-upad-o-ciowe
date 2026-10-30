@@ -46,7 +46,7 @@ export const CRON_SPECS: Record<string, CronSpec> = {
     'rynki-intraday': { label: 'Giełda — w trakcie sesji', schedule: 'pn–pt 14:00 UTC', maxAgeHours: 74 },
     'news-archive': { label: 'Archiwum newsów', schedule: 'codziennie 20:00 UTC', maxAgeHours: 26 },
     freshness: { label: 'Kontrola świeżości', schedule: 'codziennie 16:40 UTC', maxAgeHours: 26 },
-    brief: { label: 'Brief dnia (DeepSeek)', schedule: 'codziennie 05:10 UTC', maxAgeHours: 26 },
+    brief: { label: 'Brief dnia (DeepSeek)', schedule: 'codziennie 17:20 UTC', maxAgeHours: 26 },
     jp: { label: 'Japonia — wszystkie wskaźniki', schedule: 'codziennie 00:30 UTC (9:30 JST)', maxAgeHours: 26 },
 };
 

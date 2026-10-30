@@ -1,8 +1,10 @@
 /**
- * Cron: brief dnia (codziennie) i tygodnia (w poniedziałek) z DeepSeek.
+ * Cron: brief dnia (codziennie) i tygodnia (w niedzielę — w poniedziałek rano jest gotowy) z DeepSeek.
  *
- * 05:10 UTC — poza szczytem DeepSeek (01–04 i 06–10 UTC pn–pt, cena ×2); Hobby uruchamia w obrębie
- * godziny, więc 05:00–05:59. Wejście: wczorajszy digest (16:05 UTC) + archiwum newsów zagranicznych.
+ * 17:20 UTC — PO digeście dnia (`news-digest` 16:05, Hobby: 16:00–16:59), więc brief i kafelki KPI
+ * opisują ten sam dzień (do 30.10.2026 brief szedł o 05:10 z wczorajszego digestu i przez cały dzień
+ * przeczył kafelkom). Poza szczytem DeepSeek (01–04 i 06–10 UTC pn–pt, cena ×2).
+ * Wejście: dzisiejszy digest (brak → wczorajszy, `dataDate` to mówi) + archiwum newsów zagranicznych.
  * Bez DEEPSEEK_API_KEY każdy brief to `skipped`, przebieg zapisuje się jako ok (0/0).
  */
 import { NextRequest, NextResponse } from 'next/server';
@@ -19,9 +21,9 @@ export async function GET(request: NextRequest) {
 
     const started = Date.now();
     const now = new Date();
-    const monday = new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/Warsaw', weekday: 'short' }).format(now) === 'Mon';
+    const sunday = new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/Warsaw', weekday: 'short' }).format(now) === 'Sun';
     const results: BriefRunResult[] = [await runBrief('daily', now)];
-    if (monday) results.push(await runBrief('weekly', now));
+    if (sunday) results.push(await runBrief('weekly', now));
 
     const attempted = results.filter((r) => r.status !== 'skipped');
     const costUsd = Math.round(results.reduce((s, r) => s + r.costUsd, 0) * 1e6) / 1e6;
