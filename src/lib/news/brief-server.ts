@@ -71,9 +71,14 @@ export interface BriefRunResult {
     tokens?: { input: number; output: number };
 }
 
+/**
+ * Dzienny: WYŁĄCZNIE dzisiejszy digest (cron 17:20 UTC idzie po `news-digest`). Bez fallbacku na wczoraj —
+ * wczorajszy brief już go opisuje, płacilibyśmy drugi raz za ten sam dzień; brak digestu = `error`.
+ * Tygodniowy (niedziela): 7 ostatnich dni łącznie z dzisiejszym. Najnowszy pierwszy — `dataDate` = `[0].date`.
+ */
 async function gatherDigests(kind: BriefKind, today: string): Promise<DailyDigest[]> {
     const days: string[] = [];
-    let d = prevCalendarDate(today);
+    let d = today;
     for (let i = 0; i < (kind === 'daily' ? 1 : 7); i++) {
         days.push(d);
         d = prevCalendarDate(d);
@@ -91,11 +96,24 @@ async function gatherWorld(today: string): Promise<NewsArchiveItem[]> {
     );
 }
 
-function gatherCalendar(kind: BriefKind, today: string): string[] {
+const isWorkday = (day: string) => {
+    const wd = new Date(`${day}T12:00:00Z`).getUTCDay();
+    return wd !== 0 && wd !== 6;
+};
+
+/**
+ * Brief powstaje wieczorem, gdy dzisiejsze publikacje już wyszły — kalendarz patrzy do przodu:
+ * dzienny = najbliższy dzień roboczy, tygodniowy (niedziela) = pn–pt nadchodzącego tygodnia.
+ */
+export function gatherCalendar(kind: BriefKind, today: string): string[] {
     const out: string[] = [];
-    let day = today;
-    for (let i = 0; i < (kind === 'daily' ? 1 : 5); i++) {
-        for (const ev of buildTomorrowBlock(prevCalendarDate(day)).events) out.push(`${ddmm(day)} · ${ev.name}`);
+    let day = nextCalendarDate(today);
+    let workdays = 0;
+    while (workdays < (kind === 'daily' ? 1 : 5)) {
+        if (isWorkday(day)) {
+            workdays++;
+            for (const ev of buildTomorrowBlock(prevCalendarDate(day)).events) out.push(`${ddmm(day)} · ${ev.name}`);
+        }
         day = nextCalendarDate(day);
     }
     return out;
@@ -111,7 +129,7 @@ export async function runBrief(kind: BriefKind, now = new Date(), fetchImpl: typ
         const [digests, world] = await Promise.all([gatherDigests(kind, today), gatherWorld(today)]);
         // Klucz jest, a digestu brak → to awaria (cron `news-digest`), nie wyłączona funkcja: `skipped`
         // dałoby zielone 0/0 w `/status`, choć briefu nie ma.
-        if (!digests.length) return { kind, status: 'error', reason: 'brak digestu', costUsd: 0 };
+        if (!digests.length) return { kind, status: 'error', reason: `brak digestu ${today}`, costUsd: 0 };
 
         const input = buildBriefInput({ kind, date: today, digests, world, calendar: gatherCalendar(kind, today) });
         const allowed = collectBriefAllowed(input, today);

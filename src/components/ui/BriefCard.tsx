@@ -1,15 +1,19 @@
 'use client';
 
-import { useState } from 'react';
-import { Bot, CalendarDays, ChevronDown } from 'lucide-react';
-import { useNewsBrief } from '@/lib/hooks';
+import { useMemo, useState } from 'react';
+import Link from 'next/link';
+import { ArrowRight, Bot, CalendarDays, ChevronDown } from 'lucide-react';
+import { useDailyDigest, useNewsBrief } from '@/lib/hooks';
+import type { DailyDigest } from '@/lib/news/daily';
+import { KpiTiles } from '@/components/ui/KpiTiles';
+import { DailySummaryCard } from '@/components/ui/DigestSummaryCard';
 import type { BriefDoc } from '@/lib/news/brief';
 import { formatTime } from '@/lib/formatters';
 import { useIsClient } from '@/lib/use-is-client';
 import { prevCalendarDate, warsawDateKey } from '@/lib/news/warsaw-date';
 import { cleanBriefBody, ddmm, normalizeBriefBody } from '@/lib/news/brief-text';
 
-/** Tygodniowy brief pokazujemy przez 7 dni od poniedziałku, potem znika. */
+/** Tygodniowy brief (niedziela) pokazujemy do następnej soboty, potem znika. */
 const WEEK_MS = 7 * 24 * 3600 * 1000;
 
 function Points({ title, items, cols = false }: { title: string; items: string[]; cols?: boolean }) {
@@ -25,11 +29,17 @@ function Points({ title, items, cols = false }: { title: string; items: string[]
 }
 
 /** Data digestu, z którego wzięto liczby. Briefy sprzed 31.10 jej nie mają — dzienny bierze wczorajszy digest. */
+function weekStart(sunday: string): string {
+    let d = sunday;
+    for (let i = 0; i < 6; i++) d = prevCalendarDate(d);
+    return d;
+}
+
 function dataDateOf(doc: BriefDoc): string | null {
     return doc.dataDate ?? (doc.kind === 'daily' ? prevCalendarDate(doc.date) : null);
 }
 
-function BriefBodyView({ doc }: { doc: BriefDoc }) {
+function BriefBodyView({ doc, numbersTitle }: { doc: BriefDoc; numbersTitle?: string }) {
     const [open, setOpen] = useState(false);
     // Porządki jak w cronie (`brief-server`) — łatają też briefy zapisane przed tą zmianą.
     const b = cleanBriefBody(normalizeBriefBody(doc.body)) ?? normalizeBriefBody(doc.body);
@@ -39,7 +49,7 @@ function BriefBodyView({ doc }: { doc: BriefDoc }) {
         <>
             <p className="max-w-[70ch] text-[17px] font-medium leading-snug text-mk-text">{b.teza}</p>
             <div className="mt-4 space-y-4">
-                <Points title={dataDate ? `Dane z ${ddmm(dataDate)}` : 'Dane'} items={b.dane} cols />
+                <Points title={numbersTitle ?? (dataDate ? `Dane z ${ddmm(dataDate)}` : 'Dane')} items={b.dane} cols />
                 {open && (
                     <>
                         {(b.polska.length > 0 || b.swiat.length > 0) && (
@@ -51,7 +61,7 @@ function BriefBodyView({ doc }: { doc: BriefDoc }) {
                         {kalendarz.length > 0 && (
                             <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 border-t border-mk-border pt-3 text-sm text-mk-text">
                                 <span className="mk-section-label inline-flex items-center gap-1">
-                                    <CalendarDays size={12} aria-hidden /> {doc.kind === 'daily' ? 'Dziś' : 'W tym tygodniu'}
+                                    <CalendarDays size={12} aria-hidden /> {doc.kind === 'daily' ? 'Najbliższe publikacje' : 'Nadchodzący tydzień'}
                                 </span>
                                 {kalendarz.map((k, i) => (
                                     <span key={k} className="text-mk-muted">{i > 0 && <span aria-hidden>· </span>}{k}</span>
@@ -82,7 +92,11 @@ function BriefBodyView({ doc }: { doc: BriefDoc }) {
 }
 
 /** Brief dnia / tygodnia (DeepSeek). Brak briefu albo klucza → nic nie renderujemy. */
-export function BriefCard() {
+/**
+ * `day` = digest z tego samego dnia co dane briefu → jedna karta „Dzień w gospodarce”: kafelki KPI
+ * nad briefem, link do pełnego podsumowania. Bez `day` — sam brief (dwie karty, różne dni).
+ */
+export function BriefCard({ day }: { day?: DailyDigest } = {}) {
     const isClient = useIsClient();
     const { data: daily } = useNewsBrief('daily');
     const { data: weekly } = useNewsBrief('weekly');
@@ -97,14 +111,17 @@ export function BriefCard() {
 
     // „Brief na 30.10 · dane z 29.10” — bez daty dwa różne kursy EUR/PLN na jednym ekranie wyglądały na błąd.
     const dataDate = dataDateOf(doc);
-    const label = doc.kind === 'weekly'
-        ? `Brief tygodnia · od ${ddmm(doc.date)}`
-        : `Brief na ${ddmm(doc.date)}${dataDate ? ` · dane z ${ddmm(dataDate)}` : ''}`;
+    const label = day && doc.kind === 'daily'
+        ? `Dzień w gospodarce · ${ddmm(day.date)}`
+        : doc.kind === 'weekly'
+            ? `Brief tygodnia · ${ddmm(weekStart(doc.date))}–${ddmm(doc.date)}`
+            : `Brief na ${ddmm(doc.date)}${dataDate ? ` · dane z ${ddmm(dataDate)}` : ''}`;
 
     return (
-        <section className="mk-card mk-card-editorial mk-card-pad-compact" aria-label="Brief">
+        <section className="mk-card mk-card-editorial mk-card-pad-compact" aria-label={day ? 'Dzień w gospodarce' : 'Brief'}>
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                 <h2 className="mk-section-label">{label}</h2>
+                <div className="flex flex-wrap items-center gap-3">
                 {daily && weeklyFresh && (
                     <div className="mk-seg" role="tablist" aria-label="Zakres briefu">
                         {(['daily', 'weekly'] as const).map((k) => (
@@ -121,8 +138,38 @@ export function BriefCard() {
                         ))}
                     </div>
                 )}
+                {day && (
+                    <Link href={`/podsumowanie?date=${day.date}`} className="mk-press inline-flex min-h-6 items-center gap-1 text-xs font-medium text-mk-brand hover:underline touch:-my-2.5 touch:min-h-11 touch:text-sm">
+                        Całe podsumowanie <ArrowRight size={13} aria-hidden />
+                    </Link>
+                )}
+                </div>
             </div>
-            <BriefBodyView key={doc.kind} doc={doc} />
+            {day && <KpiTiles items={day.dane} className="mb-4" />}
+            <BriefBodyView key={doc.kind} doc={doc} numbersTitle={day && doc.kind === 'daily' ? 'Co mówią liczby' : undefined} />
         </section>
+    );
+}
+
+/**
+ * /newsy: gdy brief dzienny powstał z digestu, którego kafelki widać (ta sama data), pokazujemy JEDNĄ
+ * kartę — akapit-szablon „Najważniejsze dziś: <tytuł>” nic by do briefu nie dodał. Gdy daty się
+ * różnią (rano przed digestem, brak briefu, brak klucza), zostają dwie karty, każda z własną datą.
+ */
+export function NewsDayCard() {
+    const isClient = useIsClient();
+    const yesterdayKey = useMemo(() => prevCalendarDate(warsawDateKey()), []);
+    const { data: today } = useDailyDigest();
+    const { data: yesterday } = useDailyDigest(yesterdayKey);
+    const { data: daily } = useNewsBrief('daily');
+
+    const hasContent = (d: DailyDigest | null | undefined) => !!d && (d.punkty.length > 0 || d.dane.length > 0);
+    const digest = hasContent(today) ? today! : hasContent(yesterday) ? yesterday! : null;
+    if (isClient && digest && daily && dataDateOf(daily) === digest.date) return <BriefCard day={digest} />;
+    return (
+        <>
+            <DailySummaryCard compact />
+            <BriefCard />
+        </>
     );
 }

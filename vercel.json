@@ -60,7 +60,7 @@
         },
         {
             "path": "/api/cron/brief",
-            "schedule": "10 5 * * *"
+            "schedule": "20 17 * * *"
         },
         {
             "path": "/api/cron/jp",
