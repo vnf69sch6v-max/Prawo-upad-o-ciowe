@@ -1,5 +1,5 @@
 // Budowa feedu RSS (współdzielona przez `/api/news` i cron digest).
-import { NEWS_SOURCES } from '@/lib/news/sources';
+import { NEWS_SOURCES, passesSourceFilter } from '@/lib/news/sources';
 import { parseRss, urlKey, titleKey } from '@/lib/news/parse';
 import { clusterNews } from '@/lib/news/cluster';
 import { scoreItem } from '@/lib/news/score';
@@ -9,6 +9,8 @@ import type { NewsItem, NewsSourceStatus } from '@/lib/news/types';
 
 const FETCH_TIMEOUT_MS = 8000;
 const MAX_ITEMS = 150;
+/** Zagraniczne kanały nie mogą zalać polskiego feedu — najwyżej tyle pozycji z 150. */
+export const MAX_FOREIGN_ITEMS = 40;
 const UA = 'Mozilla/5.0 (compatible; MakroDataPlatform/1.0; +https://github.com/) AppleWebKit/537.36';
 
 export interface NewsFeedResult {
@@ -39,12 +41,17 @@ async function fetchSource(src: (typeof NEWS_SOURCES)[number]): Promise<{ items:
             return { items: [], status: { ...base, error: 'brak pozycji w odpowiedzi' } };
         }
 
-        const items = parsed.slice(0, src.limit).map((p) => ({
-            ...p,
-            sourceId: src.id,
-            source: src.name,
-            section: src.section,
-        }));
+        const items = parsed
+            .filter((p) => passesSourceFilter(src, p.title))
+            .slice(0, src.limit)
+            .map((p) => ({
+                ...p,
+                sourceId: src.id,
+                source: src.name,
+                section: src.section,
+                lang: src.lang ?? 'pl',
+                region: src.region ?? 'PL',
+            }));
         return { items, status: { ...base, ok: true, count: items.length } };
     } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
@@ -96,6 +103,25 @@ function rank(items: NewsItem[]): NewsItem[] {
     return items;
 }
 
+/**
+ * Przycina posortowaną (najnowsze najpierw) listę do `maxItems`, biorąc najwyżej `maxForeign`
+ * pozycji obcojęzycznych. Polskie pozycje nigdy nie są wypierane przez zagraniczne.
+ */
+export function capForeign<T extends { lang?: string }>(sorted: T[], maxItems = MAX_ITEMS, maxForeign = MAX_FOREIGN_ITEMS): T[] {
+    const out: T[] = [];
+    let foreign = 0;
+    for (const it of sorted) {
+        if (out.length >= maxItems) break;
+        const isForeign = (it.lang ?? 'pl') !== 'pl';
+        if (isForeign) {
+            if (foreign >= maxForeign) continue;
+            foreign++;
+        }
+        out.push(it);
+    }
+    return out;
+}
+
 /** Pobiera feedy RSS → scala → dedup → ranking. Bez zapisu do archiwum / cache. */
 export async function buildNewsFeed(): Promise<NewsFeedResult> {
     const settled = await Promise.all(NEWS_SOURCES.map(fetchSource));
@@ -120,7 +146,7 @@ export async function buildNewsFeed(): Promise<NewsFeedResult> {
     }
 
     merged.sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
-    const items = merged.slice(0, MAX_ITEMS);
+    const items = capForeign(merged);
 
     return {
         timestamp: new Date().toISOString(),

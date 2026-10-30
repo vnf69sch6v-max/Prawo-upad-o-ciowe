@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import Link from 'next/link';
 import { ExternalLink, ArrowRight, Layers, Copy, Megaphone } from 'lucide-react';
 import { useNews, type NewsItem } from '@/lib/hooks';
+import { isPolishNews } from '@/lib/news/lang';
 import { collapseClusters, matchesTopic, type NewsTopic, type MatchTier } from '@/lib/news/match';
 import { formatRelativeTime, formatTime } from '@/lib/formatters';
 import { SectionCard } from '@/components/ui/SectionCard';
@@ -334,7 +335,7 @@ export function LatestNews({
 }) {
     const { data, isLoading, isError, refetch } = useNews();
     const items = useMemo(
-        () => collapseClusters([...(data?.items ?? [])])
+        () => collapseClusters((data?.items ?? []).filter(isPolishNews))
             .sort((a, b) => (b.importance ?? 0) - (a.importance ?? 0))
             .slice(0, limit),
         [data, limit],

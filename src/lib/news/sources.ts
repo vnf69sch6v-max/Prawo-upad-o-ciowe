@@ -20,6 +20,10 @@
 //   • MF (gov.pl/finanse) — /rss, /rss.xml, atom → HTML bez <item>. Owner `official` gotowy.
 //   • GUS Infografiki (rss/pl/5866/45.xml) — działa, ale pozycje stare i nie-newsowe → pominięte.
 //   • GUS BDL RSS (bdl.stat.gov.pl/bdl/rss/PL) → HTML, nie XML.
+//   (2026-10-30) • Nikkei Asia (asia.nikkei.com/rss/feed/nar) — RDF bez żadnej daty → pominięte.
+//   • CNBC (/id/…/device/rss/rss.html) → 403. • IMF News RSS → 403. • NHK cat5 → daty z sierpnia.
+//   • WSJ (feeds.a.dj.com) → daty z 2025. • Investing.com news_14 → daty bez strefy (nie Warszawa).
+//   • NBP (/feed), PAP (/rss.xml), Obserwator Finansowy, KNF, gov.pl/finanse, tvn24 biznes → HTML/404.
 
 /**
  * Grupa właścicielska. KLUCZOWE dla rankingu: „ten sam temat w dwóch serwisach" jest sygnałem
@@ -27,7 +31,10 @@
  * spółki (Bonnier Business Polska — Bonnier przejął grupę Bankier.pl w 2015), więc liczone osobno
  * zawyżałyby ważność tematu. Klaster liczymy po właścicielach — patrz `lib/news/cluster.ts`.
  */
-export type NewsOwner = 'bonnier' | 'wp' | 'rasp' | 'polsat' | 'ptwp' | 'isbnews' | 'official' | 'g300';
+export type NewsOwner =
+    | 'bonnier' | 'wp' | 'rasp' | 'polsat' | 'ptwp' | 'isbnews' | 'official' | 'g300' | 'strefa' | 'inwestycje'
+    // zagraniczne (2026-10-30) — każdy bank centralny i każda redakcja to osobny, niezależny właściciel
+    | 'ecb' | 'fed' | 'boj' | 'bbc' | 'dowjones' | 'guardian' | 'nikkei' | 'japantimes';
 
 export const OWNER_NAMES: Record<NewsOwner, string> = {
     bonnier: 'Bonnier Business Polska',
@@ -38,9 +45,24 @@ export const OWNER_NAMES: Record<NewsOwner, string> = {
     isbnews: 'ISBnews',
     official: 'Źródła oficjalne (NBP / GUS / MF)',
     g300: '300Gospodarka',
+    strefa: 'Strefa Inwestorów',
+    inwestycje: 'inwestycje.pl',
+    ecb: 'Europejski Bank Centralny',
+    fed: 'Rezerwa Federalna (Fed)',
+    boj: 'Bank Japonii',
+    bbc: 'BBC',
+    dowjones: 'Dow Jones (MarketWatch)',
+    guardian: 'Guardian Media Group',
+    nikkei: 'Nikkei (Financial Times)',
+    japantimes: 'The Japan Times',
 };
 
-export type NewsSection = 'ogolne' | 'gielda' | 'waluty' | 'przemysl' | 'oficjalne';
+export type NewsSection = 'ogolne' | 'gielda' | 'waluty' | 'przemysl' | 'oficjalne' | 'swiat' | 'banki';
+
+/** Język tytułu i leadu. Zagraniczne kanały są po angielsku — nie tłumaczymy ich. */
+export type NewsLang = 'pl' | 'en';
+/** Czego dotyczy źródło: Polska, strefa euro, USA, Japonia, Wielka Brytania, świat. */
+export type NewsRegion = 'PL' | 'EU' | 'US' | 'JP' | 'GB' | 'GLOBAL';
 
 export interface NewsSource {
     /** Stabilny identyfikator używany w filtrach UI i w kluczu cache. */
@@ -59,6 +81,13 @@ export interface NewsSource {
     warsawWallClock?: boolean;
     /** Limit pozycji z tego feedu — chroni miks przed zdominowaniem przez jedno źródło. */
     limit: number;
+    /** Domyślnie 'pl' / 'PL'. */
+    lang?: NewsLang;
+    region?: NewsRegion;
+    /** Bierzemy tylko pozycje, których tytuł pasuje (np. BOJ: decyzje, nie harmonogramy operacji). */
+    include?: RegExp;
+    /** Pomijamy pozycje, których tytuł pasuje (np. Fed: zgody na fuzje banków). */
+    exclude?: RegExp;
 }
 
 // UWAGA — Bankier deklaruje BŁĘDNĄ strefę czasową (zweryfikowane 2026-07-16, nie zmieniać bez dowodu):
@@ -88,7 +117,41 @@ export const NEWS_SOURCES: NewsSource[] = [
     { id: 'gus-komunikaty', name: 'GUS — Komunikaty', owner: 'official', url: 'https://stat.gov.pl/rss/pl/5463/11.xml', section: 'oficjalne', limit: 10 },
     // 300Gospodarka — niezależny portal makro; curl 2026-08-23: HTTP 200, ~12 <item>.
     { id: '300gospodarka', name: '300Gospodarka', owner: 'g300', url: 'https://300gospodarka.pl/feed', section: 'ogolne', limit: 15 },
+    // ─── Dodane 2026-10-30 (curl: HTTP 200, <item> z datami z tego samego dnia) ───
+    // BI Gospodarka: ~20 poz., GMT; częściowo pokrywa się z głównym feedem BI → dedup po URL.
+    { id: 'businessinsider-gospodarka', name: 'Business Insider — Gospodarka', owner: 'rasp', url: 'https://businessinsider.com.pl/gospodarka.feed', section: 'ogolne', limit: 12 },
+    { id: 'strefainwestorow', name: 'Strefa Inwestorów', owner: 'strefa', url: 'https://strefainwestorow.pl/rss.xml', section: 'gielda', limit: 10 },
+    { id: 'inwestycje', name: 'inwestycje.pl', owner: 'inwestycje', url: 'https://inwestycje.pl/feed/', section: 'gielda', limit: 8 },
+    // Banki centralne — komunikaty prasowe. EBC: ~15 poz. (+0100/+0200). Fed: pubDate w CDATA, GMT.
+    { id: 'ecb', name: 'EBC — komunikaty', owner: 'ecb', url: 'https://www.ecb.europa.eu/rss/press.html', section: 'banki', limit: 8, lang: 'en', region: 'EU' },
+    {
+        id: 'fed', name: 'Fed — komunikaty', owner: 'fed', url: 'https://www.federalreserve.gov/feeds/press_all.xml', section: 'banki', limit: 8, lang: 'en', region: 'US',
+        // Nadzór nad pojedynczymi bankami (zgody na przejęcia, kary) — szum dla makro.
+        exclude: /\b(?:application|enforcement|termination|civil money penalty|approval of)\b/i,
+    },
+    {
+        id: 'boj', name: 'Bank Japonii', owner: 'boj', url: 'https://www.boj.or.jp/en/rss/whatsnew.xml', section: 'banki', limit: 6, lang: 'en', region: 'JP',
+        // whatsnew to ~50 pozycji dziennie, głównie harmonogramy operacji i tabele — bierzemy tylko politykę.
+        include: /monetary policy|outlook for economic|tankan|financial system report|summary of opinions|minutes of/i,
+    },
+    // Media zagraniczne — tylko tytuł + lead + link (jak wszędzie).
+    { id: 'bbc-business', name: 'BBC Business', owner: 'bbc', url: 'https://feeds.bbci.co.uk/news/business/rss.xml', section: 'swiat', limit: 10, lang: 'en', region: 'GB' },
+    {
+        id: 'marketwatch', name: 'MarketWatch', owner: 'dowjones', url: 'https://feeds.content.dowjones.io/public/rss/mw_topstories', section: 'swiat', limit: 8, lang: 'en', region: 'US',
+        // Top stories miesza rynki z poradnikiem „Moneyist” (listy czytelników: „My husband’s kids…”) — szum.
+        exclude: /^[‘'"]|\b(?:my|our) (?:husband|wife|father|mother|son|daughter|sister|brother|parents|kids|family)\b|\bI[’']m\b|\bshould I\b/i,
+    },
+    { id: 'guardian-economics', name: 'The Guardian — Economics', owner: 'guardian', url: 'https://www.theguardian.com/business/economics/rss', section: 'swiat', limit: 8, lang: 'en', region: 'GB' },
+    { id: 'ft-economy', name: 'Financial Times — Global Economy', owner: 'nikkei', url: 'https://www.ft.com/global-economy?format=rss', section: 'swiat', limit: 8, lang: 'en', region: 'GLOBAL' },
+    { id: 'japantimes-business', name: 'The Japan Times — Business', owner: 'japantimes', url: 'https://www.japantimes.co.jp/business/feed/', section: 'swiat', limit: 8, lang: 'en', region: 'JP' },
 ];
+
+/** Tytuł przechodzi filtry źródła (`include` / `exclude`). */
+export function passesSourceFilter(src: Pick<NewsSource, 'include' | 'exclude'>, title: string): boolean {
+    if (src.include && !src.include.test(title)) return false;
+    if (src.exclude && src.exclude.test(title)) return false;
+    return true;
+}
 
 /**
  * Waga redakcyjna źródła (mnożnik siły „głosu" w klastrze).
@@ -117,4 +180,15 @@ export const OWNER_WEIGHT: Record<NewsOwner, number> = {
     polsat: 1.05,   // Interia Biznes
     rasp: 1.00,     // Business Insider PL
     g300: 1.00,     // 300Gospodarka — portal makro, Tier D
+    strefa: 0.95,
+    inwestycje: 0.90,
+    // Zagraniczne: banki centralne to źródło pierwotne; media obce ważą mniej — serwis jest o Polsce.
+    ecb: 1.20,
+    fed: 1.20,
+    boj: 1.15,
+    bbc: 0.85,
+    dowjones: 0.80,
+    guardian: 0.80,
+    nikkei: 0.90, // FT należy do Nikkei
+    japantimes: 0.80,
 };

@@ -30,6 +30,8 @@ export interface NewsArchiveItem {
     source: string;
     section: string;
     owner?: NewsOwner;
+    lang?: 'pl' | 'en';
+    region?: string;
 }
 
 export interface NewsArchiveDoc {
@@ -39,7 +41,7 @@ export interface NewsArchiveDoc {
 
 const OWNER_OF = new Map(NEWS_SOURCES.map((s) => [s.id, s.owner]));
 
-export function toArchiveItem(it: Pick<NewsItem, 'title' | 'link' | 'publishedAt' | 'description' | 'sourceId' | 'source' | 'section'> & { owner?: NewsOwner }): NewsArchiveItem {
+export function toArchiveItem(it: Pick<NewsItem, 'title' | 'link' | 'publishedAt' | 'description' | 'sourceId' | 'source' | 'section' | 'lang' | 'region'> & { owner?: NewsOwner }): NewsArchiveItem {
     const owner = it.owner ?? OWNER_OF.get(it.sourceId);
     return {
         title: it.title,
@@ -50,6 +52,7 @@ export function toArchiveItem(it: Pick<NewsItem, 'title' | 'link' | 'publishedAt
         source: it.source,
         section: it.section,
         ...(owner ? { owner } : {}),
+        ...(it.lang && it.lang !== 'pl' ? { lang: it.lang, region: it.region } : {}),
     };
 }
 

@@ -5,6 +5,7 @@ import { Search, ExternalLink, AlertTriangle, Newspaper, X, Layers, Flame, Megap
 import { useNews, type NewsItem } from '@/lib/hooks';
 import { formatRelativeTime, formatTime, formatDate } from '@/lib/formatters';
 import { norm, collapseClusters } from '@/lib/news/match';
+import { foreignLabel } from '@/lib/news/lang';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Segmented } from '@/components/ui/Segmented';
 import { DailySummaryCard } from '@/components/ui/DigestSummaryCard';
@@ -21,6 +22,8 @@ const SECTION_LABELS: Record<string, string> = {
     waluty: 'WALUTY',
     przemysl: 'PRZEMYSŁ',
     oficjalne: 'OFICJALNE',
+    swiat: 'ŚWIAT',
+    banki: 'BANKI CENTRALNE',
 };
 
 function sectionLabel(section: string): string {
@@ -48,6 +51,17 @@ function CategoryTag({ section, filled = false }: { section: string; filled?: bo
     const label = sectionLabel(section);
     if (filled) return <span className="mk-tag-brand-fill">{label}</span>;
     return <span className="mk-tag-brand">{label}</span>;
+}
+
+/** „EN · USA” — pozycja z kanału zagranicznego, tytuł w oryginale (nie tłumaczymy). */
+function LangTag({ item }: { item: NewsItem }) {
+    const label = foreignLabel(item);
+    if (!label) return null;
+    return (
+        <span className="inline-flex shrink-0 items-center whitespace-nowrap rounded-full bg-mk-surface-alt px-1.5 py-0.5 text-[11px] font-medium text-mk-muted">
+            {label}
+        </span>
+    );
 }
 
 function CorroborationBadge({ n, wire, alsoIn, compact = false }: { n: number; wire?: boolean; alsoIn?: string[]; compact?: boolean }) {
@@ -104,6 +118,7 @@ function LeadStory({ item, mounted }: { item: NewsItem; mounted: boolean }) {
                     <Flame size={10} /> Najważniejsze
                 </span>
                 <CategoryTag section={item.section} />
+                <LangTag item={item} />
                 {(item.corroboration ?? 1) >= 2 && (
                     <span className="mk-tag-brand-fill opacity-90">POTWIERDZONE · {item.corroboration}</span>
                 )}
@@ -151,11 +166,12 @@ function NewsRow({ item, mounted }: { item: NewsItem; mounted: boolean }) {
                     {when}
                 </time>
                 <div className="min-w-0 flex-1">
-                    <h3 className="text-[15px] font-semibold leading-snug text-mk-text transition-colors group-hover:text-mk-brand sm:text-sm">
+                    <h3 lang={item.lang ?? 'pl'} className="text-[15px] font-semibold leading-snug text-mk-text transition-colors group-hover:text-mk-brand sm:text-sm">
                         {item.title}
                     </h3>
                     <div className="mt-1.5 flex flex-wrap items-center gap-x-1.5 gap-y-1 sm:mt-1">
                         <CategoryTag section={item.section} />
+                        <LangTag item={item} />
                         <span className="inline-flex min-w-0 max-w-full items-center gap-1.5 text-xs text-mk-muted sm:text-[11px] sm:text-mk-faint">
                             <span className="truncate">{item.source}</span>
                             <span className="text-mk-faint sm:hidden" aria-hidden>·</span>

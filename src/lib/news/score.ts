@@ -29,6 +29,9 @@ const HALF_LIFE_BY_OWNER: Partial<Record<NewsOwner, number>> = {
     official: 36,
     isbnews: 18,
     ptwp: 12,
+    ecb: 24,
+    fed: 24,
+    boj: 24,
 };
 
 /** Bonus za świeży news (< 2h) — sygnał „breaking". */

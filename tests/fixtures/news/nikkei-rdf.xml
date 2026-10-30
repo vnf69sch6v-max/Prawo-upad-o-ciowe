@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rdf:RDF xmlns="http://purl.org/rss/1.0/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+  <channel rdf:about="https://asia.nikkei.com/rss/feed/nar"><title>Nikkei Asia</title><items><rdf:Seq><rdf:li resource="https://asia.nikkei.com/a"/></rdf:Seq></items></channel>
+  <item rdf:about="https://asia.nikkei.com/a">
+    <title><![CDATA[Japan's Murata to invest $6.3bn in capacitor production]]></title>
+    <link>https://asia.nikkei.com/a</link>
+  </item>
+</rdf:RDF>
