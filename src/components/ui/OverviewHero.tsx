@@ -3,6 +3,7 @@
 import { useMemo, type ReactNode } from 'react';
 import Link from 'next/link';
 import { useNews } from '@/lib/hooks';
+import { isPolishNews } from '@/lib/news/lang';
 import { formatDataPeriod, formatDate, formatDecimalPL, formatRelativeTime, formatTime } from '@/lib/formatters';
 import { collapseClusters } from '@/lib/news/match';
 import { NBP_TARGET, type RankedSignal } from '@/lib/hero-signals';
@@ -153,7 +154,7 @@ function SignalCell({ r, emphasis }: { r: RankedSignal; emphasis: 'primary' | 's
 export function OverviewHero({ ranked, loading }: OverviewHeroProps) {
     const { data: newsData, isLoading: newsLoading, isError: newsError, refetch: refetchNews } = useNews();
     const topNews = useMemo(() => {
-        const items = collapseClusters([...(newsData?.items ?? [])])
+        const items = collapseClusters((newsData?.items ?? []).filter(isPolishNews))
             .sort((a, b) => (b.importance ?? 0) - (a.importance ?? 0));
         return items[0] ?? null;
     }, [newsData]);

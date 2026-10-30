@@ -98,9 +98,12 @@ function ownerOfItem(it: Pick<NewsItem, 'sourceId'> & { owner?: NewsOwner }): Ne
     return it.owner ?? OWNER_OF.get(it.sourceId) ?? 'bonnier';
 }
 
-/** Przelicza ranking na paczce — freshness wyłączony (`now = publishedAt`). */
+/**
+ * Przelicza ranking na paczce — freshness wyłączony (`now = publishedAt`).
+ * Digest dnia (Grok) jest o Polsce: pozycje zagraniczne (`lang: 'en'`) nie wchodzą — mają własny brief.
+ */
 export function rankDigestItems(items: NewsItem[]): NewsItem[] {
-    const cloned = items.map((it) => ({ ...it }));
+    const cloned = items.filter((it) => (it.lang ?? 'pl') === 'pl').map((it) => ({ ...it }));
     const withOwner = cloned.map((it) => ({
         ...it,
         owner: ownerOfItem(it as NewsItem & { owner?: NewsOwner }),

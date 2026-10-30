@@ -10,6 +10,10 @@ export interface NewsItem {
     sourceId: string;
     source: string;
     section: string;
+    /** 'en' dla kanałów zagranicznych; brak = 'pl' (stare wpisy archiwum). */
+    lang?: 'pl' | 'en';
+    /** Region źródła: PL / EU / US / JP / GB / GLOBAL; brak = 'PL'. */
+    region?: string;
 
     // ─── Pola rankingu (dokładane przez /api/news; patrz lib/news/{score,cluster}.ts) ───
     /** Ważność 0–100, znormalizowana w obrębie paczki. Sortowanie „Ważne" idzie po tym. */
