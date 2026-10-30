@@ -59,6 +59,10 @@
             "schedule": "5 16 * * *"
         },
         {
+            "path": "/api/cron/brief",
+            "schedule": "10 5 * * *"
+        },
+        {
             "path": "/api/cron/jp",
             "schedule": "30 0 * * *"
         }

@@ -192,7 +192,7 @@ export function collectAllowed(digest: DailyDigest): AllowedTokens {
  * generacji i cała warstwa 2 przestaje mieć sens. Nieostre kwantyfikatory to hedge, nie liczba.
  */
 const WORD_NUMERAL_SRC = 'dwa|dwie|dwóch|dwoma|trzy|trzech|trzema|cztery|czterech|pięć|pięciu|sześć|sześciu|siedem|siedmiu|osiem|ośmiu|dziewięć|dziesięć|pierwsz\\w*|drug\\w*|trzec\\w*|czwart\\w*|oba|obie|obu|połowa|połowę';
-const WORD_NUMERALS_G = new RegExp(`\\b(${WORD_NUMERAL_SRC})\\b`, 'gi');
+export const WORD_NUMERALS_G = new RegExp(`\\b(${WORD_NUMERAL_SRC})\\b`, 'gi');
 
 export interface ValidationResult {
     ok: boolean;

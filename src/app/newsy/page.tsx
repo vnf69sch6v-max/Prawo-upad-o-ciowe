@@ -9,6 +9,7 @@ import { foreignLabel } from '@/lib/news/lang';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Segmented } from '@/components/ui/Segmented';
 import { DailySummaryCard } from '@/components/ui/DigestSummaryCard';
+import { BriefCard } from '@/components/ui/BriefCard';
 import { Drawer } from '@/components/ui/Drawer';
 import { scrollChildInline } from '@/lib/tab-scroll';
 import { useIsClient } from '@/lib/use-is-client';
@@ -398,6 +399,9 @@ export default function NewsyPage() {
             {/* Akapit dnia PRZED leadem — daje kontekst całej doby, zanim czytelnik wejdzie
                 w pojedynczą historię. Sam się chowa, gdy digestu jeszcze nie ma. */}
             <DailySummaryCard compact />
+
+            {/* Brief DeepSeek (cron 05:10 UTC) — dane + PL + świat; chowa się bez klucza / briefu. */}
+            <BriefCard />
 
             {/* Telefon/tablet: filtry nad listą — szukajka, sortowanie + źródło (arkusz), rząd chipów kategorii. */}
             <div className="space-y-3 lg:hidden">

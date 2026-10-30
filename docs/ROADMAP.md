@@ -43,6 +43,11 @@ pierwszeństwo. Rzeczy, których nie da się zrobić z kodu, trafiają do „Wym
    że każdy cron z `vercel.json` ma wpis. Krok 2b (później): alert webhookiem dla `attention`.
 3. **CORS na `/api/*`:** `Access-Control-Allow-Origin: *` z metodami POST/PUT/DELETE/PATCH
    (`vercel.json`). Zawęzić do GET/OPTIONS; POST tylko dla parsera z własnej domeny.
+4a. **Świeżość briefu DeepSeek** (FIX 4 z recenzji PM PR #71, przeniesiony z braku budżetu sesji): `DatasetSpec`
+    `news-brief` w `FRESHNESS_DATASETS` (`/api/news/brief?kind=daily`; oczekiwana data Warsaw = dziś po 07:00,
+    wcześniej wczoraj), stan „wyłączony” przy braku klucza zamiast `error`, test w `tests/freshness.test.ts`.
+    Do tego czasu stary brief widać tylko jako „Częściowo” w dzienniku crona `brief`. Po pierwszym przebiegu
+    z kluczem (31.10, 05:10 UTC): kryteria 6–8 specyfikacji (sealed w Firestore, 3 liczby vs strony, Playwright).
 4. **`news-digest` nie zapisuje przebiegu** w `health/cron_runs` — `/status` nie pokazuje, czy działa.
 5. **Lint:** ~21 starych błędów w `src/lib/firebase/*` i hookach — wyczyścić, potem lint w CI.
 6. **`/api/news?refresh=1` przy każdym wywołaniu zapisuje archiwum dzienne do Firestore**, także wtedy,
@@ -135,6 +140,8 @@ J5. **Gospodarka Japonii** — produkcja zrobiona 27.10 (`/japonia/gospodarka`: 
     Od 28.10 czwarta grupa: mieszkania służbowe 1114, +228,6% r/r. Cztery grupy sumują się do całości.
 
 ## Wymaga właściciela (nie da się z kodu)
+- **Brief dnia/tygodnia — klucz DeepSeek: ustawiony przez właściciela 30.10.2026** (cron `brief` 05:10 UTC, spec
+  `docs/specs/2026-10-30-brief-deepseek.md`). Bez klucza karta briefu jest ukryta, a cron zapisuje przebieg 0/0. Koszt każdego przebiegu: `/status` → dziennik cronów (`health/cron_runs.brief.costUsd`).
 - **Płatna platforma — uruchomienie** (kod gotowy 25.10, bramka włączona domyślnie od 25.10; podpis ciasteczka
   sesji sprawdzany na Edge od PR #34):
   1. Vercel → Environment Variables (Production): `NEXT_PUBLIC_OWNER_NAME` (imię i nazwisko / firma),
