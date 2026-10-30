@@ -6,6 +6,7 @@ import type { NewsResult } from '@/lib/news/types';
 import { DBW_SERIES, type DbwSeriesId } from '@/lib/gus-dbw-series';
 import { cpiFullPath, dbwSeriesPath, gusCpiPath, gusMonthlyPath, koniunkturaPath, ppiFullPath } from '@/lib/gus-api-paths';
 import type { DailyDigest } from '@/lib/news/daily';
+import type { BriefDoc, BriefKind } from '@/lib/news/brief';
 import { refreshOptions } from '@/lib/query-refresh';
 
 // ─── Types ───────────────────────────────────────────────
@@ -796,6 +797,25 @@ export function useDailyDigest(date?: string, enabled = true) {
             }
         },
         staleTime: 5 * 60 * 1000,
+        retry: false,
+    });
+}
+
+/** Brief DeepSeek (cron `brief`); `null` = brak klucza / jeszcze nie wygenerowany — karta się chowa. */
+export function useNewsBrief(kind: BriefKind) {
+    return useQuery<BriefDoc | null>({
+        queryKey: ['news-brief', kind],
+        queryFn: async () => {
+            try {
+                const res = await fetch(`/api/news/brief?kind=${kind}`, { cache: 'no-store' });
+                if (!res.ok) return null;
+                const body = await res.json() as { brief?: BriefDoc | null };
+                return body.brief ?? null;
+            } catch {
+                return null;
+            }
+        },
+        staleTime: 10 * 60 * 1000,
         retry: false,
     });
 }

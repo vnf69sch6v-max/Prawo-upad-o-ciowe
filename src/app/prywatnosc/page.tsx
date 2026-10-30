@@ -98,6 +98,12 @@ export default function PrivacyPage() {
                         <strong>Stripe Payments Europe, Ltd.</strong> (Irlandia) — obsługa płatności: adres e-mail, kwota, plan
                         i identyfikator transakcji. Dane karty, BLIK i konta bankowego trafiają wyłącznie do Stripe.
                     </li>
+                    <li>
+                        <strong>DeepSeek</strong> (Hangzhou DeepSeek Artificial Intelligence, Chiny) — automatyczne pisanie briefu dnia
+                        i tygodnia. Wysyłamy wyłącznie publiczne dane statystyczne (GUS, NBP, GPW) i publiczne nagłówki mediów;
+                        żadnych danych osobowych ani informacji o użytkownikach. Brief powstaje raz dziennie po stronie serwera,
+                        nie w Twojej przeglądarce.
+                    </li>
                     <li><strong>Biuro rachunkowe</strong> — jeśli prowadzi naszą księgowość, w zakresie dokumentów sprzedaży.</li>
                 </ul>
                 <p>

@@ -135,6 +135,10 @@ J5. **Gospodarka Japonii** — produkcja zrobiona 27.10 (`/japonia/gospodarka`: 
     Od 28.10 czwarta grupa: mieszkania służbowe 1114, +228,6% r/r. Cztery grupy sumują się do całości.
 
 ## Wymaga właściciela (nie da się z kodu)
+- **Brief dnia/tygodnia — klucz DeepSeek** (kod: cron `brief` 05:10 UTC, spec `docs/specs/2026-10-30-brief-deepseek.md`):
+  konto na platform.deepseek.com → doładowanie (np. 2 USD; szacunek < 0,10 USD/mies.) → API key →
+  Vercel → Environment Variables → Production: `DEEPSEEK_API_KEY` → Redeploy. Bez klucza karta briefu jest ukryta,
+  a cron zapisuje przebieg 0/0. Koszt każdego przebiegu: `/status` → dziennik cronów (`health/cron_runs.brief.costUsd`).
 - **Płatna platforma — uruchomienie** (kod gotowy 25.10, bramka włączona domyślnie od 25.10; podpis ciasteczka
   sesji sprawdzany na Edge od PR #34):
   1. Vercel → Environment Variables (Production): `NEXT_PUBLIC_OWNER_NAME` (imię i nazwisko / firma),
