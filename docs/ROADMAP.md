@@ -48,6 +48,10 @@ pierwszeństwo. Rzeczy, których nie da się zrobić z kodu, trafiają do „Wym
     oczekiwana `dataDate` Warsaw = dziś po 18:30, wcześniej wczoraj), stan „wyłączony” przy braku klucza zamiast `error`, test w `tests/freshness.test.ts`.
     Do tego czasu stary brief widać tylko jako „Częściowo” w dzienniku crona `brief`. Po pierwszym przebiegu
     z kluczem (17:20 UTC): kryteria 6–8 specyfikacji (sealed w Firestore, 3 liczby vs strony, Playwright).
+4a'. **Brief odrzucony 31.10 („liczby spoza wejścia: 6”)** — po poprawce liczb ≥ 10 000 cron nadal padał na jednej liczbie
+    z nieznanego miejsca tekstu. Krok 31.10: komunikat odrzucenia niesie fragment wokół obcej liczby, a druga próba dostaje
+    powód odrzucenia (`POPRZEDNIA ODPOWIEDŹ ODRZUCONA`). Po cronie 1.11 (17:20 UTC) odczytać fragment z `/status` i, jeśli to
+    zasadna liczba (np. „6 listopada”), poszerzyć walidator; jeśli halucynacja — wzmocnić prompt.
 4b. **Podsumowanie dnia i brief — data, język, wygląd** — **zrobione 30.10.2026** (prośba właściciela, PM: SHIP po FIX;
     `claude/nice-wozniak-8xnus6`, spec `docs/specs/2026-10-30-podsumowanie-i-brief-wyglad.md`): dwa różne EUR/PLN
     na jednym ekranie bez daty, meta-komentarze modelu, angielski format liczb, pusta połowa karty, czerwone tagi.
