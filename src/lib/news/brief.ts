@@ -226,7 +226,7 @@ export function briefText(b: BriefBody): string {
 
 /** Fragment tekstu wokół pierwszej obcej liczby — bez niego dziennik crona nie mówi, gdzie model ją wstawił (31.10: „6”). */
 function foreignContext(text: string, num: string): string {
-    const i = text.search(new RegExp(`(?<![\\d.,])${num.replace(/^-/, '').replace('.', '[.,]')}(?![\\d])`));
+    const i = text.search(new RegExp(`(?<![\\d.,])${num.replace(/^-/, '').replace('.', '[.,]')}(?!\\d|[.,]\\d)`));
     return i < 0 ? '' : ` (…${text.slice(Math.max(0, i - 25), i + 25).replace(/\s+/g, ' ')}…)`;
 }
 
