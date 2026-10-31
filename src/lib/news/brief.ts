@@ -224,6 +224,12 @@ export function briefText(b: BriefBody): string {
     return [b.teza, ...b.dane, ...b.polska, ...b.swiat, ...b.kalendarz].join('\n');
 }
 
+/** Fragment tekstu wokół pierwszej obcej liczby — bez niego dziennik crona nie mówi, gdzie model ją wstawił (31.10: „6”). */
+function foreignContext(text: string, num: string): string {
+    const i = text.search(new RegExp(`(?<![\\d.,])${num.replace(/^-/, '').replace('.', '[.,]')}(?!\\d|[.,]\\d)`));
+    return i < 0 ? '' : ` (…${text.slice(Math.max(0, i - 25), i + 25).replace(/\s+/g, ' ')}…)`;
+}
+
 export function validateBrief(body: BriefBody, allowed: BriefAllowed): { ok: boolean; reason?: string } {
     if (body.dane.length + body.polska.length + body.swiat.length < 3) return { ok: false, reason: 'za mało punktów' };
     const text = briefText(body);
@@ -231,7 +237,7 @@ export function validateBrief(body: BriefBody, allowed: BriefAllowed): { ok: boo
     const meta = META_POINT.exec(text);
     if (meta) return { ok: false, reason: `meta: „${meta[0]}”` };
     const obce = extractNumbers(text).filter((n) => !allowed.numbers.has(n));
-    if (obce.length) return { ok: false, reason: `liczby spoza wejścia: ${[...new Set(obce)].slice(0, 5).join(', ')}` };
+    if (obce.length) return { ok: false, reason: `liczby spoza wejścia: ${[...new Set(obce)].slice(0, 5).join(', ')}${foreignContext(text, obce[0])}` };
     // Druga bramka jak w `validateSummary`: „trzeci miesiąc z rzędu” nie ma cyfry, a jest liczeniem.
     const obceSlowa = [...text.matchAll(WORD_NUMERALS_G)].map((m) => m[0]).filter((w) => !allowed.words.has(w.toLowerCase()));
     if (obceSlowa.length) return { ok: false, reason: `liczebnik słowny spoza wejścia: „${obceSlowa[0]}”` };

@@ -32,6 +32,8 @@ export async function callDeepseek(
     user: string,
     maxTokens: number,
     fetchImpl: typeof fetch = fetch,
+    /** Powód odrzucenia poprzedniej próby — model dostaje szansę poprawki zamiast losować od nowa. */
+    feedback = '',
 ): Promise<DeepseekReply> {
     const res = await fetchImpl(DEEPSEEK_ENDPOINT, {
         method: 'POST',
@@ -40,7 +42,7 @@ export async function callDeepseek(
             model: DEEPSEEK_MODEL,
             messages: [
                 { role: 'system', content: BRIEF_SYSTEM_PROMPT },
-                { role: 'user', content: user },
+                { role: 'user', content: feedback ? `${user}\n\nPOPRZEDNIA ODPOWIEDŹ ODRZUCONA: ${feedback}. Napisz brief od nowa, używając wyłącznie liczb z danych.` : user },
             ],
             thinking: { type: 'disabled' },
             response_format: { type: 'json_object' },
@@ -136,9 +138,10 @@ export async function runBrief(kind: BriefKind, now = new Date(), fetchImpl: typ
 
         let cost = 0;
         let reason = '';
+        let feedback = '';
         for (let attempt = 0; attempt < ATTEMPTS; attempt++) {
             try {
-                const reply = await callDeepseek(key, input, MAX_OUTPUT_TOKENS[kind], fetchImpl);
+                const reply = await callDeepseek(key, input, MAX_OUTPUT_TOKENS[kind], fetchImpl, feedback);
                 cost += costUsd(reply.usage, now);
                 const tokens = { input: reply.usage.prompt_tokens ?? 0, output: reply.usage.completion_tokens ?? 0 };
                 const parsed = parseBriefJson(reply.content);
@@ -146,7 +149,7 @@ export async function runBrief(kind: BriefKind, now = new Date(), fetchImpl: typ
                 const body = cleanBriefBody(normalizeBriefBody(parsed));
                 if (!body) { reason = 'meta: teza komentuje wejście'; continue; }
                 const v = validateBrief(body, allowed);
-                if (!v.ok) { reason = v.reason ?? 'walidacja'; continue; }
+                if (!v.ok) { reason = v.reason ?? 'walidacja'; feedback = reason; continue; }
 
                 const doc: BriefDoc = {
                     kind, date: today, dataDate: digests[0].date, generatedAt: now.toISOString(), model: DEEPSEEK_MODEL,

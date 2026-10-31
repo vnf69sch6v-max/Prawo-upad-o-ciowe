@@ -64,6 +64,7 @@ describe('walidator liczb', () => {
         const v = validateBrief(parseBriefJson(JSON.stringify(bad))!, allowed);
         expect(v.ok).toBe(false);
         expect(v.reason).toContain('2.7');
+        expect(v.reason).toContain('Inflacja CPI spadła do 2,7%');
     });
 
     it('odrzuca liczebnik słowny spoza wejścia, przepuszcza cytat z nagłówka', () => {
