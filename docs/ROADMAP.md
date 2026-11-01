@@ -43,7 +43,10 @@ pierwszeństwo. Rzeczy, których nie da się zrobić z kodu, trafiają do „Wym
    że każdy cron z `vercel.json` ma wpis. Krok 2b (później): alert webhookiem dla `attention`.
 3. **CORS na `/api/*`:** `Access-Control-Allow-Origin: *` z metodami POST/PUT/DELETE/PATCH
    (`vercel.json`). Zawęzić do GET/OPTIONS; POST tylko dla parsera z własnej domeny.
-4a. **Świeżość briefu DeepSeek** (FIX 4 z recenzji PM PR #71, przeniesiony z braku budżetu sesji): `DatasetSpec`
+4a. **Świeżość briefu DeepSeek** — **zrobione 1.11.2026** (`news-brief` w `FRESHNESS_DATASETS`, grupa „Newsy i brief” na `/status`;
+    dzisiejszego briefu oczekujemy od 21:00 Warszawy, nie od 18:30, bo latem cron kończy po 19:20; brak klucza nie ma osobnego stanu
+    „wyłączony” — odpowiedź bez briefu to `error`, produkcja klucz ma). Uwaga: dopóki cron `brief` nie wyjdzie z błędu, `/api/health/freshness`
+    odpowiada 503 — to zamierzone. Oryginalny opis: (FIX 4 z recenzji PM PR #71, przeniesiony z braku budżetu sesji): `DatasetSpec`
     `news-brief` w `FRESHNESS_DATASETS` (`/api/news/brief?kind=daily`; od 30.10 cron 17:20 UTC po digeście:
     oczekiwana `dataDate` Warsaw = dziś po 18:30, wcześniej wczoraj), stan „wyłączony” przy braku klucza zamiast `error`, test w `tests/freshness.test.ts`.
     Do tego czasu stary brief widać tylko jako „Częściowo” w dzienniku crona `brief`. Po pierwszym przebiegu

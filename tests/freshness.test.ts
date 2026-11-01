@@ -197,6 +197,27 @@ describe('ekstrakcja najnowszego okresu z odpowiedzi API', () => {
     });
 });
 
+describe('brief dnia', () => {
+    const brief = () => spec('news-brief');
+    const zima = (h: number, m = 0) => new Date(Date.UTC(2026, 10, 2, h - 1, m)); // 2.11.2026, Warszawa = UTC+1
+
+    it('dzisiejszego briefu oczekujemy dopiero od 21:00 Warszawy', () => {
+        expect(brief().expected(zima(20, 59))).toBe('2026-11-01');
+        expect(brief().expected(zima(21, 0))).toBe('2026-11-02');
+    });
+
+    it('brief z dnia oczekiwanego = ok, brak briefu = error', () => {
+        expect(evaluateDataset(brief(), '2026-11-02', zima(22)).status).toBe('ok');
+        expect(evaluateDataset(brief(), '2026-11-02', zima(10)).status).toBe('ok');
+        expect(evaluateDataset(brief(), null, zima(22)).status).toBe('error');
+    });
+
+    it('czytamy datę briefu z odpowiedzi API', () => {
+        expect(brief().extract({ brief: { date: '2026-11-01' } })).toBe('2026-11-01');
+        expect(brief().extract({ brief: null })).toBeNull();
+    });
+});
+
 describe('raport', () => {
     it('lag nie daje 503, stale i error dają', () => {
         expect(httpStatusFor([{ status: 'ok' }, { status: 'lag' }])).toBe(200);
@@ -209,8 +230,9 @@ describe('raport', () => {
 
     it('samonaprawa tylko poza GUS DBW/BDL (wspólny limit)', () => {
         for (const d of FRESHNESS_DATASETS) {
-            const gus = d.kind === 'gus-dbw' || d.kind === 'gus-bdl';
-            expect(d.selfHeal, d.id).toBe(!gus);
+            // Brief generuje wyłącznie własny cron (płatne wywołanie DeepSeek) — kontrola go nie wymusza.
+            const noHeal = d.kind === 'gus-dbw' || d.kind === 'gus-bdl' || d.kind === 'news';
+            expect(d.selfHeal, d.id).toBe(!noHeal);
             expect(d.endpoint(new Date()), d.id).not.toMatch(/refresh=1/);
         }
         expect(withRefreshParam('/api/nbp?table=a')).toBe('/api/nbp?table=a&refresh=1');

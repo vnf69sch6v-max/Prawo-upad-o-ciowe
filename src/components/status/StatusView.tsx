@@ -16,11 +16,12 @@ import { STATUS_STYLE } from './StatusPill';
 const QUERY_KEY = ['health-freshness'] as const;
 const ENDPOINT = '/api/health/freshness';
 
-const GROUPS: { id: 'gus' | 'eurostat' | 'markets' | 'jp'; title: string }[] = [
+const GROUPS: { id: 'gus' | 'eurostat' | 'markets' | 'jp' | 'news'; title: string }[] = [
     { id: 'gus', title: 'Wskaźniki GUS' },
     { id: 'eurostat', title: 'Eurostat' },
     { id: 'markets', title: 'Rynki — NBP i giełda' },
     { id: 'jp', title: 'Japonia' },
+    { id: 'news', title: 'Newsy i brief' },
 ];
 
 const LEGEND: { status: FreshnessStatus; text: string }[] = [
