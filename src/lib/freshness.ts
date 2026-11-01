@@ -391,7 +391,7 @@ const LAG_NOTES: Record<SourceKind, string> = {
     'jp-dashboard': 'Komunikat Statistics Bureau (8:30 JST) już jest, ale Statistics Dashboard albo nasze odświeżenie (9:30 i 15:00 JST) jeszcze go nie objęły.',
     'jp-estat': 'Komunikat CPI jest, ale plik wkładów (e-Stat, tabela 5) jeszcze nie wszedł do cache.',
     'jp-boj': 'Kurs 17:00 z Tokio albo stopa BOJ spóźnia się wobec dnia roboczego w Japonii.',
-    news: 'Brief z poprzedniego dnia — dzisiejszy powstaje w cronie `brief` (17:20 UTC) i nie wszedł do cache.',
+    news: 'Brief z poprzedniego dnia — dzisiejszy powstaje w cronie `brief` (17:20 UTC) i nie wszedł do cache. Gdy trwa dłużej, sprawdź wynik crona „Brief dnia” na tej stronie (najczęściej odrzucenie przez walidację liczb).',
 };
 
 /** `/api/jp/cpi` → najnowszy miesiąc wspólny czterem miarom rozbicia (ogółem, bazowa, bez świeżej

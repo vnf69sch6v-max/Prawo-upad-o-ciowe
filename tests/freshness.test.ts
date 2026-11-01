@@ -206,6 +206,11 @@ describe('brief dnia', () => {
         expect(brief().expected(zima(21, 0))).toBe('2026-11-02');
     });
 
+    it('latem (UTC+2) 21:00 Warszawy to 19:00 UTC', () => {
+        expect(brief().expected(new Date(Date.UTC(2026, 6, 2, 18, 59)))).toBe('2026-07-01');
+        expect(brief().expected(new Date(Date.UTC(2026, 6, 2, 19, 0)))).toBe('2026-07-02');
+    });
+
     it('brief z dnia oczekiwanego = ok, brak briefu = error', () => {
         expect(evaluateDataset(brief(), '2026-11-02', zima(22)).status).toBe('ok');
         expect(evaluateDataset(brief(), '2026-11-02', zima(10)).status).toBe('ok');
