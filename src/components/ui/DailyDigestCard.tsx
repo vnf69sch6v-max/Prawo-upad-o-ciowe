@@ -1,15 +1,15 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowRight, ArrowUpRight, Layers } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { useDailyDigest } from '@/lib/hooks';
-import { corroborationLabel } from '@/lib/news/daily';
 import { formatDate } from '@/lib/formatters';
 import type { NewsTopic } from '@/lib/news/match';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { SummaryBody } from '@/components/ui/DigestSummaryCard';
 import { sectionLabel } from '@/components/ui/RelatedNews';
 import { KpiTiles } from '@/components/ui/KpiTiles';
+import { Corroboration, ExternalMark, NewsTag } from '@/components/ui/NewsRow';
 
 const TOPIC_LABELS: Record<NewsTopic, string> = {
     ceny: 'Ceny',
@@ -18,23 +18,9 @@ const TOPIC_LABELS: Record<NewsTopic, string> = {
     rynki: 'Rynki',
 };
 
-/** Tagi neutralne — czerwień w tej karcie czytała się jak błąd (zrzut właściciela 30.10). */
-const NEUTRAL_TAG = 'rounded border border-mk-border px-1.5 py-px text-[10px] font-semibold uppercase tracking-wide text-mk-muted';
-
 function Tags({ topics, section }: { topics: NewsTopic[]; section: string }) {
     const labels = [...new Set([...topics.map((t) => TOPIC_LABELS[t]), sectionLabel(section)])];
-    return <>{labels.map((l) => <span key={l} className={NEUTRAL_TAG}>{l}</span>)}</>;
-}
-
-/** „N niezależne relacje” — dyskretnie, bez zielonej pigułki; `corroborationLabel` zwraca null przy N < 2. */
-function Corroboration({ n }: { n: number }) {
-    const label = corroborationLabel(n);
-    if (!label) return null;
-    return (
-        <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap">
-            <Layers size={11} aria-hidden /> {label}
-        </span>
-    );
+    return <>{labels.map((l) => <NewsTag key={l} label={l} />)}</>;
 }
 
 /** Karta na Przeglądzie — skrót digestu. Pusty dzień → null (jak RelatedNews). */
@@ -106,7 +92,7 @@ export function DailyDigestCard({
                         >
                             <span className="text-sm font-semibold leading-snug text-mk-text transition-colors group-hover:text-mk-brand">
                                 {p.title}
-                                <ArrowUpRight size={13} className="ml-1 inline-block align-[-1px] text-mk-faint group-hover:text-mk-brand" aria-label="(otwiera się w nowej karcie)" />
+                                <ExternalMark />
                             </span>
                             <span className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-mk-muted">
                                 <Tags topics={p.topics} section={p.section} />

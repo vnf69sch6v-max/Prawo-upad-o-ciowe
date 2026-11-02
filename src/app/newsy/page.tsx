@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { Search, ExternalLink, AlertTriangle, Newspaper, X, Layers, Flame, Megaphone, Copy, ChevronDown, SlidersHorizontal } from 'lucide-react';
+import { Search, AlertTriangle, Newspaper, X, Flame, Megaphone, ChevronDown, SlidersHorizontal } from 'lucide-react';
 import { useNews, type NewsItem } from '@/lib/hooks';
 import { formatRelativeTime, formatTime, formatDate } from '@/lib/formatters';
 import { norm, collapseClusters } from '@/lib/news/match';
@@ -10,6 +10,7 @@ import { PageHeader } from '@/components/ui/PageHeader';
 import { Segmented } from '@/components/ui/Segmented';
 import { NewsDayCard } from '@/components/ui/BriefCard';
 import { Drawer } from '@/components/ui/Drawer';
+import { Corroboration, ExternalMark, NewsTag } from '@/components/ui/NewsRow';
 import { scrollChildInline } from '@/lib/tab-scroll';
 import { useIsClient } from '@/lib/use-is-client';
 import { useScrollFade } from '@/lib/use-scroll-fade';
@@ -47,10 +48,8 @@ function categoryName(key: string): string {
 /** Ile pozycji listy pokazujemy naraz — 140 newsów jednym ciągiem to ~15 000 px przewijania na telefonie. */
 const PAGE = 30;
 
-function CategoryTag({ section, filled = false }: { section: string; filled?: boolean }) {
-    const label = sectionLabel(section);
-    if (filled) return <span className="mk-tag-brand-fill">{label}</span>;
-    return <span className="mk-tag-brand">{label}</span>;
+function CategoryTag({ section }: { section: string }) {
+    return <NewsTag label={sectionLabel(section)} />;
 }
 
 /** „EN · USA” — pozycja z kanału zagranicznego, tytuł w oryginale (nie tłumaczymy). */
@@ -60,32 +59,6 @@ function LangTag({ item }: { item: NewsItem }) {
     return (
         <span className="inline-flex shrink-0 items-center whitespace-nowrap rounded-full bg-mk-surface-alt px-1.5 py-0.5 text-[11px] font-medium text-mk-muted">
             {label}
-        </span>
-    );
-}
-
-function CorroborationBadge({ n, wire, alsoIn, compact = false }: { n: number; wire?: boolean; alsoIn?: string[]; compact?: boolean }) {
-    const tytul = alsoIn?.length ? `Ten sam temat: ${alsoIn.join(', ')}` : undefined;
-
-    if (wire && n < 2) {
-        return (
-            <span
-                className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full bg-mk-surface-alt px-1.5 py-0.5 text-[11px] font-medium text-mk-muted"
-                title={tytul ? `${tytul} — opisy niemal identyczne, to ta sama depesza w kilku serwisach` : undefined}
-            >
-                <Copy size={10} />
-                {compact ? 'depesza' : 'ta sama depesza'}
-            </span>
-        );
-    }
-    if (n < 2) return null;
-    return (
-        <span
-            className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full bg-mk-positive/10 px-1.5 py-0.5 text-[11px] font-medium text-mk-positive"
-            title={tytul}
-        >
-            <Layers size={10} />
-            {compact ? n : n === 2 ? '2 niezależne relacje' : `${n} niezależne relacje`}
         </span>
     );
 }
@@ -111,74 +84,77 @@ function LeadStory({ item, mounted }: { item: NewsItem; mounted: boolean }) {
             href={item.link}
             target="_blank"
             rel="noopener noreferrer"
-            className="group block rounded-lg transition-colors [-webkit-tap-highlight-color:transparent] focus:outline-none focus-visible:ring-2 focus-visible:ring-mk-brand/40 active:bg-mk-surface-alt"
+            className="mk-press-row group -m-1.5 block rounded-lg p-1.5 [-webkit-tap-highlight-color:transparent] focus:outline-none focus-visible:ring-2 focus-visible:ring-mk-brand/40"
         >
-            <div className="flex flex-wrap items-center gap-1.5">
-                <span className="mk-tag-brand-fill inline-flex shrink-0 items-center gap-1 whitespace-nowrap">
-                    <Flame size={10} /> Najważniejsze
-                </span>
-                <CategoryTag section={item.section} />
-                <LangTag item={item} />
-                <CorroborationBadge n={item.corroboration ?? 1} wire={item.wire} alsoIn={item.alsoIn} />
-            </div>
-            <h2 className="mt-2 text-lg font-bold leading-tight tracking-tight text-mk-text transition-colors group-hover:text-mk-brand sm:text-xl">
+            {/* Akcent marki w leadzie tylko dwa razy: pasek lewej krawędzi karty i ta etykieta (tekst, bez pigułki). */}
+            <span data-news-lead-label className="inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wide text-mk-brand">
+                <Flame size={12} aria-hidden /> Najważniejsze
+            </span>
+            <h2 lang={item.lang ?? 'pl'} className="mt-1.5 text-lg font-bold leading-tight tracking-tight text-mk-text transition-colors group-hover:text-mk-brand sm:text-xl">
                 {item.title}
+                <ExternalMark size={15} />
             </h2>
             {item.description && <p className="mt-1.5 line-clamp-2 text-sm leading-snug text-mk-muted">{item.description}</p>}
-            <div className="mt-2.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
-                <time dateTime={item.publishedAt} className="font-semibold text-mk-brand">
+            <div className="mt-2.5 flex flex-wrap items-center gap-x-2 gap-y-1.5 text-xs text-mk-muted">
+                <span className="font-medium text-mk-text-soft">{item.source}</span>
+                <span className="text-mk-faint" aria-hidden>·</span>
+                <time dateTime={item.publishedAt} className="tabular-nums">
                     {mounted ? formatRelativeTime(item.publishedAt) : formatTime(item.publishedAt)}
                 </time>
-                <span className="text-mk-faint">·</span>
-                <span className="text-mk-muted">{item.source}</span>
                 {item.alsoIn && item.alsoIn.length > 0 && (
                     <>
-                        <span className="text-mk-faint">·</span>
-                        <span className="text-mk-muted">także: {item.alsoIn.join(', ')}</span>
+                        <span className="text-mk-faint" aria-hidden>·</span>
+                        <span>także: {item.alsoIn.join(', ')}</span>
                     </>
                 )}
+            </div>
+            <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1.5 text-xs">
+                <CategoryTag section={item.section} />
+                <LangTag item={item} />
+                <Corroboration n={item.corroboration ?? 1} wire={item.wire} alsoIn={item.alsoIn} />
                 <Flags item={item} />
-                <ExternalLink size={12} className="ml-auto text-mk-faint transition-colors group-hover:text-mk-brand" aria-hidden />
             </div>
         </a>
     );
 }
 
+/** Wiersz listy: cały jest jednym linkiem ≥44 px. Tytuł z ikoną > źródło · czas > tagi i relacje. */
 function NewsRow({ item, mounted }: { item: NewsItem; mounted: boolean }) {
     const when = mounted ? formatRelativeTime(item.publishedAt) : formatTime(item.publishedAt);
+    const full = mounted ? `${formatDate(item.publishedAt)}, ${formatTime(item.publishedAt)}` : undefined;
     return (
-        <article className="group">
+        <article>
             <a
                 href={item.link}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex min-h-14 items-start gap-2.5 rounded-lg px-1 py-3 transition-colors [-webkit-tap-highlight-color:transparent] hover:bg-mk-surface-alt focus:outline-none focus-visible:ring-2 focus-visible:ring-mk-brand/40 active:bg-mk-surface-alt sm:min-h-0 sm:rounded-md sm:py-2"
+                className="mk-press-row group flex min-h-11 items-start gap-3 rounded-lg px-2 py-3 hover:bg-mk-surface-alt [-webkit-tap-highlight-color:transparent] focus:outline-none focus-visible:ring-2 focus-visible:ring-mk-brand/40 sm:py-2.5"
             >
-                {/* Kolumna czasu tylko od `sm` — na telefonie czas idzie do linii ze źródłem. */}
+                {/* Kolumna czasu od `sm` — szara, żeby oko szło po tytułach; na telefonie czas jest w linii ze źródłem. */}
                 <time
                     dateTime={item.publishedAt}
-                    title={mounted ? `${formatDate(item.publishedAt)}, ${formatTime(item.publishedAt)}` : undefined}
-                    className="mt-0.5 hidden w-12 shrink-0 text-[11px] font-semibold tabular-nums text-mk-brand sm:block"
+                    title={full}
+                    className="mt-px hidden w-[5.5rem] shrink-0 whitespace-nowrap text-xs tabular-nums text-mk-faint sm:block"
                 >
                     {when}
                 </time>
                 <div className="min-w-0 flex-1">
                     <h3 lang={item.lang ?? 'pl'} className="text-[15px] font-semibold leading-snug text-mk-text transition-colors group-hover:text-mk-brand sm:text-sm">
                         {item.title}
+                        <ExternalMark />
                     </h3>
-                    <div className="mt-1.5 flex flex-wrap items-center gap-x-1.5 gap-y-1 sm:mt-1">
+                    <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1.5 text-xs text-mk-muted">
+                        <span className="inline-flex min-w-0 max-w-full items-center gap-1.5">
+                            <span className="truncate font-medium text-mk-text-soft">{item.source}</span>
+                            <span className="text-mk-faint sm:hidden" aria-hidden>·</span>
+                            <time dateTime={item.publishedAt} title={full} className="shrink-0 tabular-nums sm:hidden">{when}</time>
+                        </span>
                         <CategoryTag section={item.section} />
                         <LangTag item={item} />
-                        <span className="inline-flex min-w-0 max-w-full items-center gap-1.5 text-xs text-mk-muted sm:text-[11px] sm:text-mk-faint">
-                            <span className="truncate">{item.source}</span>
-                            <span className="text-mk-faint sm:hidden" aria-hidden>·</span>
-                            <time dateTime={item.publishedAt} className="shrink-0 font-semibold text-mk-brand sm:hidden">{when}</time>
-                        </span>
-                        <CorroborationBadge n={item.corroboration ?? 1} wire={item.wire} alsoIn={item.alsoIn} compact />
+                        <Corroboration n={item.corroboration ?? 1} wire={item.wire} alsoIn={item.alsoIn} compact />
                         <Flags item={item} />
                     </div>
                 </div>
-                <ExternalLink size={13} className="mt-1 shrink-0 text-mk-faint transition-colors group-hover:text-mk-brand" aria-hidden />
             </a>
         </article>
     );
@@ -441,7 +417,7 @@ export default function NewsyPage() {
             </Drawer>
 
             {lead && (
-                <div className="mk-card mk-card-editorial mk-card-pad-compact border-l-[3px] border-l-mk-brand">
+                <div data-news-lead className="mk-card mk-card-editorial mk-card-pad-compact border-l-[3px] border-l-mk-brand">
                     <LeadStory item={lead} mounted={mounted} />
                 </div>
             )}
@@ -497,7 +473,7 @@ export default function NewsyPage() {
                         <div className="mk-card mk-card-editorial mk-card-pad-compact space-y-3" role="status" aria-busy="true" aria-label="Ładowanie newsów">
                             {Array.from({ length: 8 }, (_, i) => (
                                 <div key={i} className="flex gap-3 py-1">
-                                    <div className="mk-skeleton hidden h-3 w-10 shrink-0 rounded sm:block" />
+                                    <div className="mk-skeleton hidden h-3 w-16 shrink-0 rounded sm:block" />
                                     <div className="flex-1 space-y-1.5">
                                         <div className="mk-skeleton h-4 w-4/5 rounded" />
                                         <div className="mk-skeleton h-3 w-32 rounded" />
@@ -541,7 +517,7 @@ export default function NewsyPage() {
                                 </h2>
                                 <span className="text-[11px] tabular-nums text-mk-faint">{rest.length}</span>
                             </div>
-                            <div className="divide-y divide-mk-border border-t border-mk-border">
+                            <div className="-mx-2 divide-y divide-mk-border border-t border-mk-border">
                                 {visible.map((it) => (
                                     <NewsRow key={it.link} item={it} mounted={mounted} />
                                 ))}
