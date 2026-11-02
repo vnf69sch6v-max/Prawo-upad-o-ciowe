@@ -203,7 +203,7 @@ export function euHicpHeadline(p: EuHicpPayload): EuHicpHeadline {
     const plStart = p.series.PL.find((x) => x.date === start);
     const eaStart = p.series.EA.find((x) => x.date === start);
     const context = plStart && eaStart
-        ? `Różnica Polska − strefa euro: ${fmtSignedPp(diff)} p.p. Dwa lata wcześniej (${formatDataPeriod(start)}) wynosiła ${fmtSignedPp(plStart.value - eaStart.value)} p.p.`
+        ? `Różnica Polska − strefa euro: ${fmtSignedPp(diff)} p.p. Na początku wykresu (${formatDataPeriod(start)}) wynosiła ${fmtSignedPp(plStart.value - eaStart.value)} p.p.`
         : null;
     return { headline, context };
 }

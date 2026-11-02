@@ -12,7 +12,7 @@
 Inwestor, analityk albo dziennikarz widzi w dniu publikacji GUS „inflacja 4,1%” i od razu pyta, czy to dużo na tle
 Europy. Dziś musi otworzyć tabelę Eurostatu. Po tym kroku dostaje odpowiedź w jednym zdaniu, z liczbą i okresem.
 Wyjdzie z niego na przykład, że Polska ma najwyższą inflację w zestawieniu, ale tylko 0,2 p.p. powyżej strefy euro,
-a luka zwęziła się z 2,3 p.p. dwa lata temu.
+a luka zwęziła się z 2,3 p.p. na początku okna 24 miesięcy.
 
 Porównanie musi używać tej samej miary dla wszystkich krajów, czyli HICP. Do CPI GUS go nie mieszamy (patrz „Jak czytać”).
 
@@ -45,7 +45,7 @@ Kolejność: wniosek → liczby → wykres → szczegóły. Dane trafiają do HT
 1. **Nagłówek** `PageHeader` „Polska na tle UE · Inflacja HICP” i link powrotny „← Ceny” (≥44 px).
 2. **Wniosek (hero)**, jedno zdanie z danych, z funkcji czystej `euHicpHeadline()`:
    „Inflacja HICP w Polsce: **4,0%** we wrześniu 2026, 0,2 p.p. powyżej strefy euro (3,8%), najwyżej w zestawieniu.”
-   Pod spodem wiersz kontekstu: „Luka wobec strefy euro: 0,2 p.p., dwa lata temu 2,3 p.p. (październik 2024).”
+   Pod spodem wiersz kontekstu: „Różnica Polska − strefa euro: +0,2 p.p. Na początku wykresu (październik 2024) wynosiła +2,3 p.p.” (październik 2024 → wrzesień 2026 to 23 miesiące, nie „dwa lata”.)
    - Reguły słów: różnica PL−EA > 0,05 → „powyżej”, < −0,05 → „poniżej”, inaczej „na poziomie strefy euro”.
    - Miejsce 1 → „najwyżej w zestawieniu”, miejsce 5 → „najniżej w zestawieniu”, inaczej „N. miejsce z 5”.
    - Zaokrąglenie do 0,1, przecinek dziesiętny, różnice ze znakiem (`+0,5 p.p.`, `−0,3 p.p.`, minus typograficzny).

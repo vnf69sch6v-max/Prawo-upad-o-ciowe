@@ -69,7 +69,7 @@ export function EuHicp({ initial }: { initial: EuHicpPayload | null }) {
                     />
                 </SectionCard>
 
-                <SectionCard titleVariant="label" title={`Ranking · ${period}`} subtitle="HICP r/r, zmiana wobec poprzedniego miesiąca w p.p.">
+                <SectionCard className="order-first lg:order-none" titleVariant="label" title={`Ranking · ${period}`} subtitle="HICP r/r, zmiana wobec poprzedniego miesiąca w p.p.">
                     {/* Telefon: karty. */}
                     <ul className="space-y-2 md:hidden">
                         {data.rows.map((r) => (

@@ -120,11 +120,22 @@ P-5. **Watchlista — drobiazgi z recenzji PM 25.10** (niewstrzymujące). Zrobio
    liczbami (`next/og`), liczby w HTML z serwera, nie tylko po hydratacji.
 10. **Kalkulator „Twoja inflacja”:** własny koszyk na wagach COICOP z DBW.
 11. **Polska na tle UE:** HICP, bezrobocie, PKB z Eurostatu dla PL / strefy euro / sąsiadów.
-    **Krok 1 w toku** (spec `docs/specs/2026-11-02-polska-na-tle-ue-hicp.md`, gałąź `claude/pl-na-tle-ue`): HICP r/r
-    PL / strefa euro / DE / CZ / HU na `/ceny/na-tle-ue`. Według Eurostatu wrzesień 2026 to PL 4,0, EA 3,8, DE 3,3,
-    CZ 2,2, HU 2,1, aktualizacja 16.10. Kontrola produkcyjna 18.11.2026: październik do 13:30 UTC (cron `nbp`).
-    Flash strefy euro odłożony, bo publikacja jest 04.11, a zbioru API nie potwierdzono. Następne kroki: bezrobocie,
-    potem PKB.
+    **Krok 1: recenzja PM 02.11.2026 = FIX** (spec `docs/specs/2026-11-02-polska-na-tle-ue-hicp.md`, gałąź
+    `claude/pl-na-tle-ue`). HICP r/r PL / strefa euro / DE / CZ / HU na `/ceny/na-tle-ue`. Liczby zgodne z API
+    Eurostatu (sprawdzone ponownie 02.11): wrzesień 2026 PL 4,0, EA 3,8, DE 3,3, CZ 2,2, HU 2,1, aktualizacja 16.10.
+    Do poprawki przed scaleniem: na telefonie ranking ma być nad wykresem, „Dwa lata wcześniej (październik 2024)”
+    to tylko 23 miesiące, więc trzeba zmienić tekst, i brakuje notki w `AGENTS.md`. Po poprawkach potrzebna ponowna
+    recenzja.
+    Kontrola produkcyjna:
+    (a) w dniu wdrożenia `/api/health/freshness`: `eu-hicp` = `ok` z okresem 2026-09, wpis crona `refresh`
+    z `/api/eu-hicp`, HTML `/ceny/na-tle-ue` (z sesją) zawiera „4,0%”, „wrzesień 2026”, „16.10.2026”
+    i „prc_hicp_minr” (kryterium 8, w trybie demo nie dało się go sprawdzić);
+    (b) 18.11.2026 o 13:30 UTC: okres 2026-10 i liczby zgodne z komunikatem. Jeśli API Eurostatu też nie ma jeszcze
+    października (pole `updated` z 16.10 to 23:00), to jest opóźnienie źródła, a nie błąd. Wtedy przenieść drugą
+    przebieżkę na później;
+    (c) przed 18.12.2026 dopisać listopad do `EU_HICP_RELEASES`, po potwierdzeniu w kalendarzu Euro indicators.
+    Flash strefy euro jest odłożony: publikacja 04.11, zbioru API jeszcze nie potwierdzono. Następne kroki to
+    bezrobocie, potem PKB.
 12. **Monitoring błędów przeglądarki** bez zewnętrznych usług: `/api/client-errors` → Firestore,
     licznik na `/status`.
 13. **Dostępność:** kontrasty, `aria-*`, nawigacja klawiaturą, czytniki ekranu na wykresach.
