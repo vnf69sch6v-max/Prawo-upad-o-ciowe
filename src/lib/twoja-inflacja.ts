@@ -118,13 +118,18 @@ export function computePersonalInflation(shares: readonly number[], snap: MonthS
         return { code, share, yoy, pp: (share * yoy) / 100, vsCpi: ((share - gus[i]) * yoy) / 100 };
     });
     const sum = contributions.reduce((a, c) => a + c.pp, 0);
-    const driver = contributions.reduce((best, c) => (Math.abs(c.vsCpi) > Math.abs(best.vsCpi) ? c : best));
+    const diff = sum - gusSum;
+    // Wyjaśnienie różnicy bierze tylko działy ciągnące w tę samą stronę co różnica — inaczej zdanie „niżej niż CPI —
+    // głównie przez transport: +0,9 p.p.” przeczyłoby sobie. Bez takiego działu (różnica ≈ 0): największy |wpływ|.
+    const biggest = (list: Contribution[]) => list.reduce((best, c) => (Math.abs(c.vsCpi) > Math.abs(best.vsCpi) ? c : best));
+    const sameSign = contributions.filter((c) => c.vsCpi !== 0 && Math.sign(c.vsCpi) === Math.sign(diff));
+    const driver = sameSign.length ? biggest(sameSign) : biggest(contributions);
     return {
         rate: sum + residual,
         cpi: snap.cpi,
         gusSum,
         residual,
-        diff: sum - gusSum,
+        diff,
         contributions: [...contributions].sort((a, b) => b.pp - a.pp),
         driver,
     };

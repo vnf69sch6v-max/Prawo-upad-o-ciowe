@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { ArrowLeft, Check, ChevronDown, Link2, RotateCcw } from 'lucide-react';
 import { useCpiFull } from '@/lib/hooks';
 import { useIsClient } from '@/lib/use-is-client';
+import { useHideOnScroll } from '@/lib/use-hide-on-scroll';
 import { formatDecimalPL, formatDataPeriod } from '@/lib/formatters';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { QueryError } from '@/components/ui/QueryState';
@@ -65,6 +66,8 @@ export function TwojaInflacja({ initial }: Props) {
     const setOne = (i: number, v: number) => update(shares.map((s, j) => (j === i ? v : s)));
 
     // Przyklejony pasek wyniku na telefonie, gdy karta wyniku wyjedzie poza ekran.
+    // Nagłówek (56 px) chowa się przy przewijaniu w dół — pasek jedzie razem z nim, żeby go nie przykrywał.
+    const headerHidden = useHideOnScroll();
     const resultRef = useRef<HTMLElement | null>(null);
     const [resultHidden, setResultHidden] = useState(false);
     useEffect(() => {
@@ -155,7 +158,7 @@ export function TwojaInflacja({ initial }: Props) {
             </div>
 
             {resultHidden && res && (
-                <div className="fixed inset-x-0 top-0 z-30 border-b border-mk-border bg-mk-surface/95 px-4 pb-2 pt-[calc(env(safe-area-inset-top)+0.5rem)] shadow-sm backdrop-blur-sm lg:hidden"
+                <div className={`fixed inset-x-0 z-30 border-b border-mk-border bg-mk-surface/95 px-4 py-2 shadow-sm backdrop-blur-sm transition-[top] duration-200 ease-out motion-reduce:transition-none lg:hidden ${headerHidden ? 'top-[env(safe-area-inset-top)]' : 'top-[calc(env(safe-area-inset-top)+3.5rem)]'}`}
                     data-testid="sticky-result" aria-hidden>
                     <p className="text-sm font-semibold tnum text-mk-text">Twoja {rateText} <span className="font-normal text-mk-muted">· CPI {cpiText}</span></p>
                 </div>

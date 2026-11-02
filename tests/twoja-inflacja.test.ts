@@ -136,3 +136,17 @@ describe("nawigacja (kryterium 16)", () => {
     expect(isMoreActive("/ceny")).toBe(false);
   });
 });
+
+describe("zdanie-wniosek: dział zgodny ze znakiem różnicy (FIX 1 z recenzji PM)", () => {
+  it("koszyk niżej niż CPI nie jest tłumaczony działem, który go podnosi", () => {
+    // Dużo transportu (+17,9%) podnosi, ale jeszcze więcej żywności (−0,4%) i mało mieszkania (+5,1%) obniża mocniej.
+    const shares = gusShares();
+    shares[0] = 60; // 01 żywność
+    shares[3] = 5; // 04 mieszkanie
+    shares[6] = 14; // 07 transport (> waga GUS 10,18)
+    const r = computePersonalInflation(shares, SEP)!;
+    expect(r.diff).toBeLessThan(0);
+    expect(Math.sign(r.driver.vsCpi)).toBe(-1);
+    expect(r.contributions.some((c) => c.code === "07" && c.vsCpi > 0)).toBe(true);
+  });
+});
