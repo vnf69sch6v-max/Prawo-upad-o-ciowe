@@ -9,6 +9,17 @@ pierwszeństwo. Rzeczy, których nie da się zrobić z kodu, trafiają do „Wym
 ## Do zrobienia (od najważniejszego)
 
 ### Prośby właściciela
+**PRIORYTET OD 02.11.2026 (właściciel: „nie widzę realnych ulepszeń strony”).** Od 30.10 rutyna dowiozła
+same zmiany niewidoczne dla użytkownika (#75, #76). Od teraz PM wybiera z listy W1–W4 poniżej, po kolei, a
+niezawodność (sekcja niżej) bierze TYLKO gdy `/api/health/freshness` ma `stale`/`error`, cron jest
+`failing`/`late`/`partial` albo jest termin P0/J0 w swoim dniu. Każdy krok W kończy się zmianą, którą
+właściciel zobaczy na savori.space (zrzut 390 i 1440 px przed/po w raporcie). Krok za duży na jeden
+przebieg → PM tnie go na widoczne kawałki (np. najpierw sama strona z danymi, potem interakcja).
+- **W1. Szybki szacunek CPI (pozycja 7)** — w toku w osobnej sesji 02.11 (gałąź `claude/cpi-flash`); nie dublować.
+- **W2. Lista /newsy spójna z Przeglądem (4c)** — w toku w osobnej sesji 02.11 (gałąź `claude/newsy-lista`); nie dublować.
+- **W3. Kalkulator „Twoja inflacja” (pozycja 10)** — najpierw widok: suwaki 12 działów COICOP na wagach GUS → „Twoja inflacja” vs CPI; potem zapis koszyka na koncie. Widok — w toku w osobnej sesji 02.11 (gałąź `claude/twoja-inflacja`); nie dublować.
+- **W4. Polska na tle UE (pozycja 11)** — HICP PL vs strefa euro, CZ, HU, DE (Eurostat), jeden wykres i tabela. W toku w osobnej sesji 02.11 (gałąź `claude/pl-na-tle-ue`); nie dublować.
+
 0. **Rozbicie inflacji w Japonii — „ładne”** (prośba z 24.10.2026). Co napędza CPI: świeża żywność,
    energia, żywność bez świeżej, usługi/towary, kategorie koszyka; wkłady w p.p. tam, gdzie da się je
    policzyć uczciwie. Ustalone: Statistics Dashboard ma kategorie koszyka **tylko rocznie** — miesięcznie
