@@ -1,94 +1,132 @@
 import { describe, expect, it } from "vitest";
-import { CPI_WEIGHTS_2026 } from "@/lib/cpi-weights";
+import fixture from "./fixtures/gus-cpi-divisions-2026.json";
 import {
   DIVISION_CODES,
   computePersonalInflation,
   encodeBasket,
   gusShares,
-  isGusBasket,
-  normalizeTo100,
+  latestCompleteMonth,
+  latestDivisionsMonth,
   parseBasket,
+  parseShareInput,
+  type MonthSnapshot,
 } from "@/lib/twoja-inflacja";
 import { isMoreActive } from "@/components/shell/mobile-nav";
+import { datasetById } from "@/lib/freshness";
+import { cpiFullPath } from "@/lib/gus-api-paths";
 
-describe("wagi GUS 2026", () => {
-  it("13 działów COICOP 2018 w kolejności 01–13", () => {
-    expect(DIVISION_CODES).toEqual(["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13"]);
-  });
-  it("suma wag = 100 (tolerancja zaokrągleń źródła)", () => {
-    const sum = CPI_WEIGHTS_2026.reduce((a, d) => a + d.weight, 0);
-    expect(Math.abs(sum - 100)).toBeLessThanOrEqual(0.05);
+const months = fixture.months as Record<string, { cpi: number; divisions: Record<string, number> }>;
+const snapOf = (date: string): MonthSnapshot => ({ date, cpi: months[date].cpi, yoy: months[date].divisions });
+const SEP = snapOf("2026-09");
+const EXAMPLE = "3000,200,375,2500,518,620,2000,502,300,0,300,124,441";
+
+describe("kotwica w CPI (kryterium 3)", () => {
+  it.each(Object.keys(months))("%s: wagi GUS → dokładnie CPI", (m) => {
+    const r = computePersonalInflation(gusShares(), snapOf(m))!;
+    expect(Math.abs(r.rate - months[m].cpi)).toBeLessThan(1e-9);
+    expect(Math.abs(r.diff)).toBeLessThan(1e-9);
   });
 });
 
-describe("computePersonalInflation", () => {
-  const flat = DIVISION_CODES.map((code) => ({ code, yoy: 2 }));
-  it("równe dynamiki → wynik = ta dynamika, niezależnie od udziałów", () => {
-    expect(computePersonalInflation(gusShares(), flat).rate).toBeCloseTo(2, 10);
-    expect(computePersonalInflation(DIVISION_CODES.map((_, i) => i + 1), flat).rate).toBeCloseTo(2, 10);
+describe("przykładowy koszyk, wrzesień 2026 (kryterium 4)", () => {
+  const parsed = parseBasket(`w=${EXAMPLE}`);
+  it("parsuje się (suma 10880)", () => {
+    expect(parsed.status).toBe("ok");
+    if (parsed.status === "ok") expect(parsed.shares.reduce((a, b) => a + b, 0)).toBeCloseTo(108.8, 9);
   });
-  it("wkłady sumują się do wyniku", () => {
-    const r = DIVISION_CODES.map((code, i) => ({ code, yoy: i - 4 }));
-    const out = computePersonalInflation(gusShares(), r);
-    const sum = out.contributions.reduce((a, c) => a + (c.pp ?? 0), 0);
-    expect(sum).toBeCloseTo(out.rate!, 10);
+  const shares = parsed.status === "ok" ? parsed.shares : [];
+  const r = computePersonalInflation(shares, SEP)!;
+  it("wynik 5,098 (±0,001), +1,0 p.p. wobec CPI", () => {
+    expect(r.rate).toBeCloseTo(5.098, 3);
+    expect(r.residual).toBeCloseTo(-0.0221, 3);
+    expect(r.rate - r.cpi).toBeCloseTo(1.0, 1);
   });
-  it("koszyk 100% w jednym dziale = dynamika tego działu", () => {
-    const shares = DIVISION_CODES.map((c) => (c === "04" ? 100 : 0));
-    const r = DIVISION_CODES.map((code, i) => ({ code, yoy: i }));
-    expect(computePersonalInflation(shares, r).rate).toBeCloseTo(3, 10);
+  it("Σ wkładów + reszta = wynik; wkłady malejąco", () => {
+    expect(Math.abs(r.contributions.reduce((a, c) => a + c.pp, 0) + r.residual - r.rate)).toBeLessThan(1e-9);
+    const pps = r.contributions.map((c) => c.pp);
+    expect(pps).toEqual([...pps].sort((a, b) => b - a));
   });
-  it("dział bez odczytu jest pomijany i raportowany", () => {
-    const r = DIVISION_CODES.map((code) => ({ code, yoy: code === "10" ? null : 1 }));
-    const out = computePersonalInflation(gusShares(), r);
-    expect(out.rate).toBeCloseTo(1, 10);
-    expect(out.missingShare).toBeCloseTo(CPI_WEIGHTS_2026.find((d) => d.code === "10")!.weight, 1);
-    expect(out.contributions.find((c) => c.code === "10")!.pp).toBeNull();
+  it("zdanie-wniosek wskazuje transport, +1,47 p.p.", () => {
+    expect(r.driver.code).toBe("07");
+    expect(r.driver.vsCpi).toBeCloseTo(1.47, 2);
   });
-  it("brak danych → null, nie 0", () => {
-    expect(computePersonalInflation(gusShares(), []).rate).toBeNull();
+  it("koszyk zerowy albo brak danych → null", () => {
+    expect(computePersonalInflation(new Array(13).fill(0), SEP)).toBeNull();
+    expect(computePersonalInflation(gusShares(), null)).toBeNull();
   });
 });
 
-describe("stan w URL (?w=)", () => {
-  it("round-trip: encode → parse daje te same udziały (do 0,1 p.p.)", () => {
-    const shares = [30, 5, 3.5, 25, 4, 2, 12, 5, 4, 0, 6, 1, 2.5];
-    expect(parseBasket(encodeBasket(shares))).toEqual(shares);
+describe("stan w adresie (kryteria 5–6)", () => {
+  it("round-trip na siatce 0,01 (≥200 losowych koszyków)", () => {
+    let seed = 42;
+    const rnd = () => ((seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648);
+    for (let k = 0; k < 250; k++) {
+      const x = DIVISION_CODES.map(() => Math.round(rnd() * 10000) / 100);
+      x[k % 13] = Math.max(x[k % 13], 0.01);
+      const enc = encodeBasket(x);
+      if (enc == null) continue; // trafiony koszyk GUS
+      const dec = parseBasket(new URLSearchParams({ w: enc }));
+      expect(dec).toEqual({ status: "ok", shares: x });
+    }
   });
-  it("wagi GUS po round-tripie dalej są koszykiem GUS", () => {
-    expect(isGusBasket(parseBasket(encodeBasket(gusShares()))!)).toBe(true);
-    expect(isGusBasket([30, 5, 3.5, 25, 4, 2, 12, 5, 4, 0, 6, 1, 2.5])).toBe(false);
+  it("wagi GUS = brak parametru; brak parametru = wagi GUS", () => {
+    expect(encodeBasket(gusShares())).toBeNull();
+    expect(parseBasket("")).toEqual({ status: "none" });
+    expect(parseBasket("?x=1")).toEqual({ status: "none" });
   });
+  const ok13 = "2591,481,375,2035,518,620,1018,502,637,103,555,124";
   it.each([
-    [null],
-    [""],
-    ["1,2,3"],
-    ["1,2,3,4,5,6,7,8,9,10,11,12,13,14"],
-    ["0,0,0,0,0,0,0,0,0,0,0,0,0"],
-    ["259,61,42,195,51,63,98,55,59,10,64,13,-1"],
-    ["259,61,42,195,51,63,98,55,59,10,64,13,1.5"],
-    ["259,61,42,195,51,63,98,55,59,10,64,13,1001"],
-    ["259,61,42,195,51,63,98,55,59,10,64,13,abc"],
-    ["259,61,42,195,51,63,98,55,59,10,64,13,"],
-    ["1e3,61,42,195,51,63,98,55,59,10,64,13,1"],
-    ["x".repeat(500)],
-  ])("śmieci (%s) → null = wagi GUS", (raw) => {
-    expect(parseBasket(raw)).toBeNull();
+    ["12 tokenów", `w=${ok13}`],
+    ["14 tokenów", `w=${ok13},441,1`],
+    ["-1", `w=${ok13.replace(/^2591/, "-1")},441`],
+    ["10001", `w=${ok13},10001`],
+    ["1.5", `w=${ok13},1.5`],
+    ["abc", `w=${ok13},abc`],
+    ["pusty token", `w=2591,,375,2035,518,620,1018,502,637,103,555,124,441`],
+    ["same zera", `w=${new Array(13).fill(0).join(",")}`],
+    ["w dwa razy", `w=${ok13},441&w=${ok13},441`],
+    ["2000 znaków", `w=${"1".repeat(2000)}`],
+  ])("%s → invalid (wagi GUS), bez wyjątku", (_, q) => {
+    expect(() => parseBasket(q)).not.toThrow();
+    expect(parseBasket(q)).toEqual({ status: "invalid" });
+  });
+  it("pole liczbowe: przecinek i kropka, zakres 0–100, śmieci → null", () => {
+    expect(parseShareInput("12,5")).toBe(12.5);
+    expect(parseShareInput("12.25")).toBe(12.25);
+    expect(parseShareInput("150")).toBe(100);
+    expect(parseShareInput("abc")).toBeNull();
+    expect(parseShareInput("")).toBeNull();
   });
 });
 
-describe("normalizeTo100", () => {
-  it("suma dokładnie 100,0 i proporcje zachowane", () => {
-    const out = normalizeTo100([10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10]);
-    expect(out.reduce((a, b) => Math.round((a + b) * 10) / 10, 0)).toBe(100);
-    expect(Math.max(...out) - Math.min(...out)).toBeLessThanOrEqual(0.2);
+describe("miesiąc danych: działy i CPI z tego samego YYYY-MM", () => {
+  const div = (code: string, hist: [string, number | null][]) => ({ code, history: hist.map(([date, yoy]) => ({ date, yoy })) });
+  const payload = (lastHas12: boolean) => ({
+    headline: [{ date: "2026-08", yoy: 3.4 }, { date: "2026-09", yoy: 4.1 }],
+    divisions: DIVISION_CODES.map((c) => div(c, [["2025-Q4", 1], ["2026-08", 1], ["2026-09", lastHas12 && c === "10" ? null : 2]])),
   });
-  it("same zera → wagi GUS", () => {
-    expect(normalizeTo100(new Array(13).fill(0))).toEqual(gusShares());
+  it("13/13 + CPI → najnowszy miesiąc", () => {
+    expect(latestCompleteMonth(payload(false))).toMatchObject({ date: "2026-09", cpi: 4.1 });
+    expect(latestDivisionsMonth(payload(false))).toBe("2026-09");
+  });
+  it("ostatni miesiąc 12/13 → poprzedni (kryterium 7)", () => {
+    expect(latestCompleteMonth(payload(true))).toMatchObject({ date: "2026-08", cpi: 3.4 });
+    expect(latestDivisionsMonth(payload(true))).toBe("2026-08");
+  });
+  it("brak CPI za miesiąc działów → nie mieszamy miesięcy", () => {
+    const p = { ...payload(false), headline: [{ date: "2026-07", yoy: 3 }] };
+    expect(latestCompleteMonth(p)).toBeNull();
+    expect(latestCompleteMonth(null)).toBeNull();
+  });
+  it("cpi-divisions w kontroli świeżości, ta sama trasa co strona", () => {
+    const spec = datasetById("cpi-divisions")!;
+    expect(spec).toBeDefined();
+    expect(spec.endpoint(new Date("2026-11-02T12:00:00Z"))).toBe(cpiFullPath());
+    expect(spec.extract(payload(true))).toBe("2026-08");
   });
 });
 
-describe("nawigacja", () => {
+describe("nawigacja (kryterium 16)", () => {
   it("/ceny/twoja-inflacja zapala zakładkę Ceny, nie „Więcej”", () => {
     expect(isMoreActive("/ceny/twoja-inflacja")).toBe(false);
   });

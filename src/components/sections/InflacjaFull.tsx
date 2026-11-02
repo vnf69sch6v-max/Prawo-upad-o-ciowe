@@ -447,14 +447,14 @@ export function InflacjaFull() {
 
             {/* ── Drawer: szczegóły klikniętego działu ── */}
             <Drawer open={drawerOpen && !!sel} onClose={() => setDrawerOpen(false)} accent={selColor}
-                title={sel ? `${sel.code} · ${sel.name}` : ''} subtitle={sel ? `waga ${formatDecimalPL(sel.weight, 1)}% koszyka inflacyjnego` : ''}>
+                title={sel ? `${sel.code} · ${sel.name}` : ''} subtitle={sel ? `waga ${formatDecimalPL(sel.weight, 2)}% koszyka inflacyjnego` : ''}>
                 {sel && (
                     <div className="space-y-5">
                         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                             {[
                                 { l: 'r/r', v: sel.yoy != null ? `${sel.yoy > 0 ? '+' : ''}${formatDecimalPL(sel.yoy, 1)}%` : '—' },
                                 { l: 'm/m', v: sel.mom != null ? `${sel.mom > 0 ? '+' : ''}${formatDecimalPL(sel.mom, 1)}%` : '—' },
-                                { l: 'waga', v: `${formatDecimalPL(sel.weight, 1)}%` },
+                                { l: 'waga', v: `${formatDecimalPL(sel.weight, 2)}%` },
                                 { l: 'wkład w CPI', v: sel.contribution != null ? `${sel.contribution > 0 ? '+' : ''}${formatDecimalPL(sel.contribution, 2)} pp` : '—' },
                             ].map((x) => (
                                 <div key={x.l} className="rounded-xl border border-mk-border p-2 text-center">

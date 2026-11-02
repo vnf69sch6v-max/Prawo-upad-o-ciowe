@@ -118,7 +118,17 @@ P-5. **Watchlista — drobiazgi z recenzji PM 25.10** (niewstrzymujące). Zrobio
    `workflow` dla tokenu — jeśli push odrzuci, przenieść do „Wymaga właściciela”).
 9. **SEO:** metadane i opisy per strona, `sitemap.xml`, `robots.txt`, obrazy OG z aktualnymi
    liczbami (`next/og`), liczby w HTML z serwera, nie tylko po hydratacji.
-10. **Kalkulator „Twoja inflacja”:** własny koszyk na wagach COICOP z DBW.
+10. **Kalkulator „Twoja inflacja”** (W3, zakres od właściciela 02.11.2026). **Krok 1 w toku**, spec
+    `docs/specs/2026-11-02-twoja-inflacja.md`, gałąź `claude/twoja-inflacja`. Zakres: `/ceny/twoja-inflacja`,
+    13 działów COICOP 2018, start na oficjalnych wagach GUS 2026, wynik r/r dla najnowszego pełnego miesiąca
+    (wrzesień 2026) obok CPI, wkłady w p.p., reset, stan w `?w=`, bez konta, zero nowych wywołań DBW.
+    Wagi sprawdzone 02.11 (Wykres 2 komunikatu GUS z 14.10.2026, suma 100,00). DBW wag nie ma: tylko miary 2/5/8.
+    Σ waga×r/r działów odtwarza CPI w 2026 z dokładnością do 0,05 p.p. (wrzesień 4,122 wobec 4,1).
+    **Błąd na produkcji naprawiany w tym kroku:** wagi w `gus-cpi-full` są przybliżone (`weightsApprox`) i w 8 z 13
+    działów odbiegają od GUS o 0,4–1,4 p.p., więc wkłady na `/ceny` są przekłamane. Nowy `DatasetSpec` `cpi-divisions`,
+    bo `cpi` sprawdza tylko nagłówek (przekrój 1722), a działy idą z 1698.
+    Krok 2: zapis koszyka na koncie (`savori_users`, `/prywatnosc`). Krok 3: profile gospodarstw domowych z oficjalnych
+    indeksów GUS (DBW 1698 `id-pozycja-3`; nazwy grup do potwierdzenia w słowniku).
 11. **Polska na tle UE:** HICP, bezrobocie, PKB z Eurostatu dla PL / strefy euro / sąsiadów.
 12. **Monitoring błędów przeglądarki** bez zewnętrznych usług: `/api/client-errors` → Firestore,
     licznik na `/status`.

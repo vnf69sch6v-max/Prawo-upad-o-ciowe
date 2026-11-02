@@ -10,25 +10,28 @@ import { withCache } from '@/lib/server-cache';
 import { dbwFetchMany, pick, monthlyPeriods, quarterlyPeriods, monthOkres, type DbwPeriod, type DbwRow } from '@/lib/dbw-fetch';
 import { COICOP_CLASSES } from '@/lib/coicop-subcategories';
 import { badParam, forcedRefresh, parseGusYear } from '@/lib/gus-params';
+import { applyOfficialWeights } from '@/lib/cpi-weights';
 
 // Limit z eksportu (wpis w vercel.json pod globem `src/app/api/**` był martwy → 30 s i 504 w cronie dbw-1).
 // 120 s tylko razem z walidacją `year`: bez niej `?year=1` (8152 wywołania DBW) paliłoby limit 4× dłużej.
 export const maxDuration = 120;
 
+// Wagi GUS 2026 (kopia `CPI_WEIGHTS_2026`; odpowiedź i tak przechodzi przez `applyOfficialWeights`, bo stare wpisy
+// cache mają przybliżone wagi sprzed 02.11.2026).
 const DIVISIONS = [
-    { poz: 14150568, code: '01', name: 'Żywność i napoje bezalk.', weight: 25.9 },
-    { poz: 14150567, code: '02', name: 'Alkohol i tytoń', weight: 6.1 },
-    { poz: 14150566, code: '03', name: 'Odzież i obuwie', weight: 4.2 },
-    { poz: 14150565, code: '04', name: 'Mieszkanie, woda, energia', weight: 19.5 },
-    { poz: 14150564, code: '05', name: 'Wyposażenie mieszkania', weight: 5.1 },
-    { poz: 14150563, code: '06', name: 'Zdrowie', weight: 6.3 },
-    { poz: 14150562, code: '07', name: 'Transport', weight: 9.8 },
-    { poz: 14150561, code: '08', name: 'Informacja i komunikacja', weight: 5.5 },
-    { poz: 14150560, code: '09', name: 'Rekreacja, sport i kultura', weight: 5.9 },
-    { poz: 14150559, code: '10', name: 'Edukacja', weight: 1.0 },
-    { poz: 14150558, code: '11', name: 'Restauracje i hotele', weight: 6.4 },
-    { poz: 14150557, code: '12', name: 'Ubezpieczenia i usługi fin.', weight: 1.3 },
-    { poz: 14150556, code: '13', name: 'Higiena i pozostałe', weight: 3.0 },
+    { poz: 14150568, code: '01', name: 'Żywność i napoje bezalk.', weight: 25.91 },
+    { poz: 14150567, code: '02', name: 'Alkohol i tytoń', weight: 4.81 },
+    { poz: 14150566, code: '03', name: 'Odzież i obuwie', weight: 3.75 },
+    { poz: 14150565, code: '04', name: 'Mieszkanie, woda, energia', weight: 20.35 },
+    { poz: 14150564, code: '05', name: 'Wyposażenie mieszkania', weight: 5.18 },
+    { poz: 14150563, code: '06', name: 'Zdrowie', weight: 6.2 },
+    { poz: 14150562, code: '07', name: 'Transport', weight: 10.18 },
+    { poz: 14150561, code: '08', name: 'Informacja i komunikacja', weight: 5.02 },
+    { poz: 14150560, code: '09', name: 'Rekreacja, sport i kultura', weight: 6.37 },
+    { poz: 14150559, code: '10', name: 'Edukacja', weight: 1.03 },
+    { poz: 14150558, code: '11', name: 'Restauracje i hotele', weight: 5.55 },
+    { poz: 14150557, code: '12', name: 'Ubezpieczenia i usługi fin.', weight: 1.24 },
+    { poz: 14150556, code: '13', name: 'Higiena i pozostałe', weight: 4.41 },
 ];
 
 // COICOP 1999 (przekrój 736): pozycje działów → kod COICOP 2018 (13 dzieli „inne" z 12).
@@ -152,7 +155,8 @@ export async function GET(request: NextRequest) {
             'GUS DBW CPI full',
             force ? -1 : 48 * 3600 * 1000, // user czyta 48h cache; cron ?refresh=1 odświeża codziennie
         );
-        return NextResponse.json(result);
+        // Wagi GUS 2026 (src/lib/cpi-weights.ts) nakładane po cache: poprawka bez podbijania klucza v5 (~72 wywołania DBW).
+        return NextResponse.json(applyOfficialWeights(result));
     } catch (error) {
         console.error('GUS CPI full error:', error);
         return NextResponse.json({ error: String(error) }, { status: 500 });
