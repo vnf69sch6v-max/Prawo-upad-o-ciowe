@@ -58,9 +58,19 @@ pierwszeństwo. Rzeczy, których nie da się zrobić z kodu, trafiają do „Wym
 4b. **Podsumowanie dnia i brief — data, język, wygląd** — **zrobione 30.10.2026** (prośba właściciela, PM: SHIP po FIX;
     `claude/nice-wozniak-8xnus6`, spec `docs/specs/2026-10-30-podsumowanie-i-brief-wyglad.md`): dwa różne EUR/PLN
     na jednym ekranie bez daty, meta-komentarze modelu, angielski format liczb, pusta połowa karty, czerwone tagi.
-4c. **Lista /newsy spójna z Przeglądem** (z REVIEW PM 30.10): czerwone obrysowane tagi (MAKRO, PRZEMYSŁ) i samotne
-    ikony linku na liście → neutralne tagi i ikona przy tytule, jak w `DailyDigestCard`. Po briefie z 31.10 PM sprawdza,
-    czy punkty „Dane” niosą wniosek, a nie tylko przepisane liczby (nowy prompt).
+4c. **Lista /newsy spójna z Przeglądem** — **zrobione 2.11.2026** (z REVIEW PM 30.10, PM: SHIP; gałąź `claude/newsy-lista`,
+    spec `docs/specs/2026-11-02-newsy-lista-spojna.md`, wpis w „Zrobione”): wspólny `src/components/ui/NewsRow.tsx`
+    dla `DailyDigestCard` i `/newsy`, 0 `mk-tag-brand*` w `main` (było 32), czas szary, ikona przy tytule.
+4c'. **Kontrola treści briefu: czy punkty „Dane” niosą wniosek** (wydzielone z 4c 2.11.2026, kontrola PM, bez kodu):
+    na najbliższym briefie po zmianie promptu z 31.10 sprawdzić, czy każdy punkt „Dane” mówi, co liczba znaczy
+    (kierunek, porównanie z celem lub poprzednim odczytem), a nie tylko przepisuje wartość. Jeśli nie — spec poprawki promptu.
+    Zależy od 4a' (brief musi przejść walidator).
+4d. **Tagi i relacje na stronach tematycznych i /podsumowanie** (po 4c): `RelatedNews` / `CategoryNews` i `/podsumowanie`
+    nadal mają czerwone tagi (`CategoryTag`) i zielone pigułki relacji. Przepiąć na eksporty z `NewsRow.tsx` z 4c.
+    W tym samym kroku odmiana: `corroborationLabel` (`src/lib/news/daily.ts`) i kopie w `RelatedNews.tsx` dają
+    „5 niezależne relacje” — dla 5–21, 25–31… ma być „niezależnych relacji” (2–4, 22–24 „niezależne relacje”). Na liście /newsy,
+    w leadzie i w `DailyDigestCard` wyświetlanie odmienia już `relationsLabel` (`NewsRow.tsx`, 2.11) — zostaje sam `corroborationLabel` (wejście briefu).
+    Uwaga: `src/lib/news/summary.ts` używa tej etykiety w wejściu briefu i whitelistach walidatora — zmienić razem, z testem.
 4. **`news-digest` nie zapisuje przebiegu** w `health/cron_runs` — `/status` nie pokazuje, czy działa.
 5. **Lint:** ~21 starych błędów w `src/lib/firebase/*` i hookach — wyczyścić, potem lint w CI.
 6. **`/api/news?refresh=1` przy każdym wywołaniu zapisuje archiwum dzienne do Firestore**, także wtedy,
@@ -238,6 +248,12 @@ J5. **Gospodarka Japonii** — produkcja zrobiona 27.10 (`/japonia/gospodarka`: 
 - **`GUS_BDL_KEY`** — wyższy limit BDL (rejestracja na api.stat.gov.pl).
 
 ## Zrobione
+- **2.11.2026 — 4c: lista /newsy spójna z Przeglądem** (gałąź `claude/newsy-lista`, `docs/specs/2026-11-02-newsy-lista-spojna.md`, PM: SHIP).
+  Wspólny `src/components/ui/NewsRow.tsx` (`NEUTRAL_TAG`, `NewsTag`, `Corroboration`, `ExternalMark`) dla Przeglądu i `/newsy`.
+  Na `/newsy` 0 czerwonych tagów w `main` (było 32), czas w wierszach i leadzie szary z `tabular-nums`, relacje bez zielonej
+  pigułki („2 niezależne relacje”, muted), ikona linku przy tytule zamiast samotnej przy krawędzi, cały wiersz jednym linkiem
+  (min. 88/68/63 px przy 320/390/1440). Lead: akcent marki tylko pasek i etykieta „Najważniejsze” bez tła. Filtry, szukajka,
+  sortowanie i „Pokaż kolejne” bez zmian. Dalej: 4d (strony tematyczne, `/podsumowanie`, odmiana „relacji”), 4c' (treść briefu).
 - **29.10.2026 — 2: `/status` pokazuje częściowe awarie cronów** (PR #69, `docs/specs/2026-10-29-status-czesciowe-awarie-cronow.md`, PM: SHIP).
   Stan „Częściowo” przy każdej nieudanej trasie (dawniej „Działa” do połowy porażek), `crons.attention` w
   `/api/health/freshness` (kod HTTP bez zmian), linia „Automat: N z 12 cronów wymaga uwagi — …” na górze `/status`,
