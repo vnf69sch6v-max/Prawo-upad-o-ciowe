@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState, useCallback } from 'react';
+import Link from 'next/link';
 import { Cell, Tooltip, BarChart, Bar, XAxis, YAxis, AreaChart, Area, CartesianGrid } from 'recharts';
 import { ResponsiveContainer, usePlotWidth } from '@/components/ui/ChartContainer';
 import { Activity, Factory, Info, ChevronRight, Home, Wheat, Car, Scale } from 'lucide-react';
@@ -376,6 +377,9 @@ export function InflacjaFull() {
                                 })}
                             </ul>
                         </MobileListClamp>
+                        <Link href="/ceny/twoja-inflacja" className="mt-2 inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-mk-primary hover:underline lg:min-h-0">
+                            Policz swoją inflację na własnym koszyku <ChevronRight size={14} aria-hidden />
+                        </Link>
                     </SectionCard>
                 }
             />
