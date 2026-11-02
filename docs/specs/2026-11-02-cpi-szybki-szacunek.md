@@ -1,6 +1,6 @@
 # CPI — szybki szacunek GUS w dniu publikacji (ROADMAP 7, krok 1)
 
-Prośba właściciela z 02.11.2026. Status: **w toku** (PLAN 02.11.2026).
+Prośba właściciela z 02.11.2026. Status: **w toku** (PLAN 02.11.2026; REVIEW 02.11.2026 dfffcdc → **FIX**, lista na końcu).
 
 ## Problem i wartość
 GUS 30.10.2026 podał szybki szacunek: październik **3,5% r/r, −0,4% m/m** (wrzesień, pełne dane: 4,1%; konsensus PAP 3,7%).
@@ -106,3 +106,19 @@ Link „Komunikat GUS” do strony komunikatu. Desktop 1280/1440: ten sam porzą
 
 ## Działania właściciela
 Brak. Źródło publiczne, bez klucza; zmiana nie dotyczy danych użytkowników (bez zmian w `/prywatnosc`).
+
+## Recenzja 02.11.2026 (dfffcdc) — FIX
+Liczby zweryfikowane ponownie u źródła: komunikat 30.10.2026 „wzrosły o 3,5% (wskaźnik cen 103,5) … spadły o 0,4% (wskaźnik cen 99,6)”,
+XLSX na żywo bajt w bajt = fixture (sha1 d27067f…), finwire/bank.pl 3,5% vs wrzesień 4,1%.
+Przyjęte odstępstwa: brak osobnego znacznika ostatniego punktu na wykresie (zamiast tego podpis w podtytule); kryterium 13b
+(drugi refresh bez żądania) — mechanizm wspólny `withCache`, w demo bez Firestore nie do pokazania; kryterium 16 — po wdrożeniu.
+Do poprawy przed SHIP:
+1. `/ceny`, karta „Inflacja CPI — trend”: etykieta w akcjach „dane za wrzesień 2026” (`dataDate`) przeczy podtytułowi „ostatni punkt
+   (październik 2026): szybki szacunek”. Przy flashu: „dane za październik 2026 · wstępne”.
+2. Kafel „Największy wkład” (+1,75 pp, 07 Transport) to wrzesień bez podpisu okresu — dodać `divPeriod`, jak w działach 01/04/07.
+3. Opis hero `/ceny`: „a m/m zmieniły się o -0,4%” (dywiz, kalka) → „a w porównaniu z wrześniem spadły o 0,4%” (czasownik ze znaku).
+4. Parser odrzuca prawdziwy flash grudniowy od 1.02 do 31.03 (okno „bieżący lub poprzedni miesiąc”, a w lutym–marcu najnowszy flash
+   to grudzień). Dolna granica = min(poprzedni miesiąc, `expectedCpiFlashPeriod(now)`). Test: fixture 2025-12 z `now` 15.02 i 15.03
+   → 2025-12; październik z `now` 05.01.2027 nadal rzuca. (Błąd był w spec — poprawka tutaj.)
+5. Budżet czasu: 3 × `AbortSignal.timeout(10 s)` = do 30 s przy `maxDuration = 15` → wolny GUS = 504 i `dbw-1` „Częściowo”.
+   Jeden wspólny termin dla całego pobrania (≤ 12 s) albo mniejszy limit na żądanie.

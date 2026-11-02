@@ -14,24 +14,28 @@ const TTL_MS = 6 * 3600_000;
 const RECHECK_MS = 10 * 60_000;
 const UA = 'Mozilla/5.0 (compatible; Savori/1.0; +https://savori.space)';
 
-async function get(url: string, kind: 'text' | 'buffer'): Promise<string | Buffer> {
+/** Jeden termin na całe pobranie (3 żądania) — trasa ma `maxDuration = 15`. */
+const FETCH_BUDGET_MS = 12_000;
+
+async function get(url: string, kind: 'text' | 'buffer', signal: AbortSignal): Promise<string | Buffer> {
     // `no-store`: Data Cache Next.js (stale-while-revalidate) wepchnąłby stary komunikat do Firestore (AGENTS.md).
-    const res = await fetch(url, { cache: 'no-store', headers: { 'User-Agent': UA }, signal: AbortSignal.timeout(10_000) });
+    const res = await fetch(url, { cache: 'no-store', headers: { 'User-Agent': UA }, signal });
     if (!res.ok) throw new Error(`[cpi-flash] HTTP ${res.status} ${url}`);
     return kind === 'text' ? res.text() : Buffer.from(await res.arrayBuffer());
 }
 
 export async function fetchCpiFlash(now: Date = new Date()): Promise<CpiFlash> {
-    const index = (await get(GUS_PRICES_INDEX_URL, 'text')) as string;
+    const signal = AbortSignal.timeout(FETCH_BUDGET_MS);
+    const index = (await get(GUS_PRICES_INDEX_URL, 'text', signal)) as string;
     const link = pickLatestFlashLink(index);
     if (!link) throw new Error('[cpi-flash] brak linku do szybkiego szacunku na stronie działu');
-    const html = (await get(link.url, 'text')) as string;
+    const html = (await get(link.url, 'text', signal)) as string;
     const base = parseCpiFlashHtml(html, { url: link.url, now });
     let groups: CpiFlash['groups'] = [];
     const xlsx = findXlsxHref(html);
     if (xlsx) {
         try {
-            groups = parseCpiFlashGrid(await workbookToGrid((await get(xlsx, 'buffer')) as Buffer), base);
+            groups = parseCpiFlashGrid(await workbookToGrid((await get(xlsx, 'buffer', signal)) as Buffer), base);
         } catch (err) {
             console.warn('[cpi-flash] tablica XLSX pominięta:', String(err).slice(0, 200));
         }

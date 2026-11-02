@@ -121,6 +121,10 @@ function WaterfallChart({ rows, trigger }: { rows: WaterfallRow[]; trigger: 'hov
     );
 }
 
+// „w porównaniu z wrześniem” — narzędnik poprzedniego miesiąca.
+const MONTHS_INSTR = ['grudniem', 'styczniem', 'lutym', 'marcem', 'kwietniem', 'majem', 'czerwcem', 'lipcem', 'sierpniem', 'wrześniem', 'październikiem', 'listopadem'];
+const prevMonthInstr = (period: string) => MONTHS_INSTR[(Number(period.slice(5, 7)) - 1) % 12];
+
 export function InflacjaFull() {
     const { data, isLoading, isError, isFetching, refetch } = useCpiFull();
     const ppiHeadQ = useGusPpiHeadline();
@@ -290,7 +294,7 @@ export function InflacjaFull() {
         { key: 'housing', label: 'Mieszkanie (04)', value: divOf('04')?.yoy != null ? formatDecimalPL(divOf('04')!.yoy!, 1) : '—', unit: '%', icon: Home, footnote: divPeriod ?? 'energia, czynsze', loading: isLoading },
         { key: 'transport', label: 'Transport (07)', value: divOf('07')?.yoy != null ? formatDecimalPL(divOf('07')!.yoy!, 1) : '—', unit: '%', icon: Car, footnote: divPeriod ?? 'paliwa, auta', loading: isLoading },
         { key: 'contrib', label: 'Największy wkład', value: topContrib?.contribution != null ? `${topContrib.contribution > 0 ? '+' : ''}${formatDecimalPL(topContrib.contribution, 2)}` : '—', unit: 'pp', icon: Scale,
-          footnote: topContrib ? `${topContrib.code} · ${topContrib.name.slice(0, 18)}…` : 'wkład do CPI', loading: isLoading },
+          footnote: divPeriod ?? (topContrib ? `${topContrib.code} · ${topContrib.name.slice(0, 18)}…` : 'wkład do CPI'), loading: isLoading },
     ];
 
     if (isLoading) {
@@ -321,7 +325,7 @@ export function InflacjaFull() {
                 description={flash ? (
                     <>
                         Według szybkiego szacunku GUS z {ddmm(flash.publishedOn)} ceny {flash.yoy >= 0 ? 'wzrosły' : 'spadły'} o {fmtPL(Math.abs(flash.yoy))}% r/r
-                        {prev?.yoy != null && ` (miesiąc wcześniej ${fmtPL(prev.yoy)}%)`}, a m/m zmieniły się o {flash.mom > 0 ? '+' : ''}{fmtPL(flash.mom)}%.
+                        {prev?.yoy != null && ` (miesiąc wcześniej ${fmtPL(prev.yoy)}%)`}, a w porównaniu z {prevMonthInstr(flash.period)} {flash.mom > 0 ? `wzrosły o ${fmtPL(flash.mom)}%` : flash.mom < 0 ? `spadły o ${fmtPL(Math.abs(flash.mom))}%` : 'pozostały bez zmian'}.
                         {' '}Pełne dane GUS {ddmm(flash.fullReleaseOn)}; rozbicie na działy poniżej{dataDate ? ` — ${formatDataPeriodLabel(dataDate).replace(/^dane za\s+/, '')} (pełne dane)` : ''}.
                         {' '}<a href={flash.url} target="_blank" rel="noopener noreferrer" className="font-semibold underline underline-offset-2">Komunikat GUS</a>
                     </>
@@ -363,7 +367,7 @@ export function InflacjaFull() {
                         actions={<div className="flex flex-wrap items-center gap-2">
                             <Segmented value={freq} onChange={setFreq} aria-label="Częstotliwość CPI" options={[{ value: 'yoy', label: 'r/r' }, { value: 'mom', label: 'm/m' }]} />
                             <RefreshButton onClick={() => { void refetch(); }} loading={isFetching && !isLoading} />
-                            {dataDate && <span className="text-[11px] font-medium text-mk-muted">{formatDataPeriodLabel(dataDate)}</span>}
+                            {(flash ?? dataDate) && <span className="text-[11px] font-medium text-mk-muted">{flash ? `${formatDataPeriodLabel(flash.period)} · wstępne` : formatDataPeriodLabel(dataDate!)}</span>}
                             <StaleBadge date={dataDate} label="dane za" warnAfterMonths={4} />
                         </div>}>
                         <InteractiveChart data={chartData} xKey="date" height={280} unit="%" showRange initialRange="5L" ranges={['1R', '3L', '5L', 'ALL']}

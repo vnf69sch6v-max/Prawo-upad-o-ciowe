@@ -109,7 +109,10 @@ export function parseCpiFlashHtml(html: string, opts: ParseOptions): Omit<CpiFla
     const cur = warsawYearMonth(now);
     const prev = cur.month === 1 ? `${cur.year - 1}-12` : `${cur.year}-${pad(cur.month - 1)}`;
     const curKey = `${cur.year}-${pad(cur.month)}`;
-    if (period !== curKey && period !== prev) throw new Error(`[cpi-flash] okres ${period} spoza ${prev}…${curKey}`);
+    // Dolna granica: poprzedni miesiąc albo oczekiwany flash — w lutym i marcu najnowszy jest grudniowy (brak za I i II).
+    const expected = expectedCpiFlashPeriod(now);
+    const lower = expected < prev ? expected : prev;
+    if (period < lower || period > curKey) throw new Error(`[cpi-flash] okres ${period} spoza ${lower}…${curKey}`);
 
     const dm = /<div class="date right">\s*(\d{2})\.(\d{2})\.(\d{4})\s*<\/div>/.exec(html);
     const publishedOn = dm ? `${dm[3]}-${dm[2]}-${dm[1]}` : cpiFlashDate(titleMonth.year, titleMonth.month) ?? '';

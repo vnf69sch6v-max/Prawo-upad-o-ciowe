@@ -29,6 +29,14 @@ describe('parser komunikatu (HTML)', () => {
             .toMatchObject({ period: '2025-12', yoy: 2.4, mom: 0, publishedOn: '2025-12-31' });
     });
 
+    it('grudniowy flash przyjęty w lutym i marcu (za I i II GUS go nie publikuje)', () => {
+        const dec = html('gus-cpi-flash-2025-12.html');
+        expect(parseCpiFlashHtml(dec, { url: 'u', now: new Date('2026-02-15T12:00:00Z') }).period).toBe('2025-12');
+        expect(parseCpiFlashHtml(dec, { url: 'u', now: new Date('2026-03-15T12:00:00Z') }).period).toBe('2025-12');
+        // 31.03 po 10:00 jest już flash za marzec → grudzień to stary komunikat.
+        expect(() => parseCpiFlashHtml(dec, { url: 'u', now: new Date('2026-04-02T12:00:00Z') })).toThrow(/spoza/);
+    });
+
     it('rzuca zamiast zgadywać (kryterium 4)', () => {
         const oct = html('gus-cpi-flash-2026-10.html');
         const p = (h: string, now = NOV_2) => () => parseCpiFlashHtml(h, { url: 'u', now });
