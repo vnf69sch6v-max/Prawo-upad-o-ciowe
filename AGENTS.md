@@ -241,6 +241,15 @@ Standard scripts in `package.json`:
   must exclude 貿易, because 貿易・サービス収支 contains サービス収支. Dates are
   `JP_BOP_RELEASES` at 8:50 JST through January
   2027 data on 08.03.2027. Extend that map before April 2027.
+- Poland vs the EU (`/ceny/na-tle-ue`, spec `docs/specs/2026-11-02-polska-na-tle-ue-hicp.md`): HICP y/y for
+  PL / EA / DE / CZ / HU from Eurostat `prc_hicp_minr` (`coicop18=TOTAL`, `unit=RCH_A`). Route `/api/eu-hicp` (fixed
+  cache key `eurostat/eu_hicp_v1`, only `refresh=1`), parser `src/lib/eu/hicp.ts`, freshness `eu-hicp`. Never use
+  `prc_hicp_manr` (frozen at 2025-12); the parser throws unless the label has „ECOICOP ver.2” and geo is exactly those
+  five. `EA` is the changing-composition aggregate (EA21 from 2026), not `EA20`/`EA21`. Warmed by cron `refresh` and a
+  second pass in `nbp` (13:00 UTC, same day as the 11:00 release). The page only peeks the cache (ISR 1800).
+  September 2026: PL 4.0, EA 3.8, DE 3.3, CZ 2.2, HU 2.1 (update 16.10.2026). `EU_HICP_RELEASES` ends with October
+  (18.11.2026) — add November before 18.12.2026, after confirming the date with Eurostat; otherwise „Kolejny odczyt”
+  shows a generic line and freshness falls back to the day-20 heuristic.
 - Header from `xl`: sections inline, search is an icon (⌘K still works) — with
   the 220 px field the row did not fit the 1440 px container.
 - Inside a `withCache(...)` fetcher, fetch upstream with `cache: 'no-store'`,

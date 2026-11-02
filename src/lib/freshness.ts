@@ -37,6 +37,7 @@ import { expectedJpSppi } from '@/lib/jp/sppi';
 import { expectedJpOrders } from '@/lib/jp/orders';
 import { expectedJpHousing } from '@/lib/jp/housing';
 import { latestCommonPeriod } from '@/lib/jp/breakdown';
+import { euHicpReleasedPeriod } from '@/lib/eu/hicp';
 
 // ─── Typy ───────────────────────────────────────────────
 
@@ -558,6 +559,19 @@ function nbpSpec(id: string, label: string, endpoint: string, extract: (json: un
  * Zbiory sprawdzane przez /api/health/freshness — endpointy i parametry DOKŁADNIE jak w hookach stron
  * (Przegląd, Rynki, Gospodarka), żeby trafić w ten sam wpis cache, który czyta użytkownik.
  */
+/** Polska na tle UE (HICP): komunikat z `EU_HICP_RELEASES` (11:00 Warszawa) albo heurystyka dnia 20 — późniejszy z nich. */
+export function expectedEuHicp(now: Date): string {
+    const heuristic = expectedMonthlyByDay(now, 20);
+    const released = euHicpReleasedPeriod(now);
+    return released && released > heuristic ? released : heuristic;
+}
+
+/** `/api/eu-hicp` → { latest: 'YYYY-MM' } (ostatni miesiąc wspólny pięciu serii). */
+export function extractEuHicp(json: unknown): string | null {
+    const latest = asObj(json)?.latest;
+    return typeof latest === 'string' && /^\d{4}-\d{2}$/.test(latest) ? latest : null;
+}
+
 export const FRESHNESS_DATASETS: DatasetSpec[] = [
     {
         id: 'cpi', label: 'Inflacja CPI', source: 'GUS DBW', kind: 'gus-dbw', group: 'gus', frequency: 'monthly',
@@ -591,6 +605,15 @@ export const FRESHNESS_DATASETS: DatasetSpec[] = [
     // HICP: Eurostat podaje M-1 ok. 17–18. dnia M → od 19. oczekujemy M-1.
     eurostatSpec('hicp', 'Inflacja HICP', 'cpi', 'monthly', (now) => expectedMonthlyByDay(now, 19)),
     eurostatSpec('gdp', 'PKB r/r (kwartalnie)', 'gdp_yoy', 'quarterly', expectedGdpQuarter),
+    {
+        id: 'eu-hicp', label: 'Inflacja HICP — Polska na tle UE', source: 'Eurostat', kind: 'eurostat', group: 'eurostat',
+        frequency: 'monthly',
+        // useEuHicp() na /ceny/na-tle-ue; crony `refresh` i `nbp` wołają tę samą ścieżkę z `refresh=1`.
+        endpoint: () => '/api/eu-hicp',
+        extract: extractEuHicp,
+        expected: expectedEuHicp,
+        tolerance: { ok: 0, lag: 1 }, maxAgeDays: 100, lagNote: LAG_NOTES.eurostat, selfHeal: true,
+    },
     // Rentowność 10Y (średnia miesięczna MCBY): M-1 pojawia się ok. 10.–11. dnia M → od 15. oczekujemy M-1.
     eurostatSpec('bond10y', 'Rentowność obligacji 10-letnich', 'bond_yield_10y', 'monthly', (now) => expectedMonthlyByDay(now, 15), 'Eurostat (śr. miesięczna)'),
     nbpSpec('nbp-a', 'Kursy walut NBP (tabela A)', '/api/nbp?table=a', extractNbpTable),

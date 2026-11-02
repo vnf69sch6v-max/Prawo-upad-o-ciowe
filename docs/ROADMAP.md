@@ -18,7 +18,7 @@ przebieg → PM tnie go na widoczne kawałki (np. najpierw sama strona z danymi,
 - **W1. Szybki szacunek CPI (pozycja 7)** — w toku w osobnej sesji 02.11 (gałąź `claude/cpi-flash`); nie dublować.
 - **W2. Lista /newsy spójna z Przeglądem (4c)** — w toku w osobnej sesji 02.11 (gałąź `claude/newsy-lista`); nie dublować.
 - **W3. Kalkulator „Twoja inflacja” (pozycja 10)** — najpierw widok: suwaki 12 działów COICOP na wagach GUS → „Twoja inflacja” vs CPI; potem zapis koszyka na koncie. Widok — w toku w osobnej sesji 02.11 (gałąź `claude/twoja-inflacja`); nie dublować.
-- **W4. Polska na tle UE (pozycja 11)** — HICP PL vs strefa euro, CZ, HU, DE (Eurostat), jeden wykres i tabela. W toku w osobnej sesji 02.11 (gałąź `claude/pl-na-tle-ue`); nie dublować.
+- **W4. Polska na tle UE (pozycja 11)** — HICP PL vs strefa euro, CZ, HU, DE (Eurostat), jeden wykres i tabela. **Krok 1 (HICP) zrobiony 02.11** — `/ceny/na-tle-ue`, PM: SHIP; szczegóły i kontrola produkcyjna przy pozycji 11. Dalej: bezrobocie, PKB.
 
 0. **Rozbicie inflacji w Japonii — „ładne”** (prośba z 24.10.2026). Co napędza CPI: świeża żywność,
    energia, żywność bez świeżej, usługi/towary, kategorie koszyka; wkłady w p.p. tam, gdzie da się je
@@ -131,6 +131,22 @@ P-5. **Watchlista — drobiazgi z recenzji PM 25.10** (niewstrzymujące). Zrobio
    liczbami (`next/og`), liczby w HTML z serwera, nie tylko po hydratacji.
 10. **Kalkulator „Twoja inflacja”:** własny koszyk na wagach COICOP z DBW.
 11. **Polska na tle UE:** HICP, bezrobocie, PKB z Eurostatu dla PL / strefy euro / sąsiadów.
+    **Krok 1: recenzja PM 02.11.2026 = SHIP po poprawkach** (spec `docs/specs/2026-11-02-polska-na-tle-ue-hicp.md`,
+    gałąź `claude/pl-na-tle-ue`, commity e70fbd0 i 4e6c867). HICP r/r PL / strefa euro / DE / CZ / HU na
+    `/ceny/na-tle-ue`. Liczby zgodne z API Eurostatu (sprawdzone ponownie 02.11): wrzesień 2026 PL 4,0, EA 3,8,
+    DE 3,3, CZ 2,2, HU 2,1, aktualizacja 16.10. Poprawki z pierwszej recenzji są wdrożone: ranking stoi nad
+    wykresem na telefonie, zdanie kontekstu mówi „Na początku wykresu (październik 2024)”, notka jest w `AGENTS.md`.
+    Pozycja trafi do „Zrobione” po kontroli (a).
+    Kontrola produkcyjna:
+    (a) w dniu wdrożenia `/api/health/freshness`: `eu-hicp` = `ok` z okresem 2026-09, wpis crona `refresh`
+    z `/api/eu-hicp`, HTML `/ceny/na-tle-ue` (z sesją) zawiera „4,0%”, „wrzesień 2026”, „16.10.2026”
+    i „prc_hicp_minr” (kryterium 8, w trybie demo nie dało się go sprawdzić);
+    (b) 18.11.2026 o 13:30 UTC: okres 2026-10 i liczby zgodne z komunikatem. Jeśli API Eurostatu też nie ma jeszcze
+    października (pole `updated` z 16.10 to 23:00), to jest opóźnienie źródła, a nie błąd. Wtedy przenieść drugą
+    przebieżkę na później;
+    (c) przed 18.12.2026 dopisać listopad do `EU_HICP_RELEASES`, po potwierdzeniu w kalendarzu Euro indicators.
+    Flash strefy euro jest odłożony: publikacja 04.11, zbioru API jeszcze nie potwierdzono. Następne kroki to
+    bezrobocie, potem PKB.
 12. **Monitoring błędów przeglądarki** bez zewnętrznych usług: `/api/client-errors` → Firestore,
     licznik na `/status`.
 13. **Dostępność:** kontrasty, `aria-*`, nawigacja klawiaturą, czytniki ekranu na wykresach.

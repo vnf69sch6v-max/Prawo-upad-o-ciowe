@@ -39,6 +39,7 @@ const ENDPOINTS = [
     '/api/eurostat?indicator=gdp_annual&geo=PL&refresh=1',
     '/api/eurostat?indicator=cpi_annual&geo=PL&refresh=1',
     '/api/eurostat?indicator=hicp_food_yoy&geo=PL&refresh=1',
+    '/api/eu-hicp?refresh=1',                                  // Polska na tle UE (HICP PL/EA/DE/CZ/HU)
     // NBP + rynki — dublują crony nbp/stooq (pn–pt); tu codziennie, więc dane nie stoją w weekend
     '/api/nbp?table=a&refresh=1',
     '/api/nbp-rates',
