@@ -85,6 +85,11 @@ P0. **13.11.2026 (CPI za październik, komunikat 10:00):** po wdrożeniu 1a, do 
 P1. **Kalendarz GUS 2027 do 31.12.2026.** `CPI_PRELIMINARY_PUBLISH` i pozostałe harmonogramy w
     `src/lib/calendar-schedules.ts` mają tylko 2026. Od stycznia świeżość i ranking hero przejdą na heurystykę
     dni. Źródło: kalendarz roczny GUS (stat.gov.pl), zwykle publikowany w grudniu.
+P1'. **Daty 2026 w `calendar-schedules.ts` rozjechane z kalendarzem rocznym GUS** (sprawdzone 02.11.2026,
+    `stat.gov.pl/kalendarz-roczny/?pdf=1`): CPI za sierpień 15.09 (kod 14.09), za wrzesień 14.10 (kod 15.10); produkcja za sierpień
+    18.09 (kod 21.09); sprzedaż za lipiec 24.08, sierpień 22.09, wrzesień 22.10 (kod 20.08, 21.09, 20.10). Złe daty psują ranking hero
+    i świeżość. Do tego kalendarium GUS: „Opracowania sygnalne od 18.03.2026 o 9:30” — sprawdzić, czy `GUS_RELEASE_MINUTES` (10:00)
+    nie powinno być 9:30. Kalendarz roczny online pokazuje tylko dni minione — przyszłe daty z PDF „Harmonogram” lub komunikatów.
 P2. **CPI pełne w 2027 do 13.02.2027.** `gus-cpi-full` ma na sztywno `rok: 2026` dla działów i klas
     (przekrój 1698) oraz miesięczny nagłówek od 2026. Od publikacji CPI za styczeń 2027 działy i podkategorie
     stanęłyby na 2026-12, a nagłówek pokazywałby 2027-01. Przed zmianą sprawdzić w katalogu DBW przekroje
@@ -123,8 +128,12 @@ P-5. **Watchlista — drobiazgi z recenzji PM 25.10** (niewstrzymujące). Zrobio
      konto = pusta) — wynik dopisać tutaj.
 
 ### Produkt
-7. **Szybki szacunek CPI** (ostatni dzień roboczy miesiąca) na Przeglądzie w dniu publikacji —
-   dziś strona pokazuje inflację ~15 dni po rynku. DBW go nie dostaje; źródło: komunikat GUS.
+7. **Szybki szacunek CPI — w toku** (prośba właściciela 02.11.2026; spec `docs/specs/2026-11-02-cpi-szybki-szacunek.md`,
+   gałąź `claude/cpi-flash`). 30.10 GUS podał październik 3,5% r/r, −0,4% m/m, a strona do 13.11 pokazuje wrzesień 4,1%.
+   Krok 1: `/api/gus-cpi-flash` z komunikatu stat.gov.pl (HTML + XLSX „Tablice”, odkrywanie ze strony działu), scalanie z DBW,
+   podpis „szybki szacunek GUS, pełne dane DD.MM” na `/ceny` i w hero, świeżość `cpi-flash`, cron w `dbw-1`. Fixture:
+   `tests/fixtures/gus-cpi-flash-2026-10|2026-09|2025-12.html`, `…-2026-10|2026-09.xlsx`, `gus-wskazniki-cen-2026-11-02.html`.
+   Flasha za styczeń i luty GUS nie publikuje — kalendarz do poprawy w tym samym kroku. Kontrola: 30.11 do 11:00 UTC.
 8. **CI na GitHub Actions:** `tsc`, `npm test`, `eslint` na każdym PR (może wymagać uprawnienia
    `workflow` dla tokenu — jeśli push odrzuci, przenieść do „Wymaga właściciela”).
 9. **SEO:** metadane i opisy per strona, `sitemap.xml`, `robots.txt`, obrazy OG z aktualnymi

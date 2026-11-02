@@ -43,8 +43,10 @@ describe("calendar lookups", () => {
   it("finds the next scheduled release, across the year boundary", () => {
     expect(nextPublication("retail", "2026-10-03")?.date).toBe("2026-10-20");
     expect(nextPublication("cpi", "2026-10-03")?.date).toBe("2026-10-15");
-    // po pełnym CPI za wrzesień kolejna zmiana liczby na stronie to CPI za październik, nie flash 30.10
-    expect(nextPublication("cpi", "2026-10-15")?.date).toBe("2026-11-13");
+    // od 11.2026 szybki szacunek jest na stronie (/api/gus-cpi-flash): po pełnym CPI za wrzesień kolejna zmiana
+    // liczby to flash 30.10, a po nim pełne dane 13.11
+    expect(nextPublication("cpi", "2026-10-15")?.date).toBe("2026-10-30");
+    expect(nextPublication("cpi", "2026-10-30")?.date).toBe("2026-11-13");
     // grudzień publikowany w styczniu kolejnego roku (~20.)
     expect(nextPublication("industrial", "2026-12-28")?.date.startsWith("2027-01-")).toBe(true);
     expect(publicationDate("retail", "2026-12")?.startsWith("2027-01-")).toBe(true);
@@ -121,7 +123,7 @@ describe("rankHeroSignals", () => {
     expect(r.publishedOn).toBe("2026-10-15");
     expect(r.ageDays).toBe(0);
     expect(r.fresh).toBe(true);
-    expect(r.next?.date).toBe("2026-11-13");
+    expect(r.next?.date).toBe("2026-10-30"); // szybki szacunek za październik
   });
 
   it("skips empty series", () => {

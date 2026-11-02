@@ -34,6 +34,15 @@ export function lastBusinessDayOfMonth(year: number, month: number): string {
     return `${year}-${String(month).padStart(2, '0')}-28`;
 }
 
+/**
+ * Szybki szacunek CPI za `month` (ostatni dzień roboczy tego miesiąca). GUS publikuje go tylko za marzec–grudzień:
+ * za styczeń i luty flasha nie ma (archiwum 2023–2026, spec docs/specs/2026-11-02-cpi-szybki-szacunek.md) → `null`.
+ */
+export function cpiFlashDate(year: number, month: number): string | null {
+    if (month < 3 || month > 12) return null;
+    return lastBusinessDayOfMonth(year, month);
+}
+
 /** Przesuń datę na najbliższy dzień roboczy do przodu. */
 export function nextBusinessDay(iso: string): string {
     const [y, m, d] = iso.split('-').map(Number);

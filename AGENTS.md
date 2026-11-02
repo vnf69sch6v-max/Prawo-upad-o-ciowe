@@ -333,9 +333,16 @@ Standard scripts in `package.json`:
   σ of its own history; WIG20 and EUR/PLN enter only on a ≥2σ move. Keep the
   publication calendar current — stale dates make fresh readings look old.
   Recency counts from the release that puts the number on the site: for CPI
-  the full mid-month GUS release, not the end-of-month flash (events with
-  `flash: true` are skipped — DBW never gets the flash, so dating CPI by it made
-  a reading published today look 15 days old and it never got "Nowy odczyt").
+  the full mid-month GUS release for a DBW month (events with `flash: true` are
+  skipped there — dating a DBW reading by the flash made it look 15 days old).
+  Since 11.2026 the flash itself is on the site: `/api/gus-cpi-flash` (stat.gov.pl
+  release page → XLSX table, parser `src/lib/cpi-flash.ts` validates title, month
+  and range and throws; cache `macro_data/gus_cpi_flash_v1`, freshness `cpi-flash`,
+  first route of cron `dbw-1`). `useCpiHeadline()` appends it as a `provisional`
+  last point until DBW has that month (`mergeCpiHeadline`), and the hero dates
+  that point from the flash (`HeroCandidate.provisional`). GUS has no flash for
+  January and February (`cpiFlashDate` → null). Never build the release URL —
+  pick the newest link from the „Wskaźniki cen” section page.
 - `/api/bdl-series?count=N` counts consecutive BDL **variable ids** (one per
   month, or per quarter), not months — max 12 (monthly) / 4 (quarterly); the
   route clamps it. The route already returns two years (previous + current).

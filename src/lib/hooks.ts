@@ -4,10 +4,11 @@ import { useMemo } from 'react';
 import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import type { NewsResult } from '@/lib/news/types';
 import { DBW_SERIES, type DbwSeriesId } from '@/lib/gus-dbw-series';
-import { cpiFullPath, dbwSeriesPath, gusCpiPath, gusMonthlyPath, koniunkturaPath, ppiFullPath } from '@/lib/gus-api-paths';
+import { cpiFlashPath, cpiFullPath, dbwSeriesPath, gusCpiPath, gusMonthlyPath, koniunkturaPath, ppiFullPath } from '@/lib/gus-api-paths';
 import type { DailyDigest } from '@/lib/news/daily';
 import type { BriefDoc, BriefKind } from '@/lib/news/brief';
 import { refreshOptions } from '@/lib/query-refresh';
+import { mergeCpiHeadline, type CpiFlash, type HeadlinePoint } from '@/lib/cpi-flash';
 
 // ─── Types ───────────────────────────────────────────────
 
@@ -512,6 +513,38 @@ export function useCpiFull() {
         ...refreshOptions('gusDbw'),
     });
     return query;
+}
+
+/**
+ * Szybki szacunek CPI (`/api/gus-cpi-flash`, cache Firestore; stat.gov.pl tylko po stronie serwera).
+ * Błąd = brak flasha — strona zostaje na DBW, nie znika.
+ */
+export function useCpiFlash() {
+    return useQuery<CpiFlash>({
+        queryKey: ['gus-cpi-flash'],
+        queryFn: () => fetchJSON(cpiFlashPath()),
+        staleTime: 30 * 60_000,
+        refetchInterval: 60 * 60_000,
+        refetchOnWindowFocus: true,
+        retry: 1,
+    });
+}
+
+/**
+ * Headline CPI do wyświetlenia: DBW + szybki szacunek jako ostatni punkt `provisional`, dopóki DBW nie ma
+ * tego miesiąca (`mergeCpiHeadline`). `flash` = odczyt wstępny tylko wtedy, gdy rzeczywiście jest na stronie.
+ */
+export function useCpiHeadline(): { headline: HeadlinePoint[]; flash: CpiFlash | null; latestFlash: CpiFlash | null } {
+    const full = useCpiFull();
+    const flashQ = useCpiFlash();
+    return useMemo(() => {
+        const dbw: HeadlinePoint[] = full.data?.headline ?? [];
+        const latestFlash = flashQ.data && typeof flashQ.data.yoy === 'number' ? flashQ.data : null;
+        // Bez DBW nie doklejamy flasha (delta i historia bez poprzedniego miesiąca byłyby z kosmosu).
+        const headline: HeadlinePoint[] = dbw.length ? mergeCpiHeadline(dbw, latestFlash) : dbw;
+        const shown = headline.length && headline[headline.length - 1].provisional ? latestFlash : null;
+        return { headline, flash: shown, latestFlash };
+    }, [full.data, flashQ.data]);
 }
 
 // ─── GUS PPI pełny (ceny produkcji, PKD 2007) ────────────

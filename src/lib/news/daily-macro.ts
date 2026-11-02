@@ -7,6 +7,7 @@ import { formatDecimalPL } from '@/lib/formatters';
 import type { MacroChange } from '@/lib/news/daily';
 import { warsawDateKey } from '@/lib/news/warsaw-date';
 import { readServerCacheEntry, type CacheCollection } from '@/lib/server-cache';
+import { CPI_FLASH_SOURCE, latestDbwMonth, type CpiFlash } from '@/lib/cpi-flash';
 
 interface CacheMeta<T> {
     payload: T;
@@ -134,12 +135,30 @@ export async function fetchMacroChangesWithDiagnostics(
     const calendar = [...generateMacroCalendar(year - 1), ...generateMacroCalendar(year), ...generateMacroCalendar(year + 1)];
     const cpiEventsToday = calendar.filter((e) => e.type === 'cpi' && e.date === date);
     const cpiMeta = await readCacheWithMeta<CpiCache>('dbw', `gus_cpi_full_${year}_v5`);
-    if (cpiEventsToday.length === 0) {
-        pushSkip(skipped, 'cpi-yoy', 'brak publikacji CPI w kalendarzu na ten dzień');
+    // Dzień szybkiego szacunku: liczba z komunikatu GUS (cache `/api/gus-cpi-flash`), delta wobec ostatniego DBW.
+    const flashToday = cpiEventsToday.find((e) => e.flash);
+    const flashMeta = flashToday ? await readCacheWithMeta<CpiFlash>('macro_data', 'gus_cpi_flash_v1') : null;
+    const flash = flashMeta?.payload;
+    const dbwHl = (cpiMeta?.payload?.headline ?? []).filter((h) => h.yoy != null);
+    const dbwLast = latestDbwMonth(dbwHl);
+    if (flashToday && flash && flash.period === flashToday.dataPeriod && typeof flash.yoy === 'number' && (!dbwLast || flash.period > dbwLast)) {
+        const prevYoy = dbwHl.find((h) => h.date === dbwLast)?.yoy ?? null;
+        out.push({
+            id: 'cpi-yoy',
+            label: 'Inflacja CPI (r/r, szybki szacunek)',
+            source: CPI_FLASH_SOURCE,
+            value: `${formatDecimalPL(flash.yoy, 1)}%`,
+            delta: prevYoy != null ? fmtDelta(flash.yoy, prevYoy, 'pp') : undefined,
+            unit: '%',
+            readingDate: date,
+            href: '/ceny?tab=inflacja',
+        });
+    } else if (cpiEventsToday.filter((e) => !e.flash).length === 0) {
+        pushSkip(skipped, 'cpi-yoy', flashToday ? `brak szybkiego szacunku w cache (oczekiwano ${flashToday.dataPeriod})` : 'brak publikacji CPI w kalendarzu na ten dzień');
     } else if (!cpiMeta?.payload?.headline?.length) {
         pushSkip(skipped, 'cpi-yoy', 'brak cache gus-cpi-full');
     } else {
-        const periods = new Set(cpiEventsToday.map((e) => e.dataPeriod).filter(Boolean) as string[]);
+        const periods = new Set(cpiEventsToday.filter((e) => !e.flash).map((e) => e.dataPeriod).filter(Boolean) as string[]);
         const hl = cpiMeta.payload.headline.filter((h) => h.yoy != null);
         const last = hl[hl.length - 1];
         const prev = hl[hl.length - 2];

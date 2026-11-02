@@ -4,7 +4,7 @@ import { useMemo, useState, useCallback } from 'react';
 import { Cell, Tooltip, BarChart, Bar, XAxis, YAxis, AreaChart, Area, CartesianGrid } from 'recharts';
 import { ResponsiveContainer, usePlotWidth } from '@/components/ui/ChartContainer';
 import { Activity, Factory, Info, ChevronRight, Home, Wheat, Car, Scale } from 'lucide-react';
-import { useCpiFull, useGusPpiHeadline, usePpiFull, type CpiDivision, type CpiHistPoint } from '@/lib/hooks';
+import { useCpiFull, useCpiHeadline, useGusPpiHeadline, usePpiFull, type CpiDivision, type CpiHistPoint } from '@/lib/hooks';
 import { plSeries, fmtPL } from '@/lib/series';
 import { formatDecimalPL, formatDataPeriodLabel } from '@/lib/formatters';
 import { CompactKpiGrid, type CompactKpiItem } from '@/components/ui/CompactKpiGrid';
@@ -21,6 +21,9 @@ import { Drawer } from '@/components/ui/Drawer';
 import { Heatmap } from '@/components/ui/Heatmap';
 import { RelatedNews } from '@/components/ui/RelatedNews';
 import { AXIS_INK } from '@/lib/chart-theme';
+import { ddmm, flashRevision } from '@/lib/cpi-flash';
+import { useIsClient } from '@/lib/use-is-client';
+import { warsawDateKey } from '@/lib/news/warsaw-date';
 import { QueryState, QueryEmpty } from '@/components/ui/QueryState';
 
 const PALETTE = ['#2563EB', '#16A34A', '#D97706', '#7C3AED', '#E11D48', '#0891B2', '#CA8A04', '#DB2777', '#059669', '#4F46E5', '#EA580C', '#0D9488', '#64748B'];
@@ -124,7 +127,14 @@ export function InflacjaFull() {
     const ppiFullQ = usePpiFull();
     const tooltipTrigger = useCanHover() ? 'hover' : 'click';
 
-    const headline = useMemo(() => data?.headline ?? [], [data]);
+    // DBW + szybki szacunek GUS (ostatni punkt `provisional`, dopóki DBW nie ma tego miesiąca) — src/lib/cpi-flash.ts.
+    const { headline, flash, latestFlash } = useCpiHeadline();
+    const isClient = useIsClient();
+    // Po pełnym odczycie: przez 7 dni pokazujemy, ile podał szybki szacunek, jeśli GUS go zrewidował.
+    const revisedFrom = useMemo(
+        () => (isClient && !flash ? flashRevision(data?.headline ?? [], latestFlash, warsawDateKey()) : null),
+        [isClient, flash, data, latestFlash],
+    );
     const divisions = useMemo(() => data?.divisions ?? [], [data]);
     const dataDate = data?.dataDate ?? null;
     const latest = headline.length ? headline[headline.length - 1] : null;
@@ -257,22 +267,28 @@ export function InflacjaFull() {
     const heroYoY = latest?.yoy ?? null;
     const heroDev = heroYoY != null ? +(heroYoY - NBP_TARGET).toFixed(1) : null;
     const heroYoYDelta = heroYoY != null && prev?.yoy != null ? +(heroYoY - prev.yoy).toFixed(1) : null;
-    const heroHeadline = heroDev == null ? 'Inflacja konsumencka (CPI)'
+    const flashHeadline = flash && heroYoY != null
+        ? `Inflacja ${heroYoYDelta != null && heroYoYDelta < 0 ? 'spadła' : heroYoYDelta != null && heroYoYDelta > 0 ? 'wzrosła' : 'wynosi'} ${heroYoYDelta != null && heroYoYDelta !== 0 ? 'do ' : ''}${fmtPL(heroYoY)}%${heroYoY >= 1.5 && heroYoY <= 3.5 ? ' — w paśmie celu NBP' : heroYoY > 3.5 ? ' — powyżej pasma celu NBP' : ' — poniżej pasma celu NBP'}`
+        : null;
+    const heroHeadline = flashHeadline ?? (heroDev == null ? 'Inflacja konsumencka (CPI)'
         : heroDev > 0.1 ? 'Inflacja powyżej celu NBP'
         : heroDev < -0.1 ? 'Inflacja poniżej celu NBP'
-        : 'Inflacja blisko celu NBP';
+        : 'Inflacja blisko celu NBP');
     // Pozycja znacznika na skali 1,5–3,5% (cel 2,5% = środek), przycięta do widocznego zakresu.
     const heroGaugePct = heroYoY != null ? Math.max(3, Math.min(97, ((heroYoY - 1.5) / 2.0) * 100)) : 50;
-    const heroPeriod = dataDate ? formatDataPeriodLabel(dataDate).replace(/^dane za\s+/, '') : null;
+    const heroDate = flash ? flash.period : dataDate;
+    const heroPeriod = heroDate ? formatDataPeriodLabel(heroDate).replace(/^dane za\s+/, '') : null;
 
+    // Przy szybkim szacunku działy są z innego (poprzedniego) miesiąca — podpisujemy okres, nie mieszamy bez podpisu.
+    const divPeriod = flash && dataDate ? `${formatDataPeriodLabel(dataDate).replace(/^dane za\s+/, '')} · pełne dane` : null;
     const compactKpis: CompactKpiItem[] = [
-        { key: 'cpi-mm', label: 'CPI m/m', value: fmtPL(latest?.mom), unit: '%', icon: Activity, footnote: 'miesiąc do miesiąca', loading: isLoading },
+        { key: 'cpi-mm', label: 'CPI m/m', value: fmtPL(latest?.mom), unit: '%', icon: Activity, footnote: flash ? 'm/m · szybki szacunek' : 'miesiąc do miesiąca', loading: isLoading },
         { key: 'ppi-mm', label: 'PPI m/m', value: ppiLatest?.mom != null ? formatDecimalPL(ppiLatest.mom, 1) : '—', unit: '%', icon: Factory,
           delta: ppiLatest?.mom != null && ppiPrevPt?.mom != null ? { value: +(ppiLatest.mom - ppiPrevPt.mom).toFixed(1), unit: 'pp', invert: true } : undefined,
           footnote: 'producent', loading: ppiFullQ.isLoading },
-        { key: 'food', label: 'Żywność (01)', value: divOf('01')?.yoy != null ? formatDecimalPL(divOf('01')!.yoy!, 1) : '—', unit: '%', icon: Wheat, footnote: 'COICOP · r/r', loading: isLoading },
-        { key: 'housing', label: 'Mieszkanie (04)', value: divOf('04')?.yoy != null ? formatDecimalPL(divOf('04')!.yoy!, 1) : '—', unit: '%', icon: Home, footnote: 'energia, czynsze', loading: isLoading },
-        { key: 'transport', label: 'Transport (07)', value: divOf('07')?.yoy != null ? formatDecimalPL(divOf('07')!.yoy!, 1) : '—', unit: '%', icon: Car, footnote: 'paliwa, auta', loading: isLoading },
+        { key: 'food', label: 'Żywność (01)', value: divOf('01')?.yoy != null ? formatDecimalPL(divOf('01')!.yoy!, 1) : '—', unit: '%', icon: Wheat, footnote: divPeriod ?? 'COICOP · r/r', loading: isLoading },
+        { key: 'housing', label: 'Mieszkanie (04)', value: divOf('04')?.yoy != null ? formatDecimalPL(divOf('04')!.yoy!, 1) : '—', unit: '%', icon: Home, footnote: divPeriod ?? 'energia, czynsze', loading: isLoading },
+        { key: 'transport', label: 'Transport (07)', value: divOf('07')?.yoy != null ? formatDecimalPL(divOf('07')!.yoy!, 1) : '—', unit: '%', icon: Car, footnote: divPeriod ?? 'paliwa, auta', loading: isLoading },
         { key: 'contrib', label: 'Największy wkład', value: topContrib?.contribution != null ? `${topContrib.contribution > 0 ? '+' : ''}${formatDecimalPL(topContrib.contribution, 2)}` : '—', unit: 'pp', icon: Scale,
           footnote: topContrib ? `${topContrib.code} · ${topContrib.name.slice(0, 18)}…` : 'wkład do CPI', loading: isLoading },
     ];
@@ -299,23 +315,41 @@ export function InflacjaFull() {
             <EditorialHero
                 ariaLabel="Inflacja CPI — najważniejszy odczyt"
                 period={heroPeriod}
-                source="GUS · odczyt CPI"
+                badge={flash ? 'Wstępne' : null}
+                source={flash ? 'GUS · szybki szacunek' : 'GUS · odczyt CPI'}
                 headline={heroHeadline}
-                description={
+                description={flash ? (
+                    <>
+                        Według szybkiego szacunku GUS z {ddmm(flash.publishedOn)} ceny {flash.yoy >= 0 ? 'wzrosły' : 'spadły'} o {fmtPL(Math.abs(flash.yoy))}% r/r
+                        {prev?.yoy != null && ` (miesiąc wcześniej ${fmtPL(prev.yoy)}%)`}, a m/m zmieniły się o {flash.mom > 0 ? '+' : ''}{fmtPL(flash.mom)}%.
+                        {' '}Pełne dane GUS {ddmm(flash.fullReleaseOn)}; rozbicie na działy poniżej{dataDate ? ` — ${formatDataPeriodLabel(dataDate).replace(/^dane za\s+/, '')} (pełne dane)` : ''}.
+                        {' '}<a href={flash.url} target="_blank" rel="noopener noreferrer" className="font-semibold underline underline-offset-2">Komunikat GUS</a>
+                    </>
+                ) : (
                     <>
                         CPI wynosi {heroYoY != null ? fmtPL(heroYoY) : '—'}% r/r wobec celu NBP 2,5%.
                         {topContrib?.contribution != null && ` Największy wkład dokłada ${topContrib.name.toLowerCase()} (${topContrib.contribution > 0 ? '+' : ''}${formatDecimalPL(topContrib.contribution, 2)} pp).`}
                     </>
-                }
+                )}
                 value={heroYoY != null ? fmtPL(heroYoY) : '—'}
                 unit="%"
+                valueCaption={flash
+                    ? `szybki szacunek GUS, ${ddmm(flash.publishedOn)} · pełne dane ${ddmm(flash.fullReleaseOn)}`
+                    : revisedFrom != null ? `Szybki szacunek: ${fmtPL(revisedFrom)}%` : undefined}
                 delta={heroYoYDelta}
                 panelTitle="Wobec celu NBP"
                 gauge={heroYoY != null ? { pct: heroGaugePct, labels: ['1,5%', 'cel 2,5%', '3,5%'] } : null}
                 rows={[
                     { label: 'Odchylenie od celu', value: heroDev != null ? `${heroDev > 0 ? '+' : ''}${formatDecimalPL(heroDev, 1)} p.p.` : '—' },
                     { label: 'CPI m/m', value: latest?.mom != null ? `${latest.mom > 0 ? '+' : ''}${formatDecimalPL(latest.mom, 1)}%` : '—' },
-                    { label: 'CPI bez żywności', value: coreLatest != null ? `${formatDecimalPL(coreLatest, 1)}%` : '—', divider: true },
+                    ...(flash && flash.groups.length
+                        // Szybki szacunek: 3 podgrupy z tablicy GUS (r/r · m/m) zamiast „bez żywności” z DBW (inny miesiąc).
+                        ? flash.groups.map((g, i) => ({
+                            label: g.name,
+                            value: `${g.yoy > 0 ? '+' : ''}${fmtPL(g.yoy)}% · ${g.mom > 0 ? '+' : ''}${fmtPL(g.mom)}% m/m`,
+                            divider: i === 0,
+                        }))
+                        : flash ? [] : [{ label: 'CPI bez żywności', value: coreLatest != null ? `${formatDecimalPL(coreLatest, 1)}%` : '—', divider: true }]),
                 ]}
             />
 
@@ -325,7 +359,7 @@ export function InflacjaFull() {
             <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-2">
                 <div className="hidden min-w-0 lg:block"><RelatedNews topic="ceny" limit={5} title="Newsy — ceny i inflacja" variant="rail" /></div>
                 <div className="min-w-0">
-                    <SectionCard editorial titleVariant="label" title="Inflacja CPI — trend (10 lat)" subtitle={`${freq === 'yoy' ? 'rok do roku' : 'miesiąc do miesiąca'} (%) · GUS`}
+                    <SectionCard editorial titleVariant="label" title="Inflacja CPI — trend (10 lat)" subtitle={`${freq === 'yoy' ? 'rok do roku' : 'miesiąc do miesiąca'} (%) · GUS${flash ? ` · ostatni punkt (${formatDataPeriodLabel(flash.period).replace(/^dane za\s+/, '')}): szybki szacunek` : ''}`}
                         actions={<div className="flex flex-wrap items-center gap-2">
                             <Segmented value={freq} onChange={setFreq} aria-label="Częstotliwość CPI" options={[{ value: 'yoy', label: 'r/r' }, { value: 'mom', label: 'm/m' }]} />
                             <RefreshButton onClick={() => { void refetch(); }} loading={isFetching && !isLoading} />

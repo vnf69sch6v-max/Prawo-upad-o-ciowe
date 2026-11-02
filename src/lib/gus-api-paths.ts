@@ -14,6 +14,8 @@ function withQuery(path: string, qs: URLSearchParams, extra: Extra): string {
 }
 
 export const cpiFullPath = (extra: Extra = {}) => withQuery('/api/gus-cpi-full', new URLSearchParams(), extra);
+/** Szybki szacunek CPI (stat.gov.pl, nie DBW) — bez parametrów poza `refresh=1`. */
+export const cpiFlashPath = (extra: Extra = {}) => withQuery('/api/gus-cpi-flash', new URLSearchParams(), extra);
 export const ppiFullPath = (extra: Extra = {}) => withQuery('/api/gus-ppi-full', new URLSearchParams(), extra);
 export const koniunkturaPath = (extra: Extra = {}) => withQuery('/api/gus-koniunktura', new URLSearchParams(), extra);
 export const gusMonthlyPath = (extra: Extra = {}) => withQuery('/api/gus-monthly', new URLSearchParams(), extra);
