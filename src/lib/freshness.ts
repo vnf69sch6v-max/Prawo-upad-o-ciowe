@@ -18,7 +18,8 @@ import {
 import { generateMacroCalendar } from '@/lib/calendar';
 import { formatDataPeriod } from '@/lib/formatters';
 import { DBW_SERIES, type DbwSeriesId } from '@/lib/gus-dbw-series';
-import { cpiFullPath, dbwSeriesPath, gusMonthlyPath } from '@/lib/gus-api-paths';
+import { cpiFlashPath, cpiFullPath, dbwSeriesPath, gusMonthlyPath } from '@/lib/gus-api-paths';
+import { expectedCpiFlashPeriod } from '@/lib/cpi-flash';
 import { warsawMinutes } from '@/lib/market-hours';
 import { warsawDateKey } from '@/lib/news/warsaw-date';
 import { expectedJpCpi } from '@/lib/jp/calendar';
@@ -44,7 +45,7 @@ import { latestCommonPeriod } from '@/lib/jp/breakdown';
  *  źródła, ostrzeżenie); stale = ≥2 okresy za nim albo przekroczony maks. wiek; error = brak odpowiedzi/danych. */
 export type FreshnessStatus = 'ok' | 'lag' | 'stale' | 'error';
 export type Frequency = 'daily' | 'monthly' | 'quarterly';
-export type SourceKind = 'gus-dbw' | 'gus-bdl' | 'eurostat' | 'nbp' | 'yahoo' | 'jp-dashboard' | 'jp-estat' | 'jp-boj' | 'news';
+export type SourceKind = 'gus-dbw' | 'gus-bdl' | 'gus-flash' | 'eurostat' | 'nbp' | 'yahoo' | 'jp-dashboard' | 'jp-estat' | 'jp-boj' | 'news';
 
 export interface DatasetSpec {
     id: string;
@@ -329,6 +330,12 @@ export function extractCpiFull(json: unknown): string | null {
     return maxPeriod(rows.filter((r) => typeof asObj(r)?.yoy === 'number').map((r) => asObj(r)?.date), 'monthly');
 }
 
+/** `/api/gus-cpi-flash` → { period: 'YYYY-MM', yoy } — miesiąc szybkiego szacunku. */
+export function extractCpiFlash(json: unknown): string | null {
+    const o = asObj(json);
+    return typeof o?.yoy === 'number' ? maxPeriod([o.period], 'monthly') : null;
+}
+
 /** `/api/bdl-series` → { series: [{ date: 'YYYY-MM', value }] }. */
 export function extractBdlSeries(json: unknown): string | null {
     const rows = asObj(json)?.series;
@@ -385,6 +392,7 @@ export function expectedNewsBriefDate(now: Date): string {
 const LAG_NOTES: Record<SourceKind, string> = {
     'gus-dbw': 'Komunikat GUS już jest, ale baza DBW albo nocne odświeżenie cache jeszcze go nie objęły.',
     'gus-bdl': 'BDL publikuje z opóźnieniem względem komunikatu GUS — ostatni miesiąc trafi do bazy później.',
+    'gus-flash': 'Szybki szacunek CPI jest na stat.gov.pl, ale cache go jeszcze nie objął (cron dbw-1 09:40 UTC, samonaprawa 16:40 UTC).',
     eurostat: 'Eurostat publikuje dane krajowe z opóźnieniem względem GUS i własnego kalendarza.',
     nbp: 'Tabela z poprzedniego dnia roboczego — cache odświeża się po publikacji NBP (ok. 12:15).',
     yahoo: 'Brak notowania z ostatnich sesji — możliwe święto giełdowe albo opóźnienie Yahoo.',
@@ -567,6 +575,15 @@ export const FRESHNESS_DATASETS: DatasetSpec[] = [
         // Pełne dane CPI (nie szybki szacunek) — dopiero one trafiają do DBW.
         expected: (now) => expectedMonthlyBySchedule(now, cpiPreliminaryDate),
         tolerance: MONTHLY, maxAgeDays: 100, lagNote: LAG_NOTES['gus-dbw'], selfHeal: false,
+    },
+    {
+        // Szybki szacunek (stat.gov.pl, nie DBW) — od 10:00 w dniu flasha oczekujemy miesiąca flasha; brak = stale.
+        id: 'cpi-flash', label: 'Inflacja CPI — szybki szacunek', source: 'GUS, komunikat', kind: 'gus-flash', group: 'gus',
+        frequency: 'monthly',
+        endpoint: () => cpiFlashPath(),
+        extract: extractCpiFlash,
+        expected: (now) => expectedCpiFlashPeriod(now),
+        tolerance: { ok: 0, lag: 0 }, maxAgeDays: 100, lagNote: LAG_NOTES['gus-flash'], selfHeal: true,
     },
     dbwSpec('retail', 'Sprzedaż detaliczna', 'retail', retailDate),
     dbwSpec('industry', 'Produkcja przemysłowa', 'industry', industrialDate),

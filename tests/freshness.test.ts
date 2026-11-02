@@ -35,6 +35,28 @@ const spec = (id: string): DatasetSpec => {
     return s;
 };
 
+describe('szybki szacunek CPI (cpi-flash, spec 2026-11-02 kryterium 8)', () => {
+    const flash = () => spec('cpi-flash');
+    it('od 10:00 w dniu flasha oczekiwany miesiąc flasha; w styczniu–lutym grudzień', () => {
+        expect(flash().expected(new Date('2026-10-30T09:00:00Z'))).toBe('2026-10');
+        expect(flash().expected(new Date('2026-11-02T12:00:00Z'))).toBe('2026-10');
+        expect(flash().expected(new Date('2026-10-30T08:59:00Z'))).toBe('2026-09');
+        expect(flash().expected(new Date('2026-02-15T12:00:00Z'))).toBe('2025-12');
+    });
+    it('flash = ok, brak flasha po 10:00 = stale; samonaprawa dozwolona (to nie DBW)', () => {
+        const after = new Date('2026-10-30T10:00:00Z');
+        expect(evaluateDataset(flash(), '2026-10', after).status).toBe('ok');
+        expect(evaluateDataset(flash(), '2026-09', after).status).toBe('stale');
+        expect(flash().selfHeal).toBe(true);
+        expect(flash().endpoint(after)).toBe('/api/gus-cpi-flash');
+        expect(flash().extract({ period: '2026-10', yoy: 3.5 })).toBe('2026-10');
+        expect(flash().extract({ error: 'x' })).toBeNull();
+    });
+    it('cpi (DBW) bez zmian: pełny odczyt', () => {
+        expect(spec('cpi').expected(new Date('2026-11-02T12:00:00Z'))).toBe('2026-09');
+    });
+});
+
 describe('harmonogram miesięczny GUS', () => {
     it('3.10.2026: sprzedaż detaliczna — oczekiwany sierpień (publikacja 21.09), lipiec = lag', () => {
         const now = at('2026-10-03T12:00:00+02:00');

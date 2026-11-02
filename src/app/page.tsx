@@ -3,7 +3,7 @@
 import { useMemo } from 'react';
 import { TrendingUp, Percent, Users, Factory, Euro, DollarSign, ShoppingCart, LineChart, Landmark, Gem } from 'lucide-react';
 import {
-    useCpiFull, useGusRegisteredUnemployment, useGusRetailSales, useGusIndustrialProduction,
+    useCpiFull, useCpiHeadline, useGusRegisteredUnemployment, useGusRetailSales, useGusIndustrialProduction,
     useNBPInterestRates, useNBPTable, useEURPLN, useUSDPLN,
     useBondYield10Y, useGold, useStooq, useWig20,
     type NBPTable,
@@ -18,6 +18,7 @@ import { DailyDigestCard } from '@/components/ui/DailyDigestCard';
 import { OverviewHero } from '@/components/ui/OverviewHero';
 import { rankHeroSignals, type HeroCandidate } from '@/lib/hero-signals';
 import { useIsClient } from '@/lib/use-is-client';
+import { ddmm } from '@/lib/cpi-flash';
 import { warsawDateKey } from '@/lib/news/warsaw-date';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { WatchlistStrip, type WatchableKpi } from '@/components/ui/WatchlistStrip';
@@ -73,7 +74,9 @@ export default function OverviewPage() {
     // Jedno zbiorcze żądanie — pas Obserwowane dokłada kafle spółek bez osobnych fetchy per ticker.
     const spolkiQ = useWig20();
 
-    const cpi = useMemo(() => (cpiQ.data?.headline ?? []).filter((h) => h.yoy != null).map((h) => ({ date: h.date, value: h.yoy as number })), [cpiQ.data]);
+    // DBW + szybki szacunek GUS jako ostatni punkt, dopóki DBW nie ma tego miesiąca (src/lib/cpi-flash.ts).
+    const { headline: cpiHeadline, flash: cpiFlash } = useCpiHeadline();
+    const cpi = useMemo(() => cpiHeadline.filter((h) => h.yoy != null).map((h) => ({ date: h.date, value: h.yoy as number })), [cpiHeadline]);
     const unemp = useMemo(
         () => (unempQ.data?.series ?? []).map((d) => ({ date: d.date, value: d.value })),
         [unempQ.data],
@@ -98,12 +101,12 @@ export default function OverviewPage() {
     }, [spolkiQ.data]);
 
     const macro = useMemo(() => [
-        { watchId: 'cpi', label: 'Inflacja CPI (r/r)', href: '/ceny?tab=inflacja', value: fmt1(lastOf(cpi)), unit: '%', accent: 'amber' as AccentKey, icon: TrendingUp, delta: ppDelta(cpi) != null ? { value: ppDelta(cpi)!, unit: 'pp' as const, invert: true } : undefined, footnote: cpi.length ? formatDataPeriodLabel(cpi[cpi.length - 1].date) : 'cel NBP 2,5%', spark: cpi.slice(-SPARK_MACRO), sparkFormat: pct1, loading: cpiQ.isLoading, error: cpiQ.isError, onRetry: () => { void cpiQ.refetch(); } },
+        { watchId: 'cpi', label: 'Inflacja CPI (r/r)', href: '/ceny?tab=inflacja', value: fmt1(lastOf(cpi)), unit: '%', accent: 'amber' as AccentKey, icon: TrendingUp, delta: ppDelta(cpi) != null ? { value: ppDelta(cpi)!, unit: 'pp' as const, invert: true } : undefined, footnote: cpi.length ? `${formatDataPeriodLabel(cpi[cpi.length - 1].date)}${cpiFlash ? ` · szybki szacunek GUS ${ddmm(cpiFlash.publishedOn)}, pełne dane ${ddmm(cpiFlash.fullReleaseOn)}` : ''}` : 'cel NBP 2,5%', spark: cpi.slice(-SPARK_MACRO), sparkFormat: pct1, loading: cpiQ.isLoading, error: cpiQ.isError, onRetry: () => { void cpiQ.refetch(); } },
         { watchId: 'unemployment', label: 'Stopa bezrobocia', href: '/praca?tab=bezrobocie', value: fmt1(lastOf(unemp)), unit: '%', accent: 'blue' as AccentKey, icon: Users, delta: ppDelta(unemp) != null ? { value: ppDelta(unemp)!, unit: 'pp' as const, invert: true } : undefined, footnote: unemp.length ? `rejestrowane · ${formatDataPeriodLabel(unemp[unemp.length - 1].date)}` : 'rejestrowane', spark: unemp.slice(-SPARK_MACRO), sparkFormat: pct1, loading: unempQ.isLoading, error: unempQ.isError, onRetry: () => { void unempQ.refetch(); } },
         { watchId: 'ref-rate', label: 'Stopa referencyjna NBP', href: '/rynki', value: refRate ? formatDecimalPL(refRate.value, 2) : '—', unit: '%', accent: 'violet' as AccentKey, icon: Percent, footnote: refRate ? `od ${formatDate(refRate.validFrom)}` : undefined, loading: ratesQ.isLoading, error: ratesQ.isError, onRetry: () => { void ratesQ.refetch(); } },
         { watchId: 'industrial', label: 'Produkcja przemysłowa (r/r)', href: '/gospodarka?tab=aktywnosc', value: fmt1(lastOf(industrial)), unit: '%', accent: 'rose' as AccentKey, icon: Factory, delta: ppDelta(industrial) != null ? { value: ppDelta(industrial)!, unit: 'pp' as const } : undefined, footnote: industrial.length ? formatDataPeriodLabel(industrial[industrial.length - 1].date) : undefined, spark: industrial.slice(-SPARK_MACRO), sparkFormat: pct1, loading: indQ.isLoading, error: indQ.isError, onRetry: () => { void indQ.refetch(); } },
         { watchId: 'retail', label: 'Sprzedaż detaliczna (r/r)', href: '/gospodarka?tab=aktywnosc', value: fmt1(lastOf(retail)), unit: '%', accent: 'cyan' as AccentKey, icon: ShoppingCart, delta: ppDelta(retail) != null ? { value: ppDelta(retail)!, unit: 'pp' as const } : undefined, footnote: retail.length ? formatDataPeriodLabel(retail[retail.length - 1].date) : undefined, spark: retail.slice(-SPARK_MACRO), sparkFormat: pct1, loading: retailQ.isLoading, error: retailQ.isError, onRetry: () => { void retailQ.refetch(); } },
-    ], [cpi, unemp, industrial, retail, refRate, cpiQ.isLoading, cpiQ.isError, unempQ.isLoading, unempQ.isError, ratesQ.isLoading, ratesQ.isError, indQ.isLoading, indQ.isError, retailQ.isLoading, retailQ.isError]);
+    ], [cpi, cpiFlash, unemp, industrial, retail, refRate, cpiQ.isLoading, cpiQ.isError, unempQ.isLoading, unempQ.isError, ratesQ.isLoading, ratesQ.isError, indQ.isLoading, indQ.isError, retailQ.isLoading, retailQ.isError]);
 
     const markets = useMemo(() => [
         { watchId: 'wig20', label: 'WIG20', href: '/rynki', value: wigLast != null ? formatNumber(wigLast, 0) : '—', unit: 'pkt', accent: 'blue' as AccentKey, icon: LineChart, delta: wigDelta != null ? { value: wigDelta, unit: 'pct' as const } : undefined, spark: closeSeries(wigBars).slice(-SPARK_MARKET), sparkFormat: pkt, loading: wig20Q.isLoading, error: wig20Q.isError, onRetry: () => { void wig20Q.refetch(); } },
@@ -121,7 +124,8 @@ export default function OverviewPage() {
     const wigSeries = useMemo(() => closeSeries(wigBars), [wigBars]);
     const heroRanked = useMemo(() => {
         const candidates: HeroCandidate[] = [
-            { id: 'cpi', kind: 'cpi', label: 'Inflacja CPI', series: cpi, unit: '%', decimals: 1, deltaMode: 'pp', invert: true, weight: 1.3, href: '/ceny?tab=inflacja' },
+            { id: 'cpi', kind: 'cpi', label: 'Inflacja CPI', series: cpi, unit: '%', decimals: 1, deltaMode: 'pp', invert: true, weight: 1.3, href: '/ceny?tab=inflacja',
+                provisional: cpiFlash ? { period: cpiFlash.period, publishedOn: cpiFlash.publishedOn, fullReleaseOn: cpiFlash.fullReleaseOn } : undefined },
             { id: 'industrial', kind: 'industrial', label: 'Produkcja przemysłowa', series: industrial, unit: '%', decimals: 1, deltaMode: 'pp', href: '/gospodarka?tab=aktywnosc' },
             { id: 'retail', kind: 'retail', label: 'Sprzedaż detaliczna', series: retail, unit: '%', decimals: 1, deltaMode: 'pp', href: '/gospodarka?tab=aktywnosc' },
             { id: 'unemployment', kind: 'employment', label: 'Stopa bezrobocia', series: unemp, unit: '%', decimals: 1, deltaMode: 'pp', invert: true, weight: 0.8, href: '/praca?tab=bezrobocie' },
@@ -129,7 +133,7 @@ export default function OverviewPage() {
             { id: 'eur-pln', kind: 'market', label: 'EUR/PLN', series: eurSeries, unit: 'zł', decimals: 3, deltaMode: 'pct', invert: true, href: '/rynki' },
         ];
         return rankHeroSignals(candidates, today);
-    }, [cpi, industrial, retail, unemp, wigSeries, eurSeries, today]);
+    }, [cpi, cpiFlash, industrial, retail, unemp, wigSeries, eurSeries, today]);
     const freshIds = useMemo(() => new Set(heroRanked.filter((r) => r.fresh).map((r) => r.candidate.id)), [heroRanked]);
 
     const companies: WatchableKpi[] = useMemo(

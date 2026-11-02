@@ -9,6 +9,7 @@ import { collapseClusters } from '@/lib/news/match';
 import { NBP_TARGET, type RankedSignal } from '@/lib/hero-signals';
 import { HeroMetricCard } from '@/components/ui/HeroMetricCard';
 import { useIsClient } from '@/lib/use-is-client';
+import { ddmm } from '@/lib/cpi-flash';
 
 interface OverviewHeroProps {
     /** Sygnały posortowane przez `rankHeroSignals` — hero bierze dwa pierwsze. */
@@ -85,7 +86,24 @@ function reasonOf(r: RankedSignal): string | null {
 
 const shortDay = (iso: string) => new Date(`${iso}T12:00:00`).toLocaleDateString('pl-PL', { day: 'numeric', month: 'short' });
 
+/** Punkt z szybkiego szacunku GUS (nie z DBW) — plakietka „Wstępne” i podpis z datą pełnego odczytu. */
+export function provisionalOf(r: RankedSignal) {
+    const p = r.candidate.provisional;
+    return p && p.period === r.period ? p : null;
+}
+
 function Footnote({ r }: { r: RankedSignal }) {
+    const prov = provisionalOf(r);
+    const arrowEl = <span className="ml-1 inline-block transition-transform group-hover:translate-x-0.5" aria-hidden>→</span>;
+    if (prov) {
+        return (
+            <>
+                <span className="whitespace-nowrap">dane za {formatDataPeriod(r.period)}</span>
+                {' · '}<span className="whitespace-nowrap">szybki szacunek GUS, {ddmm(prov.publishedOn)}</span>
+                {' · '}<span className="whitespace-nowrap">pełne dane {ddmm(prov.fullReleaseOn)}{arrowEl}</span>
+            </>
+        );
+    }
     const period = r.candidate.kind === 'market' ? `sesja ${formatDate(r.period)}` : `dane za ${formatDataPeriod(r.period)}`;
     // Strzałka w tym samym bloku `nowrap` co ostatni fragment — inaczej na telefonie spada do osobnej linii.
     const arrow = <span className="ml-1 inline-block transition-transform group-hover:translate-x-0.5" aria-hidden>→</span>;
@@ -130,6 +148,11 @@ function SignalCell({ r, emphasis }: { r: RankedSignal; emphasis: 'primary' | 's
                 {reason && (
                     <span className="rounded-full bg-white px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-mk-brand">
                         {reason}
+                    </span>
+                )}
+                {provisionalOf(r) && (
+                    <span className="rounded-full border border-white/70 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
+                        Wstępne
                     </span>
                 )}
             </div>

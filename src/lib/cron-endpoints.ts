@@ -4,14 +4,15 @@
 //
 // DBW dzieli globalny limit ~100 żądań/15 min, więc grupy dbw-1..4 idą co 2 h (09:40–15:40 UTC) i każda mieści
 // się w jednym oknie.
-import { cpiFullPath, dbwSeriesPath, gusMonthlyPath, koniunkturaPath, ppiFullPath } from '@/lib/gus-api-paths';
+import { cpiFlashPath, cpiFullPath, dbwSeriesPath, gusMonthlyPath, koniunkturaPath, ppiFullPath } from '@/lib/gus-api-paths';
 
 const R = { refresh: '1' };
 
 export const CRON_ENDPOINTS = {
-    // 09:40 UTC — ~72 wywołania: gus-cpi-full (64: COICOP 1999 kwartalnie 2016–2025 + COICOP 2018 miesięcznie 2026)
+    // 09:40 UTC — szybki szacunek CPI (stat.gov.pl, ≤3 żądania, nie DBW — pierwszy, żeby wolny gus-cpi-full go nie
+    // zablokował; 09:40 UTC = po 10:00 Warszawy zimą i latem) + ~72 wywołania DBW: gus-cpi-full (64: COICOP 1999 kwartalnie 2016–2025 + COICOP 2018 miesięcznie 2026)
     // i ceny mieszkań (8: kwartalnie, 2 lata).
-    'dbw-1': [cpiFullPath(R), dbwSeriesPath('housePrices', R)],
+    'dbw-1': [cpiFlashPath(R), cpiFullPath(R), dbwSeriesPath('housePrices', R)],
     // 13:40 UTC — ~77 wywołań: gus-ppi-full (53: 33 pozycje PKD, 10 lat) i ceny robót budowlanych (24).
     'dbw-2': [ppiFullPath(R), dbwSeriesPath('constructionPrices', R)],
     // 15:40 UTC — ~48 wywołań: koniunktura (24) i ceny skupu produktów rolnych (24). `/api/gus-cpi` wypadło

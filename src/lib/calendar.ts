@@ -5,7 +5,7 @@ import {
     RPP_DECISIONS,
     GDP_FLASH_PUBLISH,
     cpiPreliminaryDate,
-    lastBusinessDayOfMonth,
+    cpiFlashDate,
     monthNamePl,
     unemploymentDate,
     industrialDate,
@@ -20,17 +20,18 @@ export interface MacroEvent {
     importance: 'high' | 'medium' | 'low';
     /** Okres, którego dotyczą dane (np. „2026-07" = lipiec 2026). */
     dataPeriod?: string;
-    /** Szybki szacunek (CPI flash). Nie trafia do DBW, więc nie zmienia liczb na stronie — patrz hero-signals. */
+    /** Szybki szacunek (CPI flash). Nie trafia do DBW — na stronę wchodzi przez `/api/gus-cpi-flash` (src/lib/cpi-flash.ts). */
     flash?: boolean;
 }
 
 export function generateMacroCalendar(year: number): MacroEvent[] {
     const events: MacroEvent[] = [];
 
-    // CPI — dwa wydania miesięcznie (GUS)
+    // CPI — dwa wydania miesięcznie (GUS); szybki szacunek tylko za marzec–grudzień.
     for (let m = 1; m <= 12; m++) {
         const dataPeriod = `${year}-${String(m).padStart(2, '0')}`;
-        const flashDate = lastBusinessDayOfMonth(year, m);
+        const flashDate = cpiFlashDate(year, m);
+        if (!flashDate) continue;
         events.push({
             date: flashDate,
             name: `CPI flash — dane za ${monthNamePl(m)} ${year}`,

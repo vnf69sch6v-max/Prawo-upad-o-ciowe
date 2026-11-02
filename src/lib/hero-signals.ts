@@ -36,6 +36,11 @@ export interface HeroCandidate {
     releaseOf?: (period: string) => string | null;
     /** Najbliższa publikacja po dniu `today` (YYYY-MM-DD). Bez pola: kalendarz GUS. */
     nextReleaseOf?: (today: string) => string | null;
+    /**
+     * Ostatni punkt to odczyt wstępny (szybki szacunek GUS): okres, dzień komunikatu i planowany pełny odczyt.
+     * Hero pokazuje plakietkę „Wstępne” i podpis „szybki szacunek GUS, DD.MM · pełne dane DD.MM”.
+     */
+    provisional?: { period: string; publishedOn: string; fullReleaseOn: string };
 }
 
 export interface RankedSignal {
@@ -89,16 +94,15 @@ export function daysBetween(fromIso: string, toIso: string): number {
 }
 
 /**
- * Publikacje, z którymi liczba trafia NA STRONĘ. CPI na Przeglądzie pochodzi z DBW, a tam trafiają
- * dopiero pełne dane z połowy M+1 — szybki szacunek z końca M nie zmienia wyświetlanej liczby.
- * Liczenie wieku od flasha robiło z odczytu opublikowanego dziś odczyt „sprzed 15 dni": CPI nigdy
- * nie dostawał plakietki „Nowy odczyt", a stopka zapowiadała flash, po którym na stronie nic się nie zmienia.
+ * Pełne odczyty (DBW). Okres z DBW datujemy od pełnego odczytu, nie od flasha: liczenie wieku od flasha robiło
+ * z odczytu opublikowanego dziś odczyt „sprzed 15 dni” i CPI nigdy nie dostawał „Nowy odczyt”. Punkt z szybkiego
+ * szacunku (`provisional`) datuje `releaseOf` kandydata — dzień komunikatu (src/lib/cpi-flash.ts).
  */
 function releases(type: MacroEvent['type'], year: number): MacroEvent[] {
     return eventsAround(year).filter((e) => e.type === type && !e.flash);
 }
 
-/** Dzień, w którym dane za `period` pojawiają się na stronie (kalendarz GUS). */
+/** Dzień, w którym pełne dane za `period` pojawiają się na stronie (kalendarz GUS). */
 export function publicationDate(kind: SignalKind, period: string): string | null {
     const type = CALENDAR_TYPE[kind];
     if (!type || !/^\d{4}-\d{2}$/.test(period)) return null;
@@ -106,11 +110,14 @@ export function publicationDate(kind: SignalKind, period: string): string | null
     return hit?.date ?? null;
 }
 
-/** Najbliższa publikacja, która zmieni liczbę na stronie, ściśle po `today`. */
+/**
+ * Najbliższa publikacja, która zmieni liczbę na stronie, ściśle po `today`. Od 11.2026 to także szybki
+ * szacunek CPI — strona pokazuje go w dniu komunikatu (`/api/gus-cpi-flash`).
+ */
 export function nextPublication(kind: SignalKind, today: string): MacroEvent | null {
     const type = CALENDAR_TYPE[kind];
     if (!type) return null;
-    return releases(type, Number(today.slice(0, 4))).find((e) => e.date > today) ?? null;
+    return eventsAround(Number(today.slice(0, 4))).find((e) => e.type === type && e.date > today) ?? null;
 }
 
 function nextOn(c: HeroCandidate, today: string): { date: string } | null {
@@ -155,7 +162,9 @@ export function evaluateSignal(c: HeroCandidate, today: string | null): RankedSi
     const { z, biggestSince } = zScore(ch, c.deltaMode);
 
     const periodKey = c.kind === 'market' ? lastP.date.slice(0, 10) : lastP.date;
-    const publishedOn = c.releaseOf
+    const publishedOn = c.provisional?.period === periodKey
+        ? c.provisional.publishedOn
+        : c.releaseOf
         ? c.releaseOf(periodKey)
         : c.kind === 'market' ? periodKey : publicationDate(c.kind, lastP.date);
     const ageDays = today && publishedOn ? Math.max(0, daysBetween(publishedOn, today)) : null;

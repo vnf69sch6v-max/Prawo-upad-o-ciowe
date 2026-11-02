@@ -132,6 +132,10 @@ export function validateGusPath(path: string, now: Date = new Date()): Parsed<un
         }
         case '/api/gus-monthly':
             return parseGusMonthlyYears(sp);
+        case '/api/gus-cpi-flash': {
+            for (const [k, v] of sp) if (k !== 'refresh' || v !== '1') return bad(`nieznany parametr ${k}`, k);
+            return { ok: true, value: null };
+        }
         case '/api/dbw':
             return parseDbwProxy(sp, now);
         default:
