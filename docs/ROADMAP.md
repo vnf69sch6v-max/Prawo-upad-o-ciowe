@@ -120,6 +120,11 @@ P-5. **Watchlista — drobiazgi z recenzji PM 25.10** (niewstrzymujące). Zrobio
    liczbami (`next/og`), liczby w HTML z serwera, nie tylko po hydratacji.
 10. **Kalkulator „Twoja inflacja”:** własny koszyk na wagach COICOP z DBW.
 11. **Polska na tle UE:** HICP, bezrobocie, PKB z Eurostatu dla PL / strefy euro / sąsiadów.
+    **Krok 1 w toku** (spec `docs/specs/2026-11-02-polska-na-tle-ue-hicp.md`, gałąź `claude/pl-na-tle-ue`): HICP r/r
+    PL / strefa euro / DE / CZ / HU na `/ceny/na-tle-ue`. Według Eurostatu wrzesień 2026 to PL 4,0, EA 3,8, DE 3,3,
+    CZ 2,2, HU 2,1, aktualizacja 16.10. Kontrola produkcyjna 18.11.2026: październik do 13:30 UTC (cron `nbp`).
+    Flash strefy euro odłożony, bo publikacja jest 04.11, a zbioru API nie potwierdzono. Następne kroki: bezrobocie,
+    potem PKB.
 12. **Monitoring błędów przeglądarki** bez zewnętrznych usług: `/api/client-errors` → Firestore,
     licznik na `/status`.
 13. **Dostępność:** kontrasty, `aria-*`, nawigacja klawiaturą, czytniki ekranu na wykresach.

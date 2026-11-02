@@ -9,6 +9,7 @@ import { PpiFull } from '@/components/sections/PpiFull';
 import { DbwPriceSection } from '@/components/sections/DbwPriceSection';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { MobileTabs } from '@/components/sections/mobile-layout';
+import { EuCompareLink } from '@/components/eu/EuCompareLink';
 
 type Tab = 'inflacja' | 'ppi' | 'nieruchomosci' | 'budowlane' | 'rolne';
 const TABS: { value: Tab; label: string }[] = [
@@ -38,6 +39,7 @@ export default function CenyPage() {
                 actions={<div className="hidden lg:block"><Segmented value={tab} onChange={setTab} options={TABS} aria-label="Sekcja cen" /></div>}
             />
             <MobileTabs value={tab} onChange={setTab} options={TABS_MOBILE} ariaLabel="Sekcja cen" className="-mt-2" />
+            <EuCompareLink />
 
             <div key={tab} className="mk-tab-panel mk-fade-in">
             {tab === 'inflacja' && <InflacjaFull />}

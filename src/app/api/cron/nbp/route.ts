@@ -22,6 +22,9 @@ const ENDPOINTS = [
     '/api/nbp?code=USD&last=30&refresh=1',
     '/api/nbp?code=CHF&last=30&refresh=1',
     '/api/nbp?code=GBP&last=30&refresh=1',
+    // Polska na tle UE: druga przebieżka w dniu komunikatu Eurostatu (11:00) — bez niej nowy miesiąc
+    // czekałby do porannego `refresh` następnego dnia. Do źródła najwyżej raz na 10 min (`withCache`).
+    '/api/eu-hicp?refresh=1',
 ];
 
 export async function GET(request: NextRequest) {

@@ -12,7 +12,7 @@ import { rememberOpener, useFocusTrap } from '@/lib/use-focus-trap';
 import {
     LayoutDashboard, Tag, Factory, Users, TrendingUp, Map, Search, Newspaper,
     Percent, Landmark, LineChart, Home, Wheat, HardHat, Fuel, Building2, CornerDownLeft, Briefcase,
-    FileBarChart2, Scale,
+    FileBarChart2, Scale, Globe2,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -41,6 +41,7 @@ const COMMANDS: Cmd[] = [
     { id: 'jp-trade', group: 'Wskaźniki', label: 'Handel Japonii', sub: 'Japonia', keywords: 'japonia handel bilans płatniczy obroty bieżące deficyt eksport import mof dochód wtórny transfery', href: '/japonia/gospodarka', icon: Scale },
     { id: 'jp-markets', group: 'Wskaźniki', label: 'Rynki Japonii', sub: 'Japonia', keywords: 'japonia jen jpy usd dolar stopa boj call overnight jgb', href: '/japonia/rynki', icon: TrendingUp },
     { id: 'jp-labour', group: 'Wskaźniki', label: 'Praca w Japonii', sub: 'Japonia', keywords: 'japonia bezrobocie praca płace wynagrodzenie labour unemployment wages oferty hello work urząd pracy', href: '/japonia/praca', icon: Users },
+    { id: 'eu-hicp', group: 'Wskaźniki', label: 'Polska na tle UE — inflacja HICP', sub: 'Ceny', keywords: 'ue unia strefa euro hicp eurostat niemcy czechy węgry porównanie europa', href: '/ceny/na-tle-ue', icon: Globe2 },
     { id: 'ind-ppi', group: 'Wskaźniki', label: 'Ceny producenta (PPI)', sub: 'Ceny', keywords: 'ppi producent przemysł', href: '/ceny?tab=ppi', icon: Factory },
     { id: 'ind-nier', group: 'Wskaźniki', label: 'Ceny nieruchomości', sub: 'Ceny', keywords: 'mieszkania nieruchomości rynek pierwotny wtórny', href: '/ceny?tab=nieruchomosci', icon: Home },
     { id: 'ind-bud', group: 'Wskaźniki', label: 'Ceny robót budowlanych', sub: 'Ceny', keywords: 'budownictwo budowlano-montażowe', href: '/ceny?tab=budowlane', icon: HardHat },

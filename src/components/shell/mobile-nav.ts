@@ -1,5 +1,5 @@
-import { Activity, CalendarClock, ClipboardList, Search, Settings, type LucideIcon } from 'lucide-react';
-import { JP_NAV_ITEMS, NAV_ITEMS, isActive, type NavItem } from './TopNav';
+import { Activity, CalendarClock, ClipboardList, Globe2, Search, Settings, type LucideIcon } from 'lucide-react';
+import { JP_NAV_ITEMS, NAV_ITEMS, activeNavHref, isActive, type NavItem } from './TopNav';
 import { countryOf, type Country } from './country';
 
 /**
@@ -35,6 +35,12 @@ export const MORE_GROUPS: MoreGroup[] = [
     {
         title: 'Sekcje',
         items: NAV_ITEMS.filter((it) => !(TAB_HREFS as readonly string[]).includes(it.href)).map((it) => ({ kind: 'link', ...it })),
+    },
+    {
+        title: 'Porównania',
+        items: [
+            { kind: 'link', label: 'Polska na tle UE', href: '/ceny/na-tle-ue', icon: Globe2, hint: 'Inflacja HICP: strefa euro, Niemcy, Czechy, Węgry' },
+        ],
     },
     {
         title: 'Narzędzia',
@@ -80,6 +86,8 @@ export function moreGroupsFor(country: Country): MoreGroup[] {
 
 /** Bieżąca strona jest w arkuszu „Więcej” → zakładka „Więcej” jest aktywna (jak „More” w iOS). */
 export function isMoreActive(pathname: string): boolean {
+    // Podstrona zakładki (np. `/ceny/na-tle-ue` → „Ceny”) zapala tylko tę zakładkę, choć ma też wpis w arkuszu.
+    if (activeNavHref(pathname, tabItemsFor(countryOf(pathname)))) return false;
     return moreGroupsFor(countryOf(pathname))
         .flatMap((g) => g.items.flatMap((it) => (it.kind === 'link' ? [it.href] : [])))
         .some((href) => isActive(pathname, href));
