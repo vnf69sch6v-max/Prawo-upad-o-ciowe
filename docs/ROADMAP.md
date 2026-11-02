@@ -17,7 +17,7 @@ właściciel zobaczy na savori.space (zrzut 390 i 1440 px przed/po w raporcie). 
 przebieg → PM tnie go na widoczne kawałki (np. najpierw sama strona z danymi, potem interakcja).
 - **W1. Szybki szacunek CPI (pozycja 7)** — w toku w osobnej sesji 02.11 (gałąź `claude/cpi-flash`); nie dublować.
 - **W2. Lista /newsy spójna z Przeglądem (4c)** — w toku w osobnej sesji 02.11 (gałąź `claude/newsy-lista`); nie dublować.
-- **W3. Kalkulator „Twoja inflacja” (pozycja 10)** — najpierw widok: suwaki 12 działów COICOP na wagach GUS → „Twoja inflacja” vs CPI; potem zapis koszyka na koncie. Widok — w toku w osobnej sesji 02.11 (gałąź `claude/twoja-inflacja`); nie dublować.
+- **W3. Kalkulator „Twoja inflacja” (pozycja 10)** — krok 1 (widok) zrobiony 02.11, PM: SHIP po FIX (`/ceny/twoja-inflacja`, 13 działów COICOP 2018 na oficjalnych wagach GUS 2026, wynik zakotwiczony w CPI, stan w `?w=`; spec `docs/specs/2026-11-02-twoja-inflacja.md`). Przy okazji naprawione przybliżone wagi na `/ceny`. Po wdrożeniu PM sprawdza kryteria 18–20. Następny krok: zapis koszyka na koncie.
 - **W4. Polska na tle UE (pozycja 11)** — HICP PL vs strefa euro, CZ, HU, DE (Eurostat), jeden wykres i tabela. W toku w osobnej sesji 02.11 (gałąź `claude/pl-na-tle-ue`); nie dublować.
 
 0. **Rozbicie inflacji w Japonii — „ładne”** (prośba z 24.10.2026). Co napędza CPI: świeża żywność,
