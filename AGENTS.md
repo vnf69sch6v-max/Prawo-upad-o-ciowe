@@ -336,6 +336,13 @@ Standard scripts in `package.json`:
   the full mid-month GUS release, not the end-of-month flash (events with
   `flash: true` are skipped — DBW never gets the flash, so dating CPI by it made
   a reading published today look 15 days old and it never got "Nowy odczyt").
+- CPI weights (`src/lib/cpi-weights.ts`, `CPI_WEIGHTS_2026`): the official GUS 2026 basket weights for the 13 COICOP 2018
+  divisions (sum 100,00; GUS release chart „System wag … 2026”). DBW has no weights. `gus-cpi-full` overlays them after
+  `withCache` (`applyOfficialWeights`), so a weight fix needs no cache-key bump. Add the 2027 table with ROADMAP P2.
+  `/ceny/twoja-inflacja` (`src/lib/twoja-inflacja.ts`) anchors the user's basket in the official CPI: result =
+  Σ u·y/100 + (CPI − Σ w·y/100), so the GUS weights give exactly the CPI. It uses only the newest month that has all
+  13 divisions and the headline. The basket lives only in `?w=` (13 integers in hundredths of a percent, all or
+  nothing), read after hydration. Freshness id `cpi-divisions`.
 - `/api/bdl-series?count=N` counts consecutive BDL **variable ids** (one per
   month, or per quarter), not months — max 12 (monthly) / 4 (quarterly); the
   route clamps it. The route already returns two years (previous + current).

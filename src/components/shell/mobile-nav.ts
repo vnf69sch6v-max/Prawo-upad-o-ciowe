@@ -1,4 +1,4 @@
-import { Activity, CalendarClock, ClipboardList, Search, Settings, type LucideIcon } from 'lucide-react';
+import { Activity, CalendarClock, Calculator, ClipboardList, Search, Settings, type LucideIcon } from 'lucide-react';
 import { JP_NAV_ITEMS, NAV_ITEMS, isActive, type NavItem } from './TopNav';
 import { countryOf, type Country } from './country';
 
@@ -40,6 +40,7 @@ export const MORE_GROUPS: MoreGroup[] = [
         title: 'Narzędzia',
         items: [
             { kind: 'search', label: 'Szukaj', icon: Search, hint: 'Wskaźniki, sekcje, działy' },
+            { kind: 'link', label: 'Twoja inflacja', href: '/ceny/twoja-inflacja', icon: Calculator, hint: 'Własny koszyk wobec CPI GUS' },
             { kind: 'link', label: 'Kalendarz publikacji', href: '/publikacje', icon: CalendarClock, hint: 'Terminy danych GUS i NBP' },
             { kind: 'link', label: 'Podsumowanie dnia', href: '/podsumowanie', icon: ClipboardList, hint: 'Dane i newsy z jednego dnia' },
             { kind: 'link', label: 'Stan danych', href: '/status', icon: Activity, hint: 'Świeżość źródeł danych' },
@@ -79,8 +80,13 @@ export function moreGroupsFor(country: Country): MoreGroup[] {
 }
 
 /** Bieżąca strona jest w arkuszu „Więcej” → zakładka „Więcej” jest aktywna (jak „More” w iOS). */
+/** Skrót z „Więcej” do podstrony zakładki (np. `/ceny/twoja-inflacja`) zapala tylko tę zakładkę — inaczej świeciłyby
+ *  dwie naraz. Pierwsza zakładka to strona kraju (`/`, `/japonia`), więc jej nie liczymy. */
 export function isMoreActive(pathname: string): boolean {
-    return moreGroupsFor(countryOf(pathname))
+    const country = countryOf(pathname);
+    const sections = tabItemsFor(country).slice(1).map((t) => t.href);
+    return moreGroupsFor(country)
         .flatMap((g) => g.items.flatMap((it) => (it.kind === 'link' ? [it.href] : [])))
+        .filter((href) => !sections.some((tab) => isActive(href, tab)))
         .some((href) => isActive(pathname, href));
 }

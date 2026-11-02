@@ -37,6 +37,7 @@ import { expectedJpSppi } from '@/lib/jp/sppi';
 import { expectedJpOrders } from '@/lib/jp/orders';
 import { expectedJpHousing } from '@/lib/jp/housing';
 import { latestCommonPeriod } from '@/lib/jp/breakdown';
+import { latestDivisionsMonth } from '@/lib/twoja-inflacja';
 
 // ─── Typy ───────────────────────────────────────────────
 
@@ -565,6 +566,16 @@ export const FRESHNESS_DATASETS: DatasetSpec[] = [
         endpoint: () => cpiFullPath(),
         extract: extractCpiFull,
         // Pełne dane CPI (nie szybki szacunek) — dopiero one trafiają do DBW.
+        expected: (now) => expectedMonthlyBySchedule(now, cpiPreliminaryDate),
+        tolerance: MONTHLY, maxAgeDays: 100, lagNote: LAG_NOTES['gus-dbw'], selfHeal: false,
+    },
+    {
+        // Działy idą z innego przekroju DBW (1698) niż nagłówek `cpi` (1722): gdyby się spóźniły, `cpi` byłoby ok,
+        // a wkłady na /ceny i /ceny/twoja-inflacja stałyby na starym miesiącu. Ta sama trasa = zero wywołań GUS więcej.
+        id: 'cpi-divisions', label: 'Inflacja CPI — działy (wkłady, Twoja inflacja)', source: 'GUS DBW', kind: 'gus-dbw', group: 'gus',
+        frequency: 'monthly',
+        endpoint: () => cpiFullPath(),
+        extract: latestDivisionsMonth,
         expected: (now) => expectedMonthlyBySchedule(now, cpiPreliminaryDate),
         tolerance: MONTHLY, maxAgeDays: 100, lagNote: LAG_NOTES['gus-dbw'], selfHeal: false,
     },

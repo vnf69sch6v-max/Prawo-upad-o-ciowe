@@ -504,11 +504,13 @@ interface CpiFullData {
 }
 
 // Rok ustala serwer (strefa Europe/Warsaw) — zły zegar urządzenia nie może skończyć się błędem 400.
-export function useCpiFull() {
+// `enabled = false`: strona ma już dane z cache serwera (ISR, np. /ceny/twoja-inflacja) — bez drugiego zapytania.
+export function useCpiFull(enabled = true) {
     // Bez `refresh=1`: wymuszenie GUS tylko z crona (ROADMAP 1b) — „Aktualizuj” czyta cache, który odświeża cron.
     const query = useQuery<CpiFullData>({
         queryKey: ['gus-cpi-full'],
         queryFn: () => fetchJSON(cpiFullPath()),
+        enabled,
         ...refreshOptions('gusDbw'),
     });
     return query;
