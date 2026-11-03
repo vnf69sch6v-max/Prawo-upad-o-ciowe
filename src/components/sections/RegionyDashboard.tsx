@@ -253,7 +253,7 @@ export function RegionyDashboard() {
             <PublicationDatesPanel count={4} variant="overview" />
 
             <MobileOnly>
-                <RelatedNews topic="gospodarka" limit={3} title="Powiązane newsy" variant="rail" />
+                <RelatedNews topic="gospodarka" limit={5} title="Powiązane newsy" />
             </MobileOnly>
 
             <p className="text-center text-[11px] text-mk-faint">

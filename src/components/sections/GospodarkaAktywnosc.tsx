@@ -338,7 +338,7 @@ export function GospodarkaAktywnosc() {
             </div>
 
             <MobileOnly>
-                <RelatedNews topic="gospodarka" limit={3} title="Powiązane newsy" variant="rail" />
+                <RelatedNews topic="gospodarka" limit={5} title="Powiązane newsy" />
             </MobileOnly>
         </DensePageLayout>
     );

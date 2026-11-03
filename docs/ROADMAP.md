@@ -19,6 +19,14 @@ przebieg → PM tnie go na widoczne kawałki (np. najpierw sama strona z danymi,
 - **W2. Lista /newsy spójna z Przeglądem (4c)** — w toku w osobnej sesji 02.11 (gałąź `claude/newsy-lista`); nie dublować.
 - **W3. Kalkulator „Twoja inflacja” (pozycja 10)** — krok 1 (widok) zrobiony 02.11, PM: SHIP po FIX (`/ceny/twoja-inflacja`, 13 działów COICOP 2018 na oficjalnych wagach GUS 2026, wynik zakotwiczony w CPI, stan w `?w=`; spec `docs/specs/2026-11-02-twoja-inflacja.md`). Przy okazji naprawione przybliżone wagi na `/ceny`. Po wdrożeniu PM sprawdza kryteria 18–20. Następny krok: zapis koszyka na koncie.
 - **W4. Polska na tle UE (pozycja 11)** — HICP PL vs strefa euro, CZ, HU, DE (Eurostat), jeden wykres i tabela. W toku w osobnej sesji 02.11 (gałąź `claude/pl-na-tle-ue`); nie dublować.
+- **N4. Newsy przy wskaźnikach** (właściciel 03.11: „mocno skup się na newsach”) — **zrobione 03.11.2026** (krok 1), gałąź
+  `claude/newsy-przy-wskaznikach`, spec `docs/specs/2026-11-03-newsy-przy-wskaznikach.md`. Pomiar 03.11 na 150 newsach:
+  fałszywe trafienia na każdej stronie (np. 800 plus w cenach, Ryanair w pracy), brak paliw/prądu/gazu w cenach,
+  4 z 5 miejsc w rynkach to kursy walut Money.pl. Krok 1: reguły w `src/lib/news/match.ts` (opis tylko przy ≥2 frazach,
+  weto zagraniczne, tylko PL, zwijanie serii, tag podtematu) sprawdzone na `tests/fixtures/news-topics-2026-11-03.json`
+  (dziś 0 fałszywych i komplet `expected` w każdym temacie), jedna karta bez Kalendarium (telefon: 3 + „Więcej”),
+  rdzeń strony przed resztą (na /ceny inflacja, potem energia i paliwa; max 2 na podtemat przed trzecim), te same
+  reguły w chipach Przeglądu. Potem: comiesięczny świeży pomiar i dopisanie fixture; newsy JP.
 
 0. **Rozbicie inflacji w Japonii — „ładne”** (prośba z 24.10.2026). Co napędza CPI: świeża żywność,
    energia, żywność bez świeżej, usługi/towary, kategorie koszyka; wkłady w p.p. tam, gdzie da się je

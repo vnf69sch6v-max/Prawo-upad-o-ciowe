@@ -1,0 +1,2269 @@
+{
+ "capturedAt": "2026-11-03T06:38:12.637Z",
+ "source": "GET /api/news (tryb demo, 150 pozycji)",
+ "items": [
+  {
+   "title": "Czekają nas potężne rachunki za gaz? \"Myślę, że podwyżka jest przesądzona\"",
+   "description": "Sytuacja na rynkach hurtowych może zwiastować podwyżkę taryfy za gaz od przyszłego roku. - Myślę, że (...) jest przesądzona - ocenia w rozmowie z Interią Biznes Paweł Czyżak z Ornaq.ai. Ekspert nie wyklucza jednak, że rząd zastosuje mechanizm osłonowy. - Jesteśmy w trudnym momencie - i to nie tylko my, ale cała Europa - mówi.",
+   "source": "Interia Biznes",
+   "section": "ogolne",
+   "lang": "pl",
+   "importance": 83,
+   "clusterId": 0,
+   "isOpinion": false,
+   "publishedAt": "2026-11-03T06:25:57.000Z",
+   "link": "https://biznes.interia.pl/finanse/news-rachunki-za-ogrzewanie-w-2027-roku-mysle-ze-podwyzka-jest-pr,nId,23567574",
+   "expected": [
+    "ceny"
+   ],
+   "ok": []
+  },
+  {
+   "title": "\"Za 15 lat nas nie będzie\". Szef niemieckiego giganta ostrzega",
+   "description": "Jeśli będziemy kontynuować dotychczasowe działania, za 15 lat nas nie będzie – ocenił Marc Llistosella, prezes Knorr-Bremse. Jego zdaniem Europa błędnie reaguje na konkurencję z Azji. – Cła dla Chin muszą być bardzo konkretne – dodał Llistosella w Politico.",
+   "source": "Money.pl",
+   "section": "ogolne",
+   "lang": "pl",
+   "importance": 68,
+   "clusterId": 1,
+   "isOpinion": false,
+   "publishedAt": "2026-11-03T06:21:12.000Z",
+   "link": "https://www.money.pl/mobility/za-15-lat-nas-nie-bedzie-prezes-niemieckiej-firmy-motoryzacyjnej-ostrzega-7346932519668192a.html",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "Zamieszanie wokół Trybunału Konstytucyjnego nie wystraszyło inwestorów [HIRSCH O GOSPODARCE]",
+   "description": "Rynek finansowy podchodzi do zamieszania wokół Trybunału Konstytucyjnego dość wstrzemięźliwie, polski przemysł wygląda najlepiej od półtora roku, a rząd zaskakuje nowym ruchem w sprawie podwyżki progów w podatku PIT. Ponadto minister finansów chciałby, aby skład zarządu NBP został w końcu uzupełniony, co zależy od premiera, a średnia cena mieszkania na rynku pierwotnym w Warszawie przekroczyła 20 ",
+   "source": "wnp.pl",
+   "section": "przemysl",
+   "lang": "pl",
+   "importance": 82,
+   "clusterId": 2,
+   "isOpinion": false,
+   "publishedAt": "2026-11-03T06:18:00.000Z",
+   "link": "https://www.wnp.pl/rynki/zamieszanie-wokol-trybunalu-konstytucyjnego-nie-wystraszylo-inwestorow-hirsch-o-gospodarce,1115623.html",
+   "expected": [],
+   "ok": [
+    "rynki",
+    "gospodarka"
+   ]
+  },
+  {
+   "title": "Stopy procentowe bez zmian przez najbliższe miesiące. Potem możliwy zwrot",
+   "description": "Rada Polityki Pieniężnej nie podwyższy stóp procentowych na rozpoczynającym się we wtorek posiedzeniu - przewiduje ekonomista ING Banku Śląskiego Adam Antoniak. Jego zdaniem do końca roku koszt pieniądza pozostanie bez zmian, ale w pierwszym kwartale 2027 r. możliwe są dwie podwyżki po 25 pkt bazowych.",
+   "source": "Interia Biznes",
+   "section": "ogolne",
+   "lang": "pl",
+   "importance": 100,
+   "clusterId": 3,
+   "isOpinion": false,
+   "publishedAt": "2026-11-03T06:04:12.000Z",
+   "link": "https://biznes.interia.pl/gospodarka/news-rpp-wstrzyma-sie-z-podwyzkami-zmiany-mozliwe-juz-za-kilka-mi,nId,23567942",
+   "expected": [
+    "rynki"
+   ],
+   "ok": []
+  },
+  {
+   "title": "Ile kosztuje euro? Kurs euro do złotego PLN/EUR 03.11.2026",
+   "description": "Kurs euro - 03.11.2026. We wtorek za jedno euro (EUR) trzeba zapłacić 4.4183 zł.",
+   "source": "Money.pl",
+   "section": "ogolne",
+   "lang": "pl",
+   "importance": 77,
+   "clusterId": 4,
+   "isOpinion": false,
+   "publishedAt": "2026-11-03T06:02:38.000Z",
+   "link": "https://www.money.pl/pieniadze/ile-kosztuje-euro-kurs-euro-do-zlotego-pln-eur-03-11-2026-7346936856652256a.html",
+   "expected": [
+    "rynki"
+   ],
+   "ok": []
+  },
+  {
+   "title": "Ile kosztuje frank szwajcarski? Kurs franka do złotego PLN/CHF 03.11.2026",
+   "description": "Kurs franka szwajcarskiego - 03.11.2026. We wtorek za jednego franka (CHF) trzeba zapłacić 4.825 zł.",
+   "source": "Money.pl",
+   "section": "ogolne",
+   "lang": "pl",
+   "importance": 77,
+   "clusterId": 4,
+   "isOpinion": false,
+   "publishedAt": "2026-11-03T06:02:31.000Z",
+   "link": "https://www.money.pl/pieniadze/ile-kosztuje-frank-szwajcarski-kurs-franka-do-zlotego-pln-chf-03-11-2026-7346936824822240a.html",
+   "expected": [
+    "rynki"
+   ],
+   "ok": []
+  },
+  {
+   "title": "Ile kosztuje dolar? Kurs dolara do złotego PLN/USD 03.11.2026",
+   "description": "Kurs dolara - 03.11.2026. We wtorek za jednego dolara (USD) trzeba zapłacić 3.9477 zł.",
+   "source": "Money.pl",
+   "section": "ogolne",
+   "lang": "pl",
+   "importance": 77,
+   "clusterId": 4,
+   "isOpinion": false,
+   "publishedAt": "2026-11-03T06:02:14.000Z",
+   "link": "https://www.money.pl/pieniadze/ile-kosztuje-dolar-kurs-dolara-do-zlotego-pln-usd-03-11-2026-7346936757406144a.html",
+   "expected": [
+    "rynki"
+   ],
+   "ok": []
+  },
+  {
+   "title": "Ile kosztuje funt? Kurs funta do złotego PLN/GBP 03.11.2026",
+   "description": "Kurs funta szterlinga - 03.11.2026. We wtorek za jednego funta brytyjskiego (GBP) trzeba zapłacić 5.2945 zł.",
+   "source": "Money.pl",
+   "section": "ogolne",
+   "lang": "pl",
+   "importance": 84,
+   "clusterId": 4,
+   "isOpinion": false,
+   "publishedAt": "2026-11-03T06:02:08.000Z",
+   "link": "https://www.money.pl/pieniadze/ile-kosztuje-funt-kurs-funta-do-zlotego-pln-gbp-03-11-2026-7346936733333984a.html",
+   "expected": [
+    "rynki"
+   ],
+   "ok": []
+  },
+  {
+   "title": "Darmowe nadgodziny nadal są problemem. Pokazano dane dotyczące Polski",
+   "description": "Praca po godzinach dotyczy pracowników na całym świecie - zapewniają autorzy raportu \"People at Work 2026\" (ludzie w pracy) amerykańskiego instytutu badawczego ADP Research. Wynika z niego, że 38 proc. osób zostaje po pracy co najmniej 6 godzin tygodniowo. W Polsce na taką samą liczbę nieodpłatnych godzin wskazuje 31 proc. zatrudnionych.",
+   "source": "Interia Biznes",
+   "section": "ogolne",
+   "lang": "pl",
+   "importance": 86,
+   "clusterId": 5,
+   "isOpinion": false,
+   "publishedAt": "2026-11-03T05:50:02.000Z",
+   "link": "https://biznes.interia.pl/gospodarka/news-darmowe-nadgodziny-nadal-sa-problemem-pokazano-dane-dotyczac,nId,23567814",
+   "expected": [
+    "praca"
+   ],
+   "ok": []
+  },
+  {
+   "title": "Rosja podsyca napięcia w Polsce. Amerykański dziennik wskazuje na jej cel",
+   "description": "Rosja wykorzystuje spór wokół Trybunału Konstytucyjnego w Polsce do osłabiania rządu Donalda Tuska i podważania poparcia dla Ukrainy - ocenił \"New York Times\". Jak zauważa amerykański dziennik, Moskwa nagłaśnia oskarżenia o rzekomy zamach stanu, formułowane przez prawicowych przeciwników rządu, i podsyca napięcia polityczne w Polsce.",
+   "source": "Interia Biznes",
+   "section": "ogolne",
+   "lang": "pl",
+   "importance": 79,
+   "clusterId": 6,
+   "isOpinion": false,
+   "publishedAt": "2026-11-03T05:47:51.000Z",
+   "link": "https://biznes.interia.pl/gospodarka/news-rosja-wykorzystuje-konflikt-wokol-tk-chce-oslabic-rzad-tuska,nId,23567939",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "Ruszyli do urn. Oto co mówią ostatnie sondaże",
+   "description": "Poparcie dla Donalda Trumpa utrzymuje się blisko historycznego minimum. Według najnowszego sondażu Reuters/Ipsos pracę prezydenta USA aprobuje 32 proc. badanych, a Demokraci prowadzą przed Republikanami 46 do 38 proc.",
+   "source": "Money.pl",
+   "section": "ogolne",
+   "lang": "pl",
+   "importance": 53,
+   "clusterId": 7,
+   "isOpinion": false,
+   "publishedAt": "2026-11-03T05:45:33.000Z",
+   "link": "https://www.money.pl/gospodarka/kluczowy-dzien-dla-trumpa-oto-co-mowia-ostatnie-sondaze-7346926047738336a.html",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "Półka Ekonomiczna. Polska i Indie mają ze sobą bardzo wiele wspólnego",
+   "description": "To nie przypadek, że do Indii zawitała niedawno polska delegacja rządowa, a premier Tusk dał się nawet przebrać za maharadżę. Od lat na subkontynent pielgrzymują Amerykanie, Niemcy, Francuzi albo Rosjanie. Bo Indie to już za chwilę naprawdę będzie \"trzecia potęga świata\".",
+   "source": "Interia Biznes",
+   "section": "ogolne",
+   "lang": "pl",
+   "importance": 78,
+   "clusterId": 8,
+   "isOpinion": false,
+   "publishedAt": "2026-11-03T05:40:02.000Z",
+   "link": "https://biznes.interia.pl/felietony/news-polka-ekonomiczna-48-dlaczego-indiami-trzeba-sie-interesowac,nId,23567796",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "Wydatki Ukraińców wróciły do poziomu sprzed pandemii. 3,5 mld zł w pół roku",
+   "description": "W pierwszym półroczu cudzoziemcy przekraczający granicę z Ukrainą wydali w Polsce prawie 3,5 mld zł - niemal tyle samo, co w analogicznym okresie 2019 roku - wynika z analizy Personnel Service specjalizującej się w rekrutacji ze Wschodu. W imporcie do Ukrainy rośnie też rola Baltic Hubu w Gdańsku.",
+   "source": "Interia Biznes",
+   "section": "ogolne",
+   "lang": "pl",
+   "importance": 84,
+   "clusterId": 9,
+   "isOpinion": false,
+   "publishedAt": "2026-11-03T05:30:01.000Z",
+   "link": "https://biznes.interia.pl/gospodarka/news-ukraincy-nie-szczedza-wydatkow-w-polsce-rekord-coraz-blizej,nId,23567702",
+   "expected": [],
+   "ok": [
+    "gospodarka"
+   ]
+  },
+  {
+   "title": "Przed wypłatą nie pytają o staż pracy. Dają 7000 zł świadczenia",
+   "description": "Emerytura honorowa to najwyższe świadczenie dla seniorów w Polsce. Zakład Ubezpieczeń Społecznych co miesiąc wysyła 6938,92 zł, a do przyznania tych pieniędzy nie wymaga ani dnia stażu pracy.",
+   "source": "Interia Biznes",
+   "section": "ogolne",
+   "lang": "pl",
+   "importance": 77,
+   "clusterId": 10,
+   "isOpinion": false,
+   "publishedAt": "2026-11-03T05:20:01.000Z",
+   "link": "https://biznes.interia.pl/emerytury/news-prawie-7000-zl-swiadczenia-co-miesiac-zus-nie-wymaga-ani-dni,nId,23567681",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "Kluczowa decyzja dla portfeli tysięcy Polaków. Co zrobi RPP?",
+   "description": "Na rozpoczynającym się we wtorek posiedzeniu Rady Polityki Pieniężnej nie będzie podwyżki stóp procentowych – prognozuje Adam Antoniak z ING Banku Śląskiego. Jego zdaniem, jeśli dojdzie do podwyższenia stóp, to może to nastąpić w I kwartale 2027 r.",
+   "source": "Money.pl",
+   "section": "ogolne",
+   "lang": "pl",
+   "importance": 73,
+   "clusterId": 11,
+   "isOpinion": false,
+   "publishedAt": "2026-11-03T05:15:46.000Z",
+   "link": "https://www.money.pl/gospodarka/kluczowa-decyzja-dla-portfeli-tysiecy-polakow-co-zrobi-rpp-7346921916058080a.html",
+   "expected": [
+    "rynki"
+   ],
+   "ok": []
+  },
+  {
+   "title": "Polska w czołówce UE pod względem kosztów prądu. Znamy przyczyny",
+   "description": "Polska znalazła się na drugim miejscu w Unii Europejskiej pod względem kosztów energii elektrycznej dla gospodarstw domowych, jeśli uwzględnić siłę nabywczą mieszkańców. - Główną przyczyną jest nasz miks energetyczny, a dokładniej transformacja, której w niektórych obszarach po prostu nie przeprowadziliśmy - mówi w rozmowie z Interią Biznes Bartłomiej Orzeł z Project Tempo.",
+   "source": "Interia Biznes",
+   "section": "ogolne",
+   "lang": "pl",
+   "importance": 76,
+   "clusterId": 12,
+   "isOpinion": false,
+   "publishedAt": "2026-11-03T05:13:40.000Z",
+   "link": "https://biznes.interia.pl/finanse/news-polska-z-najwyzszymi-rachunkami-za-prad-w-europie-za-co-tyle,nId,23567550",
+   "expected": [
+    "ceny"
+   ],
+   "ok": []
+  },
+  {
+   "title": "Emerytura w listopadzie w nowych terminach. Niektórzy dostaną wcześniej",
+   "description": "W listopadzie ZUS zmienia terminy wypłat świadczeń emerytalnych. Wszystko przez dni wolne od pracy. Niektórzy seniorzy dostaną przelewy wcześniej. Jak ZUS realizuje przelewy, kiedy termin wypłaty wypada w dzień wolny od pracy?",
+   "source": "Interia Biznes",
+   "section": "ogolne",
+   "lang": "pl",
+   "importance": 76,
+   "clusterId": 13,
+   "isOpinion": false,
+   "publishedAt": "2026-11-03T05:10:01.000Z",
+   "link": "https://biznes.interia.pl/emerytury/news-zus-zmienia-terminy-wyplat-w-listopadzie-oni-dostana-pieniad,nId,23567614",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "Adam Glapiński znalazł się na niebezpiecznym zakręcie. NBP wpadnie w głęboki kryzys już za dwa dni",
+   "description": "Od 5 listopada zarząd Narodowego Banku Polskiego może działać w składzie poniżej ustawowego minimum, a Adam Glapiński mierzy się z perspektywą postawienia go przed Trybunałem Stanu. Nowe nominacje do zarządu NBP blokuje premier Donald Tusk, a zbliżająca się decyzja Sejmu może pozbawić Glapińskiego w ogóle możliwości kierowania bankiem centralnym.",
+   "source": "wnp.pl",
+   "section": "przemysl",
+   "lang": "pl",
+   "importance": 76,
+   "clusterId": 14,
+   "isOpinion": false,
+   "publishedAt": "2026-11-03T05:01:00.000Z",
+   "link": "https://www.wnp.pl/rynki/adam-glapinski-znalazl-sie-na-niebezpiecznym-zakrecie-nbp-wpadnie-w-gleboki-kryzys-juz-za-dwa-dni,1115387.html",
+   "expected": [
+    "rynki"
+   ],
+   "ok": []
+  },
+  {
+   "title": "Firmy znów ruszyły po kredyty. Banki widzą szansę na większe zyski",
+   "description": "Banki już od początku tego roku ruszyły z kredytem dla gospodarki, widząc, że wśród przedsiębiorstw pojawił się popyt, także na inwestycje. Millennium chwali się, że w ciągu półtora roku kredyty korporacyjne w jego portfelu wzrosły aż o 38 proc., i w tej kategorii pokonał całą konkurencję. Wzrost biznesu to jedyna szansa dla banków, żeby obronić wyniki w warunkach spadku stóp procentowych. I to po",
+   "source": "Interia Biznes",
+   "section": "ogolne",
+   "lang": "pl",
+   "importance": 81,
+   "clusterId": 15,
+   "isOpinion": false,
+   "publishedAt": "2026-11-03T05:00:01.000Z",
+   "link": "https://biznes.interia.pl/gospodarka/news-roszczenia-frankowiczow-dogasaja-zyski-bankow-rosna,nId,23567503",
+   "expected": [],
+   "ok": [
+    "gospodarka"
+   ]
+  },
+  {
+   "title": "Do drzwi pukają obowiązkowe kontrole. Proszą o udostępnienie lokali",
+   "description": "Sezon grzewczy już w pełni. Niejedna wspólnota mieszkaniowa rozesłała do lokatorów wiadomości o obowiązkowym przeglądzie. Kontrola przychodzi w celu sprawdzenia wentylacji w domu.",
+   "source": "Interia Biznes",
+   "section": "ogolne",
+   "lang": "pl",
+   "importance": 75,
+   "clusterId": 16,
+   "isOpinion": false,
+   "publishedAt": "2026-11-03T05:00:01.000Z",
+   "link": "https://biznes.interia.pl/finanse/news-obowiazkowa-kontrola-juz-dostaja-listy-prosimy-o-udostepnien,nId,23567493",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "Górniczy gigant ponownie bez prezesa. \"W przypadku JSW można łatwo się sparzyć\"",
+   "description": "Jastrzębska Spółka Węglowa (JSW) znajduje się w trudnej sytuacji. - Pod koniec przyszłego roku odbędą się wybory parlamentarne, więc może pojawić się pokusa, aby renegocjować zawieszenie przywilejów pracowniczych - przewiduje w rozmowie z WNP Jakub Szkopek, analityk Erste Securities Polska.",
+   "source": "wnp.pl",
+   "section": "przemysl",
+   "lang": "pl",
+   "importance": 82,
+   "clusterId": 17,
+   "isOpinion": false,
+   "publishedAt": "2026-11-03T05:00:00.000Z",
+   "link": "https://www.wnp.pl/energia/gorniczy-gigant-na-zakrecie-w-przypadku-jsw-mozna-latwo-sie-sparzyc,1115448.html",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "Fuji Media and SBI to form joint venture",
+   "description": "The capital and business alliance will focus on media and content production when it is established in January next year.",
+   "source": "The Japan Times — Business",
+   "section": "swiat",
+   "lang": "en",
+   "importance": 38,
+   "clusterId": 18,
+   "isOpinion": false,
+   "publishedAt": "2026-11-03T03:31:00.000Z",
+   "link": "https://www.japantimes.co.jp/business/2026/11/03/companies/sbi-fuji-media-business-alliance/",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "Disney plans thousands of layoffs while targeting 20% cost savings",
+   "description": "Some of the company's operations, ranging from theme parks, TV network and a movie studio, will be affected disproportionately.",
+   "source": "The Japan Times — Business",
+   "section": "swiat",
+   "lang": "en",
+   "importance": 52,
+   "clusterId": 19,
+   "isOpinion": false,
+   "publishedAt": "2026-11-03T03:20:00.000Z",
+   "link": "https://www.japantimes.co.jp/business/2026/11/03/companies/disney-layoffs-cost-savings/",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "Here’s why Palantir’s stock is down despite a ‘bombastic’ quarter",
+   "description": "A deceleration in U.S. commercial contract growth gave some Wall Street analysts pause despite Palantir’s earnings beat.",
+   "source": "MarketWatch",
+   "section": "swiat",
+   "lang": "en",
+   "importance": 40,
+   "clusterId": 20,
+   "isOpinion": false,
+   "publishedAt": "2026-11-03T00:59:00.000Z",
+   "link": "https://www.marketwatch.com/story/heres-why-palantirs-stock-is-down-despite-a-bombastic-quarter-42c9fdb8?mod=mw_rss_topstories",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "Apple’s iPhone business is booming. Here’s why the stock is falling anyway.",
+   "description": "Although iPhone demand remains strong, Apple faces a worsening memory crunch and a slowing services business.",
+   "source": "MarketWatch",
+   "section": "swiat",
+   "lang": "en",
+   "importance": 40,
+   "clusterId": 21,
+   "isOpinion": false,
+   "publishedAt": "2026-11-03T00:52:00.000Z",
+   "link": "https://www.marketwatch.com/story/apples-iphone-business-is-booming-heres-why-the-stock-is-falling-anyway-07de9fff?mod=mw_rss_topstories",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "Nasdaq-100 tumbles into its third correction this year as AI worries mount",
+   "description": "The “tech wreck” from October continues. Is a bear market next?",
+   "source": "MarketWatch",
+   "section": "swiat",
+   "lang": "en",
+   "importance": 38,
+   "clusterId": 22,
+   "isOpinion": false,
+   "publishedAt": "2026-11-03T00:03:00.000Z",
+   "link": "https://www.marketwatch.com/story/nasdaq-100-tumbles-into-its-third-correction-this-year-as-ai-worries-mount-abee4c0d?mod=mw_rss_topstories",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "Marvell and Lumentum shareholders unite in panning merger deal: ‘It’s a trash offer’",
+   "description": "Shares of both companies fell Monday after Marvell said it reached an all-stock agreement to buy Lumentum.",
+   "source": "MarketWatch",
+   "section": "swiat",
+   "lang": "en",
+   "importance": 37,
+   "clusterId": 23,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T23:39:00.000Z",
+   "link": "https://www.marketwatch.com/story/marvell-and-lumentum-shareholders-unite-in-panning-merger-deal-its-a-trash-offer-53a9f307?mod=mw_rss_topstories",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "Litr oleju po frytkach to 123 ładowania telefonu, a większość Polaków wciąż go marnuje",
+   "description": "Litr zużytego oleju spożywczego może po przetworzeniu na biopaliwo dostarczyć około 2,7 kWh energii elektrycznej. Według wyliczeń projektu Olejomaty wystarczyłoby to na około 123 pełne ładowania iPhone’a 16, już po uwzględnieniu strat przy produkcji prądu i ładowaniu baterii. Tymczasem ponad połowa Polaków nadal wylewa taki tłuszcz do kanalizacji albo wyrzuca go do śmieci. Porównanie z telefonem m",
+   "source": "300Gospodarka",
+   "section": "ogolne",
+   "lang": "pl",
+   "importance": 33,
+   "clusterId": 24,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T22:53:30.000Z",
+   "link": "https://300gospodarka.pl/news/na-ile-ladowan-telefonu-starcza-litr-zuzytego-oleju-po-frytkach",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "Warszawa nie zawsze płaci najlepiej. W produkcji różnice sięgają tysięcy złotych",
+   "description": "Firmy produkcyjne ostrożniej zwiększają zatrudnienie, ale nadal mocno konkurują o specjalistów technicznych. Największy popyt utrzymuje się m.in. w kontroli jakości i utrzymaniu ruchu, a różnice płac między stanowiskami i regionami sięgają kilku tysięcy złotych miesięcznie. Z raportu Gi Group wynika, że automatyk w Trójmieście może zarobić do 12,1 tys. zł brutto wynagrodzenia zasadniczego, a kiero",
+   "source": "300Gospodarka",
+   "section": "ogolne",
+   "lang": "pl",
+   "importance": 41,
+   "clusterId": 25,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T22:44:13.000Z",
+   "link": "https://300gospodarka.pl/news/warszawa-nie-zawsze-placi-najlepiej-w-produkcji-roznice-siegaja-tysiecy-zlotych",
+   "expected": [
+    "praca"
+   ],
+   "ok": []
+  },
+  {
+   "title": "Traders rushing into a leveraged ETF to make a bullish bet on the Nasdaq-100 just got burned",
+   "description": "Some investors appeared a little too eager to buy the dip in technology stocks last month.",
+   "source": "MarketWatch",
+   "section": "swiat",
+   "lang": "en",
+   "importance": 26,
+   "clusterId": 26,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T22:03:00.000Z",
+   "link": "https://www.marketwatch.com/story/traders-rushing-into-a-leveraged-etf-to-make-a-bullish-bet-on-the-nasdaq-100-just-got-burned-d6775191?mod=mw_rss_topstories",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "Wall Street’s most hated stocks are faring far better than its favorites",
+   "description": "The thrashing that Wall Street’s artificial-intelligence darlings have taken over the past few months has led to an unusual situation in the U.S. stock market.",
+   "source": "MarketWatch",
+   "section": "swiat",
+   "lang": "en",
+   "importance": 32,
+   "clusterId": 27,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T21:45:00.000Z",
+   "link": "https://www.marketwatch.com/story/wall-streets-most-hated-stocks-are-faring-far-better-than-its-favorites-4c1d6c68?mod=mw_rss_topstories",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "Want to help your adult kids and grandkids? Give them money while you’re still alive.",
+   "description": "How to manage “giving while living” without endangering your own retirement.",
+   "source": "MarketWatch",
+   "section": "swiat",
+   "lang": "en",
+   "importance": 25,
+   "clusterId": 28,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T21:35:00.000Z",
+   "link": "https://www.marketwatch.com/story/if-you-really-want-to-help-your-adult-kids-and-grandkids-give-them-money-while-youre-still-alive-bef6b056?mod=mw_rss_topstories",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "The stock market has gone nowhere for the past 5 months. It’s now looking like a bargain.",
+   "description": "The S&P 500’s forward price-to-earnings ratio is below its five-year and 10-year averages.",
+   "source": "MarketWatch",
+   "section": "swiat",
+   "lang": "en",
+   "importance": 25,
+   "clusterId": 29,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T21:29:00.000Z",
+   "link": "https://www.marketwatch.com/story/the-stock-market-has-gone-nowhere-for-the-past-5-months-its-now-looking-like-a-bargain-150914c2?mod=mw_rss_topstories",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "\"Nikt nie jest przygotowany\". Polak wrócił do OpenAI i ostrzega",
+   "description": "- Obawiam się, że nikt nie jest przygotowany - napisał Jakub Pachocki, główny naukowiec OpenAI, w eseju o tempie rozwoju sztucznej inteligencji. Prof. Aleksander Mądry z MIT mówi w Biznes Klasie, że całkowicie się z nim zgadza i że właśnie dlatego wraca do OpenAI. Zobacz fragment rozmowy w \"Biznes Klasie\"",
+   "source": "Money.pl",
+   "section": "ogolne",
+   "lang": "pl",
+   "importance": 32,
+   "clusterId": 30,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T21:04:58.000Z",
+   "link": "https://www.money.pl/pieniadze/nikt-nie-jest-przygotowany-polak-wrocil-do-openai-i-ostrzega-7346724377053664v.html",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "Mostostal Warszawa najgorsze ma już za sobą? Jest nowy kontrakt za ponad 300 mln zł",
+   "description": "Mostostal Warszawa podpisał umowę na budowę budynku dla Politechniki Poznańskiej. Wartość umowy to 307,32 mln zł brutto. To pierwszy duży kontrakt Mostostalu Warszawa od wielu miesięcy. Nadzwyczajne walne zgromadzenie akcjonariuszy 30 października przyjęło uchwałę o emisji do 100 mln akcji po cenie emisyjnej nie mniejszej niż 2,75 zł. Ma to być jeden ze sposobów poprawy sytuacji w Mostostalu Warsz",
+   "source": "wnp.pl",
+   "section": "przemysl",
+   "lang": "pl",
+   "importance": 39,
+   "clusterId": 31,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T20:30:00.000Z",
+   "link": "https://www.wnp.pl/budownictwo/mostostal-warszawa-najgorsze-ma-juz-za-soba-jest-nowy-kontrakt-za-307-mln-i-ratunkowa-emisja-akcji,1115545.html",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "Zakaz alkoholu uderzy w gospodarkę. Straty liczone w setkach milionów",
+   "description": "Trwają prace nad ustawą zakazującą reklamy alkoholu w Polsce. Obecnie o jej przyszłości debatują senatorowie. Jeśli jednak wejdzie w życie, to straty dla gospodarki będą liczone w setkach milionów - alarmuje branża. Ucierpieć mają producenci, ale nie tylko. Wśród \"ofiar\" wymienia się także m.in. media czy kluby sportowe. Bardziej restrykcyjne prawo jest uzasadniane troską o dzieci.",
+   "source": "wnp.pl",
+   "section": "przemysl",
+   "lang": "pl",
+   "importance": 42,
+   "clusterId": 32,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T19:30:00.000Z",
+   "link": "https://www.wnp.pl/rynki/zakaza-reklamy-alkoholu-straty-z-tego-tytulu-sa-liczone-w-setkach-milionow,1114526.html",
+   "expected": [],
+   "ok": [
+    "gospodarka"
+   ]
+  },
+  {
+   "title": "Norwegia szuka rąk do pracy. Napływ Polaków gwałtownie wyhamował",
+   "description": "Brak rąk do pracy staje się jednym z największych zagrożeń dla norweskiej gospodarki. Napływ pracowników z Polski, którzy przez lata uzupełniali braki kadrowe wyraźnie wyhamował. \"Największym zagrożeniem dla norweskiej gospodarki jest brak siły roboczej\" - powiedział minister finansów Jens Stoltenberg.",
+   "source": "Interia Biznes",
+   "section": "ogolne",
+   "lang": "pl",
+   "importance": 34,
+   "clusterId": 33,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T19:26:08.000Z",
+   "link": "https://biznes.interia.pl/praca/news-norwegia-ma-problem-z-pracownikami-polacy-przestaja-ratowac,nId,23567899",
+   "expected": [
+    "praca"
+   ],
+   "ok": []
+  },
+  {
+   "title": "Na Pomorzu rozpoczęto budowę nowej fabryki. Jej koszt to 130 mln zł",
+   "description": "Dekpol Budownictwo rozpoczął realizację obiektu produkcyjno-magazynowego dla grupy Nexler w Skarszewach w woj. pomorskim. Wartość inwestycji to ok. 130 mln zł. Nexler to producent rozwiązań do hydroizolacji.",
+   "source": "wnp.pl",
+   "section": "przemysl",
+   "lang": "pl",
+   "importance": 45,
+   "clusterId": 34,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T19:07:00.000Z",
+   "link": "https://www.wnp.pl/budownictwo/na-pomorzu-rozpoczeto-budowe-nowej-fabryki-jej-koszt-to-130-mln-zl,1115532.html",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "Donald Trump może zaskoczyć rywali. Stać go nawet na rządy bez Kongresu",
+   "description": "Donald Trump aktywnie włącza się w kampanię na rzecz republikanów, żeby utrzymać Kongres. Jednak utrata wsparcia w obydwu izbach amerykańskiego parlamentu nie oznacza, że najważniejszy lokator Białego Domu będzie miał całkiem związane ręce.",
+   "source": "wnp.pl",
+   "section": "przemysl",
+   "lang": "pl",
+   "importance": 41,
+   "clusterId": 35,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T19:00:00.000Z",
+   "link": "https://www.wnp.pl/rynki/donald-trump-moze-zaskoczyc-rywali-stac-go-nawet-na-rzady-bez-kongresu,1115452.html",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "Szpitale czekają na miliony z NFZ. Pacjenci tracą terminy operacji",
+   "description": "Wrocławskie szpitale ograniczają planowe zabiegi i przesuwają przyjęcia nawet na 2027 r. Powodem są zaległości NFZ przekraczające 200 mln zł. Problemy z finansowaniem odbijają się nie tylko na budżetach placówek, ale przede wszystkim na pacjentach.",
+   "source": "Interia Biznes",
+   "section": "ogolne",
+   "lang": "pl",
+   "importance": 28,
+   "clusterId": 36,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T18:40:06.000Z",
+   "link": "https://biznes.interia.pl/gospodarka/news-ponad-200-mln-zl-zaleglosci-nfz-szpitale-przesuwaja-operacje,nId,23567891",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "Tauron z partnerem z branży rolniczej planują wspólne inwestycje",
+   "description": "Tauron Zielona Energia oraz spółka Energia z Rolnictwa złożyły w UOKiK wniosek o wydanie zgody na utworzenie spółki joint-venture. Nowy podmiot miałby się zajmować rozwojem odnawialnych źródeł energii i magazynów energii.",
+   "source": "wnp.pl",
+   "section": "przemysl",
+   "lang": "pl",
+   "importance": 46,
+   "clusterId": 37,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T18:16:00.000Z",
+   "link": "https://www.wnp.pl/energia/tauron-z-partnerem-z-branzy-rolniczej-planuja-wspolne-inwestycje,1115524.html",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "GPW rozpoczyna listopad od spadków. WIG20 poniżej 4 200 pkt, banki tracą, a NewConnect kontynuuje przecenę",
+   "description": "Pierwsza sesja listopada na warszawskiej giełdzie nie przyniosła poprawy nastrojów po piątkowej wyprzedaży. W poniedziałek, 2 listopada 2026 roku, WIG20 stracił 0,68%, kończąc notowania na poziomie 4 152,65 pkt, a szeroki WIG spadł o 0,82%, do 156 383,04 pkt. Największą przecenę spośród głównych indeksów odnotował mWIG40, który obniżył się o 1,45%. Pod presją pozostawał sektor […] Artykuł GPW rozp",
+   "source": "inwestycje.pl",
+   "section": "gielda",
+   "lang": "pl",
+   "importance": 26,
+   "clusterId": 38,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T18:04:53.000Z",
+   "link": "https://inwestycje.pl/gielda/gpw-rozpoczyna-listopad-od-spadkow-wig20-ponizej-4-200-pkt-banki-traca-a-newconnect-kontynuuje-przecene/",
+   "expected": [
+    "rynki"
+   ],
+   "ok": []
+  },
+  {
+   "title": "Bliźniaczy projekt zmian w podatkach. Chcą uniknąć zarzutu o niekonstytucyjność",
+   "description": "Ministerstwo Finansów ponownie przedstawiło projekt zmian w podatkach dochodowych. Jest on bliźniaczo podobny do tego, który jest właśnie procedowany w parlamencie. Rząd chce w ten sposób zniwelować ryzyko zarzutów dotyczących jego konstytucyjności.",
+   "source": "Money.pl",
+   "section": "ogolne",
+   "lang": "pl",
+   "importance": 37,
+   "clusterId": 39,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T17:51:28.000Z",
+   "link": "https://www.money.pl/podatki/blizniaczy-projekt-zmian-w-podatkach-chca-uniknac-zarzutu-o-niekonstytucyjnosc-7346751709419968a.html",
+   "expected": [],
+   "ok": [
+    "gospodarka"
+   ]
+  },
+  {
+   "title": "Chaos wokół zmian w podatkach. Resort finansów składa nowy projekt ustawy",
+   "description": "Ministerstwo Finansów przygotowało kolejny projekt ustawy o zmianie progów podatkowych w PIT i stawki CIT. Choć jest podobny do projektu, który przeszedł już przez Sejm i Senat, MF składa go \"aby uniknąć zastrzeżeń co do konstytucyjności nowych przepisów\".",
+   "source": "Interia Biznes",
+   "section": "ogolne",
+   "lang": "pl",
+   "importance": 35,
+   "clusterId": 40,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T17:34:32.000Z",
+   "link": "https://biznes.interia.pl/podatki/news-nowy-projekt-ustaw-podatkowych-mf-chce-uniknac-zastrzezen-ko,nId,23567871",
+   "expected": [],
+   "ok": [
+    "gospodarka"
+   ]
+  },
+  {
+   "title": "Przedsiębiorcy biją na alarm. Kryzys w TK może uderzyć w gospodarkę",
+   "description": "Przedłużający się kryzys wokół Trybunału Konstytucyjnego może osłabić zaufanie inwestorów do Polski, podnieść koszt kapitału i zahamować decyzje biznesowe. Rada Przedsiębiorczości apeluje do władz o pilne porozumienie i zakończenie sporu.",
+   "source": "Interia Biznes",
+   "section": "ogolne",
+   "lang": "pl",
+   "importance": 30,
+   "clusterId": 41,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T17:32:44.000Z",
+   "link": "https://biznes.interia.pl/gospodarka/news-przedsiebiorcy-bija-na-alarm-ws-tk-kapital-mozna-stracic,nId,23567872",
+   "expected": [],
+   "ok": [
+    "gospodarka"
+   ]
+  },
+  {
+   "title": "Tauron pokazał wyniki finansowe. Zysk w trzecim kwartale przekroczył miliard złotych",
+   "description": "Zysk netto grupy Tauron w trzecim kwartale 2026 był o 21 proc. wyższy niż w trzecim kwartale 2025: 1,02 mld zł wobec 844 mln zł.",
+   "source": "wnp.pl",
+   "section": "przemysl",
+   "lang": "pl",
+   "importance": 41,
+   "clusterId": 42,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T17:32:00.000Z",
+   "link": "https://www.wnp.pl/energia/tauron-pokazal-wyniki-finansowe-zysk-w-trzecim-kwartale-przekroczyl-miliard-zlotych,1115520.html",
+   "expected": [],
+   "ok": [
+    "rynki"
+   ]
+  },
+  {
+   "title": "KGHM odbija po mocnej przecenie, ale spadki dominują na GPW",
+   "description": "Poniedziałkowa sesja, 2 listopada 2026 r., przyniosła przewagę spadków wśród 20 analizowanych spółek na GPW. Wzrosty zanotowało 11 spółek, a dziewięć zakończyło dzień na minusie. Najmocniej zyskał KGHM, który odbił po piątkowej przecenie. Po przeciwnej stronie znalazły się Bank Pekao, Pepco i Tauron. KGHM liderem wzrostów na GPW Najlepszą sesję spośród analizowanych spółek zaliczył KGHM. […] Artyk",
+   "source": "inwestycje.pl",
+   "section": "gielda",
+   "lang": "pl",
+   "importance": 30,
+   "clusterId": 43,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T17:07:19.000Z",
+   "link": "https://inwestycje.pl/gielda/kghm-odbija-po-mocnej-przecenie-ale-spadki-dominuja-na-gpw/",
+   "expected": [
+    "rynki"
+   ],
+   "ok": []
+  },
+  {
+   "title": "\"Wykorzystamy srogą zimę\". Górnicy z Bogdanki grożą strajkiem",
+   "description": "Związkowcy z Bogdanki szykują strajk. – Jako górnicy wykorzystamy srogą zimę, żeby pokazać społeczeństwu, że węgiel jest potrzebny – mówi nam Jarosław Niemiec ze związku zawodowego \"Przeróbka\". Protestują przeciwko niewywiązaniu się z porozumień płacowych i ograniczeniu premii, domagając się jednocześnie gwarancji zatrudnienia oraz zabezpieczenia przyszłości kopalni.",
+   "source": "Money.pl",
+   "section": "ogolne",
+   "lang": "pl",
+   "importance": 24,
+   "clusterId": 44,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T17:06:57.000Z",
+   "link": "https://www.money.pl/gospodarka/wykorzystamy-sroga-zime-gornicy-z-bogdanki-groza-strajkiem-7346684226857440a.html",
+   "expected": [
+    "praca"
+   ],
+   "ok": []
+  },
+  {
+   "title": "Ważny tydzień dla polskich aktywów",
+   "description": "Nadchodzące dni przyniosą dwa istotne wydarzenia dla krajowego rynku finansowego. W środę, 4 listopada, poznamy decyzję Rady Polityki Pieniężnej w sprawie stóp procentowych, a w piątek agencja S&P przeprowadzi przegląd ratingu Polski. Oba wydarzenia mogą wpłynąć na nastroje inwestorów, notowania złotego oraz krajowy rynek długu. W przypadku rynku akcji znaczenie będzie miała przede wszystkim ocena",
+   "source": "inwestycje.pl",
+   "section": "gielda",
+   "lang": "pl",
+   "importance": 25,
+   "clusterId": 45,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T17:02:59.000Z",
+   "link": "https://inwestycje.pl/gielda/wazny-tydzien-dla-polskich-aktywow/",
+   "expected": [
+    "rynki"
+   ],
+   "ok": []
+  },
+  {
+   "title": "Oddano ważną inwestycję na lotnisku w Pyrzowicach",
+   "description": "Przy porcie lotniczym w Pyrzowicach oddano do użytku kolejną inwestycję realizowaną w ramach programu rozwoju infrastruktury na lata 2024–2032. Zakończył się drugi etap budowy parkingu terenowego P5, zlokalizowanego w południowo-wschodniej części lotniska. Koszt realizacji tego przedsięwzięcia wyniósł 12 mln zł netto.",
+   "source": "wnp.pl",
+   "section": "przemysl",
+   "lang": "pl",
+   "importance": 39,
+   "clusterId": 46,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T17:01:00.000Z",
+   "link": "https://www.wnp.pl/logistyka/oddano-wazna-inwestycje-na-lotnisku-w-pyrzowicach,1115485.html",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "Indeks WIG20 spadł o 0,68% na zamknięciu w poniedziałek",
+   "description": "Indeks giełdowy WIG20 spadł o 0,68% wobec poprzedniego zamknięcia i osiągnął poziom 4 152,65 pkt w poniedziałek, 02 listopada. Indeks WIG spadł o 0,82% wobec poprzedniego zamknięcia i osiągnął 156 383,04 pkt. Indeks mWIG40 spadł o 1,45% i osiągnął poziom 10 521,99 pkt, zaś sWIG80 spadł o 0,95% do 29 326,88 pkt. Obroty na rynku akcji wyniosły 2954,54 mln […] Artykuł Indeks WIG20 spadł o 0,68% na za",
+   "source": "inwestycje.pl",
+   "section": "gielda",
+   "lang": "pl",
+   "importance": 32,
+   "clusterId": 38,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T16:55:14.000Z",
+   "link": "https://inwestycje.pl/gielda/indeks-wig20-spadl-o-068-na-zamknieciu-w-poniedzialek/",
+   "expected": [
+    "rynki"
+   ],
+   "ok": []
+  },
+  {
+   "title": "Erste Bank Polska z 1,49 mld zł zysku. Bank poprawia jakość kredytów, ale rosnące koszty obciążają wyniki. Co dalej z rentownością?",
+   "description": "Erste Bank Polska zakończył III kwartał 2026 roku z zyskiem netto z działalności kontynuowanej na poziomie 1,49 mld zł, a rentowność kapitału własnego (ROE) wyniosła 18,2%. Choć wynik finansowy był niższy niż przed rokiem, bank odnotował wzrost wyniku odsetkowego, poprawę jakości portfela kredytowego oraz dalszy rozwój działalności. Jednocześnie instytucja przechodzi proces integracji z austriacką",
+   "source": "inwestycje.pl",
+   "section": "gielda",
+   "lang": "pl",
+   "importance": 22,
+   "clusterId": 47,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T16:50:00.000Z",
+   "link": "https://inwestycje.pl/gielda/erste-bank-polska-z-149-mld-zl-zysku-bank-poprawia-jakosc-kredytow-ale-rosnace-koszty-obciazaja-wyniki-co-dalej-z-rentownoscia/",
+   "expected": [],
+   "ok": [
+    "rynki"
+   ]
+  },
+  {
+   "title": "Blisko 60 proc. konsumentów sprawdza skład żywności. Producentom ufamy mniej niż bliskim",
+   "description": "Blisko 60 proc. Polaków zwraca uwagę na tzw. czysty skład żywności, ale producenci nie należą do źródeł, którym konsumenci ufają najbardziej. Wyżej plasują się rodzina i znajomi, naukowcy oraz dietetycy. Młodsi kupujący częściej niż starsi sprawdzają informacje o produktach także za pomocą sztucznej inteligencji. Takie wnioski można wyciągnąć z raportu PRCN „Clean food po polsku”. „Czysty skład” n",
+   "source": "300Gospodarka",
+   "section": "ogolne",
+   "lang": "pl",
+   "importance": 30,
+   "clusterId": 48,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T16:42:50.000Z",
+   "link": "https://300gospodarka.pl/news/blisko-60-proc-konsumentow-sprawdza-sklad-zywnosci-producentom-ufamy-mniej-niz-bliskim",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "Strajki u niemieckich gigantów. Pracownicy walczą o wyższe pensje",
+   "description": "Strajki w niemieckim przemyśle metalowym i elektrotechnicznym nabierają tempa. Pracownicy Audi, Mercedes-Benz i Tata Steel domagają się 5-procentowych podwyżek, ochrony miejsc pracy i udziału w zyskach firm. Spór obejmuje 3,7 mln zatrudnionych.",
+   "source": "Interia Biznes",
+   "section": "ogolne",
+   "lang": "pl",
+   "importance": 31,
+   "clusterId": 49,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T16:40:55.000Z",
+   "link": "https://biznes.interia.pl/praca/news-niemiecki-przemysl-staje-strajkuja-pracownicy-audi-i-mercede,nId,23567849",
+   "expected": [],
+   "ok": [
+    "praca"
+   ]
+  },
+  {
+   "title": "Polska spółka informatyczna poprawiła swoje wyniki finansowe. Szczegóły poznamy za kilka dni",
+   "description": "Spółka informatyczna Sygnity według wstępnych danych po trzech kwartałach 2026 r. wypracowała na poziomie skonsolidowanym 336,3 mln zł przychodów netto. W tym czasie zysk netto wyniósł 75,9 mln zł. Pełne, zaudytowane wyniki finansowe zostaną przedstawione 10 listopada.",
+   "source": "wnp.pl",
+   "section": "przemysl",
+   "lang": "pl",
+   "importance": 38,
+   "clusterId": 50,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T16:19:25.000Z",
+   "link": "https://www.wnp.pl/tech/polska-spolka-informatyczna-poprawila-swoje-wyniki-finansowe-szczegoly-poznamy-za-kilka-dni,1115499.html",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "Nieprawidłowości na ponad 120 mld zł. Skarbówka zawiadamia prokuraturę",
+   "description": "Nieprawidłowości w wydatkowaniu środków publicznych na 120 mld zł wykryła Krajowa Administracja Skarbowa podczas audytu. Skierowano zawiadomienia do prokuratury.",
+   "source": "Interia Biznes",
+   "section": "ogolne",
+   "lang": "pl",
+   "importance": 30,
+   "clusterId": 51,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T16:13:08.000Z",
+   "link": "https://biznes.interia.pl/podatki/news-nieprawidlowosci-na-ponad-120-mld-zl-skarbowka-zawiadamia-pr,nId,23567850",
+   "expected": [],
+   "ok": [
+    "gospodarka"
+   ]
+  },
+  {
+   "title": "IKZE z wyższymi limitami. W 2027 r. wpłacisz więcej",
+   "description": "Osoby, które odkładają pieniądze na IKZE, będą mogły wpłacić na konto więcej niż w tym roku. W 2027 r. limit dla większości oszczędzających wzrośnie do 12 039,60 zł, a dla prowadzących pozarolniczą działalność do 18 059,40 zł. Tegoroczny limit można wykorzystać do końca grudnia.",
+   "source": "Money.pl",
+   "section": "ogolne",
+   "lang": "pl",
+   "importance": 22,
+   "clusterId": 52,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T16:10:36.000Z",
+   "link": "https://www.money.pl/emerytury/ikze-z-wyzszymi-limitami-w-2027-r-wplacisz-wiecej-7346729536879040a.html",
+   "expected": [],
+   "ok": [
+    "rynki"
+   ]
+  },
+  {
+   "title": "Walka o TK w sieci. Szef Centrum Walki z Dezinformacją nabrał się na deepfake",
+   "description": "Fala dezinformacji wokół wydarzeń w Trybunale Konstytucyjnym, grafika AI udostępniona przez wiceministra cyfryzacji, aktywność botów - tak można opisać ostatnie dni w sieci. Jak w soczewce pokazują nam możliwy obraz przyszłej kampanii parlamentarnej. Czy jako społeczeństwo jesteśmy na to gotowi?",
+   "source": "wnp.pl",
+   "section": "przemysl",
+   "lang": "pl",
+   "importance": 27,
+   "clusterId": 53,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T16:00:00.000Z",
+   "link": "https://www.wnp.pl/tech/ai-zdominowala-walke-o-trybunal-konstytucyjny-w-sieci-polegl-szef-centrum-walki-z-dezinformacja,1115341.html",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "Wybory połówkowe w USA mogą zmienić sytuację firm. W tle akcje na giełdzie",
+   "description": "Wybory połówkowe w Stanach Zjednoczonych mogą wpłynąć na spółki, których działalność zależy od decyzji Waszyngtonu. Jak analizuje CNBC, demokratyczne zwycięstwo w Izbie Reprezentantów lub Senacie zwiększyłoby presję na firmy z sektorów obronnego, medycznego, finansowego i technologicznego, choć prezydent Donald Trump zachowałby prawo weta.",
+   "source": "Money.pl",
+   "section": "ogolne",
+   "lang": "pl",
+   "importance": 28,
+   "clusterId": 54,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T15:56:20.000Z",
+   "link": "https://www.money.pl/gielda/wybory-polowkowe-w-usa-moga-zmienic-sytuacje-firm-w-tle-akcje-na-gieldzie-7346717339671008a.html",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "Polska spółka z branży stalowej wypracowała zysk. Sytuacja na rynku nadal trudna",
+   "description": "Jednostkowy zysk netto działającej w branży stalowej spółki Bowim za trzy kwartały 2026 r. wyniósł 16,5 mln zł, podczas gdy w tym samym okresie roku 2025 r. spółka miała stratę. Bowim podkreśla, że w samym trzecim kwartale 2026 r. koniunktura gospodarcza na rynkach, na których spółka prowadzi działalność, pozostawała osłabiona.",
+   "source": "wnp.pl",
+   "section": "przemysl",
+   "lang": "pl",
+   "importance": 37,
+   "clusterId": 55,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T15:56:00.000Z",
+   "link": "https://www.wnp.pl/przemysl/polska-spolka-z-branzy-stalowej-wypracowala-zysk-sytuacja-na-rynku-nadal-trudna,1115464.html",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "Droższe paliwo zmienia plany Ryanaira. Pasażerowie zapłacą więcej",
+   "description": "Ryanair przygotowuje się na kosztowny 2027 rok. Droższe paliwo może zwiększyć jego rachunki nawet o 2 mld euro, dlatego przewoźnik rozważa zamrożenie wynagrodzeń i cięcia operacyjne. Pasażerowie mają natomiast przygotować się na dwucyfrowe podwyżki cen biletów.",
+   "source": "Interia Biznes",
+   "section": "ogolne",
+   "lang": "pl",
+   "importance": 29,
+   "clusterId": 56,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T15:54:28.000Z",
+   "link": "https://biznes.interia.pl/firma/news-ryanair-szykuje-podwyzki-cen-biletow-tanie-latanie-bedzie-dr,nId,23567819",
+   "expected": [],
+   "ok": [
+    "ceny"
+   ]
+  },
+  {
+   "title": "Ameryka chce sprzedawać Europie rosyjski gaz. To ma powstrzymać Rosję",
+   "description": "Amerykanie chcą obejść unijne sankcje i ponownie otworzyć drogę dla rosyjskiego gazu do Europy, licząc na wyhamowanie agresji Rosji. To zwrot w strategii Waszyngtonu, który wywołuje ostre sprzeciwy wśród kluczowych państw Starego Kontynentu.",
+   "source": "Interia Biznes",
+   "section": "ogolne",
+   "lang": "pl",
+   "importance": 26,
+   "clusterId": 57,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T15:43:41.000Z",
+   "link": "https://biznes.interia.pl/gospodarka/news-ameryka-chce-sprzedawac-europie-rosyjski-gaz-to-ma-powstrzym,nId,23567784",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "Binance po ataku hakerów. Klienci ruszyli po pieniądze, wypłacono już ok. 5 mld dolarów",
+   "description": "Użytkownicy giełdy kryptowalut Binance po wznowieniu działalności po bezprecedensowym ataku hakerskim w ciągu kilku godzin wypłacili z rachunków ok. 5 mld dolarów. Binance potwierdziła, że ze środków własnych i zgromadzonych rezerw na zdarzenia nadzwyczajne pokryje klientom poniesione przez nich straty szacowane na 6,3 mld dolarów.",
+   "source": "wnp.pl",
+   "section": "przemysl",
+   "lang": "pl",
+   "importance": 29,
+   "clusterId": 58,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T15:39:00.000Z",
+   "link": "https://www.wnp.pl/rynki/binance-po-ataku-hakerow-klienci-ruszyli-po-pieniadze-wyplacono-juz-ok-5-mld-dolarow,1115467.html",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "Cenowy zjazd na rynku ropy. Powód wydaje się oczywisty",
+   "description": "Poniedziałek przyniósł ok. 8-proc. spadki cen na rynku ropy. Amerykańska WTI potaniała z ponad 102 do niemal 95 dolarów za baryłkę, a ropa Brent spadła ze 112 do 104 dolarów za baryłkę. Powodem przeceny jest wiara w możliwą dyplomatyczną deeskalację konfliktu USA-Iran.",
+   "source": "Interia Biznes",
+   "section": "ogolne",
+   "lang": "pl",
+   "importance": 26,
+   "clusterId": 59,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T15:36:49.000Z",
+   "link": "https://biznes.interia.pl/gospodarka/news-cenowy-zjazd-na-rynku-ropy-powod-wydaje-sie-oczywisty,nId,23567829",
+   "expected": [],
+   "ok": [
+    "ceny",
+    "rynki"
+   ]
+  },
+  {
+   "title": "USA sprzedadzą Ukrainie rakiety Patriot. Dostawy najwcześniej w 2030 roku",
+   "description": "Jak poinformował rzecznik Departamentu Stanu USA, 500 rakiet PAC-3 do systemów Patriot zostało sprzedanych Ukrainie. Dostawy planowane są na lata 2030-2033, ale Kijów apeluje o ich przyspieszenie.",
+   "source": "Interia Biznes",
+   "section": "ogolne",
+   "lang": "pl",
+   "importance": 25,
+   "clusterId": 60,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T15:15:13.000Z",
+   "link": "https://biznes.interia.pl/polityka/news-usa-dostarcza-500-rakiet-do-patriotow-na-ukraine-dopiero-od,nId,23567812",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "Wiceprezes znanej firmy budowlanej zrezygnował ze stanowiska",
+   "description": "Paweł Średniawa, wiceprezes Onde, złożył rezygnację z pełnienia funkcji w zarządzie spółki. Nie podano przyczyn rezygnacji.",
+   "source": "wnp.pl",
+   "section": "przemysl",
+   "lang": "pl",
+   "importance": 32,
+   "clusterId": 61,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T15:02:00.000Z",
+   "link": "https://www.wnp.pl/energia/wiceprezes-znanej-firmy-budowlanej-zrezygnowal-ze-stanowiska,1115447.html",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "Rodziny mogą stracić na zmianach w 800 plus. Problemem jest próg dochodowy",
+   "description": "800 plus coraz częściej wraca w dyskusji o stanie finansów publicznych. Wysoki deficyt budżetowy, spadająca siła nabywcza świadczenia i propozycja uzależnienia wypłat od dochodów rodzin stawiają pod znakiem zapytania dotychczasowe zasady programu - zaznacza Robert Gwiazdowski w podcaście wideo \"Gwiazdowski mówi Interii\".",
+   "source": "Interia Biznes",
+   "section": "ogolne",
+   "lang": "pl",
+   "importance": 25,
+   "clusterId": 62,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T15:00:03.000Z",
+   "link": "https://biznes.interia.pl/podcast-gwiazdowski-mowi-interii/video-gwiazdowski-mowi-interii-swiadczenie-800-plus-moze-wymagac-z,nId,23567803",
+   "expected": [],
+   "ok": [
+    "gospodarka"
+   ]
+  },
+  {
+   "title": "Ważna spółka z branży fotowoltaicznej została sprzedana. Nabywca działa w branży stalowej",
+   "description": "Założona przez TDJ w 2023 spółka Enson, projektująca i produkująca konstrukcje dla wielkoskalowych farm fotowoltaicznych została sprzedana. Nabywcą jest Grupa Pruszyński.",
+   "source": "wnp.pl",
+   "section": "przemysl",
+   "lang": "pl",
+   "importance": 32,
+   "clusterId": 63,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T14:57:00.000Z",
+   "link": "https://www.wnp.pl/energia/wazna-spolka-z-branzy-fotowoltaicznej-zostala-sprzedana-nabywca-dziala-w-branzy-stalowej,1115416.html",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "Wartość aktywów PPK przekroczyła 60 mld zł",
+   "description": "Polacy zgromadzili w PPK już ponad 60 mld zł, a w programie uczestniczy obecnie 4,57 mln osób, podał PFR Portal PPK. W samym październiku 2026 r. do programu dołączyło 53 tys. nowych uczestników, a w ciągu ostatniego roku prawie pół miliona. „Przekroczenie 60 mld zł aktywów PPK to sukces uczestników programu, ale także polskiego rynku […] Artykuł Wartość aktywów PPK przekroczyła 60 mld zł pochodzi",
+   "source": "inwestycje.pl",
+   "section": "gielda",
+   "lang": "pl",
+   "importance": 19,
+   "clusterId": 64,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T14:56:34.000Z",
+   "link": "https://inwestycje.pl/gospodarka/wartosc-aktywow-ppk-przekroczyla-60-mld-zl/",
+   "expected": [],
+   "ok": [
+    "rynki"
+   ]
+  },
+  {
+   "title": "Kto płaci najwięcej za prąd w Europie? Polska wśród niechlubnych liderów",
+   "description": "Spadek średnich cen prądu o 2,2 proc. nie zmienił faktu, że Europejczycy nadal płacą za energię więcej niż przed 2022 rokiem. Najnowsze zestawienie Eurostatu wskazuje jednak na ogromne różnice w tym, jak opłaty odczuwają obywatele Unii Europejskiej.",
+   "source": "wnp.pl",
+   "section": "przemysl",
+   "lang": "pl",
+   "importance": 41,
+   "clusterId": 65,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T14:56:00.000Z",
+   "link": "https://www.wnp.pl/energia/kto-placi-najwiecej-za-prad-w-europie-polska-wsrod-niechlubnych-liderow,1115269.html",
+   "expected": [
+    "ceny"
+   ],
+   "ok": []
+  },
+  {
+   "title": "Sygnity miało wstępnie ok. 75,9 mln zł zysku netto w I-III kw. 2026",
+   "description": "Sygnity miało ok. 75,9 mln zł skonsolidowanego zysku netto w okresie I-III kw. 2026 r., podała spółka, powołując się na wstępne dane. „Przychody: ok. 336,3 mln złEBITDA: ok. 102,2 mln złZysk brutto: ok. 92,8 mln złZysk netto: ok. 75,9 mln zł” – czytamy w komunikacie. Ostateczne informacje zostaną przekazane 10 listopada. Sygnity to notowany na GPW producent […] Artykuł Sygnity miało wstępnie ok. 7",
+   "source": "inwestycje.pl",
+   "section": "gielda",
+   "lang": "pl",
+   "importance": 22,
+   "clusterId": 66,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T14:55:40.000Z",
+   "link": "https://inwestycje.pl/gielda/sygnity-mialo-wstepnie-ok-759-mln-zl-zysku-netto-w-i-iii-kw-2026/",
+   "expected": [],
+   "ok": [
+    "rynki"
+   ]
+  },
+  {
+   "title": "Były prezes JSW ma nową pracę. Trafił do górniczego giganta",
+   "description": "Polska Grupa Górnicza poinformowała, że Bogusław Oleksy został wiceprezesem spółki ds. finansowych. Kilka dni temu zrezygnował on ze stanowiska prezesa Jastrzębskiej Spółki Węglowej.",
+   "source": "Interia Biznes",
+   "section": "ogolne",
+   "lang": "pl",
+   "importance": 29,
+   "clusterId": 67,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T14:55:24.000Z",
+   "link": "https://biznes.interia.pl/gospodarka/news-byly-prezes-jsw-ma-nowa-prace-trafil-do-gorniczego-giganta,nId,23567817",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "Lokum Deweloper chce ustanowić nowy program emisji obligacji do wartości 100 mln zł",
+   "description": "Zarząd Lokum Deweloper podjął uchwałę w sprawie wyrażenia zgody na ustanowienie nowego programu emisji obligacji, w ramach którego spółka będzie mogła dokonać emisji (w ramach jednej lub kilku serii) do maksymalnej łącznej wartości nominalnej wyemitowanych obligacji w wysokości 100 mln zł, podała spółka. W związku z powyższym, prowadzi działania mające na celu ustanowienie programu, w tym […] Arty",
+   "source": "inwestycje.pl",
+   "section": "gielda",
+   "lang": "pl",
+   "importance": 24,
+   "clusterId": 68,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T14:55:00.000Z",
+   "link": "https://inwestycje.pl/gielda/lokum-deweloper-chce-ustanowic-nowy-program-emisji-obligacji-do-wartosci-100-mln-zl/",
+   "expected": [],
+   "ok": [
+    "rynki"
+   ]
+  },
+  {
+   "title": "Megalotnisko na razie \"uziemione\". Nowy szef CPK nie daje gwarancji",
+   "description": "Od piątku spółka CPK ma nowego prezesa. Rada nadzorcza tłumacząc latem potrzebę wymiany części zarządu, przekonywała, że na tym etapie projekt budowy Portu Polska potrzeba inżyniera, a nie prawnika. Z pierwszych słów Piotra Borysa wynika, że łatwo nie będzie, a terminy mogą ulec zmianie. Lotnisko na razie jest „uziemione”.",
+   "source": "wnp.pl",
+   "section": "przemysl",
+   "lang": "pl",
+   "importance": 25,
+   "clusterId": 69,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T14:50:00.000Z",
+   "link": "https://www.wnp.pl/logistyka/port-polska-z-opoznieniem-juz-na-starcie-nowy-prezes-cpk-nie-gwarantuje-terminu,1115388.html",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "Chińczycy ruszyli po rosyjski gaz. Właśnie padł rekord",
+   "description": "W niedzielę padł rekord dobowych dostaw gazu do Chin rurociągiem Siła Syberii. Pekin dostawami z Rosji rekompensuje sobie niedobory LNG.",
+   "source": "wnp.pl",
+   "section": "przemysl",
+   "lang": "pl",
+   "importance": 31,
+   "clusterId": 70,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T14:31:00.000Z",
+   "link": "https://www.wnp.pl/energia/chinczycy-ruszyli-po-rosyjski-gaz-wlasnie-padl-rekord,1115437.html",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "Wszystko w rękach premiera. Spór o NBP może zmniejszyć wiarygodność Polski",
+   "description": "Jak podaje Bloomberg, polityczna walka wokół NBP niepokoi inwestorów. Choć póki co spór o Trybunał Konstytucyjny nie wywołał paniki, to zaostrzenie walki o bank centralny może pogorszyć sytuację gospodarczą Polski na arenie międzynarodowej. W sprawę zaangażować mogą się europejskie instytucje.",
+   "source": "Interia Biznes",
+   "section": "ogolne",
+   "lang": "pl",
+   "importance": 28,
+   "clusterId": 71,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T14:16:46.000Z",
+   "link": "https://biznes.interia.pl/gospodarka/news-nie-tylko-trybunal-wiarygodnosc-polski-moze-obnizyc-spor-o-n,nId,23567696",
+   "expected": [
+    "rynki"
+   ],
+   "ok": []
+  },
+  {
+   "title": "Autostrada na południu Polski zyska trzeci pas ruchu. Remont za trzy lata",
+   "description": "GDDKiA przymierza się do poszerzenia autostrady A4 pomiędzy Dulową a Balicami. Dlatego też w poniedziałek podpisała umowę z wykonawcą, który zaprojektuje trzypasmowy, 24-kilometrowy odcinek. Roboty budowlane mają wystartować za ok. 3 lata.",
+   "source": "wnp.pl",
+   "section": "przemysl",
+   "lang": "pl",
+   "importance": 31,
+   "clusterId": 72,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T14:15:00.000Z",
+   "link": "https://www.wnp.pl/logistyka/autostrada-na-poludniu-polski-zyska-trzeci-pas-ruchu-remont-za-trzy-lata,1115443.html",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "Presja konkurencyjna w UE nie słabnie. Polska spółka hutnicza jednak poprawia wyniki",
+   "description": "Stalprodukt zanotował w trzecim kwartale 2026 roku prawie 30 mln zł zysku netto, co jest wynikiem znacząco lepszym wobec około 8 mln zł straty zaraportowanej przed rokiem.",
+   "source": "wnp.pl",
+   "section": "przemysl",
+   "lang": "pl",
+   "importance": 34,
+   "clusterId": 73,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T14:13:00.000Z",
+   "link": "https://www.wnp.pl/przemysl/presja-konkurencyjna-w-ue-nie-slabnie-polska-spolka-hutnicza-jednak-poprawia-wyniki,1115408.html",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "Francuski gigant kolejowy w tarapatach. Co z pociągami dla PKP Intercity?",
+   "description": "Problemy Alstomu z realizacją zamówień na pociągi Coradia Max dla niemieckich odbiorców prowadzą do opóźnień i przekroczenia kosztów, co zmusza francuskiego producenta do rozważenia sprzedaży części aktywów w celu wzmocnienia bilansu.",
+   "source": "wnp.pl",
+   "section": "przemysl",
+   "lang": "pl",
+   "importance": 24,
+   "clusterId": 74,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T14:06:00.000Z",
+   "link": "https://www.wnp.pl/logistyka/alstom-w-tarapatach-rozwaza-sprzedaz-aktywow-problemy-z-pociagami-coradia-max,1115384.html",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "Chińskie AGD wypiera polskie produkty. Branża bije na alarm",
+   "description": "\"Bez szybkich decyzji będziemy rozmawiać o zamykaniu zakładów i utracie miejsc pracy\" - ostrzega branża AGD. Tymczasem udział Chin w unijnym rynku przekroczył już 38 proc., a pozycja Polski słabnie.",
+   "source": "Interia Biznes",
+   "section": "ogolne",
+   "lang": "pl",
+   "importance": 20,
+   "clusterId": 75,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T13:58:09.000Z",
+   "link": "https://biznes.interia.pl/polityka/news-chinskie-agd-wypiera-polskie-produkty-branza-bije-na-alarm,nId,23567586",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "Serbski bank pod lupą śledczych. Prezes miał próbować ucieczki do Rosji",
+   "description": "Prezes serbskiego Alta Banku Davor Macura został zatrzymany po odebraniu instytucji licencji na działalność. Według \"Financial Times\" biznesmen po wyborczej porażce obozu Aleksandara Vuczicia próbował uciec do Moskwy. W tle są rosyjskie przepływy kapitałowe i podejrzenia dotyczące działalności banku.",
+   "source": "Interia Biznes",
+   "section": "ogolne",
+   "lang": "pl",
+   "importance": 23,
+   "clusterId": 76,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T13:56:32.000Z",
+   "link": "https://biznes.interia.pl/gospodarka/news-polityczne-trzesienie-ziemi-w-serbii-prezes-duzego-banku-zat,nId,23567760",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "Największe regionalne lotnisko z kolejnym rekordem. Zapowiada się historyczny wynik na koniec roku",
+   "description": "Z usług Lotniska Kraków-Balice w październiku skorzystało 1 359 879 pasażerów, o 147 tys. więcej niż przed rokiem. Wiele wskazuje na to, że w tym roku padnie kolejny rekord w największym polskim regionalnym porcie lotniczym.",
+   "source": "wnp.pl",
+   "section": "przemysl",
+   "lang": "pl",
+   "importance": 30,
+   "clusterId": 77,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T13:50:00.000Z",
+   "link": "https://www.wnp.pl/logistyka/najwieksze-regionalne-lotnisko-z-kolejnym-rekordem-zapowiada-sie-historyczny-wynik-na-koniec-roku,1115424.html",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "Kolejne cyberataki w kilku krajach Europy na systemy chłodnicze w sklepach spożywczych",
+   "description": "Trzy tygodnie po ataku na systemy chłodnicze we francuskich hipermarketach podobną akcję przeprowadzono w Belgii, Luksemburgu, Estonii i Szwecji. Cyberprzestępcy przestawili sterowniki w lodówkach i i zamrażarkach, co doprowadziło do zniszczenia towarów.",
+   "source": "wnp.pl",
+   "section": "przemysl",
+   "lang": "pl",
+   "importance": 30,
+   "clusterId": 78,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T13:45:30.000Z",
+   "link": "https://www.wnp.pl/tech/kolejne-cyberataki-w-kilku-krajach-europy-na-systemy-chlodnicze-w-sklepach-spozywczych,1115411.html",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "Przewidzieli, co stanie się w Polsce. Oto nasza przyszłość",
+   "description": "Polska gospodarka dobrze radzi sobie z zewnętrznymi wstrząsami, mimo gwałtownych zmian na rynku paliw i utrzymującego się napięcia geopolitycznego - wskazują analitycy PKO BP. Ich zdaniem perspektywy wzrostu pozostają korzystne, choć coraz większym zagrożeniem staje się rosnący dług publiczny.",
+   "source": "wnp.pl",
+   "section": "przemysl",
+   "lang": "pl",
+   "importance": 30,
+   "clusterId": 79,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T13:40:01.000Z",
+   "link": "https://www.wnp.pl/rynki/przewidzieli-co-stanie-sie-w-polsce-oto-nasza-przyszlosc,1115425.html",
+   "expected": [],
+   "ok": [
+    "gospodarka"
+   ]
+  },
+  {
+   "title": "Rachunek za węgiel rośnie. Energetyka i ciepłownie płacą więcej",
+   "description": "We wrześniu 2026 r. krajowy węgiel dla energetyki podrożał o 3,8 proc., a dla ciepłownictwa o 2,9 proc. Choć miesięczne wzrosty są wyraźne, w porównaniu z ubiegłym rokiem surowiec pozostaje tańszy.",
+   "source": "Interia Biznes",
+   "section": "ogolne",
+   "lang": "pl",
+   "importance": 24,
+   "clusterId": 80,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T12:57:48.000Z",
+   "link": "https://biznes.interia.pl/energetyka/news-wegiel-drozeje-z-miesiaca-na-miesiac-roczne-porownanie-zaska,nId,23567734",
+   "expected": [],
+   "ok": [
+    "ceny"
+   ]
+  },
+  {
+   "title": "Rogalski, DM BOŚ: Nieprzerwanie sytuacja na rynku ropy wydarzeniem nr 1",
+   "description": "– Na rynku złotego jest coraz bardziej nerwowo. Wprawdzie amerykański dolar w poniedziałek rano kosztuje 3,94 zł, czyli mniej więcej 2,5 grosza mniej niż w szycie zeszłego tygodnia, jednak na parze euro-złoty zbliżamy się do poziomu 4,42 zł. Nie obserwowaliśmy takiego poziomu od ponad dwóch lat. Złoty traci mimo, że nastroje na rynkach globalnych są […]",
+   "source": "ISBnews.TV",
+   "section": "ogolne",
+   "lang": "pl",
+   "importance": 43,
+   "clusterId": 81,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T12:57:47.000Z",
+   "link": "https://www.isbnews.tv/rogalski-dm-bos-nieprzerwanie-sytuacja-na-rynku-ropy-wydarzeniem-nr-1/",
+   "expected": [],
+   "ok": [
+    "rynki",
+    "ceny"
+   ]
+  },
+  {
+   "title": "Zmiana na stacjach od wtorku. Minister ogłosił nowe ceny paliw",
+   "description": "We wtorek 3 listopada maksymalna cena dla benzyny Pb95 wynosić będzie 6,45 zł/l, dla benzyny Pb98 7,31 zł/l, a dla oleju napędowego 8,14 zł/l - poinformował minister energii w obwieszczeniu.",
+   "source": "Money.pl",
+   "section": "ogolne",
+   "lang": "pl",
+   "importance": 21,
+   "clusterId": 82,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T12:07:45.000Z",
+   "link": "https://www.money.pl/gospodarka/zmiana-na-stacjach-od-wtorku-minister-oglosil-nowe-ceny-paliw-7346672158796256a.html",
+   "expected": [
+    "ceny"
+   ],
+   "ok": []
+  },
+  {
+   "title": "Spór o TK. Niemcy ostrzegają: Wojna rozgorzała na całego",
+   "description": "Sytuacja wokół polskiego Trybunału Konstytucyjnego budzi poważne zaniepokojenie u naszych zachodnich sąsiadów. Niemieckie dzienniki podkreślają, że polityczny spór o praworządność stał się dla Polski trudnym wyzwaniem, które trudno szybko rozwiązać.",
+   "source": "Interia Biznes",
+   "section": "ogolne",
+   "lang": "pl",
+   "importance": 20,
+   "clusterId": 83,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T12:07:20.000Z",
+   "link": "https://biznes.interia.pl/polityka/news-niemcy-ostrzegaja-europe-przed-sytuacja-w-polsce-wojna-na-ca,nId,23567507",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "Rynki nie spanikowały, ale Polska płaci. Kryzys instytucji podnosi ryzyko",
+   "description": "To, że rynki finansowe nie spanikowały po weekendowych wydarzeniach wokół Trybunału Konstytucyjnego, nie oznacza, że kryzys nie kosztuje. Inwestorzy już słono wyceniają ryzyko związane z osłabianiem instytucji państwa, a weekendowa eskalacja to potwierdza. \"Przez spór konstytucyjny i polityczne »bujanie łódką« niestety przesuwamy się coraz bardziej w kierunku Ameryki Południowej. Koszty mogą być j",
+   "source": "Interia Biznes",
+   "section": "ogolne",
+   "lang": "pl",
+   "importance": 20,
+   "clusterId": 84,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T12:06:47.000Z",
+   "link": "https://biznes.interia.pl/gieldy/news-inwestorzy-patrza-na-polske-coraz-ostrozniej-spor-o-tk-moze,nId,23567682",
+   "expected": [],
+   "ok": [
+    "rynki",
+    "gospodarka"
+   ]
+  },
+  {
+   "title": "Nowe ceny paliw na wtorek, 3 listopada. Wiemy, ile zapłacą kierowcy",
+   "description": "Znamy nowe ceny paliw na stacjach benzynowych na wtorek (3.11). Minister energii w obwieszczeniu ogłosił maksymalne stawki za benzynę i olej napędowy, które będą obowiązywać w ramach rządowego programu CPN (\"Ceny Paliwa Niżej\").",
+   "source": "Interia Biznes",
+   "section": "ogolne",
+   "lang": "pl",
+   "importance": 20,
+   "clusterId": 85,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T12:02:12.000Z",
+   "link": "https://biznes.interia.pl/finanse/news-maksymalne-ceny-paliw-na-wtorek-wiemy-ile-zaplaca-kierowcy-n,nId,23567531",
+   "expected": [
+    "ceny"
+   ],
+   "ok": []
+  },
+  {
+   "title": "Binance outflows hit $4.7 billion after record North Korea hack",
+   "description": "Net withdrawals from the platform reached $4.7 billion by Monday morning in London, according to a Binance spokesperson.",
+   "source": "The Japan Times — Business",
+   "section": "swiat",
+   "lang": "en",
+   "importance": 10,
+   "clusterId": 86,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T11:57:00.000Z",
+   "link": "https://www.japantimes.co.jp/business/2026/11/02/binance-outflows-north-korea-hack/",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "Wybory midterms w USA, a giełda. Morgan Stanley wskazuje prognozę dla S&P 500",
+   "description": "<span class=\"field field--name-title field--type-string field--label-visually_hidden\">Wybory midterms w USA, a giełda. Morgan Stanley wskazuje prognozę dla S&amp;P 500</span> <span class=\"field field--name-uid field--type-entity-reference field--label-visually_hidden\">Szymon Machalica</span> <span class=\"field field--name-created field--type-created field--label-hidden\"><time datetime=\"2026-11-02T",
+   "source": "Strefa Inwestorów",
+   "section": "gielda",
+   "lang": "pl",
+   "importance": 18,
+   "clusterId": 87,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T11:09:00.000Z",
+   "link": "https://strefainwestorow.pl/strefa-global-market/spolki/donald-trump-wyniki-wyborow-2026-prognozy",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "Oji makes inroads on licorice cultivation in Japan",
+   "description": "A unit of the paper manufacturer has established a large-scale harvesting system for the medicinal plant in Hokkaido to create stable supply.",
+   "source": "The Japan Times — Business",
+   "section": "swiat",
+   "lang": "en",
+   "importance": 14,
+   "clusterId": 88,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T09:37:00.000Z",
+   "link": "https://www.japantimes.co.jp/business/2026/11/02/companies/hokkaido-licorice-production/",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "Boris Vujčić: Integrated, open and resilient: Europe’s strengths in a fragmenting world",
+   "description": "",
+   "source": "EBC — komunikaty",
+   "section": "banki",
+   "lang": "en",
+   "importance": 45,
+   "clusterId": 89,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T09:30:00.000Z",
+   "link": "https://www.ecb.europa.eu//press/key/date/2026/html/ecb.sp.261102~70003226e9.en.html",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "Fala pozwów zalewa sądy. Klienci ruszyli na banki. Resort Żurka śledzi ofensywę",
+   "description": "Od początku roku do polskich sądów trafiło ponad 19,5 tys. spraw o darmowy kredyt – ustalił money.pl. Skalę narastających sporów monitoruje Ministerstwo Sprawiedliwości. W trzecim kwartale kredytobiorcy wyprzedzili firmy skupujące od nich roszczenia. Bankowcy mają powody do niepokoju.",
+   "source": "Money.pl",
+   "section": "ogolne",
+   "lang": "pl",
+   "importance": 18,
+   "clusterId": 90,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T09:21:49.000Z",
+   "link": "https://www.money.pl/banki/fala-pozwow-zalewa-sady-klienci-ruszyli-na-banki-resort-zurka-sledzi-ofensywe-7345596648069600a.html",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "Indie rozbudowują hutnictwo. To ważne dla notowań JSW w długim terminie",
+   "description": "<span class=\"field field--name-title field--type-string field--label-visually_hidden\">Indie rozbudowują hutnictwo. To ważne dla notowań JSW w długim terminie</span> <span class=\"field field--name-uid field--type-entity-reference field--label-visually_hidden\">Piotr Maciążek</span> <span class=\"field field--name-created field--type-created field--label-hidden\"><time datetime=\"2026-11-02T10:01:01+01:",
+   "source": "Strefa Inwestorów",
+   "section": "gielda",
+   "lang": "pl",
+   "importance": 15,
+   "clusterId": 91,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T09:01:01.000Z",
+   "link": "https://strefainwestorow.pl/w-zielonej-strefie/paliwa-i-surowce/jsw-w-indiach-rozbudowa-hutnictwa-jsw-steel",
+   "expected": [],
+   "ok": [
+    "rynki"
+   ]
+  },
+  {
+   "title": "Miliard baryłek ropy zniknął z rezerw. Branża ostrzega",
+   "description": "Świat wykorzystał już blisko miliard baryłek ropy z globalnych zapasów – alarmuje szef emirackiego państwowego koncernu naftowego ADNOC Sultan al-Dżaber. W części regionów rezerwy diesla są najniższe od 35 lat, a koszty transportu wzrosły z 5 do 30 proc. wartości baryłki.",
+   "source": "Money.pl",
+   "section": "ogolne",
+   "lang": "pl",
+   "importance": 19,
+   "clusterId": 92,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T08:59:53.000Z",
+   "link": "https://www.money.pl/gospodarka/miliard-barylek-ropy-zniknal-z-rezerw-branza-ostrzega-7346619345574336a.html",
+   "expected": [],
+   "ok": [
+    "ceny"
+   ]
+  },
+  {
+   "title": "Moś, PSG: Zależy nam na dalszym wzroście współczynnika local content",
+   "description": "– Local content to budowanie odporności naszej gospodarki. Odporność jest jednym z kluczowych elementów bezpieczeństwa, również energetycznego. Polska Spółka Gazownictwa wykazuje local content na poziomie 93%. W niektórych kategoriach, patrząc na definicję Ministerstwa Aktywów Państwowych, jest to nawet 99%. To wynik naszego przewidywalnego, stabilnego działania, choć nie stanowi to powodów do teg",
+   "source": "ISBnews.TV",
+   "section": "ogolne",
+   "lang": "pl",
+   "importance": 32,
+   "clusterId": 93,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T08:59:04.000Z",
+   "link": "https://www.isbnews.tv/mos-psg-zalezy-nam-na-dalszym-wzroscie-wspolczynnika-local-content/",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "More companies seeking cyber insurance following high-profile data breaches",
+   "description": "Such policies typically cover the cost of tracing the source of data breaches and compensation, but not ransom paid to cyberattackers.",
+   "source": "The Japan Times — Business",
+   "section": "swiat",
+   "lang": "en",
+   "importance": 13,
+   "clusterId": 94,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T08:52:00.000Z",
+   "link": "https://www.japantimes.co.jp/business/2026/11/02/companies/cyber-security-insurance-policies/",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "BOJ signals low hopes for consumer spending as population falls",
+   "description": "Private consumption accounts for about half of Japan's economy, making its strength a key consideration for the central bank.",
+   "source": "The Japan Times — Business",
+   "section": "swiat",
+   "lang": "en",
+   "importance": 10,
+   "clusterId": 95,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T08:38:00.000Z",
+   "link": "https://www.japantimes.co.jp/business/2026/11/02/economy/bank-of-japan-quarterly-outlook/",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "Rynek wewnętrzny w 2025 r.",
+   "description": "Analiza rynku wewnętrznego w 2025 r. Informacje o działalności przedsiębiorstw handlowych na tle rozwoju sfery usług. Zmiany zachodzące w wartości i strukturze sprzedaży detalicznej oraz sprzedaży hurtowej. Rozmieszczenie i wielkość sieci sklepów detalicznych, stałej i sezonowej sieci targowiskowej oraz sieci placówek gastronomicznych.",
+   "source": "GUS — Aktualności",
+   "section": "oficjalne",
+   "lang": "pl",
+   "importance": 59,
+   "clusterId": 96,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T08:30:00.000Z",
+   "link": "https://stat.gov.pl/obszary-tematyczne/ceny-handel/handel/rynek-wewnetrzny-w-2025-r-,7,32.html",
+   "expected": [],
+   "ok": [
+    "gospodarka"
+   ]
+  },
+  {
+   "title": "Szkolnictwo wyższe i jego finanse w 2025 r.",
+   "description": "Podstawowe informacje o uczelniach działających w roku akademickim 2024/25 zgodnie z ustawą Prawo o szkolnictwie wyższym i nauce. Prezentacja danych o uczelniach, studentach i absolwentach według typów instytucji systemu szkolnictwa wyższego i nauki, grup i podgrup kierunków studiów, wieku i płci, nauczycielach akademickich, studiach podyplomowych i kształceniu doktorantów, nadanych stopniach nauk",
+   "source": "GUS — Aktualności",
+   "section": "oficjalne",
+   "lang": "pl",
+   "importance": 59,
+   "clusterId": 97,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T08:30:00.000Z",
+   "link": "https://stat.gov.pl/obszary-tematyczne/edukacja/edukacja/szkolnictwo-wyzsze-i-jego-finanse-w-2025-r-,2,22.html",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "Oświata i wychowanie w roku szkolnym 2025/2026",
+   "description": "Informacje o placówkach wychowania przedszkolnego, szkołach podstawowych, branżowych szkołach I i II stopnia, technikach, liceach ogólnokształcących, szkołach artystycznych, szkołach policealnych, szkołach specjalnych.",
+   "source": "GUS — Aktualności",
+   "section": "oficjalne",
+   "lang": "pl",
+   "importance": 59,
+   "clusterId": 98,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T08:30:00.000Z",
+   "link": "https://stat.gov.pl/obszary-tematyczne/edukacja/edukacja/oswiata-i-wychowanie-w-roku-szkolnym-20252026,1,21.html",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "Najlepsze lokaty i konta oszczędnościowe w listopadzie 2026 r.",
+   "description": "<span class=\"field field--name-title field--type-string field--label-visually_hidden\">Najlepsze lokaty i konta oszczędnościowe w listopadzie 2026 r.</span> <span class=\"field field--name-uid field--type-entity-reference field--label-visually_hidden\">Wioletta Hass</span> <span class=\"field field--name-created field--type-created field--label-hidden\"><time datetime=\"2026-11-02T08:30:00+01:00\" title=",
+   "source": "Strefa Inwestorów",
+   "section": "gielda",
+   "lang": "pl",
+   "importance": 14,
+   "clusterId": 99,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T07:30:00.000Z",
+   "link": "https://strefainwestorow.pl/gospodarka/najlepsze-lokaty-listopad-2026",
+   "expected": [],
+   "ok": [
+    "rynki"
+   ]
+  },
+  {
+   "title": "Japan extends transition bond push despite fossil-fuel reliance",
+   "description": "Japanese government bonds have rallied alongside other so-called safe-haven assets in recent weeks as technology-sector jitters unsettled investors.",
+   "source": "The Japan Times — Business",
+   "section": "swiat",
+   "lang": "en",
+   "importance": 12,
+   "clusterId": 100,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T07:09:00.000Z",
+   "link": "https://www.japantimes.co.jp/business/2026/11/02/japan-climate-transition-bond/",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "Mitsui Fudosan hopes to book gains and make mark with British Library project",
+   "description": "The largest property development in Europe by a Japanese company is just a stone's throw from the Harry Potter train station.",
+   "source": "The Japan Times — Business",
+   "section": "swiat",
+   "lang": "en",
+   "importance": 11,
+   "clusterId": 101,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T06:03:00.000Z",
+   "link": "https://www.japantimes.co.jp/business/2026/11/02/companies/mitsui-fudosan-london/",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "8 najciekawszych spółek dywidendowych tuż przed wynikami. Czy dywidenda będzie wyższa w 2027 r.",
+   "description": "<span class=\"field field--name-title field--type-string field--label-visually_hidden\">8 najciekawszych spółek dywidendowych tuż przed wynikami. Czy dywidenda będzie wyższa w 2027 r.</span> <span class=\"field field--name-uid field--type-entity-reference field--label-visually_hidden\">Piotr Kwestarz</span> <span class=\"field field--name-created field--type-created field--label-hidden\"><time datetime=",
+   "source": "Strefa Inwestorów",
+   "section": "gielda",
+   "lang": "pl",
+   "importance": 9,
+   "clusterId": 102,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T05:23:00.000Z",
+   "link": "https://strefainwestorow.pl/dywidendy/najciekawsze-spolki-dywidendowe-szansa-na-wyzsza-dywidende-2027",
+   "expected": [],
+   "ok": [
+    "rynki"
+   ]
+  },
+  {
+   "title": "Wyniki finansowe Grupy AMBRA za I kwartał roku obrotowego 2026/2027 – czat inwestorski z zarządem spółki",
+   "description": "<span class=\"field field--name-title field--type-string field--label-hidden\">Wyniki finansowe Grupy AMBRA za I kwartał roku obrotowego 2026/2027 – czat inwestorski z zarządem spółki</span> <span class=\"field field--name-uid field--type-entity-reference field--label-hidden\"><span>Czaty</span></span> <span class=\"field field--name-created field--type-created field--label-hidden\"><time datetime=\"2026",
+   "source": "Strefa Inwestorów",
+   "section": "gielda",
+   "lang": "pl",
+   "importance": 9,
+   "clusterId": 102,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T05:15:00.000Z",
+   "link": "https://strefainwestorow.pl/czaty-inwestorskie/2026-11-05/wyniki-finansowe-ambra-1q27",
+   "expected": [],
+   "ok": [
+    "rynki"
+   ]
+  },
+  {
+   "title": "Outlook for Economic Activity and Prices (October 2026, full text)",
+   "description": "",
+   "source": "Bank Japonii",
+   "section": "banki",
+   "lang": "en",
+   "importance": 38,
+   "clusterId": 103,
+   "isOpinion": false,
+   "publishedAt": "2026-11-02T05:00:00.000Z",
+   "link": "http://www.boj.or.jp/en/mopo/outlook/gor2610b.pdf",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "Rekordowe dywidendy w 2027 roku. 12 spółek z szansą na wyższe wypłaty – Piotr Kwestarz | Procent Składany",
+   "description": "<span class=\"field field--name-title field--type-string field--label-visually_hidden\">Rekordowe dywidendy w 2027 roku. 12 spółek z szansą na wyższe wypłaty – Piotr Kwestarz | Procent Składany</span> <span class=\"field field--name-uid field--type-entity-reference field--label-visually_hidden\">Paweł Biedrzycki</span> <span class=\"field field--name-created field--type-created field--label-hidden\"><ti",
+   "source": "Strefa Inwestorów",
+   "section": "gielda",
+   "lang": "pl",
+   "importance": 5,
+   "clusterId": 102,
+   "isOpinion": false,
+   "publishedAt": "2026-11-01T21:00:41.000Z",
+   "link": "https://strefainwestorow.pl/podcast/procent-skladany/dywidendy-2027",
+   "expected": [],
+   "ok": [
+    "rynki"
+   ]
+  },
+  {
+   "title": "21% Rocznie 441 EXTRA | Podcast | Jak inwestować - XTB, Kruk, Millennium, Żabka, Eurocash, Budimex, Cyfrowy Polsat, Kęty",
+   "description": "<span class=\"field field--name-title field--type-string field--label-visually_hidden\">21% Rocznie 441 EXTRA | Podcast | Jak inwestować - XTB, Kruk, Millennium, Żabka, Eurocash, Budimex, Cyfrowy Polsat, Kęty</span> <span class=\"field field--name-uid field--type-entity-reference field--label-visually_hidden\">Paweł Biedrzycki</span> <span class=\"field field--name-created field--type-created field--la",
+   "source": "Strefa Inwestorów",
+   "section": "gielda",
+   "lang": "pl",
+   "importance": 4,
+   "clusterId": 104,
+   "isOpinion": false,
+   "publishedAt": "2026-11-01T16:41:59.000Z",
+   "link": "https://strefainwestorow.pl/podcast/21-rocznie-extra/24-jak-inwestowac-441",
+   "expected": [],
+   "ok": [
+    "rynki"
+   ]
+  },
+  {
+   "title": "Dino, PKO, ASBIS i Bank Handlowy – kalendarium publikacji raportów za III kwartał na GPW",
+   "description": "<span class=\"field field--name-title field--type-string field--label-visually_hidden\">Dino, PKO, ASBIS i Bank Handlowy – kalendarium publikacji raportów za III kwartał na GPW</span> <span class=\"field field--name-uid field--type-entity-reference field--label-visually_hidden\">Piotr Kwestarz</span> <span class=\"field field--name-created field--type-created field--label-hidden\"><time datetime=\"2026-1",
+   "source": "Strefa Inwestorów",
+   "section": "gielda",
+   "lang": "pl",
+   "importance": 4,
+   "clusterId": 105,
+   "isOpinion": false,
+   "publishedAt": "2026-11-01T16:00:00.000Z",
+   "link": "https://strefainwestorow.pl/wydarzenia/kalendarium-publikacji-raportow-kwartalnych-1-tydzien-listopad-2026",
+   "expected": [],
+   "ok": [
+    "rynki"
+   ]
+  },
+  {
+   "title": "Inflacja zaskoczyła w dół. Stopy raczej bez zmian, ale ryzyka rosną",
+   "description": "Inflacja CPI w Polsce spadła w październiku do 3,5 proc. rok do roku z 4,1 proc. we wrześniu i znalazła się na górnej granicy pasma odchyleń od celu NBP. Odczyt okazał się niższy od rynkowych prognoz na poziomie 3,7 proc., a ceny w ujęciu miesięcznym obniżyły się o 0,4 proc. Ekonomiści Banku Millennium i Banku Pocztowego oceniają, że dane wzmacniają argumenty za pozostawieniem stóp procentowych be",
+   "source": "300Gospodarka",
+   "section": "ogolne",
+   "lang": "pl",
+   "importance": 0,
+   "clusterId": 106,
+   "isOpinion": false,
+   "publishedAt": "2026-10-30T22:52:29.000Z",
+   "link": "https://300gospodarka.pl/news/inflacja-zaskoczyla-w-dol-stopy-raczej-bez-zmian-ale-ryzyka-rosna",
+   "expected": [
+    "ceny",
+    "rynki"
+   ],
+   "ok": []
+  },
+  {
+   "title": "Trzy razy więcej zakupów w sześć lat. Polacy rozgościli się na hiszpańskim rynku nieruchomości",
+   "description": "Hiszpania od lat przyciąga najwięcej turystów, a sektor turystyczny odpowiada za kilkanaście procent PKB. W 2025 roku cudzoziemcy wykupili prawie 250 mln noclegów – sześć razy więcej niż w Polsce. Część turystów tak docenia ten kawałek świata, że kupują w Hiszpanii własną nieruchomość, co odpowiada za kilkanaście procent popytu w tym kraju. Dane notarialne analizowane przez 5S invest pokazują, że ",
+   "source": "300Gospodarka",
+   "section": "ogolne",
+   "lang": "pl",
+   "importance": 0,
+   "clusterId": 107,
+   "isOpinion": false,
+   "publishedAt": "2026-10-30T22:31:47.000Z",
+   "link": "https://300gospodarka.pl/news/trzy-razy-wiecej-zakupow-w-szesc-lat-polacy-rozgoscili-sie-na-hiszpanskim-rynku-nieruchomosci",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "Darmowe nadgodziny wciąż powszechne. Najgorzej jest w średnich firmach",
+   "description": "31 proc. pracowników w Polsce spędza w pracy co najmniej sześć dodatkowych godzin tygodniowo, za które nie dostaje wynagrodzenia. Co dziewiąty pracuje za darmo ponad 16 godzin tygodniowo, czyli średnio ponad dwie godziny dziennie. Problem najmocniej dotyka młodych pracowników i zatrudnionych w średnich firmach, a w danych globalnych także kadry zarządzającej – wynika z raportu ADP Research „People",
+   "source": "300Gospodarka",
+   "section": "ogolne",
+   "lang": "pl",
+   "importance": 0,
+   "clusterId": 108,
+   "isOpinion": false,
+   "publishedAt": "2026-10-30T20:50:23.000Z",
+   "link": "https://300gospodarka.pl/news/darmowe-nadgodziny-wciaz-powszechne-najgorzej-jest-w-srednich-firmach",
+   "expected": [
+    "praca"
+   ],
+   "ok": []
+  },
+  {
+   "title": "Rachunki rosną, ale 30 lat temu bolały jeszcze bardziej. Energetyczny paradoks Polski",
+   "description": "Przeciętne gospodarstwo domowe w Polsce w 2025 roku wydawało ponad 5,2 tys. zł rocznie na prąd i ciepło – szacuje Mzuri, opierając się na danych GUS i Eurostatu. To stawia nas na niechlubnym europejskim podium pod względem tego, jaką część domowego budżetu przeznaczamy na te wydatki. Gorzej jest tylko na Łotwie i w Czechach. Jeszcze 10 lat temu, w 2016 roku, na ten cel przeciętna polska rodzina wy",
+   "source": "300Gospodarka",
+   "section": "ogolne",
+   "lang": "pl",
+   "importance": 0,
+   "clusterId": 109,
+   "isOpinion": false,
+   "publishedAt": "2026-10-30T18:18:53.000Z",
+   "link": "https://300gospodarka.pl/news/rachunki-rosna-ale-30-lat-temu-bolaly-jeszcze-bardziej-energetyczny-paradoks-polski",
+   "expected": [],
+   "ok": [
+    "ceny"
+   ]
+  },
+  {
+   "title": "Philip R. Lane: AI adoption in Europe",
+   "description": "",
+   "source": "EBC — komunikaty",
+   "section": "banki",
+   "lang": "en",
+   "importance": 7,
+   "clusterId": 110,
+   "isOpinion": false,
+   "publishedAt": "2026-10-30T16:10:00.000Z",
+   "link": "https://www.ecb.europa.eu//press/key/date/2026/html/ecb.sp261030~08d9d540f0.en.html",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "Kiepas, Tickmill: Pomimo globalnych napięć w polskiej gospodarce panuje optymizm",
+   "description": "– W ostatnim tygodniu października na warszawską giełdę wróciły dobre nastroje mimo, że na rynkach globalnych są nienajlepsze. Trzy z czterech głównych warszawskich indeksów osiągnęły nowe historyczne rekordy. Z pewnością pomogły w tym dobre wyniki publikowane przez spółki. Optymistyczne wieści napłynęły również z krajowej gospodarki. W październiku inflacja wyhamowała do poziomu 3,5% z poziomu 4,",
+   "source": "ISBnews.TV",
+   "section": "ogolne",
+   "lang": "pl",
+   "importance": 4,
+   "clusterId": 111,
+   "isOpinion": false,
+   "publishedAt": "2026-10-30T14:07:58.000Z",
+   "link": "https://www.isbnews.tv/kiepas-tickmill-pomimo-globalnych-napiec-w-polskiej-gospodarce-panuje-optymizm/",
+   "expected": [
+    "gospodarka"
+   ],
+   "ok": [
+    "rynki",
+    "ceny"
+   ]
+  },
+  {
+   "title": "Decisions taken by the Governing Council of the ECB (in addition to decisions setting interest rates)",
+   "description": "",
+   "source": "EBC — komunikaty",
+   "section": "banki",
+   "lang": "en",
+   "importance": 5,
+   "clusterId": 112,
+   "isOpinion": false,
+   "publishedAt": "2026-10-30T14:00:00.000Z",
+   "link": "https://www.ecb.europa.eu//press/govcdec/otherdec/2026/html/ecb.gc261030~e40f864093.en.html",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "Zeidler, MAP: Local Content jest szansą na budowanie jeszcze silniejszej polskiej gospodarki",
+   "description": "– Grupa Orlen jest podmiotem, który realizuje i będzie realizował największe inwestycje strategiczne. W związku z tym projekt Local Content jest kluczowy. Spółka prowadzi szereg zamówień i zakupów, dlatego ważne jest, aby w tych postępowaniach brało udział jak najwięcej polskich podmiotów – powiedziała Eliza Zeidler, wiceminister w Ministerstwie Aktywów Państwowych w rozmowie z ISBnews.TV. Jak […]",
+   "source": "ISBnews.TV",
+   "section": "ogolne",
+   "lang": "pl",
+   "importance": 2,
+   "clusterId": 113,
+   "isOpinion": false,
+   "publishedAt": "2026-10-30T09:01:37.000Z",
+   "link": "https://www.isbnews.tv/zeidler-map-local-content-jest-szansa-na-budowanie-jeszcze-silniejszej-polskiej-gospodarki/",
+   "expected": [],
+   "ok": [
+    "gospodarka"
+   ]
+  },
+  {
+   "title": "Results of the ECB Survey of Professional Forecasters for the fourth quarter of 2026",
+   "description": "",
+   "source": "EBC — komunikaty",
+   "section": "banki",
+   "lang": "en",
+   "importance": 4,
+   "clusterId": 114,
+   "isOpinion": false,
+   "publishedAt": "2026-10-30T09:00:00.000Z",
+   "link": "https://www.ecb.europa.eu//press/pr/date/2026/html/ecb.pr261030~e92c3c838c.en.html",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "Wyrównania sezonowe - przeciętne zatrudnienie i przeciętne miesięczne wynagrodzenie",
+   "description": "Wyrównania sezonowe - przeciętne zatrudnienie i przeciętne miesięczne wynagrodzenie",
+   "source": "GUS — Aktualności",
+   "section": "oficjalne",
+   "lang": "pl",
+   "importance": 15,
+   "clusterId": 115,
+   "isOpinion": false,
+   "publishedAt": "2026-10-30T08:45:00.000Z",
+   "link": "https://stat.gov.pl/obszary-tematyczne/rynek-pracy/pracujacy-zatrudnieni-wynagrodzenia-koszty-pracy/wyrownania-sezonowe-przecietne-zatrudnienie-i-przecietne-miesieczne-wynagrodzenie,20,14.html",
+   "expected": [
+    "praca"
+   ],
+   "ok": []
+  },
+  {
+   "title": "Informacja na temat publikacji danych o zobowiązaniach warunkowych sektora instytucji rządowych i samorządowych i udziale sektora w kapitale przedsiębiorstw oraz zobowiązaniach przedsiębiorstw publicznych",
+   "description": "",
+   "source": "GUS — Aktualności",
+   "section": "oficjalne",
+   "lang": "pl",
+   "importance": 12,
+   "clusterId": 116,
+   "isOpinion": false,
+   "publishedAt": "2026-10-30T08:40:00.000Z",
+   "link": "https://stat.gov.pl/aktualnosci/informacja-na-temat-publikacji-danych-o-zobowiazaniach-warunkowych-sektora-instytucji-rzadowych-i-samorzadowych-i-udziale-sektora-w-kapitale-przedsiebiorstw-oraz-zobowiazaniach-przedsiebiorstw-,697,1.html",
+   "expected": [],
+   "ok": [
+    "gospodarka"
+   ]
+  },
+  {
+   "title": "Szybki szacunek wskaźnika cen towarów i usług konsumpcyjnych w październiku 2026 r.",
+   "description": "Ceny towarów i usług konsumpcyjnych według szybkiego szacunku w październiku 2026 r. wzrosły o 3,5% (wskaźnik cen 103,5) w porównaniu z analogicznym miesiącem ub. roku, a w porównaniu z poprzednim miesiącem spadły o 0,4% (wskaźnik cen 99,6).",
+   "source": "GUS — Aktualności",
+   "section": "oficjalne",
+   "lang": "pl",
+   "importance": 16,
+   "clusterId": 117,
+   "isOpinion": false,
+   "publishedAt": "2026-10-30T08:30:00.000Z",
+   "link": "https://stat.gov.pl/obszary-tematyczne/ceny-handel/wskazniki-cen/szybki-szacunek-wskaznika-cen-towarow-i-uslug-konsumpcyjnych-w-pazdzierniku-2026-r-,21,46.html",
+   "expected": [
+    "ceny"
+   ],
+   "ok": []
+  },
+  {
+   "title": "Bieżące informacje o inflacji",
+   "description": "",
+   "source": "GUS — Aktualności",
+   "section": "oficjalne",
+   "lang": "pl",
+   "importance": 17,
+   "clusterId": 118,
+   "isOpinion": false,
+   "publishedAt": "2026-10-30T06:30:00.000Z",
+   "link": "https://stat.gov.pl/aktualnosci/biezace-informacje-o-inflacji,484,2.html",
+   "expected": [
+    "ceny"
+   ],
+   "ok": []
+  },
+  {
+   "title": "Outlook for Economic Activity and Prices (October 2026, The Bank's View)",
+   "description": "",
+   "source": "Bank Japonii",
+   "section": "banki",
+   "lang": "en",
+   "importance": 5,
+   "clusterId": 119,
+   "isOpinion": false,
+   "publishedAt": "2026-10-30T04:00:00.000Z",
+   "link": "http://www.boj.or.jp/en/mopo/outlook/gor2610a.pdf",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "Statement on Monetary Policy",
+   "description": "",
+   "source": "Bank Japonii",
+   "section": "banki",
+   "lang": "en",
+   "importance": 7,
+   "clusterId": 120,
+   "isOpinion": false,
+   "publishedAt": "2026-10-30T04:00:00.000Z",
+   "link": "http://www.boj.or.jp/en/mopo/mpmdeci/mpr_2026/k261030a.pdf",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "Małe zakupy, duża zmiana. BNPL wychowuje nowych kredytobiorców",
+   "description": "Zakup za kilkadziesiąt złotych z płatnością przesuniętą na później może być pierwszym krokiem na rynku kredytowym. W 2025 roku Polacy wykonali 78 mln transakcji BNPL, a ponad 4 na 10 osób debiutujących w ten sposób miało najwyżej 24 lata. Ponad połowa z nich później sięga po inne formy finansowania. 78 mln odroczonych płatności w rok Płatności odroczone w schemacie „kup teraz, zapłać później” (BNP",
+   "source": "300Gospodarka",
+   "section": "ogolne",
+   "lang": "pl",
+   "importance": 0,
+   "clusterId": 121,
+   "isOpinion": false,
+   "publishedAt": "2026-10-29T22:36:06.000Z",
+   "link": "https://300gospodarka.pl/news/male-zakupy-duza-zmiana-bnpl-wychowuje-nowych-kredytobiorcow",
+   "expected": [],
+   "ok": [
+    "rynki"
+   ]
+  },
+  {
+   "title": "Wolnego wciąż za mało. Niektórzy pracownicy sięgają po ryzykowne sposoby",
+   "description": "43 proc. pracujących Polaków byłoby skłonnych zgodzić się na niższą pensję w zamian za dodatkowe dni wolne. Jednocześnie niemal połowa badanych uważa, że obecna liczba dni wolnych od pracy jest niewystarczająca. Część pracowników sięga nawet po ryzykowne sposoby na przedłużenie wypoczynku – od tzw. quiet vacation po wykorzystywanie zwolnienia lekarskiego niezgodnie z przeznaczeniem. Tak wynika z b",
+   "source": "300Gospodarka",
+   "section": "ogolne",
+   "lang": "pl",
+   "importance": 0,
+   "clusterId": 122,
+   "isOpinion": false,
+   "publishedAt": "2026-10-29T22:03:05.000Z",
+   "link": "https://300gospodarka.pl/news/wolnego-wciaz-za-malo-niektorzy-pracownicy-siegaja-po-ryzykowne-sposoby",
+   "expected": [],
+   "ok": [
+    "praca"
+   ]
+  },
+  {
+   "title": "Co trzeci Polak boi się kradzieży tożsamości, a niemal połowa zna cyberbezpieczeństwo tylko powierzchownie",
+   "description": "Aż jedna trzecia Polaków obawia się kradzieży tożsamości w mediach społecznościowych. Niewiele mniej, bo 32 proc., za jedno z najpoważniejszych zagrożeń uważa próby wyłudzenia danych lub pieniędzy. Jednocześnie 21 proc. badanych zetknęło się w ostatnim roku osobiście lub w swoim otoczeniu z przejęciem konta w social mediach – wynika z raportu „Cyberbezpieczny Portfel 2026” przygotowanego przez Fun",
+   "source": "300Gospodarka",
+   "section": "ogolne",
+   "lang": "pl",
+   "importance": 0,
+   "clusterId": 123,
+   "isOpinion": false,
+   "publishedAt": "2026-10-29T18:57:09.000Z",
+   "link": "https://300gospodarka.pl/news/jak-polacy-dbaja-o-cyberbezpieczenstwo-raport-wib",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "Piero Cipollone: Next-day securities settlement, tokenisation and the transformation of Europe’s financial infrastructure",
+   "description": "",
+   "source": "EBC — komunikaty",
+   "section": "banki",
+   "lang": "en",
+   "importance": 3,
+   "clusterId": 124,
+   "isOpinion": false,
+   "publishedAt": "2026-10-29T15:50:00.000Z",
+   "link": "https://www.ecb.europa.eu//press/key/date/2026/html/ecb.sp261029~e9b57c3495.en.html",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "Transport drogowy w Polsce w latach 2024 i 2025",
+   "description": "Analiza sytuacji przedsiębiorstw transportu drogowego (finanse, zatrudnienie, wynagrodzenia, nakłady inwestycyjne), informacje o sieci drogowej, środkach transportu drogowego, ruchu drogowym, transporcie towarowym (wg kierunków transportu, typu ładunków, grup ładunków, stref odległości), wojewódzkie bilanse przewozów ładunków, o transporcie pasażerskim (komunikacja miejska, krajowa i międzynarodow",
+   "source": "GUS — Aktualności",
+   "section": "oficjalne",
+   "lang": "pl",
+   "importance": 10,
+   "clusterId": 125,
+   "isOpinion": false,
+   "publishedAt": "2026-10-29T14:07:00.000Z",
+   "link": "https://stat.gov.pl/obszary-tematyczne/transport-i-lacznosc/transport/transport-drogowy-w-polsce-w-latach-2024-i-2025,6,9.html",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "Christine Lagarde, Boris Vujčić: Monetary policy statement (with Q&A)",
+   "description": "",
+   "source": "EBC — komunikaty",
+   "section": "banki",
+   "lang": "en",
+   "importance": 3,
+   "clusterId": 126,
+   "isOpinion": false,
+   "publishedAt": "2026-10-29T14:00:00.000Z",
+   "link": "https://www.ecb.europa.eu//press/press_conference/monetary-policy-statement/2026/html/ecb.is261029~5c5ffe99e5.en.html",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "Monetary policy decisions",
+   "description": "",
+   "source": "EBC — komunikaty",
+   "section": "banki",
+   "lang": "en",
+   "importance": 5,
+   "clusterId": 120,
+   "isOpinion": false,
+   "publishedAt": "2026-10-29T13:15:00.000Z",
+   "link": "https://www.ecb.europa.eu//press/pr/date/2026/html/ecb.mp261029~9a493adf17.en.html",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "Orlik, PFR TFI: AI może wesprzeć popularyzację inwestowania",
+   "description": "– Uczyliśmy się sztucznej inteligencji korzystając z różnych aplikacji, począwszy od map, skończywszy na korzystaniu z różnych usług i robiąc zakupy. Czas na następny krok. Zaczynamy AI pytać o porady finansowe. Według mnie będzie to miało pozytywny skutek. Każda rozmowa, nawet ze sztuczną inteligencją, na tematy finansowe nas wzbogaca. Liczę, że w krótkim czasie zaczniemy […]",
+   "source": "ISBnews.TV",
+   "section": "ogolne",
+   "lang": "pl",
+   "importance": 1,
+   "clusterId": 127,
+   "isOpinion": false,
+   "publishedAt": "2026-10-29T11:21:06.000Z",
+   "link": "https://www.isbnews.tv/orlik-pfr-tfi-ai-moze-wesprzec-popularyzacje-inwestowania/",
+   "expected": [],
+   "ok": [
+    "rynki"
+   ]
+  },
+  {
+   "title": "Uboje zwierząt gospodarskich w ubojniach i rzeźniach w 2026 r.",
+   "description": "Informacje są wynikiem Sprawozdania o wielkości ubojów zwierząt gospodarskich (R-09U). Obowiązkiem sprawozdawczym objęte są wszystkie ubojnie i rzeźnie prowadzące uboje zwierząt gospodarskich na terenie Polski.",
+   "source": "GUS — Aktualności",
+   "section": "oficjalne",
+   "lang": "pl",
+   "importance": 10,
+   "clusterId": 128,
+   "isOpinion": false,
+   "publishedAt": "2026-10-29T10:28:00.000Z",
+   "link": "https://stat.gov.pl/obszary-tematyczne/rolnictwo-lesnictwo/produkcja-zwierzeca-zwierzeta-gospodarskie/uboje-zwierzat-gospodarskich-w-ubojniach-i-rzezniach-w-2026-r-,16,2.html",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "ECB President Lagarde to step down on 7 February 2027",
+   "description": "",
+   "source": "EBC — komunikaty",
+   "section": "banki",
+   "lang": "en",
+   "importance": 2,
+   "clusterId": 129,
+   "isOpinion": false,
+   "publishedAt": "2026-10-29T10:00:00.000Z",
+   "link": "https://www.ecb.europa.eu//press/pr/date/2026/html/ecb.pr261029~abbb6dc64b.en.html",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "Pracujący w gospodarce narodowej w Polsce w maju 2026 r.",
+   "description": "W ostatnim dniu maja 2026 r. zbiorowość pracujących w gospodarce narodowej liczyła 15062,9 tys. osób. Liczba pracujących zwiększyła się o 0,4% w porównaniu z ostatnim dniem maja 2025 r. i o 0,2% w porównaniu z ostatnim dniem kwietnia 2026 r.",
+   "source": "GUS — Aktualności",
+   "section": "oficjalne",
+   "lang": "pl",
+   "importance": 10,
+   "clusterId": 130,
+   "isOpinion": false,
+   "publishedAt": "2026-10-29T08:43:00.000Z",
+   "link": "https://stat.gov.pl/obszary-tematyczne/rynek-pracy/pracujacy-zatrudnieni-wynagrodzenia-koszty-pracy/pracujacy-w-gospodarce-narodowej-w-polsce-w-maju-2026-r-,27,42.html",
+   "expected": [
+    "praca"
+   ],
+   "ok": []
+  },
+  {
+   "title": "Obwieszczenie w sprawie szacunków wartości produktu krajowego brutto na jednego mieszkańca w latach 2022-2024 na poziomie makroregionów (NUTS 1), regionów (NUTS 2) i podregionów (NUTS 3)",
+   "description": "",
+   "source": "GUS — Komunikaty",
+   "section": "oficjalne",
+   "lang": "pl",
+   "importance": 7,
+   "clusterId": 131,
+   "isOpinion": false,
+   "publishedAt": "2026-10-29T08:30:00.000Z",
+   "link": "https://stat.gov.pl/sygnalne/komunikaty-i-obwieszczenia/lista-komunikatow-i-obwieszczen/obwieszczenie-w-sprawie-szacunkow-wartosci-produktu-krajowego-brutto-na-jednego-mieszkanca-w-latach-2022-2024-na-poziomie-makroregionow-nuts-1-regionow-nuts-2-i-podregionow-nuts-3,281,13.html",
+   "expected": [
+    "gospodarka"
+   ],
+   "ok": []
+  },
+  {
+   "title": "AI zmienia nawet zawody „manualne”. Polska ma tu konkretny problem",
+   "description": "AI nie sprawi, że mechanicy, operatorzy maszyn czy inni pracownicy techniczni przestaną być potrzebni. Problem w tym, że wykonywanie tych samych zawodów będzie wymagało zupełnie innych kompetencji niż jeszcze kilka lat temu. Polska już dziś ma szczególnie duże braki tam, gdzie praktyczna wiedza musi spotkać się z umiejętnościami cyfrowymi – informuje Polski Instytut Ekonomiczny. Maker skills nie z",
+   "source": "300Gospodarka",
+   "section": "ogolne",
+   "lang": "pl",
+   "importance": 0,
+   "clusterId": 132,
+   "isOpinion": false,
+   "publishedAt": "2026-10-28T22:29:30.000Z",
+   "link": "https://300gospodarka.pl/news/ai-zmienia-nawet-zawody-manualne-polska-ma-tu-konkretny-problem",
+   "expected": [],
+   "ok": [
+    "praca"
+   ]
+  },
+  {
+   "title": "4 na 10 lekarzy ma co najmniej 55 lat. Luka kadrowa niby maleje, ale nadal jest ogromnym problemem",
+   "description": "Do 2030 roku w Europie zabraknie blisko miliona pracowników ochrony zdrowia – alarmuje Światowa Organizacja Zdrowia. Problem jest na tyle duży, że Parlament Europejski wezwał Komisję Europejską do opracowania kompleksowej, długoterminowej strategii. Koordynacja działań na poziomie unijnym jest możliwa, ale zdaniem europosłanki PiS Marleny Maląg każde państwo członkowskie powinno poradzić sobie we ",
+   "source": "300Gospodarka",
+   "section": "ogolne",
+   "lang": "pl",
+   "importance": 0,
+   "clusterId": 133,
+   "isOpinion": false,
+   "publishedAt": "2026-10-28T21:06:47.000Z",
+   "link": "https://300gospodarka.pl/news/747668",
+   "expected": [],
+   "ok": [
+    "praca"
+   ]
+  },
+  {
+   "title": "Federal Reserve issues FOMC statement",
+   "description": "Federal Reserve issues FOMC statement",
+   "source": "Fed — komunikaty",
+   "section": "banki",
+   "lang": "en",
+   "importance": 2,
+   "clusterId": 134,
+   "isOpinion": false,
+   "publishedAt": "2026-10-28T18:00:00.000Z",
+   "link": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20261028a.htm",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "Prugar, Orlen SA: Gaz odgrywa istotną rolę w polskiej gospodarce",
+   "description": "– Polski Kongres Naftowy i Gazowniczy ma swoją historię. Natomiast tegoroczna edycja odbywa się w momencie, w którym trwa ogromna dyskusja na temat roli paliw kopalnych, w tym gazu i ropy naftowej, w gospodarkach Europy i świata. W związku z transformacją, widzimy pewną racjonalizację tej dyskusji. Zależało nam na ukazaniu jaką rolę ropa i gaz […]",
+   "source": "ISBnews.TV",
+   "section": "ogolne",
+   "lang": "pl",
+   "importance": 0,
+   "clusterId": 135,
+   "isOpinion": false,
+   "publishedAt": "2026-10-28T09:01:15.000Z",
+   "link": "https://www.isbnews.tv/prugar-orlen-sa-gaz-odgrywa-istotna-role-w-polskiej-gospodarce/",
+   "expected": [],
+   "ok": [
+    "gospodarka"
+   ]
+  },
+  {
+   "title": "Zielonka, Konfederacja Lewiatan: Polskie PKB nie jest zagrożone, rok zakończymy na poziomie 3,6%",
+   "description": "– Rada Polityki Pieniężnej patrząc na inflację widzi dwa czynniki: paliwa i Program CPN. Paliwa zadecydowały o wrześniowym wyniku inflacji. Program CPN będzie trwał do końca grudnia. Rząd, wprowadzając go, zatrzymał rozlewanie się inflacji po gospodarce. W moim odczuciu skutecznie sprowadzi nam ją do poziomu 3,4-3,5% w perspektywie końca roku – powiedział Mariusz Zielonka, główny […]",
+   "source": "ISBnews.TV",
+   "section": "ogolne",
+   "lang": "pl",
+   "importance": 0,
+   "clusterId": 136,
+   "isOpinion": false,
+   "publishedAt": "2026-10-27T09:01:54.000Z",
+   "link": "https://www.isbnews.tv/zielonka-konfederacja-lewiatan-polskie-pkb-nie-jest-zagrozone-rok-zakonczymy-na-poziomie-36/",
+   "expected": [
+    "gospodarka"
+   ],
+   "ok": [
+    "ceny",
+    "rynki"
+   ]
+  },
+  {
+   "title": "Rogalski, DM BOŚ: Euro-złoty powyżej 4,40!",
+   "description": "– Na rynkach finansowych widać dużą nerwowość. W zeszłym tygodniu była przecena indeksów giełdowych na Wall Street. Nastąpił wzrost notowań ropy. Rynki obawiają się tego, co może wydarzyć się po 3 listopada, czyli potencjalnej akcji militarnej wobec Iranu – powiedział Marek Rogalski, główny analityk rynkowy DM BOŚ w cotygodniowym komentarzu dla ISBnews.TV. Ekspert podał, że […]",
+   "source": "ISBnews.TV",
+   "section": "ogolne",
+   "lang": "pl",
+   "importance": 0,
+   "clusterId": 137,
+   "isOpinion": false,
+   "publishedAt": "2026-10-26T12:00:10.000Z",
+   "link": "https://www.isbnews.tv/rogalski-dm-bos-euro-zloty-powyzej-440/",
+   "expected": [
+    "rynki"
+   ],
+   "ok": []
+  },
+  {
+   "title": "Zimolzak, SW Research: Młode pokolenie widzi w AI więcej zagrożeń niż pracodawcy",
+   "description": "– Przeprowadziliśmy badanie, w którym zapytaliśmy o wizję rynku pracy za 10 lat, zatem mówimy o Polsce w 2035 r. Perspektywa młodego pokolenia oraz przedsiębiorców jest spójna. Dominować będzie praca oparta na digitalu. Będzie to rynek pracy cyfrowy, praca hybrydowa zdalna oraz oparta na łączeniu kilku rodzajów dochodów – powiedział Piotr Zimolzak, wiceprezes SW Research, […]",
+   "source": "ISBnews.TV",
+   "section": "ogolne",
+   "lang": "pl",
+   "importance": 0,
+   "clusterId": 138,
+   "isOpinion": false,
+   "publishedAt": "2026-10-26T09:01:43.000Z",
+   "link": "https://www.isbnews.tv/zimolzak-sw-research-mlode-pokolenie-widzi-w-ai-wiecej-zagrozen-niz-pracodawcy/",
+   "expected": [],
+   "ok": [
+    "praca"
+   ]
+  },
+  {
+   "title": "Kiepas, Tickmill: Ceny ropy wciąż postrachem inwestorów",
+   "description": "– Odnotowaliśmy we wrześniu wzrost produkcji przemysłowej w Polsce o 4,6% r/r, wzrost sprzedaży detalicznej w cenach stałych o 3,3%, stabilizację stopy bezrobocia na poziomie 5,8%, wzrost płac w firmach o 5,9% i przyspieszenie inflacji producenckiej do poziomu 6,1%. Takowe dane napłynęły do nas w ostatnich dniach z polskiej gospodarki. Są relatywnie dobre i mogą […]",
+   "source": "ISBnews.TV",
+   "section": "ogolne",
+   "lang": "pl",
+   "importance": 0,
+   "clusterId": 139,
+   "isOpinion": false,
+   "publishedAt": "2026-10-24T08:01:12.000Z",
+   "link": "https://www.isbnews.tv/kiepas-tickmill-ceny-ropy-wciaz-postrachem-inwestorow/",
+   "expected": [],
+   "ok": [
+    "ceny",
+    "gospodarka",
+    "rynki"
+   ]
+  },
+  {
+   "title": "Rekordowy rok dla pasywnego inwestowania w Polsce. Ten fundusz ETF jest absolutnym hitem",
+   "description": "<span class=\"field field--name-title field--type-string field--label-visually_hidden\">Rekordowy rok dla pasywnego inwestowania w Polsce. Ten fundusz ETF jest absolutnym hitem</span> <span class=\"field field--name-uid field--type-entity-reference field--label-visually_hidden\">Wiadomości</span> <span class=\"field field--name-created field--type-created field--label-hidden\"><time datetime=\"2026-10-23",
+   "source": "Strefa Inwestorów",
+   "section": "gielda",
+   "lang": "pl",
+   "importance": 0,
+   "clusterId": 140,
+   "isOpinion": false,
+   "publishedAt": "2026-10-23T06:35:51.000Z",
+   "link": "https://strefainwestorow.pl/wiadomosci/20261023/rekordowy-rok-dla-pasywnego-inwestowania-w-polsce-ten-fundusz-etf-jest",
+   "expected": [],
+   "ok": [
+    "rynki"
+   ]
+  },
+  {
+   "title": "Financial System Report (October 2026)",
+   "description": "",
+   "source": "Bank Japonii",
+   "section": "banki",
+   "lang": "en",
+   "importance": 0,
+   "clusterId": 141,
+   "isOpinion": false,
+   "publishedAt": "2026-10-23T06:00:00.000Z",
+   "link": "http://www.boj.or.jp/en/research/brp/fsr/fsr261023.htm",
+   "expected": [],
+   "ok": []
+  },
+  {
+   "title": "Obwieszczenie w sprawie przeciętnego miesięcznego wynagrodzenia w sektorze przedsiębiorstw bez wypłat nagród z zysku w trzecim kwartale 2026 r.",
+   "description": "",
+   "source": "GUS — Komunikaty",
+   "section": "oficjalne",
+   "lang": "pl",
+   "importance": 0,
+   "clusterId": 142,
+   "isOpinion": false,
+   "publishedAt": "2026-10-20T11:09:00.000Z",
+   "link": "https://stat.gov.pl/sygnalne/komunikaty-i-obwieszczenia/lista-komunikatow-i-obwieszczen/obwieszczenie-w-sprawie-przecietnego-miesiecznego-wynagrodzenia-w-sektorze-przedsiebiorstw-bez-wyplat-nagrod-z-zysku-w-trzecim-kwartale-2026-r-,59,51.html",
+   "expected": [
+    "praca"
+   ],
+   "ok": []
+  }
+ ]
+}

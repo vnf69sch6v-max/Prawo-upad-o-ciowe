@@ -5,23 +5,13 @@ import Link from 'next/link';
 import { ExternalLink, ArrowRight, Layers, Copy, Megaphone } from 'lucide-react';
 import { useNews, type NewsItem } from '@/lib/hooks';
 import { isPolishNews } from '@/lib/news/lang';
-import { collapseClusters, matchesTopic, type NewsTopic, type MatchTier } from '@/lib/news/match';
+import { collapseClusters, type NewsTopic, type MatchTier } from '@/lib/news/match';
+import { newsTopics } from '@/lib/news/topic-links';
 import { formatRelativeTime, formatTime } from '@/lib/formatters';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { CategoryNewsPanel } from '@/components/ui/CategoryNews';
 import { QueryState } from '@/components/ui/QueryState';
 import { useIsClient } from '@/lib/use-is-client';
-
-const TOPIC_LINKS: { topic: NewsTopic; label: string; href: string }[] = [
-    { topic: 'ceny', label: 'Inflacja CPI', href: '/ceny?tab=inflacja' },
-    { topic: 'gospodarka', label: 'PKB / aktywność', href: '/gospodarka?tab=aktywnosc' },
-    { topic: 'praca', label: 'Rynek pracy', href: '/praca' },
-    { topic: 'rynki', label: 'Rynki finansowe', href: '/rynki' },
-];
-
-function newsTopics(item: Pick<NewsItem, 'title' | 'description'>) {
-    return TOPIC_LINKS.filter((t) => matchesTopic(item, t.topic));
-}
 
 const SECTION_LABELS: Record<string, string> = {
     ogolne: 'MAKRO',
@@ -56,28 +46,21 @@ const AllNewsLink = ({ brand = false }: { brand?: boolean }) => (
 );
 
 /**
- * Pas „Newsy powiązane" — newsy dopasowane do tematu sekcji (nasz wyróżnik: news stoi przy
- * wskaźniku, którego dotyczy). Reguły dopasowania: `lib/news/match.ts` (precyzja > zasięg).
+ * Pas newsów przy wskaźniku — newsy dopasowane do tematu sekcji (nasz wyróżnik: news stoi przy
+ * wskaźniku, którego dotyczy). Reguły: `lib/news/match.ts` (precyzja > zasięg), widok: `CategoryNewsPanel`.
+ * Brak trafień → nic się nie renderuje. `title` zostaje tylko dla zgodności wywołań (nagłówek jest stały).
  *
- * Gdy nic nie pasuje albo dane jeszcze lecą — komponent NIE renderuje niczego. Pusta ramka
- * z napisem „brak" byłaby gorsza niż jej brak, a przy nastawieniu na precyzję zero trafień
- * to normalny stan (np. w dzień bez danych o PKB), nie błąd.
- *
- * `matchTier` / `excludeOpinion` — opcjonalne zaostrzenie na warstwie UI (np. Rynek pracy);
- * inne tematy zostają przy domyślnym `all` bez filtrowania opinii.
+ * `matchTier` / `excludeOpinion` — opcjonalne zaostrzenie na warstwie UI (np. Rynek pracy).
  */
-/** @deprecated title — nagłówki sekcji są teraz stałe (KALENDARIUM / NEWSY). Parametr zachowany dla kompatybilności API. */
 export function RelatedNews({
     topic,
-    title: _title,
     limit = 4,
     className = '',
     matchTier = 'all',
     excludeOpinion = false,
-    /** `rail` = jedna karta (bez stacku Kalendarium+NEWSY) — do DenseTwoCol. */
-    variant = 'stack',
 }: {
     topic: NewsTopic;
+    /** @deprecated nagłówek karty jest stały („Newsy — <temat>”). */
     title?: string;
     limit?: number;
     className?: string;
@@ -85,7 +68,6 @@ export function RelatedNews({
     matchTier?: MatchTier;
     /** Ukryj felietony/opinie (`isOpinion`). */
     excludeOpinion?: boolean;
-    variant?: 'stack' | 'rail';
 }) {
     return (
         <CategoryNewsPanel
@@ -94,7 +76,6 @@ export function RelatedNews({
             className={className}
             matchTier={matchTier}
             excludeOpinion={excludeOpinion}
-            variant={variant}
         />
     );
 }
