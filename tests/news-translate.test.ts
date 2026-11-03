@@ -51,6 +51,7 @@ describe('walidator liczb', () => {
         expect(suspicious('  ', t, a, 'title')).toBe('pusta');
         expect(suspicious(t, t, a, 'title')).toBe('bez tłumaczenia');
         expect(suspicious('Ceny ropy 下跌', t, a, 'title')).toBe('obce pismo');
+        expect(suspicious('Цены нефти падают', t, a, 'title')).toBe('obce pismo');
         expect(suspicious('**Ceny ropy spadają**', t, a, 'title')).toBe('markdown');
         expect(suspicious('Tłumaczenie: ceny ropy spadają', t, a, 'title')).toBe('meta-komentarz');
         expect(suspicious('Ceny\nropy', t, a, 'title')).toBe('nowa linia');
@@ -94,6 +95,12 @@ describe('partie', () => {
         for (const x of b) expect(x.items.length).toBeLessThanOrEqual(BATCH_SIZE);
         expect(b[0].input).toContain('[1] TYTUŁ: Headline number 0');
         expect(b[1].input).toContain('[1] TYTUŁ: Headline number 15');
+    });
+
+    it('opis w wejściu ucięty do 300 zn.', () => {
+        const [b] = buildBatches([en('Headline', `${'a'.repeat(300)}ZZZ${'b'.repeat(700)}`)]);
+        expect(b.input).toContain('a'.repeat(300));
+        expect(b.input).not.toContain('ZZZ');
     });
 
     it('wejście partii mieści się w limicie tokenów, nawet przy długich opisach', () => {
@@ -194,7 +201,7 @@ describe('runNewsTranslate (cron)', () => {
         const r = await runNewsTranslate(now, f as unknown as typeof fetch, { feed: async () => feed, read: async () => null, write });
         expect(f).toHaveBeenCalledTimes(1);
         const body = JSON.parse((f.mock.calls[0] as unknown as [string, RequestInit])[1].body as string);
-        expect(body).toMatchObject({ model: 'deepseek-flash', thinking: { type: 'disabled' }, max_tokens: MAX_TRANSLATE_OUTPUT_TOKENS, response_format: { type: 'json_object' } });
+        expect(body).toMatchObject({ model: 'deepseek-flash', thinking: { type: 'disabled' }, max_tokens: MAX_TRANSLATE_OUTPUT_TOKENS, temperature: 0.3, response_format: { type: 'json_object' } });
         expect(body.messages[0].content).toMatch(/Tłumaczysz nagłówki/);
         expect(body.messages[1].content).not.toContain('Polski'); // polskie pozycje nie idą do modelu
         // poza szczytem: 1000 × 0,15 + 500 × 0,60 za 1M = 0,00045 USD
@@ -218,6 +225,48 @@ describe('runNewsTranslate (cron)', () => {
             expect(r.failed.length).toBe(1);
             expect(write).not.toHaveBeenCalled();
         }
+    });
+
+    it('timeout partii → error, bez zapisu', async () => {
+        const f = vi.fn(async () => { throw new DOMException('The operation was aborted due to timeout', 'TimeoutError'); });
+        const write = vi.fn();
+        const r = await runNewsTranslate(now, f as unknown as typeof fetch, { feed: async () => feed, read: async () => null, write });
+        expect(r.status).toBe('error');
+        expect(r.failed[0]).toMatch(/timeout/);
+        expect(write).not.toHaveBeenCalled();
+    });
+
+    it('ucięta odpowiedź jest zapłacona — koszt z usage trafia do wyniku mimo błędu', async () => {
+        const f = vi.fn(async () => new Response(JSON.stringify({
+            choices: [{ message: { content: '{"items": [' }, finish_reason: 'length' }],
+            usage: { prompt_tokens: 1000, completion_tokens: 3000, prompt_cache_miss_tokens: 1000 },
+        })));
+        const r = await runNewsTranslate(now, f as unknown as typeof fetch, { feed: async () => feed, read: async () => null, write: vi.fn() });
+        expect(r.status).toBe('error');
+        expect(r.costUsd).toBeCloseTo(0.00195, 6); // 1000 × 0,15 + 3000 × 0,60 za 1M
+        expect(r.tokens).toEqual({ input: 1000, output: 3000 });
+    });
+
+    it('przebieg mieszany: udana partia zapisana, nieudana nie (żadnego rej z partii 2) → partial', async () => {
+        const many = Array.from({ length: 20 }, (_, i) => en(`Market headline ${i + 100}`, '', { publishedAt: `2026-11-03T${String(i).padStart(2, '0')}:00:00Z` }));
+        let call = 0;
+        const f = vi.fn(async (_url: string, init: RequestInit) => {
+            call++;
+            if (call === 2) return new Response('err', { status: 500 });
+            const user = JSON.parse(init.body as string).messages[1].content as string;
+            const ids = [...user.matchAll(/\[(\d+)\] TYTUŁ: Market headline (\d+)/g)];
+            const items = ids.map((m) => ({ id: m[1], t: `Nagłówek rynkowy ${m[2]}`, l: '' }));
+            return new Response(JSON.stringify({ choices: [{ message: { content: JSON.stringify({ items }) }, finish_reason: 'stop' }], usage: {} }));
+        });
+        const write = vi.fn(async () => {});
+        const r = await runNewsTranslate(now, f as unknown as typeof fetch, { feed: async () => many, read: async () => null, write });
+        expect(r).toMatchObject({ status: 'partial', batches: { ok: 1, total: 2 }, translated: 15, rejected: 0 });
+        expect(write).toHaveBeenCalledTimes(1);
+        const saved = (write.mock.calls[0] as unknown as [TranslationsDoc])[0];
+        expect(Object.keys(saved.entries)).toHaveLength(15);
+        // pierwsza partia = 15 najnowszych (19…5), druga (4…0) bez żadnego wpisu
+        for (let i = 0; i < 5; i++) expect(saved.entries[translationKey(`Market headline ${i + 100}`)]).toBeUndefined();
+        expect(Object.values(saved.entries).every((e) => 't' in e)).toBe(true);
     });
 
     it('błąd odczytu słownika → error, bez wywołania API (nie nadpisujemy słownika pustym)', async () => {

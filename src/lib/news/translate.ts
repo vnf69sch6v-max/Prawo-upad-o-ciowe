@@ -36,7 +36,7 @@ export interface TranslatableItem {
 
 /** Klucz = hash tytułu po ujednoliceniu białych znaków: ten sam tytuł z dwóch odświeżeń feedu = jedno tłumaczenie. */
 export function translationKey(title: string): string {
-    const norm = title.normalize('NFC').replace(/\s+/g, ' ').trim().toLowerCase();
+    const norm = title.normalize('NFKC').replace(/\s+/g, ' ').trim().toLowerCase();
     return createHash('sha256').update(norm).digest('hex').slice(0, 16);
 }
 

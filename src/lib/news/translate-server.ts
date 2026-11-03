@@ -2,7 +2,7 @@
 // `/api/cron/news-translate`; `/api/news` tylko czyta słownik (`readTranslations`). Bez DEEPSEEK_API_KEY → `skipped`.
 // Spec: docs/specs/2026-11-03-newsy-tlumaczenie.md.
 import { peekServerCache, readServerCacheEntry, setServerCache } from '@/lib/server-cache';
-import { callDeepseek } from '@/lib/news/brief-server';
+import { DeepseekError, callDeepseek } from '@/lib/news/brief-server';
 import { costUsd, DEEPSEEK_MODEL } from '@/lib/news/brief';
 import { buildNewsFeed } from '@/lib/news/feed';
 import {
@@ -79,6 +79,12 @@ export async function runNewsTranslate(
                 Object.assign(fresh, entries);
                 res.batches.ok++;
             } catch (e) {
+                // Ucięta odpowiedź albo `reasoning_content` są już zapłacone — koszt musi trafić do dziennika.
+                if (e instanceof DeepseekError) {
+                    res.costUsd += costUsd(e.usage, now);
+                    res.tokens.input += e.usage.prompt_tokens ?? 0;
+                    res.tokens.output += e.usage.completion_tokens ?? 0;
+                }
                 res.failed.push(`partia ${i + 1} → ${e instanceof Error ? e.message : String(e)}`.slice(0, 120));
             }
         }
