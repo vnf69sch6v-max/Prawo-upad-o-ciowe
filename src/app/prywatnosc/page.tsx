@@ -100,9 +100,11 @@ export default function PrivacyPage() {
                     </li>
                     <li>
                         <strong>DeepSeek</strong> (Hangzhou DeepSeek Artificial Intelligence, Chiny) — automatyczne pisanie briefu dnia
-                        i tygodnia. Wysyłamy wyłącznie publiczne dane statystyczne (GUS, NBP, GPW) i publiczne nagłówki mediów;
-                        żadnych danych osobowych ani informacji o użytkownikach. Brief powstaje raz dziennie po stronie serwera,
-                        nie w Twojej przeglądarce.
+                        i tygodnia oraz maszynowe tłumaczenie na polski tytułów i krótkich opisów zagranicznych newsów (media
+                        i banki centralne na stronie Newsy). Wysyłamy wyłącznie publiczne dane statystyczne (GUS, NBP, GPW)
+                        i publiczne nagłówki oraz opisy mediów; żadnych danych osobowych ani informacji o użytkownikach.
+                        Brief i tłumaczenia powstają po stronie serwera, w zaplanowanych zadaniach (kilka razy dziennie), nie w Twojej
+                        przeglądarce.
                     </li>
                     <li><strong>Biuro rachunkowe</strong> — jeśli prowadzi naszą księgowość, w zakresie dokumentów sprzedaży.</li>
                 </ul>

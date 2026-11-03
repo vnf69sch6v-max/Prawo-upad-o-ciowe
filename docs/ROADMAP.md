@@ -19,6 +19,9 @@ przebieg → PM tnie go na widoczne kawałki (np. najpierw sama strona z danymi,
 - **W2. Lista /newsy spójna z Przeglądem (4c)** — w toku w osobnej sesji 02.11 (gałąź `claude/newsy-lista`); nie dublować.
 - **W3. Kalkulator „Twoja inflacja” (pozycja 10)** — krok 1 (widok) zrobiony 02.11, PM: SHIP po FIX (`/ceny/twoja-inflacja`, 13 działów COICOP 2018 na oficjalnych wagach GUS 2026, wynik zakotwiczony w CPI, stan w `?w=`; spec `docs/specs/2026-11-02-twoja-inflacja.md`). Przy okazji naprawione przybliżone wagi na `/ceny`. Po wdrożeniu PM sprawdza kryteria 18–20. Następny krok: zapis koszyka na koncie.
 - **W4. Polska na tle UE (pozycja 11)** — HICP PL vs strefa euro, CZ, HU, DE (Eurostat), jeden wykres i tabela. W toku w osobnej sesji 02.11 (gałąź `claude/pl-na-tle-ue`); nie dublować.
+- **N3. Newsy zagraniczne po polsku** — **zrobione 3.11.2026** (prośba właściciela 03.11 „mocno skup się na newsach”; gałąź
+  `claude/newsy-tlumaczenie`, spec `docs/specs/2026-11-03-newsy-tlumaczenie.md`, wpis w „Zrobione”). Po wdrożeniu PM sprawdza kryterium 18
+  (wpis `news-translate` z kosztem, pokrycie ≥ 70%, 5 tytułów ręcznie). Jeśli w dzienniku pojawi się `ucięta (max_tokens)` — dzielić partię.
 - **N4. Newsy przy wskaźnikach** (właściciel 03.11: „mocno skup się na newsach”) — **zrobione 03.11.2026** (krok 1), gałąź
   `claude/newsy-przy-wskaznikach`, spec `docs/specs/2026-11-03-newsy-przy-wskaznikach.md`. Pomiar 03.11 na 150 newsach:
   fałszywe trafienia na każdej stronie (np. 800 plus w cenach, Ryanair w pracy), brak paliw/prądu/gazu w cenach,
@@ -280,6 +283,13 @@ J5. **Gospodarka Japonii** — produkcja zrobiona 27.10 (`/japonia/gospodarka`: 
 - **`GUS_BDL_KEY`** — wyższy limit BDL (rejestracja na api.stat.gov.pl).
 
 ## Zrobione
+- **3.11.2026 — N3: polskie tytuły i leady zagranicznych newsów na /newsy** (gałąź `claude/newsy-tlumaczenie`,
+  `docs/specs/2026-11-03-newsy-tlumaczenie.md`). Cron `news-translate` (05:15, 11:15, 19:15 UTC, poza szczytem DeepSeek) tłumaczy
+  `deepseek-flash` partiami (≤ 15 pozycji, ≤ 4000 tok. wejścia, `max_tokens` 3000, ≤ 3 partie) tylko pozycje EN bez wpisu w słowniku
+  `news/translations_v1` (klucz = hash tytułu, sealed, 14 dni / 600 wpisów). Walidator: liczby tłumaczenia muszą być w oryginale,
+  liczby tytułu muszą być w tłumaczeniu; podejrzana odpowiedź = oryginał (`rej` z `rv`). `/api/news` nakłada `titlePl`/`leadPl` po cache
+  i po archiwum (brief i digest widzą oryginały). UI: polski tytuł, pod nim „tłum. maszynowe · oryginał”, lead PL w „Najważniejsze”,
+  szukajka po polsku. Koszt w `health/cron_runs`. `/prywatnosc` zaktualizowana. Bez klucza / przy błędzie — jak dotąd.
 - **2.11.2026 — 4c: lista /newsy spójna z Przeglądem** (gałąź `claude/newsy-lista`, `docs/specs/2026-11-02-newsy-lista-spojna.md`, PM: SHIP).
   Wspólny `src/components/ui/NewsRow.tsx` (`NEUTRAL_TAG`, `NewsTag`, `Corroboration`, `ExternalMark`) dla Przeglądu i `/newsy`.
   Na `/newsy` 0 czerwonych tagów w `main` (było 32), czas w wierszach i leadzie szary z `tabular-nums`, relacje bez zielonej

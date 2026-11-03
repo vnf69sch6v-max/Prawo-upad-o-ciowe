@@ -5,6 +5,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { withCache } from '@/lib/server-cache';
 import { appendFeedToTodayArchive } from '@/lib/news/archive';
 import { buildNewsFeed } from '@/lib/news/feed';
+import { applyTranslations } from '@/lib/news/translate';
+import { readTranslations } from '@/lib/news/translate-server';
 
 export const revalidate = 0;
 
@@ -32,6 +34,12 @@ export async function GET(request: NextRequest) {
             }
         }
 
+        // Polskie tytuły zagranicznych pozycji (cron `news-translate`) — nakładane po cache, więc feed w Firestore
+        // zostaje czysty, a nowe tłumaczenie nie czeka na wygaśnięcie 15-min TTL. Tu nic nie wołamy u DeepSeek.
+        if (result?.items?.length) {
+            const translations = await readTranslations().catch(() => null);
+            if (translations) return NextResponse.json({ ...result, items: applyTranslations(result.items, translations) });
+        }
         return NextResponse.json(result);
     } catch (error) {
         return NextResponse.json({ error: String(error) }, { status: 500 });
