@@ -65,4 +65,14 @@ describe('limity czasu funkcji (Vercel)', () => {
         expect(effective(`src/app/api/cron/${group}/route.ts`)).toBeGreaterThanOrEqual(need);
         expect(effective(`src/app/api/cron/${group}/route.ts`)).toBeLessThanOrEqual(300); // Hobby
     });
+    it('cron brief zdąży zapisać przebieg przy najgorszym przypadku (niedziela: 2 briefy × próby × timeout)', () => {
+        const src = readFileSync('src/lib/news/brief-server.ts', 'utf8');
+        const attempts = Number(/const ATTEMPTS = (\d+)/.exec(src)?.[1]);
+        const timeoutS = Number(/const TIMEOUT_MS = ([\d_]+)/.exec(src)?.[1].replace(/_/g, '')) / 1000;
+        expect(attempts).toBeGreaterThan(0);
+        expect(timeoutS).toBeGreaterThan(0);
+        const limit = effective('src/app/api/cron/brief/route.ts');
+        expect(limit).toBeGreaterThanOrEqual(2 * attempts * timeoutS + 10);
+        expect(limit).toBeLessThanOrEqual(300); // Hobby
+    });
 });

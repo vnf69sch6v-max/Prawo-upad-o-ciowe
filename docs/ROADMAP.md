@@ -66,6 +66,9 @@ przebieg → PM tnie go na widoczne kawałki (np. najpierw sama strona z danymi,
     z nieznanego miejsca tekstu. Krok 31.10: komunikat odrzucenia niesie fragment wokół obcej liczby, a druga próba dostaje
     powód odrzucenia (`POPRZEDNIA ODPOWIEDŹ ODRZUCONA`). Po cronie 1.11 (17:20 UTC) odczytać fragment z `/status` i, jeśli to
     zasadna liczba (np. „6 listopada”), poszerzyć walidator; jeśli halucynacja — wzmocnić prompt.
+    1.11 cron przeszedł (2/2), 2.11 znów padł: „liczebnik słowny spoza wejścia: „pięciu””. Krok 3.11: prompt zakazuje wprost liczebników
+    słownych i porządkowych (z przykładami), `ATTEMPTS` 2 → 3 (~0,0005 USD na próbę), `maxDuration` crona 150 → 210 s (niedziela: 2 briefy × 3 próby × 30 s) i test w `function-limits`. Jeśli odrzucenia wrócą w tym tygodniu —
+    rozważyć łagodniejszy walidator słów (dopuścić liczebnik w kontekście kwantyfikatora) albo model z lepszym przestrzeganiem instrukcji.
 4b. **Podsumowanie dnia i brief — data, język, wygląd** — **zrobione 30.10.2026** (prośba właściciela, PM: SHIP po FIX;
     `claude/nice-wozniak-8xnus6`, spec `docs/specs/2026-10-30-podsumowanie-i-brief-wyglad.md`): dwa różne EUR/PLN
     na jednym ekranie bez daty, meta-komentarze modelu, angielski format liczb, pusta połowa karty, czerwone tagi.
