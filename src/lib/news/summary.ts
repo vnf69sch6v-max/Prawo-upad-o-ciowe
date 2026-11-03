@@ -186,8 +186,12 @@ export function collectAllowed(digest: DailyDigest): AllowedTokens {
  * zdanie „opisane niezależnie przez kilka redakcji" — czyli sformułowanie, które prompt systemowy
  * w punkcie 4 WPROST DOPUSZCZA. Walidator sprzeczny z promptem spycha na szablon przy każdej
  * generacji i cała warstwa 2 przestaje mieć sens. Nieostre kwantyfikatory to hedge, nie liczba.
+ *
+ * ⚠ NIE dopisywać z powrotem „oba|obie|obu". To kwantyfikator zbiorczy („w obu przypadkach") odsyłający do dwóch
+ * rzeczy z tego samego zdania, nie liczenie; model pisał go mimo zakazu w prompcie i odrzucał cały brief (3.11.2026,
+ * 3 próby z 3). „połowa" zostaje: to twierdzenie o udziale.
  */
-const WORD_NUMERAL_SRC = 'dwa|dwie|dwóch|dwoma|trzy|trzech|trzema|cztery|czterech|pięć|pięciu|sześć|sześciu|siedem|siedmiu|osiem|ośmiu|dziewięć|dziesięć|pierwsz\\w*|drug\\w*|trzec\\w*|czwart\\w*|oba|obie|obu|połowa|połowę';
+const WORD_NUMERAL_SRC = 'dwa|dwie|dwóch|dwoma|trzy|trzech|trzema|cztery|czterech|pięć|pięciu|sześć|sześciu|siedem|siedmiu|osiem|ośmiu|dziewięć|dziesięć|pierwsz\\w*|drug\\w*|trzec\\w*|czwart\\w*|połowa|połowę';
 export const WORD_NUMERALS_G = new RegExp(`\\b(${WORD_NUMERAL_SRC})\\b`, 'gi');
 
 export interface ValidationResult {
