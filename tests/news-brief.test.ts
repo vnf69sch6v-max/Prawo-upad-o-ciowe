@@ -77,6 +77,16 @@ describe('walidator liczb', () => {
         expect(v.reason).toContain('pięciu');
     });
 
+    it('kwantyfikator zbiorczy „obu” nie jest liczeniem (brief odrzucony 3.11), reszta liczebników nadal tak', () => {
+        const ok = (teza: string) => validateBrief(normalizeBriefBody({ ...goodBody, teza }), allowed).ok;
+        expect(ok('Złoty i giełda zachowały się różnie, a w obu przypadkach skala ruchu była niewielka.')).toBe(true);
+        expect(ok('Obie waluty pozostają pod presją.')).toBe(true);
+        expect(ok('Inflacja spada trzeci miesiąc z rzędu.')).toBe(false);
+        expect(ok('Wzrost objął pięciu największych spółek.')).toBe(false);
+        expect(ok('Dwa banki obniżyły prognozy.')).toBe(false);
+        expect(ok('Połowa kategorii zdrożała.')).toBe(false);
+    });
+
     it('odrzuca liczebnik słowny spoza wejścia, przepuszcza cytat z nagłówka', () => {
         const v = validateBrief(normalizeBriefBody({ ...goodBody, teza: 'Inflacja spada trzeci miesiąc z rzędu.' }), allowed);
         expect(v.ok).toBe(false);
