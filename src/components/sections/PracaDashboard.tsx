@@ -456,7 +456,7 @@ export function PracaDashboard() {
             />
 
             <MobileOnly id="praca-newsy">
-                <RelatedNews topic="praca" limit={3} title="Powiązane newsy" matchTier="strong" excludeOpinion variant="rail" />
+                <RelatedNews topic="praca" limit={5} title="Powiązane newsy" matchTier="strong" excludeOpinion />
             </MobileOnly>
 
             <Drawer

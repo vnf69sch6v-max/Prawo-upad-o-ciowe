@@ -324,7 +324,7 @@ export function InflacjaFull() {
 
             {/* Telefon: wykres zaraz po KPI, newsy na końcu strony (MobileOnly). Desktop: newsy | wykres. */}
             <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-2">
-                <div className="hidden min-w-0 lg:block"><RelatedNews topic="ceny" limit={5} title="Newsy — ceny i inflacja" variant="rail" /></div>
+                <div className="hidden min-w-0 lg:block"><RelatedNews topic="ceny" limit={5} title="Newsy — ceny i inflacja" /></div>
                 <div className="min-w-0">
                     <SectionCard editorial titleVariant="label" title="Inflacja CPI — trend (10 lat)" subtitle={`${freq === 'yoy' ? 'rok do roku' : 'miesiąc do miesiąca'} (%) · GUS`}
                         actions={<div className="flex flex-wrap items-center gap-2">
@@ -442,7 +442,7 @@ export function InflacjaFull() {
             </MobileMore>
 
             <MobileOnly>
-                <RelatedNews topic="ceny" limit={3} title="Newsy — ceny i inflacja" variant="rail" />
+                <RelatedNews topic="ceny" limit={5} title="Newsy — ceny i inflacja" />
             </MobileOnly>
 
             {/* ── Drawer: szczegóły klikniętego działu ── */}
