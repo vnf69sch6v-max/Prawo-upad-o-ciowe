@@ -15,7 +15,7 @@ export interface CronRun {
     origin?: string;
     /** Czas każdego wywołania w kolejności listy crona (bez `refresh=1`, maks. 30) — podstawa limitów `maxDuration`. */
     routes?: { ep: string; ms: number }[];
-    /** Koszt wywołań modelu w USD (cron `brief`). */
+    /** Koszt wywołań modelu w USD (crony `brief`, `news-translate`). */
     costUsd?: number;
 }
 
@@ -47,6 +47,7 @@ export const CRON_SPECS: Record<string, CronSpec> = {
     'news-archive': { label: 'Archiwum newsów', schedule: 'codziennie 20:00 UTC', maxAgeHours: 26 },
     freshness: { label: 'Kontrola świeżości', schedule: 'codziennie 16:40 UTC', maxAgeHours: 26 },
     brief: { label: 'Brief dnia (DeepSeek)', schedule: 'codziennie 17:20 UTC', maxAgeHours: 26 },
+    'news-translate': { label: 'Tłumaczenie newsów (DeepSeek)', schedule: 'codziennie 05:15, 11:15, 19:15 UTC', maxAgeHours: 26 },
     jp: { label: 'Japonia — wszystkie wskaźniki', schedule: 'codziennie 00:30 UTC (9:30 JST)', maxAgeHours: 26 },
 };
 

@@ -75,4 +75,14 @@ describe('limity czasu funkcji (Vercel)', () => {
         expect(limit).toBeGreaterThanOrEqual(2 * attempts * timeoutS + 10);
         expect(limit).toBeLessThanOrEqual(300); // Hobby
     });
+    it('cron news-translate zdąży zapisać przebieg przy wszystkich partiach z timeoutem', () => {
+        const brief = readFileSync('src/lib/news/brief-server.ts', 'utf8');
+        const timeoutS = Number(/const TIMEOUT_MS = ([\d_]+)/.exec(brief)?.[1].replace(/_/g, '')) / 1000;
+        const batches = Number(/export const MAX_BATCHES = (\d+)/.exec(readFileSync('src/lib/news/translate.ts', 'utf8'))?.[1]);
+        expect(batches).toBeGreaterThan(0);
+        const limit = effective('src/app/api/cron/news-translate/route.ts');
+        // + 20 s: RSS (timeout 8 s na źródło, równolegle), odczyt i zapis Firestore, dziennik crona.
+        expect(limit).toBeGreaterThanOrEqual(batches * timeoutS + 20);
+        expect(limit).toBeLessThanOrEqual(300); // Hobby
+    });
 });

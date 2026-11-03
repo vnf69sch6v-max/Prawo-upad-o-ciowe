@@ -11,6 +11,7 @@ import { Segmented } from '@/components/ui/Segmented';
 import { NewsDayCard } from '@/components/ui/BriefCard';
 import { Drawer } from '@/components/ui/Drawer';
 import { Corroboration, ExternalMark, NewsTag } from '@/components/ui/NewsRow';
+import { OriginalTitle, displayLang, displayLead, displayTitle } from '@/components/ui/NewsTranslation';
 import { scrollChildInline } from '@/lib/tab-scroll';
 import { useIsClient } from '@/lib/use-is-client';
 import { useScrollFade } from '@/lib/use-scroll-fade';
@@ -52,7 +53,7 @@ function CategoryTag({ section }: { section: string }) {
     return <NewsTag label={sectionLabel(section)} />;
 }
 
-/** „EN · USA” — pozycja z kanału zagranicznego, tytuł w oryginale (nie tłumaczymy). */
+/** „EN · USA” — pozycja z kanału zagranicznego (tytuł po polsku, gdy jest tłumaczenie z crona, inaczej oryginał). */
 function LangTag({ item }: { item: NewsItem }) {
     const label = foreignLabel(item);
     if (!label) return null;
@@ -90,11 +91,12 @@ function LeadStory({ item, mounted }: { item: NewsItem; mounted: boolean }) {
             <span data-news-lead-label className="inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wide text-mk-brand">
                 <Flame size={12} aria-hidden /> Najważniejsze
             </span>
-            <h2 lang={item.lang ?? 'pl'} className="mt-1.5 text-lg font-bold leading-tight tracking-tight text-mk-text transition-colors group-hover:text-mk-brand sm:text-xl">
-                {item.title}
+            <h2 lang={displayLang(item)} className="mt-1.5 text-lg font-bold leading-tight tracking-tight text-mk-text transition-colors group-hover:text-mk-brand sm:text-xl">
+                {displayTitle(item)}
                 <ExternalMark size={15} />
             </h2>
-            {item.description && <p className="mt-1.5 line-clamp-2 text-sm leading-snug text-mk-muted">{item.description}</p>}
+            <OriginalTitle item={item} />
+            {displayLead(item) && <p lang={item.leadPl ? 'pl' : item.lang ?? 'pl'} className="mt-1.5 line-clamp-2 text-sm leading-snug text-mk-muted">{displayLead(item)}</p>}
             <div className="mt-2.5 flex flex-wrap items-center gap-x-2 gap-y-1.5 text-xs text-mk-muted">
                 <span className="font-medium text-mk-text-soft">{item.source}</span>
                 <span className="text-mk-faint" aria-hidden>·</span>
@@ -139,10 +141,11 @@ function NewsRow({ item, mounted }: { item: NewsItem; mounted: boolean }) {
                     {when}
                 </time>
                 <div className="min-w-0 flex-1">
-                    <h3 lang={item.lang ?? 'pl'} className="text-[15px] font-semibold leading-snug text-mk-text transition-colors group-hover:text-mk-brand sm:text-sm">
-                        {item.title}
+                    <h3 lang={displayLang(item)} className="text-[15px] font-semibold leading-snug text-mk-text transition-colors group-hover:text-mk-brand sm:text-sm">
+                        {displayTitle(item)}
                         <ExternalMark />
                     </h3>
+                    <OriginalTitle item={item} />
                     <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1.5 text-xs text-mk-muted">
                         <span className="inline-flex min-w-0 max-w-full items-center gap-1.5">
                             <span className="truncate font-medium text-mk-text-soft">{item.source}</span>
@@ -260,7 +263,7 @@ export default function NewsyPage() {
             if (source !== 'all' && it.sourceId !== source) return false;
             if (cat !== 'all' && sectionKey(it.section) !== cat) return false;
             if (!needle) return true;
-            return norm(it.title).includes(needle) || norm(it.description).includes(needle);
+            return [it.title, it.description, it.titlePl, it.leadPl].some((t) => !!t && norm(t).includes(needle));
         });
         const base = source === 'all' ? collapseClusters(out) : out;
         return sort === 'data'
@@ -274,7 +277,7 @@ export default function NewsyPage() {
         const przedZwinieciem = (data?.items ?? []).filter((it) => {
             if (cat !== 'all' && sectionKey(it.section) !== cat) return false;
             if (!needle) return true;
-            return norm(it.title).includes(needle) || norm(it.description).includes(needle);
+            return [it.title, it.description, it.titlePl, it.leadPl].some((t) => !!t && norm(t).includes(needle));
         }).length;
         return przedZwinieciem - filtered.length;
     }, [data, q, source, cat, filtered.length]);

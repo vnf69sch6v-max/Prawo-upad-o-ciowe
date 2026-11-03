@@ -14,6 +14,10 @@ export interface NewsItem {
     lang?: 'pl' | 'en';
     /** Region źródła: PL / EU / US / JP / GB / GLOBAL; brak = 'PL'. */
     region?: string;
+    /** Tytuł po polsku (tłumaczenie maszynowe DeepSeek z crona `news-translate`); brak = pokazujemy oryginał. */
+    titlePl?: string;
+    /** Krótki lead po polsku z opisu oryginału; tylko gdy jest `titlePl`. */
+    leadPl?: string;
 
     // ─── Pola rankingu (dokładane przez /api/news; patrz lib/news/{score,cluster}.ts) ───
     /** Ważność 0–100, znormalizowana w obrębie paczki. Sortowanie „Ważne" idzie po tym. */
