@@ -6,6 +6,7 @@ import {
     cleanBriefBody, normalizeBriefBody, normalizeBriefText, parseBriefJson, validateBrief, type BriefInputData,
 } from '@/lib/news/brief';
 import { callDeepseek, runBrief } from '@/lib/news/brief-server';
+import { validateSummary } from '@/lib/news/summary';
 import type { DailyDigest } from '@/lib/news/daily';
 import realBrief from './fixtures/brief-2026-10-30.json';
 
@@ -85,6 +86,13 @@ describe('walidator liczb', () => {
         expect(ok('Wzrost objął pięciu największych spółek.')).toBe(false);
         expect(ok('Dwa banki obniżyły prognozy.')).toBe(false);
         expect(ok('Połowa kategorii zdrożała.')).toBe(false);
+    });
+
+    it('„obu” w polu dane też przechodzi, a podsumowanie dnia dzieli tę samą bramkę', () => {
+        expect(validateBrief(normalizeBriefBody({ ...goodBody, dane: ['Oba rynki zachowały się podobnie.', ...goodBody.dane] }), allowed).ok).toBe(true);
+        const none = { numbers: new Set<string>(), words: new Set<string>() };
+        expect(validateSummary('Rynki wyglądają spokojnie. W obu przypadkach ruch był niewielki.', none).ok).toBe(true);
+        expect(validateSummary('Rynki wyglądają spokojnie. Ruch objął pięciu spółek.', none).ok).toBe(false);
     });
 
     it('odrzuca liczebnik słowny spoza wejścia, przepuszcza cytat z nagłówka', () => {

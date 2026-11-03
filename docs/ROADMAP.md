@@ -81,7 +81,7 @@ przebieg → PM tnie go na widoczne kawałki (np. najpierw sama strona z danymi,
     słownych i porządkowych (z przykładami), `ATTEMPTS` 2 → 3 (~0,0005 USD na próbę), `maxDuration` crona 150 → 210 s (niedziela: 2 briefy × 3 próby × 30 s) i test w `function-limits`. Jeśli odrzucenia wrócą w tym tygodniu —
     rozważyć łagodniejszy walidator słów (dopuścić liczebnik w kontekście kwantyfikatora) albo model z lepszym przestrzeganiem instrukcji.
     3.11 wszystkie 3 próby padły na „obu". Decyzja PM 3.11 (opcja A, spec `docs/specs/2026-11-03-brief-liczebniki.md`): z bramki znikają
-    tylko `oba|obie|obu`; kardynalne, porządkowe i „połowa” zostają. Status: do zrobienia (priorytet 1 — `news-brief` stale).
+    tylko `oba|obie|obu`; kardynalne, porządkowe i „połowa” zostają. Status: wdrożone 3.11 (opcja A; krok z `curl` na crona pominięty — brak `CRON_SECRET`), czeka na weryfikację przebiegiem 4.11 17:20 UTC; `news-brief` stale do tego czasu. Jeśli cron padnie na innym słowie — nie luzować dalej bez nowej decyzji PM; sprawdzić, czy „obu” nie dotyczy trzech rzeczy (kontrola 4c').
 4b. **Podsumowanie dnia i brief — data, język, wygląd** — **zrobione 30.10.2026** (prośba właściciela, PM: SHIP po FIX;
     `claude/nice-wozniak-8xnus6`, spec `docs/specs/2026-10-30-podsumowanie-i-brief-wyglad.md`): dwa różne EUR/PLN
     na jednym ekranie bez daty, meta-komentarze modelu, angielski format liczb, pusta połowa karty, czerwone tagi.
