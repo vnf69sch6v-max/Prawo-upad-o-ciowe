@@ -21,6 +21,13 @@ export async function readBrief(kind: BriefKind): Promise<BriefDoc | null> {
     return peekServerCache<BriefDoc>('digest', briefDocId(kind));
 }
 
+/** Błąd po odpowiedzi, za którą DeepSeek już policzył tokeny — `usage` pozwala doliczyć koszt do dziennika crona. */
+export class DeepseekError extends Error {
+    constructor(message: string, readonly usage: DeepseekUsage = {}) {
+        super(message);
+    }
+}
+
 export interface DeepseekReply {
     content: string;
     usage: DeepseekUsage;
@@ -34,6 +41,8 @@ export async function callDeepseek(
     fetchImpl: typeof fetch = fetch,
     /** Powód odrzucenia poprzedniej próby — model dostaje szansę poprawki zamiast losować od nowa. */
     feedback = '',
+    /** Prompt systemowy — domyślnie brief; tłumaczenie newsów (`translate-server.ts`) podaje własny. */
+    system = BRIEF_SYSTEM_PROMPT,
 ): Promise<DeepseekReply> {
     const res = await fetchImpl(DEEPSEEK_ENDPOINT, {
         method: 'POST',
@@ -41,7 +50,7 @@ export async function callDeepseek(
         body: JSON.stringify({
             model: DEEPSEEK_MODEL,
             messages: [
-                { role: 'system', content: BRIEF_SYSTEM_PROMPT },
+                { role: 'system', content: system },
                 { role: 'user', content: feedback ? `${user}\n\nPOPRZEDNIA ODPOWIEDŹ ODRZUCONA: ${feedback}. Napisz brief od nowa, używając wyłącznie liczb z danych.` : user },
             ],
             thinking: { type: 'disabled' },
@@ -55,13 +64,15 @@ export async function callDeepseek(
     });
     if (!res.ok) throw new Error(`DeepSeek HTTP ${res.status}`);
     const json = (await res.json()) as {
-        choices?: { message?: { content?: string; reasoning_content?: string } }[];
+        choices?: { message?: { content?: string; reasoning_content?: string }; finish_reason?: string }[];
         usage?: DeepseekUsage;
     };
     const msg = json.choices?.[0]?.message;
     // Rozumowanie miało być wyłączone — jeśli wróciło, płacimy za tokeny, których nie chcieliśmy.
-    if (msg?.reasoning_content) throw new Error('DeepSeek zwrócił reasoning_content (thinking nie wyłączony)');
-    if (!msg?.content) throw new Error('DeepSeek: pusta odpowiedź');
+    if (msg?.reasoning_content) throw new DeepseekError('DeepSeek zwrócił reasoning_content (thinking nie wyłączony)', json.usage);
+    if (!msg?.content) throw new DeepseekError('DeepSeek: pusta odpowiedź', json.usage);
+    // Ucięty JSON i tak nie przejdzie parsera; komunikat mówi wprost, że zabrakło `max_tokens`.
+    if (json.choices?.[0]?.finish_reason === 'length') throw new DeepseekError('DeepSeek: odpowiedź ucięta (max_tokens)', json.usage);
     return { content: msg.content, usage: json.usage ?? {} };
 }
 
@@ -159,6 +170,7 @@ export async function runBrief(kind: BriefKind, now = new Date(), fetchImpl: typ
                 console.log(`[brief] ${kind} ${today}: ok, ${tokens.input}+${tokens.output} tok, $${cost.toFixed(6)}`);
                 return { kind, status: 'ok', costUsd: cost, tokens };
             } catch (e) {
+                if (e instanceof DeepseekError) cost += costUsd(e.usage, now);
                 reason = e instanceof Error ? e.message : String(e);
             }
         }

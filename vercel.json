@@ -63,6 +63,18 @@
             "schedule": "20 17 * * *"
         },
         {
+            "path": "/api/cron/news-translate",
+            "schedule": "15 5 * * *"
+        },
+        {
+            "path": "/api/cron/news-translate",
+            "schedule": "15 11 * * *"
+        },
+        {
+            "path": "/api/cron/news-translate",
+            "schedule": "15 19 * * *"
+        },
+        {
             "path": "/api/cron/jp",
             "schedule": "30 0 * * *"
         }

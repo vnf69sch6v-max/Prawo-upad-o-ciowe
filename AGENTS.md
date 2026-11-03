@@ -241,6 +241,13 @@ Standard scripts in `package.json`:
   must exclude 貿易, because 貿易・サービス収支 contains サービス収支. Dates are
   `JP_BOP_RELEASES` at 8:50 JST through January
   2027 data on 08.03.2027. Extend that map before April 2027.
+- Foreign news translation (ROADMAP N3, `docs/specs/2026-11-03-newsy-tlumaczenie.md`): cron `news-translate`
+  (3 entries in `vercel.json`, same path, 05:15/11:15/19:15 UTC) sends only `lang:'en'` items without an entry in the
+  sealed dictionary `news/translations_v1` (key = hash of the title) to DeepSeek in batches. Pure logic + validator in
+  `src/lib/news/translate.ts` (numbers in the translation must be in the original and vice versa for the title;
+  suspicious = keep original, stored as `rej` with `rv` — bump `TRANSLATE_RULES_VERSION` when prompt/validator change).
+  `/api/news` overlays `titlePl`/`leadPl` after cache and archive (brief/digest/clustering see originals); never call
+  DeepSeek in a request. UI: `src/components/ui/NewsTranslation.tsx`.
 - Header from `xl`: sections inline, search is an icon (⌘K still works) — with
   the 220 px field the row did not fit the 1440 px container.
 - Inside a `withCache(...)` fetcher, fetch upstream with `cache: 'no-store'`,
