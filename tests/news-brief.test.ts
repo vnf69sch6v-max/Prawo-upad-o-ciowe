@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('server-only', () => ({}));
 import {
-    MAX_OUTPUT_TOKENS, buildBriefInput, collectBriefAllowed, costUsd, estimateTokens, isDeepseekPeak,
+    BRIEF_SYSTEM_PROMPT, MAX_OUTPUT_TOKENS, buildBriefInput, collectBriefAllowed, costUsd, estimateTokens, isDeepseekPeak,
     cleanBriefBody, normalizeBriefBody, normalizeBriefText, parseBriefJson, validateBrief, type BriefInputData,
 } from '@/lib/news/brief';
 import { callDeepseek, runBrief } from '@/lib/news/brief-server';
@@ -57,6 +57,10 @@ describe('walidator liczb', () => {
 
     it('akceptuje liczby z wejścia (2,8 = 2.8, −0,1 bez znaku, daty ISO po normalizacji)', () => {
         expect(validateBrief(normalizeBriefBody(parseBriefJson(JSON.stringify(goodBody))!), allowed)).toEqual({ ok: true });
+    });
+
+    it('prompt zakazuje liczebników słownych (brief odrzucony 2.11: „pięciu”)', () => {
+        expect(BRIEF_SYSTEM_PROMPT).toMatch(/liczebników słownych i porządkowych/);
     });
 
     it('odrzuca liczbę spoza wejścia', () => {

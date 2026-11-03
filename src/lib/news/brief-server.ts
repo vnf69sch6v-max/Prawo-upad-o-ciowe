@@ -12,7 +12,7 @@ import {
 } from '@/lib/news/brief';
 
 const TIMEOUT_MS = 30_000;
-const ATTEMPTS = 2;
+const ATTEMPTS = 3;
 
 /** `digest/brief_daily_v1` i `digest/brief_weekly_v1` — kolekcja `digest` jest już objęta szyfrowaniem i sweepem. */
 export const briefDocId = (kind: BriefKind) => `brief_${kind}_v1`;
