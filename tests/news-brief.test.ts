@@ -71,6 +71,12 @@ describe('walidator liczb', () => {
         expect(v.reason).toContain('Inflacja CPI spadła do 2,7%');
     });
 
+    it('odrzuca „pięciu” bez tej liczby na wejściu (brief odrzucony 2.11)', () => {
+        const v = validateBrief(normalizeBriefBody({ ...goodBody, polska: [...goodBody.polska, 'Indeks wzrósł wśród pięciu największych spółek.'] }), allowed);
+        expect(v.ok).toBe(false);
+        expect(v.reason).toContain('pięciu');
+    });
+
     it('odrzuca liczebnik słowny spoza wejścia, przepuszcza cytat z nagłówka', () => {
         const v = validateBrief(normalizeBriefBody({ ...goodBody, teza: 'Inflacja spada trzeci miesiąc z rzędu.' }), allowed);
         expect(v.ok).toBe(false);
