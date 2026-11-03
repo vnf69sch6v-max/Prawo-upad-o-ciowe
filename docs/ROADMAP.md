@@ -22,7 +22,7 @@ przebieg → PM tnie go na widoczne kawałki (np. najpierw sama strona z danymi,
 - **N3. Newsy zagraniczne po polsku** — **zrobione 3.11.2026** (prośba właściciela 03.11 „mocno skup się na newsach”; gałąź
   `claude/newsy-tlumaczenie`, spec `docs/specs/2026-11-03-newsy-tlumaczenie.md`, wpis w „Zrobione”). Po wdrożeniu PM sprawdza kryterium 18
   (wpis `news-translate` z kosztem, pokrycie ≥ 70%, 5 tytułów ręcznie). Jeśli w dzienniku pojawi się `ucięta (max_tokens)` — dzielić partię.
-- **N4. Newsy przy wskaźnikach** (właściciel 03.11: „mocno skup się na newsach”) — **zrobione 03.11.2026** (krok 1), gałąź
+- **N4. Newsy przy wskaźnikach** (właściciel 03.11: „mocno skup się na newsach”) — **zrobione 03.11.2026** (krok 1, PM: SHIP), gałąź
   `claude/newsy-przy-wskaznikach`, spec `docs/specs/2026-11-03-newsy-przy-wskaznikach.md`. Pomiar 03.11 na 150 newsach:
   fałszywe trafienia na każdej stronie (np. 800 plus w cenach, Ryanair w pracy), brak paliw/prądu/gazu w cenach,
   4 z 5 miejsc w rynkach to kursy walut Money.pl. Krok 1: reguły w `src/lib/news/match.ts` (opis tylko przy ≥2 frazach,
@@ -283,6 +283,12 @@ J5. **Gospodarka Japonii** — produkcja zrobiona 27.10 (`/japonia/gospodarka`: 
 - **`GUS_BDL_KEY`** — wyższy limit BDL (rejestracja na api.stat.gov.pl).
 
 ## Zrobione
+- **3.11.2026 — N4 krok 1: trafne newsy przy wskaźnikach** (gałąź `claude/newsy-przy-wskaznikach`,
+  `docs/specs/2026-11-03-newsy-przy-wskaznikach.md`, PM: SHIP). `src/lib/news/match.ts`: opis liczy się dopiero przy ≥ 2 frazach,
+  weto zagraniczne w rynkach, tylko PL, serie dzienne (kursy Money.pl, „Nowe ceny paliw”) zwinięte do jednej pozycji, tag podtematu
+  (INFLACJA, PALIWA, ENERGIA, STOPY, ZŁOTY, GPW…), rdzeń strony przed resztą. Fixture 150 newsów z 03.11: precyzja ≥ 95% i recall ≥ 90%
+  w każdym temacie (`tests/news-topics.test.ts`). Jedna karta „Newsy — <temat>” zamiast Kalendarium (telefon: 3 + „Więcej”, wiersz
+  ≥ 44 px, szary tag), chipy Przeglądu liczone tą samą funkcją (`src/lib/news/topic-links.ts`). Bez nowego źródła, crona i CSP.
 - **3.11.2026 — N3: polskie tytuły i leady zagranicznych newsów na /newsy** (gałąź `claude/newsy-tlumaczenie`,
   `docs/specs/2026-11-03-newsy-tlumaczenie.md`). Cron `news-translate` (05:15, 11:15, 19:15 UTC, poza szczytem DeepSeek) tłumaczy
   `deepseek-flash` partiami (≤ 15 pozycji, ≤ 4000 tok. wejścia, `max_tokens` 3000, ≤ 3 partie) tylko pozycje EN bez wpisu w słowniku
