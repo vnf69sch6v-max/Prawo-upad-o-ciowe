@@ -6,7 +6,7 @@ import { NextRequest } from 'next/server';
 import { warmEndpoints } from '@/lib/cron-warm';
 import { CRON_ENDPOINTS } from '@/lib/cron-endpoints';
 
-export const maxDuration = 120;
+export const maxDuration = 270;
 
 export async function GET(request: NextRequest) {
     return warmEndpoints(request, [...CRON_ENDPOINTS.bdl], 'bdl');
