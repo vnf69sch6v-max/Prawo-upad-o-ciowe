@@ -54,8 +54,9 @@ przebieg → PM tnie go na widoczne kawałki (np. najpierw sama strona z danymi,
      - `bdl-series`: dowolne `start`/`step`/`year`/`freq` tworzą dowolne klucze;
      - `gus-labor-extra` `year`, `regional-gus`, `gus-regional`, `smup`;
      - cron `bdl`: **zrobione 5.11.2026** — `maxDuration` 120 → 270 s (8 tras × 30 s + 8 × 1,5 s + 10 s = 262 s), test w
-       `function-limits` obejmuje teraz `bdl`. Powód: brak zapisu przebiegu 3.11 i 5.11 przy świeżych danych (cron ucięty
-       przed `recordCronRun`?). Jeśli `bdl` znów będzie `late` po 6.11 — przyczyna leży gdzie indziej (logi Vercela, właściciel).
+       `function-limits` obejmuje teraz `bdl`. Prawdopodobny powód (bez logów Vercela): brak zapisu przebiegu 3.11 i 5.11 przy świeżych
+       danych — cron ucięty przed `recordCronRun`. To hipoteza: przy typowych 21–32 s ucięcie wymaga wolnego BDL. Jeśli `bdl` znów będzie
+       `late` po 6.11 — przyczyna leży gdzie indziej; wtedy w „Wymaga właściciela”: logi Vercela z 3.11 i 5.11 (Project → Logs, filtr `/api/cron/bdl`).
      - Ta sama reguła dla crona `jp` (pliki Cursora — uzgodnić): 17 tras, suma ich limitów 640 s, a cron ma 120 s
        (28.10 trwał 78,1 s). `tests/function-limits.test.ts` sprawdza tylko `dbw-1..4`. Rozszerzyć test na wszystkie
        warm crony, potem podzielić `jp` albo skrócić limity tras. Czasy tras z kroku 2 pokażą, które są wolne.
