@@ -59,7 +59,7 @@ describe('limity czasu funkcji (Vercel)', () => {
         });
     });
 
-    it.each(['dbw-1', 'dbw-2', 'dbw-3', 'dbw-4'] as const)('cron %s zdąży wywołać wszystkie trasy i zapisać przebieg', (group) => {
+    it.each(['dbw-1', 'dbw-2', 'dbw-3', 'dbw-4', 'bdl'] as const)('cron %s zdąży wywołać wszystkie trasy i zapisać przebieg', (group) => {
         const endpoints = CRON_ENDPOINTS[group];
         const need = endpoints.reduce((s, ep) => s + effective(routeFile(ep)), 0) + endpoints.length * CRON_SPACING_MS / 1000 + 10;
         expect(effective(`src/app/api/cron/${group}/route.ts`)).toBeGreaterThanOrEqual(need);
