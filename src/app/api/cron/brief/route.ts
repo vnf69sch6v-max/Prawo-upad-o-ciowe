@@ -11,7 +11,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { runBrief, type BriefRunResult } from '@/lib/news/brief-server';
 import { recordCronRun } from '@/lib/cron-log';
 
-export const maxDuration = 210;
+export const maxDuration = 260;
 
 export async function GET(request: NextRequest) {
     const secret = process.env.CRON_SECRET;

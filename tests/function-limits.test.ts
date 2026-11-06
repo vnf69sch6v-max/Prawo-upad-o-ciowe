@@ -69,10 +69,12 @@ describe('limity czasu funkcji (Vercel)', () => {
         const src = readFileSync('src/lib/news/brief-server.ts', 'utf8');
         const attempts = Number(/const ATTEMPTS = (\d+)/.exec(src)?.[1]);
         const timeoutS = Number(/const TIMEOUT_MS = ([\d_]+)/.exec(src)?.[1].replace(/_/g, '')) / 1000;
+        const repairs = Number(/const REPAIRS = (\d+)/.exec(src)?.[1]);
         expect(attempts).toBeGreaterThan(0);
+        expect(repairs).toBeGreaterThan(0);
         expect(timeoutS).toBeGreaterThan(0);
         const limit = effective('src/app/api/cron/brief/route.ts');
-        expect(limit).toBeGreaterThanOrEqual(2 * attempts * timeoutS + 10);
+        expect(limit).toBeGreaterThanOrEqual(2 * (attempts + repairs) * timeoutS + 10);
         expect(limit).toBeLessThanOrEqual(300); // Hobby
     });
     it('cron news-translate zdąży zapisać przebieg przy wszystkich partiach z timeoutem', () => {
