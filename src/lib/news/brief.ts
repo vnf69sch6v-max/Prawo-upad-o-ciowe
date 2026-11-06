@@ -38,6 +38,8 @@ export interface BriefDoc {
     body: BriefBody;
     tokens: { input: number; output: number };
     costUsd: number;
+    /** Ile punktów przepisano po odrzuceniu przez bramkę (`runBrief` → naprawa). Brak = brief przeszedł bez naprawy. */
+    repaired?: number;
 }
 
 // ─── Model i limity ─────────────────────────────────────────
@@ -225,6 +227,82 @@ export function parseBriefJson(raw: string): BriefBody | null {
 
 export function briefText(b: BriefBody): string {
     return [b.teza, ...b.dane, ...b.polska, ...b.swiat, ...b.kalendarz].join('\n');
+}
+
+// ─── Naprawa odrzuconych punktów ────────────────────────────
+
+/**
+ * Osobny, krótki prompt: model dostaje tylko punkt i zakazany token — bez wejścia briefu, więc nie ma skąd wziąć
+ * nowych faktów. Wynik i tak przechodzi niezmienioną bramkę `validateBrief` oraz lokalny bezpiecznik `applyRepairs`.
+ */
+export const BRIEF_REPAIR_PROMPT = `Przepisz każdy punkt po polsku, usuwając zakazane słowo lub liczbę (pole "zakazane").
+Zachowaj sens oraz wszystkie cyfry, daty i nazwy z punktu. Nie dodawaj nowych liczb, faktów ani liczebników słownych
+i porządkowych (pierwszy, drugi, pięciu…): zamiast tego „kolejny”, „w każdym z nich”, „ostatni” albo po prostu pomiń słowo.
+Odpowiedz wyłącznie JSON-em {"punkty": string[]} — w tej samej kolejności i z tą samą liczbą elementów co wejście.`;
+
+export type BriefField = 'teza' | 'dane' | 'polska' | 'swiat' | 'kalendarz';
+
+export interface OffendingPoint {
+    field: BriefField;
+    /** Indeks w tablicy pola; `teza` ma 0. */
+    index: number;
+    text: string;
+    /** Zakazany liczebnik słowny albo liczba (zapis kanoniczny jak `extractNumbers`). */
+    token: string;
+    kind: 'word' | 'number';
+}
+
+const MAX_REPAIR_POINTS = 4;
+const MAX_REPAIR_GROWTH = 1.3;
+
+/** Naprawiamy tylko to, co w punkcie widać jako jedno słowo/liczbę; markdown, meta, powtórzenia i brak punktów — nie. */
+export function isRepairableReason(reason: string): boolean {
+    return reason.startsWith('liczebnik słowny spoza wejścia') || reason.startsWith('liczby spoza wejścia');
+}
+
+/** Punkty (≤4) z pierwszym zakazanym liczebnikiem lub obcą liczbą — dokładnie tym, czego szuka `validateBrief`. */
+export function findOffendingPoints(body: BriefBody, allowed: BriefAllowed): OffendingPoint[] {
+    const out: OffendingPoint[] = [];
+    const fields: [BriefField, string[]][] = [
+        ['teza', [body.teza]], ['dane', body.dane], ['polska', body.polska], ['swiat', body.swiat], ['kalendarz', body.kalendarz],
+    ];
+    for (const [field, points] of fields) {
+        points.forEach((text, index) => {
+            if (out.length >= MAX_REPAIR_POINTS) return;
+            const word = [...text.matchAll(WORD_NUMERALS_G)].map((m) => m[0]).find((w) => !allowed.words.has(w.toLowerCase()));
+            if (word) { out.push({ field, index, text, token: word, kind: 'word' }); return; }
+            const num = extractNumbers(text).find((n) => !allowed.numbers.has(n));
+            if (num) out.push({ field, index, text, token: num, kind: 'number' });
+        });
+    }
+    return out;
+}
+
+const unsigned = (n: string) => n.replace(/^-/, '');
+
+/**
+ * Podmienia punkty na przepisane. `null`, gdy cokolwiek się nie zgadza: liczba elementów, brak tekstu, zakazany token
+ * wciąż w punkcie, liczba spoza punktu pierwotnego albo punkt dłuższy niż 130% oryginału. Bez mutacji `body`.
+ * Bezpiecznik jest ostrzejszy niż bramka: naprawa ma tylko USUNĄĆ słowo, nie dopisać treść.
+ */
+export function applyRepairs(body: BriefBody, points: OffendingPoint[], repaired: unknown): BriefBody | null {
+    if (!Array.isArray(repaired) || repaired.length !== points.length) return null;
+    const next: BriefBody = { teza: body.teza, dane: [...body.dane], polska: [...body.polska], swiat: [...body.swiat], kalendarz: [...body.kalendarz] };
+    for (let i = 0; i < points.length; i++) {
+        const p = points[i];
+        const text = repaired[i];
+        if (typeof text !== 'string' || !text.trim()) return null;
+        const t = text.trim();
+        if (t.length > Math.ceil(p.text.length * MAX_REPAIR_GROWTH)) return null;
+        const nums = extractNumbers(t).map(unsigned);
+        const orig = new Set(extractNumbers(p.text).map(unsigned));
+        if (nums.some((n) => !orig.has(n))) return null;
+        if (p.kind === 'number' && nums.includes(unsigned(p.token))) return null;
+        if (p.kind === 'word' && new RegExp(`(?<![\\p{L}])${p.token}(?![\\p{L}])`, 'iu').test(t)) return null;
+        if (p.field === 'teza') next.teza = t;
+        else next[p.field][p.index] = t;
+    }
+    return next;
 }
 
 /** Fragment tekstu wokół pierwszej obcej liczby — bez niego dziennik crona nie mówi, gdzie model ją wstawił (31.10: „6”). */

@@ -6,13 +6,16 @@ import { readNewsArchive, type NewsArchiveItem } from '@/lib/news/archive';
 import { buildTomorrowBlock, type DailyDigest } from '@/lib/news/daily';
 import { nextCalendarDate, prevCalendarDate, warsawDateKey } from '@/lib/news/warsaw-date';
 import {
-    BRIEF_SYSTEM_PROMPT, DEEPSEEK_ENDPOINT, DEEPSEEK_MODEL, MAX_OUTPUT_TOKENS,
-    buildBriefInput, cleanBriefBody, collectBriefAllowed, costUsd, normalizeBriefBody, parseBriefJson, validateBrief, ddmm,
-    type BriefDoc, type BriefKind, type DeepseekUsage,
+    BRIEF_REPAIR_PROMPT, BRIEF_SYSTEM_PROMPT, DEEPSEEK_ENDPOINT, DEEPSEEK_MODEL, MAX_OUTPUT_TOKENS,
+    applyRepairs, buildBriefInput, cleanBriefBody, collectBriefAllowed, costUsd, findOffendingPoints, isRepairableReason,
+    normalizeBriefBody, parseBriefJson, validateBrief, ddmm,
+    type BriefAllowed, type BriefBody, type BriefDoc, type BriefKind, type DeepseekUsage,
 } from '@/lib/news/brief';
 
 const TIMEOUT_MS = 30_000;
 const ATTEMPTS = 3;
+/** Naprawa odrzuconych punktów: jedno dodatkowe wywołanie na przebieg (`maxDuration` crona liczy ją jak próbę). */
+const REPAIRS = 1;
 
 /** `digest/brief_daily_v1` i `digest/brief_weekly_v1` — kolekcja `digest` jest już objęta szyfrowaniem i sweepem. */
 export const briefDocId = (kind: BriefKind) => `brief_${kind}_v1`;
@@ -132,6 +135,29 @@ export function gatherCalendar(kind: BriefKind, today: string): string[] {
     return out;
 }
 
+/**
+ * Jedno krótkie wywołanie, które przepisuje ≤4 odrzucone punkty. Nigdy nie rzuca: błąd, zły JSON albo odrzucenie przez
+ * `applyRepairs` → `body: null` i wywołujący wraca do zwykłej ścieżki. Koszt (także nieudanej odpowiedzi) zawsze zwracany.
+ */
+async function repairBrief(
+    key: string, body: BriefBody, allowed: BriefAllowed, fetchImpl: typeof fetch, now: Date,
+): Promise<{ body: BriefBody | null; cost: number; n: number }> {
+    const points = findOffendingPoints(body, allowed);
+    if (!points.length) return { body: null, cost: 0, n: 0 };
+    let cost = 0;
+    try {
+        const user = JSON.stringify({ punkty: points.map((p) => ({ tekst: p.text, zakazane: p.token })) });
+        const reply = await callDeepseek(key, user, 700, fetchImpl, '', BRIEF_REPAIR_PROMPT);
+        cost += costUsd(reply.usage, now);
+        const parsed = JSON.parse(reply.content.trim().replace(/^```(?:json)?\s*|\s*```$/g, '')) as { punkty?: unknown };
+        const fixed = applyRepairs(body, points, parsed?.punkty);
+        return fixed ? { body: fixed, cost, n: points.length } : { body: null, cost, n: 0 };
+    } catch (e) {
+        if (e instanceof DeepseekError) cost += costUsd(e.usage, now);
+        return { body: null, cost, n: 0 };
+    }
+}
+
 /** Generuje i zapisuje brief. Nigdy nie rzuca — wynik idzie do dziennika crona. */
 export async function runBrief(kind: BriefKind, now = new Date(), fetchImpl: typeof fetch = fetch): Promise<BriefRunResult> {
     const key = process.env.DEEPSEEK_API_KEY?.trim();
@@ -150,6 +176,7 @@ export async function runBrief(kind: BriefKind, now = new Date(), fetchImpl: typ
         let cost = 0;
         let reason = '';
         let feedback = '';
+        let repairsLeft = REPAIRS;
         for (let attempt = 0; attempt < ATTEMPTS; attempt++) {
             try {
                 const reply = await callDeepseek(key, input, MAX_OUTPUT_TOKENS[kind], fetchImpl, feedback);
@@ -159,15 +186,29 @@ export async function runBrief(kind: BriefKind, now = new Date(), fetchImpl: typ
                 if (!parsed) { reason = 'niepoprawny JSON'; continue; }
                 const body = cleanBriefBody(normalizeBriefBody(parsed));
                 if (!body) { reason = 'meta: teza komentuje wejście'; continue; }
-                const v = validateBrief(body, allowed);
+                let final = body;
+                let repaired = 0;
+                let v = validateBrief(final, allowed);
+                if (!v.ok && repairsLeft > 0 && isRepairableReason(v.reason ?? '')) {
+                    repairsLeft--;
+                    const fix = await repairBrief(key, final, allowed, fetchImpl, now);
+                    cost += fix.cost;
+                    // Naprawiony tekst przechodzi TĘ SAMĄ bramkę co oryginał — całość, nie tylko podmienione punkty.
+                    const fixed = fix.body && cleanBriefBody(normalizeBriefBody(fix.body));
+                    if (fixed) {
+                        const again = validateBrief(fixed, allowed);
+                        if (again.ok) { final = fixed; repaired = fix.n; }
+                        v = again;
+                    }
+                }
                 if (!v.ok) { reason = v.reason ?? 'walidacja'; feedback = reason; continue; }
 
                 const doc: BriefDoc = {
                     kind, date: today, dataDate: digests[0].date, generatedAt: now.toISOString(), model: DEEPSEEK_MODEL,
-                    body, tokens, costUsd: cost,
+                    body: final, tokens, costUsd: cost, ...(repaired ? { repaired } : {}),
                 };
                 await setServerCache('digest', briefDocId(kind), doc, 'deepseek');
-                console.log(`[brief] ${kind} ${today}: ok, ${tokens.input}+${tokens.output} tok, $${cost.toFixed(6)}`);
+                console.log(`[brief] ${kind} ${today}: ok, ${tokens.input}+${tokens.output} tok, $${cost.toFixed(6)}${repaired ? `, naprawiono ${repaired} pkt` : ''}`);
                 return { kind, status: 'ok', costUsd: cost, tokens };
             } catch (e) {
                 if (e instanceof DeepseekError) cost += costUsd(e.usage, now);

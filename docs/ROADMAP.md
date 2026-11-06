@@ -84,6 +84,11 @@ przebieg → PM tnie go na widoczne kawałki (np. najpierw sama strona z danymi,
     rozważyć łagodniejszy walidator słów (dopuścić liczebnik w kontekście kwantyfikatora) albo model z lepszym przestrzeganiem instrukcji.
     3.11 wszystkie 3 próby padły na „obu". Decyzja PM 3.11 (opcja A, spec `docs/specs/2026-11-03-brief-liczebniki.md`): z bramki znikają
     tylko `oba|obie|obu`; kardynalne, porządkowe i „połowa” zostają. Status: wdrożone 3.11 (opcja A; krok z `curl` na crona pominięty — brak `CRON_SECRET`), czeka na weryfikację przebiegiem 4.11 17:20 UTC; `news-brief` stale do tego czasu. Jeśli cron padnie na innym słowie — nie luzować dalej bez nowej decyzji PM; sprawdzić, czy „obu” nie dotyczy trzech rzeczy (kontrola 4c').
+    5.11 padło „pierwszy” (porządkowe, 3 próby z 3). Decyzja PM 6.11 (opcja C, spec `docs/specs/2026-11-06-brief-naprawa-zdania.md`):
+    bramka bez zmian; po odrzuceniu wyłącznie za liczebnik słowny/obcą liczbę — jedna naprawa (maks. 1 na przebieg) zakazanych punktów
+    osobnym małym promptem, walidacja całości tą samą bramką + lokalny bezpiecznik; `maxDuration` crona 210 → 260. Status: **zrobione 6.11.2026** (REVIEW PM w PR). Do sprawdzenia po
+    cronie 17:20 UTC: `/status` → `brief` ok, w logu Vercel „naprawiono N pkt”; miara: 7 dni z rzędu `news-brief` fresh, a przy ≥2 z 7
+    odrzuceń — eskalacja do właściciela z kosztem mocniejszego modelu (`DEEPSEEK_MODEL`).
 4b. **Podsumowanie dnia i brief — data, język, wygląd** — **zrobione 30.10.2026** (prośba właściciela, PM: SHIP po FIX;
     `claude/nice-wozniak-8xnus6`, spec `docs/specs/2026-10-30-podsumowanie-i-brief-wyglad.md`): dwa różne EUR/PLN
     na jednym ekranie bez daty, meta-komentarze modelu, angielski format liczb, pusta połowa karty, czerwone tagi.
