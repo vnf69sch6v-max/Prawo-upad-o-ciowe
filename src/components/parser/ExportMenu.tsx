@@ -4,6 +4,7 @@ import * as React from "react";
 import { Download, Loader2 } from "lucide-react";
 import { useNotify } from "@/components/parser/Notices";
 import { pl } from "@/lib/parser/copy.pl";
+import { exportBodyFits } from "@/lib/parser/upload-strategy";
 import type { ParseResult } from "@/lib/parser/types";
 
 const FORMATS: { id: "csv" | "xlsx" | "json"; label: string }[] = [
@@ -17,12 +18,17 @@ export function ExportMenu({ result }: { result: ParseResult }) {
   const notify = useNotify();
 
   const download = async (format: "csv" | "xlsx" | "json") => {
+    const body = JSON.stringify({ result: { ...result, rawText: "" }, format });
+    if (!exportBodyFits(body)) {
+      notify("error", pl.export.tooLarge);
+      return;
+    }
     setBusy(format);
     try {
       const res = await fetch("/api/parser/export", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ result: { ...result, rawText: "" }, format }),
+        body,
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const blob = await res.blob();
