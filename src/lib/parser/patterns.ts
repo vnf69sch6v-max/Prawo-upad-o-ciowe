@@ -71,6 +71,8 @@ function normalizeLabelUncached(input: string): string {
     .replace(/^(?:[a-ząćęłńóśźż]|[ivxlcdm]{1,6}|\d+)\s*[.)]\s+/i, "")
     // Trailing cross-reference formulae: (A-B), (C+D-E), (I-J-K), (F+/-D)
     .replace(/\s*\([a-z0-9+\-/\s]+\)\s*$/i, "")
+    // Oxford comma: "Selling, general, and administrative" = "Selling, general and administrative".
+    .replace(/,\s+and\s+/g, " and ")
     .replace(/\s+/g, " ")
     .replace(/\s*[,:;.]\s*$/, "")
     .trim();
@@ -227,6 +229,9 @@ export const PATTERNS: MetricPattern[] = [
       p("Zysk (strata) na działalności operacyjnej"),
       p("Zysk na działalności operacyjnej"),
       p("Strata na działalności operacyjnej"),
+      // Last on purpose: the earlier "Income from operations" hits a 6-column MD&A table first, and
+      // resolveMetric lets a later synonym whose row fits the columns win (keeps the PL synonym ranks).
+      p("Income (loss) from operations"),
     ],
     exclude: ["segment", "non-operating", "other operating"],
   },
@@ -503,8 +508,10 @@ export const PATTERNS: MetricPattern[] = [
       p("Debt, current"),
       p("Current portion of debt"),
       p("Notes payable, current"),
+      p("Debt and finance leases, current"),
     ],
-    exclude: ["lease", "operating", "finance lease", "długoterminowe"],
+    // Finance leases count as debt (net debt); operating leases do not.
+    exclude: ["operating", "długoterminowe"],
     magnitude: true,
   },
   {
@@ -520,8 +527,11 @@ export const PATTERNS: MetricPattern[] = [
       p("Notes payable, noncurrent"),
       // PAS: total long-term liabilities line (dominated by bank loans for this issuer class)
       p("Zobowiązania długoterminowe"),
+      // Appended (not inserted) so the ranks above stay put; a fitting row still wins (resolveMetric).
+      p("Long-term borrowings, net"),
+      p("Debt and finance leases, net of current"),
     ],
-    exclude: ["current portion", "lease", "operating", "finance lease", "current maturities", "rezerwy"],
+    exclude: ["current portion", "operating", "current maturities", "rezerwy"],
     magnitude: true,
   },
   {
@@ -619,6 +629,7 @@ export const PATTERNS: MetricPattern[] = [
       p("Purchases of treasury stock"),
       p("Repurchases of common stock and related"),
       s("Payments related to repurchases", "prefix"),
+      s("Payments for repurchase of common", "prefix"),
     ],
     exclude: ["proceeds", "issuance", "per share", "employee"],
     magnitude: true,

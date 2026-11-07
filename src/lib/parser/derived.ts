@@ -171,7 +171,7 @@ function computeAdvancedRatios(
   if (interest && interest !== 0 && opInc !== null)
     out.push({ key: "interestCoverage", label: "Interest coverage", value: opInc / Math.abs(interest), format: "x", basis: `${flowP.short} · EBIT / interest` });
   if (tax !== null && preTax && preTax > 0)
-    out.push({ key: "effectiveTaxRate", label: "Effective tax rate", value: (Math.abs(tax) / preTax) * 100, format: "pct", basis: flowP.short });
+    out.push({ key: "effectiveTaxRate", label: "Effective tax rate", value: (tax / preTax) * 100, format: "pct", basis: flowP.short });
 
   return out;
 }

@@ -22,8 +22,9 @@ import {
   normalizeLabel,
   type MetricPattern,
 } from "./patterns";
-import { parseCells, type NumericCell } from "./numbers";
+import { parseCells, looksUsDocument, withNumberFormat, type NumericCell } from "./numbers";
 import { splitLeadingLabel } from "./split";
+import { stripRelatedPartyNotes } from "./notes";
 import {
   detectForm,
   detectIssuer,
@@ -54,7 +55,10 @@ function isValuesOnlyLine(line: string): boolean {
 interface Candidate {
   lineIndex: number;
   label: string;
-  money: number[];
+  /** One entry per column; a dash cell ("—", nil) is null but still a column. */
+  money: (number | null)[];
+  /** Words among the numbers: the label itself carries amounts ("net of allowance of $67 and $39 at …"). */
+  wordy: boolean;
   synonymIndex: number;
   primary: boolean;
 }
@@ -69,25 +73,52 @@ interface Resolution {
   matchedLabel: string;
   lineIndex: number;
   synonymRank: number;
+  /** Money cells on the matched row (before trimming to the column count). */
+  cellCount: number;
   note?: string;
 }
 
 /**
  * Resolve one metric: try synonyms in priority order; the first synonym that
- * yields a candidate wins. Among candidates for that synonym, prefer the one
- * whose money-cell count equals the expected column count, then the earliest in
- * document order (statements precede notes / MD&A).
+ * yields a candidate with the expected column count wins. Among candidates for
+ * one synonym, prefer that count, then the earliest in document order
+ * (statements precede notes / MD&A). If no synonym has a row with the expected
+ * count, the first synonym's best row is used (downgraded) — so "Income before
+ * income taxes $ 4,014" in a one-column segment table no longer beats
+ * "Income (loss) before income taxes" on the statement itself.
+ *
+ * `ytd` (cash flow in an interim report): indices of the year-to-date periods. A
+ * 10-Q cash-flow statement has only those columns, so a row with exactly that
+ * many cells goes there instead of into the quarter columns.
  */
+// splitLeadingLabel per line, once per parse (resolveMetric runs ~45 patterns × ~8 synonyms over every line).
+const splitCache = new WeakMap<string[], ReturnType<typeof splitLeadingLabel>[]>();
+function splitLines(lines: string[]) {
+  let hit = splitCache.get(lines);
+  if (!hit) {
+    hit = lines.map((l) => splitLeadingLabel(l));
+    splitCache.set(lines, hit);
+  }
+  return hit;
+}
+
 function resolveMetric(
   lines: string[],
   pattern: MetricPattern,
   expected: number,
+  ytd: number[] = [],
 ): Resolution | null {
+  const split = splitLines(lines);
+  const fits = (n: number) => n === expected || (ytd.length > 0 && n === ytd.length);
+  // 2 = column count fits; 1 = extra numbers come from the label text (keep the last columns);
+  // 0 = another table (segments, MD&A change columns, equity statement).
+  const score = (c: Candidate) => (fits(c.money.length) ? 2 : c.wordy && c.money.length > expected ? 1 : 0);
+  let fallback: { res: Resolution; score: number } | null = null;
   for (let si = 0; si < pattern.synonyms.length; si++) {
     const syn = pattern.synonyms[si];
     const cands: Candidate[] = [];
     for (let i = 0; i < lines.length; i++) {
-      const { label, rest } = splitLeadingLabel(lines[i]);
+      const { label, rest } = split[i];
       if (!label) continue;
       if (!labelMatches(label, syn)) continue;
       if (isExcluded(label, pattern.exclude)) continue;
@@ -100,30 +131,51 @@ function resolveMetric(
           cells = parseCells(next.rest || lines[i + 1]);
         }
       }
+      // Dashes keep their column: "Marketable securities 38,561 —" is two columns, not one, and
+      // "Impairment — — — 29" puts 29 in the last column, not the first.
       const money = cells
-        .filter((c) => (pattern.allowPercent ? true : !c.isPercent) && c.value !== null)
-        .map((c) => c.value as number);
-      if (money.length === 0) continue;
-      cands.push({ lineIndex: i, label, money, synonymIndex: si, primary: syn.tier === "primary" });
+        .filter((c) => (pattern.allowPercent ? true : !c.isPercent) && (c.value !== null || c.isDash))
+        .map((c) => (c.isDash ? null : c.value));
+      if (!money.some((v) => v !== null)) continue;
+      const wordy = /[a-ząćęłńóśźż]{3,}/i.test(rest ?? "");
+      cands.push({ lineIndex: i, label, money, wordy, synonymIndex: si, primary: syn.tier === "primary" });
     }
     if (cands.length === 0) continue;
 
-    cands.sort((a, b) => {
-      const am = a.money.length === expected ? 1 : 0;
-      const bm = b.money.length === expected ? 1 : 0;
-      if (am !== bm) return bm - am;
-      return a.lineIndex - b.lineIndex;
-    });
+    cands.sort((a, b) => score(b) - score(a) || a.lineIndex - b.lineIndex);
 
-    const best = cands[0];
-    let nums = best.money.map((v) => (pattern.magnitude ? Math.abs(v) : v));
-    if (expected > 0 && nums.length > expected) nums = nums.slice(nums.length - expected);
+    if (expected <= 0) return build(cands[0], si);
+    if (!fallback) {
+      if (score(cands[0]) === 2) return build(cands[0], si);
+      fallback = { res: build(cands[0], si), score: score(cands[0]) };
+      continue;
+    }
+    // A later synonym replaces an inexact row with a row that fits. Over a row whose label carries
+    // amounts ("Accounts receivable, net of allowance … $67 and $39 … 4,772 1,579" on the balance
+    // sheet) only if it comes earlier in the document — not the cash-flow "Accounts receivable (2,882)".
+    const fit = cands.find((c) => score(c) === 2 && (fallback!.score === 0 || c.lineIndex < fallback!.res.lineIndex));
+    if (fit) return build(fit, si);
+    const leak = cands.find((c) => score(c) === 1);
+    if (leak && fallback.score === 0) fallback = { res: build(leak, si), score: 1 };
+  }
+  return fallback?.res ?? null;
+
+  function build(best: Candidate, si: number): Resolution {
+    let nums = best.money.map((v) => (v !== null && pattern.magnitude ? Math.abs(v) : v));
     const slots = expected > 0 ? expected : nums.length;
-    const values: (number | null)[] = [];
-    for (let i = 0; i < slots; i++) values.push(i < nums.length ? nums[i] : null);
+    let values: (number | null)[] = [];
+    let note: string | undefined;
+    if (expected > 0 && ytd.length > 0 && ytd.length < expected && nums.length === ytd.length) {
+      values = Array.from({ length: slots }, () => null);
+      ytd.forEach((col, k) => (values[col] = nums[k]));
+      note = "year-to-date columns only";
+    } else {
+      if (expected > 0 && nums.length > expected) nums = nums.slice(nums.length - expected);
+      for (let i = 0; i < slots; i++) values.push(i < nums.length ? nums[i] : null);
+    }
 
     let confidence: Confidence = best.primary ? "HIGH" : "MEDIUM";
-    if (expected > 0 && best.money.length !== expected) confidence = downgrade(confidence);
+    if (expected > 0 && !fits(best.money.length)) confidence = downgrade(confidence);
 
     return {
       values,
@@ -131,9 +183,50 @@ function resolveMetric(
       matchedLabel: best.label,
       lineIndex: best.lineIndex,
       synonymRank: si,
+      cellCount: best.money.length,
+      note,
     };
   }
-  return null;
+}
+
+/** Indices of the longest-duration periods when the set mixes quarter and year-to-date columns. */
+function ytdIndices(periods: Period[]): number[] {
+  const months = periods.map((p) => (p.kind === "duration" ? p.months ?? 0 : 0));
+  const max = Math.max(0, ...months);
+  if (max <= 3) return [];
+  const idx = months.flatMap((m, i) => (m === max ? [i] : []));
+  return idx.length < periods.length ? idx : [];
+}
+
+/**
+ * The tax line's sign differs by convention: US "Provision for (benefit from) income taxes (390)" is a
+ * benefit, IFRS "Podatek dochodowy (1 234)" is an expense. `magnitude` stores |tax|; when only
+ * pre-tax + |tax| = net holds, it was a benefit and is stored negative (as on the statement).
+ */
+export function reconcileTaxSign(byKey: Map<MetricKey, Metric>): void {
+  const tax = byKey.get("incomeTax");
+  const pre = byKey.get("incomeBeforeTax");
+  const net = byKey.get("netIncome");
+  if (!tax || !pre || !net) return;
+  let flipped = false;
+  let unreconciled = false;
+  for (const v of tax.values) {
+    if (v.value === null || v.value === 0) continue;
+    const p = metricVal(pre, v.periodKey);
+    const n = metricVal(net, v.periodKey);
+    if (p === null || n === null) continue;
+    const t = Math.abs(v.value);
+    const tol = Math.max(1, Math.abs(n) * 0.001);
+    if (Math.abs(p - t - n) <= tol) continue;
+    if (Math.abs(p + t - n) <= tol) {
+      v.value = -t;
+      flipped = true;
+    } else {
+      unreconciled = true; // minorities, discontinued ops, or a wrong row — keep |tax|, say so
+    }
+  }
+  if (flipped) tax.note = "negative = tax benefit (pre-tax − tax = net)";
+  if (unreconciled) tax.flags = [...(tax.flags ?? []), "tax sign not reconciled with pre-tax and net income"];
 }
 
 function periodsFor(statement: StatementType, income: Period[], balance: Period[]): Period[] {
@@ -154,7 +247,7 @@ function toMetric(
     matchedLabel: res.matchedLabel,
     synonymRank: res.synonymRank,
     sourceLine: res.lineIndex,
-    note: res.note,
+    ...(res.note ? { note: res.note } : {}),
   };
 }
 
@@ -183,13 +276,20 @@ function resolveTotalDebt(
   const longTerm = byKey.get("longTermDebt");
   const aggregate = (): (number | null)[] | null => {
     if (!current && !longTerm) return null;
-    return balance.map((p) => {
+    const vals = balance.map((p) => {
       const c = current?.values.find((v) => v.periodKey === p.key)?.value ?? null;
       const l = longTerm?.values.find((v) => v.periodKey === p.key)?.value ?? null;
       if (c === null && l === null) return null;
       return Math.abs(c ?? 0) + Math.abs(l ?? 0);
     });
+    return vals.some((v) => v !== null) ? vals : null;
   };
+
+  // A "Total debt" row with more cells than balance dates is a debt note (principal / costs / net),
+  // not the balance sheet: "Total debt 38,006 145 37,861" gave debt = 145. The balance sheet wins.
+  if (direct && direct.cellCount !== expected && aggregate()) {
+    return aggregatedDebt(balance, aggregate()!);
+  }
 
   if (direct) {
     const agg = aggregate();
@@ -224,17 +324,19 @@ function resolveTotalDebt(
   }
 
   const agg = aggregate();
-  if (agg && agg.some((v) => v !== null)) {
-    return {
-      key: "totalDebt",
-      label: "Total debt",
-      statement: "balance",
-      values: balance.map((p, i) => ({ periodKey: p.key, value: agg[i] ?? null })),
-      confidence: "MEDIUM",
-      note: "aggregated: current portion + long-term debt",
-    };
-  }
+  if (agg) return aggregatedDebt(balance, agg);
   return emptyMetric(pattern, balance);
+}
+
+function aggregatedDebt(balance: Period[], agg: (number | null)[]): Metric {
+  return {
+    key: "totalDebt",
+    label: "Total debt",
+    statement: "balance",
+    values: balance.map((p, i) => ({ periodKey: p.key, value: agg[i] ?? null })),
+    confidence: "MEDIUM",
+    note: "aggregated: current portion + long-term debt",
+  };
 }
 
 // ---- Total operating expenses: direct line, else R&D + S&M + G&A (or SG&A) ----
@@ -355,8 +457,13 @@ function extractPerShare(lines: string[], income: Period[]): Metric[] {
     }
 
     // Header rows (no numbers) followed by Basic / Diluted sub-rows.
+    // "Net income (loss) per share …" is an EPS header; "Weighted average shares used in computing net
+    // income (loss) per share" is the share-count header, not EPS.
+    const nlx = nl.replace(/\s*\((?:loss|losses|income|earnings)\)/g, "");
     const isEpsHeader =
-      cells.length === 0 && /(earnings|loss|income|net loss|net income) per share/.test(nl);
+      cells.length === 0 &&
+      /(earnings|loss|income|net loss|net income) per share/.test(nlx) &&
+      !/weighted average/.test(nl);
     const isSharesHeader =
       cells.length === 0 && /weighted average/.test(nl) && /shares/.test(nl);
     if (isEpsHeader || isSharesHeader) {
@@ -463,8 +570,12 @@ export interface ParseInput {
 }
 
 export function parseReport(input: ParseInput): ParseResult {
+  return withNumberFormat(looksUsDocument(input.text), () => parseReportInner(input));
+}
+
+function parseReportInner(input: ParseInput): ParseResult {
   const { text } = input;
-  const lines = text.split("\n").map((l) => l.replace(/\s+$/g, ""));
+  const lines = stripRelatedPartyNotes(text.split("\n").map((l) => l.replace(/\s+$/g, "")));
 
   // ---- Detection ----
   const formType = detectForm(text);
@@ -496,12 +607,13 @@ export function parseReport(input: ParseInput): ParseResult {
   };
 
   // ---- Metric extraction ----
+  const ytd = ytdIndices(income);
   const metrics: Metric[] = [];
   const byKey = new Map<MetricKey, Metric>();
   for (const pattern of PATTERNS) {
     if (pattern.key === "totalDebt" || pattern.key === "totalOpEx") continue; // computed below
     const periods = periodsFor(pattern.statement, income, balance);
-    const res = resolveMetric(lines, pattern, periods.length);
+    const res = resolveMetric(lines, pattern, periods.length, pattern.statement === "cashflow" ? ytd : []);
     const metric = res ? toMetric(pattern, res, periods) : emptyMetric(pattern, periods);
     metrics.push(metric);
     byKey.set(pattern.key, metric);
@@ -520,6 +632,8 @@ export function parseReport(input: ParseInput): ParseResult {
     metrics.push(m);
     byKey.set(m.key, m);
   }
+
+  reconcileTaxSign(byKey);
 
   // ---- Exhaustive numeric-row inventory (all numbers, not just headlines) ----
   const extractedRows = extractAllRows(lines, income, balance);

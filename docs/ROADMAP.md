@@ -28,7 +28,7 @@ pozycje PS, po kolei. Wyjątki jak dotąd: awaria danych (`stale`/`error` w `/ap
 - **PS1b. Eksport CSV i JSON w przeglądarce** (mały krok po PS1). `toCSV` i `toJSON` są czyste. XLSX zostaje na serwerze:
   `exceljs` w przeglądarce to 252 KB gzip i wywołania `Function(...)`, których CSP bez `'unsafe-eval'` nie przepuści.
   Krok zawęża zdanie o eksporcie w `/prywatnosc`.
-- **PS2. Pomiar jakości (następny po PS1).** Zestaw testowy prawdziwych raportów z liczbami sprawdzonymi ręcznie
+- **PS2. Pomiar jakości (w toku od 07.11.2026: PS2a).** Zestaw testowy prawdziwych raportów z liczbami sprawdzonymi ręcznie
   w raporcie lub komunikacie spółki:
   - raporty: polski raport roczny i kwartalny (firma, bank, ubezpieczyciel, NewConnect), US 10-Q i 10-K;
   - liczby: przychody, zysk operacyjny, zysk netto, aktywa, kapitał, OCF, okresy, jednostka;
@@ -39,6 +39,28 @@ pozycje PS, po kolei. Wyjątki jak dotąd: awaria danych (`stale`/`error` w `/ap
   - przychody poprawne w 1 z 6 (Żabka 23 797 mln zł, ale z doklejonymi kolumnami);
   - zysk netto: PZU −2562 zamiast ~5,3 mld zł, Żabka 1,7 zamiast 593 mln zł;
   - Orlen SSF: przychody 37; Platige: dwie liczby sklejone w jedną; PKO BP (bank): brak przychodów.
+
+  Pierwszy raport od właściciela (07.11): 10-Q SpaceX za Q3 2026 (EDGAR, accession 0001628280-26-066880). Ma błędy w RZiS,
+  przepływach i długu. Podkroki, każdy z fixture'em i testem wartości:
+  - **PS2a — w toku** (spec `docs/specs/2026-11-07-parser-ps2a-spacex-10q.md`): RZiS i przepływy zgodne z dokumentem.
+    Zakres:
+    - przecinek oksfordzki;
+    - notki „(related party …)”;
+    - synonimy „Income (loss) …”;
+    - amerykański format liczb dla całego dokumentu: dziś „997 611” u NVIDII i „140 885 632” u SpaceX to jedna liczba;
+    - znak podatku z uzgodnienia;
+    - przepływy 10-Q w kolumnach 9M, z rachunku przepływów;
+    - EPS „Net income (loss) per share”.
+  - **PS2b — następny: bilans.**
+    - Dług z bilansu, z leasingiem finansowym: 38 844, a nie 145 z noty „Principal / Costs / Net”.
+    - Kreska liczona jako kolumna: papiery wartościowe 38 561, a nie 557 z alokacji ceny przejęcia.
+    - Gotówka netto 51,0 mld USD.
+
+    Dług i papiery idą razem. Sam dług dałby gotówkę netto 13,0 mld zamiast 51,0.
+  - **PS2c — UI.**
+    - Δ% od ujemnej bazy: dziś „▲517,8%” przy przejściu ze straty w zysk.
+    - Kontrola „zysk operacyjny + pozostałe = brutto” z odsetkami: dziś SpaceX ją oblewa przy poprawnych liczbach.
+    - Widoczny baner, gdy kontrole spójności nie przechodzą.
 - **PS3+. Kierunek, bez zobowiązań.** Każdy dopiero po PS2 i z osobną specyfikacją:
   - ESEF: xhtml z tagami iXBRL, czyli dokładne liczby z rocznych sprawozdań spółek z GPW bez heurystyk;
   - teczka: raporty zapisane na koncie, na zasadach `savori_users`, z szyfrowaniem i wpisem w `/prywatnosc`;
@@ -244,6 +266,8 @@ J5. **Gospodarka Japonii** — produkcja zrobiona 27.10 (`/japonia/gospodarka`: 
 ## Wymaga właściciela (nie da się z kodu)
 - **Parser — raporty, na których zawiódł (do PS2, od 07.11.2026).** Przyślij PDF-y albo linki. Dla każdego napisz, które
   liczby są złe i jakie powinny być. Bez tego PS2 mierzy tylko na raportach wybranych przez PM (PZU, PKO BP, Orlen, Żabka, Platige).
+  Otrzymane: 10-Q SpaceX Q3 2026 (07.11, zrzuty) → PS2a–PS2c. Najbardziej brakuje polskiego raportu kwartalnego, na którym
+  parser zawiódł, i dowolnego 10-K.
   Po wdrożeniu PS1: wgraj na swoim telefonie największy raport, jaki masz. Podaj model telefonu, wersję iOS/Androida, czas i to,
   czy wynik się pokazał (kryterium 17 specyfikacji). Starszych iPhone'ów (iOS < 17.4) nie da się odtworzyć w testach.
   Na iPhonie w Safari: próbka Microsoft (0 błędów) i Orlen Sprawozdanie Zarządu 2025

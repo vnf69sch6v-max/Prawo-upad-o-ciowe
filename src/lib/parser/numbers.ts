@@ -109,9 +109,15 @@ export function parsePercent(raw: string): number | null {
  * European amounts with internal spaces ("2 924 056,55", "- 83 942,75") are
  * consumed as a single cell — they must not be split on whitespace.
  */
-function matchNextCell(s: string): { raw: string; rest: string } | null {
+function matchNextCell(s: string, usRow = false): { raw: string; rest: string } | null {
   const t = s.replace(/^\s+/, "");
   if (!t) return null;
+
+  // In a US row a negative is "(1,234)" or "-1,234"; "- 1,234" is a nil column, then 1,234.
+  if (usRow) {
+    const nil = t.match(new RegExp(`^([${DASH_CHARS}]+)(?=\\s)`));
+    if (nil && DASH_RE.test(nil[1])) return { raw: nil[1], rest: t.slice(nil[0].length) };
+  }
 
   // Lone dash cell (nil / empty).
   const dash = t.match(new RegExp(`^([${DASH_CHARS}]+)(?=\\s|$|[${DASH_CHARS}])`));
@@ -133,14 +139,14 @@ function matchNextCell(s: string): { raw: string; rest: string } | null {
   if (paren) return { raw: paren[0].replace(/\s+/g, " ").trim(), rest: t.slice(paren[0].length) };
 
   // Signed European with space thousands: - 2 924 056,55  or −83 942,75
-  const euSigned = t.match(/^[−-]\s*(\d{1,3}(?:\s\d{3})+(?:,\d+)?|\d+,\d+)\b/);
+  const euSigned = usRow ? null : t.match(/^[−-]\s*(\d{1,3}(?:\s\d{3})+(?:,\d+)?|\d+,\d+)\b/);
   if (euSigned) return { raw: euSigned[0], rest: t.slice(euSigned[0].length) };
 
   // Unsigned European with space thousands, or comma decimal (1–2 digits only —
   // a 3-digit group after a comma is US thousands, e.g. 82,886).
-  const eu =
-    t.match(/^\d{1,3}(?:\s\d{3})+(?:,\d+)?\b/) ||
-    t.match(/^\d+,\d{1,2}\b/);
+  const eu = usRow
+    ? null
+    : t.match(/^\d{1,3}(?:\s\d{3})+(?:,\d+)?\b/) || t.match(/^\d+,\d{1,2}\b/);
   if (eu) return { raw: eu[0], rest: t.slice(eu[0].length) };
 
   // US / plain: -82,886.50 or 82886 or 4.27%
@@ -150,7 +156,31 @@ function matchNextCell(s: string): { raw: string; rest: string } | null {
   // Skip a non-numeric word and retry (e.g. stray "do" in a header bleed).
   const skip = t.match(/^\S+/);
   if (!skip) return null;
-  return matchNextCell(t.slice(skip[0].length));
+  return matchNextCell(t.slice(skip[0].length), usRow);
+}
+
+/** Set by `withNumberFormat` for one parse: the whole document writes numbers the US way. */
+let usDocument = false;
+
+/**
+ * Decide once per document: many "1,234" and (almost) no "1 234,56" / "12,5" → US. Then a space never
+ * joins digits, even in rows with no comma at all ("Restructuring charges 3 278 (6) 472",
+ * "Depreciation and amortization 997 611").
+ */
+export function looksUsDocument(text: string): boolean {
+  const us = text.match(/\d,\d{3}(?![\d,])/g)?.length ?? 0;
+  const eu = text.match(/\d,\d{1,2}(?!\d)/g)?.length ?? 0;
+  return us >= 20 && us > 5 * eu;
+}
+
+export function withNumberFormat<T>(us: boolean, fn: () => T): T {
+  const prev = usDocument;
+  usDocument = us;
+  try {
+    return fn();
+  } finally {
+    usDocument = prev;
+  }
 }
 
 /**
@@ -164,11 +194,14 @@ export function parseCells(region: string): NumericCell[] {
   // whitespace-free at the edges: "( 82,886 )" → handled in matcher,
   // "67.6 %" → "67.6%".
   s = s.replace(/\s+%/g, "%");
+  // A row with US thousands ("1,025") and no comma decimals is US: a space never joins digits there.
+  // Otherwise "1,025 140 885 632.1 %" (amount, amount, change, %) became one cell of 140,885,632.
+  const us = usDocument || (/\d,\d{3}(?!\d)/.test(s) && !/\d,\d{1,2}(?!\d)/.test(s));
 
   const cells: NumericCell[] = [];
   let guard = 0;
   while (s.trim() && guard++ < 200) {
-    const m = matchNextCell(s);
+    const m = matchNextCell(s, us);
     if (!m) break;
     s = m.rest;
     const raw = m.raw.trim();
