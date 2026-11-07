@@ -1,6 +1,13 @@
 # PS2a — parser: RZiS i przepływy z 10-Q SpaceX zgodne z dokumentem
 
-Status: **REVIEW 1 (07.11.2026): FIX** — kryteria 1–13 spełnione, 14–18 do zrobienia (regresje na tekstach zestawu PS2).
+Status: **zrobione 07.11.2026, PR #89** (REVIEW 1: FIX → REVIEW 2: SHIP, commit 671751c). Kryteria 1–18 spełnione.
+REVIEW 2: na 13 tekstach (6 fixture'ów i 7 z zestawu PS2) żadna wartość zgodna z dokumentem nie stała się błędna. Zmiany:
+- PZU: zysk operacyjny, brutto i netto teraz poprawne;
+- Orlen Q4 2024: dywidendy 4 819 / 4 818 / 6 385 / — (wcześniej z numerem noty);
+- Orlen SSF i gotówka PZU: z błędnych na inne błędne (PS2b);
+- PKO, Platige i Orlen SZ bez zmian wartości.
+
+Format liczb ustalany jest tylko dla całego dokumentu: reguła per wiersz usunięta, bo rozbijała „39 119,801” u Orlenu.
 Roadmapa: PS2 → PS2a. Następne: PS2b (numery not, bilans z trzema kolumnami), PS2c (UI).
 
 ## Problem i wartość

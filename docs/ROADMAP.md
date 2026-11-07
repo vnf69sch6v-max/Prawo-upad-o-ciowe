@@ -28,7 +28,7 @@ pozycje PS, po kolei. Wyjątki jak dotąd: awaria danych (`stale`/`error` w `/ap
 - **PS1b. Eksport CSV i JSON w przeglądarce** (mały krok po PS1). `toCSV` i `toJSON` są czyste. XLSX zostaje na serwerze:
   `exceljs` w przeglądarce to 252 KB gzip i wywołania `Function(...)`, których CSP bez `'unsafe-eval'` nie przepuści.
   Krok zawęża zdanie o eksporcie w `/prywatnosc`.
-- **PS2. Pomiar jakości (w toku od 07.11.2026: PS2a).** Zestaw testowy prawdziwych raportów z liczbami sprawdzonymi ręcznie
+- **PS2. Pomiar jakości (w toku od 07.11.2026; PS2a zrobione, następny PS2b).** Zestaw testowy prawdziwych raportów z liczbami sprawdzonymi ręcznie
   w raporcie lub komunikacie spółki:
   - raporty: polski raport roczny i kwartalny (firma, bank, ubezpieczyciel, NewConnect), US 10-Q i 10-K;
   - liczby: przychody, zysk operacyjny, zysk netto, aktywa, kapitał, OCF, okresy, jednostka;
@@ -42,22 +42,7 @@ pozycje PS, po kolei. Wyjątki jak dotąd: awaria danych (`stale`/`error` w `/ap
 
   Pierwszy raport od właściciela (07.11): 10-Q SpaceX za Q3 2026 (EDGAR, accession 0001628280-26-066880). Ma błędy w RZiS,
   przepływach i długu. Podkroki, każdy z fixture'em i testem wartości:
-  - **PS2a — w toku, REVIEW 1 (07.11): FIX** (spec `docs/specs/2026-11-07-parser-ps2a-spacex-10q.md`, kryteria 14–18).
-    RZiS, przepływy i dług SpaceX zgodne z dokumentem. Zakres:
-    - przecinek oksfordzki;
-    - notki „(related party …)”;
-    - synonimy „Income (loss) …” i wybór wiersza z pasującą liczbą kolumn (przy okazji PZU: zysk netto 12 221, było −2 562);
-    - amerykański format liczb dla całego dokumentu;
-    - znak podatku z uzgodnienia;
-    - przepływy 10-Q w kolumnach 9M;
-    - EPS „Net income (loss) per share”;
-    - dług z bilansu z leasingiem finansowym, kreska jako kolumna, gotówka netto 51,0 mld USD;
-    - Cipher: dług długoterminowy z bilansu.
-
-    Do poprawy przed merge, bo psuje raporty spoza fixture'ów:
-    - format liczb ustalany z prozy: Orlen Q4 2024 (EN) dostaje aktywa 60 / 824;
-    - nagłówek dat jako wartość: PZU, wartość firmy 31 / 2023;
-    - koszt własny sprzedaży Orlenu z wiersza przekształcenia danych.
+  - **PS2a — zrobione 7.11.2026, PR #89** (szczegóły w „Zrobione”).
   - **PS2b — następny: numery not i bilans z trzema datami** (zestaw PS2). Przykłady:
     - PZU „Wartość firmy 27 2 792 2 801 2 808”: powinno być 2 792 / 2 801, dziś 2 801 / 2 808;
     - PZU podatek „25 (3 484) (3 626)”: dziś 25 / 35;
@@ -68,7 +53,11 @@ pozycje PS, po kolei. Wyjątki jak dotąd: awaria danych (`stale`/`error` w `/ap
       liczby sklejają się w jedną, a parser bierze kolumny EUR;
     - SpaceX: przychody z RZiS, nie z noty (te same liczby, zła linia źródła).
 
-    Każdy przykład dostaje fixture albo fragment i test wartości. Część może wejść już w FIX PS2a (kryterium 16).
+    - Orlen SSF: kontrola „aktywa = pasywa” przechodzi na spójnych, ale błędnych liczbach z jednej noty (1 606 = 622 + 984).
+      Metryki bilansu muszą pochodzić z bilansu, nie z noty.
+
+    Każdy przykład dostaje fixture albo fragment i test wartości. Numery not z kropką („5.2”) PS2a już odcina. Zostają
+    numery całkowite („25”, „27”, „37”), bez psucia PKO BP: rzeczowe aktywa trwałe nie mogą spaść do 18 / 41.
   - **PS2c — UI.**
     - Δ% od ujemnej bazy: dziś „▲517,8%” przy przejściu ze straty w zysk.
     - Kontrola „zysk operacyjny + pozostałe = brutto” z odsetkami: dziś SpaceX ją oblewa przy poprawnych liczbach.
@@ -372,6 +361,24 @@ J5. **Gospodarka Japonii** — produkcja zrobiona 27.10 (`/japonia/gospodarka`: 
 - **`GUS_BDL_KEY`** — wyższy limit BDL (rejestracja na api.stat.gov.pl).
 
 ## Zrobione
+- **7.11.2026 — PS2a: 10-Q SpaceX zgodny z dokumentem** (PR #89, `docs/specs/2026-11-07-parser-ps2a-spacex-10q.md`,
+  PM: FIX → SHIP). Pierwszy raport od właściciela. Wartości SpaceX:
+  - RZiS, w tym korzyść podatkowa ze znakiem (−390) i EPS;
+  - przepływy 9M: FCF −34 972 mln USD;
+  - dług z bilansu 38 844 i gotówka netto 51,0 mld USD.
+
+  Zmiany parsera:
+  - format liczb ustalany dla całego dokumentu z wierszy tabel: u NVIDII „997 611” to dwie liczby;
+  - notki „related party” wycinane z etykiet;
+  - kreska liczy się jako kolumna;
+  - wygrywa wiersz z pasującą liczbą kolumn.
+
+  Przy okazji:
+  - PZU: zysk netto 12 221, było −2 562;
+  - Cipher: dług netto 4,0 mld, było „gotówka netto +355 mln”;
+  - `parseReport` 2× szybszy.
+
+  Sprawdzone na 13 tekstach: żadna poprawna wartość nie stała się błędna.
 - **7.11.2026 — PS1: parser w przeglądarce** (PR #88, `docs/specs/2026-11-07-parser-w-przegladarce.md`, PM: FIX → SHIP).
   Każdy PDF/TXT analizowany w przeglądarce (pdfjs `legacy` + Web Worker parsera), 100 MB / 800 stron / 6 MB tekstu / 240 s,
   postęp i „Anuluj”, serwer tylko po kliknięciu. Parsowanie PZU 10,3 s → 2,3 s (pamięć `normalizeLabel`, wynik bez zmian).
