@@ -7,6 +7,7 @@ import { describe, expect, it } from "vitest";
 import { IxbrlError, parseIxNumber, readIxbrl } from "@/lib/parser/ixbrl/read";
 import { parseIxbrl } from "@/lib/parser/ixbrl/to-result";
 import { getMetric } from "@/lib/parser/parser";
+import { toCSV, toJSON } from "@/lib/parser/export";
 import type { MetricKey } from "@/lib/parser/types";
 
 const NS = `xmlns="http://www.w3.org/1999/xhtml" xmlns:ix="http://www.xbrl.org/2013/inlineXBRL" xmlns:xbrli="http://www.xbrl.org/2003/instance" xmlns:us-gaap="http://fasb.org/us-gaap/2025" xmlns:dei="http://xbrl.sec.gov/dei/2025" xmlns:xbrldi="http://xbrl.org/2006/xbrldi"`;
@@ -119,6 +120,34 @@ describe("Cipher Digital 10-K FY2025 (tys. USD): wartości zgodne z komunikatem 
     expect(r.derived.fcf.map((f) => f.fcf)).toEqual([-695859, -227006, -114721]);
     expect(r.validation.passed).toBe(r.validation.total);
     expect(r.validation.checks.find((c) => c.detail.includes("30,319"))?.passed).toBe(true);
+  });
+});
+
+describe("duplikaty faktów: wygrywa dokładniejszy, nie pierwszy w dokumencie", () => {
+  const twice = (a: string, b: string) =>
+    readIxbrl(doc(`<tr><td>MD&amp;A</td><td><ix:nonFraction name="us-gaap:Revenues" contextRef="d" unitRef="usd" ${a}</ix:nonFraction></td></tr>`
+      + `<tr><td>Revenue</td><td><ix:nonFraction name="us-gaap:Revenues" contextRef="d" unitRef="usd" ${b}</ix:nonFraction></td></tr>`));
+  it("zaokrąglony fakt z MD&A (decimals −5) przed sprawozdaniem (decimals −3) nie wygrywa i nie daje ostrzeżenia", () => {
+    const d = twice('scale="6" decimals="-5">628.3', 'scale="3" decimals="-3">628,263'.replace(",", ""));
+    expect(d.facts).toHaveLength(1);
+    expect(d.facts[0]).toMatchObject({ value: 628263000, rowLabel: "Revenue" });
+    expect(d.warnings.join()).not.toContain("duplicate");
+  });
+  it("różnica większa niż zaokrąglenie to ostrzeżenie", () => {
+    expect(twice('scale="0" decimals="0">100', 'scale="0" decimals="0">105').warnings.join()).toContain("duplicate");
+  });
+  it.each(["spacex-10q-q3-2026", "cipher-10k-fy2025"])("%s: żadnego ostrzeżenia o duplikatach", (name) => {
+    expect(readIxbrl(readFileSync(`tests/fixtures/ixbrl/${name}.htm`, "utf8")).warnings.join()).not.toContain("duplicate");
+  });
+});
+
+describe("eksport wyniku z XBRL (kryterium 8)", () => {
+  const r = fixture("spacex-10q-q3-2026");
+  it("CSV zawiera przychody; JSON bez rawText mieści się w limicie eksportu", () => {
+    expect(toCSV(r)).toContain("Przychody");
+    const json = toJSON(r);
+    expect(Object.keys(JSON.parse(json))).not.toContain("rawText");
+    expect(new TextEncoder().encode(json).length).toBeLessThan(4 * 1024 * 1024);
   });
 });
 

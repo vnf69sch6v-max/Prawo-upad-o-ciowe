@@ -17,7 +17,7 @@ ctx.onmessage = async (e) => {
     if ("html" in e.data) {
       // The File is read here, off the main thread: a 10 MB filing never exists as a string there.
       const html = await e.data.html.text();
-      ctx.postMessage({ ok: true, result: parseIxbrl(html) });
+      ctx.postMessage({ ok: true, result: parseIxbrl(html, e.data.html.size) });
       return;
     }
     const { text, pages } = e.data;

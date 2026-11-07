@@ -260,7 +260,17 @@ export function readIxbrl(source: string): IxDocument {
     const key = `${qname}|${ctx.sig}|${ctx.dims.join(",")}|${fact.unit}`;
     const prev = seen.get(key);
     if (prev) {
-      if (Math.abs(prev.value - value) > Math.max(1, Math.abs(value) * 1e-6)) dupDiffer++;
+      // The same fact appears in MD&A (rounded: "628.3" million) and in the statement ("628,263"). The more precise one
+      // stays, wherever it stands in the document; a warning only when they differ by more than the coarser rounding.
+      const pd = precision(prev.decimals);
+      const nd = precision(fact.decimals);
+      const coarse = Math.min(pd, nd);
+      const tolerance = Number.isFinite(coarse) ? 0.5 * 10 ** -coarse + 1e-9 : Math.max(1e-6, Math.abs(value) * 1e-9);
+      if (Math.abs(prev.value - value) > tolerance) dupDiffer++;
+      if (nd > pd) {
+        facts[facts.indexOf(prev)] = fact;
+        seen.set(key, fact);
+      }
       return;
     }
     seen.set(key, fact);
@@ -274,6 +284,14 @@ export function readIxbrl(source: string): IxDocument {
   const labels = new Map(rowList.map((r) => [r.id, r.label ?? ""]));
   for (const f of facts) if (f.rowId !== null) f.rowLabel = labels.get(f.rowId) ?? "";
   return { facts, contexts, units, dei, warnings, rows: rowCount };
+}
+
+/** `decimals` → comparable precision: "INF" = exact, "-6" = millions, missing = unknown (least precise). */
+function precision(decimals: string | null): number {
+  if (decimals === null) return -Infinity;
+  if (/^inf$/i.test(decimals)) return Infinity;
+  const n = Number(decimals);
+  return Number.isFinite(n) ? n : -Infinity;
 }
 
 function readContexts(doc: string): Map<string, IxContext> {

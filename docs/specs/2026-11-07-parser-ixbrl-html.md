@@ -122,6 +122,17 @@ Dokładny zakres:
     0 przewijania w bok, 0 błędów konsoli, 0 naruszeń CSP, 0 żądań do `/api/parser`.
 11. Produkcja: właściciel wgrywa swój plik SpaceX na telefonie; kafle zgodne z komunikatem (przychody 14,6 mld USD, netto 4,4 mld).
 
+### REVIEW PS3a (07.11.2026, commit 185e0e9): FIX, odchylenia przyjęte
+Przyjęte: (1) pojęcie RZiS i bilansu = największe pokrycie kolumn kotwicy, remis wg kolejności tabeli; przepływy i dane na akcję wg
+kolejności tabeli (deterministyczne, bo liczy się tylko pokrycie kolumn kotwicy; sprawdzone na `otherIncome`, `intangiblesNet`,
+`ppeNet`, `totalEquity`, `currentDebt`, `stockComp` obu plików); (2) `current` = najnowszy okres każdej długości (Q3'26 i 9M'26);
+(3) etykieta = pierwsza niepusta z trzech pierwszych komórek, kolumny RZiS z pierwszego wiersza z ≥2 kontekstami; (4) 4 kontrole
+w SpaceX (mezzanine dla obu dat). Do poprawienia przed SHIP: (a) duplikat faktu (ten sam pojęcie+kontekst+jednostka) zostawia
+**wartość o większej precyzji** (`decimals`), a ostrzeżenie tylko przy różnicy większej niż grubsza precyzja (dziś: fałszywe
+„12 duplicate facts differ” w Cipher, bo MD&A tnie 628 263 do 628,3 mln; wygrywa pierwszy w dokumencie, więc w pliku z MD&A
+przed sprawozdaniem wygrałaby wartość zaokrąglona); (b) `tests/fixtures/ixbrl/README.md` (accession, sha256 oryginału, data,
+komenda skryptu) — kryterium 9; (c) test eksportu CSV/JSON z wyniku XBRL — kryterium 8.
+
 ## PS3b — profesjonalny wygląd (2 przebiegi; projekt z agentem `mobile-designer`)
 b1: formularz HTML domyślny („Wgraj raport z SEC lub ESEF”, instrukcja: EDGAR → „Filing Detail” → plik `.htm` z typem 10-K/10-Q;
 GPW/IR → ZIP ESEF), PDF/TXT za zwijanym „Masz tylko PDF?”; plakietka „Dane z XBRL: dokładne wartości ze sprawozdania, bez OCR”;

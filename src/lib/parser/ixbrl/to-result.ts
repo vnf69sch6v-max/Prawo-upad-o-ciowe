@@ -299,8 +299,8 @@ function validateFacts(
 }
 
 /** Full pipeline: HTML text → reader → ParseResult. Throws `IxbrlError` for non-iXBRL / corrupt files. */
-export function parseIxbrl(html: string): ParseResult {
-  return ixbrlToResult(readIxbrl(html), html.length);
+export function parseIxbrl(html: string, fileBytes = html.length): ParseResult {
+  return ixbrlToResult(readIxbrl(html), fileBytes);
 }
 
 export { EPS_KEYS, SHARE_KEYS, BALANCE_KEYS, CASHFLOW_KEYS };
