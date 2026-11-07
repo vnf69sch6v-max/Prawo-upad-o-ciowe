@@ -20,8 +20,9 @@ const vals = (r: ReturnType<typeof parse>, key: MetricKey) => getMetric(r, key)!
 
 describe("PZU 2024 — bilans 31.12.2024 / 31.12.2023 / 01.01.2023", () => {
   const r = parse("pzu-2024-statements");
-  it("trzy daty bilansu z nagłówka sprawozdania", () => {
-    expect(r.detection.periods.balance).toHaveLength(3);
+  it("trzy daty bilansu z nagłówka, od najnowszej (pdfjs wypisuje 2023 przed 2024)", () => {
+    expect(r.detection.periods.balance.map((p) => p.short)).toEqual(["31.12.2024", "31.12.2023", "01.01.2023"]);
+    expect(r.detection.periods.balance[0].current).toBe(true);
   });
   it.each([
     ["goodwill", [2792, 2801, 2808]], // „Wartość firmy 27 2 792 2 801 2 808” — 27 to nota
@@ -41,6 +42,9 @@ describe("PZU 2024 — bilans 31.12.2024 / 31.12.2023 / 01.01.2023", () => {
 
 describe("ORLEN 2025 (EN) — bilans z notami „12.4” i trzema datami", () => {
   const r = parse("orlen-2025-balance-en");
+  it("daty kolumn", () => {
+    expect(r.detection.periods.balance.map((p) => p.short)).toEqual(["31.12.2025", "31.12.2024", "01.01.2024"]);
+  });
   it.each([
     ["totalAssets", [265048, 255395, 264082]],
     ["totalEquity", [144543, 146750, 152117]],
@@ -58,6 +62,11 @@ describe("PKO BP 2024 — nota całkowita nie psuje kolumn", () => {
   it("rzeczowe aktywa trwałe 3 320 / 3 203 / 2 917 (nie 18 / 41, nie przesunięte o kolumnę)", () => {
     expect(vals(r, "ppeNet")).toEqual([3320, 3203, 2917]);
     expect(vals(r, "totalEquity")).toEqual([52370, 45227, 35707]);
+  });
+  it("trzecia kolumna z datą 01.01.2023; suma aktywów z „AKTYWA”, nie z tabeli przekształceń z wartością ujemną", () => {
+    expect(r.detection.periods.balance.map((p) => p.short).at(-1)).toBe("01.01.2023");
+    // „SUMA AKTYWÓW 501 516 (6 127) - 495 389” (przekształcenie danych) nie jest kandydatem.
+    expect(vals(r, "totalAssets")).toEqual([525225, 495389, 417797]);
   });
 });
 

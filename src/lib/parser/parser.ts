@@ -158,6 +158,7 @@ function resolveMetric(
       }
       const money = kept.map((c) => (c.isDash ? null : c.value));
       if (!money.some((v) => v !== null)) continue;
+      if (pattern.nonNegative && money.some((v) => v !== null && v < 0)) continue;
       // Score 1 only when the last columns stand after the last word: "… respectively 4,772 1,579" yes,
       // a date header "Wartość firmy 31 grudnia 2024 31 grudnia 2023" no.
       const words = [...(rest ?? "").matchAll(/[a-ząćęłńóśźż]{3,}/gi)];
@@ -580,10 +581,10 @@ function synthesize(lines: string[]): { income: Period[]; balance: Period[] } {
     kind: "duration",
     current: i === 0,
   }));
-  const balance: Period[] = Array.from({ length: balanceDateCount(lines) }, (_, i) => ({
+  const balance: Period[] = [0, 1].map((i) => ({
     key: `bal${i}`,
-    short: i === 0 ? "Current" : i === 1 ? "Prior" : `Prior ${i}`,
-    label: i === 0 ? "Current period" : i === 1 ? "Prior period" : `Prior period ${i}`,
+    short: i === 0 ? "Current" : "Prior",
+    label: i === 0 ? "Current period" : "Prior period",
     kind: "point",
     current: i === 0,
   }));
@@ -600,23 +601,50 @@ const DATE_RE = new RegExp(
 const BALANCE_TITLE_RE =
   /^\s*(?:(?:skonsolidowane|jednostkowe|śródroczne|skrócone|consolidated|separate|interim|condensed)\s+)*(?:sprawozdanie z sytuacji|statements? of financial position|balance sheets?\b|bilans\b)/i;
 
+const MONTH_INDEX = new Map<string, number>(
+  [...PL_MONTHS.split("|"), ...EN_MONTHS.split("|")].map((m, i) => [m, (i % 12) + 1]),
+);
+
+/** "31.12.2024", "31/12/2025", "1 stycznia 2023", "December 31, 2024" → [y, m, d]. */
+function parseHeaderDate(s: string): [number, number, number] | null {
+  const t = s.toLowerCase().replace(/\s+/g, " ");
+  let m = t.match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{4})$/);
+  if (m) return [+m[3], +m[2], +m[1]];
+  m = t.match(/^(\d{1,2}) ([a-ząćęłńóśźż]+) (\d{4})$/);
+  if (m && MONTH_INDEX.has(m[2])) return [+m[3], MONTH_INDEX.get(m[2])!, +m[1]];
+  m = t.match(/^([a-z]+) (\d{1,2}),? (\d{4})$/);
+  if (m && MONTH_INDEX.has(m[1])) return [+m[3], MONTH_INDEX.get(m[1])!, +m[2]];
+  return null;
+}
+
 /**
- * Balance-sheet columns from the statement's own header: PZU, PKO BP and Orlen show three dates
- * (31.12.2024, 31.12.2023 restated, 01.01.2023). Looks only between the title and the first data row; a
- * table-of-contents line ("… z sytuacji finansowej ....... 8") has no dates after it and is skipped.
+ * Balance-sheet column dates from the statement's own header, newest first: PZU, PKO BP and Orlen show
+ * three (31.12.2024, 31.12.2023 restated, 01.01.2023). Looks only between the title and the first data
+ * row; a table-of-contents line ("… z sytuacji finansowej ....... 8") has no dates after it and is
+ * skipped. pdfjs may print "31 grudnia 2023   1 stycznia 2023" above "31 grudnia 2024", so the column
+ * order comes from the dates, not from the text. Returns [] when fewer than 2 dates are found.
  */
-function balanceDateCount(lines: string[]): number {
+function balanceDatesFromHeader(lines: string[]): string[] {
   for (let i = 0; i < lines.length; i++) {
     if (!BALANCE_TITLE_RE.test(lines[i]) || /\.{5,}/.test(lines[i])) continue;
-    const dates = new Set<string>();
+    const found = new Map<string, [number, number, number]>();
     for (let j = i; j < Math.min(lines.length, i + 10); j++) {
       const l = lines[j];
       if (j > i && /[a-ząćęłńóśźż]{3,}.*\d[\d ]*\s*$/i.test(l) && !(l.match(DATE_RE) ?? []).length) break; // first data row
-      for (const d of l.match(DATE_RE) ?? []) dates.add(d.toLowerCase().replace(/\s+/g, " "));
+      for (const raw of l.match(DATE_RE) ?? []) {
+        const ymd = parseHeaderDate(raw);
+        if (ymd) found.set(ymd.join("-"), ymd);
+      }
     }
-    if (dates.size >= 2) return Math.min(dates.size, 3);
+    if (found.size >= 2) {
+      const pad = (n: number) => String(n).padStart(2, "0");
+      return [...found.values()]
+        .sort((a, b) => b[0] - a[0] || b[1] - a[1] || b[2] - a[2])
+        .slice(0, 3)
+        .map(([y, m, d]) => `${pad(d)}.${pad(m)}.${y}`);
+    }
   }
-  return 2;
+  return [];
 }
 
 export interface ParseInput {
@@ -648,9 +676,18 @@ function parseReportInner(input: ParseInput): ParseResult {
     if (income.length === 0) income = syn.income;
     if (balance.length === 0) balance = syn.balance;
   }
-  if (balance.length === 2 && balanceDateCount(lines) === 3) {
-    // Restated comparatives add an opening balance (PKO BP: 31.12.2024, 31.12.2023, 01.01.2023).
-    balance = [...balance, { key: "bal2", short: "Prior 2", label: "Prior period 2", kind: "point", current: false }];
+  // Restated comparatives add an opening balance (PZU, PKO BP, ORLEN: 31.12.2024, 31.12.2023, 01.01.2023).
+  // The statement's own header wins over periods guessed elsewhere ("FY24 close", "Current").
+  const balanceDates = balanceDatesFromHeader(lines);
+  if (balanceDates.length === 3 && balance.length !== 3) {
+    balance = balanceDates.map((d, i) => ({
+      key: `bal${i}`,
+      short: d,
+      label: `As of ${d}`,
+      kind: "point",
+      endDate: d,
+      current: i === 0,
+    }));
   }
 
   const structureLabel = [formType, issuer].filter(Boolean).join(" · ") || "Unknown filing";

@@ -60,3 +60,12 @@ ZA ROK ZAKOŃCZONY   Kapitał   Fundusz   Skumulowane   rezerwowe i   akcjonariu
 Pozostałe   wynik   okresu   niekontrolujące,   własny
 31 GRUDNIA 2024 ROKU   zakładowy   Kapitał   ogólnego   inne dochody   skumulowane   jednostki
 kapitały   finansowy   bieżącego   razem   ogółem
+Zmiana prezentacji   Zmiana prezentacji   31.12.2023
+SPRAWOZDANIE Z SYTUACJI   31.12.2023 przed
+instrumentów   rezerw na   dane
+FINANSOWEJ – WYBRANE DANE   przekształceniem
+pochodnych   niewykorzystane urlopy   przekształcone
+Należności od banków 14 438 (1 085) - 13 353
+Pochodne instrumenty zabezpieczające 1 174 (819) - 355
+Pozostałe instrumenty pochodne 8 406 (4 223) - 4 183
+SUMA AKTYWÓW 501 516 (6 127) - 495 389

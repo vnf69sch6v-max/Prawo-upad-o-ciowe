@@ -306,8 +306,6 @@ export function resegmentEuropean(cells: NumericCell[], expected: number, ytd = 
     return g && g.length >= 3 ? g : null;
   });
   if (!chains.some((g) => g)) return cells;
-  const longChain = true;
-  if (fits(cells) && !longChain) return cells;
 
   // Every chain of k groups can be cut after any of its first k−1 groups: 2^(k−1) ways.
   const options: NumericCell[][][] = cells.map((c, i) => {
@@ -354,7 +352,7 @@ export function resegmentEuropean(cells: NumericCell[], expected: number, ytd = 
   if (bestFit) return bestFit.row;
   // A row that "fits" only because a long run stayed glued (Orlen "Total assets 262 742 264 463 61 489
   // 60 824": PLN + EUR columns) is another table — give it its natural split so it stops fitting.
-  if (fits(cells) && longChain && bestAny && cost(cells) > 2) return bestAny.row;
+  if (fits(cells) && bestAny && cost(cells) > 2) return bestAny.row;
   return cells;
 }
 

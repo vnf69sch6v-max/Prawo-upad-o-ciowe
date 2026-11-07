@@ -1,14 +1,18 @@
 # PS2b-1 — parser: bilans z trzema datami, numery not, liczby sklejone spacją
 
-Status: **REVIEW** (07.11.2026). Zakres i przykłady: wpis PS2b w `docs/ROADMAP.md` (zdefiniowany przez PM po PS2a).
+Status: **REVIEW 1 PM (07.11.2026): FIX** — kryteria 1–9 spełnione, 10–12 do zrobienia. Spec napisany bez osobnego
+PLAN (okno rutyny); zakres i podział PS2b-1 / PS2b-2 PM przyjmuje. Zakres i przykłady: wpis PS2b w `docs/ROADMAP.md` (zdefiniowany przez PM po PS2a).
 Ten krok robi część bilansową i numery not; reszta PS2b przechodzi do PS2b-2 (niżej).
 
 ## Problem i wartość
 Polskie i europejskie sprawozdania (PZU, PKO BP, ORLEN) po przekształceniu danych mają w bilansie trzy daty:
 31.12 roku bieżącego, 31.12 roku poprzedniego (przekształcone) i 1 stycznia roku poprzedniego. Parser zakładał dwie,
 z wiersza „Wartość firmy 27 2 792 2 801 2 808” brał dwie ostatnie liczby i pokazywał **rok poprzedni jako bieżący**:
-- Orlen SSF: aktywa 255 395 zamiast 265 048;
+- PZU: wartość firmy 2 801 / 2 808 zamiast 2 792 / 2 801;
 - PKO BP: kapitał 45 227 zamiast 52 370.
+
+W Orlen SSF parser brał aktywa, kapitał i zobowiązania z noty o wspólnym przedsięwzięciu (1 606 / 984 / 622),
+bo wiersze bilansu z trzema kolumnami nie pasowały do dwóch okresów.
 
 Do tego liczby powyżej 99 999 zlewały się w jedną. „Aktywa, razem 503 257 467 945 429 205” to jedna „liczba” 503 bln.
 Ktoś, kto zrobi na tym DCF albo porówna rok do roku, dostanie złe wnioski bez żadnego ostrzeżenia.
@@ -34,6 +38,11 @@ Ktoś, kto zrobi na tym DCF albo porówna rok do roku, dostanie złe wnioski bez
 - Suma aktywów PKO BP (wiersz „AKTYWA 525 225 495 389 417 797” bez synonimu; dziś wygrywa tabela przekształceń).
 - „Wszystkie wiersze” dalej pokazują sklejone liczby; podział dotyczy tylko metryk, bo tam znana jest liczba kolumn.
 - SpaceX: przychody z RZiS, nie z noty (te same liczby).
+- Z REVIEW 1 (błędne → inne błędne, w tabeli PR):
+  - Platige: przychody 143 650 (rok 2023) w kolumnie bieżącej, wcześniej sklejone 153 670 143 650. To samo z kosztami;
+    przyczyną jest liczba kolumn RZiS, pierwszy punkt PS2b-2;
+  - PKO BP: „Aktywa obrotowe 486 449” z noty o wspólnym przedsięwzięciu, czyli dwie kolumny sklejone 2-grupowo. Bank
+    nie ma aktywów obrotowych, metryka powinna być „—”.
 
 ## Kryteria akceptacji
 1. PZU (fixture `pzu-2024-statements.txt`), 3 daty bilansu:
@@ -61,3 +70,36 @@ Ktoś, kto zrobi na tym DCF albo porówna rok do roku, dostanie złe wnioski bez
    - tabela przewija się w swoim kontenerze, strona nie;
    - 0 żądań do `/api/parser`, 0 błędów konsoli.
 9. `tsc`, eslint, `npm test` i `npm run build` przechodzą.
+
+### FIX po REVIEW 1 PM (07.11.2026)
+PM porównał main (a749c0b) z c4c8e3f na 13 tekstach. Zysk jest duży:
+- PZU: cały bilans i podatek są poprawne, kontrole 2/2;
+- Orlen SSF i Q: aktywa, kapitał i zobowiązania poprawne, sumy się zgadzają;
+- PKO BP: rzeczowe aktywa trwałe i kapitał poprawne;
+- Platige: zapasy, wartości niematerialne i gotówka poprawne;
+- 6 fixture'ów: bez zmian.
+
+Do poprawy trzy rzeczy, od najmniejszej:
+
+10. **Martwy kod w `resegmentEuropean`.** `const longChain = true` i warunek `fits(cells) && !longChain` nigdy nie
+    działają. Usunąć, wynik bez zmian (hashe i testy).
+11. **Okres na każdej kolumnie bilansu.** Nowa kolumna ma nagłówek „Prior 2” / „Prior period 2” bez daty. W PKO BP
+    obok stoją „FY24 close” i „FY23 close”, a przy PZU wszystkie trzy to „Current / Prior / Prior 2”. Daty są
+    w nagłówku sprawozdania, `balanceDateCount` już je czyta. Warunki:
+    - każda kolumna bilansu z datą z nagłówka pokazuje tę datę: PZU 31.12.2024 / 31.12.2023 / 01.01.2023, PKO BP trzecia
+      kolumna 01.01.2023, Orlen SSF 31.12.2025 / 31.12.2024 / 01.01.2024;
+    - format jak w pozostałych kolumnach;
+    - kolejność kolumn bierze się z dat, nie z kolejności w tekście. W PZU pdfjs wypisuje „31 grudnia 2023   1 stycznia
+      2023” linię przed „Aktywa Nota 31 grudnia 2024”. Kolumny idą od najnowszej, a 1 stycznia jest ostatni;
+    - test na `short` i `label` okresów oraz zrzut 390 px.
+12. **Bilans nie może mieć ujemnej sumy ani pozycji majątku.** PKO BP: suma aktywów wynosi dziś 501 516 / (6 127) /
+    (495 389) z pewnością HIGH. To wiersz tabeli przekształceń „SUMA AKTYWÓW 501 516 (6 127) - 495 389” (l. 1374 pełnego
+    tekstu). Pasuje do 3 kolumn, bo „- 495 389” czyta się jako liczbę ujemną. Na main było sklejone 122 917 113 935
+    z pewnością MEDIUM, czyli śmieci widoczne na pierwszy rzut oka. Teraz to wiarygodnie wyglądająca zła liczba
+    z wyższą pewnością. Warunki:
+    - wiersz z wartością ujemną nie jest kandydatem dla aktywów razem, zobowiązań razem, aktywów obrotowych, gotówki,
+      rzeczowych aktywów trwałych, wartości firmy i zapasów;
+    - PKO BP: suma aktywów 525 225 / 495 389 / 417 797 (wiersz „AKTYWA 525 225 495 389 417 797”, l. 294) albo „—”;
+      nigdy 501 516;
+    - fixture `pkobp-2024-balance.txt` dostaje wiersze tabeli przekształceń (l. 1366–1374), a test oblewa na c4c8e3f;
+    - tabela 13 tekstów przed → po w PR.

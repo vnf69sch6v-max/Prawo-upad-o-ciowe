@@ -26,6 +26,8 @@ export interface MetricPattern {
   allowPercent?: boolean;
   /** Expected sign of the headline value, used only for display hints. */
   magnitude?: boolean; // true => report absolute value (e.g. capex, buybacks)
+  /** A row with a negative amount is not this item (a restatement table: "SUMA AKTYWÓW 501 516 (6 127) - 495 389"). */
+  nonNegative?: boolean;
 }
 
 const p = (text: string, match: MatchType = "exact"): Synonym => ({
@@ -335,13 +337,15 @@ export const PATTERNS: MetricPattern[] = [
     key: "totalAssets",
     label: "Total assets",
     statement: "balance",
-    synonyms: [p("Total assets"), p("Aktywa razem"), p("Suma aktywów"), p("Aktywa, razem")],
+    nonNegative: true,
+    synonyms: [p("Total assets"), p("Aktywa razem"), p("Suma aktywów"), p("Aktywa, razem"), p("Aktywa")],
     exclude: ["current", "non-current", "noncurrent", "by segment", "deferred tax", "trwałe", "obrotowe"],
   },
   {
     key: "totalCurrentAssets",
     label: "Total current assets",
     statement: "balance",
+    nonNegative: true,
     synonyms: [p("Total current assets"), p("Aktywa obrotowe")],
     exclude: [],
   },
@@ -364,6 +368,7 @@ export const PATTERNS: MetricPattern[] = [
     key: "inventories",
     label: "Inventories",
     statement: "balance",
+    nonNegative: true,
     synonyms: [p("Inventories"), p("Inventory"), p("Inventories, net"), p("Zapasy")],
     exclude: ["change", "decrease", "increase"],
   },
@@ -371,6 +376,7 @@ export const PATTERNS: MetricPattern[] = [
     key: "goodwill",
     label: "Goodwill",
     statement: "balance",
+    nonNegative: true,
     synonyms: [p("Goodwill"), p("Goodwill, net"), p("Wartość firmy")],
     exclude: ["impairment", "and intangible", "accumulated", "ujemna"],
   },
@@ -390,6 +396,7 @@ export const PATTERNS: MetricPattern[] = [
     key: "ppeNet",
     label: "Property & equipment, net",
     statement: "balance",
+    nonNegative: true,
     // "net of accumulated depreciation of $X" first (digits embedded in label),
     // so the balance-sheet line beats a bare note line and the "at cost" row.
     synonyms: [
@@ -413,6 +420,7 @@ export const PATTERNS: MetricPattern[] = [
     key: "totalLiabilities",
     label: "Total liabilities",
     statement: "balance",
+    nonNegative: true,
     synonyms: [
       p("Total liabilities"),
       p("Zobowiązania i rezerwy na zobowiązania"),
@@ -443,6 +451,7 @@ export const PATTERNS: MetricPattern[] = [
     key: "cash",
     label: "Cash & equivalents",
     statement: "balance",
+    nonNegative: true,
     synonyms: [
       p("Cash and cash equivalents"),
       p("Cash and equivalents"),
