@@ -55,7 +55,7 @@ export function UploadZone({
       <input
         ref={inputRef}
         type="file"
-        accept="application/pdf,.pdf,text/plain,.txt"
+        accept=".htm,.html,.xhtml,text/html,application/xhtml+xml,application/pdf,.pdf,text/plain,.txt"
         className="hidden"
         onChange={(e) => {
           const f = e.target.files?.[0];

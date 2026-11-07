@@ -21,8 +21,8 @@ export const pl = {
     ms: (n: number) => `${n} ms`,
   },
   upload: {
-    drop: "Upuść PDF lub kliknij, aby wybrać",
-    browse: "raport kwartalny lub roczny · do 100 MB i 800 stron",
+    drop: "Upuść raport (HTML z SEC, PDF) lub kliknij, aby wybrać",
+    browse: "najdokładniej: plik .htm z EDGAR (dane XBRL) · PDF do 100 MB i 800 stron",
     sampleHint: "lub wczytaj przykład (bez pliku)",
     uploading: "Wysyłam na serwer…",
     extractingLocal: "Czytam plik w przeglądarce…",
@@ -41,7 +41,7 @@ export const pl = {
     badges: ["Wodospad", "Segmenty · produkty", "Wskaźniki · FCF", "CSV · XLSX · JSON"],
   },
   toast: {
-    needPdf: "Wgraj plik PDF (lub .txt z fixture).",
+    needPdf: "Wgraj plik HTML (.htm z EDGAR), PDF lub .txt.",
     tooLarge: "Plik za duży — limit 100 MB. Wgraj samo sprawozdanie finansowe.",
     parsed: (name: string, matched: number, total: number) =>
       `Przetworzono ${name} — ${matched}/${total} metryk`,
@@ -209,6 +209,9 @@ export const pl = {
     cancel: "Anuluj",
   },
   failure: {
+    notIxbrl:
+      "To nie jest raport z danymi XBRL. Pobierz z EDGAR plik .htm raportu 10-K lub 10-Q (strona „Filing Detail”, pierwszy plik na liście), a nie podgląd w przeglądarce. Masz tylko PDF? Wgraj go, ale liczby będą mniej dokładne.",
+    ixbrlCorrupt: "Plik HTML wygląda na uszkodzony albo ucięty. Pobierz go ponownie.",
     scan: "W pliku prawie nie ma tekstu — to pewnie skan albo tekst zamieniony na obraz. Parser nie odczytuje skanów.",
     parser: "Parser nie poradził sobie z tym raportem. Spróbuj samego sprawozdania finansowego.",
     extractTechnical: "Przeglądarka nie odczytała tego PDF-a.",

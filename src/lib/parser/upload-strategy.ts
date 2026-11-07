@@ -7,6 +7,7 @@ import {
   MAX_CLIENT_FILE_BYTES,
   MAX_CLIENT_TEXT_BYTES,
   MAX_EXTRACTED_TEXT_BYTES,
+  MAX_HTML_BYTES,
 } from "./limits";
 
 export type ParseStrategy = "browser" | "reject-type" | "reject-too-large";
@@ -15,21 +16,26 @@ export function isPdfFile(file: { name: string; type: string }): boolean {
   return /pdf/i.test(file.type) || /\.pdf$/i.test(file.name);
 }
 
+/** EDGAR .htm and ESEF .xhtml: inline XBRL, read in the browser by `ixbrl/`. */
+export function isHtmlFile(file: { name: string; type: string }): boolean {
+  return /\.(x?html?)$/i.test(file.name) || /text\/html|application\/xhtml/i.test(file.type);
+}
+
 export function isTextFile(file: { name: string; type: string }): boolean {
   return /text\/plain/i.test(file.type) || /\.txt$/i.test(file.name);
 }
 
 /** Every PDF/TXT within the caps is extracted and parsed in the browser — the file never leaves the device. */
 export function chooseParseStrategy(file: { size: number; name: string; type: string }): ParseStrategy {
-  if (!isPdfFile(file) && !isTextFile(file)) return "reject-type";
-  const cap = isPdfFile(file) ? MAX_CLIENT_FILE_BYTES : MAX_CLIENT_TEXT_BYTES;
+  if (!isPdfFile(file) && !isTextFile(file) && !isHtmlFile(file)) return "reject-type";
+  const cap = isHtmlFile(file) ? MAX_HTML_BYTES : isPdfFile(file) ? MAX_CLIENT_FILE_BYTES : MAX_CLIENT_TEXT_BYTES;
   return file.size > cap ? "reject-too-large" : "browser";
 }
 
 /** Why the browser path stopped. Only technical failures may offer the server; input problems would fail there too. */
 export type BrowserFailure =
   | "password" | "invalid" | "scan" | "too-many-pages" | "too-much-text" | "parser"
-  | "extract-technical" | "extract-timeout" | "worker" | "parse-timeout" | "cancelled";
+  | "extract-technical" | "extract-timeout" | "worker" | "parse-timeout" | "cancelled" | "not-ixbrl" | "ixbrl-corrupt";
 
 /** A browser-path failure with its kind (`serverFallbackFor`) and a Polish message for the UI. */
 export class BrowserParseError extends Error {
