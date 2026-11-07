@@ -333,6 +333,10 @@ J5. **Gospodarka Japonii** — produkcja zrobiona 27.10 (`/japonia/gospodarka`: 
 - **`GUS_BDL_KEY`** — wyższy limit BDL (rejestracja na api.stat.gov.pl).
 
 ## Zrobione
+- **7.11.2026 — PS1: parser w przeglądarce** (PR #88, `docs/specs/2026-11-07-parser-w-przegladarce.md`, PM: FIX → SHIP).
+  Każdy PDF/TXT analizowany w przeglądarce (pdfjs `legacy` + Web Worker parsera), 100 MB / 800 stron / 6 MB tekstu / 240 s,
+  postęp i „Anuluj”, serwer tylko po kliknięciu. Parsowanie PZU 10,3 s → 2,3 s (pamięć `normalizeLabel`, wynik bez zmian).
+  Kryterium 14/17 (iPhone, Safari) — test właściciela, wynik dopisać w PS1.
 - **3.11.2026 — N4 krok 1: trafne newsy przy wskaźnikach** (gałąź `claude/newsy-przy-wskaznikach`,
   `docs/specs/2026-11-03-newsy-przy-wskaznikach.md`, PM: SHIP). `src/lib/news/match.ts`: opis liczy się dopiero przy ≥ 2 frazach,
   weto zagraniczne w rynkach, tylko PL, serie dzienne (kursy Money.pl, „Nowe ceny paliw”) zwinięte do jednej pozycji, tag podtematu
