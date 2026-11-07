@@ -28,7 +28,21 @@ pozycje PS, po kolei. Wyjątki jak dotąd: awaria danych (`stale`/`error` w `/ap
 - **PS1b. Eksport CSV i JSON w przeglądarce** (mały krok po PS1). `toCSV` i `toJSON` są czyste. XLSX zostaje na serwerze:
   `exceljs` w przeglądarce to 252 KB gzip i wywołania `Function(...)`, których CSP bez `'unsafe-eval'` nie przepuści.
   Krok zawęża zdanie o eksporcie w `/prywatnosc`.
-- **PS2. Pomiar jakości (w toku od 07.11.2026; PS2a i PS2b-1 zrobione, następny PS2b-2).** Zestaw testowy prawdziwych raportów z liczbami sprawdzonymi ręcznie
+- **PS3. Parser: raporty HTML z XBRL (iXBRL) jako ścieżka główna** — spec `docs/specs/2026-11-07-parser-ixbrl-html.md`,
+  status: **w toku od 07.11.2026** (PLAN PM gotowy; do potwierdzenia przez właściciela: PDF zostaje jako zakładka, nie znika).
+  Powód (właściciel 07.11: „czytajmy tylko html … niech wygląda rewelacyjnie”): plik `.htm` z EDGAR ma fakty XBRL (wartość, okres,
+  skala, znak, segmenty), więc liczby nie są zgadywane z tekstu. Zweryfikowane na SpaceX 10-Q i Cipher 10-K: wartości zgodne z API
+  SEC i komunikatami; czytnik regex w workerze czyta 2,3 MB w 28–104 ms. Kroki, po jednym na przebieg:
+  - **PS3a — zrobione 07.11.2026, PR #91** (REVIEW: FIX → poprawki → SHIP; SpaceX i Cipher z XBRL zgodne ze spec; 4/4 kontrole; 80–110 ms w Node). Następny: PS3b. Pierwotny opis:: czytnik, tabela pojęć us-gaap, wynik w istniejącym `ParseResult`, wgrywanie `.htm/.html/.xhtml`.
+    Parytet z PS2a (SpaceX) i lista ręczna Cipher w specu. Efekt: na produkcji działa wgrany plik z SEC z poprawnym RZiS, bilansem i przepływami.
+  - **PS3b — wygląd** (2 przebiegi, z `mobile-designer`): formularz HTML domyślny z instrukcją skąd pobrać plik, plakietka „dane z XBRL”,
+    sprawozdania w kolejności raportu, źródło liczby po kliknięciu, segmenty i produkty z wymiarów, „wszystkie fakty”, baner kontroli.
+    Przejmuje z PS2c: Δ% od ujemnej bazy, znak Δ w wierszach neutralnych, FCF payout przy ujemnym FCF, 390 px bez pustych kolumn.
+  - **PS3c — ESEF i IFRS** (2 przebiegi, projekt i REVIEW mocniejszym modelem): `.xhtml`, `.zip`, `ifrs-full:`, przecinek dziesiętny, banki.
+    Wymaga 2 polskich raportów rocznych ESEF od właściciela („Wymaga właściciela”).
+  - **PS3d — opcjonalnie**: HTML bez XBRL przez tabele → tekst → stary parser, z etykietą „zgadywane”.
+  PS2b-2 i PDF-owa część PS2c: **wstrzymane** (bez dalszego rozwoju heurystyk PDF; kod zostaje, bo raporty kwartalne GPW nie mają iXBRL).
+- **PS2. Pomiar jakości (w toku od 07.11.2026; PS2a i PS2b-1 zrobione; dalsze kroki PDF wstrzymane na rzecz PS3).** Zestaw testowy prawdziwych raportów z liczbami sprawdzonymi ręcznie
   w raporcie lub komunikacie spółki:
   - raporty: polski raport roczny i kwartalny (firma, bank, ubezpieczyciel, NewConnect), US 10-Q i 10-K;
   - liczby: przychody, zysk operacyjny, zysk netto, aktywa, kapitał, OCF, okresy, jednostka;
@@ -58,7 +72,7 @@ pozycje PS, po kolei. Wyjątki jak dotąd: awaria danych (`stale`/`error` w `/ap
 
     Kolumny bilansu mają daty z nagłówka sprawozdania. Wcześniej rok poprzedni był pokazywany jako bieżący albo liczby
     pochodziły z noty.
-  - **PS2b-2 — następny:**
+  - **PS2b-2 — wstrzymane 07.11.2026 (PS3; wraca po decyzji właściciela):**
     - najpierw liczba kolumn RZiS w raportach europejskich (Platige 4, Orlen SSF 1). Platige pokazuje przychody 2023
       (143 650) jako bieżące, a kolumny EUR jako kolejne okresy. To wiarygodnie wyglądająca zła liczba w kaflu „Przychody”;
     - sklejenia 2-grupowe w notach (PKO BP „Aktywa obrotowe 486 449” = 486 | 449; bank nie ma aktywów obrotowych → „—”);
@@ -80,7 +94,7 @@ pozycje PS, po kolei. Wyjątki jak dotąd: awaria danych (`stale`/`error` w `/ap
 
     Każdy przykład dostaje fixture albo fragment i test wartości. Numery not z kropką („5.2”) PS2a już odcina. Zostają
     numery całkowite („25”, „27”, „37”), bez psucia PKO BP: rzeczowe aktywa trwałe nie mogą spaść do 18 / 41.
-  - **PS2c — UI.**
+  - **PS2c — UI.** Pozycje niezależne od źródła przeszły do PS3b; zostają tylko PDF-owe.
     - Δ% od ujemnej bazy: dziś „▲517,8%” przy przejściu ze straty w zysk.
     - Kontrola „zysk operacyjny + pozostałe = brutto” z odsetkami: dziś SpaceX ją oblewa przy poprawnych liczbach.
     - Widoczny baner, gdy kontrole spójności nie przechodzą.
@@ -91,8 +105,8 @@ pozycje PS, po kolei. Wyjątki jak dotąd: awaria danych (`stale`/`error` w `/ap
       jako „14.5%” (`Delta`, `Math.abs`). Pierwszy punkt PS2c.
     - Kolumny bilansu „Current” / „Prior” bez dat, gdy nagłówek ma 2 daty, a okresy były zgadywane (fragment PZU
       z dwiema datami). Przy 3 datach daty są już w nagłówkach (PS2b-1).
-- **PS3+. Kierunek, bez zobowiązań.** Każdy dopiero po PS2 i z osobną specyfikacją:
-  - ESEF: xhtml z tagami iXBRL, czyli dokładne liczby z rocznych sprawozdań spółek z GPW bez heurystyk;
+- **PS4+. Kierunek, bez zobowiązań.** Każdy dopiero po PS2 i z osobną specyfikacją:
+  - (ESEF przeniesiony do PS3c)
   - teczka: raporty zapisane na koncie, na zasadach `savori_users`, z szyfrowaniem i wpisem w `/prywatnosc`;
   - DCF na liczbach z parsera.
 
@@ -296,7 +310,9 @@ J5. **Gospodarka Japonii** — produkcja zrobiona 27.10 (`/japonia/gospodarka`: 
 ## Wymaga właściciela (nie da się z kodu)
 - **Parser — raporty, na których zawiódł (do PS2, od 07.11.2026).** Przyślij PDF-y albo linki. Dla każdego napisz, które
   liczby są złe i jakie powinny być. Bez tego PS2 mierzy tylko na raportach wybranych przez PM (PZU, PKO BP, Orlen, Żabka, Platige).
-  Otrzymane: 10-Q SpaceX Q3 2026 (07.11, zrzuty) → PS2a–PS2c. Najbardziej brakuje polskiego raportu kwartalnego, na którym
+  Otrzymane: 10-Q SpaceX Q3 2026 (07.11, zrzuty) → PS2a–PS2c; 07.11 także pliki HTML (SpaceX 10-Q, Cipher Digital 10-K) → PS3.
+  **Do PS3c:** 2 polskie raporty roczne ESEF (paczka `.zip` z relacji inwestorskich: spółka WIG20 i bank albo ubezpieczyciel)
+  i 1 raport 20-F w iXBRL. **Do potwierdzenia:** PDF zostaje jako druga zakładka (nie kasujemy kodu). Najbardziej brakuje polskiego raportu kwartalnego, na którym
   parser zawiódł, i dowolnego 10-K.
   Po wdrożeniu PS1: wgraj na swoim telefonie największy raport, jaki masz. Podaj model telefonu, wersję iOS/Androida, czas i to,
   czy wynik się pokazał (kryterium 17 specyfikacji). Starszych iPhone'ów (iOS < 17.4) nie da się odtworzyć w testach.

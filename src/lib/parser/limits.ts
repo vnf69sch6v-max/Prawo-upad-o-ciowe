@@ -20,6 +20,9 @@ export const MAX_CLIENT_FILE_LABEL = "100 MB";
 
 /** Browser path: covers a 533-page integrated report; 800 pages ≈ 60–90 s on a mid-tier phone. */
 export const MAX_CLIENT_PAGES = 800;
+/** HTML/iXBRL (EDGAR .htm, ESEF .xhtml): a 10-K is 2–15 MB; the worker reads it as a File, not a copy on the main thread. */
+export const MAX_HTML_BYTES = 50 * 1024 * 1024;
+export const MAX_HTML_LABEL = "50 MB";
 
 /** Browser path: text cap (also for TXT) — 6 MB ≈ 18 s desktop / ~75 s phone in the parser worker. */
 export const MAX_CLIENT_TEXT_BYTES = 6 * 1024 * 1024;

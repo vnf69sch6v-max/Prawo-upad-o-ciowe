@@ -27,9 +27,9 @@ import { SourceModal } from "@/components/parser/SourceModal";
 import { pl } from "@/lib/parser/copy.pl";
 import { ParseFailureCard, ParseProgressCard, type ParsePhase } from "@/components/parser/ParseProgress";
 import { MAX_CLIENT_TOTAL_MS } from "@/lib/parser/limits";
-import { parseInWorker } from "@/lib/parser/parse-in-worker";
+import { parseHtmlInWorker, parseInWorker } from "@/lib/parser/parse-in-worker";
 import {
-  BrowserParseError, chooseParseStrategy, isPdfFile, serverFallbackFor,
+  BrowserParseError, chooseParseStrategy, isHtmlFile, isPdfFile, serverFallbackFor,
   type BrowserFailure, type ServerFallback,
 } from "@/lib/parser/upload-strategy";
 import type { Metric, MetricKey, ParseResult } from "@/lib/parser/types";
@@ -58,6 +58,8 @@ const FAILURE_COPY: Partial<Record<BrowserFailure, string>> = {
   "extract-timeout": pl.failure.extractTimeout,
   "parse-timeout": pl.failure.parseTimeout,
   worker: pl.failure.worker,
+  "not-ixbrl": pl.failure.notIxbrl,
+  "ixbrl-corrupt": pl.failure.ixbrlCorrupt,
 };
 
 function fileForm(file: File): FormData {
@@ -153,6 +155,17 @@ function ParserView() {
     setRunning({ name: file.name, size: file.size });
     setStatus("extracting");
     try {
+      if (isHtmlFile(file)) {
+        // Raport HTML z danymi XBRL (EDGAR .htm, ESEF .xhtml): worker czyta plik sam, nic nie wychodzi z urządzenia.
+        stage = "parse";
+        setPhase({ kind: "parse" });
+        setStatus("parsing");
+        const result = await parseHtmlInWorker(file, controller.signal);
+        setData({ ok: true, fileName: file.name, fileSize: file.size, elapsedMs: Math.round(performance.now() - startedAt), result });
+        setStatus("done");
+        window.scrollTo({ top: 0, behavior: "auto" });
+        return;
+      }
       if (isPdfFile(file)) {
         setPhase({ kind: "read", page: 0, pages: 0 });
         let lastPaint = 0;

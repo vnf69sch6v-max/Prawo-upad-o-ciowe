@@ -66,7 +66,7 @@ export default function PrivacyPage() {
                     <li>Nie używamy narzędzi analitycznych, pikseli reklamowych ani ciasteczek śledzących.</li>
                     <li>Nie sprzedajemy ani nie udostępniamy danych w celach marketingowych.</li>
                     <li>
-                        Pliki wgrane do parsera sprawozdań analizujemy w Twojej przeglądarce — ani plik, ani jego treść nie trafiają
+                        Pliki wgrane do parsera sprawozdań (HTML z danymi XBRL, PDF, TXT) analizujemy w Twojej przeglądarce — ani plik, ani jego treść nie trafiają
                         do Savori. Wyjątki, zawsze po Twoim kliknięciu: „Przetwórz na serwerze” (gdy przeglądarka nie poradzi sobie
                         z plikiem) wysyła plik do 4 MB albo odczytany z niego tekst, a eksport (CSV, XLSX, JSON) wysyła wynik
                         analizy — liczby oraz nazwy wierszy i okresów, bez pliku i bez jego pełnego tekstu. Te dane przetwarzamy
