@@ -28,7 +28,7 @@ pozycje PS, po kolei. Wyjątki jak dotąd: awaria danych (`stale`/`error` w `/ap
 - **PS1b. Eksport CSV i JSON w przeglądarce** (mały krok po PS1). `toCSV` i `toJSON` są czyste. XLSX zostaje na serwerze:
   `exceljs` w przeglądarce to 252 KB gzip i wywołania `Function(...)`, których CSP bez `'unsafe-eval'` nie przepuści.
   Krok zawęża zdanie o eksporcie w `/prywatnosc`.
-- **PS2. Pomiar jakości (w toku od 07.11.2026; PS2a zrobione, następny PS2b).** Zestaw testowy prawdziwych raportów z liczbami sprawdzonymi ręcznie
+- **PS2. Pomiar jakości (w toku od 07.11.2026; PS2a i PS2b-1 zrobione, następny PS2b-2).** Zestaw testowy prawdziwych raportów z liczbami sprawdzonymi ręcznie
   w raporcie lub komunikacie spółki:
   - raporty: polski raport roczny i kwartalny (firma, bank, ubezpieczyciel, NewConnect), US 10-Q i 10-K;
   - liczby: przychody, zysk operacyjny, zysk netto, aktywa, kapitał, OCF, okresy, jednostka;
@@ -43,7 +43,29 @@ pozycje PS, po kolei. Wyjątki jak dotąd: awaria danych (`stale`/`error` w `/ap
   Pierwszy raport od właściciela (07.11): 10-Q SpaceX za Q3 2026 (EDGAR, accession 0001628280-26-066880). Ma błędy w RZiS,
   przepływach i długu. Podkroki, każdy z fixture'em i testem wartości:
   - **PS2a — zrobione 7.11.2026, PR #89** (szczegóły w „Zrobione”).
-  - **PS2b — następny: numery not i bilans z trzema datami** (zestaw PS2). Przykłady:
+  - **PS2b-1 — zrobione 7.11.2026, PR #90** (spec `docs/specs/2026-11-07-parser-ps2b-bilans-trzy-daty.md`, PM: FIX → SHIP). Zakres:
+    - 3 daty bilansu z nagłówka;
+    - numery not całkowite i z kropką;
+    - liczby sklejone spacją dzielone wg liczby kolumn.
+
+    Poprawne po zmianie:
+    - PZU: cały bilans, podatek 3 484 / 3 626, kontrole 2/2;
+    - Orlen SSF i Q: aktywa, kapitał, zobowiązania, zapasy, sumy zgodne;
+    - PKO BP: rzeczowe aktywa trwałe, kapitał;
+    - Platige: zapasy, wartości niematerialne, gotówka.
+    - PKO BP: suma aktywów 525 225 / 495 389 / 417 797. Wiersz z wartością ujemną nie jest kandydatem na sumę bilansu
+      ani na pozycję majątku.
+
+    Kolumny bilansu mają daty z nagłówka sprawozdania. Wcześniej rok poprzedni był pokazywany jako bieżący albo liczby
+    pochodziły z noty.
+  - **PS2b-2 — następny:**
+    - najpierw liczba kolumn RZiS w raportach europejskich (Platige 4, Orlen SSF 1). Platige pokazuje przychody 2023
+      (143 650) jako bieżące, a kolumny EUR jako kolejne okresy. To wiarygodnie wyglądająca zła liczba w kaflu „Przychody”;
+    - sklejenia 2-grupowe w notach (PKO BP „Aktywa obrotowe 486 449” = 486 | 449; bank nie ma aktywów obrotowych → „—”);
+    - gotówka Orlen SSF i Q (dziś 26 z noty albo „—”; Orlen Q „Cash 14.6 11 042 13 282 21 046”);
+    - podział sklejonych liczb w „wszystkich wierszach”;
+    - przychody SpaceX z RZiS.
+  - **PS2b (pierwotny zakres) — numery not i bilans z trzema datami** (zestaw PS2). Przykłady:
     - PZU „Wartość firmy 27 2 792 2 801 2 808”: powinno być 2 792 / 2 801, dziś 2 801 / 2 808;
     - PZU podatek „25 (3 484) (3 626)”: dziś 25 / 35;
     - PZU gotówka: 15 127 / 17 702;
@@ -65,6 +87,10 @@ pozycje PS, po kolei. Wyjątki jak dotąd: awaria danych (`stale`/`error` w `/ap
     - „Wypłata z FCF −12,7%” przy ujemnym FCF: ukryć albo opisać.
     - 390 px, „Przepływy i dług” w 10-Q: puste kolumny Q3 spychają liczby 9M za krawędź.
     - „Koszty operacyjne razem” z kosztem własnym (SpaceX) nie może obniżać pewności poprawnej liczby.
+    - **Błąd:** Δ r/r w wierszach „neutralnych” (bilans, koszty) jest bez znaku i strzałki. Spadek gotówki PZU o 14,5% widać
+      jako „14.5%” (`Delta`, `Math.abs`). Pierwszy punkt PS2c.
+    - Kolumny bilansu „Current” / „Prior” bez dat, gdy nagłówek ma 2 daty, a okresy były zgadywane (fragment PZU
+      z dwiema datami). Przy 3 datach daty są już w nagłówkach (PS2b-1).
 - **PS3+. Kierunek, bez zobowiązań.** Każdy dopiero po PS2 i z osobną specyfikacją:
   - ESEF: xhtml z tagami iXBRL, czyli dokładne liczby z rocznych sprawozdań spółek z GPW bez heurystyk;
   - teczka: raporty zapisane na koncie, na zasadach `savori_users`, z szyfrowaniem i wpisem w `/prywatnosc`;
@@ -361,6 +387,14 @@ J5. **Gospodarka Japonii** — produkcja zrobiona 27.10 (`/japonia/gospodarka`: 
 - **`GUS_BDL_KEY`** — wyższy limit BDL (rejestracja na api.stat.gov.pl).
 
 ## Zrobione
+- **7.11.2026 — PS2b-1: bilans z trzema datami, numery not, liczby sklejone spacją** (PR #90,
+  `docs/specs/2026-11-07-parser-ps2b-bilans-trzy-daty.md`, PM: FIX → SHIP). Zestaw PS2:
+  - PZU: cały bilans, podatek 3 484 i kontrole 2/2;
+  - Orlen SSF i Q: aktywa, kapitał, zobowiązania i zapasy, w każdej kolumnie aktywa = pasywa;
+  - PKO BP: aktywa 525 225, kapitał 52 370, rzeczowe aktywa trwałe 3 320;
+  - Platige: zapasy, wartości niematerialne, gotówka.
+
+  Kolumny bilansu są nazwane datami z nagłówka (31.12.2024 / 31.12.2023 / 01.01.2023). 6 fixture'ów bez zmian.
 - **7.11.2026 — PS2a: 10-Q SpaceX zgodny z dokumentem** (PR #89, `docs/specs/2026-11-07-parser-ps2a-spacex-10q.md`,
   PM: FIX → SHIP). Pierwszy raport od właściciela. Wartości SpaceX:
   - RZiS, w tym korzyść podatkowa ze znakiem (−390) i EPS;

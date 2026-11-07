@@ -22,7 +22,15 @@ import {
   normalizeLabel,
   type MetricPattern,
 } from "./patterns";
-import { parseCells, isUsDocument, looksUsDocument, withNumberFormat, type NumericCell } from "./numbers";
+import {
+  parseCells,
+  isNoteLike,
+  isUsDocument,
+  looksUsDocument,
+  resegmentEuropean,
+  withNumberFormat,
+  type NumericCell,
+} from "./numbers";
 import { splitLeadingLabel } from "./split";
 import { stripRelatedPartyNotes } from "./notes";
 import {
@@ -134,13 +142,23 @@ function resolveMetric(
       // Dashes keep their column: "Marketable securities 38,561 —" is two columns, not one, and
       // "Impairment — — — 29" puts 29 in the last column, not the first.
       let kept = cells.filter((c) => (pattern.allowPercent ? true : !c.isPercent) && (c.value !== null || c.isDash));
-      // A dotted note reference before the columns ("Cost of sales 5.2 (255 132) …") — in a document
-      // with comma decimals "5.2" cannot be an amount. Integer notes ("Podatek dochodowy 25 …") are PS2b.
-      if (expected > 0 && kept.length === expected + 1 && !isUsDocument() && /^\d{1,2}\.\d{1,2}$/.test(kept[0].raw)) {
+      if (!isUsDocument()) kept = resegmentEuropean(kept, expected, ytd.length);
+      // A note reference before the columns: "Cost of sales 5.2 (255 132) …", "Wartość firmy 27 2 792 …",
+      // "Goodwill 12.4 3,812 …". In a US-formatted document only when the amounts have no decimals
+      // (an EPS row "0.37 (0.36) …" keeps its first value).
+      if (
+        expected > 0 &&
+        kept.length === expected + 1 &&
+        isNoteLike(kept[0]) &&
+        // With a single column every "label 82 (554)" would fit — integers count as notes from 2 columns up.
+        (kept[0].raw.includes(".") || expected >= 2) &&
+        (!isUsDocument() || kept.slice(1).every((c) => c.value === null || Number.isInteger(c.value)))
+      ) {
         kept = kept.slice(1);
       }
       const money = kept.map((c) => (c.isDash ? null : c.value));
       if (!money.some((v) => v !== null)) continue;
+      if (pattern.nonNegative && money.some((v) => v !== null && v < 0)) continue;
       // Score 1 only when the last columns stand after the last word: "… respectively 4,772 1,579" yes,
       // a date header "Wartość firmy 31 grudnia 2024 31 grudnia 2023" no.
       const words = [...(rest ?? "").matchAll(/[a-ząćęłńóśźż]{3,}/gi)];
@@ -573,6 +591,62 @@ function synthesize(lines: string[]): { income: Period[]; balance: Period[] } {
   return { income, balance };
 }
 
+const PL_MONTHS = "stycznia|lutego|marca|kwietnia|maja|czerwca|lipca|sierpnia|września|października|listopada|grudnia";
+const EN_MONTHS = "january|february|march|april|may|june|july|august|september|october|november|december";
+const DATE_RE = new RegExp(
+  `\\b\\d{1,2}[./-]\\d{1,2}[./-]\\d{4}\\b|\\b\\d{1,2}\\s+(?:${PL_MONTHS}|${EN_MONTHS})\\s+\\d{4}\\b|\\b(?:${EN_MONTHS})\\s+\\d{1,2},?\\s+\\d{4}\\b`,
+  "gi",
+);
+// A title line, not prose that mentions the statement ("kurs NBP (pozycje sprawozdania z sytuacji finansowej)").
+const BALANCE_TITLE_RE =
+  /^\s*(?:(?:skonsolidowane|jednostkowe|śródroczne|skrócone|consolidated|separate|interim|condensed)\s+)*(?:sprawozdanie z sytuacji|statements? of financial position|balance sheets?\b|bilans\b)/i;
+
+const MONTH_INDEX = new Map<string, number>(
+  [...PL_MONTHS.split("|"), ...EN_MONTHS.split("|")].map((m, i) => [m, (i % 12) + 1]),
+);
+
+/** "31.12.2024", "31/12/2025", "1 stycznia 2023", "December 31, 2024" → [y, m, d]. */
+function parseHeaderDate(s: string): [number, number, number] | null {
+  const t = s.toLowerCase().replace(/\s+/g, " ");
+  let m = t.match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{4})$/);
+  if (m) return [+m[3], +m[2], +m[1]];
+  m = t.match(/^(\d{1,2}) ([a-ząćęłńóśźż]+) (\d{4})$/);
+  if (m && MONTH_INDEX.has(m[2])) return [+m[3], MONTH_INDEX.get(m[2])!, +m[1]];
+  m = t.match(/^([a-z]+) (\d{1,2}),? (\d{4})$/);
+  if (m && MONTH_INDEX.has(m[1])) return [+m[3], MONTH_INDEX.get(m[1])!, +m[2]];
+  return null;
+}
+
+/**
+ * Balance-sheet column dates from the statement's own header, newest first: PZU, PKO BP and Orlen show
+ * three (31.12.2024, 31.12.2023 restated, 01.01.2023). Looks only between the title and the first data
+ * row; a table-of-contents line ("… z sytuacji finansowej ....... 8") has no dates after it and is
+ * skipped. pdfjs may print "31 grudnia 2023   1 stycznia 2023" above "31 grudnia 2024", so the column
+ * order comes from the dates, not from the text. Returns [] when fewer than 2 dates are found.
+ */
+function balanceDatesFromHeader(lines: string[]): string[] {
+  for (let i = 0; i < lines.length; i++) {
+    if (!BALANCE_TITLE_RE.test(lines[i]) || /\.{5,}/.test(lines[i])) continue;
+    const found = new Map<string, [number, number, number]>();
+    for (let j = i; j < Math.min(lines.length, i + 10); j++) {
+      const l = lines[j];
+      if (j > i && /[a-ząćęłńóśźż]{3,}.*\d[\d ]*\s*$/i.test(l) && !(l.match(DATE_RE) ?? []).length) break; // first data row
+      for (const raw of l.match(DATE_RE) ?? []) {
+        const ymd = parseHeaderDate(raw);
+        if (ymd) found.set(ymd.join("-"), ymd);
+      }
+    }
+    if (found.size >= 2) {
+      const pad = (n: number) => String(n).padStart(2, "0");
+      return [...found.values()]
+        .sort((a, b) => b[0] - a[0] || b[1] - a[1] || b[2] - a[2])
+        .slice(0, 3)
+        .map(([y, m, d]) => `${pad(d)}.${pad(m)}.${y}`);
+    }
+  }
+  return [];
+}
+
 export interface ParseInput {
   text: string;
   pages: number;
@@ -601,6 +675,19 @@ function parseReportInner(input: ParseInput): ParseResult {
     const syn = synthesize(lines);
     if (income.length === 0) income = syn.income;
     if (balance.length === 0) balance = syn.balance;
+  }
+  // Restated comparatives add an opening balance (PZU, PKO BP, ORLEN: 31.12.2024, 31.12.2023, 01.01.2023).
+  // The statement's own header wins over periods guessed elsewhere ("FY24 close", "Current").
+  const balanceDates = balanceDatesFromHeader(lines);
+  if (balanceDates.length === 3 && balance.length !== 3) {
+    balance = balanceDates.map((d, i) => ({
+      key: `bal${i}`,
+      short: d,
+      label: `As of ${d}`,
+      kind: "point",
+      endDate: d,
+      current: i === 0,
+    }));
   }
 
   const structureLabel = [formType, issuer].filter(Boolean).join(" · ") || "Unknown filing";
