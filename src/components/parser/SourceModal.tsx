@@ -61,6 +61,7 @@ export function SourceModal({
               <p className="text-sm font-semibold">{metricLabelPl(metric.key, metric.label)}</p>
               <p className="text-xs text-rp-data-muted sm:text-[11px]">
                 {pl.source.sourceLine(idx >= 0 ? String(idx + 1) : "?")}
+                {metric.note && /^[\w-]+:[A-Za-z]/.test(metric.note) ? ` · ${pl.source.concept}: ${metric.note}` : ""}
               </p>
             </div>
           </div>

@@ -23,6 +23,17 @@ export function pctChange(cur: number | null | undefined, prior: number | null |
   return ((cur - prior) / Math.abs(prior)) * 100;
 }
 
+/**
+ * Zmiana r/r do wyświetlenia: liczba, null (brak danych) albo "nd" — baza ujemna lub zerowa. Ze straty (−1,1) na zysk (4,4)
+ * „+517,8%” wprowadza w błąd, a przy mniejszej stracie „+84%” znaczy odwrotność wzrostu: pokazujemy „n/d”.
+ */
+export type DeltaValue = number | null | "nd";
+export function deltaChange(cur: number | null | undefined, prior: number | null | undefined): DeltaValue {
+  if (cur === null || cur === undefined || prior === null || prior === undefined) return null;
+  if (prior <= 0) return prior === 0 && cur === 0 ? null : "nd";
+  return ((cur - prior) / prior) * 100;
+}
+
 export function fmtDeltaPct(v: number | null): string {
   if (v === null || !Number.isFinite(v)) return DASH;
   return `${v >= 0 ? "+" : ""}${v.toFixed(1)}%`;

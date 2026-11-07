@@ -92,12 +92,21 @@ describe("SpaceX 10-Q Q3 2026 z XBRL = wartości z PDF (PS2a) i z komunikatu", (
     expect(r.validation.total).toBeGreaterThanOrEqual(4);
     expect(r.validation.checks.find((c) => c.detail.includes("38,752"))?.passed).toBe(true);
   });
+  it("segmenty z wymiarów XBRL: Space / Connectivity / SI = przychody ogółem, zysk operacyjny segmentów = 2 791", () => {
+    const s = r.segments!;
+    expect(s.segments.map((x) => [x.name, x.revenue, x.operatingIncome])).toEqual([
+      ["Space", 1767, -7], ["Connectivity", 5248, 2367], ["SI", 7560, 431],
+    ]);
+    expect(s.segments.map((x) => x.revenuePrior)).toEqual([1666, 3097, 813]);
+    expect(s).toMatchObject({ totalRevenue: 14575, totalOperatingIncome: 2791, reconciles: true, periodLabel: "Q3 FY26" });
+    expect(r.productRevenue?.items.map((i) => [i.name, i.value])).toEqual([["Products", 771], ["Services", 13804]]);
+    expect(r.productRevenue?.reconciles).toBe(true);
+  });
   it("źródło: etykieta wiersza i pojęcie; wyciąg faktów jest rawText", () => {
     const m = getMetric(r, "revenue")!;
     expect(m.note).toBe("us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax");
     expect(m.matchedLabel).toBe("Revenue");
     expect(r.rawText.split("\n")[m.sourceLine!]).toContain("Revenue");
-    expect(r.segments).toBeNull();
   });
 });
 
@@ -116,6 +125,10 @@ describe("Cipher Digital 10-K FY2025 (tys. USD): wartości zgodne z komunikatem 
     ["cash", [628263, 5585]], ["totalAssets", [4291908, 855446]], ["totalLiabilities", [3456054, 173493]], ["totalEquity", [805535, 681953]],
     ["currentDebt", [37793, 32330]], ["longTermDebt", [2711648, 0]], ["totalDebt", [2749441, 32330]],
   ] as const)("%s", (key, expected) => expect(vals(r, key)).toEqual(expected));
+  it("jeden segment bez wymiarów → brak sekcji segmentów (nie wymyślamy)", () => {
+    expect(r.segments).toBeNull();
+    expect(r.productRevenue).toBeNull();
+  });
   it("FCF −695 859 / −227 006 / −114 721; kontrole z mezzanine (30 319) przechodzą", () => {
     expect(r.derived.fcf.map((f) => f.fcf)).toEqual([-695859, -227006, -114721]);
     expect(r.validation.passed).toBe(r.validation.total);
@@ -168,5 +181,18 @@ describe.skipIf(!FULL || !existsSync(`${FULL}/SpaceX_10-Q_Q3_2026.html`))("pełn
     expect(performance.now() - t0).toBeLessThan(1500);
     expect(vals(r, "revenue")).toEqual([14575, 5576, 27083, 13714]);
     expect(r.validation.passed).toBe(r.validation.total);
+  });
+});
+
+describe("zmiana r/r z ujemnej bazy = „n/d” (PS3b)", () => {
+  it("baza ujemna lub zerowa → n/d, dodatnia → procent, brak danych → null", async () => {
+    const { deltaChange } = await import("@/lib/parser/format");
+    expect(deltaChange(4.4, -1.1)).toBe("nd");
+    expect(deltaChange(-0.4, -2.6)).toBe("nd");
+    expect(deltaChange(5, 0)).toBe("nd");
+    expect(deltaChange(0, 0)).toBeNull();
+    expect(deltaChange(14.6, 5.6)).toBeCloseTo(160.7, 1);
+    expect(deltaChange(2, 4)).toBe(-50);
+    expect(deltaChange(null, 4)).toBeNull();
   });
 });

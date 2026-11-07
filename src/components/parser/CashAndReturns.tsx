@@ -54,7 +54,7 @@ export function CapitalReturnsCard({ cr }: { cr: CapitalReturnsResult | null }) 
       <Row label={pl.cash.buybacks} value={fmt(cr.buybacks, { unit: true })} />
       <div className="my-1 h-px bg-rp-hairline" />
       <Row label={pl.cash.totalReturned} value={fmt(cr.total, { unit: true })} emphasis />
-      {cr.payoutOfFcf !== null && <Row label={pl.cash.payoutFcf} value={fmtPct(cr.payoutOfFcf)} />}
+      {cr.payoutOfFcf !== null && (cr.fcf ?? 0) > 0 && <Row label={pl.cash.payoutFcf} value={fmtPct(cr.payoutOfFcf)} />}
     </Panel>
   );
 }

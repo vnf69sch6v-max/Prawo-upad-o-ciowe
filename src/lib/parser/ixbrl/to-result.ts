@@ -7,6 +7,7 @@ import type {
   Detection, ExtractedRow, Metric, MetricKey, ParseResult, Period, PipelineStage, ValidationCheck,
 } from "../types";
 import { readIxbrl, type IxDocument, type IxFact } from "./read";
+import { ixSegments } from "./segments";
 import {
   BALANCE_KEYS, CASHFLOW_KEYS, CONCEPTS, EPS_KEYS, INTEREST_INCOME, MEZZANINE, NET_INCOME_CONSOLIDATED,
   NONOPERATING_TOTAL, PER_SHARE_KEYS, REVENUE, SHARE_KEYS,
@@ -213,7 +214,18 @@ export function ixbrlToResult(doc: IxDocument, fileBytes: number): ParseResult {
   const netCash = computeNetCash(byKey, balance);
   const capitalReturns = computeCapitalReturns(byKey, income, derived);
   const perShare = buildPerShareHeadline(byKey, income);
+  const curRev = byKey.get("revenue")?.values.find((v) => v.periodKey === (income.find((p) => p.current && p.months === 3) ?? income[0])?.key)?.value ?? null;
+  const curOp = byKey.get("operatingIncome")?.values.find((v) => v.periodKey === (income.find((p) => p.current && p.months === 3) ?? income[0])?.key)?.value ?? null;
+  const { segments, products } = ixSegments(doc.facts, income, incomeSigs, show, { revenue: curRev, operatingIncome: curOp });
   const validation = validateFacts(find, incomeSigs, balanceSigs, byKey, show, income, balance);
+  if (segments) {
+    validation.checks.push({
+      name: "Sum of segments = Total revenue", passed: segments.reconciles,
+      detail: `${segments.segments.map((s) => (s.revenue ?? 0).toLocaleString("en-US")).join(" + ")} vs ${(curRev ?? 0).toLocaleString("en-US")}`,
+    });
+    validation.total = validation.checks.length;
+    validation.passed = validation.checks.filter((c) => c.passed).length;
+  }
   const matchedCount = HEADLINE_METRICS.filter((k) => byKey.get(k)?.values.some((v) => v.value !== null)).length;
 
   const factCount = doc.facts.length;
@@ -223,13 +235,14 @@ export function ixbrlToResult(doc: IxDocument, fileBytes: number): ParseResult {
     { id: "context", label: "Context detected", status: detection.formType ? "ok" : "warn", detail: [detection.formType, detection.currency, detection.unitLabel].filter(Boolean).join(" · ") },
     { id: "periods", label: "Period columns labelled", status: income.length && balance.length ? "ok" : "warn", detail: `${income.length} duration · ${balance.length} point-in-time` },
     { id: "metrics", label: "Metrics matched", status: matchedCount >= 9 ? "ok" : matchedCount >= 5 ? "warn" : "fail", detail: `${matchedCount}/${HEADLINE_METRICS.length} headline metrics` },
+    { id: "segments", label: "Segments parsed", status: segments ? (segments.reconciles ? "ok" : "warn") : "warn", detail: segments ? `${segments.segments.length} segments${products ? ` · ${products.items.length} product lines` : ""}` : "no segment dimensions" },
     { id: "allRows", label: "All numeric rows", status: rows.length >= 20 ? "ok" : "warn", detail: `${rows.length} labeled rows` },
     { id: "validation", label: "Reconciliations", status: validation.passed === validation.total ? "ok" : validation.passed > 0 ? "warn" : "fail", detail: `${validation.passed}/${validation.total} passed` },
     ...(doc.warnings.length ? [{ id: "warnings", label: "Reader warnings", status: "warn" as const, detail: doc.warnings.join("; ") }] : []),
   ];
 
   return {
-    detection, metrics, extractedRows: rows, segments: null, productRevenue: null, derived, netCash, capitalReturns,
+    detection, metrics, extractedRows: rows, segments, productRevenue: products, derived, netCash, capitalReturns,
     perShare, oneOff: { detected: false }, validation, pipeline, matchedCount, totalMetrics: HEADLINE_METRICS.length,
     rawText, charCount: rawText.length, pages: 1,
   };

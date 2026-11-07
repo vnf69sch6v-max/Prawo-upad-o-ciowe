@@ -87,10 +87,20 @@ export function Delta({
   direction = "auto",
   className,
 }: {
-  value: number | null | undefined;
+  value: number | null | undefined | "nd";
   direction?: DeltaDirection;
   className?: string;
 }) {
+  if (value === "nd") {
+    return (
+      <span
+        className={cn("num inline-block w-[4.5rem] text-right text-rp-data-dim", className)}
+        title="Wartość z poprzedniego okresu jest ujemna lub zerowa — zmiana procentowa nie ma sensu."
+      >
+        n/d
+      </span>
+    );
+  }
   if (value === null || value === undefined || !Number.isFinite(value)) {
     return <span className={cn("num inline-block w-[4.5rem] text-right text-rp-data-dim", className)}>—</span>;
   }
@@ -100,6 +110,7 @@ export function Delta({
   return (
     <span className={cn("num inline-block w-[4.5rem] text-right", color, className)}>
       {!neutral && <span className="mr-0.5">{up ? "▲" : "▼"}</span>}
+      {neutral ? (up ? "+" : "−") : ""}
       {Math.abs(value).toFixed(1)}%
     </span>
   );
