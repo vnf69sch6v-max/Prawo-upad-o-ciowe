@@ -183,7 +183,11 @@ function ParserView() {
       setStatus("done");
       window.scrollTo({ top: 0, behavior: "auto" });
     } catch (err) {
-      let kind: BrowserFailure = err instanceof BrowserParseError ? err.kind : "parser";
+      // Przebieg przerwany przez nowszy (np. dwuklik na próbce) nie może cofnąć ekranu nowego przebiegu.
+      if (abortRef.current !== controller) return;
+      // Nieznany błąd przy czytaniu pliku (brak pamięci, plik w chmurze, nieudany import po wdrożeniu) jest techniczny:
+      // serwer może dać radę, a „parser nie poradził sobie” byłoby nieprawdą.
+      let kind: BrowserFailure = err instanceof BrowserParseError ? err.kind : stage === "read" ? "extract-technical" : "parser";
       if (kind === "cancelled" && timedOut) kind = stage === "read" ? "extract-timeout" : "parse-timeout";
       if (kind === "cancelled") {
         setStatus("idle");
@@ -205,8 +209,10 @@ function ParserView() {
       setStatus("error");
     } finally {
       clearTimeout(timer);
-      if (abortRef.current === controller) abortRef.current = null;
-      setPhase(null);
+      if (abortRef.current === controller) {
+        abortRef.current = null;
+        setPhase(null);
+      }
     }
   };
 

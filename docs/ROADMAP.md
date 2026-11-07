@@ -13,7 +13,7 @@ pierwszeństwo. Rzeczy, których nie da się zrobić z kodu, trafiają do „Wym
 pozycje PS, po kolei. Wyjątki jak dotąd: awaria danych (`stale`/`error` w `/api/health/freshness`, cron
 `failing`/`late`/`partial`) i kontrole P0/J0 w ich dniu. W1–W4 i reszta backlogu czekają.
 - **PS1. Duże pliki analizowane w przeglądarce** — spec `docs/specs/2026-11-07-parser-w-przegladarce.md`, gałąź
-  `claude/parser-w-przegladarce`, status: **do wdrożenia**. Każdy PDF i TXT analizowany w przeglądarce:
+  gałąź rutyny `claude/elegant-mccarthy-0um1n3`, status: **zrobione 7.11.2026** (REVIEW PM: FIX → poprawione). Każdy PDF i TXT analizowany w przeglądarce:
   - ekstrakcja pdfjs w buildzie `legacy` (nowoczesny build pada na Safari < 17.4), z postępem „strona X z Y” i przyciskiem „Anuluj”;
   - parsowanie w Web Workerze;
   - limity 100 MB / 800 stron / 6 MB tekstu / 240 s (było 40 MB / 250 stron / 45 s);
@@ -23,6 +23,8 @@ pozycje PS, po kolei. Wyjątki jak dotąd: awaria danych (`stale`/`error` w `/ap
   Pomiar 07.11: dzisiejszy limit 250 stron odrzuca PZU SSF 2024 (299 stron) i Orlen Sprawozdanie Zarządu 2025 (309).
   Pamięć wyników `normalizeLabel` przyspiesza parsowanie 3–5× bez zmiany wyniku. Raport 300 stron na telefonie średniej
   klasy (CPU 4×) zajmie ok. 20–25 s, dziś ok. 55 s. Po wdrożeniu: kryterium 17 (telefon właściciela) — wynik dopisać tutaj.
+  Wynik 7.11 (`next start` z CSP, Chromium): PZU 299 str. 5,9 s (CPU 4×: 7,9 s), 0 żądań sieci; parsowanie PZU 10,3 s → 2,3 s;
+  eksport JSON przeglądarka = serwer bajt w bajt (4 próbki). Nie sprawdzone: WebKit (brak w środowisku) — test właściciela niżej.
 - **PS1b. Eksport CSV i JSON w przeglądarce** (mały krok po PS1). `toCSV` i `toJSON` są czyste. XLSX zostaje na serwerze:
   `exceljs` w przeglądarce to 252 KB gzip i wywołania `Function(...)`, których CSP bez `'unsafe-eval'` nie przepuści.
   Krok zawęża zdanie o eksporcie w `/prywatnosc`.
@@ -244,6 +246,8 @@ J5. **Gospodarka Japonii** — produkcja zrobiona 27.10 (`/japonia/gospodarka`: 
   liczby są złe i jakie powinny być. Bez tego PS2 mierzy tylko na raportach wybranych przez PM (PZU, PKO BP, Orlen, Żabka, Platige).
   Po wdrożeniu PS1: wgraj na swoim telefonie największy raport, jaki masz. Podaj model telefonu, wersję iOS/Androida, czas i to,
   czy wynik się pokazał (kryterium 17 specyfikacji). Starszych iPhone'ów (iOS < 17.4) nie da się odtworzyć w testach.
+  Na iPhonie w Safari: próbka Microsoft (0 błędów) i Orlen Sprawozdanie Zarządu 2025
+  (https://raportroczny.orlen.pl/pliki/Sprawozdanie_Zarzadu_2025.pdf); podaj wersję iOS (kryterium 14 + 17).
 - **Brief dnia/tygodnia — klucz DeepSeek: ustawiony przez właściciela 30.10.2026** (cron `brief` 05:10 UTC, spec
   `docs/specs/2026-10-30-brief-deepseek.md`). Bez klucza karta briefu jest ukryta, a cron zapisuje przebieg 0/0. Koszt każdego przebiegu: `/status` → dziennik cronów (`health/cron_runs.brief.costUsd`).
 - **Płatna platforma — uruchomienie** (kod gotowy 25.10, bramka włączona domyślnie od 25.10; podpis ciasteczka
