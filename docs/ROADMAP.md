@@ -12,7 +12,7 @@ pierwszeństwo. Rzeczy, których nie da się zrobić z kodu, trafiają do „Wym
 **PRIORYTET OD 07.11.2026 — Parser sprawozdań (właściciel: „zajmijmy się tylko parserem”).** Rutyna bierze wyłącznie
 pozycje PS, po kolei. Wyjątki jak dotąd: awaria danych (`stale`/`error` w `/api/health/freshness`, cron
 `failing`/`late`/`partial`) i kontrole P0/J0 w ich dniu. W1–W4 i reszta backlogu czekają.
-- **PS1. Duże pliki analizowane w przeglądarce** — spec `docs/specs/2026-11-07-parser-w-przegladarce.md`, gałąź
+- **PS1. Duże pliki analizowane w przeglądarce** — spec `docs/specs/2026-11-07-parser-w-przegladarce.md`,
   gałąź rutyny `claude/elegant-mccarthy-0um1n3`, status: **zrobione 7.11.2026** (REVIEW PM: FIX → poprawione). Każdy PDF i TXT analizowany w przeglądarce:
   - ekstrakcja pdfjs w buildzie `legacy` (nowoczesny build pada na Safari < 17.4), z postępem „strona X z Y” i przyciskiem „Anuluj”;
   - parsowanie w Web Workerze;
