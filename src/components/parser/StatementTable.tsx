@@ -6,7 +6,7 @@ import { DocSection } from "@/components/parser/DocSection";
 import { DataCell, Delta } from "@/components/parser/ui/primitives";
 import { useScale } from "@/components/parser/ScaleContext";
 import { cn } from "@/lib/utils/cn";
-import { pctChange } from "@/lib/parser/format";
+import { deltaChange } from "@/lib/parser/format";
 import { metricLabelPl, pl } from "@/lib/parser/copy.pl";
 import { Sigma, FileSearch } from "lucide-react";
 import type { Metric, MetricKey, Period } from "@/lib/parser/types";
@@ -137,7 +137,7 @@ export function StatementTable({
                   {deltas.map((d) => (
                     <td key={d.label} className="px-3 py-1.5 text-right">
                       <Delta
-                        value={pctChange(m.values[d.curIdx]?.value, m.values[d.priorIdx]?.value)}
+                        value={deltaChange(m.values[d.curIdx]?.value, m.values[d.priorIdx]?.value)}
                         direction={GOOD_UP.has(m.key) ? "auto" : "neutral"}
                       />
                     </td>

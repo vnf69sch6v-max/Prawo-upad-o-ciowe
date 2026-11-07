@@ -2,7 +2,7 @@
 
 import { Metric, Delta } from "@/components/parser/ui/primitives";
 import { useScale } from "@/components/parser/ScaleContext";
-import { pctChange } from "@/lib/parser/format";
+import { deltaChange, type DeltaValue } from "@/lib/parser/format";
 import { pl } from "@/lib/parser/copy.pl";
 import type { MetricKey, ParseResult, Period } from "@/lib/parser/types";
 
@@ -36,28 +36,28 @@ export function HeroKpis({ result }: { result: ParseResult }) {
       label: pl.hero.revenue,
       value: fmt(val("revenue", q?.key), { unit: true }),
       sub: q?.short,
-      delta: pctChange(val("revenue", q?.key), val("revenue", qPrior?.key)),
+      delta: deltaChange(val("revenue", q?.key), val("revenue", qPrior?.key)),
       dir: "auto" as const,
     },
     {
       label: pl.hero.netIncome,
       value: fmt(val("netIncome", q?.key), { unit: true }),
       sub: q?.short,
-      delta: pctChange(val("netIncome", q?.key), val("netIncome", qPrior?.key)),
+      delta: deltaChange(val("netIncome", q?.key), val("netIncome", qPrior?.key)),
       dir: "auto" as const,
     },
     {
       label: pl.hero.fcf,
       value: fmt(fcf, { unit: true }),
       sub: lp?.short,
-      delta: pctChange(fcf, fcfPrior),
+      delta: deltaChange(fcf, fcfPrior),
       dir: "auto" as const,
     },
     {
       label: nc?.isNetCash ? pl.hero.netCash : pl.hero.netDebt,
       value: fmt(nc?.netCashInclStInv ?? null, { unit: true }),
       sub: nc?.periodLabel,
-      delta: null as number | null,
+      delta: null as DeltaValue,
       dir: "neutral" as const,
     },
   ];

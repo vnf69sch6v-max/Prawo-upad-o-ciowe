@@ -19,6 +19,7 @@ describe("ścieżka przeglądarkowa bez sieci", () => {
     "src/lib/parser/ixbrl/read.ts",
     "src/lib/parser/ixbrl/concepts.ts",
     "src/lib/parser/ixbrl/to-result.ts",
+    "src/lib/parser/ixbrl/segments.ts",
   ])("%s nie woła sieci", (file) => {
     expect(read(file)).not.toMatch(NETWORK);
   });

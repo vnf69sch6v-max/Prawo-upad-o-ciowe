@@ -4,7 +4,7 @@
 // `concepts.ts` (plus the reconciliation helpers). No `style=`, no notes, no segment rows.
 // Usage: npx vite-node scripts/make-ixbrl-fixture.ts <full.htm> <out.htm>
 import { readFileSync, writeFileSync } from "node:fs";
-import { CONCEPTS, INTEREST_INCOME, MEZZANINE, NONOPERATING_TOTAL } from "@/lib/parser/ixbrl/concepts";
+import { CONCEPTS, INTEREST_INCOME, MEZZANINE, NONOPERATING_TOTAL, REVENUE } from "@/lib/parser/ixbrl/concepts";
 import { readIxbrl } from "@/lib/parser/ixbrl/read";
 
 const [src, out] = process.argv.slice(2);
@@ -12,6 +12,13 @@ const html = readFileSync(src, "utf8").replace(/<!--[\s\S]*?-->/g, "");
 const doc = readIxbrl(html);
 const wanted = new Set<string>([...Object.values(CONCEPTS).flat(), ...INTEREST_INCOME, ...MEZZANINE, ...NONOPERATING_TOTAL]);
 const free = new Set([...doc.contexts.values()].filter((c) => c.dims.length === 0).map((c) => c.id));
+// Segment and product revenue / operating income (PS3b): contexts whose dimensions are only these axes.
+const SEGMENT_CONCEPTS = new Set([...REVENUE, "OperatingIncomeLoss"]);
+const segmentCtx = new Set(
+  [...doc.contexts.values()]
+    .filter((c) => c.dims.length > 0 && c.dims.every((d) => /(StatementBusinessSegmentsAxis|ConsolidationItemsAxis|ProductOrServiceAxis)=/.test(d)))
+    .map((c) => c.id),
+);
 
 const root = html.match(/<(?:\w+:)?html\b[^>]*>/i)![0];
 const rows: string[] = [];
@@ -24,7 +31,7 @@ for (const m of html.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/g)) {
   const names = facts.map((f) => /name="[\w-]+:(\w+)"/.exec(f)?.[1] ?? "");
   const all = facts.map((f, i) => ({ f, n: names[i], c: /contextRef="([^"]+)"/.exec(f)?.[1] ?? "" }));
   // Only consolidated facts survive (a related-party fact in the same row has a dimension and is dropped).
-  const kept = all.filter((x) => free.has(x.c));
+  const kept = all.filter((x) => free.has(x.c) || (segmentCtx.has(x.c) && SEGMENT_CONCEPTS.has(x.n)));
   if (!kept.some((x) => wanted.has(x.n))) continue;
   facts.length = 0;
   facts.push(...kept.map((x) => x.f));

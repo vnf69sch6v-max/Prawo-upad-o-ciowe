@@ -83,14 +83,15 @@ export function computeDerived(byKey: MetricMap, income: Period[], balance: Peri
     if (cur && prior) {
       const fc = fcf.find((f) => f.periodKey === cur.key);
       const fp = fcf.find((f) => f.periodKey === prior.key);
-      if (fc && fp && fc.ocf !== null && fp.ocf !== null && fc.fcf !== null && fp.fcf !== null) {
+      // Procent od ujemnej bazy nic nie mówi (FCF −9,7 → −35,0 mld to nie „−260%”): flaga tylko przy dodatnich przepływach rok wcześniej.
+      if (fc && fp && fc.ocf !== null && fp.ocf !== null && fc.fcf !== null && fp.fcf !== null && fp.ocf > 0 && fp.fcf > 0) {
         const ocfG = growth(fc.ocf, fp.ocf);
         const fcfG = growth(fc.fcf, fp.fcf);
         const capexG = growth(fc.capex, fp.capex);
         if (ocfG !== null && fcfG !== null && ocfG - fcfG > 12) {
           capexIntensityFlag =
-            `Capex intensity rising: ${longest}M operating cash flow ${ocfG >= 0 ? "+" : ""}${ocfG.toFixed(0)}% ` +
-            `but free cash flow only ${fcfG >= 0 ? "+" : ""}${fcfG.toFixed(0)}%` +
+            `Rosnące nakłady inwestycyjne: przepływy operacyjne ${longest}M ${ocfG >= 0 ? "+" : ""}${ocfG.toFixed(0)}% r/r, ` +
+            `ale wolne przepływy (FCF) tylko ${fcfG >= 0 ? "+" : ""}${fcfG.toFixed(0)}%` +
             (capexG !== null ? ` (capex ${capexG >= 0 ? "+" : ""}${capexG.toFixed(0)}%).` : ".");
         }
       }

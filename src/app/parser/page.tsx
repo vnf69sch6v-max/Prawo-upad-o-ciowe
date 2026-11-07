@@ -26,6 +26,7 @@ import { ExportMenu } from "@/components/parser/ExportMenu";
 import { SourceModal } from "@/components/parser/SourceModal";
 import { pl } from "@/lib/parser/copy.pl";
 import { ParseFailureCard, ParseProgressCard, type ParsePhase } from "@/components/parser/ParseProgress";
+import { HowToGet } from "@/components/parser/HowToGet";
 import { MAX_CLIENT_TOTAL_MS } from "@/lib/parser/limits";
 import { parseHtmlInWorker, parseInWorker } from "@/lib/parser/parse-in-worker";
 import {
@@ -83,6 +84,7 @@ const CASHFLOW_KEYS: MetricKey[] = [
 ];
 
 const SAMPLES: { file: string; name: string; label: string }[] = [
+  { file: "spacex-10q-q3-2026.htm", name: "spacex-10q-q3-2026.htm", label: "SpaceX (HTML, XBRL)" },
   { file: "kombinat-konopny-2q2026.txt", name: "kombinat-konopny-2q2026.txt", label: "Kombinat Konopny" },
   { file: "microsoft-10q.pdf", name: "microsoft-10q.pdf", label: "Microsoft" },
   { file: "cipher-digital-10q.pdf", name: "cipher-digital-10q.pdf", label: "Cipher Digital" },
@@ -268,7 +270,7 @@ function ParserView() {
       const res = await fetch(`/parser-samples/${file}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const blob = await res.blob();
-      const type = /\.txt$/i.test(name) ? "text/plain" : "application/pdf";
+      const type = /\.txt$/i.test(name) ? "text/plain" : /\.html?$/i.test(name) ? "text/html" : "application/pdf";
       handleFile(new File([blob], name, { type }));
     } catch (err) {
       console.error(err);
@@ -350,6 +352,8 @@ function ParserView() {
           <Badge variant="outline">{pl.app.badgeLocal}</Badge>
           <Badge variant="neutral">{pl.app.badgeNoLlm}</Badge>
         </div>
+
+        <HowToGet />
       </div>
     );
   }
@@ -443,6 +447,9 @@ function ParserView() {
               <div className="flex flex-wrap items-center gap-2">
                 {result.detection.formType && (
                   <span className="mk-tag-brand">{result.detection.formType}</span>
+                )}
+                {result.pipeline.some((s) => s.id === "facts") && (
+                  <span className="mk-tag-brand" title={pl.app.badgeXbrlHint}>{pl.app.badgeXbrl}</span>
                 )}
                 <span className="text-[12px] font-semibold tracking-[0.04em] text-mk-muted">
                   {currentPeriod?.label}

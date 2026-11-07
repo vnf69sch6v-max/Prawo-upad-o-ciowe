@@ -9,6 +9,23 @@ export const pl = {
     subtitle: "ekstrakcja sprawozdań finansowych",
     badgeLocal: "plik zostaje na urządzeniu",
     badgeNoLlm: "reguły, nie model",
+    badgeXbrl: "dane z XBRL",
+    badgeXbrlHint: "Liczby odczytane ze znaczników XBRL w pliku (bez OCR i zgadywania z układu strony). Wskaźniki, FCF, dług netto i marże są z nich wyliczone.",
+  },
+  howTo: {
+    title: "Skąd wziąć plik",
+    lead: "Najdokładniej czyta raport w HTML z danymi XBRL: każda liczba ma w nim okres, jednostkę i znak, więc wartości ze sprawozdania nie są zgadywane. Wskaźniki (FCF, dług netto, marże) liczymy z nich sami.",
+    steps: [
+      "Wejdź na SEC EDGAR i wyszukaj spółkę (nazwa lub ticker).",
+      "Otwórz raport 10-K (roczny) albo 10-Q (kwartalny): „Filing Detail”.",
+      "Pobierz pierwszy plik z listy (.htm), nie podgląd w przeglądarce ani PDF.",
+      "Wgraj go tutaj. Analiza trwa ułamek sekundy i dzieje się u Ciebie.",
+    ],
+    edgar: "Otwórz SEC EDGAR",
+    gpw: "Roczne raporty ESEF spółek z GPW: w przygotowaniu. Raporty kwartalne nie mają danych XBRL, więc wgraj PDF i sprawdź liczby z oryginałem.",
+    pdfTitle: "Masz tylko PDF?",
+    pdfBody:
+      "PDF też zadziała (do 100 MB i 800 stron), ale parser musi wtedy odgadnąć kolumny i okresy z układu strony. Liczby sprawdź z raportem, zwłaszcza w polskich sprawozdaniach.",
   },
   tabs: {
     results: "Wyniki",
@@ -36,7 +53,7 @@ export const pl = {
     title: "Wczytaj raport, aby zacząć",
     errorTitle: "Coś poszło nie tak",
     body:
-      "Wgraj PDF sprawozdania: 10-Q, 10-K, raport kwartalny lub roczny. Analiza odbywa się w Twojej przeglądarce — plik nie jest wysyłany na serwer. Parsowanie regułami, bez AI.",
+      "Wgraj raport 10-K lub 10-Q w HTML (.htm z SEC EDGAR) — dostaniesz dokładne liczby z XBRL. PDF też działa. Analiza odbywa się w Twojej przeglądarce: plik nie jest wysyłany na serwer, a liczby liczą reguły, nie model.",
     orSample: "Albo wczytaj przykład",
     badges: ["Wodospad", "Segmenty · produkty", "Wskaźniki · FCF", "CSV · XLSX · JSON"],
   },
@@ -183,6 +200,7 @@ export const pl = {
   source: {
     sourceLine: (n: string) => `Źródło · wiersz ${n}`,
     matched: (label: string) => `dopasowano: „${label}”`,
+    concept: "pojęcie XBRL",
   },
   oneOff: {
     title: "Wykryto pozycję one-off / non-GAAP",

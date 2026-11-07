@@ -172,7 +172,7 @@ export function CapitalBridge({ result }: { result: ParseResult }) {
       <ChartHeader
         icon={<GitBranch className="h-4 w-4" />}
         label={pl.charts.capital(p.short)}
-        right={cr.payoutOfFcf !== null ? <Badge variant="outline">{pl.charts.payoutOfFcf(fmtPct(cr.payoutOfFcf, 0))}</Badge> : undefined}
+        right={cr.payoutOfFcf !== null && (cr.fcf ?? 0) > 0 ? <Badge variant="outline">{pl.charts.payoutOfFcf(fmtPct(cr.payoutOfFcf, 0))}</Badge> : undefined}
       />
       <WaterfallChart bars={bars} tiesNote={pl.charts.retainedAfter(fmt(retained, { unit: true }))} />
     </Panel>

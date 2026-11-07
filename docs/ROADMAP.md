@@ -35,9 +35,13 @@ pozycje PS, po kolei. Wyjątki jak dotąd: awaria danych (`stale`/`error` w `/ap
   SEC i komunikatami; czytnik regex w workerze czyta 2,3 MB w 28–104 ms. Kroki, po jednym na przebieg:
   - **PS3a — zrobione 07.11.2026, PR #91** (REVIEW: FIX → poprawki → SHIP; SpaceX i Cipher z XBRL zgodne ze spec; 4/4 kontrole; 80–110 ms w Node). Następny: PS3b. Pierwotny opis:: czytnik, tabela pojęć us-gaap, wynik w istniejącym `ParseResult`, wgrywanie `.htm/.html/.xhtml`.
     Parytet z PS2a (SpaceX) i lista ręczna Cipher w specu. Efekt: na produkcji działa wgrany plik z SEC z poprawnym RZiS, bilansem i przepływami.
-  - **PS3b — wygląd** (2 przebiegi, z `mobile-designer`): formularz HTML domyślny z instrukcją skąd pobrać plik, plakietka „dane z XBRL”,
-    sprawozdania w kolejności raportu, źródło liczby po kliknięciu, segmenty i produkty z wymiarów, „wszystkie fakty”, baner kontroli.
-    Przejmuje z PS2c: Δ% od ujemnej bazy, znak Δ w wierszach neutralnych, FCF payout przy ujemnym FCF, 390 px bez pustych kolumn.
+  - **PS3b — zrobione 07.11.2026, PR #92** (REVIEW: FIX → poprawki 1–7): formularz HTML-first z instrukcją EDGAR, przykład SpaceX (HTML), plakietka
+    „dane z XBRL”, pojęcie XBRL w oknie źródła, segmenty i produkty z wymiarów (SpaceX: suma = przychody), Δ% od ujemnej bazy = „n/d”, znak w wierszach
+    neutralnych, „wypłata z FCF” i flaga „capex intensity” bez procentów od ujemnej bazy.
+  - **PS3b-2 — następny** (1–2 przebiegi): klik liczby → arkusz (okres, kontekst, `factId`, wartość surowa), oznaczenie „wyliczone” przy FCF, długu netto i
+    marżach, „wszystkie fakty” z wyszukiwarką po pojęciu, baner nieudanych kontroli, scalanie rozciętych tabel bilansu, 10-Q na 390 px bez pustych kolumn Q3,
+    nazwy kolumn bez „Current/Prior” przy 2 datach, nazwy produktów po polsku, sprawdzić na prawdziwym filingu SEC, jak z „Filing Detail” dostać surowy `.htm`
+    (krok 3 instrukcji).
   - **PS3c — ESEF i IFRS** (2 przebiegi, projekt i REVIEW mocniejszym modelem): `.xhtml`, `.zip`, `ifrs-full:`, przecinek dziesiętny, banki.
     Wymaga 2 polskich raportów rocznych ESEF od właściciela („Wymaga właściciela”).
   - **PS3d — opcjonalnie**: HTML bez XBRL przez tabele → tekst → stary parser, z etykietą „zgadywane”.
