@@ -10,11 +10,11 @@ export const pl = {
     badgeLocal: "plik zostaje na urządzeniu",
     badgeNoLlm: "reguły, nie model",
     badgeXbrl: "dane z XBRL",
-    badgeXbrlHint: "Dokładne wartości ze sprawozdania: bez OCR i bez zgadywania z układu strony.",
+    badgeXbrlHint: "Liczby odczytane ze znaczników XBRL w pliku (bez OCR i zgadywania z układu strony). Wskaźniki, FCF, dług netto i marże są z nich wyliczone.",
   },
   howTo: {
     title: "Skąd wziąć plik",
-    lead: "Najdokładniej czyta raport w HTML z danymi XBRL — każda liczba ma w nim okres, jednostkę i znak, więc nic nie jest zgadywane.",
+    lead: "Najdokładniej czyta raport w HTML z danymi XBRL: każda liczba ma w nim okres, jednostkę i znak, więc wartości ze sprawozdania nie są zgadywane. Wskaźniki (FCF, dług netto, marże) liczymy z nich sami.",
     steps: [
       "Wejdź na SEC EDGAR i wyszukaj spółkę (nazwa lub ticker).",
       "Otwórz raport 10-K (roczny) albo 10-Q (kwartalny): „Filing Detail”.",
@@ -22,7 +22,7 @@ export const pl = {
       "Wgraj go tutaj. Analiza trwa ułamek sekundy i dzieje się u Ciebie.",
     ],
     edgar: "Otwórz SEC EDGAR",
-    gpw: "Raporty roczne spółek z GPW (ESEF) i polskie sprawozdania kwartalne: wkrótce. Do tego czasu wgraj PDF.",
+    gpw: "Roczne raporty ESEF spółek z GPW: w przygotowaniu. Raporty kwartalne nie mają danych XBRL, więc wgraj PDF i sprawdź liczby z oryginałem.",
     pdfTitle: "Masz tylko PDF?",
     pdfBody:
       "PDF też zadziała (do 100 MB i 800 stron), ale parser musi wtedy odgadnąć kolumny i okresy z układu strony. Liczby sprawdź z raportem, zwłaszcza w polskich sprawozdaniach.",

@@ -4,9 +4,15 @@ import { Panel, Delta } from "@/components/parser/ui/primitives";
 import { Badge } from "@/components/parser/ui/badge";
 import { PieChart } from "lucide-react";
 import { useScale } from "@/components/parser/ScaleContext";
-import { fmtPct } from "@/lib/parser/format";
 import { pl } from "@/lib/parser/copy.pl";
 import type { SegmentsResult } from "@/lib/parser/types";
+
+/** Marża: poniżej 1% jedno miejsce po przecinku i prawdziwy minus (nie „-0%”). */
+function opPct(v: number | null): string {
+  if (v === null || !Number.isFinite(v)) return "—";
+  const dp = Math.abs(v) < 1 ? 1 : 0;
+  return `${v < 0 ? "−" : ""}${Math.abs(v).toFixed(dp).replace(".", ",")}%`;
+}
 
 export function SegmentsView({ segments }: { segments: SegmentsResult | null }) {
   const { fmt, active } = useScale();
@@ -40,7 +46,7 @@ export function SegmentsView({ segments }: { segments: SegmentsResult | null }) 
                 <span className="flex shrink-0 items-center gap-3">
                   <Delta value={s.revenueYoY} />
                   <span className="num text-[13px] text-rp-data">{fmt(s.revenue, { unit: true })}</span>
-                  <span className="num w-12 text-right text-xs text-rp-data-muted">{pl.segments.op} {fmtPct(s.operatingMargin, 0)}</span>
+                  <span className="num w-12 text-right text-xs text-rp-data-muted">{pl.segments.op} {opPct(s.operatingMargin)}</span>
                 </span>
               </div>
               <div className="h-2 w-full rounded-full bg-rp-data/10">

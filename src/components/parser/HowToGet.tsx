@@ -32,9 +32,9 @@ export function HowToGet() {
         <ExternalLink className="ml-1.5 h-4 w-4" aria-hidden />
       </a>
       <p className="text-sm leading-relaxed text-mk-muted">{h.gpw}</p>
-      <details className="group rounded-lg border border-mk-border px-3.5 py-2.5">
-        <summary className="min-h-[28px] cursor-pointer select-none text-sm font-medium text-mk-text">{h.pdfTitle}</summary>
-        <p className="mt-2 text-sm leading-relaxed text-mk-muted">{h.pdfBody}</p>
+      <details className="group rounded-lg border border-mk-border">
+        <summary className="flex min-h-11 cursor-pointer select-none items-center px-3.5 text-sm font-medium text-mk-text">{h.pdfTitle}</summary>
+        <p className="px-3.5 pb-3 text-sm leading-relaxed text-mk-muted">{h.pdfBody}</p>
       </details>
     </div>
   );

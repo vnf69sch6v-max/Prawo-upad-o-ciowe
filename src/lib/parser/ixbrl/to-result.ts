@@ -235,7 +235,7 @@ export function ixbrlToResult(doc: IxDocument, fileBytes: number): ParseResult {
     { id: "context", label: "Context detected", status: detection.formType ? "ok" : "warn", detail: [detection.formType, detection.currency, detection.unitLabel].filter(Boolean).join(" · ") },
     { id: "periods", label: "Period columns labelled", status: income.length && balance.length ? "ok" : "warn", detail: `${income.length} duration · ${balance.length} point-in-time` },
     { id: "metrics", label: "Metrics matched", status: matchedCount >= 9 ? "ok" : matchedCount >= 5 ? "warn" : "fail", detail: `${matchedCount}/${HEADLINE_METRICS.length} headline metrics` },
-    { id: "segments", label: "Segments parsed", status: segments ? (segments.reconciles ? "ok" : "warn") : "warn", detail: segments ? `${segments.segments.length} segments${products ? ` · ${products.items.length} product lines` : ""}` : "no segment dimensions" },
+    { id: "segments", label: "Segments parsed", status: segments && !segments.reconciles ? "warn" : "ok", detail: segments ? `${segments.segments.length} segments${products ? ` · ${products.items.length} product lines` : ""}` : "no segment dimensions (single segment)" },
     { id: "allRows", label: "All numeric rows", status: rows.length >= 20 ? "ok" : "warn", detail: `${rows.length} labeled rows` },
     { id: "validation", label: "Reconciliations", status: validation.passed === validation.total ? "ok" : validation.passed > 0 ? "warn" : "fail", detail: `${validation.passed}/${validation.total} passed` },
     ...(doc.warnings.length ? [{ id: "warnings", label: "Reader warnings", status: "warn" as const, detail: doc.warnings.join("; ") }] : []),
