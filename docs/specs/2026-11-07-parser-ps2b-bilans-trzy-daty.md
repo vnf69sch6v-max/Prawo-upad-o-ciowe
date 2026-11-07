@@ -1,7 +1,17 @@
 # PS2b-1 — parser: bilans z trzema datami, numery not, liczby sklejone spacją
 
-Status: **REVIEW 1 PM (07.11.2026): FIX** — kryteria 1–9 spełnione, 10–12 do zrobienia. Spec napisany bez osobnego
-PLAN (okno rutyny); zakres i podział PS2b-1 / PS2b-2 PM przyjmuje. Zakres i przykłady: wpis PS2b w `docs/ROADMAP.md` (zdefiniowany przez PM po PS2a).
+Status: **zrobione 07.11.2026, PR #90** (REVIEW 1: FIX → REVIEW 2: SHIP, commit d923500). Kryteria 1–12 spełnione.
+Spec napisany bez osobnego PLAN (okno rutyny); zakres i podział PS2b-1 / PS2b-2 PM przyjmuje.
+REVIEW 2 (PM, 13 tekstów, main → d923500):
+- PKO BP: suma aktywów 525 225 / 495 389 / 417 797, poprawna;
+- Orlen SZ: zapasy zmieniły się ze śmieci (26 411 / −7 285) na „—”;
+- 6 fixture'ów bez zmian.
+
+Kolumny bilansu PZU przy 390 px to „31.12.2024 / 31.12.2023 / 01.01.2023”. Daty mieszczą się w nagłówkach bez
+zawijania. Tabela przewija się w swoim kontenerze (489 / 358 px, przy 320 px 489 / 288), strona nie. 0 błędów konsoli,
+0 żądań do `/api/parser`.
+
+Zostaje: przy 2 datach w nagłówku i okresach zgadywanych kolumny dalej nazywają się „Current” / „Prior” (PS2c). Zakres i przykłady: wpis PS2b w `docs/ROADMAP.md` (zdefiniowany przez PM po PS2a).
 Ten krok robi część bilansową i numery not; reszta PS2b przechodzi do PS2b-2 (niżej).
 
 ## Problem i wartość
