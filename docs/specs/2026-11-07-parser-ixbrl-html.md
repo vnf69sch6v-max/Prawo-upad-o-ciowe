@@ -1,6 +1,6 @@
 # PS3 — parser: raporty HTML z danymi XBRL (iXBRL) jako ścieżka główna
 
-Status: **PLAN 07.11.2026 (PM), w toku.** Pierwszy krok do wdrożenia: **PS3a**. PS3b i PS3c dostają osobne REVIEW.
+Status: **PS3a zrobione 07.11.2026, PR #91** (REVIEW PM: FIX a–c → poprawione i przetestowane; kryterium 11 po stronie właściciela na produkcji). Następny: **PS3b**; PS3c dostaje osobne REVIEW.
 
 ## Decyzja właściciela do potwierdzenia
 Właściciel (07.11, dosłownie): „czytajmy tylko html, jebac to PDF gowniane, i zrobmy to na grubo … zeby html byl domyslny

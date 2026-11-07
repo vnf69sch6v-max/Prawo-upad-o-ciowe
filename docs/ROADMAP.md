@@ -33,7 +33,7 @@ pozycje PS, po kolei. Wyjątki jak dotąd: awaria danych (`stale`/`error` w `/ap
   Powód (właściciel 07.11: „czytajmy tylko html … niech wygląda rewelacyjnie”): plik `.htm` z EDGAR ma fakty XBRL (wartość, okres,
   skala, znak, segmenty), więc liczby nie są zgadywane z tekstu. Zweryfikowane na SpaceX 10-Q i Cipher 10-K: wartości zgodne z API
   SEC i komunikatami; czytnik regex w workerze czyta 2,3 MB w 28–104 ms. Kroki, po jednym na przebieg:
-  - **PS3a — następny** (~300 linii + test): czytnik, tabela pojęć us-gaap, wynik w istniejącym `ParseResult`, wgrywanie `.htm/.html/.xhtml`.
+  - **PS3a — zrobione 07.11.2026, PR #91** (REVIEW: FIX → poprawki → SHIP; SpaceX i Cipher z XBRL zgodne ze spec; 4/4 kontrole; 80–110 ms w Node). Następny: PS3b. Pierwotny opis:: czytnik, tabela pojęć us-gaap, wynik w istniejącym `ParseResult`, wgrywanie `.htm/.html/.xhtml`.
     Parytet z PS2a (SpaceX) i lista ręczna Cipher w specu. Efekt: na produkcji działa wgrany plik z SEC z poprawnym RZiS, bilansem i przepływami.
   - **PS3b — wygląd** (2 przebiegi, z `mobile-designer`): formularz HTML domyślny z instrukcją skąd pobrać plik, plakietka „dane z XBRL”,
     sprawozdania w kolejności raportu, źródło liczby po kliknięciu, segmenty i produkty z wymiarów, „wszystkie fakty”, baner kontroli.
