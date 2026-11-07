@@ -7,8 +7,8 @@ export const pl = {
   app: {
     title: "report-parser",
     subtitle: "ekstrakcja sprawozdań finansowych",
-    badgeLocal: "reguły, nie model",
-    badgeNoLlm: "bez LLM w runtime",
+    badgeLocal: "plik zostaje na urządzeniu",
+    badgeNoLlm: "reguły, nie model",
   },
   tabs: {
     results: "Wyniki",
@@ -21,28 +21,28 @@ export const pl = {
     ms: (n: number) => `${n} ms`,
   },
   upload: {
-    drop: "Upuść PDF (10-Q / 10-K / NewConnect)",
-    browse: "lub kliknij, aby wybrać · max 40 MB",
+    drop: "Upuść PDF lub kliknij, aby wybrać",
+    browse: "raport kwartalny lub roczny · do 100 MB i 800 stron",
     sampleHint: "lub wczytaj przykład (bez pliku)",
-    uploading: "Przesyłanie…",
-    extractingLocal: "Duży plik — odczytuję lokalnie…",
+    uploading: "Wysyłam na serwer…",
+    extractingLocal: "Czytam plik w przeglądarce…",
     parsing: "Parsowanie…",
     parsed: "przetworzono",
     uploadAnother: "Wczytaj kolejny",
-    uploadFailed: "Przesyłanie nie powiodło się",
+    uploadFailed: "Nie udało się odczytać pliku",
     tryAgain: "Spróbuj ponownie",
   },
   empty: {
     title: "Wczytaj raport, aby zacząć",
     errorTitle: "Coś poszło nie tak",
     body:
-      "Upuść PDF 10-Q, 10-K lub raportu NewConnect. Małe pliki idą na serwer; większe (do 40 MB) odczytywane są w przeglądarce, a na serwer leci sam tekst. Parsowanie regułami — bez AI w runtime.",
+      "Wgraj PDF sprawozdania: 10-Q, 10-K, raport kwartalny lub roczny. Analiza odbywa się w Twojej przeglądarce — plik nie jest wysyłany na serwer. Parsowanie regułami, bez AI.",
     orSample: "Albo wczytaj przykład",
     badges: ["Wodospad", "Segmenty · produkty", "Wskaźniki · FCF", "CSV · XLSX · JSON"],
   },
   toast: {
     needPdf: "Wgraj plik PDF (lub .txt z fixture).",
-    tooLarge: "Plik za duży — limit 40 MB. Skanowane i zaszyfrowane PDF-y nie zadziałają.",
+    tooLarge: "Plik za duży — limit 100 MB. Wgraj samo sprawozdanie finansowe.",
     parsed: (name: string, matched: number, total: number) =>
       `Przetworzono ${name} — ${matched}/${total} metryk`,
     parseFailed: "Parsowanie nie powiodło się.",
@@ -177,6 +177,8 @@ export const pl = {
     search: "Szukaj w wyciągniętym tekście…",
     lines: (shown: number, total: number) =>
       `${shown.toLocaleString("pl-PL")} / ${total.toLocaleString("pl-PL")} linii`,
+    capped: (shown: number, total: number) =>
+      `Pokazano ${shown.toLocaleString("pl-PL")} z ${total.toLocaleString("pl-PL")} wierszy — zawęź wyszukiwaniem.`,
   },
   source: {
     sourceLine: (n: string) => `Źródło · wiersz ${n}`,
@@ -197,6 +199,27 @@ export const pl = {
   },
   export: {
     aria: "Eksport",
+    tooLarge: "Ten raport jest za duży na eksport — skróć plik do samego sprawozdania finansowego.",
+  },
+  progress: {
+    reading: (page: number, pages: number) => `Czytam stronę ${page} z ${pages}`,
+    readingText: "Czytam plik…",
+    analysing: "Analizuję tabele i liczby…",
+    hint: "Plik nie opuszcza Twojego urządzenia. Duży raport roczny na telefonie: zwykle do minuty.",
+    cancel: "Anuluj",
+  },
+  failure: {
+    scan: "W pliku prawie nie ma tekstu — to pewnie skan albo tekst zamieniony na obraz. Parser nie odczytuje skanów.",
+    parser: "Parser nie poradził sobie z tym raportem. Spróbuj samego sprawozdania finansowego.",
+    extractTechnical: "Przeglądarka nie odczytała tego PDF-a.",
+    extractTimeout: "Odczyt pliku trwał ponad 4 minuty.",
+    parseTimeout: "Analiza trwała ponad 4 minuty.",
+    worker: "Przeglądarka nie uruchomiła analizy w tle.",
+    server: "Przetwórz na serwerze",
+    sendFile: (size: string) => `Wyślemy plik (${size}), przeanalizujemy go w pamięci i nie zapiszemy.`,
+    sendText: (size: string) => `Wyślemy odczytany tekst (${size}, bez pliku PDF), przeanalizujemy go w pamięci i nie zapiszemy.`,
+    desktop: "Spróbuj w aktualnej przeglądarce na komputerze.",
+    other: "Wybierz inny plik",
   },
 } as const;
 

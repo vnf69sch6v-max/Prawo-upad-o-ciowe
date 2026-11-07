@@ -1,6 +1,6 @@
 // tests/parser-upload-limits.test.ts
-// Binary POST stays under Vercel's 4.5 MB function body. Larger PDFs go through
-// JSON { text } after client (or test-time) extract.
+// Every file is parsed in the browser (docs/specs/2026-11-07-parser-w-przegladarce.md). The server route stays
+// as a click-only fallback: binary POST under Vercel's 4.5 MB body, or JSON { text } after a browser extract.
 
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
@@ -9,38 +9,68 @@ import {
   MAX_BINARY_UPLOAD_BYTES,
   MAX_CLIENT_FILE_BYTES,
   MAX_CLIENT_PAGES,
+  MAX_CLIENT_TEXT_BYTES,
+  MAX_CLIENT_TOTAL_MS,
   MAX_EXTRACTED_TEXT_BYTES,
   VERCEL_BODY_LIMIT_BYTES,
 } from "@/lib/parser/limits";
-import { chooseParseStrategy } from "@/lib/parser/upload-strategy";
+import { chooseParseStrategy, serverFallbackFor } from "@/lib/parser/upload-strategy";
 import { POST } from "@/app/api/parser/parse/route";
 
 function pdf(size: number, name = "report.pdf") {
   return { size, name, type: "application/pdf" };
 }
 
-describe("upload strategy vs Vercel body cap", () => {
+describe("browser path and the Vercel body cap", () => {
   it("does not pretend the 4.5 MB function body can be raised", () => {
     expect(VERCEL_BODY_LIMIT_BYTES).toBe(Math.floor(4.5 * 1024 * 1024));
     expect(MAX_BINARY_UPLOAD_BYTES).toBeLessThan(VERCEL_BODY_LIMIT_BYTES);
-    expect(MAX_CLIENT_FILE_BYTES).toBe(40 * 1024 * 1024);
-    expect(MAX_CLIENT_PAGES).toBe(250);
     expect(MAX_EXTRACTED_TEXT_BYTES).toBeLessThan(VERCEL_BODY_LIMIT_BYTES);
   });
 
-  it("keeps small PDFs on the binary server path", () => {
-    expect(chooseParseStrategy(pdf(612_000))).toBe("binary");
-    expect(chooseParseStrategy(pdf(MAX_BINARY_UPLOAD_BYTES))).toBe("binary");
+  it("browser caps: 100 MB, 800 pages, 6 MB of text, 240 s", () => {
+    expect(MAX_CLIENT_FILE_BYTES).toBe(100 * 1024 * 1024);
+    expect(MAX_CLIENT_PAGES).toBe(800);
+    expect(MAX_CLIENT_TEXT_BYTES).toBe(6 * 1024 * 1024);
+    expect(MAX_CLIENT_TOTAL_MS).toBe(240_000);
   });
 
-  it("extracts PDFs above the binary cap in the client (Tesla-sized)", () => {
-    expect(chooseParseStrategy(pdf(Math.floor(4.5 * 1024 * 1024) + 1))).toBe("client-extract");
-    expect(chooseParseStrategy(pdf(10.8 * 1024 * 1024))).toBe("client-extract");
-    expect(chooseParseStrategy(pdf(MAX_CLIENT_FILE_BYTES))).toBe("client-extract");
-  });
-
-  it("rejects files above the client cap", () => {
+  it("every PDF within 100 MB goes to the browser — small ones too", () => {
+    for (const size of [612_000, MAX_BINARY_UPLOAD_BYTES, Math.floor(4.5 * 1024 * 1024) + 1, 40 * 1024 * 1024, MAX_CLIENT_FILE_BYTES]) {
+      expect(chooseParseStrategy(pdf(size))).toBe("browser");
+    }
     expect(chooseParseStrategy(pdf(MAX_CLIENT_FILE_BYTES + 1))).toBe("reject-too-large");
+  });
+
+  it("TXT up to 6 MB in the browser, other types rejected", () => {
+    const txt = (size: number) => ({ size, name: "r.txt", type: "text/plain" });
+    expect(chooseParseStrategy(txt(MAX_CLIENT_TEXT_BYTES))).toBe("browser");
+    expect(chooseParseStrategy(txt(MAX_CLIENT_TEXT_BYTES + 1))).toBe("reject-too-large");
+    expect(chooseParseStrategy({ size: 1000, name: "r.docx", type: "application/vnd.openxmlformats" })).toBe("reject-type");
+  });
+});
+
+describe("server fallback — only on click, only when the server could do better", () => {
+  const MB = 1024 * 1024;
+  it("worker / parse timeout → the extracted text, up to 3.5 MB", () => {
+    for (const kind of ["worker", "parse-timeout"] as const) {
+      expect(serverFallbackFor(kind, { fileBytes: 50 * MB, textBytes: MAX_EXTRACTED_TEXT_BYTES })).toBe("text");
+      expect(serverFallbackFor(kind, { fileBytes: 1 * MB, textBytes: MAX_EXTRACTED_TEXT_BYTES + 1 })).toBeNull();
+      expect(serverFallbackFor(kind, { fileBytes: 1 * MB, textBytes: null })).toBeNull();
+    }
+  });
+
+  it("technical extraction failure / extraction timeout → the file, up to 4 MB", () => {
+    for (const kind of ["extract-technical", "extract-timeout"] as const) {
+      expect(serverFallbackFor(kind, { fileBytes: MAX_BINARY_UPLOAD_BYTES, textBytes: null })).toBe("file");
+      expect(serverFallbackFor(kind, { fileBytes: MAX_BINARY_UPLOAD_BYTES + 1, textBytes: null })).toBeNull();
+    }
+  });
+
+  it("input problems and cancel never offer the server — it would do the same", () => {
+    for (const kind of ["password", "invalid", "scan", "too-many-pages", "too-much-text", "parser", "cancelled"] as const) {
+      expect(serverFallbackFor(kind, { fileBytes: 1000, textBytes: 1000 })).toBeNull();
+    }
   });
 });
 

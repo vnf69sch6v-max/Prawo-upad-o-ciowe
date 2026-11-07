@@ -4,6 +4,8 @@ import * as React from "react";
 import { Search } from "lucide-react";
 import { pl } from "@/lib/parser/copy.pl";
 
+const MAX_RENDERED_LINES = 2000;
+
 export function RawTextInspector({ text }: { text: string }) {
   const [q, setQ] = React.useState("");
   const lines = React.useMemo(() => text.split("\n"), [text]);
@@ -14,6 +16,8 @@ export function RawTextInspector({ text }: { text: string }) {
       .map((l, i) => [i + 1, l] as const)
       .filter(([, l]) => l.toLowerCase().includes(needle));
   }, [lines, q]);
+  // PZU SSF: 13 878 linii ≈ 42 tys. węzłów DOM. Wyszukiwanie dalej przeszukuje wszystkie linie.
+  const shown = filtered.length > MAX_RENDERED_LINES ? filtered.slice(0, MAX_RENDERED_LINES) : filtered;
 
   return (
     <div className="space-y-3">
@@ -38,7 +42,7 @@ export function RawTextInspector({ text }: { text: string }) {
       </div>
       <div className="max-h-[60vh] overflow-auto overscroll-contain rounded-xl border border-rp-hairline bg-rp-surface-raised sm:max-h-[70vh]">
         <pre className="num whitespace-pre-wrap break-words p-3 text-xs leading-relaxed sm:text-[11px]">
-          {filtered.map(([n, l]) => (
+          {shown.map(([n, l]) => (
             <div key={n} className="flex gap-2 hover:bg-rp-secondary/40 sm:gap-3">
               <span className="w-8 shrink-0 select-none text-right text-rp-data-muted/50 sm:w-10">{n}</span>
               <span className="min-w-0 text-rp-data/90">{l || " "}</span>
@@ -46,6 +50,9 @@ export function RawTextInspector({ text }: { text: string }) {
           ))}
         </pre>
       </div>
+      {shown.length < filtered.length && (
+        <p className="text-xs text-rp-data-muted">{pl.raw.capped(shown.length, filtered.length)}</p>
+      )}
     </div>
   );
 }

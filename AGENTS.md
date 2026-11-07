@@ -390,6 +390,14 @@ Standard scripts in `package.json`:
   worker is a 500 (`Setting up fake worker failed`), not an empty parse.
   Vercel Function request bodies are a hard 4.5 MB (`FUNCTION_PAYLOAD_TOO_LARGE`)
   on every plan — do not raise `MAX_BINARY_UPLOAD_BYTES` or add
-  `bodyParser.sizeLimit`. PDFs above ~4 MB are extracted in the browser
-  (`extractPdfTextInBrowser`, worker at `/pdfjs/pdf.worker.min.mjs`) and
-  POSTed as JSON text (cap 40 MB file / 250 pages / 45 s).
+  `bodyParser.sizeLimit`. Since 07.11.2026 (`docs/specs/2026-11-07-parser-w-przegladarce.md`) **every** PDF/TXT
+  is extracted and parsed in the browser, so nothing is POSTed: `extractPdfTextInBrowser` (pdfjs **legacy** build —
+  the modern one calls `Promise.withResolvers`, missing before Safari 17.4 — worker `/pdfjs/pdf.worker.legacy.min.mjs`,
+  page progress, `AbortSignal`), then `parseInWorker` (`src/lib/parser/parse.worker.ts`, our own Web Worker, so a
+  300-page report does not freeze the page). Caps: 100 MB, 800 pages, 6 MB of text, 240 s total, with a Cancel button.
+  `/api/parser/parse` stays as a **click-only** fallback (`serverFallbackFor`): the extracted text (≤ 3.5 MB) after a
+  worker failure/parse timeout, or the file (≤ 4 MB) after a technical extraction failure — never automatically;
+  input problems (password, scan, too many pages) never offer it. `tests/parser-browser-path.test.ts` keeps network
+  calls out of the browser path. Export still POSTs `{ result without rawText }` to `/api/parser/export` (exceljs needs
+  eval, the CSP has no `'unsafe-eval'`) behind `exportBodyFits` (≤ 4 MB). `normalizeLabel` is memoised (3–5× faster
+  parsing); `tests/parser-parity.test.ts` pins the parser output by hash — a deliberate parser change updates them.

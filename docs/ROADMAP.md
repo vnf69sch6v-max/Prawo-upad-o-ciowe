@@ -9,7 +9,42 @@ pierwszeństwo. Rzeczy, których nie da się zrobić z kodu, trafiają do „Wym
 ## Do zrobienia (od najważniejszego)
 
 ### Prośby właściciela
-**PRIORYTET OD 02.11.2026 (właściciel: „nie widzę realnych ulepszeń strony”).** Od 30.10 rutyna dowiozła
+**PRIORYTET OD 07.11.2026 — Parser sprawozdań (właściciel: „zajmijmy się tylko parserem”).** Rutyna bierze wyłącznie
+pozycje PS, po kolei. Wyjątki jak dotąd: awaria danych (`stale`/`error` w `/api/health/freshness`, cron
+`failing`/`late`/`partial`) i kontrole P0/J0 w ich dniu. W1–W4 i reszta backlogu czekają.
+- **PS1. Duże pliki analizowane w przeglądarce** — spec `docs/specs/2026-11-07-parser-w-przegladarce.md`,
+  gałąź rutyny `claude/elegant-mccarthy-0um1n3`, status: **zrobione 7.11.2026** (REVIEW PM: FIX → poprawione). Każdy PDF i TXT analizowany w przeglądarce:
+  - ekstrakcja pdfjs w buildzie `legacy` (nowoczesny build pada na Safari < 17.4), z postępem „strona X z Y” i przyciskiem „Anuluj”;
+  - parsowanie w Web Workerze;
+  - limity 100 MB / 800 stron / 6 MB tekstu / 240 s (było 40 MB / 250 stron / 45 s);
+  - serwer tylko po kliknięciu (plik ≤ 4 MB albo tekst ≤ 3,5 MB);
+  - `/prywatnosc` w tym samym PR.
+
+  Pomiar 07.11: dzisiejszy limit 250 stron odrzuca PZU SSF 2024 (299 stron) i Orlen Sprawozdanie Zarządu 2025 (309).
+  Pamięć wyników `normalizeLabel` przyspiesza parsowanie 3–5× bez zmiany wyniku. Raport 300 stron na telefonie średniej
+  klasy (CPU 4×) zajmie ok. 20–25 s, dziś ok. 55 s. Po wdrożeniu: kryterium 17 (telefon właściciela) — wynik dopisać tutaj.
+  Wynik 7.11 (`next start` z CSP, Chromium): PZU 299 str. 5,9 s (CPU 4×: 7,9 s), 0 żądań sieci; parsowanie PZU 10,3 s → 2,3 s;
+  eksport JSON przeglądarka = serwer bajt w bajt (4 próbki). Nie sprawdzone: WebKit (brak w środowisku) — test właściciela niżej.
+- **PS1b. Eksport CSV i JSON w przeglądarce** (mały krok po PS1). `toCSV` i `toJSON` są czyste. XLSX zostaje na serwerze:
+  `exceljs` w przeglądarce to 252 KB gzip i wywołania `Function(...)`, których CSP bez `'unsafe-eval'` nie przepuści.
+  Krok zawęża zdanie o eksporcie w `/prywatnosc`.
+- **PS2. Pomiar jakości (następny po PS1).** Zestaw testowy prawdziwych raportów z liczbami sprawdzonymi ręcznie
+  w raporcie lub komunikacie spółki:
+  - raporty: polski raport roczny i kwartalny (firma, bank, ubezpieczyciel, NewConnect), US 10-Q i 10-K;
+  - liczby: przychody, zysk operacyjny, zysk netto, aktywa, kapitał, OCF, okresy, jednostka;
+  - wynik: tabela „poprawne / błędne / brak” per raport w `npm test`, potem poprawki od najczęstszego błędu.
+
+  Wejście: raporty od właściciela („Wymaga właściciela”). Pomiar wstępny 07.11 na 6 polskich raportach:
+  - emitent wykryty w 0 z 6;
+  - przychody poprawne w 1 z 6 (Żabka 23 797 mln zł, ale z doklejonymi kolumnami);
+  - zysk netto: PZU −2562 zamiast ~5,3 mld zł, Żabka 1,7 zamiast 593 mln zł;
+  - Orlen SSF: przychody 37; Platige: dwie liczby sklejone w jedną; PKO BP (bank): brak przychodów.
+- **PS3+. Kierunek, bez zobowiązań.** Każdy dopiero po PS2 i z osobną specyfikacją:
+  - ESEF: xhtml z tagami iXBRL, czyli dokładne liczby z rocznych sprawozdań spółek z GPW bez heurystyk;
+  - teczka: raporty zapisane na koncie, na zasadach `savori_users`, z szyfrowaniem i wpisem w `/prywatnosc`;
+  - DCF na liczbach z parsera.
+
+**PRIORYTET OD 02.11.2026 — wstrzymany 07.11.2026 na czas PS (wyżej)** (właściciel: „nie widzę realnych ulepszeń strony”). Od 30.10 rutyna dowiozła
 same zmiany niewidoczne dla użytkownika (#75, #76). Od teraz PM wybiera z listy W1–W4 poniżej, po kolei, a
 niezawodność (sekcja niżej) bierze TYLKO gdy `/api/health/freshness` ma `stale`/`error`, cron jest
 `failing`/`late`/`partial` albo jest termin P0/J0 w swoim dniu. Każdy krok W kończy się zmianą, którą
@@ -207,6 +242,12 @@ J5. **Gospodarka Japonii** — produkcja zrobiona 27.10 (`/japonia/gospodarka`: 
     Od 28.10 czwarta grupa: mieszkania służbowe 1114, +228,6% r/r. Cztery grupy sumują się do całości.
 
 ## Wymaga właściciela (nie da się z kodu)
+- **Parser — raporty, na których zawiódł (do PS2, od 07.11.2026).** Przyślij PDF-y albo linki. Dla każdego napisz, które
+  liczby są złe i jakie powinny być. Bez tego PS2 mierzy tylko na raportach wybranych przez PM (PZU, PKO BP, Orlen, Żabka, Platige).
+  Po wdrożeniu PS1: wgraj na swoim telefonie największy raport, jaki masz. Podaj model telefonu, wersję iOS/Androida, czas i to,
+  czy wynik się pokazał (kryterium 17 specyfikacji). Starszych iPhone'ów (iOS < 17.4) nie da się odtworzyć w testach.
+  Na iPhonie w Safari: próbka Microsoft (0 błędów) i Orlen Sprawozdanie Zarządu 2025
+  (https://raportroczny.orlen.pl/pliki/Sprawozdanie_Zarzadu_2025.pdf); podaj wersję iOS (kryterium 14 + 17).
 - **Brief dnia/tygodnia — klucz DeepSeek: ustawiony przez właściciela 30.10.2026** (cron `brief` 05:10 UTC, spec
   `docs/specs/2026-10-30-brief-deepseek.md`). Bez klucza karta briefu jest ukryta, a cron zapisuje przebieg 0/0. Koszt każdego przebiegu: `/status` → dziennik cronów (`health/cron_runs.brief.costUsd`).
 - **Płatna platforma — uruchomienie** (kod gotowy 25.10, bramka włączona domyślnie od 25.10; podpis ciasteczka
@@ -292,6 +333,10 @@ J5. **Gospodarka Japonii** — produkcja zrobiona 27.10 (`/japonia/gospodarka`: 
 - **`GUS_BDL_KEY`** — wyższy limit BDL (rejestracja na api.stat.gov.pl).
 
 ## Zrobione
+- **7.11.2026 — PS1: parser w przeglądarce** (PR #88, `docs/specs/2026-11-07-parser-w-przegladarce.md`, PM: FIX → SHIP).
+  Każdy PDF/TXT analizowany w przeglądarce (pdfjs `legacy` + Web Worker parsera), 100 MB / 800 stron / 6 MB tekstu / 240 s,
+  postęp i „Anuluj”, serwer tylko po kliknięciu. Parsowanie PZU 10,3 s → 2,3 s (pamięć `normalizeLabel`, wynik bez zmian).
+  Kryterium 14/17 (iPhone, Safari) — test właściciela, wynik dopisać w PS1.
 - **3.11.2026 — N4 krok 1: trafne newsy przy wskaźnikach** (gałąź `claude/newsy-przy-wskaznikach`,
   `docs/specs/2026-11-03-newsy-przy-wskaznikach.md`, PM: SHIP). `src/lib/news/match.ts`: opis liczy się dopiero przy ≥ 2 frazach,
   weto zagraniczne w rynkach, tylko PL, serie dzienne (kursy Money.pl, „Nowe ceny paliw”) zwinięte do jednej pozycji, tag podtematu

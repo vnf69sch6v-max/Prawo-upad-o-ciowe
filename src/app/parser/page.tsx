@@ -25,7 +25,13 @@ import { AllRowsView } from "@/components/parser/AllRowsView";
 import { ExportMenu } from "@/components/parser/ExportMenu";
 import { SourceModal } from "@/components/parser/SourceModal";
 import { pl } from "@/lib/parser/copy.pl";
-import { chooseParseStrategy, isPdfFile, isTextFile } from "@/lib/parser/upload-strategy";
+import { ParseFailureCard, ParseProgressCard, type ParsePhase } from "@/components/parser/ParseProgress";
+import { MAX_CLIENT_TOTAL_MS } from "@/lib/parser/limits";
+import { parseInWorker } from "@/lib/parser/parse-in-worker";
+import {
+  BrowserParseError, chooseParseStrategy, isPdfFile, serverFallbackFor,
+  type BrowserFailure, type ServerFallback,
+} from "@/lib/parser/upload-strategy";
 import type { Metric, MetricKey, ParseResult } from "@/lib/parser/types";
 
 interface ApiOk {
@@ -34,6 +40,30 @@ interface ApiOk {
   fileSize: number;
   elapsedMs: number;
   result: ParseResult;
+}
+
+interface Failure {
+  message: string;
+  fallback: ServerFallback;
+  file: File;
+  text: string | null;
+  pages: number;
+  sendBytes: number;
+}
+
+const FAILURE_COPY: Partial<Record<BrowserFailure, string>> = {
+  scan: pl.failure.scan,
+  parser: pl.failure.parser,
+  "extract-technical": pl.failure.extractTechnical,
+  "extract-timeout": pl.failure.extractTimeout,
+  "parse-timeout": pl.failure.parseTimeout,
+  worker: pl.failure.worker,
+};
+
+function fileForm(file: File): FormData {
+  const fd = new FormData();
+  fd.append("file", file);
+  return fd;
 }
 
 const INCOME_KEYS: MetricKey[] = [
@@ -70,6 +100,11 @@ function ParserView() {
   const [status, setStatus] = React.useState<UploadStatus>("idle");
   const [data, setData] = React.useState<ApiOk | null>(null);
   const [sourceMetric, setSourceMetric] = React.useState<Metric | null>(null);
+  const [phase, setPhase] = React.useState<ParsePhase | null>(null);
+  const [running, setRunning] = React.useState<{ name: string; size: number } | null>(null);
+  const [failure, setFailure] = React.useState<Failure | null>(null);
+  const abortRef = React.useRef<AbortController | null>(null);
+  React.useEffect(() => () => abortRef.current?.abort(), []);
 
   const postAndApply = async (res: Response) => {
     const raw = await res.text();
@@ -90,50 +125,114 @@ function ParserView() {
     window.scrollTo({ top: 0, behavior: "auto" });
   };
 
+  // Analiza w przeglądarce: plik nie jest nigdzie wysyłany. Serwer tylko po kliknięciu „Przetwórz na serwerze”.
   const handleFile = async (file: File) => {
-    if (!isPdfFile(file) && !isTextFile(file)) {
+    const strategy = chooseParseStrategy(file);
+    if (strategy === "reject-type") {
       notify("error", pl.toast.needPdf);
       return;
     }
-    const strategy = chooseParseStrategy(file);
     if (strategy === "reject-too-large") {
       notify("error", pl.toast.tooLarge);
       return;
     }
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+    let timedOut = false;
+    const timer = setTimeout(() => {
+      timedOut = true;
+      controller.abort();
+    }, MAX_CLIENT_TOTAL_MS);
+    const startedAt = performance.now();
+    let stage: "read" | "parse" = "read";
+    let text: string | null = null;
+    let pages = 1;
     setData(null);
+    setFailure(null);
+    setRunning({ name: file.name, size: file.size });
+    setStatus("extracting");
     try {
-      if (strategy === "client-extract") {
-        setStatus("extracting");
-        let text: string;
-        let pages = 1;
-        if (isPdfFile(file)) {
-          const { extractPdfTextInBrowser } = await import("@/lib/parser/extract-browser");
-          const extracted = await extractPdfTextInBrowser(file);
-          text = extracted.text;
-          pages = extracted.pages;
-        } else {
-          text = await file.text();
-        }
-        setStatus("parsing");
-        const res = await fetch("/api/parser/parse", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            text,
-            pages,
-            fileName: file.name,
-            fileSize: file.size,
-          }),
+      if (isPdfFile(file)) {
+        setPhase({ kind: "read", page: 0, pages: 0 });
+        let lastPaint = 0;
+        const { extractPdfTextInBrowser } = await import("@/lib/parser/extract-browser");
+        const extracted = await extractPdfTextInBrowser(file, {
+          signal: controller.signal,
+          // ~10 aktualizacji na sekundę, ostatnia strona zawsze.
+          onPage: (page, total) => {
+            const now = performance.now();
+            if (page === total || now - lastPaint > 100) {
+              lastPaint = now;
+              setPhase({ kind: "read", page, pages: total });
+            }
+          },
         });
-        await postAndApply(res);
+        text = extracted.text;
+        pages = extracted.pages;
+      } else {
+        setPhase({ kind: "read-text" });
+        text = await file.text();
+      }
+      if (text.length < 200) throw new BrowserParseError("scan", pl.failure.scan);
+      stage = "parse";
+      setPhase({ kind: "parse" });
+      setStatus("parsing");
+      const result = await parseInWorker(text, pages, controller.signal);
+      setData({ ok: true, fileName: file.name, fileSize: file.size, elapsedMs: Math.round(performance.now() - startedAt), result });
+      setStatus("done");
+      window.scrollTo({ top: 0, behavior: "auto" });
+    } catch (err) {
+      // Przebieg przerwany przez nowszy (np. dwuklik na próbce) nie może cofnąć ekranu nowego przebiegu.
+      if (abortRef.current !== controller) return;
+      // Nieznany błąd przy czytaniu pliku (brak pamięci, plik w chmurze, nieudany import po wdrożeniu) jest techniczny:
+      // serwer może dać radę, a „parser nie poradził sobie” byłoby nieprawdą.
+      let kind: BrowserFailure = err instanceof BrowserParseError ? err.kind : stage === "read" ? "extract-technical" : "parser";
+      if (kind === "cancelled" && timedOut) kind = stage === "read" ? "extract-timeout" : "parse-timeout";
+      if (kind === "cancelled") {
+        setStatus("idle");
         return;
       }
+      if (!(err instanceof BrowserParseError)) console.error(err);
+      const textBytes = text === null ? null : new TextEncoder().encode(text).length;
+      const fallback = serverFallbackFor(kind, { fileBytes: file.size, textBytes });
+      const base = FAILURE_COPY[kind] ?? (err instanceof Error ? err.message : pl.toast.parseFailed);
+      const isTechnical = kind === "worker" || kind === "extract-technical" || kind.endsWith("-timeout");
+      setFailure({
+        message: isTechnical && !fallback ? `${base} ${pl.failure.desktop}` : base,
+        fallback,
+        file,
+        text,
+        pages,
+        sendBytes: fallback === "text" ? (textBytes ?? 0) : file.size,
+      });
+      setStatus("error");
+    } finally {
+      clearTimeout(timer);
+      if (abortRef.current === controller) {
+        abortRef.current = null;
+        setPhase(null);
+      }
+    }
+  };
 
-      setStatus("uploading");
-      const fd = new FormData();
-      fd.append("file", file);
+  // Ścieżka awaryjna — wyłącznie po kliknięciu. Wysyła tekst (≤ 3,5 MB) albo plik (≤ 4 MB), nic więcej.
+  const runOnServer = async () => {
+    const f = failure;
+    if (!f?.fallback) return;
+    setFailure(null);
+    setRunning({ name: f.file.name, size: f.file.size });
+    setStatus("uploading");
+    try {
+      const res =
+        f.fallback === "text" && f.text !== null
+          ? await fetch("/api/parser/parse", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ text: f.text, pages: f.pages, fileName: f.file.name, fileSize: f.file.size }),
+            })
+          : await fetch("/api/parser/parse", { method: "POST", body: fileForm(f.file) });
       setStatus("parsing");
-      const res = await fetch("/api/parser/parse", { method: "POST", body: fd });
       await postAndApply(res);
     } catch (err) {
       console.error(err);
@@ -142,9 +241,13 @@ function ParserView() {
     }
   };
 
+  const cancel = () => abortRef.current?.abort();
+
   const reset = () => {
+    abortRef.current?.abort();
     setStatus("idle");
     setData(null);
+    setFailure(null);
   };
 
   const loadSample = async (file: string, name: string) => {
@@ -212,8 +315,18 @@ function ParserView() {
           </p>
         </div>
 
+        {failure && (
+          <ParseFailureCard
+            message={failure.message}
+            fallback={failure.fallback}
+            sendBytes={failure.sendBytes}
+            onServer={runOnServer}
+            onOther={reset}
+          />
+        )}
+
         <UploadZone
-          status={status}
+          status={failure ? "idle" : status}
           onFile={handleFile}
           onReset={reset}
           samples={SAMPLES}
@@ -238,7 +351,13 @@ function ParserView() {
           : pl.upload.parsing;
     return (
       <div className="rp-root mk-fade-in mx-auto max-w-[860px] space-y-5 py-6">
-        <p className="text-sm font-medium text-mk-muted">{busyLabel}</p>
+        {phase && running ? (
+          <div className="mx-auto max-w-[720px]">
+            <ParseProgressCard fileName={running.name} fileSize={running.size} phase={phase} onCancel={cancel} />
+          </div>
+        ) : (
+          <p className="text-sm font-medium text-mk-muted">{busyLabel}</p>
+        )}
         <Skeleton className="h-9 w-72" />
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (

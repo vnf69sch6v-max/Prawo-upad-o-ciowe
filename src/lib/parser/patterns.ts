@@ -43,7 +43,22 @@ const s = (text: string, match: MatchType = "exact"): Synonym => ({
  *  strip PAS letter/Roman prefixes (A. / III. / c)) and trailing (A-B) formulae.
  *  Polish IFRS writes "Zysk/(strata) netto" — treat "/(" as a space so it matches
  *  the PAS form "Zysk (strata) netto". */
+// normalizeLabel runs for every synonym of every pattern on every line — the same label hundreds of times
+// (PKO BP: 3.35 s of 8.0 s). Memoised: identical output (parity test), 3–5× faster parsing. Bounded so a
+// long session in the parser worker cannot grow it without limit.
+const normalizeCache = new Map<string, string>();
+const NORMALIZE_CACHE_MAX = 50_000;
+
 export function normalizeLabel(input: string): string {
+  const hit = normalizeCache.get(input);
+  if (hit !== undefined) return hit;
+  const out = normalizeLabelUncached(input);
+  if (normalizeCache.size >= NORMALIZE_CACHE_MAX) normalizeCache.clear();
+  normalizeCache.set(input, out);
+  return out;
+}
+
+function normalizeLabelUncached(input: string): string {
   return input
     .toLowerCase()
     .replace(/\/\(/g, " (")

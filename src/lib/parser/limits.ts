@@ -1,36 +1,32 @@
 // lib/limits.ts — upload caps shared by the API route and the /parser UI.
 //
-// Vercel Functions reject request bodies over 4.5 MB with 413
-// FUNCTION_PAYLOAD_TOO_LARGE. That cap is platform-level (Hobby and Pro) and
-// cannot be raised via vercel.json, maxDuration, or bodyParser.sizeLimit.
-// Binary PDFs therefore stay under ~4 MB (multipart overhead). Larger PDFs
-// are extracted in the browser with pdfjs; only the text is POSTed.
+// Since 07.11.2026 every PDF/TXT is extracted AND parsed in the browser (pdfjs legacy + our Web Worker),
+// so nothing is POSTed and the Vercel body cap no longer limits the file. The server route stays only as a
+// fallback the user clicks (spec docs/specs/2026-11-07-parser-w-przegladarce.md) — the binary/JSON caps
+// below apply to that fallback only.
 
-/** Hard Vercel Function request-body limit. Do not "raise" this. */
+/** Hard Vercel Function request-body limit (Hobby and Pro). Do not "raise" this. */
 export const VERCEL_BODY_LIMIT_BYTES = Math.floor(4.5 * 1024 * 1024);
 
-/**
- * Max binary PDF/txt posted to /api/parser/parse. Slightly under 4.5 MB so
- * multipart wrapping does not 413.
- */
+/** Fallback: max binary PDF/txt posted to /api/parser/parse — under 4.5 MB so multipart wrapping does not 413. */
 export const MAX_BINARY_UPLOAD_BYTES = 4 * 1024 * 1024;
 
-/** Files bigger than this are rejected even for client-side extract. */
-export const MAX_CLIENT_FILE_BYTES = 40 * 1024 * 1024;
-export const MAX_CLIENT_FILE_LABEL = "40 MB";
-
-/** Browser extract gives up after this many pages. */
-export const MAX_CLIENT_PAGES = 250;
-
-/** Browser extract wall clock. */
-export const MAX_CLIENT_EXTRACT_MS = 45_000;
-
-/**
- * Extracted text (JSON) must still fit in the 4.5 MB function body.
- * Leave headroom for JSON quoting / filename.
- */
+/** Fallback: extracted text (JSON) posted to /api/parser/parse, with headroom for quoting / filename. */
 export const MAX_EXTRACTED_TEXT_BYTES = 3.5 * 1024 * 1024;
 
-/** @deprecated alias — binary path only; UI now allows up to MAX_CLIENT_FILE_BYTES. */
+/** Browser path: a 74 MB PDF adds ~132 MB to the tab; 100 MB ≈ 270–300 MB per tab. */
+export const MAX_CLIENT_FILE_BYTES = 100 * 1024 * 1024;
+export const MAX_CLIENT_FILE_LABEL = "100 MB";
+
+/** Browser path: covers a 533-page integrated report; 800 pages ≈ 60–90 s on a mid-tier phone. */
+export const MAX_CLIENT_PAGES = 800;
+
+/** Browser path: text cap (also for TXT) — 6 MB ≈ 18 s desktop / ~75 s phone in the parser worker. */
+export const MAX_CLIENT_TEXT_BYTES = 6 * 1024 * 1024;
+
+/** Browser path: extraction + parsing together; the UI shows progress and a Cancel button instead of a hard 45 s. */
+export const MAX_CLIENT_TOTAL_MS = 240_000;
+
+/** @deprecated alias — the fallback's binary cap. */
 export const MAX_UPLOAD_BYTES = MAX_BINARY_UPLOAD_BYTES;
 export const MAX_UPLOAD_LABEL = MAX_CLIENT_FILE_LABEL;

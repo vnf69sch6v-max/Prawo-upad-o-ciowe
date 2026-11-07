@@ -2,6 +2,8 @@
 // Kept free of Node APIs so the browser extractor can reuse the same copy.
 
 export interface ClassifiedExtractError {
+  /** Kind for the browser path (`serverFallbackFor`); the server route only uses message and status. */
+  kind: "password" | "invalid" | "too-many-pages" | "timeout" | "technical";
   userMessage: string;
   status: number;
   detail: string;
@@ -18,6 +20,7 @@ export function classifyPdfExtractError(err: unknown): ClassifiedExtractError {
     /incorrect password/i.test(detail)
   ) {
     return {
+      kind: "password",
       userMessage: "PDF jest chroniony hasłem. Parser nie otwiera plików zaszyfrowanych.",
       status: 422,
       detail,
@@ -30,6 +33,7 @@ export function classifyPdfExtractError(err: unknown): ClassifiedExtractError {
     /size is zero bytes/i.test(detail)
   ) {
     return {
+      kind: "invalid",
       userMessage: "Plik nie jest prawidłowym PDF (uszkodzony, pusty albo to nie jest PDF).",
       status: 422,
       detail,
@@ -37,6 +41,7 @@ export function classifyPdfExtractError(err: unknown): ClassifiedExtractError {
   }
   if (/too many pages/i.test(detail)) {
     return {
+      kind: "too-many-pages",
       userMessage: detail,
       status: 422,
       detail,
@@ -44,12 +49,14 @@ export function classifyPdfExtractError(err: unknown): ClassifiedExtractError {
   }
   if (/extract timeout/i.test(detail) || /timed out/i.test(detail)) {
     return {
+      kind: "timeout",
       userMessage: "Odczyt PDF w przeglądarce trwał zbyt długo. Spróbuj mniejszego pliku.",
       status: 422,
       detail,
     };
   }
   return {
+    kind: "technical",
     userMessage: "Parsowanie nie powiodło się. Ślad stosu jest w logach serwera.",
     status: 500,
     detail,

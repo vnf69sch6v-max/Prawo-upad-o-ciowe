@@ -2,13 +2,23 @@ import { copyFileSync, existsSync, mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import type { NextConfig } from "next";
 
-/** Browser pdfjs worker — copied so /parser can extract large PDFs locally. */
+/**
+ * Browser pdfjs workers for /parser. The page uses the **legacy** build (Safari < 17.4 has no
+ * `Promise.withResolvers`, which the modern build calls), under a new file name so a cached modern worker is
+ * never paired with the legacy library. The modern file stays for pages opened before the deploy.
+ */
 function copyPdfWorkerToPublic() {
-  const src = join(process.cwd(), "node_modules/pdfjs-dist/build/pdf.worker.min.mjs");
-  const dest = join(process.cwd(), "public/pdfjs/pdf.worker.min.mjs");
-  if (!existsSync(src)) return;
-  mkdirSync(dirname(dest), { recursive: true });
-  copyFileSync(src, dest);
+  const copies: [string, string][] = [
+    ["node_modules/pdfjs-dist/legacy/build/pdf.worker.min.mjs", "public/pdfjs/pdf.worker.legacy.min.mjs"],
+    ["node_modules/pdfjs-dist/build/pdf.worker.min.mjs", "public/pdfjs/pdf.worker.min.mjs"],
+  ];
+  for (const [from, to] of copies) {
+    const src = join(process.cwd(), from);
+    const dest = join(process.cwd(), to);
+    if (!existsSync(src)) continue;
+    mkdirSync(dirname(dest), { recursive: true });
+    copyFileSync(src, dest);
+  }
 }
 copyPdfWorkerToPublic();
 
