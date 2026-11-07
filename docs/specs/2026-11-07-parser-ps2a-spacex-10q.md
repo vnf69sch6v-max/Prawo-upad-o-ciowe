@@ -1,6 +1,7 @@
 # PS2a — parser: RZiS i przepływy z 10-Q SpaceX zgodne z dokumentem
 
-Status: **w toku** (07.11.2026). Roadmapa: PS2 → PS2a. Następne: PS2b (bilans), PS2c (UI).
+Status: **REVIEW 1 (07.11.2026): FIX** — kryteria 1–13 spełnione, 14–18 do zrobienia (regresje na tekstach zestawu PS2).
+Roadmapa: PS2 → PS2a. Następne: PS2b (numery not, bilans z trzema kolumnami), PS2c (UI).
 
 ## Problem i wartość
 Właściciel wgrał 07.11 prawdziwy raport (10-Q SpaceX za Q3 2026). Na ekranie: „Pozostałe przychody” 140 885 632 mln USD,
@@ -57,6 +58,21 @@ Do tego wiersz „Total debt 38,006 145 37,861” (3 liczby, a okresy bilansu s�
 „reconciles with current + long-term” nie może się pojawić, gdy obu składników brak. Kontrola 1c (odsetki), Δ% od ujemnej
 bazy i baner nieudanych kontroli → **PS2c**.
 
+**Odchylenia od zakresu, przyjęte w REVIEW 1 (07.11.2026).**
+1. (c) „Income (loss) from operations” dopisany na końcu listy synonimów. `resolveMetric` ocenia kandydatów: 2 = liczba
+   komórek pasuje do kolumn (dla przepływów 10-Q także liczba okresów 9M), 1 = nadmiarowe liczby pochodzą z etykiety,
+   0 = inna tabela. Późniejszy synonim z wynikiem 2 wygrywa z wcześniejszym, który ma 0. Z wynikiem 1 wygrywa tylko wtedy,
+   gdy stoi wcześniej w dokumencie. Na 6 fixture'ach żadna wartość metryki się nie zmienia. Na PZU to naprawia zysk
+   operacyjny (15 697 / 16 135, było −3 342 / −4 183 z uzgodnienia segmentów) i zysk netto (12 221 / 12 519, było
+   −2 562 / −3 235). Warunek: kryterium 15.
+2. (g) i kreska jako kolumna wróciły do PS2a. Bez kreski wiersz z zestawienia zmian w kapitale („— — — — 2,421 — — 2,421”)
+   wygrywał SBC, a samo (g) dawało gotówkę netto 13,0 mld. Razem: dług 38 844 / 22 896, papiery 38 561 / —, gotówka netto
+   51 011, zgodnie z bilansem. Warunek: kryterium 16.
+3. Cipher: synonim „Long-term borrowings, net” (bilans l. 225: 4 376 761 / 2 711 648). Wcześniej 4 597 (dyskonto
+   z noty o długu), a kafel pokazywał gotówkę netto +355 mln USD zamiast długu netto 4,0 mld.
+4. Pamięć `splitLeadingLabel` na jeden przebieg. `parseReport` jest 2–3× szybszy niż przed zmianą (pomiar PM:
+   Microsoft 258 → 121 ms, SpaceX 297 → 127 ms, kombinat 104 → 34 ms).
+
 ## Lekcje zastosowane
 - [x] Liczba = liczba z dokumentu, sprawdzona z komunikatem i prasą (wyżej).
 - [x] Telefon 390 px i desktop 1440 px: zrzuty z wynikami (bez zmian układu).
@@ -98,25 +114,75 @@ Wartości w mln USD, kolumny Q3'26 / Q3'25 / 9M'26 / 9M'25. Test: `tests/parser-
    - „Pre-tax − Tax = Net income” i „Assets = Liabilities + Equity” przechodzą;
    - „Operating income + Other = Pre-tax income” nie przechodzi, przy poprawnych wejściach 2 791 + 1 025 wobec 4 014.
      To znana luka: kontrola pomija odsetki. Test to opisuje, a PS2c to odwraca.
-9. Bilans SpaceX bez zmian względem wyniku sprzed zmiany, z jednym wyjątkiem: ppeNet = 89 483 / 42 602.
-   Bez zmian zostają totalDebt, currentDebt, longTermDebt, shortTermInvestments i netCash. Cele PS2b są w teście jako
-   `it.fails`: dług 38 844 / 22 896, papiery 38 561, gotówka netto z papierami 51 011.
+9. Bilans SpaceX (zmienione w REVIEW 1, odchylenie 2; asercje wprost, bez `it.fails`):
+   - ppeNet 89 483 / 42 602;
+   - currentDebt 2 698 / 928 i longTermDebt 36 146 / 21 968 („Debt and finance leases”, leasing finansowy to dług, operacyjny nie);
+   - totalDebt 38 844 / 22 896 jako suma z bilansu. Wiersz noty „Total debt 38,006 145 37,861” (3 liczby, 2 daty bilansu)
+     przegrywa;
+   - shortTermInvestments 38 561 / —, należności 4 772 / 1 579, gotówka netto z papierami 51 011.
 10. Parytet:
     - `kombinat-konopny-2q2026` i `polish-ifrs-slash`: hash bez zmian;
     - `microsoft-10q`, `nvidia-10q`, `cipher-digital-10q`: nowe hashe. Opis PR ma tabelę każdej zmienionej wartości
       metryki: klucz, kolumna, przed → po, wartość i linia w fixturze;
     - żadna wartość wcześniej zgodna z dokumentem się nie zmienia;
     - wszystkie kontrole, które dziś przechodzą, nadal przechodzą: Microsoft 9, NVIDIA 8, Cipher 4.
+
+    Zmiany metryk sprawdzone w REVIEW 1:
+    - NVIDIA: D&A 997 / 611 i wartości niematerialne 700 / 807 (l. 91 i 59), wcześniej sklejone;
+    - Cipher: longTermDebt 4 376 761 / 2 711 648 (odchylenie 3).
+    - Microsoft: metryki bez zmian, a w „wszystkie wiersze” 29 wierszy rozklejonych, np. l. 1617 „$ 145 563%” → 145
+      (563 to procent).
 11. Czas `parseReport` na 6 fixture'ach przed i po (w opisie PR): wzrost ≤ 10%.
 12. Czysto: `tsc --noEmit`, `npm test` (w tym `parser-browser-path`, bez sieci), eslint zmienionych plików, `npm run build`.
 13. Zrzuty `/parser` z PDF-em SpaceX, 390 px i 1440 px: tabela RZiS jak w kryterium 2, kafel FCF „9M FY26”.
     Bez przewijania w bok, 0 błędów konsoli.
 
+### FIX po REVIEW 1 (07.11.2026)
+PM porównał wynik przed i po zmianie na 7 tekstach z pomiaru PS2 z 07.11: PZU SSF 2024, PKO BP, Platige i 4 dokumenty
+Orlenu. Trzy nowe reguły psują liczby w raportach spoza fixture'ów. Każdy punkt wymaga testu w repo, który na obecnym
+stanie nie przechodzi. Może to być fragment tekstu raportu albo pełny fixture, decyduje inżynier.
+
+14. **Format liczb z tabel, nie z prozy.** Raport kwartalny Orlenu za Q4 2024 (EN) ma przecinki tylko w prozie, np.
+    „PLN 296,947 million” (206 trafień). Tabele są ze spacjami (ok. 1 750 grup w wierszach z liczbami). Dziś
+    `looksUsDocument` = true, a skutki są takie:
+    - „Total assets 262 742 264 463 61 489 60 824” daje aktywa 60 / 824;
+    - kapitał własny 35 / 285;
+    - RZiS ma 9 okresów zamiast 4;
+    - koszt własny sprzedaży, poprawny przed zmianą, jest przesunięty o kolumnę.
+
+    Warunki po poprawce:
+    - ten dokument nie jest „US”;
+    - RZiS ma 4 okresy, a aktywa i kapitał są jak przed zmianą: 61 489 / 60 824 i 35 868 / 35 285. To kolumny EUR z tabeli
+      „wybrane dane”, czyli błąd znany sprzed zmiany: „262 742 264 463” skleja się w jedną liczbę. Naprawa w PS2b;
+    - SpaceX, Microsoft, NVIDIA, Cipher i Orlen SSF (EN, przecinki w tabelach) zostają „US”.
+15. **Wynik 1 („liczby z etykiety”) tylko wtedy, gdy ostatnie N komórek stoi za ostatnim słowem wiersza.** Nagłówek dat
+    nie może zostać wartością. Przykład z PZU: „Wartość firmy 31 grudnia 2024 31 grudnia 2023” daje dziś wartość firmy
+    31 / 2023. Należności SpaceX zostają 4 772 / 1 579.
+16. **Orlen Q4 2024: koszt własny sprzedaży 255 132 / 62 883 / 311 754 / 81 893**, tak jak przed zmianą. Źródło:
+    sprawozdanie, wiersz „Cost of sales 5.2 (255 132) …”, albo nota „Cost of sales (255 132) …”. Po samej poprawce 14
+    wygrywa wcześniejszy wiersz przekształcenia danych „Cost of sales (311 847) 93 - (311 754)”, bo kreska liczona jako
+    kolumna daje mu 4 komórki. Uwaga z prototypu PM: pominięcie numeru noty („5.2”, „27”) przy N+1 komórkach naprawia ten
+    wiersz i podatek PZU (3 484 / 3 626). Zmienia jednak też PKO BP (rzeczowe aktywa trwałe 3 203 / 2 917 → 18 / 41)
+    i Platige, więc każdą zmianę trzeba sprawdzić w dokumencie.
+17. **Tabela w PR: każda zmiana wartości metryki na 13 tekstach** (6 fixture'ów i 7 tekstów zestawu PS2), w formacie
+    przed → po, z linią. Żadna wartość zgodna z dokumentem przed zmianą nie staje się błędna. Zmiana z błędnej na inną
+    błędną jest dopuszczalna, ale musi być w tabeli.
+18. Drobne:
+    - test sprawdza `derived.fcf` dla 9M'25 (−9 726) i dla obu kolumn Q3 (`null`) oraz brak 873155, 278278 i 472472
+      w wyniku (kryteria 5 i 7);
+    - `AGENTS.md`, sekcja parsera: format liczb ustalany na poziomie dokumentu; w wierszu US „- 1,234” to pusta kolumna
+      i liczba; kreska to kolumna; notki „related party” są wycinane.
+
 ## Poza zakresem
-- PS2b: bilans (dług, kreska jako kolumna, papiery wartościowe, gotówka netto).
+- PS2b: numery not przed liczbami i bilans z trzema datami (dane przekształcone). Dług, kreska jako kolumna, papiery
+  wartościowe i gotówka netto weszły do PS2a (odchylenie 2).
 - PS2c: UI. Δ% od ujemnej bazy (dziś „▲517,8%”) i baner nieudanych kontroli. Kontrola 1c z odsetkami (metryka
-  `interestIncome`), żeby baner nie dawał fałszywego alarmu.
-- Zmiana sortowania kandydatów między synonimami; ogólne notki w nawiasach poza „related party”.
+  `interestIncome`), żeby baner nie dawał fałszywego alarmu. Z REVIEW 1:
+  - „Wypłata z FCF −12,7%” przy ujemnym FCF;
+  - na 390 px w „Przepływy i dług” dwie kolumny „—” spychają jedyne liczby (9M) za krawędź;
+  - „Koszty operacyjne razem” SpaceX to „Total costs and expenses” z kosztem własnym. Porównanie z R&D + SG&A obniża
+    pewność poprawnej liczby do MEDIUM.
+- Ogólne notki w nawiasach poza „related party”.
 - Kwartalne przepływy (Q3 = 9M − 6M z poprzedniego 10-Q): wymaga dwóch dokumentów.
 
 ## Działania właściciela

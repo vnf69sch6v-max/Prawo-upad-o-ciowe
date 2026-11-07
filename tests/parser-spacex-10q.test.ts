@@ -9,7 +9,7 @@ import { describe, expect, it } from "vitest";
 import { parseReport, getMetric, reconcileTaxSign } from "@/lib/parser/parser";
 import { computeDerived } from "@/lib/parser/derived";
 import type { Metric, MetricKey, Period } from "@/lib/parser/types";
-import { parseCells } from "@/lib/parser/numbers";
+import { looksUsDocument, parseCells, withNumberFormat } from "@/lib/parser/numbers";
 import { stripRelatedPartyNotes } from "@/lib/parser/notes";
 
 const text = readFileSync("tests/fixtures/spacex-10q-q3-2026.txt", "utf8");
@@ -67,8 +67,7 @@ describe("10-Q SpaceX — przepływy tylko narastająco (9M) i dług z bilansu",
     expect(vals("depreciationAmortization")).toEqual([null, null, 8934, 4784]);
     expect(vals("stockComp")).toEqual([null, null, 3833, 1044]);
     expect(vals("buybacks")).toEqual([null, null, 4426, 525]);
-    const fcf = r.derived.fcf.find((f) => f.periodKey === "inc2")!;
-    expect(fcf.fcf).toBe(13097 - 48069);
+    expect(r.derived.fcf.map((f) => f.fcf)).toEqual([null, null, 13097 - 48069, 4120 - 13846]);
   });
 
   it("dług = bieżący + długoterminowy z bilansu, nie wiersz noty (principal / koszty / netto)", () => {
@@ -133,10 +132,14 @@ describe("pomocnicze", () => {
     expect(stripRelatedPartyNotes(open)).toEqual(open);
   });
 
-  it("wiersz z amerykańskimi tysiącami nie skleja liczb po spacji; europejski dalej tak", () => {
-    expect(parseCells("1,025 140 885 632.1 % (937) 342").map((c) => c.value)).toEqual([1025, 140, 885, 632.1, -937, 342]);
+  it("w dokumencie US spacja nie skleja liczb, „- 1,234” to pusta kolumna; poza nim jak dotąd", () => {
+    withNumberFormat(true, () => {
+      expect(parseCells("1,025 140 885 632.1 % (937) 342").map((c) => c.value)).toEqual([1025, 140, 885, 632.1, -937, 342]);
+      expect(parseCells("- 10,438,413 10").map((c) => c.value)).toEqual([null, 10438413, 10]);
+    });
     expect(parseCells("2 924 056,55 1 234,10").map((c) => c.value)).toEqual([2924056.55, 1234.1]);
-    expect(parseCells("- 10,438,413 10").map((c) => c.value)).toEqual([null, 10438413, 10]);
+    // Polska tabela: „39 119,801” to 39 119,801, nie dwie kolumny (Orlen, sprawozdanie zarządu).
+    expect(parseCells("39 119,801 35 863,405").map((c) => c.value)).toEqual([39119.801, 35863.405]);
   });
 
   it("format liczb z całego dokumentu: w raporcie US „997 611” to dwie kolumny (NVIDIA)", () => {
@@ -146,7 +149,8 @@ describe("pomocnicze", () => {
     const line = text.split("\n").findIndex((l) => l.startsWith("Restructuring charges (credits)"));
     const row = r.extractedRows.find((x) => x.lineIndex === line);
     expect(row?.values).toEqual([3, 278, -6, 472]);
-    expect(JSON.stringify(r)).not.toContain("140885632");
+    const all = JSON.stringify({ ...r, rawText: "" });
+    for (const glued of ["140885632", "873155", "278278", "472472"]) expect(all).not.toContain(glued);
   });
 
   it("Cipher: dług z bilansu (Short-term borrowings + Long-term borrowings, net), nie dyskonto z noty", () => {
@@ -154,5 +158,48 @@ describe("pomocnicze", () => {
     const c = parseReport({ text: cd, pages: 1, charCount: cd.length });
     expect(getMetric(c, "longTermDebt")!.values.map((v) => v.value)).toEqual([4376761, 2711648]);
     expect(getMetric(c, "totalDebt")!.values.map((v) => v.value)).toEqual([355348 + 4376761, 37793 + 2711648]);
+  });
+});
+
+// REVIEW 1 PM (FIX): trzy reguły PS2a psuły raporty spoza fixture'ów (PZU, Orlen Q4 2024). Każdy test
+// poniżej nie przechodził na pierwszej wersji PS2a (85abca4).
+describe("PS2a FIX — raporty polskie i europejskie", () => {
+  it("nagłówek dat w nocie („Wartość firmy 31 grudnia 2024 31 grudnia 2023”) nie wygrywa z bilansem", () => {
+    const pl = [
+      "Skonsolidowane sprawozdanie z sytuacji finansowej",
+      "Aktywa Nota 31 grudnia 2025 31 grudnia 2024",
+      "Wartość firmy 27 2 792 2 801",
+      "Aktywa razem 450 000 440 000",
+      "27. Wartość firmy",
+      "Wartość firmy 31 grudnia 2024 31 grudnia 2023",
+      "Wartość firmy, razem 2 792 2 801",
+    ].join("\n");
+    const p = parseReport({ text: pl, pages: 1, charCount: pl.length });
+    expect(getMetric(p, "goodwill")!.values.map((v) => v.value)).toEqual([2792, 2801]);
+    expect(getMetric(p, "goodwill")!.sourceLine).toBe(2);
+  });
+
+  it("przecinki w prozie („PLN 296,947 million”) nie robią z raportu europejskiego dokumentu US", () => {
+    const prose = Array.from({ length: 30 }, (_, i) => `Revenue amounted to PLN 296,${100 + i} million, up from last year.`);
+    const table = Array.from({ length: 30 }, (_, i) => `Item ${i} 296 947   262 342   68 990   82 318`);
+    expect(looksUsDocument([...prose, ...table].join("\n"))).toBe(false);
+    const us = Array.from({ length: 30 }, (_, i) => `Item ${i} $ 14,575 $ 5,576 $ 27,083`);
+    expect(looksUsDocument(us.join("\n"))).toBe(true);
+    expect(looksUsDocument(text)).toBe(true); // SpaceX
+  });
+
+  it("numer noty z kropką („Cost of sales 5.2 …”) nie przegrywa z późniejszym przekształceniem danych", () => {
+    const eu = [
+      "CONSOLIDATED STATEMENT OF PROFIT OR LOSS",
+      "Revenue 296 947   75 012   372 767   90 106",
+      "Cost of sales 5.2   (255 132)   (62 883)   (311 754)   (81 893)",
+      "Gross profit on sales 41 815   12 129   61 013   8 213",
+      "Net profit 7 953   1 004   20 969   1 112",
+      "Restatement of comparative data",
+      "Cost of sales (311 847)   93   -   (311 754)",
+    ].join("\n");
+    const q = parseReport({ text: eu, pages: 1, charCount: eu.length });
+    expect(getMetric(q, "costOfRevenue")!.values.map((v) => v.value)).toEqual([255132, 62883, 311754, 81893]);
+    expect(getMetric(q, "costOfRevenue")!.sourceLine).toBe(2);
   });
 });

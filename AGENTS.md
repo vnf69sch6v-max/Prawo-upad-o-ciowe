@@ -401,3 +401,7 @@ Standard scripts in `package.json`:
   calls out of the browser path. Export still POSTs `{ result without rawText }` to `/api/parser/export` (exceljs needs
   eval, the CSP has no `'unsafe-eval'`) behind `exportBodyFits` (≤ 4 MB). `normalizeLabel` is memoised (3–5× faster
   parsing); `tests/parser-parity.test.ts` pins the parser output by hash — a deliberate parser change updates them.
+  Since PS2a (`docs/specs/2026-11-07-parser-ps2a-spacex-10q.md`): the number format is decided per document
+  (`looksUsDocument`, table rows only) — in a US document a space never joins digits and "- 1,234" is a nil column
+  plus 1,234; a dash is a column; "(related party …)" notes are cut from labels (`notes.ts`, line count kept); a row
+  whose column count fits beats another table, and cash-flow rows in a 10-Q go to the year-to-date columns.

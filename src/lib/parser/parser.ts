@@ -22,7 +22,7 @@ import {
   normalizeLabel,
   type MetricPattern,
 } from "./patterns";
-import { parseCells, looksUsDocument, withNumberFormat, type NumericCell } from "./numbers";
+import { parseCells, isUsDocument, looksUsDocument, withNumberFormat, type NumericCell } from "./numbers";
 import { splitLeadingLabel } from "./split";
 import { stripRelatedPartyNotes } from "./notes";
 import {
@@ -133,11 +133,21 @@ function resolveMetric(
       }
       // Dashes keep their column: "Marketable securities 38,561 —" is two columns, not one, and
       // "Impairment — — — 29" puts 29 in the last column, not the first.
-      const money = cells
-        .filter((c) => (pattern.allowPercent ? true : !c.isPercent) && (c.value !== null || c.isDash))
-        .map((c) => (c.isDash ? null : c.value));
+      let kept = cells.filter((c) => (pattern.allowPercent ? true : !c.isPercent) && (c.value !== null || c.isDash));
+      // A dotted note reference before the columns ("Cost of sales 5.2 (255 132) …") — in a document
+      // with comma decimals "5.2" cannot be an amount. Integer notes ("Podatek dochodowy 25 …") are PS2b.
+      if (expected > 0 && kept.length === expected + 1 && !isUsDocument() && /^\d{1,2}\.\d{1,2}$/.test(kept[0].raw)) {
+        kept = kept.slice(1);
+      }
+      const money = kept.map((c) => (c.isDash ? null : c.value));
       if (!money.some((v) => v !== null)) continue;
-      const wordy = /[a-ząćęłńóśźż]{3,}/i.test(rest ?? "");
+      // Score 1 only when the last columns stand after the last word: "… respectively 4,772 1,579" yes,
+      // a date header "Wartość firmy 31 grudnia 2024 31 grudnia 2023" no.
+      const words = [...(rest ?? "").matchAll(/[a-ząćęłńóśźż]{3,}/gi)];
+      const lastWord = words[words.length - 1];
+      const tail = lastWord ? (rest ?? "").slice(lastWord.index! + lastWord[0].length) : "";
+      const wordy =
+        !!lastWord && expected > 0 && parseCells(tail).filter((c) => !c.isPercent && (c.value !== null || c.isDash)).length >= expected;
       cands.push({ lineIndex: i, label, money, wordy, synonymIndex: si, primary: syn.tier === "primary" });
     }
     if (cands.length === 0) continue;

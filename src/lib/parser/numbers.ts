@@ -168,9 +168,21 @@ let usDocument = false;
  * "Depreciation and amortization 997 611").
  */
 export function looksUsDocument(text: string): boolean {
-  const us = text.match(/\d,\d{3}(?![\d,])/g)?.length ?? 0;
-  const eu = text.match(/\d,\d{1,2}(?!\d)/g)?.length ?? 0;
-  return us >= 20 && us > 5 * eu;
+  // Table rows only (a label, numbers at the end): prose like "PLN 296,947 million" in an English
+  // Orlen report must not outvote ~1,750 space-grouped amounts in its tables.
+  const rows = text
+    .split("\n")
+    .filter((l) => /[\d)]\s*$/.test(l) && /[a-z]{3,}/i.test(l))
+    .join("\n");
+  const us = rows.match(/\d,\d{3}(?![\d,])/g)?.length ?? 0;
+  const eu = rows.match(/\d,\d{1,2}(?!\d)/g)?.length ?? 0;
+  const spaced = rows.match(/(?<![\d,.])\d{1,3}(?: \d{3})+(?![\d,.])/g)?.length ?? 0;
+  return us >= 20 && us > 5 * eu && us > 2 * spaced;
+}
+
+/** Whether the current parse treats the document as US-formatted (see `withNumberFormat`). */
+export function isUsDocument(): boolean {
+  return usDocument;
 }
 
 export function withNumberFormat<T>(us: boolean, fn: () => T): T {
@@ -194,9 +206,10 @@ export function parseCells(region: string): NumericCell[] {
   // whitespace-free at the edges: "( 82,886 )" → handled in matcher,
   // "67.6 %" → "67.6%".
   s = s.replace(/\s+%/g, "%");
-  // A row with US thousands ("1,025") and no comma decimals is US: a space never joins digits there.
-  // Otherwise "1,025 140 885 632.1 %" (amount, amount, change, %) became one cell of 140,885,632.
-  const us = usDocument || (/\d,\d{3}(?!\d)/.test(s) && !/\d,\d{1,2}(?!\d)/.test(s));
+  // In a US document a space never joins digits: "1,025 140 885 632.1 %" (amount, amount, change, %)
+  // used to become one cell of 140,885,632. Decided per document, not per row — in a Polish table
+  // "39 119,801" is 39 119.801, not two columns.
+  const us = usDocument;
 
   const cells: NumericCell[] = [];
   let guard = 0;

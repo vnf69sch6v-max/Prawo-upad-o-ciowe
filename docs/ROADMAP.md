@@ -42,25 +42,40 @@ pozycje PS, po kolei. Wyjątki jak dotąd: awaria danych (`stale`/`error` w `/ap
 
   Pierwszy raport od właściciela (07.11): 10-Q SpaceX za Q3 2026 (EDGAR, accession 0001628280-26-066880). Ma błędy w RZiS,
   przepływach i długu. Podkroki, każdy z fixture'em i testem wartości:
-  - **PS2a — w toku** (spec `docs/specs/2026-11-07-parser-ps2a-spacex-10q.md`): RZiS i przepływy zgodne z dokumentem.
-    Zakres:
+  - **PS2a — w toku, REVIEW 1 (07.11): FIX** (spec `docs/specs/2026-11-07-parser-ps2a-spacex-10q.md`, kryteria 14–18).
+    RZiS, przepływy i dług SpaceX zgodne z dokumentem. Zakres:
     - przecinek oksfordzki;
     - notki „(related party …)”;
-    - synonimy „Income (loss) …”;
-    - amerykański format liczb dla całego dokumentu: dziś „997 611” u NVIDII i „140 885 632” u SpaceX to jedna liczba;
+    - synonimy „Income (loss) …” i wybór wiersza z pasującą liczbą kolumn (przy okazji PZU: zysk netto 12 221, było −2 562);
+    - amerykański format liczb dla całego dokumentu;
     - znak podatku z uzgodnienia;
-    - przepływy 10-Q w kolumnach 9M, z rachunku przepływów;
-    - EPS „Net income (loss) per share”.
-  - **PS2b — następny: bilans.**
-    - Dług z bilansu, z leasingiem finansowym: 38 844, a nie 145 z noty „Principal / Costs / Net”.
-    - Kreska liczona jako kolumna: papiery wartościowe 38 561, a nie 557 z alokacji ceny przejęcia.
-    - Gotówka netto 51,0 mld USD.
+    - przepływy 10-Q w kolumnach 9M;
+    - EPS „Net income (loss) per share”;
+    - dług z bilansu z leasingiem finansowym, kreska jako kolumna, gotówka netto 51,0 mld USD;
+    - Cipher: dług długoterminowy z bilansu.
 
-    Dług i papiery idą razem. Sam dług dałby gotówkę netto 13,0 mld zamiast 51,0.
+    Do poprawy przed merge, bo psuje raporty spoza fixture'ów:
+    - format liczb ustalany z prozy: Orlen Q4 2024 (EN) dostaje aktywa 60 / 824;
+    - nagłówek dat jako wartość: PZU, wartość firmy 31 / 2023;
+    - koszt własny sprzedaży Orlenu z wiersza przekształcenia danych.
+  - **PS2b — następny: numery not i bilans z trzema datami** (zestaw PS2). Przykłady:
+    - PZU „Wartość firmy 27 2 792 2 801 2 808”: powinno być 2 792 / 2 801, dziś 2 801 / 2 808;
+    - PZU podatek „25 (3 484) (3 626)”: dziś 25 / 35;
+    - PZU gotówka: 15 127 / 17 702;
+    - Orlen SSF (EN) „Goodwill 12.4 3,812 4,372 2,179” → 3 812 / 4 372;
+    - Orlen SSF zobowiązania 120 505 / 108 645, dziś z noty o wspólnym przedsięwzięciu;
+    - Orlen Q4 2024 (EN) „Total assets 262 742 264 463 61 489 60 824”: PLN 262 742 / 264 463. Dziś dwie pierwsze
+      liczby sklejają się w jedną, a parser bierze kolumny EUR;
+    - SpaceX: przychody z RZiS, nie z noty (te same liczby, zła linia źródła).
+
+    Każdy przykład dostaje fixture albo fragment i test wartości. Część może wejść już w FIX PS2a (kryterium 16).
   - **PS2c — UI.**
     - Δ% od ujemnej bazy: dziś „▲517,8%” przy przejściu ze straty w zysk.
     - Kontrola „zysk operacyjny + pozostałe = brutto” z odsetkami: dziś SpaceX ją oblewa przy poprawnych liczbach.
     - Widoczny baner, gdy kontrole spójności nie przechodzą.
+    - „Wypłata z FCF −12,7%” przy ujemnym FCF: ukryć albo opisać.
+    - 390 px, „Przepływy i dług” w 10-Q: puste kolumny Q3 spychają liczby 9M za krawędź.
+    - „Koszty operacyjne razem” z kosztem własnym (SpaceX) nie może obniżać pewności poprawnej liczby.
 - **PS3+. Kierunek, bez zobowiązań.** Każdy dopiero po PS2 i z osobną specyfikacją:
   - ESEF: xhtml z tagami iXBRL, czyli dokładne liczby z rocznych sprawozdań spółek z GPW bez heurystyk;
   - teczka: raporty zapisane na koncie, na zasadach `savori_users`, z szyfrowaniem i wpisem w `/prywatnosc`;
