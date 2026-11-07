@@ -85,11 +85,13 @@ export function validate(
     const taxV = valAt(byKey.get("incomeTax"), incCur.key);
     const ni = valAt(byKey.get("netIncome"), incCur.key);
     if (preTax !== null && taxV !== null && ni !== null) {
-      const expected = preTax - Math.abs(taxV);
+      // Negative tax = benefit (sign set by the parser from the statement's own arithmetic).
+      const expected = preTax - taxV;
+      const taxS = taxV < 0 ? `(${Math.abs(taxV).toLocaleString()})` : taxV.toLocaleString();
       checks.push({
         name: "Pre-tax − Tax = Net income",
         passed: Math.abs(expected - ni) <= tol(Math.max(Math.abs(preTax), Math.abs(ni))),
-        detail: `${preTax.toLocaleString()} − ${Math.abs(taxV).toLocaleString()} = ${expected.toLocaleString()} vs ${ni.toLocaleString()}`,
+        detail: `${preTax.toLocaleString()} − ${taxS} = ${expected.toLocaleString()} vs ${ni.toLocaleString()}`,
       });
     }
   }
