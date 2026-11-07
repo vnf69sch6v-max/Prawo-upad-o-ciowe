@@ -1,0 +1,77 @@
+* Comparative data have been restated; detailed information is set out in Note 4.2.
+ORLEN GROUP CONSOLIDATED FINANCIAL STATEMENTS OF THE ORLEN GROUP FOR 2025 5 / 134
+Translation from the original Polish version
+
+CONSOLIDATED STATEMENT OF FINANCIAL POSITION
+(PLN million)
+CONSOLIDATED STATEMENT OF FINANCIAL POSITION
+NOTE 31/12/2025 31/12/2024   01/01/2024
+(restated)   (restated)
+ASSETS
+Non-current assets
+Property, plant and equipment 12.1 142,380 141,639 135,191
+Investment property 12.2 768 678 598
+Intangible assets 12.3 4,526 7,012 11,651
+Goodwill 12.4 3,812 4,372 2,179
+Right-of-use assets 15.2.1 14,824 13,899 13,486
+Investments accounted for using the equity method 12.5 2,465 1,969 2,170
+Deferred tax assets 11.8.2 1,903 2,088 1,033
+Other financial assets 12.12.1 4,148 3,823 4,288
+Mandatory stocks 12.7.1 9,180 11,033 10,258
+Other assets 12.13 701 339 427
+184,707 186,852 181,281
+Current assets
+Inventories 12.7.1 19,126 21,739 22,917
+Trade receivables 12.7.2 24,060 26,411 33,443
+Income tax receivables 399 786 1,417
+Cash 12.8 26,445 11,042 13,282
+Other financial assets 12.12.1 4,738 4,183 4,706
+Other assets 12.13 4,148 4,230 6,794
+Assets classified as held for sale 1,425 152 242
+80,341 68,543 82,801
+Total assets 265,048 255,395 264,082
+EQUITY AND LIABILITIES
+EQUITY
+Share capital 12.11.1 1,974 1,974 1,974
+Share premium 12.11.2 46,405 46,405 46,405
+Other components of equity 12.11.3 2,641 303 3,585
+Retained earnings 12.11.4 92,597 97,089 99,072
+Equity attributable to owners of the parent 143,617 145,771 151,036
+Equity attributable to non-controlling interests 12.11.5 926 979 1,081
+Total equity 144,543 146,750 152,117
+LIABILITIES
+Non-current liabilities
+Borrowings and bonds 12.9 23,657 14,979 10,671
+Lease liabilities 15.2.1 10,867 9,875 9,343
+Provisions 12.14 12,051 11,388 9,952
+Deferred tax liabilities 11.8.2 10,975 10,779 10,195
+Other financial liabilities 12.12.2 950 600 592
+Other liabilities 12.13 1,833 703 646
+60,333 48,324 41,399
+Current liabilities
+Trade payables 12.7.3 18,552 19,987 20,288
+Lease liabilities 15.2.1 1,694 1,470 1,386
+Contract liabilities 12.13.1 2,084 1,771 1,818
+Borrowings and bonds 12.9 1,507 3,167 4,496
+Provisions 12.14 12,127 8,989 12,213
+Income tax liabilities 3,326 2,873 2,331
+Other financial liabilities 12.12.2 9,277 9,976 12,399
+Other liabilities 12.13 11,605 12,088 15,635
+60,172 60,321 70,566
+Total liabilities 120,505 108,645 111,965
+Total equity and liabilities 265,048 255,395 264,082
+* Comparative data have been restated; detailed information is set out in Note 4.2.
+ORLEN GROUP CONSOLIDATED FINANCIAL STATEMENTS OF THE ORLEN GROUP FOR 2025 6 / 134
+Translation from the original Polish version
+
+CONSOLIDATED STATEMENT OF CHANGES IN EQUITY
+(PLN million)
+CONSOLIDATED STATEMENT OF CHANGES IN EQUITY
+Share   Share   Other   Retained   Equity   Equity   Total
+capital   premium   components of   earnings   attributable   attributable to   equity
+equity treasury   hedging   costs of   fair value   exchange   to owners of   non-controlling
+shares   reserve   hedging   reserve   differences on
+the parent   interests
+translation of
+foreign
+operations

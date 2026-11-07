@@ -275,3 +275,89 @@ export function moneyValues(region: string): (number | null)[] {
     .filter((c) => !c.isPercent)
     .map((c) => c.value);
 }
+
+/** A note reference in front of the columns: "27", "25", "12.4", "5.2" (raw cell text, not a dash or a parenthesis). */
+export function isNoteLike(cell: NumericCell): boolean {
+  return !cell.isDash && !cell.isPercent && /^\d{1,2}(?:\.\d{1,2})*$/.test(cell.raw);
+}
+
+const CHAIN_RE = /^\d{1,3}(?: \d{3})+$/;
+const MAX_SEGMENTATIONS = 4096;
+
+function digits(v: number): number {
+  return String(Math.trunc(Math.abs(v))).length;
+}
+
+/**
+ * European tables separate both thousands and columns with a single space, so "503 257 467 945 429 205"
+ * is three amounts (503 257 / 467 945 / 429 205) that the tokenizer reads as one. Given the column count
+ * the row should have, try every split of such space-joined runs and keep the one whose amounts have the
+ * most similar size (a leading note number is left out of that comparison). Only rows that do not fit the
+ * columns, or that contain a run of 3+ groups, are touched; a split is accepted only if the sizes differ by at
+ * most 2 digits. Returns the cells unchanged when nothing better exists.
+ */
+export function resegmentEuropean(cells: NumericCell[], expected: number, ytd = 0): NumericCell[] {
+  if (expected <= 0) return cells;
+  const noted = (row: NumericCell[]) => row.length === expected + 1 && !!row[0] && isNoteLike(row[0]);
+  const fits = (row: NumericCell[]) => row.length === expected || (ytd > 0 && row.length === ytd) || noted(row);
+  // Only runs of 3+ groups are split: "525 225" stays 525 225 (splitting it would invent two columns).
+  const chains = cells.map((c) => {
+    const g = !c.isDash && !c.isPercent && CHAIN_RE.test(c.raw) ? c.raw.split(" ") : null;
+    return g && g.length >= 3 ? g : null;
+  });
+  if (!chains.some((g) => g)) return cells;
+  const longChain = true;
+  if (fits(cells) && !longChain) return cells;
+
+  // Every chain of k groups can be cut after any of its first k−1 groups: 2^(k−1) ways.
+  const options: NumericCell[][][] = cells.map((c, i) => {
+    const g = chains[i];
+    if (!g) return [[c]];
+    const out: NumericCell[][] = [];
+    for (let mask = 0; mask < 1 << (g.length - 1); mask++) {
+      const parts: NumericCell[] = [];
+      let cur = [g[0]];
+      for (let j = 1; j < g.length; j++) {
+        if (mask & (1 << (j - 1))) {
+          parts.push(chainCell(cur));
+          cur = [g[j]];
+        } else cur.push(g[j]);
+      }
+      parts.push(chainCell(cur));
+      out.push(parts);
+    }
+    return out;
+  });
+  const total = options.reduce((n, o) => n * o.length, 1);
+  if (total > MAX_SEGMENTATIONS) return cells;
+
+  const cost = (row: NumericCell[]): number => {
+    const d = (noted(row) ? row.slice(1) : row).filter((c) => c.value !== null).map((c) => digits(c.value as number));
+    return d.length ? Math.max(...d) - Math.min(...d) : 0;
+  };
+
+  let bestFit: { row: NumericCell[]; cost: number } | null = null;
+  let bestAny: { row: NumericCell[]; cost: number } | null = null;
+  for (let k = 0; k < total; k++) {
+    let rem = k;
+    const row: NumericCell[] = [];
+    for (const o of options) {
+      row.push(...o[rem % o.length]);
+      rem = Math.floor(rem / o.length);
+    }
+    const c = cost(row);
+    const better = (b: { row: NumericCell[]; cost: number } | null) =>
+      !b || c < b.cost || (c === b.cost && row.length < b.row.length);
+    if (fits(row) && c <= 2 && better(bestFit)) bestFit = { row, cost: c };
+    if (better(bestAny)) bestAny = { row, cost: c };
+  }
+  if (bestFit) return bestFit.row;
+  // A row that "fits" only because a long run stayed glued (Orlen "Total assets 262 742 264 463 61 489
+  // 60 824": PLN + EUR columns) is another table — give it its natural split so it stops fitting.
+  if (fits(cells) && longChain && bestAny && cost(cells) > 2) return bestAny.row;
+  return cells;
+}
+
+function chainCell(groups: string[]): NumericCell {
+  return { raw: groups.join(" "), value: Number(groups.join("")), isPercent: false, isDash: false };
+}

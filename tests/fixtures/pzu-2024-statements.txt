@@ -1,0 +1,156 @@
+procentowej
+Przychody o charakterze zbliżonym do odsetek 1 270 1 201
+Pozostałe przychody netto z inwestycji 14 373 406
+Wynik z tytułu zaprzestania ujmowania instrumentów finansowych i inwestycji
+15 8 (47)
+niewycenianych w wartości godziwej przez wynik finansowy
+Wynik z tytułu odpisów na oczekiwane straty kredytowe 16 (1 486) (1 285)
+Zmiana netto wartości godziwej aktywów i zobowiązań wycenianych
+17 946 1 502
+w wartości godziwej
+Przychody z tytułu prowizji i opłat 18 5 165 5 528
+Koszty z tytułu prowizji i opłat 19 (1 323) (1 742)
+Koszty działania Grupy PZU niedotyczące usług ubezpieczenia 20 (10 514) (9 701)
+Koszty odsetkowe 21 (8 243) (8 890)
+Koszty ryzyka prawnego walutowych kredytów hipotecznych (729) (369)
+Pozostałe przychody operacyjne 23 1 728 1 525
+Pozostałe koszty operacyjne 24 (685) (612)
+Zysk z działalności operacyjnej 15 697 16 135
+Udział w wynikach finansowych netto jednostek wycenianych metodą praw
+8 10
+własności
+Zysk brutto 15 705 16 145
+Podatek dochodowy 25 (3 484) (3 626)
+Zysk netto, w tym: 12 221 12 519
+- zysk przypisywany właścicielom jednostki dominującej 5 342 5 780
+- zyski (straty) przypisywane właścicielom udziałów niekontrolujących 6 879 6 739
+Podstawowa i rozwodniona średnia ważona liczba akcji zwykłych 26 863 358 403 863 378 107
+Podstawowy i rozwodniony zysk (strata) na jedną akcję zwykłą (w złotych) 26 6,19 6,69
+1) Informacje o przekształceniu danych porównawczych zaprezentowano w punkcie 6.3.
+Warszawa, 26 marca 2025 roku
+Załączone noty stanowią integralną część skonsolidowanego sprawozdania finansowego
+4
+
+Grupa Kapitałowa Powszechnego Zakładu Ubezpieczeń Spółki Akcyjnej
+Skonsolidowane sprawozdanie finansowe wg MSSF za rok zakończony 31 grudnia 2024 roku
+(w milionach złotych)
+Skonsolidowane sprawozdanie z innych całkowitych
+dochodów
+1 stycznia -
+1 stycznia -
+Skonsolidowane sprawozdanie z innych całkowitych dochodów Nota   31 grudnia 2023
+31 grudnia 2024   1)
+(przekształcone)
+Zysk netto 12 221 12 519
+Inne całkowite dochody netto 669 2 812
+Podlegające późniejszemu przeniesieniu do rachunku zysków i strat 686 2 807
+Wycena instrumentów dłużnych 155 2 064
+Reklasyfikacja wyceny instrumentów dłużnych do rachunku zysków i strat 45 39
+Wycena należności od klientów z tytułu kredytów 6 5
+Przychody i koszty finansowe z ubezpieczeń 495 (1 678)
+Przychody i koszty finansowe z reasekuracji (16) 38
+Różnice kursowe z przeliczenia (38) (137)
+Zabezpieczenie przepływów pieniężnych, w tym: 202 3 160
+Zyski i straty z wyceny do wartości godziwej instrumentów finansowych
+zabezpieczających przepływy pieniężne w części stanowiącej efektywne   (907) 1 532
+zabezpieczenie
+Zyski i straty na instrumentach finansowych zabezpieczających przepływy
+1 109 1 628
+pieniężne przeklasyfikowane do wyniku finansowego
+Podatek dochodowy 25 (163) (684)
+Niepodlegające późniejszemu przeniesieniu do rachunku zysków i strat (17) 5
+Wycena instrumentów kapitałowych (82) -
+Reklasyfikacja nieruchomości z rzeczowych aktywów trwałych do
+61 27
+nieruchomości inwestycyjnych
+Zyski i straty aktuarialne związane z rezerwami pracowniczymi (2) (27)
+Podatek dochodowy 25 6 5
+Dochody całkowite, razem 12 890 15 331
+- dochody całkowite przypisywane właścicielom jednostki dominującej 5 828 5 946
+- dochody całkowite przypisywane właścicielom udziałów niekontrolujących 7 062 9 385
+1) Informacje o przekształceniu danych porównawczych zaprezentowano w punkcie 6.3.
+Warszawa, 26 marca 2025 roku
+Załączone noty stanowią integralną część skonsolidowanego sprawozdania finansowego
+5
+
+Grupa Kapitałowa Powszechnego Zakładu Ubezpieczeń Spółki Akcyjnej
+Skonsolidowane sprawozdanie finansowe wg MSSF za rok zakończony 31 grudnia 2024 roku
+(w milionach złotych)
+Skonsolidowane sprawozdanie z sytuacji finansowej
+31 grudnia 2023   1 stycznia 2023
+Aktywa Nota 31 grudnia 2024
+(przekształcone) 1)   (przekształcone) 1)
+Wartość firmy 27 2 792 2 801 2 808
+Wartości niematerialne 28 3 745 3 404 3 282
+Rzeczowe aktywa trwałe 29 4 256 4 445 4 304
+Nieruchomości inwestycyjne 30 3 159 3 098 3 021
+Jednostki wyceniane metodą praw własności 31 69 62 52
+Aktywa z tytułu umów ubezpieczenia 11 108 111 68
+Aktywa z tytułu umów reasekuracji 11 4 042 3 469 2 336
+Aktywa stanowiące zabezpieczenie zobowiązań 34 1 404 1 708 972
+Aktywa przeznaczone do sprzedaży 48 595 621 654
+Należności od klientów z tytułu kredytów (w tym należności z tytułu
+32 232 166 218 874 212 725
+leasingu finansowego)
+Pochodne instrumenty finansowe 33 5 384 11 396 16 197
+Inwestycyjne (lokacyjne) aktywa finansowe 35 222 315 192 332 153 861
+Wyceniane w zamortyzowanym koszcie 158 550 135 875 106 013
+Wyceniane w wartości godziwej przez inne całkowite dochody 53 131 44 366 39 725
+Wyceniane w wartości godziwej przez wynik finansowy 10 634 12 091 8 123
+Aktywa z tytułu odroczonego podatku dochodowego 47 2 244 2 193 3 090
+Należności z tytułu bieżącego podatku dochodowego 6 19 305
+Inne należności 36 5 258 5 227 9 108
+Inne aktywa 37 587 483 462
+Środki pieniężne i ekwiwalenty środków pieniężnych 39 15 127 17 702 15 960
+Aktywa, razem 503 257 467 945 429 205
+1) Informacje o przekształceniu danych porównawczych zaprezentowano w punkcie 6.3.
+Warszawa, 26 marca 2025 roku
+Załączone noty stanowią integralną część skonsolidowanego sprawozdania finansowego
+6
+
+Grupa Kapitałowa Powszechnego Zakładu Ubezpieczeń Spółki Akcyjnej
+Skonsolidowane sprawozdanie finansowe wg MSSF za rok zakończony 31 grudnia 2024 roku
+(w milionach złotych)
+Skonsolidowane sprawozdanie z sytuacji finansowej (kontynuacja)
+31 grudnia 2023   1 stycznia 2023
+Kapitały i zobowiązania Nota 31 grudnia 2024   1)   1)
+(przekształcone)   (przekształcone)
+Kapitały
+Kapitały przypadające właścicielom jednostki dominującej 32 111 30 037 26 163
+Kapitał podstawowy 40.1 86 86 86
+Pozostałe kapitały 40.3 22 076 18 225 17 205
+Niepodzielony wynik 9 949 11 726 8 872
+Zysk z lat ubiegłych 4 607 5 946 8 872
+Zysk netto 5 342 5 780 nd.
+Udziały niekontrolujące 2.4 33 146 30 515 22 268
+Kapitały, razem 65 257 60 552 48 431
+Zobowiązania
+Zobowiązania z tytułu umów ubezpieczenia 11 43 642 42 328 37 518
+Zobowiązania z tytułu umów reasekuracji 11 35 35 31
+Zobowiązania podporządkowane 41 5 099 6 166 6 184
+Zobowiązania z tytułu własnych dłużnych papierów wartościowych 42 18 086 12 003 11 090
+Zobowiązania wobec banków 43 6 895 7 047 7 720
+Zobowiązania wobec klientów z tytułu depozytów 44 334 193 303 781 278 058
+Pochodne instrumenty finansowe 33 6 132 11 656 20 956
+Zobowiązania z tytułu bieżącego podatku dochodowego 1 818 1 991 328
+Inne zobowiązania 45 15 946 16 980 14 301
+Rezerwy 46 2 756 2 286 1 724
+Rezerwa z tytułu odroczonego podatku dochodowego 47 3 374 3 088 2 831
+Zobowiązania bezpośrednio związane z aktywami zakwalifikowanymi
+48 24 32 33
+jako przeznaczone do sprzedaży
+Zobowiązania, razem 438 000 407 393 380 774
+Kapitały i zobowiązania, razem 503 257 467 945 429 205
+1) Informacje o przekształceniu danych porównawczych zaprezentowano w punkcie 6.3.
+Warszawa, 26 marca 2025 roku
+Załączone noty stanowią integralną część skonsolidowanego sprawozdania finansowego
+7
+
+Grupa Kapitałowa Powszechnego Zakładu Ubezpieczeń Spółki Akcyjnej
+Skonsolidowane sprawozdanie finansowe wg MSSF za rok zakończony 31 grudnia 2024 roku
+(w milionach złotych)
+Sprawozdanie ze zmian w skonsolidowanym kapitale własnym
+Kapitały przypadające właścicielom jednostki dominującej
+Pozostałe kapitały
+Sprawozdanie ze zmian   Skumulowane inne dochody całkowite   Udziały   Kapitał
+Kapitał   Pozosta-

@@ -22,7 +22,15 @@ import {
   normalizeLabel,
   type MetricPattern,
 } from "./patterns";
-import { parseCells, isUsDocument, looksUsDocument, withNumberFormat, type NumericCell } from "./numbers";
+import {
+  parseCells,
+  isNoteLike,
+  isUsDocument,
+  looksUsDocument,
+  resegmentEuropean,
+  withNumberFormat,
+  type NumericCell,
+} from "./numbers";
 import { splitLeadingLabel } from "./split";
 import { stripRelatedPartyNotes } from "./notes";
 import {
@@ -134,9 +142,18 @@ function resolveMetric(
       // Dashes keep their column: "Marketable securities 38,561 —" is two columns, not one, and
       // "Impairment — — — 29" puts 29 in the last column, not the first.
       let kept = cells.filter((c) => (pattern.allowPercent ? true : !c.isPercent) && (c.value !== null || c.isDash));
-      // A dotted note reference before the columns ("Cost of sales 5.2 (255 132) …") — in a document
-      // with comma decimals "5.2" cannot be an amount. Integer notes ("Podatek dochodowy 25 …") are PS2b.
-      if (expected > 0 && kept.length === expected + 1 && !isUsDocument() && /^\d{1,2}\.\d{1,2}$/.test(kept[0].raw)) {
+      if (!isUsDocument()) kept = resegmentEuropean(kept, expected, ytd.length);
+      // A note reference before the columns: "Cost of sales 5.2 (255 132) …", "Wartość firmy 27 2 792 …",
+      // "Goodwill 12.4 3,812 …". In a US-formatted document only when the amounts have no decimals
+      // (an EPS row "0.37 (0.36) …" keeps its first value).
+      if (
+        expected > 0 &&
+        kept.length === expected + 1 &&
+        isNoteLike(kept[0]) &&
+        // With a single column every "label 82 (554)" would fit — integers count as notes from 2 columns up.
+        (kept[0].raw.includes(".") || expected >= 2) &&
+        (!isUsDocument() || kept.slice(1).every((c) => c.value === null || Number.isInteger(c.value)))
+      ) {
         kept = kept.slice(1);
       }
       const money = kept.map((c) => (c.isDash ? null : c.value));
@@ -563,14 +580,43 @@ function synthesize(lines: string[]): { income: Period[]; balance: Period[] } {
     kind: "duration",
     current: i === 0,
   }));
-  const balance: Period[] = [0, 1].map((i) => ({
+  const balance: Period[] = Array.from({ length: balanceDateCount(lines) }, (_, i) => ({
     key: `bal${i}`,
-    short: i === 0 ? "Current" : "Prior",
-    label: i === 0 ? "Current period" : "Prior period",
+    short: i === 0 ? "Current" : i === 1 ? "Prior" : `Prior ${i}`,
+    label: i === 0 ? "Current period" : i === 1 ? "Prior period" : `Prior period ${i}`,
     kind: "point",
     current: i === 0,
   }));
   return { income, balance };
+}
+
+const PL_MONTHS = "stycznia|lutego|marca|kwietnia|maja|czerwca|lipca|sierpnia|września|października|listopada|grudnia";
+const EN_MONTHS = "january|february|march|april|may|june|july|august|september|october|november|december";
+const DATE_RE = new RegExp(
+  `\\b\\d{1,2}[./-]\\d{1,2}[./-]\\d{4}\\b|\\b\\d{1,2}\\s+(?:${PL_MONTHS}|${EN_MONTHS})\\s+\\d{4}\\b|\\b(?:${EN_MONTHS})\\s+\\d{1,2},?\\s+\\d{4}\\b`,
+  "gi",
+);
+// A title line, not prose that mentions the statement ("kurs NBP (pozycje sprawozdania z sytuacji finansowej)").
+const BALANCE_TITLE_RE =
+  /^\s*(?:(?:skonsolidowane|jednostkowe|śródroczne|skrócone|consolidated|separate|interim|condensed)\s+)*(?:sprawozdanie z sytuacji|statements? of financial position|balance sheets?\b|bilans\b)/i;
+
+/**
+ * Balance-sheet columns from the statement's own header: PZU, PKO BP and Orlen show three dates
+ * (31.12.2024, 31.12.2023 restated, 01.01.2023). Looks only between the title and the first data row; a
+ * table-of-contents line ("… z sytuacji finansowej ....... 8") has no dates after it and is skipped.
+ */
+function balanceDateCount(lines: string[]): number {
+  for (let i = 0; i < lines.length; i++) {
+    if (!BALANCE_TITLE_RE.test(lines[i]) || /\.{5,}/.test(lines[i])) continue;
+    const dates = new Set<string>();
+    for (let j = i; j < Math.min(lines.length, i + 10); j++) {
+      const l = lines[j];
+      if (j > i && /[a-ząćęłńóśźż]{3,}.*\d[\d ]*\s*$/i.test(l) && !(l.match(DATE_RE) ?? []).length) break; // first data row
+      for (const d of l.match(DATE_RE) ?? []) dates.add(d.toLowerCase().replace(/\s+/g, " "));
+    }
+    if (dates.size >= 2) return Math.min(dates.size, 3);
+  }
+  return 2;
 }
 
 export interface ParseInput {
@@ -601,6 +647,10 @@ function parseReportInner(input: ParseInput): ParseResult {
     const syn = synthesize(lines);
     if (income.length === 0) income = syn.income;
     if (balance.length === 0) balance = syn.balance;
+  }
+  if (balance.length === 2 && balanceDateCount(lines) === 3) {
+    // Restated comparatives add an opening balance (PKO BP: 31.12.2024, 31.12.2023, 01.01.2023).
+    balance = [...balance, { key: "bal2", short: "Prior 2", label: "Prior period 2", kind: "point", current: false }];
   }
 
   const structureLabel = [formType, issuer].filter(Boolean).join(" · ") || "Unknown filing";

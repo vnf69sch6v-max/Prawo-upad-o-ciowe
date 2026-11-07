@@ -28,7 +28,7 @@ pozycje PS, po kolei. Wyjątki jak dotąd: awaria danych (`stale`/`error` w `/ap
 - **PS1b. Eksport CSV i JSON w przeglądarce** (mały krok po PS1). `toCSV` i `toJSON` są czyste. XLSX zostaje na serwerze:
   `exceljs` w przeglądarce to 252 KB gzip i wywołania `Function(...)`, których CSP bez `'unsafe-eval'` nie przepuści.
   Krok zawęża zdanie o eksporcie w `/prywatnosc`.
-- **PS2. Pomiar jakości (w toku od 07.11.2026; PS2a zrobione, następny PS2b).** Zestaw testowy prawdziwych raportów z liczbami sprawdzonymi ręcznie
+- **PS2. Pomiar jakości (w toku od 07.11.2026; PS2a zrobione, PS2b-1 w REVIEW).** Zestaw testowy prawdziwych raportów z liczbami sprawdzonymi ręcznie
   w raporcie lub komunikacie spółki:
   - raporty: polski raport roczny i kwartalny (firma, bank, ubezpieczyciel, NewConnect), US 10-Q i 10-K;
   - liczby: przychody, zysk operacyjny, zysk netto, aktywa, kapitał, OCF, okresy, jednostka;
@@ -43,7 +43,19 @@ pozycje PS, po kolei. Wyjątki jak dotąd: awaria danych (`stale`/`error` w `/ap
   Pierwszy raport od właściciela (07.11): 10-Q SpaceX za Q3 2026 (EDGAR, accession 0001628280-26-066880). Ma błędy w RZiS,
   przepływach i długu. Podkroki, każdy z fixture'em i testem wartości:
   - **PS2a — zrobione 7.11.2026, PR #89** (szczegóły w „Zrobione”).
-  - **PS2b — następny: numery not i bilans z trzema datami** (zestaw PS2). Przykłady:
+  - **PS2b-1 — w REVIEW (07.11.2026), spec `docs/specs/2026-11-07-parser-ps2b-bilans-trzy-daty.md`:**
+    - 3 daty bilansu z nagłówka;
+    - numery not całkowite i z kropką;
+    - liczby sklejone spacją dzielone wg liczby kolumn.
+
+    Zrobione dla: PZU (wartość firmy, gotówka, aktywa = pasywa), Orlen SSF i Orlen Q (aktywa, kapitał, zobowiązania),
+    PKO BP (rzeczowe aktywa trwałe, kapitał). Wcześniej rok poprzedni był pokazywany jako bieżący.
+  - **PS2b-2 — następny:**
+    - liczba kolumn RZiS w raportach europejskich (Platige 4, Orlen SSF 1);
+    - suma aktywów PKO BP („AKTYWA …”);
+    - podział sklejonych liczb w „wszystkich wierszach”;
+    - przychody SpaceX z RZiS.
+  - **PS2b (pierwotny zakres) — numery not i bilans z trzema datami** (zestaw PS2). Przykłady:
     - PZU „Wartość firmy 27 2 792 2 801 2 808”: powinno być 2 792 / 2 801, dziś 2 801 / 2 808;
     - PZU podatek „25 (3 484) (3 626)”: dziś 25 / 35;
     - PZU gotówka: 15 127 / 17 702;

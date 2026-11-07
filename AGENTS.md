@@ -405,3 +405,6 @@ Standard scripts in `package.json`:
   (`looksUsDocument`, table rows only) — in a US document a space never joins digits and "- 1,234" is a nil column
   plus 1,234; a dash is a column; "(related party …)" notes are cut from labels (`notes.ts`, line count kept); a row
   whose column count fits beats another table, and cash-flow rows in a 10-Q go to the year-to-date columns.
+  PS2b-1: a balance sheet with three header dates (restated comparatives + opening balance) gets three balance
+  columns; a note number in front of the columns is dropped at N+1 cells (integers only from 2 columns up); in a
+  European document space-joined runs of 3+ groups are split to the row's column count (`resegmentEuropean`).
