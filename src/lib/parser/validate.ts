@@ -44,7 +44,7 @@ export function validate(
       checks.push({
         name: "Revenue − Cost = Gross profit",
         passed,
-        detail: `${rev.toLocaleString()} − ${cost.toLocaleString()} = ${expected.toLocaleString()} vs reported ${gross.toLocaleString()}`,
+        detail: `${rev.toLocaleString("en-US")} − ${cost.toLocaleString("en-US")} = ${expected.toLocaleString("en-US")} vs reported ${gross.toLocaleString("en-US")}`,
       });
     }
   }
@@ -59,7 +59,7 @@ export function validate(
       checks.push({
         name: "Gross − Operating expenses = Operating income",
         passed: Math.abs(expected - opInc) <= tol(gross),
-        detail: `${gross.toLocaleString()} − ${Math.abs(opex).toLocaleString()} = ${expected.toLocaleString()} vs ${opInc.toLocaleString()}`,
+        detail: `${gross.toLocaleString("en-US")} − ${Math.abs(opex).toLocaleString("en-US")} = ${expected.toLocaleString("en-US")} vs ${opInc.toLocaleString("en-US")}`,
       });
     }
   }
@@ -74,7 +74,7 @@ export function validate(
       checks.push({
         name: "Operating income + Other = Pre-tax income",
         passed: Math.abs(expected - preTax) <= tol(Math.max(Math.abs(preTax), Math.abs(opInc))),
-        detail: `${opInc.toLocaleString()} + ${other.toLocaleString()} = ${expected.toLocaleString()} vs ${preTax.toLocaleString()}`,
+        detail: `${opInc.toLocaleString("en-US")} + ${other.toLocaleString("en-US")} = ${expected.toLocaleString("en-US")} vs ${preTax.toLocaleString("en-US")}`,
       });
     }
   }
@@ -87,11 +87,11 @@ export function validate(
     if (preTax !== null && taxV !== null && ni !== null) {
       // Negative tax = benefit (sign set by the parser from the statement's own arithmetic).
       const expected = preTax - taxV;
-      const taxS = taxV < 0 ? `(${Math.abs(taxV).toLocaleString()})` : taxV.toLocaleString();
+      const taxS = taxV < 0 ? `(${Math.abs(taxV).toLocaleString("en-US")})` : taxV.toLocaleString("en-US");
       checks.push({
         name: "Pre-tax − Tax = Net income",
         passed: Math.abs(expected - ni) <= tol(Math.max(Math.abs(preTax), Math.abs(ni))),
-        detail: `${preTax.toLocaleString()} − ${taxS} = ${expected.toLocaleString()} vs ${ni.toLocaleString()}`,
+        detail: `${preTax.toLocaleString("en-US")} − ${taxS} = ${expected.toLocaleString("en-US")} vs ${ni.toLocaleString("en-US")}`,
       });
     }
   }
@@ -107,7 +107,7 @@ export function validate(
       checks.push({
         name: "Assets = Liabilities + Equity",
         passed,
-        detail: `${assets.toLocaleString()} vs ${liab.toLocaleString()} + ${equity.toLocaleString()} = ${sum.toLocaleString()}`,
+        detail: `${assets.toLocaleString("en-US")} vs ${liab.toLocaleString("en-US")} + ${equity.toLocaleString("en-US")} = ${sum.toLocaleString("en-US")}`,
       });
     }
   }
@@ -126,7 +126,7 @@ export function validate(
       checks.push({
         name: "Total debt = Current + Long-term",
         passed,
-        detail: `${debt.toLocaleString()} vs ${(cur ?? 0).toLocaleString()} + ${(lt ?? 0).toLocaleString()} = ${sum.toLocaleString()}`,
+        detail: `${debt.toLocaleString("en-US")} vs ${(cur ?? 0).toLocaleString("en-US")} + ${(lt ?? 0).toLocaleString("en-US")} = ${sum.toLocaleString("en-US")}`,
       });
     }
   }
@@ -142,7 +142,7 @@ export function validate(
       checks.push({
         name: "Total liquidity = Cash + ST investments",
         passed,
-        detail: `${total.toLocaleString()} vs ${cash.toLocaleString()} + ${sti.toLocaleString()} = ${sum.toLocaleString()}`,
+        detail: `${total.toLocaleString("en-US")} vs ${cash.toLocaleString("en-US")} + ${sti.toLocaleString("en-US")} = ${sum.toLocaleString("en-US")}`,
       });
     }
   }
@@ -155,14 +155,14 @@ export function validate(
       checks.push({
         name: "Σ Segment revenue = Total revenue",
         passed: Math.abs(sumRev - segments.totalRevenue) <= tol(segments.totalRevenue),
-        detail: `${sumRev.toLocaleString()} vs ${segments.totalRevenue.toLocaleString()}`,
+        detail: `${sumRev.toLocaleString("en-US")} vs ${segments.totalRevenue.toLocaleString("en-US")}`,
       });
     }
     if (segments.totalOperatingIncome !== null) {
       checks.push({
         name: "Σ Segment operating income = Total",
         passed: Math.abs(sumOp - segments.totalOperatingIncome) <= tol(segments.totalOperatingIncome),
-        detail: `${sumOp.toLocaleString()} vs ${segments.totalOperatingIncome.toLocaleString()}`,
+        detail: `${sumOp.toLocaleString("en-US")} vs ${segments.totalOperatingIncome.toLocaleString("en-US")}`,
       });
     }
   }
