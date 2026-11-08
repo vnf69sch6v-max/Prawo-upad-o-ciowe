@@ -412,4 +412,5 @@ Standard scripts in `package.json`:
   in the worker) reads inline XBRL facts, `ixbrl/to-result.ts` maps `CONCEPTS` (`ixbrl/concepts.ts`, order = priority, dimensionless facts
   only) into the same `ParseResult`; PDF/TXT stays as the second path with no further heuristics work. PS3b-2a: consistency checks
   (`result.validation`) are shown on the overview — failure is a banner above the KPI tiles, success one line below them
-  (`ValidationStatus`, `src/lib/parser/validation-view.ts` re-formats the `en-US` numbers in `detail` for Polish display; the export is unchanged).
+  (`ValidationStatus`, `src/lib/parser/validation-view.ts` re-formats the numbers in `detail` for Polish display; the export is unchanged). Contract: every `detail` string is built with
+  `toLocaleString("en-US")` (also in `validate.ts`, which runs in the browser) — a locale-dependent `detail` would let `0,123` read as `0 123`.

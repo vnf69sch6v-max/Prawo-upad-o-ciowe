@@ -1,6 +1,6 @@
 # PS3b-2a — parser: kontrole spójności widoczne dla użytkownika
 
-Status: **wdrożone 08.11.2026, czeka na REVIEW PM** (jeden przebieg, ~250 linii zmian; kryteria 1–7 i 9 sprawdzone, 8 w opisie PR). Następne kroki PS3b-2 są w ROADMAP (2b klik liczby → arkusz z faktem, 2c „wyliczone”, 2d reszta).
+Status: **wdrożone 08.11.2026, REVIEW PM: FIX (locale w `validate.ts`, dotyk) → poprawione** (jeden przebieg, ~250 linii zmian; kryteria 1–7 i 9 sprawdzone, 8 w opisie PR). Następne kroki PS3b-2 są w ROADMAP (2b klik liczby → arkusz z faktem, 2c „wyliczone”, 2d reszta).
 
 ## Dlaczego ten krok (3 zdania)
 Parser XBRL liczy już kontrole spójności (zysk op. + pozaoperacyjne = przed podatkiem, przed podatkiem − podatek = netto, aktywa = zobowiązania + mezzanine + kapitał
@@ -81,7 +81,7 @@ Klik liczby → arkusz z faktem (2b); oznaczenie „wyliczone” (2c); „wszyst
 instrukcja „Filing Detail” (2d); nowe kontrole (np. przepływy: OCF + inwestycyjne + finansowe = zmiana gotówki); zmiana tolerancji `tol()`; zmiana nazw w `to-result.ts`; PDF-owe „Current/Prior”.
 
 ## Ryzyka
-1. **Fałszywy alarm**: tolerancja `max(2, 0,5%)` dobrana pod 2 pliki; pierwszy obcy emitent (np. bez mezzanine, z `Liabilities` wyliczanym) może dać `fail` mimo poprawnych liczb. Baner jest wtedy
+1. **Fałszywy alarm**: tolerancja `max(2, 0,5%)` dobrana pod 2 pliki; pierwszy obcy emitent (np. bez mezzanine, z `Liabilities` wyliczanym) może dać `fail` mimo poprawnych liczb. Przykład z kroku: TXT SpaceX 10-Q (ścieżka PDF, nie jest próbką w UI) daje 3/4, bo parser PDF pomija odsetki w „Pozostałe” (2 791 + 1 025 vs 4 014). Baner jest wtedy
    uciążliwy, ale uczciwy; tekst mówi „sprawdź”, nie „błąd”. Dalsze próbki dopiero z prawdziwych plików właściciela.
 2. **Brak kontroli ≠ poprawnie**: stan `none` nic nie mówi; nie dodajemy komunikatu „nie sprawdzono”, bo przy PDF byłby stale widoczny — do rozważenia w 2d po zobaczeniu, ile plików ma `total < 3`.
 3. **Format liczb w `detail`** zależy od `toLocaleString("en-US")`; zmiana tamtego formatu bez zmiany regexu cicho zepsuje wyświetlanie — stąd test z kryterium 4 na prawdziwym wyniku (kryterium 3).

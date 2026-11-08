@@ -20,7 +20,7 @@ export function ValidationStatus({ result, variant }: { result: ParseResult; var
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
-        className="mt-1 inline-flex min-h-[44px] items-center gap-1 rounded-md px-2 text-[12px] font-semibold text-mk-muted hover:text-rp-data lg:min-h-0 lg:px-1"
+        className="mt-1 inline-flex items-center gap-1 rounded-md px-2 text-[12px] font-semibold text-mk-muted hover:text-rp-data touch:min-h-[44px]"
       >
         {label}
         <ChevronDown className={`h-3.5 w-3.5 transition-transform ${open ? "rotate-180" : ""}`} aria-hidden />
@@ -33,9 +33,9 @@ export function ValidationStatus({ result, variant }: { result: ParseResult; var
           {items.map((i, n) => (
             <li key={n} className="flex items-start gap-2 text-[12px] leading-snug">
               {i.passed ? (
-                <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-rp-data-dim" aria-label={pl.validation.okMark} />
+                <><Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-rp-data-dim" aria-hidden /><span className="sr-only">{pl.validation.okMark}</span></>
               ) : (
-                <X className="mt-0.5 h-3.5 w-3.5 shrink-0 text-rp-warn" aria-label={pl.validation.failMark} />
+                <><X className="mt-0.5 h-3.5 w-3.5 shrink-0 text-rp-warn" aria-hidden /><span className="sr-only">{pl.validation.failMark}</span></>
               )}
               <span className="min-w-0 break-words">
                 <span className="text-rp-data">{i.namePl}</span>

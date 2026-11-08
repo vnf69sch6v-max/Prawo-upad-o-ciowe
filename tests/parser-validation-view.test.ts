@@ -69,6 +69,9 @@ describe("formatEquationPl", () => {
     expect(formatEquationPl("4,014 − -390")).toBe(`4${NBSP}014 − (−390)`);
     expect(formatEquationPl("-421,563 + -403,994")).toBe(`−421${NBSP}563 + (−403${NBSP}994)`);
   });
+  it("ułamek z trzema cyframi (0.123 w en-US) nie staje się grupą tysięcy", () => {
+    expect(formatEquationPl(`${(0.123).toLocaleString("en-US")} vs ${(1234.5).toLocaleString("en-US")}`)).toBe(`0,123 vs 1${NBSP}234,5`);
+  });
   it("liczba bez separatora zostaje", () => {
     expect(formatEquationPl("2791 vs 12")).toBe("2791 vs 12");
   });
