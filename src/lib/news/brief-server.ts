@@ -7,7 +7,7 @@ import { buildTomorrowBlock, type DailyDigest } from '@/lib/news/daily';
 import { nextCalendarDate, prevCalendarDate, warsawDateKey } from '@/lib/news/warsaw-date';
 import {
     BRIEF_REPAIR_PROMPT, BRIEF_SYSTEM_PROMPT, DEEPSEEK_ENDPOINT, DEEPSEEK_MODEL, MAX_OUTPUT_TOKENS,
-    applyRepairs, buildBriefInput, cleanBriefBody, collectBriefAllowed, costUsd, findOffendingPoints, isRepairableReason,
+    applyRepairs, briefRetryNote, buildBriefInput, cleanBriefBody, collectBriefAllowed, costUsd, findOffendingPoints, isRepairableReason,
     normalizeBriefBody, parseBriefJson, validateBrief, ddmm,
     type BriefAllowed, type BriefBody, type BriefDoc, type BriefKind, type DeepseekUsage,
 } from '@/lib/news/brief';
@@ -54,7 +54,7 @@ export async function callDeepseek(
             model: DEEPSEEK_MODEL,
             messages: [
                 { role: 'system', content: system },
-                { role: 'user', content: feedback ? `${user}\n\nPOPRZEDNIA ODPOWIEDŹ ODRZUCONA: ${feedback}. Napisz brief od nowa, używając wyłącznie liczb z danych.` : user },
+                { role: 'user', content: feedback ? `${user}\n\nPOPRZEDNIA ODPOWIEDŹ ODRZUCONA: ${feedback}. ${briefRetryNote(feedback)}` : user },
             ],
             thinking: { type: 'disabled' },
             response_format: { type: 'json_object' },

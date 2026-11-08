@@ -311,6 +311,20 @@ function foreignContext(text: string, num: string): string {
     return i < 0 ? '' : ` (…${text.slice(Math.max(0, i - 25), i + 25).replace(/\s+/g, ' ')}…)`;
 }
 
+/**
+ * Wskazówka dla ponownej próby po odrzuceniu. Stałe „używaj wyłącznie liczb z danych” pasuje tylko do obcych liczb;
+ * przy `powtórzenie: N` liczba JEST w danych, więc takie zdanie niczego nie poprawia (8.11.2026: 3 próby z rzędu „0.4”).
+ * Liczba w powodzie ma kropkę (`0.4`), model pisze po polsku z przecinkiem — podajemy ją w polskim zapisie.
+ */
+export function briefRetryNote(reason: string): string {
+    const m = /^powtórzenie: (-?\d[\d.]*)$/.exec(reason);
+    if (m) {
+        const n = m[1].replace('.', ',');
+        return `Liczba ${n} występuje w dwóch punktach „dane”. Użyj każdej liczby w jednym punkcie „dane”, w drugim opisz zjawisko bez niej i nie dodawaj nowych liczb. Napisz brief od nowa.`;
+    }
+    return 'Napisz brief od nowa, używając wyłącznie liczb z danych.';
+}
+
 export function validateBrief(body: BriefBody, allowed: BriefAllowed): { ok: boolean; reason?: string } {
     if (body.dane.length + body.polska.length + body.swiat.length < 3) return { ok: false, reason: 'za mało punktów' };
     const text = briefText(body);
