@@ -20,6 +20,7 @@ import { ProductRevenueView } from "@/components/parser/ProductRevenueView";
 import { NetCashCard, CapitalReturnsCard } from "@/components/parser/CashAndReturns";
 import { PerShareRow } from "@/components/parser/PerShareRow";
 import { OneOffBanner } from "@/components/parser/OneOffBanner";
+import { ValidationStatus } from "@/components/parser/ValidationStatus";
 import { RawTextInspector } from "@/components/parser/RawTextInspector";
 import { AllRowsView } from "@/components/parser/AllRowsView";
 import { ExportMenu } from "@/components/parser/ExportMenu";
@@ -455,7 +456,9 @@ function ParserView() {
                   {currentPeriod?.label}
                 </span>
               </div>
+              <ValidationStatus result={result} variant="banner" />
               <HeroKpis result={result} />
+              <ValidationStatus result={result} variant="line" />
               <OneOffBanner oneOff={result.oneOff} />
             </DocSection>
 

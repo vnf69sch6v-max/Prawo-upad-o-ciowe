@@ -180,6 +180,18 @@ export const pl = {
   validation: {
     title: "Walidacja danych",
     passed: (a: number, b: number) => `${a}/${b} OK`,
+    okLine: (a: number, b: number) => `Kontrole spójności: ${a}/${b} zgodne`,
+    failTitle: (bad: number, total: number) => `Kontrole spójności: nie przeszło ${bad} z ${total}`,
+    failBody:
+      "Liczby z tej kontroli mogą być przypisane do złej kolumny albo źle odczytane. Nie opieraj na nich decyzji, dopóki nie sprawdzisz ich w oknie źródła (ikona lupy przy wierszu) lub w oryginalnym pliku.",
+    show: "Pokaż",
+    hide: "Ukryj",
+    showAll: "Pokaż wszystkie kontrole",
+    hideAll: "Ukryj kontrole",
+    unitNote: (unit: string) => (unit ? `Kwoty w ${unit} (jednostka raportu). ` : "") +
+      "Kontrola sprawdza, czy liczby z różnych tabel dają się do siebie dodać; nie dowodzi, że spółka podała prawdę.",
+    okMark: "zgodne",
+    failMark: "niezgodne",
   },
   detection: {
     title: "Detekcja",
@@ -310,6 +322,7 @@ export const VALIDATION_PL: Record<string, string> = {
   "Total liquidity = Cash + ST investments": "Płynność = Gotówka + Inwestycje KT",
   "Σ Segment revenue = Total revenue": "Σ Przychody segmentów = Przychody razem",
   "Σ Segment operating income = Total": "Σ Zysk op. segmentów = Razem",
+  "Sum of segments = Total revenue": "Suma segmentów = Przychody razem",
 };
 
 export const RATIO_PL: Record<string, string> = {
@@ -333,7 +346,11 @@ export function pipelineLabelPl(id: string, fallback: string): string {
 }
 
 export function validationNamePl(name: string): string {
-  return VALIDATION_PL[name] ?? name;
+  if (VALIDATION_PL[name]) return VALIDATION_PL[name];
+  // XBRL: „Assets = Liabilities + Equity (FY25 close)” — okres w nawiasie, bilans na każdą datę osobno.
+  const bs = /^Assets = Liabilities \+ Equity \((.+)\)$/.exec(name);
+  if (bs) return `Aktywa = Zobowiązania + mezzanine + Kapitał (${bs[1]})`;
+  return name;
 }
 
 export function ratioLabelPl(key: string, fallback: string): string {

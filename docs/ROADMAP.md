@@ -38,10 +38,17 @@ pozycje PS, po kolei. Wyjątki jak dotąd: awaria danych (`stale`/`error` w `/ap
   - **PS3b — zrobione 07.11.2026, PR #92** (REVIEW: FIX → poprawki 1–7): formularz HTML-first z instrukcją EDGAR, przykład SpaceX (HTML), plakietka
     „dane z XBRL”, pojęcie XBRL w oknie źródła, segmenty i produkty z wymiarów (SpaceX: suma = przychody), Δ% od ujemnej bazy = „n/d”, znak w wierszach
     neutralnych, „wypłata z FCF” i flaga „capex intensity” bez procentów od ujemnej bazy.
-  - **PS3b-2 — następny** (1–2 przebiegi): klik liczby → arkusz (okres, kontekst, `factId`, wartość surowa), oznaczenie „wyliczone” przy FCF, długu netto i
-    marżach, „wszystkie fakty” z wyszukiwarką po pojęciu, baner nieudanych kontroli, scalanie rozciętych tabel bilansu, 10-Q na 390 px bez pustych kolumn Q3,
-    nazwy kolumn bez „Current/Prior” przy 2 datach, nazwy produktów po polsku, sprawdzić na prawdziwym filingu SEC, jak z „Filing Detail” dostać surowy `.htm`
-    (krok 3 instrukcji).
+  - **PS3b-2 — podzielone 08.11.2026** (spec kroku 2a: `docs/specs/2026-11-08-parser-ps3b2-kontrole-spojnosci.md`):
+    - **2a — NASTĘPNY, 1 przebieg (~250 linii): kontrole spójności widoczne w Przeglądzie.** Dziś `result.validation` (SpaceX 5/5, Cipher 4/4) trafia tylko do eksportu,
+      UI go nie pokazuje; krok dodaje linię „Kontrole spójności: n/n zgodne” z rozwijaną listą i baner nad kaflami, gdy kontrola nie przechodzi; polskie nazwy kontroli
+      (3 z 5 kontroli SpaceX byłyby po angielsku), liczby w polskim formacie (dziś „38,752” czyta się jak 38,75).
+    - **2b — klik liczby → arkusz z faktem** (1–2 przebiegi, po 2a): `SourceModal` ma dziś pojęcie, wiersz i etykietę, ale działa na wiersz, nie na komórkę, i nie zna okresu klikniętej
+      liczby, `contextId`, `factId`, wartości surowej (przed `scale`/`sign`), jednostki i `decimals` (są w `IxFact`, nie ma ich w `Metric.values`). Wymaga opcjonalnego odniesienia do faktu
+      przy wartości (zmiana typu, rozmiar eksportu JSON ≤ 4 MB do sprawdzenia) i klikalnych komórek w `StatementTable`.
+    - **2c — oznaczenie „wyliczone”** przy FCF, długu netto, marżach i kaflach `HeroKpis` (dziś tylko zdanie w podpowiedzi plakietki; wiersz `totalDebt` nie ma lupy, bo nie ma `sourceLine`).
+    - **2d — reszta:** „wszystkie fakty” z wyszukiwarką po pojęciu, scalanie rozciętych tabel bilansu, 10-Q na 390 px bez pustych kolumn Q3, nazwy produktów po polsku, sprawdzić na prawdziwym
+      filingu SEC, jak z „Filing Detail” dostać surowy `.htm` (krok 3 instrukcji).
+    - **Wypadło z PS3b-2:** nazwy kolumn „Current/Prior” — występują tylko w ścieżce PDF (`parser.ts`), XBRL daje „Q3 FY26”/„FY25 close”; wraca do PS2c (wstrzymane).
   - **PS3c — ESEF i IFRS** (2 przebiegi, projekt i REVIEW mocniejszym modelem): `.xhtml`, `.zip`, `ifrs-full:`, przecinek dziesiętny, banki.
     Wymaga 2 polskich raportów rocznych ESEF od właściciela („Wymaga właściciela”).
   - **PS3d — opcjonalnie**: HTML bez XBRL przez tabele → tekst → stary parser, z etykietą „zgadywane”.

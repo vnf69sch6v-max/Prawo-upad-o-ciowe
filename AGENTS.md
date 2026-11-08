@@ -408,3 +408,8 @@ Standard scripts in `package.json`:
   PS2b-1: a balance sheet with three header dates (restated comparatives + opening balance) gets three balance
   columns; a note number in front of the columns is dropped at N+1 cells (integers only from 2 columns up); in a
   European document space-joined runs of 3+ groups are split to the row's column count (`resegmentEuropean`).
+  PS3 (`docs/specs/2026-11-07-parser-ixbrl-html.md`): `.htm/.html/.xhtml` is the default path. `ixbrl/read.ts` (regex tokenizer, no DOMParser
+  in the worker) reads inline XBRL facts, `ixbrl/to-result.ts` maps `CONCEPTS` (`ixbrl/concepts.ts`, order = priority, dimensionless facts
+  only) into the same `ParseResult`; PDF/TXT stays as the second path with no further heuristics work. PS3b-2a: consistency checks
+  (`result.validation`) are shown on the overview — failure is a banner above the KPI tiles, success one line below them
+  (`ValidationStatus`, `src/lib/parser/validation-view.ts` re-formats the `en-US` numbers in `detail` for Polish display; the export is unchanged).
