@@ -39,10 +39,10 @@ pozycje PS, po kolei. Wyjątki jak dotąd: awaria danych (`stale`/`error` w `/ap
     „dane z XBRL”, pojęcie XBRL w oknie źródła, segmenty i produkty z wymiarów (SpaceX: suma = przychody), Δ% od ujemnej bazy = „n/d”, znak w wierszach
     neutralnych, „wypłata z FCF” i flaga „capex intensity” bez procentów od ujemnej bazy.
   - **PS3b-2 — podzielone 08.11.2026** (spec kroku 2a: `docs/specs/2026-11-08-parser-ps3b2-kontrole-spojnosci.md`):
-    - **2a — NASTĘPNY, 1 przebieg (~250 linii): kontrole spójności widoczne w Przeglądzie.** Dziś `result.validation` (SpaceX 5/5, Cipher 4/4) trafia tylko do eksportu,
+    - **2a — zrobione 08.11.2026, PR #93** (REVIEW: FIX → poprawki → SHIP; locale `en-US` w `validate.ts`, cel dotyku `touch:`): **kontrole spójności widoczne w Przeglądzie.** Dziś `result.validation` (SpaceX 5/5, Cipher 4/4) trafia tylko do eksportu,
       UI go nie pokazuje; krok dodaje linię „Kontrole spójności: n/n zgodne” z rozwijaną listą i baner nad kaflami, gdy kontrola nie przechodzi; polskie nazwy kontroli
       (3 z 5 kontroli SpaceX byłyby po angielsku), liczby w polskim formacie (dziś „38,752” czyta się jak 38,75).
-    - **2b — klik liczby → arkusz z faktem** (1–2 przebiegi, po 2a): `SourceModal` ma dziś pojęcie, wiersz i etykietę, ale działa na wiersz, nie na komórkę, i nie zna okresu klikniętej
+    - **2b — NASTĘPNY: klik liczby → arkusz z faktem** (1–2 przebiegi): `SourceModal` ma dziś pojęcie, wiersz i etykietę, ale działa na wiersz, nie na komórkę, i nie zna okresu klikniętej
       liczby, `contextId`, `factId`, wartości surowej (przed `scale`/`sign`), jednostki i `decimals` (są w `IxFact`, nie ma ich w `Metric.values`). Wymaga opcjonalnego odniesienia do faktu
       przy wartości (zmiana typu, rozmiar eksportu JSON ≤ 4 MB do sprawdzenia) i klikalnych komórek w `StatementTable`.
     - **2c — oznaczenie „wyliczone”** przy FCF, długu netto, marżach i kaflach `HeroKpis` (dziś tylko zdanie w podpowiedzi plakietki; wiersz `totalDebt` nie ma lupy, bo nie ma `sourceLine`).

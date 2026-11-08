@@ -1,6 +1,6 @@
 # PS3b-2a — parser: kontrole spójności widoczne dla użytkownika
 
-Status: **wdrożone 08.11.2026, REVIEW PM: FIX (locale w `validate.ts`, dotyk) → poprawione** (jeden przebieg, ~250 linii zmian; kryteria 1–7 i 9 sprawdzone, 8 w opisie PR). Następne kroki PS3b-2 są w ROADMAP (2b klik liczby → arkusz z faktem, 2c „wyliczone”, 2d reszta).
+Status: **zrobione 08.11.2026, PR #93 — REVIEW PM: FIX (locale w `validate.ts`, dotyk) → poprawione → SHIP** (jeden przebieg, ~250 linii zmian; kryteria 1–7 i 9 sprawdzone, 8 w opisie PR). Następne kroki PS3b-2 są w ROADMAP (2b klik liczby → arkusz z faktem, 2c „wyliczone”, 2d reszta).
 
 ## Dlaczego ten krok (3 zdania)
 Parser XBRL liczy już kontrole spójności (zysk op. + pozaoperacyjne = przed podatkiem, przed podatkiem − podatek = netto, aktywa = zobowiązania + mezzanine + kapitał
