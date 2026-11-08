@@ -1,5 +1,7 @@
 # Brief: właściwa wskazówka przy powodzie „powtórzenie” — 2026-11-08
 
+Status: **zrobione 08.11.2026** (PR #94; kryterium 4 — odczyt po cronie 17:20 UTC — jeszcze do potwierdzenia).
+
 Decyzja PM: **opcja (a)** — powód-specyficzna wskazówka dla ponownej próby. Opcja (b) (lokalne wycinanie liczby) odrzucona.
 Bramka `validateBrief` bez zmian. Brak nowych serii danych, więc bez `DatasetSpec` (freshness `news-brief` już istnieje).
 
