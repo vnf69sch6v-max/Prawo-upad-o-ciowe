@@ -6,6 +6,7 @@ import {
     cleanBriefBody, normalizeBriefBody, normalizeBriefText, parseBriefJson, validateBrief, type BriefInputData,
 } from '@/lib/news/brief';
 import { callDeepseek, runBrief } from '@/lib/news/brief-server';
+import { briefRetryNote } from '@/lib/news/brief';
 import { validateSummary } from '@/lib/news/summary';
 import type { DailyDigest } from '@/lib/news/daily';
 import realBrief from './fixtures/brief-2026-10-30.json';
@@ -194,5 +195,26 @@ describe('wywołanie DeepSeek', () => {
     it('odpowiedź z reasoning_content jest odrzucana', async () => {
         const f = vi.fn(async () => new Response(JSON.stringify({ choices: [{ message: { content: '{}', reasoning_content: 'myślę…' } }] })));
         await expect(callDeepseek('k', 'x', 100, f as unknown as typeof fetch)).rejects.toThrow(/reasoning_content/);
+    });
+
+    it('ponowna próba: wskazówka zależy od powodu (powtórzenie ≠ obca liczba)', async () => {
+        const note = briefRetryNote('powtórzenie: 0.4');
+        expect(note).toContain('0,4');
+        expect(note).toContain('w jednym punkcie');
+        expect(note).not.toContain('używając wyłącznie liczb z danych');
+        expect(briefRetryNote('powtórzenie: 2.8')).toContain('2,8');
+        expect(briefRetryNote('powtórzenie: 4181')).toContain('4181');
+        for (const r of ['liczby spoza wejścia: 6', 'liczebnik słowny spoza wejścia: „pięciu”', 'markdown', 'meta: „x”', 'niepoprawny JSON']) {
+            expect(briefRetryNote(r)).toBe('Napisz brief od nowa, używając wyłącznie liczb z danych.');
+        }
+    });
+
+    it('callDeepseek: z powodem „powtórzenie” wiadomość niesie wskazówkę, bez powodu jest równa wejściu', async () => {
+        const f = vi.fn(async () => new Response(JSON.stringify({ choices: [{ message: { content: '{}' } }], usage: {} })));
+        await callDeepseek('k', 'wejście', 100, f as unknown as typeof fetch, 'powtórzenie: 0.4');
+        await callDeepseek('k', 'wejście', 100, f as unknown as typeof fetch);
+        const user = (i: number) => JSON.parse((f.mock.calls[i] as unknown as [string, RequestInit])[1].body as string).messages[1].content as string;
+        expect(user(0)).toContain('POPRZEDNIA ODPOWIEDŹ ODRZUCONA: powtórzenie: 0.4. Liczba 0,4');
+        expect(user(1)).toBe('wejście');
     });
 });

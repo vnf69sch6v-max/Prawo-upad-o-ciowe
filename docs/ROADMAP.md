@@ -201,6 +201,11 @@ przebieg → PM tnie go na widoczne kawałki (np. najpierw sama strona z danymi,
     osobnym małym promptem, walidacja całości tą samą bramką + lokalny bezpiecznik; `maxDuration` crona 210 → 260. Status: **zrobione 6.11.2026** (REVIEW PM w PR). Do sprawdzenia po
     cronie 17:20 UTC: `/status` → `brief` ok, w logu Vercel „naprawiono N pkt”; miara: 7 dni z rzędu `news-brief` fresh, a przy ≥2 z 7
     odrzuceń — eskalacja do właściciela z kosztem mocniejszego modelu (`DEEPSEEK_MODEL`).
+    8.11 (niedziela) dzienny padł 3 próbami z 3 na „powtórzenie: 0.4” (tygodniowy ok; `news-brief` stale, ostatni 7.11). Przyczyna: ponowna próba
+    dostaje stałą wskazówkę „używając wyłącznie liczb z danych”, która dla powtórzenia jest myląca. Decyzja PM 8.11 (opcja a, spec
+    `docs/specs/2026-11-08-brief-feedback-powtorzenie.md`): `briefRetryNote(reason)` — wskazówka specyficzna dla „powtórzenia”, reszta powodów bez zmian;
+    bramka i naprawa 6.11 nietknięte. Status: do implementacji (~25 linii + testy). Eskalacja: „powtórzenie” ≥2 razy w 7 dni → (b′) usunięcie całego
+    drugiego punktu `dane` (osobny spec). Miara: 7 dni bez „powtórzenia” w odrzuceniach.
 4b. **Podsumowanie dnia i brief — data, język, wygląd** — **zrobione 30.10.2026** (prośba właściciela, PM: SHIP po FIX;
     `claude/nice-wozniak-8xnus6`, spec `docs/specs/2026-10-30-podsumowanie-i-brief-wyglad.md`): dwa różne EUR/PLN
     na jednym ekranie bez daty, meta-komentarze modelu, angielski format liczb, pusta połowa karty, czerwone tagi.
