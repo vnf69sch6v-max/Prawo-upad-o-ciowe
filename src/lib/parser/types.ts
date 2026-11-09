@@ -240,6 +240,21 @@ export interface ExtractedRow {
   rawLine: string;
 }
 
+/** PS3b-2b-1: fakt XBRL, z którego wzięto liczbę (tylko ścieżka HTML). Boczna mapa, nie `MetricValue` — eksport jej nie niesie. */
+export interface FactRef {
+  periodKey: string;
+  factId: string | null;
+  contextId: string;
+  qname: string;
+  /** Okres kontekstu: „start|end” albo data (jak `IxFact.sig`). */
+  period: string;
+  unit: string | null;
+  /** Wartość pełna po `scale` i `sign`, w jednostkach (dolary, akcje). */
+  value: number;
+  scale: number;
+  decimals: string | null;
+}
+
 export interface ParseResult {
   detection: Detection;
   metrics: Metric[];
@@ -259,4 +274,6 @@ export interface ParseResult {
   rawText: string;
   charCount: number;
   pages: number;
+  /** Tylko wynik z HTML/XBRL; PDF/TXT nie ma tego pola. */
+  factRefs?: Partial<Record<MetricKey, FactRef[]>>;
 }

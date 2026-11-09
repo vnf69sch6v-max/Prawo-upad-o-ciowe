@@ -539,7 +539,13 @@ function ParserView() {
         </div>
       </ScaleProvider>
 
-      <SourceModal metric={sourceMetric} rawText={result.rawText} onClose={() => setSourceMetric(null)} />
+      <SourceModal
+        metric={sourceMetric}
+        rawText={result.rawText}
+        factRefs={sourceMetric ? result.factRefs?.[sourceMetric.key] : undefined}
+        periods={[...result.detection.periods.income, ...result.detection.periods.balance]}
+        onClose={() => setSourceMetric(null)}
+      />
     </div>
   );
 }

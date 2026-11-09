@@ -427,8 +427,9 @@ export function toCSV(result: ParseResult): string {
 
 export function toJSON(result: ParseResult): string {
   // Surowy tekst wylatuje — JSON ma zostać przy danych strukturalnych.
-  const { rawText, ...rest } = result;
+  const { rawText, factRefs, ...rest } = result;
   void rawText;
+  void factRefs; // PS3b-2b-1: fakty XBRL są tylko do okna źródła, eksport zostaje bajt w bajt
   return JSON.stringify(rest, null, 2);
 }
 

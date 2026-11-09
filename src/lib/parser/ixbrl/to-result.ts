@@ -4,7 +4,7 @@
 import { HEADLINE_METRICS, PATTERNS } from "../patterns";
 import { computeCapitalReturns, computeDerived, computeNetCash, buildPerShareHeadline } from "../derived";
 import type {
-  Detection, ExtractedRow, Metric, MetricKey, ParseResult, Period, PipelineStage, ValidationCheck,
+  Detection, ExtractedRow, FactRef, Metric, MetricKey, ParseResult, Period, PipelineStage, ValidationCheck,
 } from "../types";
 import { readIxbrl, type IxDocument, type IxFact } from "./read";
 import { ixSegments } from "./segments";
@@ -147,6 +147,7 @@ export function ixbrlToResult(doc: IxDocument, fileBytes: number): ParseResult {
   // ---- Metrics ----
   const metrics: Metric[] = [];
   const byKey = new Map<MetricKey, Metric>();
+  const factRefs: Partial<Record<MetricKey, FactRef[]>> = {};
   const meta: { key: MetricKey; label: string; statement: Metric["statement"] }[] = [
     ...PATTERNS.filter((p) => p.key !== "totalDebt" && p.key !== "totalOpEx").map((p) => ({ key: p.key, label: p.label, statement: p.statement })),
     { key: "totalDebt", label: "Total debt", statement: "balance" },
@@ -189,6 +190,10 @@ export function ixbrlToResult(doc: IxDocument, fileBytes: number): ParseResult {
           sourceLine: first.rowId !== null ? lineOfRow.get(first.rowId) : undefined,
           note: `${first.family}:${first.concept}`,
         };
+        factRefs[key] = best.hits.flatMap((f, i) => f ? [{
+          periodKey: periods[i].key, factId: f.factId, contextId: f.contextId, qname: f.qname, period: f.sig,
+          unit: f.unit, value: f.value, scale: f.scale, decimals: f.decimals,
+        }] : []);
       }
     }
     if (!metric) {
@@ -245,6 +250,7 @@ export function ixbrlToResult(doc: IxDocument, fileBytes: number): ParseResult {
     detection, metrics, extractedRows: rows, segments, productRevenue: products, derived, netCash, capitalReturns,
     perShare, oneOff: { detected: false }, validation, pipeline, matchedCount, totalMetrics: HEADLINE_METRICS.length,
     rawText, charCount: rawText.length, pages: 1,
+    ...(Object.keys(factRefs).length ? { factRefs } : {}),
   };
 }
 

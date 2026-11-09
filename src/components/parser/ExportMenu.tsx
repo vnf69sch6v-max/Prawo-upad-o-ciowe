@@ -18,7 +18,7 @@ export function ExportMenu({ result }: { result: ParseResult }) {
   const notify = useNotify();
 
   const download = async (format: "csv" | "xlsx" | "json") => {
-    const body = JSON.stringify({ result: { ...result, rawText: "" }, format });
+    const body = JSON.stringify({ result: { ...result, rawText: "", factRefs: undefined }, format });
     if (!exportBodyFits(body)) {
       notify("error", pl.export.tooLarge);
       return;
