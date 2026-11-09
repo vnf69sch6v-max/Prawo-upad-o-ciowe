@@ -43,10 +43,11 @@ pozycje PS, po kolei. Wyjątki jak dotąd: awaria danych (`stale`/`error` w `/ap
       UI go nie pokazuje; krok dodaje linię „Kontrole spójności: n/n zgodne” z rozwijaną listą i baner nad kaflami, gdy kontrola nie przechodzi; polskie nazwy kontroli
       (3 z 5 kontroli SpaceX byłyby po angielsku), liczby w polskim formacie (dziś „38,752” czyta się jak 38,75).
     - **2b — podzielone 09.11.2026** (klik liczby → arkusz z faktem; `SourceModal` działa na wiersz, nie na komórkę, i nie zna okresu, `contextId`, `factId`, `decimals` — są w `IxFact`, nie w `Metric.values`):
-      - **2b-1 — NASTĘPNY, PLAN gotowy** (spec `docs/specs/2026-11-09-parser-ps3b2-fakty-w-oknie-zrodla.md`, 1 przebieg, ~150–200 linii): okno źródła pokazuje karty faktów
+      - **2b-1 — zrobione 09.11.2026, PR #95** (REVIEW: SHIP; spec `docs/specs/2026-11-09-parser-ps3b2-fakty-w-oknie-zrodla.md`): okno źródła pokazuje karty faktów
         wiersza (okres, wartość pełna, skala, `decimals` po polsku, `factId`, `contextId` + daty kontekstu). Dane w **bocznej mapie** `ParseResult.factRefs` (nie zmienia `Metric.values`,
-        hashe parytetu PDF/TXT bez zmian, wycinana z eksportu JSON — bajty bez zmian). Bez nowych klikalnych elementów w tabelach.
-      - **2b-2 — potem:** klik w komórkę `StatementTable` otwiera okno na wybranym okresie (podświetlona karta); wymaga decyzji dla komórek wyliczonych (Δ, FCF) → łączy się z 2c.
+        hashe parytetu PDF/TXT bez zmian, wycinana z eksportu JSON — `toJSON` SpaceX i Cipher identyczny bajt w bajt z `main` f6d6e92, SHA-256 zweryfikowany przy review;
+        mapa SpaceX = 19,5 kB). Bez nowych klikalnych elementów.
+      - **2b-2 — NASTĘPNY:** klik w komórkę `StatementTable` otwiera okno na wybranym okresie (podświetlona karta); wymaga decyzji dla komórek wyliczonych (Δ, FCF) → łączy się z 2c.
     - **2c — oznaczenie „wyliczone”** przy FCF, długu netto, marżach i kaflach `HeroKpis` (dziś tylko zdanie w podpowiedzi plakietki; wiersz `totalDebt` nie ma lupy, bo nie ma `sourceLine`).
     - **2d — reszta:** „wszystkie fakty” z wyszukiwarką po pojęciu, scalanie rozciętych tabel bilansu, 10-Q na 390 px bez pustych kolumn Q3, nazwy produktów po polsku, sprawdzić na prawdziwym
       filingu SEC, jak z „Filing Detail” dostać surowy `.htm` (krok 3 instrukcji).

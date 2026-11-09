@@ -1,6 +1,6 @@
 # PS3b-2b-1 — parser: okno źródła pokazuje fakty XBRL (okres, kontekst, factId, skala, dokładność)
 
-Status: **PLAN 09.11.2026** (jeden przebieg, ok. 150–200 linii zmian razem z testem). Krok 2b z ROADMAP podzielony: **2b-1 = ten spec**, 2b-2 = klik w komórkę (zostaje).
+Status: **ZROBIONE 09.11.2026, PR #95 (REVIEW: SHIP)**; plan z 09.11.2026 (jeden przebieg, ok. 150–200 linii zmian razem z testem). Krok 2b z ROADMAP podzielony: **2b-1 = ten spec**, 2b-2 = klik w komórkę (zostaje).
 
 ## Dlaczego ten krok (3 zdania)
 Pełne 2b (klik w liczbę → okno) wymaga klikalnych komórek w `StatementTable` i rozstrzygnięcia, co robi komórka bez faktu (Δ, wyliczone, kolumny PDF), więc nie mieści się w jednym przebiegu; wycinek „okno źródła pokazuje fakty całego wiersza” daje 80% wartości
