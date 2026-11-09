@@ -42,9 +42,12 @@ pozycje PS, po kolei. Wyjątki jak dotąd: awaria danych (`stale`/`error` w `/ap
     - **2a — zrobione 08.11.2026, PR #93** (REVIEW: FIX → poprawki → SHIP; locale `en-US` w `validate.ts`, cel dotyku `touch:`): **kontrole spójności widoczne w Przeglądzie.** Dziś `result.validation` (SpaceX 5/5, Cipher 4/4) trafia tylko do eksportu,
       UI go nie pokazuje; krok dodaje linię „Kontrole spójności: n/n zgodne” z rozwijaną listą i baner nad kaflami, gdy kontrola nie przechodzi; polskie nazwy kontroli
       (3 z 5 kontroli SpaceX byłyby po angielsku), liczby w polskim formacie (dziś „38,752” czyta się jak 38,75).
-    - **2b — NASTĘPNY: klik liczby → arkusz z faktem** (1–2 przebiegi): `SourceModal` ma dziś pojęcie, wiersz i etykietę, ale działa na wiersz, nie na komórkę, i nie zna okresu klikniętej
-      liczby, `contextId`, `factId`, wartości surowej (przed `scale`/`sign`), jednostki i `decimals` (są w `IxFact`, nie ma ich w `Metric.values`). Wymaga opcjonalnego odniesienia do faktu
-      przy wartości (zmiana typu, rozmiar eksportu JSON ≤ 4 MB do sprawdzenia) i klikalnych komórek w `StatementTable`.
+    - **2b — podzielone 09.11.2026** (klik liczby → arkusz z faktem; `SourceModal` działa na wiersz, nie na komórkę, i nie zna okresu, `contextId`, `factId`, `decimals` — są w `IxFact`, nie w `Metric.values`):
+      - **2b-1 — zrobione 09.11.2026, PR #95** (REVIEW: SHIP; spec `docs/specs/2026-11-09-parser-ps3b2-fakty-w-oknie-zrodla.md`): okno źródła pokazuje karty faktów
+        wiersza (okres, wartość pełna, skala, `decimals` po polsku, `factId`, `contextId` + daty kontekstu). Dane w **bocznej mapie** `ParseResult.factRefs` (nie zmienia `Metric.values`,
+        hashe parytetu PDF/TXT bez zmian, wycinana z eksportu JSON — `toJSON` SpaceX i Cipher identyczny bajt w bajt z `main` f6d6e92, SHA-256 zweryfikowany przy review;
+        mapa SpaceX = 19,5 kB). Bez nowych klikalnych elementów.
+      - **2b-2 — NASTĘPNY:** klik w komórkę `StatementTable` otwiera okno na wybranym okresie (podświetlona karta); wymaga decyzji dla komórek wyliczonych (Δ, FCF) → łączy się z 2c.
     - **2c — oznaczenie „wyliczone”** przy FCF, długu netto, marżach i kaflach `HeroKpis` (dziś tylko zdanie w podpowiedzi plakietki; wiersz `totalDebt` nie ma lupy, bo nie ma `sourceLine`).
     - **2d — reszta:** „wszystkie fakty” z wyszukiwarką po pojęciu, scalanie rozciętych tabel bilansu, 10-Q na 390 px bez pustych kolumn Q3, nazwy produktów po polsku, sprawdzić na prawdziwym
       filingu SEC, jak z „Filing Detail” dostać surowy `.htm` (krok 3 instrukcji).

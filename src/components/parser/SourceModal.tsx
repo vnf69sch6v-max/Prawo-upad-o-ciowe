@@ -5,7 +5,8 @@ import { createPortal } from "react-dom";
 import { X, FileSearch } from "lucide-react";
 import { Badge } from "@/components/parser/ui/badge";
 import { metricLabelPl, pl } from "@/lib/parser/copy.pl";
-import type { Metric } from "@/lib/parser/types";
+import { describeDecimals, describeScale, formatFactPeriod, formatFullValue } from "@/lib/parser/fact-view";
+import type { FactRef, Metric, Period } from "@/lib/parser/types";
 
 /**
  * Provenance: show the exact extracted line(s) a metric was read from.
@@ -19,10 +20,15 @@ import type { Metric } from "@/lib/parser/types";
 export function SourceModal({
   metric,
   rawText,
+  factRefs,
+  periods = [],
   onClose,
 }: {
   metric: Metric | null;
   rawText: string;
+  /** PS3b-2b-1: fakty XBRL wiersza (tylko ścieżka HTML). */
+  factRefs?: FactRef[];
+  periods?: Period[];
   onClose: () => void;
 }) {
   React.useEffect(() => {
@@ -59,7 +65,7 @@ export function SourceModal({
             <FileSearch className="h-4 w-4 shrink-0 text-rp-data-muted" aria-hidden />
             <div className="min-w-0">
               <p className="text-sm font-semibold">{metricLabelPl(metric.key, metric.label)}</p>
-              <p className="text-xs text-rp-data-muted sm:text-[11px]">
+              <p className="break-words text-xs text-rp-data-muted [overflow-wrap:anywhere] sm:text-[11px]">
                 {pl.source.sourceLine(idx >= 0 ? String(idx + 1) : "?")}
                 {metric.note && /^[\w-]+:[A-Za-z]/.test(metric.note) ? ` · ${pl.source.concept}: ${metric.note}` : ""}
               </p>
@@ -80,10 +86,40 @@ export function SourceModal({
               <Badge variant="outline">{pl.source.matched(metric.matchedLabel)}</Badge>
             )}
             {metric.note && (
-              <Badge variant={/aggregat/i.test(metric.note) ? "warning" : "outline"}>{metric.note}</Badge>
+              <Badge variant={/aggregat/i.test(metric.note) ? "warning" : "outline"} className="max-w-full whitespace-normal break-all">{metric.note}</Badge>
             )}
             <Badge variant="accent">{metric.confidence}</Badge>
           </div>
+          {factRefs && factRefs.length > 0 && (
+            <section aria-label={pl.source.factsTitle(factRefs.length)} className="space-y-2">
+              <p className="text-sm font-semibold">{pl.source.factsTitle(factRefs.length)}</p>
+              <p className="text-xs leading-relaxed text-rp-data-muted">{pl.source.factsHint}</p>
+              {factRefs.map((f) => {
+                const period = periods.find((p) => p.key === f.periodKey);
+                const rows: [string, string][] = [
+                  [pl.source.factFull, formatFullValue(f.value, f.unit)],
+                  [pl.source.factScale, describeScale(f.scale)],
+                  [pl.source.factDecimals, describeDecimals(f.decimals)],
+                  [pl.source.factId, f.factId ?? pl.source.factNoId],
+                  [pl.source.factContext, `${f.contextId} · ${formatFactPeriod(f.period)}`],
+                  [pl.source.factConcept, f.qname],
+                ];
+                return (
+                  <div key={f.periodKey} className="rounded-lg border border-rp-hairline bg-rp-surface p-3">
+                    <p className="text-xs font-semibold">{period?.short ?? f.periodKey}</p>
+                    <dl className="mt-1.5 space-y-1 text-xs sm:text-[11px]">
+                      {rows.map(([k, v]) => (
+                        <div key={k} className="grid grid-cols-[6.5rem_1fr] gap-2">
+                          <dt className="text-rp-data-muted">{k}</dt>
+                          <dd className="num min-w-0 break-all text-rp-data">{v}</dd>
+                        </div>
+                      ))}
+                    </dl>
+                  </div>
+                );
+              })}
+            </section>
+          )}
           <pre className="num overflow-x-auto overscroll-x-contain rounded-lg border border-rp-hairline bg-rp-surface p-3 text-xs leading-relaxed sm:text-[11px]">
             {snippet.map((s) => (
               <div key={s.n} className={s.n === idx + 1 ? "rounded bg-rp-data/10 px-1 text-rp-data" : "px-1 text-rp-data-muted"}>
