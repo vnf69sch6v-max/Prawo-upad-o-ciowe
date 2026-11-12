@@ -1,6 +1,6 @@
 # PS3b-2c — parser: oznaczenie „wyliczone” przy liczbach, których nie ma w sprawozdaniu
 
-Status: **do wdrożenia** (PLAN 12.11.2026). Rozmiar: ≤ ~250 linii, bez zmian w `parser.ts`, `ixbrl/*` i `ParseResult` (hashe parytetu bez zmian).
+Status: **zrobione 12.11.2026, PR #96** (REVIEW: SHIP). Rozmiar: ≤ ~250 linii, bez zmian w `parser.ts`, `ixbrl/*` i `ParseResult` (hashe parytetu bez zmian).
 
 ## Problem i wartość
 Analityk wgrywa raport i widzi FCF, dług netto, marże i kafle `HeroKpis`. Dziś nie odróżnia liczby przepisanej ze sprawozdania

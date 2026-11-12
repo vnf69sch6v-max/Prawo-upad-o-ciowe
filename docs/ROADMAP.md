@@ -47,8 +47,8 @@ pozycje PS, po kolei. Wyjątki jak dotąd: awaria danych (`stale`/`error` w `/ap
         wiersza (okres, wartość pełna, skala, `decimals` po polsku, `factId`, `contextId` + daty kontekstu). Dane w **bocznej mapie** `ParseResult.factRefs` (nie zmienia `Metric.values`,
         hashe parytetu PDF/TXT bez zmian, wycinana z eksportu JSON — `toJSON` SpaceX i Cipher identyczny bajt w bajt z `main` f6d6e92, SHA-256 zweryfikowany przy review;
         mapa SpaceX = 19,5 kB). Bez nowych klikalnych elementów.
-      - **2b-2 — po 2c:** klik w komórkę `StatementTable` otwiera okno na wybranym okresie (podświetlona karta); wymaga decyzji dla komórek wyliczonych (Δ, FCF) → łączy się z 2c.
-    - **2c — NASTĘPNY (spec 12.11.2026: `docs/specs/2026-11-12-parser-ps3b2c-wyliczone.md`, ≤ ~250 linii; robić przed 2b-2).** Oznaczenie „wyliczone” przy FCF, długu netto, marżach i kaflach `HeroKpis` (dziś tylko zdanie w podpowiedzi plakietki; wiersz `totalDebt` nie ma lupy, bo nie ma `sourceLine`).
+      - **2b-2 — NASTĘPNY (2c zrobione; komórki wyliczone = okno „jak policzono” z `DERIVED_FORMULAS`, nie okno faktu):** klik w komórkę `StatementTable` otwiera okno na wybranym okresie (podświetlona karta); wymaga decyzji dla komórek wyliczonych (Δ, FCF) → łączy się z 2c.
+    - **2c — zrobione 12.11.2026, PR #96** (REVIEW: SHIP po jednej poprawce; spec `docs/specs/2026-11-12-parser-ps3b2c-wyliczone.md`). Oznaczenie „wyliczone” przy FCF, długu netto, marżach i kaflach `HeroKpis` (dziś tylko zdanie w podpowiedzi plakietki; wiersz `totalDebt` nie ma lupy, bo nie ma `sourceLine`).
     - **2d — reszta:** „wszystkie fakty” z wyszukiwarką po pojęciu, scalanie rozciętych tabel bilansu, 10-Q na 390 px bez pustych kolumn Q3, nazwy produktów po polsku, sprawdzić na prawdziwym
       filingu SEC, jak z „Filing Detail” dostać surowy `.htm` (krok 3 instrukcji).
     - **Wypadło z PS3b-2:** nazwy kolumn „Current/Prior” — występują tylko w ścieżce PDF (`parser.ts`), XBRL daje „Q3 FY26”/„FY25 close”; wraca do PS2c (wstrzymane).
