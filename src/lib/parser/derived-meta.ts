@@ -84,7 +84,7 @@ export const DERIVED_FORMULAS: Record<DerivedKey, DerivedFormula> = {
   },
   delta: {
     labelPl: "Zmiana Δ%",
-    formulaPl: "Δ% = (okres bieżący − okres porównawczy) ÷ |okres porównawczy| × 100; przy ujemnej bazie: n/d",
+    formulaPl: "Δ% = (okres bieżący − okres porównawczy) ÷ okres porównawczy × 100; przy bazie ≤ 0: n/d",
   },
 };
 

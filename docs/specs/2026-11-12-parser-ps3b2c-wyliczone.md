@@ -40,6 +40,10 @@ Prywatność: bez zmian (przetwarzanie w przeglądarce, brak nowych danych; `/pr
 7. PDF/TXT (stary parser): plakietki tam, gdzie wiersz jest wyliczany w `derived`; brak regresji układu tabeli.
 8. ROADMAP: 2c do „Zrobione” z PR; 2b-2 odblokowane z notatką „wyliczone = okno ‘jak policzono’”.
 
+## Odstępstwa (REVIEW 12.11.2026)
+- Δ% i intensywność capexu mają tylko wzór, bez składników: to porównania dwóch okresów, a liczby capexu są już w zdaniu flagi. Typ `DerivedFormula` dopuszcza brak `inputs`.
+- Plakietka w kaflach `HeroKpis` pojawia się tylko, gdy wartość istnieje (FCF albo gotówka netto ≠ „—”).
+
 ## Poza zakresem
 Klik w komórkę (2b-2), wyszukiwarka faktów (2d), zmiany heurystyk PDF, nowe wskaźniki, zmiany w eksporcie.
 

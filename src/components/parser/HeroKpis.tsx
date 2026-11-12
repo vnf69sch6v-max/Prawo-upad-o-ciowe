@@ -54,7 +54,7 @@ export function HeroKpis({ result }: { result: ParseResult }) {
       sub: lp?.short,
       delta: deltaChange(fcf, fcfPrior),
       dir: "auto" as const,
-      derived: "fcf" as DerivedKey,
+      derived: fcf !== null ? ("fcf" as DerivedKey) : undefined,
       pk: lp?.key,
     },
     {
@@ -63,7 +63,7 @@ export function HeroKpis({ result }: { result: ParseResult }) {
       sub: nc?.periodLabel,
       delta: null as DeltaValue,
       dir: "neutral" as const,
-      derived: "netDebt" as DerivedKey,
+      derived: nc?.netCashInclStInv != null ? ("netDebt" as DerivedKey) : undefined,
       pk: nc?.periodKey,
     },
   ] as { label: string; value: string; sub?: string; delta: DeltaValue; dir: "auto" | "neutral"; derived?: DerivedKey; pk?: string }[];
