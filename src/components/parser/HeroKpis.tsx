@@ -4,6 +4,8 @@ import { Metric, Delta } from "@/components/parser/ui/primitives";
 import { useScale } from "@/components/parser/ScaleContext";
 import { deltaChange, type DeltaValue } from "@/lib/parser/format";
 import { pl } from "@/lib/parser/copy.pl";
+import { DerivedBadge } from "@/components/parser/DerivedBadge";
+import { DERIVED_FORMULAS, type DerivedKey } from "@/lib/parser/derived-meta";
 import type { MetricKey, ParseResult, Period } from "@/lib/parser/types";
 
 function priorSameDuration(income: Period[], current: Period | undefined): Period | undefined {
@@ -52,6 +54,8 @@ export function HeroKpis({ result }: { result: ParseResult }) {
       sub: lp?.short,
       delta: deltaChange(fcf, fcfPrior),
       dir: "auto" as const,
+      derived: "fcf" as DerivedKey,
+      pk: lp?.key,
     },
     {
       label: nc?.isNetCash ? pl.hero.netCash : pl.hero.netDebt,
@@ -59,14 +63,21 @@ export function HeroKpis({ result }: { result: ParseResult }) {
       sub: nc?.periodLabel,
       delta: null as DeltaValue,
       dir: "neutral" as const,
+      derived: "netDebt" as DerivedKey,
+      pk: nc?.periodKey,
     },
-  ];
+  ] as { label: string; value: string; sub?: string; delta: DeltaValue; dir: "auto" | "neutral"; derived?: DerivedKey; pk?: string }[];
 
   return (
     <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
       {tiles.map((t) => (
         <div key={t.label} className="mk-card mk-card-pad rp-kpi">
           <Metric label={t.label} value={t.value} sub={t.sub} />
+          {t.derived && (
+            <div className="mt-1">
+              <DerivedBadge k={t.derived} period={t.sub} inputs={t.pk ? DERIVED_FORMULAS[t.derived].inputs?.(result, t.pk) : undefined} />
+            </div>
+          )}
           {t.delta !== null && t.delta !== undefined && (
             <div className="mt-1.5">
               <Delta value={t.delta} direction={t.dir} />

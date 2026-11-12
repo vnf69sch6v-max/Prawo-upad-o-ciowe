@@ -7,6 +7,7 @@ import { DataCell, Delta } from "@/components/parser/ui/primitives";
 import { useScale } from "@/components/parser/ScaleContext";
 import { cn } from "@/lib/utils/cn";
 import { deltaChange } from "@/lib/parser/format";
+import { DerivedBadge } from "@/components/parser/DerivedBadge";
 import { metricLabelPl, pl } from "@/lib/parser/copy.pl";
 import { Sigma, FileSearch } from "lucide-react";
 import type { Metric, MetricKey, Period } from "@/lib/parser/types";
@@ -84,8 +85,8 @@ export function StatementTable({
                 </th>
               ))}
               {deltas.map((d) => (
-                <th key={d.label} className="col-header px-3 py-2 text-right">
-                  Δ {d.label}
+                <th key={d.label} className="col-header whitespace-nowrap px-3 py-2 text-right">
+                  Δ {d.label} <DerivedBadge k="delta" />
                 </th>
               ))}
             </tr>

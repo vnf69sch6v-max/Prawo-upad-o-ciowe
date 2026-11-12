@@ -6,12 +6,17 @@ import { Wallet, HandCoins } from "lucide-react";
 import { useScale } from "@/components/parser/ScaleContext";
 import { fmtPct } from "@/lib/parser/format";
 import { pl } from "@/lib/parser/copy.pl";
+import { DerivedBadge } from "@/components/parser/DerivedBadge";
+import type { DerivedKey } from "@/lib/parser/derived-meta";
 import type { NetCashResult, CapitalReturnsResult } from "@/lib/parser/types";
 
-function Row({ label, value, emphasis }: { label: string; value: string; emphasis?: boolean }) {
+function Row({ label, value, emphasis, derived }: { label: string; value: string; emphasis?: boolean; derived?: DerivedKey }) {
   return (
-    <div className="flex items-center justify-between py-1">
-      <span className="text-[13px] text-rp-data-muted">{label}</span>
+    <div className="flex items-center justify-between gap-2 py-1">
+      <span className="flex flex-wrap items-center gap-1.5 text-[13px] text-rp-data-muted">
+        {label}
+        {derived && <DerivedBadge k={derived} />}
+      </span>
       <span className={"num text-[13px] " + (emphasis ? "font-medium text-rp-data" : "text-rp-data")}>{value}</span>
     </div>
   );
@@ -35,8 +40,8 @@ export function NetCashCard({ netCash }: { netCash: NetCashResult | null }) {
         <Row label={pl.cash.stInv} value={fmt(netCash.shortTermInvestments, { unit: true })} />
       )}
       <div className="my-1 h-px bg-rp-hairline" />
-      <Row label={pl.cash.netExcl} value={fmt(netCash.netCashExclStInv, { unit: true })} emphasis />
-      <Row label={pl.cash.netIncl} value={fmt(netCash.netCashInclStInv, { unit: true })} emphasis />
+      <Row label={pl.cash.netExcl} value={fmt(netCash.netCashExclStInv, { unit: true })} emphasis derived="netDebt" />
+      <Row label={pl.cash.netIncl} value={fmt(netCash.netCashInclStInv, { unit: true })} emphasis derived="netDebt" />
     </Panel>
   );
 }
@@ -54,7 +59,7 @@ export function CapitalReturnsCard({ cr }: { cr: CapitalReturnsResult | null }) 
       <Row label={pl.cash.buybacks} value={fmt(cr.buybacks, { unit: true })} />
       <div className="my-1 h-px bg-rp-hairline" />
       <Row label={pl.cash.totalReturned} value={fmt(cr.total, { unit: true })} emphasis />
-      {cr.payoutOfFcf !== null && (cr.fcf ?? 0) > 0 && <Row label={pl.cash.payoutFcf} value={fmtPct(cr.payoutOfFcf)} />}
+      {cr.payoutOfFcf !== null && (cr.fcf ?? 0) > 0 && <Row label={pl.cash.payoutFcf} value={fmtPct(cr.payoutOfFcf)} derived="payoutOfFcf" />}
     </Panel>
   );
 }
