@@ -7,6 +7,8 @@ import { useScale } from "@/components/parser/ScaleContext";
 import { fmtPct } from "@/lib/parser/format";
 import { pl } from "@/lib/parser/copy.pl";
 import { TrendingUp } from "lucide-react";
+import { DerivedBadge } from "@/components/parser/DerivedBadge";
+import type { DerivedKey } from "@/lib/parser/derived-meta";
 import type { DerivedResult, Period } from "@/lib/parser/types";
 
 /**
@@ -34,16 +36,16 @@ export function Profitability({
   });
   if (!hasRatios && !hasFcf) return null;
 
-  const marginRows: { label: string; pick: (periodKey: string) => number | null }[] = [
-    { label: pl.ratios.grossMargin, pick: (k) => ratioFor(k)?.grossMargin ?? null },
-    { label: pl.ratios.operatingMargin, pick: (k) => ratioFor(k)?.operatingMargin ?? null },
-    { label: pl.ratios.netMargin, pick: (k) => ratioFor(k)?.netMargin ?? null },
+  const marginRows: { label: string; pick: (periodKey: string) => number | null; derived?: DerivedKey }[] = [
+    { label: pl.ratios.grossMargin, pick: (k) => ratioFor(k)?.grossMargin ?? null, derived: "grossMargin" },
+    { label: pl.ratios.operatingMargin, pick: (k) => ratioFor(k)?.operatingMargin ?? null, derived: "operatingMargin" },
+    { label: pl.ratios.netMargin, pick: (k) => ratioFor(k)?.netMargin ?? null, derived: "netMargin" },
   ];
 
-  const cashRows: { label: string; pick: (periodKey: string) => number | null }[] = [
+  const cashRows: { label: string; pick: (periodKey: string) => number | null; derived?: DerivedKey }[] = [
     { label: pl.ratios.ocf, pick: (k) => fcfFor(k)?.ocf ?? null },
     { label: pl.ratios.capex, pick: (k) => fcfFor(k)?.capex ?? null },
-    { label: pl.ratios.fcf, pick: (k) => fcfFor(k)?.fcf ?? null },
+    { label: pl.ratios.fcf, pick: (k) => fcfFor(k)?.fcf ?? null, derived: "fcf" },
   ];
 
   const headerCells = (
@@ -81,7 +83,7 @@ export function Profitability({
               {marginRows.map((row) => (
                 <tr key={row.label}>
                   <td className="sticky left-0 z-[1] border-b border-mk-surface-alt bg-rp-surface py-2.5 pr-3 text-[14px] font-medium text-mk-text">
-                    {row.label}
+                    <span className="flex flex-wrap items-center gap-1.5">{row.label}{row.derived && <DerivedBadge k={row.derived} />}</span>
                   </td>
                   {periods.map((p) => {
                     const v = row.pick(p.key);
@@ -123,7 +125,7 @@ export function Profitability({
                       i === cashRows.length - 1 ? "font-semibold text-mk-text" : "text-mk-text-soft"
                     }`}
                   >
-                    {row.label}
+                    <span className="flex flex-wrap items-center gap-1.5">{row.label}{row.derived && <DerivedBadge k={row.derived} />}</span>
                   </td>
                   {periods.map((p) => {
                     const v = row.pick(p.key);
@@ -153,7 +155,7 @@ export function Profitability({
       {derived.capexIntensityFlag && (
         <div className="mt-4 flex items-start gap-2.5 rounded-[10px] border border-mk-warn/30 bg-mk-warn-soft px-3.5 py-2.5">
           <TrendingUp className="mt-0.5 h-3.5 w-3.5 shrink-0 text-mk-warn" aria-hidden />
-          <p className="text-[12px] leading-relaxed text-mk-warn">{derived.capexIntensityFlag}</p>
+          <p className="text-[12px] leading-relaxed text-mk-warn">{derived.capexIntensityFlag} <DerivedBadge k="capexIntensity" /></p>
         </div>
       )}
     </DocSection>

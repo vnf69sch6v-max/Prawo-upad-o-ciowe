@@ -75,6 +75,9 @@ export const pl = {
     K: "Tys",
     raw: "1:1",
   },
+  derived: {
+    badge: "wyliczone",
+  },
   hero: {
     revenue: "Przychody",
     netIncome: "Zysk netto",
