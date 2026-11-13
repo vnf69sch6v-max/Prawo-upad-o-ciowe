@@ -235,6 +235,12 @@ przebieg → PM tnie go na widoczne kawałki (np. najpierw sama strona z danymi,
 P0. **(12.11: gotowość sprawdzona w kodzie — `dbw-1` 09:40 UTC, `gus-cpi-full` maxDuration 120, `cpi` w `FRESHNESS_DATASETS`, data 2026-11-13 w `CPI_PRELIMINARY_PUBLISH`, hero pomija flash; w piątek tylko kontrola.)** 13.11.2026 (CPI za październik, komunikat 10:00):** po wdrożeniu 1a, do 11:00 UTC przebieg `dbw-1` ma
     `failed: []`, a świeżość `cpi` = ok z okresem 2026-10. Liczba zgodna z komunikatem GUS (kryterium 19
     specyfikacji 1a). Wynik dopisać tutaj.
+    **Wynik 13.11.2026 (kontrola 11:10 UTC): przeszło.** `dbw-1` 09:53 UTC: `ok` 2/2, `failed: []`
+    (`gus-cpi-full` 21,1 s, `dbw-series` 3,2 s). `/api/health/freshness`: `cpi` = ok, okres 2026-10, `cpi-divisions` = ok,
+    2026-10. Liczba: DBW (zmienna 305, przekrój 1722, okres 256, Ogółem 14916914 / 6902025) daje 103,5 r/r i 99,6 m/m,
+    czyli **+3,5% r/r, −0,4% m/m**, tyle samo co szybki szacunek GUS z 30.10 (3,5% / −0,4%). Pełnego komunikatu na
+    stat.gov.pl o 11:10 UTC nie było jeszcze w spisie działu. Liczby na stronie nie odczytano wprost (strona i `/api`
+    są za logowaniem), ale `gus-cpi-full` liczy ją z tego samego wiersza (`pick(…, 5)` = 103,5 − 100).
 P1. **Kalendarz GUS 2027 do 31.12.2026.** `CPI_PRELIMINARY_PUBLISH` i pozostałe harmonogramy w
     `src/lib/calendar-schedules.ts` mają tylko 2026. Od stycznia świeżość i ranking hero przejdą na heurystykę
     dni. Źródło: kalendarz roczny GUS (stat.gov.pl), zwykle publikowany w grudniu.
