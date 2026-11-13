@@ -48,8 +48,8 @@ describe('dbw-series (B3): tylko serie z listy', () => {
     const ids = Object.keys(DBW_SERIES) as DbwSeriesId[];
     const sp = (path: string) => new URL(path, 'https://x').searchParams;
 
-    it('każda z sześciu serii z funkcji budującej jest przyjęta i rozpoznana', () => {
-        expect(ids).toHaveLength(6);
+    it('każda z siedmiu serii z funkcji budującej jest przyjęta i rozpoznana', () => {
+        expect(ids).toHaveLength(7);
         for (const id of ids) expect(parseDbwSeries(sp(dbwSeriesPath(id)))).toEqual({ ok: true, value: id });
     });
 
@@ -75,6 +75,7 @@ describe('dbw-series (B3): tylko serie z listy', () => {
             'dbwser_310_484_4801795-4801796_2026_q_5_v3',
             'dbwser_312_93_6661787_2026_m_5_v3',
             'dbwser_324_775_7124703-7124713-7124724-7189791-7121981_2026_m_5_v3',
+            'dbwser_875_143_33617_2026_m_95_v3', // P4: bezrobocie rejestrowane
         ]);
     });
 
@@ -118,8 +119,8 @@ describe('zablokowane trasy (B5)', () => {
         expect(validateGusPath('/api/dbw?var=310&przekroj=484&rok=2026&okres=270', now)?.ok).toBe(true);
     });
 
-    it('dbw-3 ma 2 endpointy i żaden cron nie woła /api/gus-cpi', () => {
-        expect(CRON_ENDPOINTS['dbw-3']).toHaveLength(2);
+    it('dbw-3 ma 3 endpointy (P4: bezrobocie) i żaden cron nie woła /api/gus-cpi', () => {
+        expect(CRON_ENDPOINTS['dbw-3']).toHaveLength(3);
         for (const eps of Object.values(CRON_ENDPOINTS)) for (const ep of eps) expect(new URL(ep, 'https://x').pathname).not.toBe('/api/gus-cpi');
     });
 });

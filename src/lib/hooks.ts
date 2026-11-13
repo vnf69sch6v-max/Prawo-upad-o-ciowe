@@ -312,11 +312,20 @@ export function useUnemploymentMonthly(geo = 'PL') {
     return useEurostat('unemployment', geo);
 }
 
-/** Stopa bezrobocia rejestrowanego (GUS BDL P3559) — miesięczna, krajowa.
- *  `/api/bdl-series` zwraca ~24 miesiące (rok poprzedni + bieżący) przy 12 zmiennych miesięcznych;
- *  `count` > 12 dokładał INNE zmienne BDL jako „miesiące 13–24". */
+/** Stopa bezrobocia rejestrowanego (GUS DBW zm. 875, przekrój 143, Polska) — miesięczna, w %.
+ *  Do 11.2026 z BDL (P3559), który dostawał miesiąc tygodnie po komunikacie GUS (ROADMAP P4). Ten sam klucz
+ *  zapytania co `useDbwSeries('unemployment')`; kształt `{ series: [{ date, value }] }` jak wcześniej z BDL. */
 export function useGusRegisteredUnemployment() {
-    return useBdlSeries(461680, 12);
+    const key = String(DBW_SERIES.unemployment.poz[0]);
+    return useQuery<{ series: Record<string, number | string>[]; source: string }, Error, { series: { date: string; value: number }[]; source: string }>({
+        queryKey: ['dbw-series', 'unemployment'],
+        queryFn: () => fetchJSON(dbwSeriesPath('unemployment')),
+        ...refreshOptions('gusDbw'),
+        select: (d) => ({
+            series: (d.series ?? []).flatMap((r) => (typeof r[key] === 'number' ? [{ date: String(r.date), value: r[key] as number }] : [])),
+            source: d.source,
+        }),
+    });
 }
 
 export function useGDPQuarterly(geo = 'PL') {

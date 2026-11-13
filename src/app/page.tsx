@@ -24,7 +24,7 @@ import { WatchlistStrip, type WatchableKpi } from '@/components/ui/WatchlistStri
 
 // ── Źródła KPI (Przegląd) ───────────────────────────────────
 // CPI            → useCpiFull              → /api/gus-cpi-full (GUS DBW)
-// Bezrobocie     → useGusRegisteredUnemployment → /api/bdl-series P3559 (GUS BDL)
+// Bezrobocie     → useGusRegisteredUnemployment → /api/dbw-series zm. 875 (GUS DBW)
 // Sprzedaż detal.→ useGusRetailSales       → /api/dbw-series zm. 109 (GUS DBW, r/r ceny stałe)
 // Produkcja      → useGusIndustrialProduction → /api/dbw-series zm. 814 (GUS DBW, r/r ceny stałe)
 // Hero           → rankHeroSignals (src/lib/hero-signals.ts) — 2 najważniejsze sygnały wg świeżości

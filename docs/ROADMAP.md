@@ -257,6 +257,8 @@ P4. **Bezrobocie rejestrowane jest miesiąc za komunikatem GUS.** 29.10 `/api/he
     odczyt tygodnie po GUS. Ta sama liczba stoi w hero Przeglądu. Do sprawdzenia: zmienna stopy bezrobocia
     rejestrowanego w katalogu DBW i jej nazwa. Do tego budżet: `dbw-4` robi już ~72 wywołania, a +24 dałoby ~96
     przy limicie ~100, więc raczej osobna grupa crona. Kandydat na następny krok PL (priorytet 4, świeżość liczby z hero).
+    **Wybrany 13.11.2026** — spec `docs/specs/2026-11-13-bezrobocie-rejestrowane-dbw.md`: DBW zm. 875, przekrój 143,
+    miara 95, wrzesień = 5,8% zweryfikowane; do `dbw-3` (~72 wywołania), bez nowej grupy crona. Status: do wdrożenia.
 
 ### Płatna platforma
 P-2. ~~API za bramką~~ — działa od 25.10.2026 (`CRON_SECRET` ustawiony, `/api/*` bez sesji = 401). Wymuszone
