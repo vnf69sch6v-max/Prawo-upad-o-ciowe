@@ -50,7 +50,8 @@ export function StatementTable({
   title?: string;
   metrics: Metric[];
   periods: Period[];
-  onSource?: (m: Metric) => void;
+  /** `periodKey` — kliknięta komórka (PS3b-2b-2); `trigger` — element, na który wraca fokus po zamknięciu okna. */
+  onSource?: (m: Metric, periodKey?: string, trigger?: HTMLElement) => void;
   /** Sama tabela, bez nagłówka sekcji — gdy woła ją sekcja nadrzędna. */
   bare?: boolean;
 }) {
@@ -110,7 +111,7 @@ export function StatementTable({
                            (ujemny margines, żeby nie rozpychać wiersza). Mysz: pojawia się przy najechaniu. */
                         <button
                           type="button"
-                          onClick={() => onSource(m)}
+                          onClick={(e) => onSource(m, undefined, e.currentTarget)}
                           title={pl.statements.showSource}
                           aria-label={`${pl.statements.showSource}: ${label}`}
                           className="-m-4 flex shrink-0 items-center justify-center p-4 transition-opacity pointer-fine:opacity-0 pointer-fine:group-hover:opacity-100 pointer-fine:focus-visible:opacity-100 lg:-m-1 lg:p-1"
@@ -128,11 +129,24 @@ export function StatementTable({
                         groupBreakAfter.has(i - 1) && "border-l border-rp-hairline",
                       )}
                     >
-                      <DataCell
-                        value={fmt(v.value)}
-                        emphasis={periods[i]?.current || isTotal}
-                        className="block"
-                      />
+                      {onSource && m.sourceLine !== undefined && v.value !== null && periods[i] ? (
+                        /* PS3b-2b-2: komórka z liczbą ze sprawozdania otwiera okno źródła na swoim okresie. Na dotyku
+                           cel ma 44 px (ujemny margines pionowy, żeby wiersz się nie rozpychał). */
+                        <button
+                          type="button"
+                          onClick={(e) => onSource(m, periods[i].key, e.currentTarget)}
+                          aria-label={pl.source.cellSource(label, periods[i].short)}
+                          className="-mx-1 block w-[calc(100%+0.5rem)] rounded px-1 text-right hover:bg-rp-data/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-rp-data/40 touch:-my-3 touch:min-h-[44px]"
+                        >
+                          <DataCell value={fmt(v.value)} emphasis={periods[i]?.current || isTotal} className="block" />
+                        </button>
+                      ) : (
+                        <DataCell
+                          value={fmt(v.value)}
+                          emphasis={periods[i]?.current || isTotal}
+                          className="block"
+                        />
+                      )}
                     </td>
                   ))}
                   {deltas.map((d) => (

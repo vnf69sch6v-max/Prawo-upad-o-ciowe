@@ -1,5 +1,6 @@
 // PS3b-2b-1 (docs/specs/2026-11-09-parser-ps3b2-fakty-w-oknie-zrodla.md): czyste formatowanie faktów XBRL do okna źródła.
 import { pl } from "./copy.pl";
+import type { FactRef } from "./types";
 
 const NBSP = "\u00a0";
 const MINUS = "\u2212";
@@ -37,4 +38,11 @@ export function formatFactPeriod(sig: string): string {
 export function describeScale(scale: number): string {
   const name: Record<number, string> = { 0: "jednostki", 3: "tys.", 6: "mln", 9: "mld" };
   return `10^${scale}${name[scale] ? ` · ${name[scale]}` : ""}`;
+}
+
+/** PS3b-2b-2: karta klikniętej komórki pierwsza; nieznany okres = brak wyróżnienia, kolejność kolumn bez zmian. */
+export function orderFactRefs(refs: FactRef[] | undefined, periodKey?: string): { ordered: FactRef[]; highlighted: FactRef | null } {
+  const list = refs ?? [];
+  const hit = periodKey ? list.find((f) => f.periodKey === periodKey) ?? null : null;
+  return { ordered: hit ? [hit, ...list.filter((f) => f !== hit)] : list, highlighted: hit };
 }

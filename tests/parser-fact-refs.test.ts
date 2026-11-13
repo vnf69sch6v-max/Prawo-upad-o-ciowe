@@ -2,7 +2,9 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { toJSON } from "@/lib/parser/export";
-import { describeDecimals, describeScale, formatFactPeriod, formatFullValue } from "@/lib/parser/fact-view";
+import { describeDecimals, describeScale, formatFactPeriod, formatFullValue, orderFactRefs } from "@/lib/parser/fact-view";
+import { createHash } from "node:crypto";
+import { pl } from "@/lib/parser/copy.pl";
 import { parseIxbrl } from "@/lib/parser/ixbrl/to-result";
 import { readIxbrl } from "@/lib/parser/ixbrl/read";
 import { parseReport } from "@/lib/parser/parser";
@@ -93,5 +95,52 @@ describe("fact-view", () => {
     expect(formatFactPeriod("2026-07-01|2026-09-30")).toBe("2026-07-01 → 2026-09-30");
     expect(formatFactPeriod("2025-12-31")).toBe("2025-12-31");
     expect(describeScale(6)).toBe("10^6 · mln");
+  });
+});
+
+describe("PS3b-2b-2: klik w komórkę", () => {
+  it("orderFactRefs: wybrany okres pierwszy; nieznany okres i pusta lista bez wyróżnienia", () => {
+    const refs = spacex.factRefs!.revenue!;
+    const { ordered, highlighted } = orderFactRefs(refs, refs[2].periodKey);
+    expect(highlighted).toBe(refs[2]);
+    expect(ordered[0]).toBe(refs[2]);
+    expect(ordered).toHaveLength(refs.length);
+    expect(new Set(ordered)).toEqual(new Set(refs));
+    expect(orderFactRefs(refs, "nie-ma")).toEqual({ ordered: refs, highlighted: null });
+    expect(orderFactRefs(refs)).toEqual({ ordered: refs, highlighted: null });
+    expect(orderFactRefs(undefined, "inc0")).toEqual({ ordered: [], highlighted: null });
+  });
+
+  for (const [name, r] of [["SpaceX", spacex], ["Cipher", cipher]] as const) {
+    it(`${name}: każda komórka z faktem ma swoją kartę na pozycji 0`, () => {
+      let n = 0;
+      for (const m of r.metrics) {
+        const refs = r.factRefs?.[m.key];
+        if (!refs) continue;
+        for (const v of m.values) {
+          if (v.value === null) continue;
+          const { ordered, highlighted } = orderFactRefs(refs, v.periodKey);
+          expect(highlighted?.periodKey, `${m.key} ${v.periodKey}`).toBe(v.periodKey);
+          expect(ordered[0].periodKey).toBe(v.periodKey);
+          n++;
+        }
+      }
+      expect(n).toBeGreaterThan(20);
+    });
+  }
+
+  it("fakt bez id w pliku: factId null, w oknie napis „brak id w pliku”", () => {
+    const src = html("spacex-10q-q3-2026");
+    const noId = src.replace(/(<ix:nonFraction[^>]*?) id="f-137"/, "$1");
+    expect(noId).not.toBe(src);
+    const f = parseIxbrl(noId).factRefs!.revenue![0];
+    expect(f.factId).toBeNull();
+    expect(f.factId ?? pl.source.factNoId).toBe("brak id w pliku");
+  });
+
+  it("eksport JSON przypięty (SHA-256 z main 469c6bf)", () => {
+    const sha = (r: typeof spacex) => createHash("sha256").update(toJSON(r)).digest("hex");
+    expect(sha(spacex)).toBe("fb9868bc91414a223336f4e33f76e67dd9bcc1068b92f41c01dd15e25c4d55f3");
+    expect(sha(cipher)).toBe("18e089785f269e74952217059032c68322c8be5f5b719088472366929f92c5e3");
   });
 });
