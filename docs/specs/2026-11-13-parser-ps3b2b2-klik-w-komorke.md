@@ -1,6 +1,6 @@
 # PS3b-2b-2 — parser: klik w komórkę tabeli otwiera okno źródła na wybranym okresie
 
-Status: do zrobienia (PLAN 13.11.2026). Rozmiar: ≤ ~200 linii, tylko UI (`StatementTable`, `SourceModal`, `page.tsx`) + jedna czysta funkcja.
+Status: zrobione 13.11.2026, PR #97 (REVIEW: SHIP). Rozmiar: ≤ ~200 linii, tylko UI (`StatementTable`, `SourceModal`, `page.tsx`) + jedna czysta funkcja.
 Bez zmian w `parser.ts`, `ixbrl/*`, `ParseResult`, eksporcie (hashe parytetu i `toJSON` bez zmian). Bez sieci, bez nowych źródeł, bez crona.
 
 ## Problem i wartość
