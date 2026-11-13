@@ -105,6 +105,21 @@ function ParserView() {
   const [status, setStatus] = React.useState<UploadStatus>("idle");
   const [data, setData] = React.useState<ApiOk | null>(null);
   const [sourceMetric, setSourceMetric] = React.useState<Metric | null>(null);
+  const [sourcePeriod, setSourcePeriod] = React.useState<string | undefined>(undefined);
+  const sourceTrigger = React.useRef<HTMLElement | null>(null);
+  const openSource = React.useCallback((m: Metric, periodKey?: string, trigger?: HTMLElement) => {
+    sourceTrigger.current = trigger ?? null;
+    setSourcePeriod(periodKey);
+    setSourceMetric(m);
+  }, []);
+  const closeSource = React.useCallback(() => {
+    setSourceMetric(null);
+    setSourcePeriod(undefined);
+    // Fokus wraca na komórkę albo lupę, z której otwarto okno (klawiatura, czytniki ekranu).
+    const t = sourceTrigger.current;
+    sourceTrigger.current = null;
+    if (t) requestAnimationFrame(() => t.focus());
+  }, []);
   const [phase, setPhase] = React.useState<ParsePhase | null>(null);
   const [running, setRunning] = React.useState<{ name: string; size: number } | null>(null);
   const [failure, setFailure] = React.useState<Failure | null>(null);
@@ -467,7 +482,7 @@ function ParserView() {
               title={pl.statements.income}
               metrics={pick(INCOME_KEYS)}
               periods={inc}
-              onSource={setSourceMetric}
+              onSource={openSource}
             />
 
             <CostStructure result={result} periods={inc} />
@@ -489,7 +504,7 @@ function ParserView() {
               title={pl.statements.balance}
               metrics={pick(BALANCE_KEYS)}
               periods={bal}
-              onSource={setSourceMetric}
+              onSource={openSource}
             />
 
             <DocSection id="przeplywy" title="Przepływy i dług">
@@ -498,7 +513,7 @@ function ParserView() {
                   bare
                   metrics={pick(CASHFLOW_KEYS)}
                   periods={inc}
-                  onSource={setSourceMetric}
+                  onSource={openSource}
                 />
                 <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
                   <NetCashCard netCash={result.netCash} />
@@ -544,7 +559,8 @@ function ParserView() {
         rawText={result.rawText}
         factRefs={sourceMetric ? result.factRefs?.[sourceMetric.key] : undefined}
         periods={[...result.detection.periods.income, ...result.detection.periods.balance]}
-        onClose={() => setSourceMetric(null)}
+        periodKey={sourcePeriod}
+        onClose={closeSource}
       />
     </div>
   );

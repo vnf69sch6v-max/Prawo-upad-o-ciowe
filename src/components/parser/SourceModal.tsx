@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { X, FileSearch } from "lucide-react";
 import { Badge } from "@/components/parser/ui/badge";
 import { metricLabelPl, pl } from "@/lib/parser/copy.pl";
-import { describeDecimals, describeScale, formatFactPeriod, formatFullValue } from "@/lib/parser/fact-view";
+import { describeDecimals, describeScale, formatFactPeriod, formatFullValue, orderFactRefs } from "@/lib/parser/fact-view";
 import type { FactRef, Metric, Period } from "@/lib/parser/types";
 
 /**
@@ -22,6 +22,7 @@ export function SourceModal({
   rawText,
   factRefs,
   periods = [],
+  periodKey,
   onClose,
 }: {
   metric: Metric | null;
@@ -29,6 +30,8 @@ export function SourceModal({
   /** PS3b-2b-1: fakty XBRL wiersza (tylko ścieżka HTML). */
   factRefs?: FactRef[];
   periods?: Period[];
+  /** PS3b-2b-2: okres klikniętej komórki — jego karta idzie pierwsza z oznaczeniem „Ta komórka”. */
+  periodKey?: string;
   onClose: () => void;
 }) {
   React.useEffect(() => {
@@ -38,6 +41,8 @@ export function SourceModal({
   }, [onClose]);
 
   if (!metric) return null;
+  const { ordered, highlighted } = orderFactRefs(factRefs, periodKey);
+  const clickedPeriod = periodKey ? periods.find((p) => p.key === periodKey) : undefined;
   const lines = rawText.split("\n");
   const idx = metric.sourceLine ?? -1;
   const from = Math.max(0, idx - 2);
@@ -94,7 +99,10 @@ export function SourceModal({
             <section aria-label={pl.source.factsTitle(factRefs.length)} className="space-y-2">
               <p className="text-sm font-semibold">{pl.source.factsTitle(factRefs.length)}</p>
               <p className="text-xs leading-relaxed text-rp-data-muted">{pl.source.factsHint}</p>
-              {factRefs.map((f) => {
+              {factRefs && periodKey && !highlighted && (
+                <p className="text-xs text-rp-warn">{pl.source.noFactForPeriod(clickedPeriod?.short ?? periodKey)}</p>
+              )}
+              {ordered.map((f) => {
                 const period = periods.find((p) => p.key === f.periodKey);
                 const rows: [string, string][] = [
                   [pl.source.factFull, formatFullValue(f.value, f.unit)],
@@ -105,8 +113,14 @@ export function SourceModal({
                   [pl.source.factConcept, f.qname],
                 ];
                 return (
-                  <div key={f.periodKey} className="rounded-lg border border-rp-hairline bg-rp-surface p-3">
-                    <p className="text-xs font-semibold">{period?.short ?? f.periodKey}</p>
+                  <div
+                    key={f.periodKey}
+                    className={`rounded-lg border bg-rp-surface p-3 ${f === highlighted ? "border-rp-data/40 ring-1 ring-rp-data/20" : "border-rp-hairline"}`}
+                  >
+                    <p className="text-xs font-semibold">
+                      {period?.short ?? f.periodKey}
+                      {f === highlighted && <span className="ml-2 rounded bg-rp-data/10 px-1.5 py-0.5 text-[10px] uppercase tracking-[0.04em]">{pl.source.thisCell}</span>}
+                    </p>
                     <dl className="mt-1.5 space-y-1 text-xs sm:text-[11px]">
                       {rows.map(([k, v]) => (
                         <div key={k} className="grid grid-cols-[6.5rem_1fr] gap-2">
