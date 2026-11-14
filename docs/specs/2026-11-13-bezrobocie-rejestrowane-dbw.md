@@ -2,6 +2,8 @@
 
 Data specyfikacji: 13.11.2026. Rozmiar: jeden krok, ~150–250 linii wraz z testami.
 
+Status: zrobione 14.11.2026, PR #99 (review: SHIP).
+
 ## Problem i wartość
 Stopa bezrobocia rejestrowanego stoi w hero Przeglądu i na `/praca`. Idzie z BDL (`bdl-series?start=461680`),
 które dostaje odczyt tygodnie po komunikacie GUS. Freshness pokazuje `unemployment` = `lag`. Użytkownik widzi
