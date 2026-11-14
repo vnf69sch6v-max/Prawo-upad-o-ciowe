@@ -590,15 +590,8 @@ export const FRESHNESS_DATASETS: DatasetSpec[] = [
         expected: (now) => expectedMonthlyBySchedule(now, industrialDate),
         tolerance: MONTHLY, maxAgeDays: 100, lagNote: LAG_NOTES['gus-bdl'], selfHeal: false,
     },
-    {
-        id: 'unemployment', label: 'Stopa bezrobocia rejestrowanego', source: 'GUS BDL', kind: 'gus-bdl', group: 'gus',
-        frequency: 'monthly',
-        // useGusRegisteredUnemployment() → useBdlSeries(461680, 12) z domyślnymi year/freq/step.
-        endpoint: (now) => `/api/bdl-series?start=461680&count=12&year=${warsawClock(now).year}&freq=m&step=1`,
-        extract: extractBdlSeries,
-        expected: (now) => expectedMonthlyBySchedule(now, unemploymentDate),
-        tolerance: MONTHLY, maxAgeDays: 100, lagNote: LAG_NOTES['gus-bdl'], selfHeal: false,
-    },
+    // P4 (docs/specs/2026-11-13-bezrobocie-rejestrowane-dbw.md): DBW zm. 875 zamiast BDL P3559 — ta sama ścieżka co hook.
+    dbwSpec('unemployment', 'Stopa bezrobocia rejestrowanego', 'unemployment', unemploymentDate),
     // HICP: Eurostat podaje M-1 ok. 17–18. dnia M → od 19. oczekujemy M-1.
     eurostatSpec('hicp', 'Inflacja HICP', 'cpi', 'monthly', (now) => expectedMonthlyByDay(now, 19)),
     eurostatSpec('gdp', 'PKB r/r (kwartalnie)', 'gdp_yoy', 'quarterly', expectedGdpQuarter),

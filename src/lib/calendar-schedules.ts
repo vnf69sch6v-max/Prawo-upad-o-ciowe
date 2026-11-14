@@ -86,11 +86,12 @@ export const GDP_FLASH_PUBLISH: Record<number, { date: string; quarter: number; 
 };
 
 // ─── GUS rynek pracy — bezrobocie rejestrowane (dzień publikacji w miesiącu M → dane za M-1) ───
+// 10: komunikat za wrzesień wyszedł 23.10.2026 (DBW zm. 875 ma wrzesień = 5,8%); 11 i 12 do potwierdzenia w kalendarzu GUS.
 
 export const UNEMPLOYMENT_PUBLISH: Record<number, Record<number, string>> = {
     2026: {
         2: '2026-02-25', 3: '2026-03-25', 4: '2026-04-24', 5: '2026-05-26', 6: '2026-06-24',
-        7: '2026-07-24', 8: '2026-08-25', 9: '2026-09-24', 10: '2026-10-26', 11: '2026-11-25', 12: '2026-12-23',
+        7: '2026-07-24', 8: '2026-08-25', 9: '2026-09-24', 10: '2026-10-23', 11: '2026-11-25', 12: '2026-12-23',
     },
 };
 

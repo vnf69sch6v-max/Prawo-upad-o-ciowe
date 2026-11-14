@@ -1,3 +1,4 @@
+import { dbwSeriesPath } from '@/lib/gus-api-paths';
 import { describe, expect, it } from 'vitest';
 import {
     businessDaysBetween,
@@ -79,10 +80,12 @@ describe('harmonogram miesięczny GUS', () => {
         expect(cpi.expected(at('2026-10-03T12:00:00+02:00'))).toBe('2026-08');
     });
 
-    it('bezrobocie: publikacja ~25. → do 26.10.2026 oczekiwany sierpień', () => {
+    it('bezrobocie: komunikat za wrzesień 23.10.2026 → wcześniej oczekiwany sierpień; źródło DBW jak hook', () => {
         const u = spec('unemployment');
-        expect(u.expected(at('2026-10-25T12:00:00+01:00'))).toBe('2026-08');
-        expect(u.expected(at('2026-10-26T12:00:00+01:00'))).toBe('2026-09');
+        expect(u.expected(at('2026-10-22T12:00:00+02:00'))).toBe('2026-08');
+        expect(u.expected(at('2026-10-23T12:00:00+02:00'))).toBe('2026-09');
+        expect(u.kind).toBe('gus-dbw');
+        expect(u.endpoint(at('2026-11-13T12:00:00+01:00'))).toBe(dbwSeriesPath('unemployment'));
     });
 
     it('bezpiecznik maks. wieku zamienia lag na stale', () => {

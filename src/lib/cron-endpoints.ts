@@ -16,7 +16,7 @@ export const CRON_ENDPOINTS = {
     'dbw-2': [ppiFullPath(R), dbwSeriesPath('constructionPrices', R)],
     // 15:40 UTC — ~48 wywołań: koniunktura (24) i ceny skupu produktów rolnych (24). `/api/gus-cpi` wypadło
     // 25.10.2026: żadna strona go nie czyta, a cron palił na nie 24 wywołania dziennie i dostawał 504.
-    'dbw-3': [koniunkturaPath(R), dbwSeriesPath('agriPrices', R)],
+    'dbw-3': [koniunkturaPath(R), dbwSeriesPath('agriPrices', R), dbwSeriesPath('unemployment', R)],
     // 11:40 UTC — ~72 wywołania: produkcja przemysłu, budownictwo, sprzedaż detaliczna (r/r, ceny stałe, po 24).
     'dbw-4': [dbwSeriesPath('industry', R), dbwSeriesPath('construction', R), dbwSeriesPath('retail', R)],
     // 05:00 UTC — GUS BDL po kolei (bez klucza ~5 żądań/s i ~100 / 15 min); ~60 zapytań.

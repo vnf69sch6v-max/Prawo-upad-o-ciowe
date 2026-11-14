@@ -1,0 +1,65 @@
+{
+ "_note": "DBW zm. 875 przekrój 143 okres 255 (wrzesień 2026), pobrane 13.11.2026; Polska + 3 inne wiersze (z 397)",
+ "data": [
+  {
+   "rownumber": 1,
+   "id-zmienna": 875,
+   "id-przekroj": 143,
+   "id-wymiar-1": 10,
+   "id-pozycja-1": 33617,
+   "id-okres": 255,
+   "id-sposob-prezentacji-miara": 95,
+   "id-daty": 2026,
+   "id-brak-wartosci": 253,
+   "id-tajnosci": 43,
+   "id-flaga": 36,
+   "wartosc": 5.8,
+   "precyzja": 2
+  },
+  {
+   "rownumber": 2,
+   "id-zmienna": 875,
+   "id-przekroj": 143,
+   "id-wymiar-1": 10,
+   "id-pozycja-1": 33619,
+   "id-okres": 255,
+   "id-sposob-prezentacji-miara": 95,
+   "id-daty": 2026,
+   "id-brak-wartosci": 253,
+   "id-tajnosci": 43,
+   "id-flaga": 36,
+   "wartosc": 5.0,
+   "precyzja": 2
+  },
+  {
+   "rownumber": 3,
+   "id-zmienna": 875,
+   "id-przekroj": 143,
+   "id-wymiar-1": 10,
+   "id-pozycja-1": 33622,
+   "id-okres": 255,
+   "id-sposob-prezentacji-miara": 95,
+   "id-daty": 2026,
+   "id-brak-wartosci": 253,
+   "id-tajnosci": 43,
+   "id-flaga": 36,
+   "wartosc": 3.7,
+   "precyzja": 2
+  },
+  {
+   "rownumber": 4,
+   "id-zmienna": 875,
+   "id-przekroj": 143,
+   "id-wymiar-1": 10,
+   "id-pozycja-1": 33634,
+   "id-okres": 255,
+   "id-sposob-prezentacji-miara": 95,
+   "id-daty": 2026,
+   "id-brak-wartosci": 253,
+   "id-tajnosci": 43,
+   "id-flaga": 36,
+   "wartosc": 4.7,
+   "precyzja": 2
+  }
+ ]
+}

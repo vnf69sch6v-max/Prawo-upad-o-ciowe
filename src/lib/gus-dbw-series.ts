@@ -7,6 +7,10 @@
 export interface DbwSeriesConfig {
     var: number; przekroj: number; poz: number[];
     freq?: 'm' | 'q'; prez?: number;
+    /** Wartość podana wprost (np. stopa w %), bez odejmowania 100 jak przy indeksach. */
+    raw?: boolean;
+    /** Przekrój bez `id-pozycja-2` (np. 143: tylko terytorium) — `poz` to wtedy `id-pozycja-1`. */
+    level1?: boolean;
 }
 
 /** Sposób prezentacji DBW: „analogiczny okres roku poprzedniego=100; szereg niewyrównany; ceny stałe"
@@ -41,6 +45,11 @@ export const GUS_CONSTRUCTION_PRICES_SERIES: DbwSeriesConfig = { var: 312, przek
 /** Ceny skupu produktów rolnych (DBW zm. 324), przekrój 775: pszenica, żyto, bydło, trzoda, mleko (/ceny → Rolne). */
 export const GUS_AGRI_PRICES_SERIES: DbwSeriesConfig = { var: 324, przekroj: 775, poz: [7124703, 7124713, 7124724, 7189791, 7121981] };
 
+/** Stopa bezrobocia rejestrowanego (DBW zm. 875), przekrój 143 „Polska, województwa, powiaty", miara 95 [%].
+ *  Przekrój nie ma `id-pozycja-2`, więc seria to wiersz Polski (`id-pozycja-1` = 33617), a wartość to stopa wprost.
+ *  BDL (P3559) dostawał miesiąc kilka tygodni po komunikacie GUS — hero Przeglądu stał miesiąc z tyłu (ROADMAP P4). */
+export const GUS_UNEMPLOYMENT_SERIES: DbwSeriesConfig = { var: 875, przekroj: 143, poz: [33617], prez: 95, raw: true, level1: true };
+
 /** Jedyne serie, które przyjmuje `/api/dbw-series` (i `/api/dbw`). Nowa seria = nowy wpis tutaj. */
 export const DBW_SERIES = {
     industry: GUS_INDUSTRY_SERIES,
@@ -49,6 +58,7 @@ export const DBW_SERIES = {
     housePrices: GUS_HOUSE_PRICES_SERIES,
     constructionPrices: GUS_CONSTRUCTION_PRICES_SERIES,
     agriPrices: GUS_AGRI_PRICES_SERIES,
+    unemployment: GUS_UNEMPLOYMENT_SERIES,
 } as const satisfies Record<string, DbwSeriesConfig>;
 
 export type DbwSeriesId = keyof typeof DBW_SERIES;
@@ -67,4 +77,20 @@ export function dbwSeriesParams(id: DbwSeriesId): URLSearchParams {
 export function dbwSeriesCacheKey(id: DbwSeriesId, year: number): string {
     const { var: v, przekroj, poz, freq = 'm', prez = 5 } = DBW_SERIES[id];
     return `dbwser_${v}_${przekroj}_${poz.join('-')}_${year}_${freq}_${prez}_v3`.slice(0, 120);
+}
+
+export interface DbwDataRow { 'id-pozycja-1': number; 'id-pozycja-2'?: number; 'id-sposob-prezentacji-miara': number; wartosc: number | null }
+
+/** Wartości serii w jednym okresie DBW: klucz = `poz`, wartość = odchylenie od 100 (indeksy) albo wprost (`raw`).
+ *  `wartosc === 0` to placeholder „brak publikacji" i jest pomijany (luka zamiast fałszywego −100% albo 0%). */
+export function pickDbwPoint(rows: DbwDataRow[], cfg: DbwSeriesConfig): Record<string, number> {
+    const { poz, prez = 5, raw = false, level1 = false } = cfg;
+    const out: Record<string, number> = {};
+    for (const p of poz) {
+        const r = rows.find((x) => (level1
+            ? x['id-pozycja-1'] === p
+            : x['id-pozycja-1'] === DBW_POLSKA && x['id-pozycja-2'] === p) && x['id-sposob-prezentacji-miara'] === prez);
+        if (r && r.wartosc != null && r.wartosc !== 0) out[String(p)] = raw ? +r.wartosc.toFixed(1) : +(r.wartosc - 100).toFixed(1);
+    }
+    return out;
 }
